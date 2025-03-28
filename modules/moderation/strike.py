@@ -82,7 +82,6 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
             await user.ban(reason=reason)
     except Exception as e:
         print(f"Failed to apply disciplinary action for user {user}: {e}")
-        return True
 
     # Log strikes channel
     embed.title = f"{user.display_name} received a strike"
