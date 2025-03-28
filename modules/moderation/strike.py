@@ -2,16 +2,10 @@ from discord import Interaction, Member, Embed, Color
 from discord.ext import commands
 from modules.utils.user_utils import message_user
 from modules.utils.mysql import execute_query
-from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from discord.utils import utcnow
 from modules.utils import logging
-import os
 from modules.utils import mysql
-
-
-load_dotenv()
-STRIKES_CHANNEL_ID = int(os.getenv('STRIKES_CHANNEL_ID'))
 
 async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provided", interaction: Interaction = None) -> bool:
     """strike a specific user with escalating consequences."""
@@ -21,9 +15,10 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
     else:
         strike_by = bot.user
     # Record the strike in the database
+    guild_id = user.guild.id
     execute_query(
-        "INSERT INTO strikes (user_id, reason, striked_by_id, timestamp) VALUES (%s, %s, %s, %s)",
-        (user.id, reason, strike_by.id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        "INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp) VALUES (%s, %s, %s, %s)",
+        (guild_id, user.id, reason, strike_by.id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     )
 
     # Fetch the updated strike count for the user
@@ -93,6 +88,8 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
 
     # Log strikes channel
     embed.title = f"{user.display_name} received a strike"
-    await logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)
+    STRIKES_CHANNEL_ID = mysql.get_settings(user.guild.id).get("strike_channel")
+    if STRIKES_CHANNEL_ID:
+        await logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)
 
     return True

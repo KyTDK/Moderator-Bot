@@ -50,12 +50,13 @@ class moderation(commands.Cog):
         """Retrieve strikes for a specified user."""
         # Defer the response to acknowledge the interaction
         await interaction.response.defer(ephemeral=True)
-
+        guild_id = interaction.guild.id
         # Retrieve strikes from the database.
         # Adjust the SELECT query as needed for your database schema.
         strikes, _ = execute_query(
-            "SELECT reason, striked_by_id, timestamp FROM strikes WHERE user_id = %s ORDER BY timestamp DESC",
-            (user.id,), fetch_all=True
+            "SELECT reason, striked_by_id, timestamp FROM strikes WHERE guild_id = %s AND user_id = %s ORDER BY timestamp DESC",
+            (guild_id, user.id),  # Passing both guild_id and user_id as parameters
+            fetch_all=True
         )
 
         # Create an embed to display the strikes
@@ -98,8 +99,8 @@ class moderation(commands.Cog):
 
         # Delete strikes from the database
         _, rows_affected = execute_query(
-            "DELETE FROM strikes WHERE user_id = %s",
-            (user.id,)
+            "DELETE FROM strikes WHERE user_id = %s AND guild_id = %s",
+            (user.id, interaction.guild.id)  # Passing both guild_id and user_id as parameters
         )
 
         # Provide feedback

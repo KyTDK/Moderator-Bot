@@ -89,3 +89,44 @@ class settings(commands.Cog):
                 ephemeral=True
             )
         raise error
+    
+    # set strike channel
+    @app_commands.command(
+        name="set_strike_channel",
+        description="Set the strike channel."
+    )
+    @app_commands.checks.has_permissions(moderate_members=True)
+    async def set_strike_channel(self, interaction: Interaction, channel: discord.TextChannel):
+        """Set the strike channel."""
+        await mysql.update_settings("strike_channel", channel.id)
+        await interaction.response.send_message(f"Successfully set the strike channel to {channel.mention}.", ephemeral=True)
+    @set_strike_channel.error
+    async def set_strike_channel_error(self, interaction: Interaction, error):
+        if isinstance(error, MissingPermissions):
+            await interaction.response.send_message(
+                "You don't have permission to run this command.",
+                ephemeral=True
+            )
+        raise error
+    
+    # set nsfw channel
+    @app_commands.command(
+        name="set_nsfw_channel",
+        description="Set the nsfw channel."
+    )
+    @app_commands.checks.has_permissions(moderate_members=True)
+    async def set_nsfw_channel(self, interaction: Interaction, channel: discord.TextChannel):
+        """Set the nsfw channel."""
+        await mysql.update_settings("nsfw_channel", channel.id)
+        await interaction.response.send_message(f"Successfully set the nsfw channel to {channel.mention}.", ephemeral=True)
+    @set_nsfw_channel.error
+    async def set_nsfw_channel_error(self, interaction: Interaction, error):
+        if isinstance(error, MissingPermissions):
+            await interaction.response.send_message(
+                "You don't have permission to run this command.",
+                ephemeral=True
+            )
+        raise error
+    
+async def setup(bot: commands.Bot):
+    await bot.add_cog(settings(bot))

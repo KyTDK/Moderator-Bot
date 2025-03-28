@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from lottie.exporters.gif import export_gif
 import lottie
 import base64
+from modules.utils import mysql
 
 from openai import OpenAI
 
@@ -24,7 +25,6 @@ USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 
 
 load_dotenv()
-NSFW_STRIKES_ID = os.getenv('NSFW_STRIKES_ID')
 OPENAI_API_KEY = os.getenv('OPENAI_API')
 
 def determine_file_type(file_path):
@@ -245,4 +245,5 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, imag
     embed.set_image(url=f"attachment://{image.filename}")
     # Add a field for the reason
     embed.add_field(name="Reason", value=reason, inline=False)
+    NSFW_STRIKES_ID = mysql.get_settings(user.guild.id).get("nsfw_strikes_channel")
     await logging.log_to_channel(embed, NSFW_STRIKES_ID, bot, image)

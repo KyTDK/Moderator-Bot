@@ -83,6 +83,7 @@ def initialize_database():
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS strikes (
                     id INT AUTO_INCREMENT PRIMARY KEY,
+                    guild_id BIGINT,
                     user_id BIGINT,
                     reason VARCHAR(255),
                     striked_by_id BIGINT,
