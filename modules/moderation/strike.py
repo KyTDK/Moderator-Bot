@@ -17,7 +17,7 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
     # Record the strike in the database
     guild_id = user.guild.id
     execute_query(
-        "INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp) VALUES (%s, %s, %s, %s)",
+        "INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp) VALUES (%s, %s, %s, %s, %s)",
         (guild_id, user.id, reason, strike_by.id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     )
 
