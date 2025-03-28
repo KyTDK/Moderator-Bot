@@ -21,7 +21,7 @@ class settings(commands.Cog):
     @app_commands.checks.has_permissions(moderate_members=True)
     async def get_moderation_settings(self, interaction: Interaction):
         """Get moderation settings."""
-        settings_json = await mysql.get_settings(interaction.guild.id)
+        settings_json = mysql.get_settings(interaction.guild.id)
         settings_list = json.loads(settings_json)
 
         embed_color = Color.blue()
