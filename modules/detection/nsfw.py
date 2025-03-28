@@ -245,6 +245,10 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, imag
     embed.set_image(url=f"attachment://{image.filename}")
     # Add a field for the reason
     embed.add_field(name="Reason", value=reason, inline=False)
-    NSFW_STRIKES_ID = mysql.get_settings(user.guild.id).get("nsfw_strikes_channel")
+    settings = mysql.get_settings(user.guild.id)
+    NSFW_STRIKES_ID = settings.get("nsfw_strikes_channel")
+    STRIKE_CHANNEL_ID = settings.get("strike_channel")
     if NSFW_STRIKES_ID:
         await logging.log_to_channel(embed, NSFW_STRIKES_ID, bot, image)
+    elif STRIKE_CHANNEL_ID:
+        await logging.log_to_channel(embed, STRIKE_CHANNEL_ID, bot)
