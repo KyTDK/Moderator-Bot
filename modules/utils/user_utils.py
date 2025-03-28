@@ -30,5 +30,10 @@ def has_role_or_permission(*role_names: str):
 
 async def message_user(user: discord.User, content: str, embed: discord.Embed = None):
     # Attempt to send a DM
-    message = await user.send(content, embed=embed) if embed else await user.send(content)
+    try:
+        message = await user.send(content, embed=embed) if embed else await user.send(content)
+    except discord.Forbidden:
+        # ignore
+        message = None
+        pass
     return message
