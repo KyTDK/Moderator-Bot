@@ -117,7 +117,7 @@ class settings(commands.Cog):
     @app_commands.checks.has_permissions(moderate_members=True)
     async def set_nsfw_channel(self, interaction: Interaction, channel: discord.TextChannel):
         """Set the nsfw channel."""
-        mysql.update_settings("nsfw_channel", channel.id)
+        mysql.update_settings(interaction.guild.id, "nsfw_channel", channel.id)
         await interaction.response.send_message(f"Successfully set the nsfw channel to {channel.mention}.", ephemeral=True)
     @set_nsfw_channel.error
     async def set_nsfw_channel_error(self, interaction: Interaction, error):
