@@ -34,8 +34,9 @@ class settings(commands.Cog):
         total_chars = 0
         # settings: {"nsfw_channel": 1342326581258878986, "strike_channel": 1342685831571443713}
         for label, value in settings_list.items():
+            print(label, value)
             # If the current embed is full or adding this field would exceed the Discord character limit, start a new embed.
-            if len(current_embed.fields) >= 25 or total_chars + len(label) + len(value) > 6000:
+            if len(current_embed.fields) >= 25 or total_chars + len(str(label)) + len(str(value)) > 6000:
                 embeds.append(current_embed)
                 current_embed = Embed(title="Settings (continued)", color=embed_color)
                 total_chars = 0
