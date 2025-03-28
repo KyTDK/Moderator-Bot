@@ -74,7 +74,7 @@ class settings(commands.Cog):
     #set moderation settings
     @app_commands.command(
         name="set_moderation_settings",
-        description="Set moderation settings."
+        description="Set moderation settings. Leave key blank to remove the setting."
     )
     @app_commands.checks.has_permissions(moderate_members=True)
     async def set_moderation_settings(self, interaction: Interaction, settings_label: str, setting_key: str):
@@ -117,7 +117,7 @@ class settings(commands.Cog):
     @app_commands.checks.has_permissions(moderate_members=True)
     async def set_nsfw_channel(self, interaction: Interaction, channel: discord.TextChannel):
         """Set the nsfw channel."""
-        await mysql.update_settings("nsfw_channel", channel.id)
+        mysql.update_settings("nsfw_channel", channel.id)
         await interaction.response.send_message(f"Successfully set the nsfw channel to {channel.mention}.", ephemeral=True)
     @set_nsfw_channel.error
     async def set_nsfw_channel_error(self, interaction: Interaction, error):
