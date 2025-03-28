@@ -68,7 +68,8 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
     try:
         await message_user(user, "", embed=embed)
     except Exception as e:
-        await interaction.channel.send(user.mention, embed=embed)
+        if interaction:
+            await interaction.channel.send(user.mention, embed=embed)      
         return True
 
     # Apply disciplinary action and capture a description
