@@ -85,7 +85,7 @@ class settings(commands.Cog):
             if success:
                 await interaction.response.send_message(f"Successfully removed the setting {settings_label}.", ephemeral=True)
             else:
-                await interaction.response.send_message(f"Setting_key not found, available keys are"+", ".join(mysql.get_settings(interaction.guild.id).keys()), ephemeral=True)
+                await interaction.response.send_message(f"Setting_key not found, available keys are "+", ".join(mysql.get_settings(interaction.guild.id).keys()), ephemeral=True)
         else:
             await interaction.response.send_message(f"Successfully set the setting {settings_label} to {setting_key}.", ephemeral=True)
     @set_moderation_settings.error
