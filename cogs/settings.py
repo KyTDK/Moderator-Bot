@@ -1,3 +1,4 @@
+from typing import Optional
 from discord.ext import commands
 from discord import app_commands
 from discord import app_commands, Interaction, Embed, Color
@@ -21,8 +22,7 @@ class settings(commands.Cog):
     @app_commands.checks.has_permissions(moderate_members=True)
     async def get_moderation_settings(self, interaction: Interaction):
         """Get moderation settings."""
-        settings_json = mysql.get_settings(interaction.guild.id)
-        settings_list = json.loads(settings_json)
+        settings_list = mysql.get_settings(interaction.guild.id)
 
         embed_color = Color.blue()
         embeds = []
@@ -71,16 +71,23 @@ class settings(commands.Cog):
             await interaction.response.send_message("You don't have permission to run this command", ephemeral=True)
         raise error
     
+
     #set moderation settings
     @app_commands.command(
         name="set_moderation_settings",
         description="Set moderation settings. Leave key blank to remove the setting."
     )
     @app_commands.checks.has_permissions(moderate_members=True)
-    async def set_moderation_settings(self, interaction: Interaction, settings_label: str, setting_key: str):
+    async def set_moderation_settings(self, interaction: Interaction, settings_label: str, setting_key: Optional[str] = None):
         """Set moderation settings."""
-        mysql.update_settings(interaction.guild.id, settings_label, setting_key)
-        await interaction.response.send_message(f"Successfully set the setting {settings_label} to {setting_key}.", ephemeral=True)
+        success = mysql.update_settings(interaction.guild.id, settings_label, setting_key)
+        if not setting_key:
+            if success:
+                await interaction.response.send_message(f"Successfully removed the setting {settings_label}.", ephemeral=True)
+            else:
+                await interaction.response.send_message(f"Setting_key not found, available keys are"+", ".join(mysql.get_settings(interaction.guild.id).keys()), ephemeral=True)
+        else:
+            await interaction.response.send_message(f"Successfully set the setting {settings_label} to {setting_key}.", ephemeral=True)
     @set_moderation_settings.error
     async def set_moderation_settings_error(self, interaction: Interaction, error):
         if isinstance(error, MissingPermissions):

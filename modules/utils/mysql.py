@@ -63,18 +63,23 @@ def get_settings(guild_id):
         (guild_id,),
         fetch_one=True
     )
-    return settings[0] if settings else "{}"
+    return json.loads(settings[0]) if settings else json.loads("{}")
 
 def update_settings(guild_id, settings_key, settings_value):
     """Update the settings for a guild."""
     settings = get_settings(guild_id)
-    settings = json.loads(settings) 
-    settings[settings_key] = settings_value
+    success = False
+    if settings_value is None:
+        success = settings.pop(settings_key, None) is not None
+    else:
+        settings[settings_key] = settings_value
+        success = True
     settings = json.dumps(settings)
     execute_query(
         "INSERT INTO settings (guild_id, settings_json) VALUES (%s, %s) ON DUPLICATE KEY UPDATE settings_json = %s",
         (guild_id, settings, settings)
     )
+    return success
         
 def initialize_database():
     """Initialize the database schema."""

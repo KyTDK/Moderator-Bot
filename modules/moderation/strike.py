@@ -86,7 +86,7 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
 
     # Log strikes channel
     embed.title = f"{user.display_name} received a strike"
-    STRIKES_CHANNEL_ID = json.loads(mysql.get_settings(user.guild.id)).get("strike_channel")
+    STRIKES_CHANNEL_ID = mysql.get_settings(user.guild.id).get("strike_channel")
     if STRIKES_CHANNEL_ID:
         await logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)
 
