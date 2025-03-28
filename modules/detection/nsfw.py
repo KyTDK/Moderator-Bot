@@ -251,4 +251,5 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, imag
     if NSFW_STRIKES_ID:
         await logging.log_to_channel(embed, NSFW_STRIKES_ID, bot, image)
     elif STRIKE_CHANNEL_ID:
+        # exclude image from logging as it is not allowed in the strike channel
         await logging.log_to_channel(embed, STRIKE_CHANNEL_ID, bot)
