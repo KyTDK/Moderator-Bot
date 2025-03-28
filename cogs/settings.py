@@ -79,7 +79,7 @@ class settings(commands.Cog):
     @app_commands.checks.has_permissions(moderate_members=True)
     async def set_moderation_settings(self, interaction: Interaction, settings_label: str, setting_key: str):
         """Set moderation settings."""
-        await mysql.update_settings(settings_label, setting_key)
+        mysql.update_settings(interaction.guild.id, settings_label, setting_key)
         await interaction.response.send_message(f"Successfully set the setting {settings_label} to {setting_key}.", ephemeral=True)
     @set_moderation_settings.error
     async def set_moderation_settings_error(self, interaction: Interaction, error):
@@ -98,7 +98,7 @@ class settings(commands.Cog):
     @app_commands.checks.has_permissions(moderate_members=True)
     async def set_strike_channel(self, interaction: Interaction, channel: discord.TextChannel):
         """Set the strike channel."""
-        await mysql.update_settings(interaction.guild.id, "strike_channel", channel.id)
+        mysql.update_settings(interaction.guild.id, "strike_channel", channel.id)
         await interaction.response.send_message(f"Successfully set the strike channel to {channel.mention}.", ephemeral=True)
     @set_strike_channel.error
     async def set_strike_channel_error(self, interaction: Interaction, error):
