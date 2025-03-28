@@ -25,7 +25,7 @@ USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 
 load_dotenv()
 NSFW_STRIKES_ID = os.getenv('NSFW_STRIKES_ID')
-OPENAI_API = os.getenv('OPENAI_API')
+OPENAI_API_KEY = os.getenv('OPENAI_API')
 
 def determine_file_type(file_path):
     kind = filetype.guess(file_path)
@@ -55,10 +55,10 @@ nsfw_labels = {
 if not USE_MODERATOR_API:
     detector = NudeDetector(model_path="640m.onnx", inference_resolution=640)
 else:
-    if not OPENAI_API:
-        raise ValueError("OPENAI_API is not set.")
+    if not OPENAI_API_KEY :
+        raise ValueError("OPENAI_API_KEY  is not set.")
     client = OpenAI(
-        api_key=OPENAI_API
+        api_key=OPENAI_API_KEY 
     )
 
 import os
