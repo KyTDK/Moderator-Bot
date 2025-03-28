@@ -68,8 +68,8 @@ def get_settings(guild_id):
 def update_settings(guild_id, settings_key, settings_value):
     """Update the settings for a guild."""
     settings = get_settings(guild_id)
-    settings[settings_key] = settings_value
     settings = json.dumps(settings)
+    settings[settings_key] = settings_value
     execute_query(
         "INSERT INTO settings (guild_id, settings_json) VALUES (%s, %s) ON DUPLICATE KEY UPDATE settings_json = %s",
         (guild_id, settings, settings)
