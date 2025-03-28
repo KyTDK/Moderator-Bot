@@ -62,7 +62,7 @@ def get_settings(guild_id):
         (guild_id,),
         fetch_one=True
     )
-    return settings[0] if settings else None
+    return settings[0] if settings else {}
 
 def update_settings(guild_id, settings):
     """Update the settings for a guild."""
