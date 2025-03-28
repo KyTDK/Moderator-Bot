@@ -70,7 +70,7 @@ def update_settings(guild_id, settings_key, settings_value):
     settings[settings_key] = settings_value
     execute_query(
         "INSERT INTO settings (guild_id, settings_json) VALUES (%s, %s) ON DUPLICATE KEY UPDATE settings_json = %s",
-        (guild_id, settings)
+        (guild_id, settings, settings)
     )
         
 def initialize_database():
