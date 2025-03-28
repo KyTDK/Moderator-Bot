@@ -54,6 +54,22 @@ def get_connection(database=None, user=None, password=None, use_database=True):
     except Error as e:
         logging.error(f"Error connecting to MySQL: {e}")
         return None
+    
+def get_settings(guild_id):
+    """Retrieve the settings for a guild."""
+    settings, _ = execute_query(
+        "SELECT settings_json FROM settings WHERE guild_id = %s",
+        (guild_id,),
+        fetch_one=True
+    )
+    return settings[0] if settings else None
+
+def update_settings(guild_id, settings):
+    """Update the settings for a guild."""
+    execute_query(
+        "INSERT INTO settings (guild_id, settings_json) VALUES (%s, %s) ON DUPLICATE KEY UPDATE settings_json = %s",
+        (guild_id, settings, settings)
+    )
         
 def initialize_database():
     """Initialize the database schema."""
@@ -72,6 +88,12 @@ def initialize_database():
                     striked_by_id BIGINT,
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                            )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS settings (
+                    guild_id BIGINT PRIMARY KEY,
+                    settings_json JSON
+                )
             """)
             db.commit()
     except Error as e:

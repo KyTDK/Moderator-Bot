@@ -20,11 +20,12 @@ import base64
 
 from openai import OpenAI
 
-USE_MODERATOR_API = True
+USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 
 
 load_dotenv()
 NSFW_STRIKES_ID = os.getenv('NSFW_STRIKES_ID')
+OPENAI_API = os.getenv('OPENAI_API')
 
 def determine_file_type(file_path):
     kind = filetype.guess(file_path)
@@ -38,7 +39,7 @@ def determine_file_type(file_path):
         return 'Other'
     
 moderator_api_category_exclusions = {
-    "violence"}
+    "violence"} # Exclude violence category from the NSFW check as triggers too many false positives
 
 # NSFW labels to check against
 nsfw_labels = {
@@ -54,8 +55,10 @@ nsfw_labels = {
 if not USE_MODERATOR_API:
     detector = NudeDetector(model_path="640m.onnx", inference_resolution=640)
 else:
+    if not OPENAI_API:
+        raise ValueError("OPENAI_API is not set.")
     client = OpenAI(
-        api_key="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"
+        api_key=OPENAI_API
     )
 
 import os

@@ -7,26 +7,19 @@ from datetime import datetime, timedelta
 from discord.utils import utcnow
 from modules.utils import logging
 import os
+from modules.utils import mysql
+
 
 load_dotenv()
-GUILD_ID = int(os.getenv('GUILD_ID'))
 STRIKES_CHANNEL_ID = int(os.getenv('STRIKES_CHANNEL_ID'))
 
 async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provided", interaction: Interaction = None) -> bool:
     """strike a specific user with escalating consequences."""
-    # Determine the issuer and the target guild
     if interaction:
         await interaction.response.defer(ephemeral=True)
         strike_by = interaction.user
-        guild = interaction.guild
     else:
         strike_by = bot.user
-        guild = bot.get_guild(GUILD_ID)
-
-    if guild is None:
-        print(f"Guild with ID {GUILD_ID} not found.")
-        return False
-
     # Record the strike in the database
     execute_query(
         "INSERT INTO strikes (user_id, reason, striked_by_id, timestamp) VALUES (%s, %s, %s, %s)",
@@ -78,7 +71,7 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
 
     # Send the strike message to the user
     try:
-        await message_user(user, "", bot, guild, embed=embed)
+        await message_user(user, "", embed=embed)
     except Exception as e:
         error_message = f"Unable to send strike message to {user.mention}: {e}"
         print(error_message)
@@ -93,7 +86,7 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
             until = utcnow() + duration
             await user.timeout(until, reason=reason)
         elif action == "ban":
-            await guild.ban(user, reason=reason)
+            await user.ban(reason=reason)
     except Exception as e:
         print(f"Failed to apply disciplinary action for user {user}: {e}")
         return True

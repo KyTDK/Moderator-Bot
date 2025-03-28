@@ -2,13 +2,9 @@ from discord.ext import commands
 from discord import app_commands, Interaction, Member, Embed, Color
 from modules.utils.mysql import execute_query
 from modules.utils.user_utils import has_role_or_permission
-import os
 from discord.app_commands.errors import MissingPermissions
-from dotenv import load_dotenv
 from modules.moderation import strike
 
-load_dotenv()
-GUILD_ID = os.getenv('GUILD_ID')
 
 class moderation(commands.Cog):
     """A cog for moderation commands."""

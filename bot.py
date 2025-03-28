@@ -8,7 +8,6 @@ from modules.utils import user_utils, mysql
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD_ID = os.getenv('GUILD_ID')
 
 intents = discord.Intents.default()
 intents.members = True
@@ -17,7 +16,6 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 
 @bot.event
 async def on_ready():
-    bot.tree.copy_global_to(guild=discord.Object(id=GUILD_ID))
     await bot.tree.sync()
     mysql.initialize_database()
 
