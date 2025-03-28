@@ -23,8 +23,8 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
 
     # Fetch the updated strike count for the user
     result = execute_query(
-        "SELECT COUNT(*) FROM strikes WHERE user_id = %s",
-        (user.id,), fetch_one=True
+        "SELECT COUNT(*) FROM strikes WHERE user_id = %s AND guild_id = %s",
+        (user.id, guild_id,), fetch_one=True
     )
     strike_count = result[0][0] if result else 0
     
