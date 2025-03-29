@@ -246,7 +246,7 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, imag
     # Add a field for the reason
     embed.add_field(name="Reason", value=reason, inline=False)
     settings = mysql.get_settings(user.guild.id)
-    NSFW_STRIKES_ID = settings.get("nsfw_strikes_channel")
+    NSFW_STRIKES_ID = settings.get("nsfw_channel")
     STRIKE_CHANNEL_ID = settings.get("strike_channel")
     if NSFW_STRIKES_ID:
         await logging.log_to_channel(embed, NSFW_STRIKES_ID, bot, image)
