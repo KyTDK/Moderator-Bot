@@ -39,8 +39,9 @@ def determine_file_type(file_path):
         return 'Other'
     
 moderator_api_category_exclusions = {
-    "violence"} # Exclude violence category from the NSFW check as triggers too many false positives
-
+    "violence", # Exclude violence category from the NSFW check as triggers too many false positives
+    "self-harm", # Exclude self-harm category from the NSFW check as triggers too many false positives
+    } 
 # NSFW labels to check against
 nsfw_labels = {
     "BUTTOCKS_EXPOSED",
