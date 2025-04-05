@@ -171,8 +171,7 @@ class Settings(commands.Cog):
                 f"`{name}` is currently set to `{current_value}`.", ephemeral=True
             )
 
-    @commands.Cog.listener()
-    async def on_app_command_error(self, interaction: Interaction, error: AppCommandError):
+    async def cog_app_command_error(self, interaction: Interaction, error: AppCommandError):
         # intercept permission errors before Discord’s default
         if isinstance(error, MissingPermissions):
             # send only our custom message
