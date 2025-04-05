@@ -16,11 +16,12 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
     mysql.initialize_database()
     # show info of guilds the bot is in
     for guild in bot.guilds:
         print(f"Connected to {guild.name} (ID: {guild.id}) with {len(guild.members)} members ")
+        # Ensure command tree is synced for each guild
+        await bot.tree.sync(guild=guild)
 
 @bot.event
 async def setup_hook():
