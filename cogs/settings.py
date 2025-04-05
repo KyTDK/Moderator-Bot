@@ -141,7 +141,7 @@ class Settings(commands.Cog):
     @app_commands.checks.has_permissions(moderate_members=True)
     async def help(self, interaction: Interaction):
         """Provide help information for settings, showing description, name and expected type."""
-        help_message = "Available settings, :\n"
+        help_message = "Available settings:\n"
         for setting in SETTINGS_SCHEMA.values():
             help_message += (
                 f"**{setting.name}**: {setting.description} (Type: {setting.type.__name__})\n"
