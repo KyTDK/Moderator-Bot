@@ -22,6 +22,8 @@ async def on_ready():
         print(f"Connected to {guild.name} (ID: {guild.id}) with {len(guild.members)} members ")
         # Ensure command tree is synced for each guild
         await bot.tree.sync(guild=guild)
+    total_users = sum(guild.member_count for guild in bot.guilds)
+    print(f"Connected to {len(bot.guilds)} guilds with a total of {total_users} users.")
 
 @bot.event
 async def setup_hook():
