@@ -1,10 +1,8 @@
 from discord.ext import commands
 import discord
 import os
-from discord import app_commands
 from dotenv import load_dotenv
-from modules.detection import nsfw
-from modules.utils import user_utils, mysql
+from modules.utils import mysql
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
