@@ -24,7 +24,7 @@ class AggregatedModeration(commands.Cog):
 
         # If multiple messages exist in the cache, combine them for moderation check
         if mysql.get_settings(message.guild.id, "delete-offensive") == "True" or \
-        mysql.get_strike_count(message.author.id, message.guild.id) > 0:
+        (mysql.get_strike_count(message.author.id, message.guild.id) > 0 and mysql.get_settings(message.guild.id, "restrict-striked-users") == "True"):
             now = time.time()
 
             # Add current message to cache

@@ -57,4 +57,10 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=True,
     ),
+    "restrict-striked-users": Setting(
+        name="restrict-striked-users",
+        description="Restrict striked users by scanning their messages for offensive content (TEXT ONLY).",
+        setting_type=bool,
+        default=False,
+    ),
 }
