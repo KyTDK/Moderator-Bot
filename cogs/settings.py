@@ -51,33 +51,65 @@ class Settings(commands.Cog):
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
             await interaction.response.send_message(
-                f"Invalid setting name. Available settings: {', '.join(SETTINGS_SCHEMA.keys())}",
+                f"**Invalid setting name.** Available settings: `{', '.join(SETTINGS_SCHEMA.keys())}`",
                 ephemeral=True,
             )
             return
 
+        expected = schema.type
         try:
-            # Parse value based on expected type
-            if schema.type == int:
-                parsed_value = int(value)
-            elif schema.type == bool:
-                parsed_value = value.lower() in ["true", "1", "yes"]
-            elif schema.type == discord.TextChannel:
-                raise ValueError("This setting requires a channel, use `/set_channel` instead.")
+            # 1) Parse & type‐check
+            if expected is int:
+                try:
+                    parsed = int(value)
+                except ValueError:
+                    raise ValueError(
+                        f"**`{name}` expects an integer.**\n"
+                        f"Usage: `/set_setting {name} 42` (whole number, no decimals)"
+                    )
+            elif expected is bool:
+                low = value.lower()
+                if low in ("true", "1", "yes"):
+                    parsed = True
+                elif low in ("false", "0", "no"):
+                    parsed = False
+                else:
+                    raise ValueError(
+                        f"**`{name}` expects a boolean.**\n"
+                        f"Usage: `/set_setting {name} true` or `/set_setting {name} false`"
+                    )
+            elif expected is discord.TextChannel:
+                # you might handle channel‐mentions elsewhere
+                raise ValueError(
+                    f"**`{name}` expects a channel.**\n"
+                    f"Use `/set_channel {name} #channel-name` instead."
+                )
             else:
-                parsed_value = value
+                # fallback to string
+                parsed = value
 
-            if not schema.validate(parsed_value):
-                raise ValueError("Value failed custom validation.")
+            # 2) Custom validation
+            if not schema.validate(parsed):
+                raise ValueError(
+                    f"**Invalid value for `{name}`.**\n"
+                    f"Please ensure it meets the required criteria."
+                )
 
-            mysql.update_settings(interaction.guild.id, name, parsed_value)
+            # 3) Persist
+            mysql.update_settings(interaction.guild.id, name, parsed)
             await interaction.response.send_message(
-                f"Updated `{name}` to `{value}`.", ephemeral=True
+                f"Updated `{name}` to `{parsed}`.", ephemeral=True
             )
 
-        except Exception as e:
+        except ValueError as ve:
+            # user‐facing error
+            await interaction.response.send_message(str(ve), ephemeral=True)
+
+        except Exception:
+            # catch‐all for unexpected issues
             await interaction.response.send_message(
-                f"Failed to update setting: {e}", ephemeral=True
+                "An unexpected error occurred while updating your setting. Please try again later.",
+                ephemeral=True
             )
 
     @app_commands.command(name="set_channel", description="Set a channel for a setting.")
