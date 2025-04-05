@@ -17,25 +17,25 @@ class Settings(commands.Cog):
     non_channel_choices = [
         app_commands.Choice(name=setting.name, value=setting_name)
         for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type != discord.TextChannel
+        if setting.type != discord.TextChannel and setting.type != list[discord.TextChannel]
     ]
 
     # List to hold choices for channel settings
     channel_choices = [
         app_commands.Choice(name=setting.name, value=setting_name)
         for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type == discord.TextChannel
+        if setting.type == discord.TextChannel or setting.type == list[discord.TextChannel]
     ]
     
     @app_commands.command(name="remove_setting", description="Remove a server setting.")
-    @app_commands.choices(name=non_channel_choices+channel_choices)
+    @app_commands.choices(name=non_channel_choices)
     @app_commands.checks.has_permissions(moderate_members=True)
     async def remove_setting(self, interaction: Interaction, name: str):
         """Remove a server setting."""
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
             await interaction.response.send_message(
-                f"Invalid setting name. Available settings: {', '.join(SETTINGS_SCHEMA.keys())}",
+                f"Invalid setting name.",
                 ephemeral=True,
             )
             return
@@ -54,7 +54,7 @@ class Settings(commands.Cog):
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
             await interaction.response.send_message(
-                f"**Invalid setting name.** Available settings: `{', '.join(SETTINGS_SCHEMA.keys())}`",
+                f"**Invalid setting name.",
                 ephemeral=True,
             )
             return
@@ -120,17 +120,56 @@ class Settings(commands.Cog):
     @app_commands.checks.has_permissions(moderate_members=True)
     async def set_channel(self, interaction: Interaction, name: str, channel: discord.TextChannel):
         schema = SETTINGS_SCHEMA.get(name)
-        if not schema or schema.type != discord.TextChannel:
+        if not schema or (schema.type != discord.TextChannel and schema.type != list[discord.TextChannel]):
             await interaction.response.send_message(
-                f"Invalid setting name or type. Available settings: {', '.join(SETTINGS_SCHEMA.keys())}",
+                f"Invalid setting name or type.",
                 ephemeral=True,
             )
             return
-
+        if schema.type == list[discord.TextChannel]:
+            # If the setting is a list of channels, append the new channel
+            current_channels = mysql.get_settings(interaction.guild.id, name) or []
+            if channel.id not in current_channels:
+                current_channels.append(channel.id)
+                mysql.update_settings(interaction.guild.id, name, current_channels)
+                await interaction.response.send_message(
+                    f"Added `{channel.name}` to `{name}`.", ephemeral=True
+                )
+            else:
+                await interaction.response.send_message(
+                    f"`{channel.name}` is already in `{name}`.", ephemeral=True
+                )
+            return
         mysql.update_settings(interaction.guild.id, name, channel.id)
         await interaction.response.send_message(
             f"Updated `{name}` to channel `{channel.name}`.", ephemeral=True
         )
+    
+    @app_commands.command(name="remove_channel", description="Remove a channel from a setting.")
+    @app_commands.choices(name=channel_choices)
+    @app_commands.checks.has_permissions(moderate_members=True)    
+    async def remove_channel(self, interaction: Interaction, name: str, channel: discord.TextChannel):
+        schema = SETTINGS_SCHEMA.get(name)
+        if not schema or (schema.type != discord.TextChannel and schema.type != list[discord.TextChannel]):
+            await interaction.response.send_message(
+                f"Invalid setting name or type.",
+                ephemeral=True,
+            )
+            return
+        if schema.type == list[discord.TextChannel]:
+            # If the setting is a list of channels, remove the channel
+            current_channels = mysql.get_settings(interaction.guild.id, name) or []
+            if channel.id in current_channels:
+                current_channels.remove(channel.id)
+                mysql.update_settings(interaction.guild.id, name, current_channels)
+                await interaction.response.send_message(
+                    f"Removed `{channel.name}` from `{name}`.", ephemeral=True
+                )
+            else:
+                await interaction.response.send_message(
+                    f"`{channel.name}` is not in `{name}`.", ephemeral=True
+                )
+            return
 
     @app_commands.command(name="help", description="Get help on settings.")
     @app_commands.checks.has_permissions(moderate_members=True)
@@ -144,6 +183,7 @@ class Settings(commands.Cog):
         help_message += "\nAvailable commands:\n"
         help_message += "`/set_setting <name> <value>`: Set a server setting.\n"
         help_message += "`/remove_setting <name>`: Remove a server setting.\n"
+        help_message += "`/remove_channel <name> <channel>`: Remove a channel from a setting.\n"
         help_message += "`/set_channel <name> <channel>`: Set a channel for a setting.\n"
         help_message += "`/get_setting <name>`: Get the current value of a server setting.\n"
         help_message += "`/help`: Get help on settings.\n"
@@ -157,7 +197,7 @@ class Settings(commands.Cog):
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
             await interaction.response.send_message(
-                f"Invalid setting name. Available settings: {', '.join(SETTINGS_SCHEMA.keys())}",
+                f"Invalid setting name.",
                 ephemeral=True,
             )
             return

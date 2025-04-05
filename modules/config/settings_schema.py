@@ -56,4 +56,10 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
     ),
+    "exlude-channels": Setting(
+        name="exlude-channels",
+        description="Channels to exclude from detection.",
+        setting_type=list[discord.TextChannel],
+        default=[],
+    ),
 }
