@@ -47,7 +47,7 @@ class AggregatedModeration(commands.Cog):
                     # Clear cache for this user
                     self.user_message_cache[user_id].clear()
 
-        if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content) and mysql.get_settings(message.guild.id, "delete-offensive") == "True" and not message.channel.id in mysql.get_settings(message.guild.id, "exlude-channels"):
+        if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content) and mysql.get_settings(message.guild.id, "delete-offensive") == "True" and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):
             try:
                 await message.delete()
                 await message.channel.send(

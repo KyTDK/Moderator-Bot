@@ -18,7 +18,6 @@ async def on_ready():
     # show info of guilds the bot is in
     for guild in bot.guilds:
         print(f"Connected to {guild.name} (ID: {guild.id}) with {len(guild.members)} members ")
-        # Ensure command tree is synced for each guild
     #     bot.tree.clear_commands(guild=guild)
     #     await bot.tree.sync(guild=guild)
     # await bot.tree.sync()
