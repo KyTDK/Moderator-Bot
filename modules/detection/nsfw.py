@@ -2,13 +2,11 @@ import os
 import traceback
 from nudenet import NudeDetector
 from PIL import Image
-import pillow_avif  # Registers AVIF support with Pillow
 import cv2
 import filetype
-import re
 import uuid
 import requests
-from discord import Message, Member
+from discord import Member
 from discord.ext import commands
 from modules.moderation import strike
 import discord
