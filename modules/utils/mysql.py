@@ -72,6 +72,10 @@ def get_settings(guild_id, settings_key=None):
         fetch_one=True
     )
     response = json.loads(settings[0]) if settings else json.loads("{}")
+    if response=="True":
+        response = True
+    elif response=="False":
+        response = False
     return response if settings_key is None else response.get(settings_key, SETTINGS_SCHEMA.get(settings_key).default) if settings_key else response
 
 def update_settings(guild_id, settings_key, settings_value):

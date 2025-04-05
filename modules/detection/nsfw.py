@@ -238,7 +238,7 @@ async def process_image(original_filename):
             os.remove(converted_filename)
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
-    if mysql.get_settings(user.guild.id, "strike-nsfw") == "True":
+    if mysql.get_settings(user.guild.id, "strike-nsfw") == True:
         await strike.strike(user=user, bot=bot, reason=reason, interaction=None)
         embed = discord.Embed(
             title="NSFW Content strike",

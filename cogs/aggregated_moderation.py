@@ -23,8 +23,8 @@ class AggregatedModeration(commands.Cog):
         user_id = message.author.id
 
         # If multiple messages exist in the cache, combine them for moderation check
-        if mysql.get_settings(message.guild.id, "delete-offensive") == "True" or \
-        (mysql.get_strike_count(message.author.id, message.guild.id) > 0 and mysql.get_settings(message.guild.id, "restrict-striked-users") == "True"):
+        if mysql.get_settings(message.guild.id, "delete-offensive") == True or \
+        (mysql.get_strike_count(message.author.id, message.guild.id) > 0 and mysql.get_settings(message.guild.id, "restrict-striked-users") == True):
             now = time.time()
 
             # Add current message to cache
@@ -47,7 +47,7 @@ class AggregatedModeration(commands.Cog):
                     # Clear cache for this user
                     self.user_message_cache[user_id].clear()
         delete_offensive = mysql.get_settings(message.guild.id, "delete-offensive")
-        if (delete_offensive == "True" or delete_offensive == True) and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):
+        if (mysql.get_settings(message.guild.id, "delete-offensive") == True) and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):
             if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content):
                 try:
                     await message.delete()
