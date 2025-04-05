@@ -46,8 +46,8 @@ class AggregatedModeration(commands.Cog):
                             print("Bot does not have permission to delete a message or the message no longer exists.")
                     # Clear cache for this user
                     self.user_message_cache[user_id].clear()
-
-        if mysql.get_settings(message.guild.id, "delete-offensive") == "True" and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):
+        delete_offensive = mysql.get_settings(message.guild.id, "delete-offensive")
+        if (delete_offensive == "True" or delete_offensive == True) and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):
             if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content):
                 try:
                     await message.delete()
