@@ -57,9 +57,6 @@ if not USE_MODERATOR_API:
 else:
     if not OPENAI_API_KEY :
         raise ValueError("OPENAI_API_KEY  is not set.")
-    client = OpenAI(
-        api_key=OPENAI_API_KEY 
-    )
 
 import os
 import uuid
@@ -190,6 +187,9 @@ def moderator_api(text: str = None, image: str = None):
             image = f.read()
             image = base64.b64encode(image).decode("utf-8")
         input.append({"type": "image_url","image_url": {"url": "data:image/jpeg;base64,"+image}})
+    client = OpenAI(
+        api_key=OPENAI_API_KEY 
+    )
     response = client.moderations.create(model="omni-moderation-latest", input=input)
     # Check if there is at least one result, then check the categories of the first result.
     results = response.results[0]
