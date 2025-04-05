@@ -10,6 +10,8 @@ class Settings(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        bot.tree.on_error = self.on_app_command_error
+
 
     # List to hold choices for non-channel settings
     non_channel_choices = [
@@ -171,7 +173,10 @@ class Settings(commands.Cog):
                 f"`{name}` is currently set to `{current_value}`.", ephemeral=True
             )
 
-    async def cog_app_command_error(self, interaction: Interaction, error: AppCommandError):
+    async def on_app_command_error(
+    self,
+    interaction: Interaction,
+    error: AppCommandError):
         # intercept permission errors before Discord’s default
         if isinstance(error, MissingPermissions):
             # send only our custom message

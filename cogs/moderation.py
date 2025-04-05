@@ -34,11 +34,6 @@ class moderation(commands.Cog):
             await interaction.followup.send(embed=log_embed, ephemeral=True)
         else:
             await interaction.followup.send("An error occured, please try again")
-    @strike.error
-    async def strike_error(self, interaction: Interaction, error):
-        if isinstance(error, MissingPermissions): 
-            await interaction.response.send_message("You don't have permission to run this command", ephemeral=True)
-        raise error
     
     # Get strikes
     @app_commands.command(
@@ -78,13 +73,6 @@ class moderation(commands.Cog):
                     inline=False
                 )
         await interaction.followup.send(embed=embed)
-    @get_strikes.error
-    async def get_strikes_error(self, interaction: Interaction, error):
-        from discord.app_commands import MissingPermissions
-        if isinstance(error, MissingPermissions): 
-            await interaction.response.send_message("You don't have permission to run this command", ephemeral=True)
-        else:
-            raise error
     
     #Clear strikes
     @app_commands.command(
@@ -110,14 +98,6 @@ class moderation(commands.Cog):
             message = f"No strikes found for {user.mention}."
 
         await interaction.followup.send(message, ephemeral=True)
-    @clear_strikes.error
-    async def clear_strikes_error(self, interaction: Interaction, error):
-        if isinstance(error, app_commands.MissingPermissions):
-            await interaction.response.send_message(
-                "You don't have permission to run this command.",
-                ephemeral=True
-            )
-            raise error
     
     # Warn channel or optionally user
     @app_commands.command(
@@ -167,15 +147,28 @@ class moderation(commands.Cog):
             )
             # Send the embed to the channel
             await interaction.channel.send(embed=embed)
-        await interaction.response.send_message("Sent message.", ephemeral=True)
-    @intimidate.error
-    async def intimidate_error(self, interaction: Interaction, error):
-        if isinstance(error, app_commands.MissingPermissions):
-            await interaction.response.send_message(
-                "You don't have permission to run this command.",
-                ephemeral=True
-            )
-            raise error
+        await interaction.response.send_message("Sent message.", ephemeral=True) 
+
+    # custom error handler for missing permissions
+    @commands.Cog.listener()
+    async def on_app_command_error(self, interaction: Interaction, error: app_commands.AppCommandError):
+        # intercept permission errors before Discord’s default
+        if isinstance(error, MissingPermissions):
+            # send only our custom message
+            if not interaction.response.is_done():
+                await interaction.response.send_message(
+                    "You don't have permission to run this command.",
+                    ephemeral=True
+                )
+            else:
+                await interaction.followup.send(
+                    "You don't have permission to run this command.",
+                    ephemeral=True
+                )
+            return
+
+        # let everything else fall back to the default handler
+        await super().on_app_command_error(interaction, error)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(moderation(bot))
