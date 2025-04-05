@@ -18,6 +18,8 @@ async def on_ready():
     # show info of guilds the bot is in
     for guild in bot.guilds:
         print(f"Connected to {guild.name} (ID: {guild.id}) with {len(guild.members)} members ")
+        # Make message to the bot owner about new features
+        await guild.system_channel.send("New features have been added to the bot! Use /help to see the new commands.")
         # Ensure command tree is synced for each guild
         # await bot.tree.sync(guild=guild)
     total_users = sum(guild.member_count for guild in bot.guilds)
