@@ -27,13 +27,6 @@ SETTINGS_SCHEMA = {
         description="Channel where NSFW violations are logged with a preview of the media.",
         setting_type=discord.TextChannel,
     ),
-    "max-strikes": Setting(
-        name="max-strikes",
-        description="Maximum number of strikes before a user is banned.",
-        setting_type=int,
-        default=3,
-        validator=lambda x: 1 <= x <= 10
-    ),
     "monitor-channel": Setting(
         name="monitor-channel",
         description="Channel to log all server activities, including message edits, deletions, and user join/leave events.",
