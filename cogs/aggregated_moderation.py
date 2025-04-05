@@ -47,14 +47,15 @@ class AggregatedModeration(commands.Cog):
                     # Clear cache for this user
                     self.user_message_cache[user_id].clear()
 
-        if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content) and mysql.get_settings(message.guild.id, "delete-offensive") == "True" and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):
-            try:
-                await message.delete()
-                await message.channel.send(
-                    f"{message.author.mention}, your message was detected to contain explicit content and was removed."
-                )
-            except (discord.Forbidden, discord.NotFound):
-                print("Bot does not have permission to delete the message or the message no longer exists.")
+        if mysql.get_settings(message.guild.id, "delete-offensive") == "True" and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):
+            if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content):
+                try:
+                    await message.delete()
+                    await message.channel.send(
+                        f"{message.author.mention}, your message was detected to contain explicit content and was removed."
+                    )
+                except (discord.Forbidden, discord.NotFound):
+                    print("Bot does not have permission to delete the message or the message no longer exists.")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AggregatedModeration(bot))
