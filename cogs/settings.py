@@ -3,6 +3,7 @@ from discord import app_commands, Interaction
 import discord
 from modules.utils import mysql
 from modules.config.settings_schema import SETTINGS_SCHEMA
+from discord.app_commands import MissingPermissions, AppCommandError
 
 class Settings(commands.Cog):
     """A cog for settings commands."""
@@ -128,14 +129,6 @@ class Settings(commands.Cog):
         await interaction.response.send_message(
             f"Updated `{name}` to channel `{channel.name}`.", ephemeral=True
         )
-    @set_setting.error
-    async def set_setting_error(self, interaction: Interaction, error):
-        if isinstance(error, app_commands.MissingPermissions):
-            await interaction.response.send_message(
-                "You don't have permission to run this command.",
-                ephemeral=True
-            )
-            raise error
 
     @app_commands.command(name="help", description="Get help on settings.")
     @app_commands.checks.has_permissions(moderate_members=True)
@@ -153,14 +146,6 @@ class Settings(commands.Cog):
         help_message += "`/get_setting <name>`: Get the current value of a server setting.\n"
         help_message += "`/help`: Get help on settings.\n"
         await interaction.response.send_message(help_message, ephemeral=True)
-    @help.error
-    async def help_error(self, interaction: Interaction, error):
-        if isinstance(error, app_commands.MissingPermissions):
-            await interaction.response.send_message(
-                "You don't have permission to run this command.",
-                ephemeral=True
-            )
-            raise error
 
     @app_commands.command(name="get_setting", description="Get the current value of a server setting.")
     @app_commands.choices(name=non_channel_choices+channel_choices)
@@ -185,14 +170,26 @@ class Settings(commands.Cog):
             await interaction.response.send_message(
                 f"`{name}` is currently set to `{current_value}`.", ephemeral=True
             )
-    @get_setting.error
-    async def get_setting_error(self, interaction: Interaction, error):
-        if isinstance(error, app_commands.MissingPermissions):
-            await interaction.response.send_message(
-                "You don't have permission to run this command.",
-                ephemeral=True
-            )
-            raise error
+
+    async def on_app_command_error(self, interaction: Interaction, error: AppCommandError):
+        # intercept permission errors before Discord’s default
+        if isinstance(error, MissingPermissions):
+            # send only our custom message
+            if not interaction.response.is_done():
+                await interaction.response.send_message(
+                    "You don't have permission to run this command.",
+                    ephemeral=True
+                )
+            else:
+                await interaction.followup.send(
+                    "You don't have permission to run this command.",
+                    ephemeral=True
+                )
+            return
+
+        # let everything else fall back to the default handler
+        await super().on_app_command_error(interaction, error)
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Settings(bot))
