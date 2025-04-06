@@ -190,6 +190,8 @@ class Settings(commands.Cog):
         help_message += "`/remove_banned_word <word>`: Remove a word from the banned words list.\n"
         help_message += "`/list_banned_words`: List all banned words.\n"
         help_message += "`/help`: Get help on settings.\n"
+        # support discord servrer link
+        help_message += "\nPost suggestions and bugs on the support discord server: [Support Server](https://discord.gg/invite/33VcwjfEXC)"
         await interaction.response.send_message(help_message, ephemeral=True)
 
     @app_commands.command(name="get_setting", description="Get the current value of a server setting.")
