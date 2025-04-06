@@ -4,12 +4,12 @@ from typing import Any, Callable, Optional
 import discord
 
 class Setting:
-    def __init__(self, name: str, description: str, setting_type: type, default: Any = None, validator: Optional[Callable] = None):
+    def __init__(self, name: str, description: str, setting_type: type, default: Any = None, encrypted: bool = False, validator: Optional[Callable] = None):
         self.name = name
         self.description = description
         self.type = setting_type
         self.default = default
-        self.encrypted = False
+        self.encrypted = encrypted
         self.validator = validator
 
     def validate(self, value: Any) -> bool:
