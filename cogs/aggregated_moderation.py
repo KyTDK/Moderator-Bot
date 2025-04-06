@@ -19,7 +19,7 @@ class AggregatedModeration(commands.Cog):
         # Skip messages sent by bots to prevent potential loops
         if message.author.bot:
             return
-
+        
         user_id = message.author.id
 
         # If multiple messages exist in the cache, combine them for moderation check
