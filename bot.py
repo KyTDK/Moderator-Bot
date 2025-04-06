@@ -17,7 +17,7 @@ async def on_ready():
     mysql.initialize_database()
     # show info of guilds the bot is in
     for guild in bot.guilds:
-        print(f"Connected to {guild.name} (ID: {guild.id}) with {len(guild.members)} members ")
+        print(f"Connected to {guild.name} (ID: {guild.id}) with {len([member for member in guild.members if not member.bot])} members ")
     #     bot.tree.clear_commands(guild=guild)
     #     await bot.tree.sync(guild=guild)
     # await bot.tree.sync()
