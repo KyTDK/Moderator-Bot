@@ -186,6 +186,9 @@ class Settings(commands.Cog):
         help_message += "`/remove_channel <name> <channel>`: Remove a channel from a setting.\n"
         help_message += "`/set_channel <name> <channel>`: Set a channel for a setting.\n"
         help_message += "`/get_setting <name>`: Get the current value of a server setting.\n"
+        help_message += "`/add_banned_word <word>`: Add a word to the banned words list.\n"
+        help_message += "`/remove_banned_word <word>`: Remove a word from the banned words list.\n"
+        help_message += "`/list_banned_words`: List all banned words.\n"
         help_message += "`/help`: Get help on settings.\n"
         await interaction.response.send_message(help_message, ephemeral=True)
 

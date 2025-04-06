@@ -111,3 +111,6 @@ class banned_words(commands.Cog):
             if word[0] in message.content:
                 await message.delete()
                 break
+
+async def setup(bot: commands.Bot):
+    await bot.add_cog(banned_words(bot))
