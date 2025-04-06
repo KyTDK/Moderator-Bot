@@ -12,6 +12,16 @@ intents.members = True
 intents.message_content = True
 bot = commands.Bot(command_prefix='/', intents=intents)
 
+async def make_announcement(guild_id, message):
+    guild = bot.get_guild(guild_id)
+    if guild:
+        channel = guild.system_channel  # Default system channel for announcements
+        if channel:
+            try:
+                await channel.send(message)
+            except discord.Forbidden:
+                print(f"Cannot send message to {channel.name} in {guild.name}. Check permissions.")
+
 @bot.event
 async def on_ready():
     mysql.initialize_database()
