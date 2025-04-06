@@ -47,11 +47,12 @@ class banned_words(commands.Cog):
         """Remove a word from the banned words list."""
         guild_id = interaction.guild.id
         # Check if the word exists in the database
-        existing_word = execute_query(
+        rows, _ = execute_query(
             "SELECT * FROM banned_words WHERE guild_id = %s AND word = %s",
             (guild_id, word),
             fetch_one=True
         )
+        existing_word = rows[0] if rows else None
         if not existing_word:
             await interaction.response.send_message(f"The word '{word}' is not banned.", ephemeral=True)
             return
@@ -81,14 +82,14 @@ class banned_words(commands.Cog):
 
         banned_words = [row[0] for row in rows]
 
-        if not banned_words or not banned_words[0] or len(banned_words[0]) == 0:
+        if not banned_words or len(banned_words) == 0:
             await interaction.response.send_message("No banned words found.", ephemeral=True)
             return
 
         file_content = "Banned Words:\n"
         if banned_words and len(banned_words) > 0:
             for word in banned_words:
-                file_content += f"- {word[0]}\n"
+                file_content += f"- {word}\n"
             file_buffer = io.StringIO(file_content)
             file = discord.File(file_buffer, filename="banned_words.txt")
 
