@@ -9,6 +9,7 @@ class Setting:
         self.description = description
         self.type = setting_type
         self.default = default
+        self.encrypted = False
         self.validator = validator
 
     def validate(self, value: Any) -> bool:
@@ -61,5 +62,12 @@ SETTINGS_SCHEMA = {
         description="Channels to exclude from detection.",
         setting_type=list[discord.TextChannel],
         default=[],
+    ),
+    "api-key": Setting(
+        name="api-key",
+        description="OPENAI API key for NSFW detection.",
+        setting_type=str,
+        default=None,
+        encrypted=True,
     ),
 }

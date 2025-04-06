@@ -1,5 +1,5 @@
-from nsfw_detector import predict
-model = predict.load_model('./nsfw_mobilenet2.224x224.h5')
+from cryptography.fernet import Fernet
 
-# Predict single image
-predict.classify(model, r"C:\Users\taber\Downloads\23164412.gif")
+# Only do this once and save securely (not in code!)
+key = Fernet.generate_key()
+print(key.decode())

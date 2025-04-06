@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from  modules.config.settings_schema import SETTINGS_SCHEMA
 import json
+from cryptography.fernet import Fernet
 
 load_dotenv()
 
@@ -14,6 +15,9 @@ MYSQL_CONFIG = {
     'password': os.getenv('MYSQL_PASSWORD'),
     'database': os.getenv('MYSQL_DATABASE')
 }
+
+FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
+fernet = Fernet(FERNET_KEY)
 
 def execute_query(query, params=(), *, commit=True, fetch_one=False, fetch_all=False, buffered=True, database=None, user=None, password=None):
     db = get_connection(database=database, user=user, password=password)
@@ -72,25 +76,32 @@ def get_settings(guild_id, settings_key=None):
         fetch_one=True
     )
     response = json.loads(settings[0]) if settings else json.loads("{}")
+    encypted = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
+    if encypted and settings_key in response:
+        response = fernet.decrypt(response[settings_key].encode()).decode()
     if response=="True":
         response = True
     elif response=="False":
         response = False
     return response if settings_key is None else response.get(settings_key, SETTINGS_SCHEMA.get(settings_key).default) if settings_key else response
 
-def update_settings(guild_id, settings_key, settings_value):
+def update_settings(guild_id, settings_key, settings_value, encrypt=False):
     """Update the settings for a guild."""
     settings = get_settings(guild_id)
     success = False
+
     if settings_value is None:
         success = settings.pop(settings_key, None) is not None
     else:
+        if encrypt:
+            settings_value = fernet.encrypt(settings_value.encode()).decode()
         settings[settings_key] = settings_value
         success = True
-    settings = json.dumps(settings)
+
+    settings_json = json.dumps(settings)
     execute_query(
         "INSERT INTO settings (guild_id, settings_json) VALUES (%s, %s) ON DUPLICATE KEY UPDATE settings_json = %s",
-        (guild_id, settings, settings)
+        (guild_id, settings_json, settings_json)
     )
     return success
         
