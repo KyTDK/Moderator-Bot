@@ -185,9 +185,14 @@ def moderator_api(text: str = None, image: str = None, guild_id: int = None) -> 
             image = f.read()
             image = base64.b64encode(image).decode("utf-8")
         input.append({"type": "image_url","image_url": {"url": "data:image/jpeg;base64,"+image}})
-    client = OpenAI(
-        api_key=mysql.get_settings(guild_id, "api-key") if guild_id and mysql.get_settings(guild_id, "api-key") else OPENAI_API_KEY 
-    )
+    try:
+        client = OpenAI(
+            api_key=mysql.get_settings(guild_id, "api-key") if guild_id and mysql.get_settings(guild_id, "api-key") else OPENAI_API_KEY 
+        )
+    except Exception:
+        print("Error initializing OpenAI client:")
+        print(traceback.format_exc())
+        return False
     response = client.moderations.create(model="omni-moderation-latest", input=input)
     # Check if there is at least one result, then check the categories of the first result.
     results = response.results[0]

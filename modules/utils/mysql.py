@@ -77,13 +77,14 @@ def get_settings(guild_id, settings_key=None):
     )
     response = json.loads(settings[0]) if settings else json.loads("{}")
     encypted = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
-    if encypted and settings_key in response:
-        response = fernet.decrypt(response[settings_key].encode()).decode()
     if response=="True":
         response = True
     elif response=="False":
         response = False
-    return response if settings_key is None else response.get(settings_key, SETTINGS_SCHEMA.get(settings_key).default) if settings_key else response
+    value = response if settings_key is None else response.get(settings_key, SETTINGS_SCHEMA.get(settings_key).default) if settings_key else response
+    if encypted and value:
+        value = fernet.decrypt(value.encode()).decode()
+    return value
 
 def update_settings(guild_id, settings_key, settings_value):
     """Update the settings for a guild."""
