@@ -88,7 +88,7 @@ async def process_video(
                 cv2.imwrite(frame_filename, image)
                 try:
                     # Process the extracted frame
-                    if await process_image(frame_filename):
+                    if await process_image(frame_filename, guld_id=message.guild.id):
                         if nsfw_callback:
                             file_to_send = discord.File(
                                 frame_filename, filename=os.path.basename(frame_filename)
@@ -119,7 +119,7 @@ async def is_nsfw(
         try:
             file_type = determine_file_type(temp_filename)
             if file_type == "Image":
-                if await process_image(temp_filename):
+                if await process_image(temp_filename, guld_id=message.guild.id):
                     if nsfw_callback:
                         file = discord.File(temp_filename, filename=attachment.filename)
                         await nsfw_callback(message.author, bot, "Uploading explicit content", file)
@@ -208,7 +208,7 @@ def nsfw_model(converted_filename: str):
             return True
     return False
 
-async def process_image(original_filename):
+async def process_image(original_filename, guld_id=None):
     converted_filename = os.path.join(os.getcwd(), 'converted_image.jpg')
     try:
         # Convert the image to JPEG using Pillow
@@ -224,7 +224,7 @@ async def process_image(original_filename):
         # Run the NSFW detector on the converted image
         try:
             if USE_MODERATOR_API:
-                return moderator_api(image=converted_filename)
+                return moderator_api(image=converted_filename, guild_id=guld_id)
             else:
                 return nsfw_model(converted_filename)
         except Exception:
