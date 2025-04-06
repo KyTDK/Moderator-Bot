@@ -21,8 +21,8 @@ async def on_ready():
     #     bot.tree.clear_commands(guild=guild)
     #     await bot.tree.sync(guild=guild)
     # await bot.tree.sync()
-    total_users = sum(guild.member_count for guild in bot.guilds)
-    print(f"Connected to {len(bot.guilds)} guilds with a total of {total_users} users.")
+    total_users_not_bots = sum(len([member for member in guild.members if not member.bot]) for guild in bot.guilds)
+    print(f"Connected to {len(bot.guilds)} guilds with a total of {total_users_not_bots} users.")
 
 @bot.event
 async def setup_hook():
