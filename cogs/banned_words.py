@@ -108,7 +108,7 @@ class banned_words(commands.Cog):
             return
 
         for word in banned_words:
-            if word[0] in message.content:
+            if word and word[0] in message.content:
                 await message.delete()
                 break
 
