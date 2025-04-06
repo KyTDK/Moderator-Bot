@@ -132,6 +132,13 @@ def initialize_database():
                     settings_json JSON
                 )
             """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS banned_words (
+                    guild_id BIGINT,
+                    word VARCHAR(255),
+                    PRIMARY KEY (guild_id, word)
+                )
+            """)
             db.commit()
     except Error as e:
         logging.error(f"Error initializing database: {e}")
