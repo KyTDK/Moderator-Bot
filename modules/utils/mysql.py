@@ -85,7 +85,7 @@ def get_settings(guild_id, settings_key=None):
         response = False
     return response if settings_key is None else response.get(settings_key, SETTINGS_SCHEMA.get(settings_key).default) if settings_key else response
 
-def update_settings(guild_id, settings_key, settings_value, encrypt=False):
+def update_settings(guild_id, settings_key, settings_value):
     """Update the settings for a guild."""
     settings = get_settings(guild_id)
     success = False
@@ -93,6 +93,7 @@ def update_settings(guild_id, settings_key, settings_value, encrypt=False):
     if settings_value is None:
         success = settings.pop(settings_key, None) is not None
     else:
+        encrypt = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
         if encrypt:
             settings_value = fernet.encrypt(settings_value.encode()).decode()
         settings[settings_key] = settings_value
