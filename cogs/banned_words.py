@@ -1,10 +1,8 @@
 from discord.ext import commands
-from discord import app_commands, Interaction, Member, Embed, Color
+from discord import app_commands, Interaction
 from modules.utils.mysql import execute_query
-from modules.utils.user_utils import has_role_or_permission
-from discord.app_commands.errors import MissingPermissions
-from modules.moderation import strike
 import io
+import re
 import discord
 
 class banned_words(commands.Cog):
@@ -28,7 +26,7 @@ class banned_words(commands.Cog):
             (guild_id, word),
             fetch_one=True
         )
-        if existing_word:
+        if existing_word[0]:
             await interaction.response.send_message(f"The word '{word}' is already banned.", ephemeral=True)
             return
 
@@ -75,20 +73,24 @@ class banned_words(commands.Cog):
         """List all banned words."""
         guild_id = interaction.guild.id
         # Retrieve all banned words from the database
-        banned_words = execute_query(
-            "SELECT word FROM banned_words WHERE guild_id = %s",
-            (guild_id,),
-            fetch_all=True
-        )
-        if not banned_words:
+        rows, _ = execute_query(
+                    "SELECT word FROM banned_words WHERE guild_id = %s",
+                    (guild_id,),
+                    fetch_all=True
+                )
+
+        banned_words = [row[0] for row in rows]
+
+        if not banned_words or not banned_words[0] or len(banned_words[0]) == 0:
             await interaction.response.send_message("No banned words found.", ephemeral=True)
             return
 
         file_content = "Banned Words:\n"
-        for word in banned_words:
-            file_content += f"- {word[0]}\n"
-        file_buffer = io.StringIO(file_content)
-        file = discord.File(file_buffer, filename="banned_words.txt")
+        if banned_words and len(banned_words) > 0:
+            for word in banned_words:
+                file_content += f"- {word[0]}\n"
+            file_buffer = io.StringIO(file_content)
+            file = discord.File(file_buffer, filename="banned_words.txt")
 
         await interaction.response.send_message(file=file, ephemeral=True)
 
@@ -99,18 +101,28 @@ class banned_words(commands.Cog):
             return
 
         guild_id = message.guild.id
-        banned_words = execute_query(
+        # unpack rows, ignore count
+        rows, _ = execute_query(
             "SELECT word FROM banned_words WHERE guild_id = %s",
             (guild_id,),
             fetch_all=True
         )
+
+        banned_words = [row[0] for row in rows]
+
         if not banned_words:
             return
 
-        for word in banned_words:
-            if word and word[0] in message.content:
-                await message.delete()
-                break
+        # build a regex that only matches whole words, case‑insensitive
+        pattern = r'\b(?:' + '|'.join(re.escape(w) for w in banned_words) + r')\b'
+        if re.search(pattern, message.content, re.IGNORECASE):
+            await message.delete()
+            await message.channel.send(
+                f"{message.author.mention}, your message contained a banned word and was removed."
+            )
+
+        # important: let commands still be processed
+        await self.bot.process_commands(message)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(banned_words(bot))
