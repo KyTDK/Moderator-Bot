@@ -17,6 +17,7 @@ import lottie
 import base64
 from modules.utils import mysql
 from openai import OpenAI
+import time
 
 USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 
@@ -175,34 +176,60 @@ async def is_nsfw(
                     os.remove(temp_location)
     return False    
 
-def moderator_api(text: str = None, image: str = None, guild_id: int = None) -> bool:
-    input = []
+
+def moderator_api(text: str = None,
+                  image_path: str = None,
+                  guild_id: int = None,
+                  retries: int = 2,
+                  backoff: float = 0.5) -> bool:
+    """Returns True if any moderation category (not excluded) is flagged."""
+    # 1) Build the payload
+    inputs = []
     if text:
-        input.append({"type": "text", "text": text})
-    if image:
-        # Get the image as a base64 string
-        with open(image, "rb") as f:
-            image = f.read()
-            image = base64.b64encode(image).decode("utf-8")
-        input.append({"type": "image_url","image_url": {"url": "data:image/jpeg;base64,"+image}})
-    try:
-        client = OpenAI(
-            api_key=mysql.get_settings(guild_id, "api-key") if guild_id and mysql.get_settings(guild_id, "api-key") else OPENAI_API_KEY 
-        )
-        response = client.moderations.create(model="omni-moderation-latest", input=input)
-    except Exception:
-        print("Error initializing OpenAI client:")
-        print(traceback.format_exc())
-        return False
-    # Check if there is at least one result, then check the categories of the first result.
-    results = response.results[0]
-    if results:
-        categories = results.categories
-        # Iterate over the attributes of the categories object
-        for category, is_flagged in categories.__dict__.items():
-            if is_flagged and category not in moderator_api_category_exclusions:
+        inputs.append({"type": "text", "text": text})
+    if image_path:
+        with open(image_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+        inputs.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
+        })
+
+    # 2) Initialize client
+    key = mysql.get_settings(guild_id, "api-key") or OPENAI_API_KEY
+    client = OpenAI(api_key=key)
+
+    # 3) Attempt the call, with a simple retry if results list is empty
+    for attempt in range(1, retries + 1):
+        try:
+            response = client.moderations.create(
+                model="omni-moderation-latest",
+                input=inputs
+            )
+        except Exception:
+            print(f"[moderator_api] API call error (attempt {attempt}):")
+            print(traceback.format_exc())
+            return False
+
+        results = getattr(response, "results", [])
+        if not results:
+            # no results returned — maybe transient; retry if we still can
+            if attempt < retries:
+                time.sleep(backoff)
+                continue
+            # final attempt, bail out
+            return False
+
+        # we have at least one result, inspect the first
+        first = results[0]
+        for category, flagged in vars(first.categories).items():
+            if flagged and category not in moderator_api_category_exclusions:
                 print(f"Category {category} is flagged.")
                 return True
+        # none of the categories (after exclusions) were flagged
+        return False
+
+    # shouldn't get here, but safe default
     return False
 
 def nsfw_model(converted_filename: str):
