@@ -37,7 +37,7 @@ SETTINGS_SCHEMA = {
         name="delete-offensive",
         description="Automatically delete messages containing offensive content, such as harassment or hate speech.",
         setting_type=bool,
-        default=True,
+        default=False,
     ),
     "delete-nsfw": Setting(
         name="delete-nsfw",
