@@ -183,7 +183,6 @@ def moderator_api(text: str = None,
                   retries: int = 2,
                   backoff: float = 0.5) -> bool:
     """Returns True if any moderation category (not excluded) is flagged."""
-    print(f"[moderator_api] Checking text: {text} and image: {image_path}")
     # 1) Build the payload
     inputs = []
     if text:
