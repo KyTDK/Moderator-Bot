@@ -86,7 +86,7 @@ class banned_words(commands.Cog):
 
         file_content = "Banned Words:\n"
         for word in banned_words:
-            content += f"- {word[0]}\n"
+            file_content += f"- {word[0]}\n"
         file_buffer = io.StringIO(file_content)
         file = discord.File(file_buffer, filename="banned_words.txt")
 
