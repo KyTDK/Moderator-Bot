@@ -36,7 +36,7 @@ class AggregatedModeration(commands.Cog):
             ]
             if len(self.user_message_cache[user_id]) > 0:
                 combined_content = " ".join([m.content for _, m in self.user_message_cache[user_id]])
-                if nsfw.moderator_api(combined_content, guild_id=message.guild.id):
+                if nsfw.moderator_api(text=combined_content, guild_id=message.guild.id):
                     # Delete all cached messages
                     for _, msg in self.user_message_cache[user_id]:
                         try:

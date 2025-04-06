@@ -183,6 +183,7 @@ def moderator_api(text: str = None,
                   retries: int = 2,
                   backoff: float = 0.5) -> bool:
     """Returns True if any moderation category (not excluded) is flagged."""
+    print(f"[moderator_api] Checking text: {text} and image: {image_path}")
     # 1) Build the payload
     inputs = []
     if text:
@@ -256,7 +257,7 @@ async def process_image(original_filename, guld_id=None):
         # Run the NSFW detector on the converted image
         try:
             if USE_MODERATOR_API:
-                return moderator_api(image=converted_filename, guild_id=guld_id)
+                return moderator_api(image_path=converted_filename, guild_id=guld_id)
             else:
                 return nsfw_model(converted_filename)
         except Exception:
