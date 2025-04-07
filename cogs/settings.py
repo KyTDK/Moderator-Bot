@@ -152,20 +152,29 @@ class Settings(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         schema = SETTINGS_SCHEMA.get(name)
-        if not schema or (schema.type != discord.TextChannel and schema.type != list[discord.TextChannel]):
-            await interaction.followup.send(f"Invalid setting name or type.", ephemeral=True)
+        if not schema or schema.type not in (discord.TextChannel, list[discord.TextChannel]):
+            await interaction.followup.send("Invalid setting name or type.", ephemeral=True)
             return
 
+        current = mysql.get_settings(interaction.guild.id, name)
+
         if schema.type == list[discord.TextChannel]:
-            # If the setting is a list of channels, remove the channel
-            current_channels = mysql.get_settings(interaction.guild.id, name) or []
-            if channel.id in current_channels:
-                current_channels.remove(channel.id)
-                mysql.update_settings(interaction.guild.id, name, current_channels)
-                await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
-            else:
+            channels = current or []
+            if channel.id not in channels:
                 await interaction.followup.send(f"`{channel.name}` is not in `{name}`.", ephemeral=True)
-            return
+                return
+
+            channels.remove(channel.id)
+            mysql.update_settings(interaction.guild.id, name, channels)
+            await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
+        else:
+            if current != channel.id:
+                await interaction.followup.send(f"`{channel.name}` is not set for `{name}`.", ephemeral=True)
+                return
+
+            mysql.update_settings(interaction.guild.id, name, None)
+            await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
+
 
     @app_commands.command(name="help", description="Get help on settings.")
     @app_commands.checks.has_permissions(moderate_members=True)
