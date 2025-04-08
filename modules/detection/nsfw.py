@@ -35,7 +35,7 @@ def determine_file_type(file_path):
         return 'Video'
     else:
         return 'Other'
-    
+#todo: enable user to set the categories to exclude from the nsfw check
 moderator_api_category_exclusions = {
     "violence", # Exclude violence category from the NSFW check as triggers too many false positives
     "self_harm", # Exclude self-harm category from the NSFW check as triggers too many false positives
