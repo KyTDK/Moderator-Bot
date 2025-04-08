@@ -297,8 +297,10 @@ class Settings(commands.Cog):
 
         strike_actions = mysql.get_settings(interaction.guild.id, "strike-actions") or {}
 
+        number_of_strikes = str(number_of_strikes)
+
         # Update the dictionary, telling the user the new and old values
-        if str(number_of_strikes) in strike_actions:
+        if number_of_strikes in strike_actions:
             old_action = strike_actions[number_of_strikes]
             strike_actions[number_of_strikes] = (action, duration)
             await interaction.followup.send(
