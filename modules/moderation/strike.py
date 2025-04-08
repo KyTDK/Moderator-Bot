@@ -49,8 +49,7 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
     # strike_settings = {"1": ["timeout", "1d"], "2": ["Timeout", "7d"], "3": ["Ban", "-1"], "1": ["timeout", "1d"]}}
     available_strikes = sorted(strike_settings.keys(), key=int)
 
-    action, duration_str = strike_settings.get(str(strike_count), None)
-    print(f"Strike count: {strike_count}, Action: {action}, Duration: {duration_str}")
+    action, duration_str = strike_settings.get(str(strike_count), (None, None))
 
     strikes_for_ban = get_ban_threshold(strike_settings)
     strikes_till_ban =  strikes_for_ban - strike_count if strikes_for_ban is not None else None

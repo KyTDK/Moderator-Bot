@@ -75,12 +75,12 @@ SETTINGS_SCHEMA = {
     "strike-actions": Setting(
         name="strike-actions",
         description="Actions to take for each strike level.",
-        setting_type=dict[int, tuple[str, str]],
+        setting_type=dict[str, tuple[str, str]],
         hidden=True,
         default={
-            1: ("timeout", "1d"),
-            2: ("timeout", "7d"),
-            3: ("ban", "-1"), 
+            "1": ("timeout", "1d"),
+            "2": ("timeout", "7d"),
+            "3": ("ban", "-1"), 
         },
     ),
 }
