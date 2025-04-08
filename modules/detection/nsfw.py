@@ -177,7 +177,7 @@ async def is_nsfw(
     return False    
 
 
-def moderator_api(text: str = None,
+async def moderator_api(text: str = None,
                   image_path: str = None,
                   guild_id: int = None,
                   retries: int = 2,
@@ -202,7 +202,7 @@ def moderator_api(text: str = None,
     # 3) Attempt the call, with a simple retry if results list is empty
     for attempt in range(1, retries + 1):
         try:
-            response = client.moderations.create(
+            response = await client.moderations.create(
                 model="omni-moderation-latest",
                 input=inputs
             )
@@ -256,7 +256,7 @@ async def process_image(original_filename, guld_id=None):
         # Run the NSFW detector on the converted image
         try:
             if USE_MODERATOR_API:
-                return moderator_api(image_path=converted_filename, guild_id=guld_id)
+                return await moderator_api(image_path=converted_filename, guild_id=guld_id)
             else:
                 return nsfw_model(converted_filename)
         except Exception:
