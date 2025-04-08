@@ -16,7 +16,7 @@ from lottie.exporters.gif import export_gif
 import lottie
 import base64
 from modules.utils import mysql
-from openai import OpenAI
+from openai import AsyncOpenAI
 import time
 
 USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
@@ -197,7 +197,7 @@ def moderator_api(text: str = None,
 
     # 2) Initialize client
     key = mysql.get_settings(guild_id, "api-key") or OPENAI_API_KEY
-    client = OpenAI(api_key=key)
+    client = AsyncOpenAI(api_key=key)
 
     # 3) Attempt the call, with a simple retry if results list is empty
     for attempt in range(1, retries + 1):
