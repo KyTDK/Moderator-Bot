@@ -15,7 +15,7 @@ class Settings(commands.Cog):
     non_channel_choices_with_hidden = [
         app_commands.Choice(name=setting.name, value=setting_name)
         for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type != discord.TextChannel and setting.type != list[discord.TextChannel] and setting.hidden is False
+        if setting.type != discord.TextChannel and setting.type != list[discord.TextChannel] and setting.hidden is True
     ]
     non_channel_choices_all = [
         app_commands.Choice(name=setting.name, value=setting_name)
@@ -27,7 +27,7 @@ class Settings(commands.Cog):
     channel_choices = [
         app_commands.Choice(name=setting.name, value=setting_name)
         for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type == discord.TextChannel or setting.type == list[discord.TextChannel] and setting.hidden is False
+        if setting.type == discord.TextChannel or setting.type == list[discord.TextChannel]
     ]
 
     settings_group = app_commands.Group(
@@ -183,6 +183,7 @@ class Settings(commands.Cog):
 
 
     @app_commands.command(name="help", description="Get help on settings.")
+    @app_commands.default_permissions(moderate_members=True)
     async def help(self, interaction: Interaction):
         """Provide help information for settings, showing description, name and expected type."""
         help_message = "Available settings:\n"
