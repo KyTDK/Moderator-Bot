@@ -4,12 +4,13 @@ from typing import Any, Callable, Optional
 import discord
 
 class Setting:
-    def __init__(self, name: str, description: str, setting_type: type, default: Any = None, encrypted: bool = False, validator: Optional[Callable] = None):
+    def __init__(self, name: str, description: str, setting_type: type, default: Any = None, encrypted: bool = False, hidden: bool = False, validator: Optional[Callable] = None):
         self.name = name
         self.description = description
         self.type = setting_type
         self.default = default
         self.encrypted = encrypted
+        self.hidden = hidden
         self.validator = validator
 
     def validate(self, value: Any) -> bool:
@@ -69,5 +70,17 @@ SETTINGS_SCHEMA = {
         setting_type=str,
         default=None,
         encrypted=True,
+    ),
+    # strike actions, type is dict[int, str]
+    "strike-actions": Setting(
+        name="strike-actions",
+        description="Actions to take for each strike level.",
+        setting_type=dict[int, tuple[str, str]],
+        hidden=True,
+        default={
+            1: ("timeout", "1d"),
+            2: ("timeout", "7d"),
+            3: ("ban", "-1"), 
+        },
     ),
 }

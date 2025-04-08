@@ -4,6 +4,7 @@ from modules.utils.mysql import execute_query
 from modules.utils.user_utils import has_role_or_permission
 from discord.app_commands.errors import MissingPermissions
 from modules.moderation import strike
+import discord
 
 
 class moderation(commands.Cog):
@@ -12,12 +13,20 @@ class moderation(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    
+    strike_group = app_commands.Group(
+        name="strikes",
+        description="Strike management commands.",
+        default_permissions=discord.Permissions(moderate_members=True),
+        guild_only=True
+    )
+
     #strike
     @app_commands.command(
         name="strike",
         description="Strike a specific user."
     )
-    @app_commands.checks.has_permissions(moderate_members=True)
+    @app_commands.default_permissions(moderate_members=True)
     async def strike(self, interaction: Interaction, user: Member, reason: str):
         """strike a specific user."""
         if await strike.strike(user=user, bot=self.bot, reason=reason, interaction=interaction):
@@ -36,11 +45,10 @@ class moderation(commands.Cog):
             await interaction.followup.send("An error occured, please try again")
     
     # Get strikes
-    @app_commands.command(
-        name="get_strikes",
+    @strike_group.command(
+        name="get",
         description="Get strikes of a specific user."
     )
-    @has_role_or_permission("Modder", "Trial Moderator", "Intern Modder")
     async def get_strikes(self, interaction: Interaction, user: Member):
         """Retrieve strikes for a specified user."""
         # Defer the response to acknowledge the interaction
@@ -75,11 +83,10 @@ class moderation(commands.Cog):
         await interaction.followup.send(embed=embed)
     
     #Clear strikes
-    @app_commands.command(
-        name="clear_strikes",
+    @strike_group.command(
+        name="clear",
         description="Clear all strikes of a specific user."
     )
-    @app_commands.checks.has_permissions(moderate_members=True)
     async def clear_strikes(self, interaction: Interaction, user: Member):
         """Clear all strikes for a specified user."""
         # Defer the response to acknowledge the interaction
@@ -104,11 +111,11 @@ class moderation(commands.Cog):
         name="intimidate",
         description="Intimidate the channel, or a specific user."
     )
-    @has_role_or_permission("Modder", "Trial Moderator", "Intern Modder")
     @app_commands.describe(
         user="The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
         channel="If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
     )
+    @app_commands.default_permissions(moderate_members=True)
     async def intimidate(self, interaction: Interaction, user: Member = None, channel: bool = False):
         """Intimidate the user."""
         # Create an embed with an intimidating message
@@ -148,27 +155,6 @@ class moderation(commands.Cog):
             # Send the embed to the channel
             await interaction.channel.send(embed=embed)
         await interaction.response.send_message("Sent message.", ephemeral=True) 
-
-    # custom error handler for missing permissions
-    @commands.Cog.listener()
-    async def on_app_command_error(self, interaction: Interaction, error: app_commands.AppCommandError):
-        # intercept permission errors before Discord’s default
-        if isinstance(error, MissingPermissions):
-            # send only our custom message
-            if not interaction.response.is_done():
-                await interaction.response.send_message(
-                    "You don't have permission to run this command.",
-                    ephemeral=True
-                )
-            else:
-                await interaction.followup.send(
-                    "You don't have permission to run this command.",
-                    ephemeral=True
-                )
-            return
-
-        # let everything else fall back to the default handler
-        await super().on_app_command_error(interaction, error)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(moderation(bot))

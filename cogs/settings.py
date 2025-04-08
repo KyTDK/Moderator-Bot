@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
 import discord
-from modules.utils import mysql
+from modules.utils import mysql, time
 from modules.config.settings_schema import SETTINGS_SCHEMA
 from discord.app_commands import MissingPermissions, AppCommandError
 
@@ -10,11 +10,14 @@ class Settings(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        bot.tree.on_error = self.on_app_command_error
-
 
     # List to hold choices for non-channel settings
-    non_channel_choices = [
+    non_channel_choices_with_hidden = [
+        app_commands.Choice(name=setting.name, value=setting_name)
+        for setting_name, setting in SETTINGS_SCHEMA.items()
+        if setting.type != discord.TextChannel and setting.type != list[discord.TextChannel] and setting.hidden is False
+    ]
+    non_channel_choices_all = [
         app_commands.Choice(name=setting.name, value=setting_name)
         for setting_name, setting in SETTINGS_SCHEMA.items()
         if setting.type != discord.TextChannel and setting.type != list[discord.TextChannel]
@@ -24,12 +27,18 @@ class Settings(commands.Cog):
     channel_choices = [
         app_commands.Choice(name=setting.name, value=setting_name)
         for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type == discord.TextChannel or setting.type == list[discord.TextChannel]
+        if setting.type == discord.TextChannel or setting.type == list[discord.TextChannel] and setting.hidden is False
     ]
+
+    settings_group = app_commands.Group(
+        name="settings",
+        description="Manage server settings.",
+        guild_only=True,
+        default_permissions=discord.Permissions(manage_guild=True),
+    )
     
-    @app_commands.command(name="remove_setting", description="Remove a server setting.")
-    @app_commands.choices(name=non_channel_choices)
-    @app_commands.checks.has_permissions(moderate_members=True)
+    @settings_group.command(name="remove", description="Remove a server setting.")
+    @app_commands.choices(name=non_channel_choices_all)
     async def remove_setting(self, interaction: Interaction, name: str):
         """Remove a server setting."""
         schema = SETTINGS_SCHEMA.get(name)
@@ -47,9 +56,8 @@ class Settings(commands.Cog):
         )
 
 
-    @app_commands.command(name="set_setting", description="Set a server setting.")
-    @app_commands.choices(name=non_channel_choices)
-    @app_commands.checks.has_permissions(moderate_members=True)
+    @settings_group.command(name="set", description="Set a server setting.")
+    @app_commands.choices(name=non_channel_choices_with_hidden)
     async def set_setting(self, interaction: Interaction, name: str, value: str):
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
@@ -115,9 +123,8 @@ class Settings(commands.Cog):
                 ephemeral=True
             )
 
-    @app_commands.command(name="set_channel", description="Set a channel for a setting.")
+    @settings_group.command(name="channel_set", description="Set a channel for a setting.")
     @app_commands.choices(name=channel_choices)
-    @app_commands.checks.has_permissions(moderate_members=True)
     async def set_channel(self, interaction: Interaction, name: str, channel: discord.TextChannel):
         schema = SETTINGS_SCHEMA.get(name)
         if not schema or (schema.type != discord.TextChannel and schema.type != list[discord.TextChannel]):
@@ -145,9 +152,8 @@ class Settings(commands.Cog):
             f"Updated `{name}` to channel `{channel.name}`.", ephemeral=True
         )
     
-    @app_commands.command(name="remove_channel", description="Remove a channel from a setting.")
+    @settings_group.command(name="channel_remove", description="Remove a channel from a setting.")
     @app_commands.choices(name=channel_choices)
-    @app_commands.checks.has_permissions(moderate_members=True)    
     async def remove_channel(self, interaction: Interaction, name: str, channel: discord.TextChannel):
         await interaction.response.defer(ephemeral=True)
 
@@ -177,7 +183,6 @@ class Settings(commands.Cog):
 
 
     @app_commands.command(name="help", description="Get help on settings.")
-    @app_commands.checks.has_permissions(moderate_members=True)
     async def help(self, interaction: Interaction):
         """Provide help information for settings, showing description, name and expected type."""
         help_message = "Available settings:\n"
@@ -186,27 +191,30 @@ class Settings(commands.Cog):
                 f"**{setting.name}**: {setting.description} (Type: {setting.type.__name__})\n"
             )
         help_message += "\nAvailable commands:\n"
-        help_message += "`/set_setting <name> <value>`: Set a server setting.\n"
-        help_message += "`/remove_setting <name>`: Remove a server setting.\n"
-        help_message += "`/remove_channel <name> <channel>`: Remove a channel from a setting.\n"
-        help_message += "`/set_channel <name> <channel>`: Set a channel for a setting.\n"
-        help_message += "`/get_setting <name>`: Get the current value of a server setting.\n"
-        help_message += "`/add_banned_word <word>`: Add a word to the banned words list.\n"
-        help_message += "`/remove_banned_word <word>`: Remove a word from the banned words list.\n"
-        help_message += "`/list_banned_words`: List all banned words.\n"
+        help_message += "`/settings get <name>`: Get the current value of a server setting.\n"
+        help_message += "`/settings set <name> <value>`: Set a server setting.\n"
+        help_message += "`/settings remove <name>`: Remove a server setting.\n"
+        help_message += "`/settings channel_remove <name> <channel>`: Remove a channel from a setting.\n"
+        help_message += "`/settings channel_set <name> <channel>`: Set a channel for a setting.\n"
+        help_message += "`/settings strike <number_of_strikes> <action> <duration>`: Configure strike actions.\n"
+        help_message += "`/strike <user>`: Strike a user.\n"
+        help_message += "`/strikes get <user>`: Get strikes of a user.\n"
+        help_message += "`/bannedwords add <word>`: Add a word to the banned words list.\n"
+        help_message += "`/bannedwords remove <word>`: Remove a word from the banned words list.\n"
+        help_message += "`/bannedwords list`: List all banned words.\n"
         help_message += "`/help`: Get help on settings.\n"
         # support discord servrer link
         help_message += "\nPost suggestions and bugs on the support discord server: [Support Server](https://discord.gg/invite/33VcwjfEXC)"
         await interaction.response.send_message(help_message, ephemeral=True)
 
-    @app_commands.command(name="get_setting", description="Get the current value of a server setting.")
-    @app_commands.choices(name=non_channel_choices+channel_choices)
-    @app_commands.checks.has_permissions(moderate_members=True)
+    @settings_group.command(name="get", description="Get the current value of a server setting.")
+    @app_commands.choices(name=non_channel_choices_all+channel_choices)
     async def get_setting(self, interaction: Interaction, name: str):
         """Get the current value of a server setting."""
+        await interaction.response.defer(ephemeral=True)
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"Invalid setting name.",
                 ephemeral=True,
             )
@@ -214,37 +222,97 @@ class Settings(commands.Cog):
 
         # Retrieve the current value from the database
         current_value = mysql.get_settings(interaction.guild.id, name)
+        type = schema.type
         if current_value is None:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"`{name}` is not set.", ephemeral=True
             )
         else:
-            await interaction.response.send_message(
-                f"`{name}` is currently set to `{current_value}`.", ephemeral=True
-            )
-
-    async def on_app_command_error(
-    self,
-    interaction: Interaction,
-    error: AppCommandError):
-        # intercept permission errors before Discord’s default
-        if isinstance(error, MissingPermissions):
-            # send only our custom message
-            if not interaction.response.is_done():
-                await interaction.response.send_message(
-                    "You don't have permission to run this command.",
-                    ephemeral=True
+            # If the setting is a list of channels, convert to channel mentions
+            if type == list[discord.TextChannel]:
+                # Convert channel IDs to mentions
+                channel_mentions = [f"<#{channel_id}>" for channel_id in current_value]
+                await interaction.followup.send(
+                    f"`{name}` is currently set to {', '.join(channel_mentions)}.", ephemeral=True
+                )
+            elif type == discord.TextChannel:
+                # Convert channel ID to mention
+                channel_mention = f"<#{current_value}>"
+                await interaction.followup.send(
+                    f"`{name}` is currently set to {channel_mention}.", ephemeral=True
+                )
+            elif type == dict[int, tuple[str, str]]:
+                # Convert the dictionary to a string representation
+                strike_actions = ", ".join(
+                    [f"{k}: {v[0]} {v[1] or ''}" for k, v in current_value.items()]
+                )
+                await interaction.followup.send(
+                    f"`{name}` is currently set to `{strike_actions}`.", ephemeral=True
                 )
             else:
                 await interaction.followup.send(
-                    "You don't have permission to run this command.",
-                    ephemeral=True
+                    f"`{name}` is currently set to `{current_value}`.", ephemeral=True
                 )
+
+    # Command to configure strike actions, allowing user to define punishment for x amount of strikes, so it will be a list of actions they can define
+    @settings_group.command(name="strike", description="Configure strike actions.")
+    @app_commands.describe(
+        number_of_strikes="Number of strikes required to trigger the action.",
+        action="Action to take (ban, kick, timeout).",
+        duration="Duration for mute action (e.g., 1h, 30m, 30d). Leave empty for permanent or if not applicable.",
+    )
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(name="Permanent ban", value="ban"),
+            app_commands.Choice(name="kick", value="kick"),
+            app_commands.Choice(name="timeout", value="timeout"),
+        ]
+    )
+    async def strike_action(self, interaction: Interaction, number_of_strikes: int, action: str, duration: str = None):
+        """Configure strike actions."""
+        await interaction.response.defer(ephemeral=True)
+        # Validate action and duration
+        valid_actions = ["ban", "kick", "timeout"]
+        if action not in valid_actions:
+            await interaction.followup.send(
+                f"Invalid action. Valid actions are: {', '.join(valid_actions)}.",
+                ephemeral=True,
+            )
             return
 
-        # let everything else fall back to the default handler
-        await super().on_app_command_error(interaction, error)
+        if action == "timeout" and duration is None:
+            await interaction.followup.send(
+                "Duration is required for timeout action.",
+                ephemeral=True,
+            )
+            return
+        
+        if time.parse_duration(duration) is None and duration is not None:
+            await interaction.followup.send(
+                "Invalid duration format. Use formats like 1h, 30m, 30d.",
+                ephemeral=True,
+            )
+            return
 
+        strike_actions = mysql.get_settings(interaction.guild.id, "strike-actions") or {}
+        print(strike_actions)
+        # Update the dictionary, telling the user the new and old values
+        if number_of_strikes in strike_actions:
+            old_action = strike_actions[number_of_strikes]
+            strike_actions[number_of_strikes] = (action, duration)
+            await interaction.followup.send(
+                f"Updated strike action for `{number_of_strikes}` strikes: `{old_action}` -> `{action}` {duration or ''}.",
+                ephemeral=True,
+            )
+        else:
+            strike_actions[number_of_strikes] = (action, duration)
+            await interaction.followup.send(
+                f"Added strike action for `{number_of_strikes}` strikes: `{action}` {duration or ''}.",
+                ephemeral=True,
+            )
+
+        # Store the strike action in the database
+        mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Settings(bot))

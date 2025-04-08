@@ -11,12 +11,18 @@ class banned_words(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # Add a banned word
-    @app_commands.command(
-        name="add_banned_word",
+    
+    bannedwords_group = app_commands.Group(
+        name="bannedwords",
+        description="Banned words management commands.",
+        default_permissions=discord.Permissions(manage_messages=True),
+        guild_only=True
+    )
+
+    @bannedwords_group.command(
+        name="add",
         description="Add a word to the banned words list."
     )
-    @app_commands.checks.has_permissions(moderate_members=True)
     async def add_banned_word(self, interaction: Interaction, word: str):
         """Add a word to the banned words list."""
         guild_id = interaction.guild.id
@@ -38,11 +44,10 @@ class banned_words(commands.Cog):
         await interaction.response.send_message(f"The word '{word}' has been added to the banned words list.", ephemeral=True)
 
     # Remove a banned word
-    @app_commands.command(
-        name="remove_banned_word",
+    @bannedwords_group.command(
+        name="remove",
         description="Remove a word from the banned words list."
     )
-    @app_commands.checks.has_permissions(moderate_members=True)
     async def remove_banned_word(self, interaction: Interaction, word: str):
         """Remove a word from the banned words list."""
         guild_id = interaction.guild.id
@@ -65,11 +70,10 @@ class banned_words(commands.Cog):
         await interaction.response.send_message(f"The word '{word}' has been removed from the banned words list.", ephemeral=True)
     
     # List banned words (in a text file)
-    @app_commands.command(
-        name="list_banned_words",
+    @bannedwords_group.command(
+        name="list",
         description="List all banned words."
     )
-    @app_commands.checks.has_permissions(moderate_members=True)
     async def list_banned_words(self, interaction: Interaction):
         """List all banned words."""
         guild_id = interaction.guild.id
