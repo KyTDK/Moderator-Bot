@@ -50,10 +50,14 @@ class Settings(commands.Cog):
             return
 
         # Remove the setting from the database
-        mysql.update_settings(interaction.guild.id, name, None)
-        await interaction.response.send_message(
-            f"Removed `{name}` setting.", ephemeral=True
-        )
+        if mysql.update_settings(interaction.guild.id, name, None):
+            await interaction.response.send_message(
+                f"Removed `{name}` setting.", ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                f"`{name}` has already been removed.", ephemeral=True
+            )
 
 
     @settings_group.command(name="set", description="Set a server setting.")
