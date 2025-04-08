@@ -12,10 +12,10 @@ class Settings(commands.Cog):
         self.bot = bot
 
     # List to hold choices for non-channel settings
-    non_channel_choices_with_hidden = [
+    non_channel_choices_without_hidden = [
         app_commands.Choice(name=setting.name, value=setting_name)
         for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type != discord.TextChannel and setting.type != list[discord.TextChannel] and setting.hidden is True
+        if setting.type != discord.TextChannel and setting.type != list[discord.TextChannel] and setting.hidden is False
     ]
     non_channel_choices_all = [
         app_commands.Choice(name=setting.name, value=setting_name)
@@ -61,7 +61,7 @@ class Settings(commands.Cog):
 
 
     @settings_group.command(name="set", description="Set a server setting.")
-    @app_commands.choices(name=non_channel_choices_with_hidden)
+    @app_commands.choices(name=non_channel_choices_without_hidden)
     async def set_setting(self, interaction: Interaction, name: str, value: str):
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
