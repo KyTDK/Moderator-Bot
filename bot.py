@@ -12,8 +12,7 @@ intents.members = True
 intents.message_content = True
 bot = commands.Bot(command_prefix='/', intents=intents)
 
-async def make_announcement(guild_id, message):
-    guild = bot.get_guild(guild_id)
+async def make_announcement(guild, message):
     if guild:
         channel = guild.system_channel  # Default system channel for announcements
         if channel:
@@ -28,10 +27,6 @@ async def on_ready():
     # show info of guilds the bot is in
     for guild in bot.guilds:
         print(f"Connected to {guild.name} (ID: {guild.id}) with {len([member for member in guild.members if not member.bot])} members ")
-        
-        # bot.tree.clear_commands(guild=guild)
-        # await bot.tree.sync(guild=guild)
-    
     total_users_not_bots = sum(len([member for member in guild.members if not member.bot]) for guild in bot.guilds)
     print(f"Connected to {len(bot.guilds)} guilds with a total of {total_users_not_bots} users.")
 

@@ -3,6 +3,8 @@ from datetime import timedelta
 
 def parse_duration(duration_str):
     # Strip any leading/trailing whitespace
+    if duration_str is None:
+        return None
     duration_str = duration_str.strip()
     
     # Match digits followed by time units (s, m, h, d, w, mo, y)
