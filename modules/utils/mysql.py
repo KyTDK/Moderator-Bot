@@ -3,10 +3,12 @@ import mysql.connector
 from mysql.connector import Error
 import os
 from dotenv import load_dotenv
-from  modules.config.settings_schema import SETTINGS_SCHEMA
+from modules.config.settings_schema import SETTINGS_SCHEMA
 import json
 from cryptography.fernet import Fernet
 from rapidfuzz import fuzz
+import imagehash
+from PIL import Image
 
 load_dotenv()
 
@@ -23,7 +25,7 @@ fernet = Fernet(FERNET_KEY)
 def execute_query(query, params=(), *, commit=True, fetch_one=False, fetch_all=False, buffered=True, database=None, user=None, password=None):
     db = get_connection(database=database, user=user, password=password)
     if not db:
-        return None
+        return None, 0
     try:
         with db.cursor(buffered=buffered) as cursor:
             cursor.execute(query, params)
@@ -63,11 +65,11 @@ def get_connection(database=None, user=None, password=None, use_database=True):
         return None
     
 def get_strike_count(user_id, guild_id):
-    result = execute_query(
+    result, _ = execute_query(
         "SELECT COUNT(*) FROM strikes WHERE user_id = %s AND guild_id = %s",
         (user_id, guild_id,), fetch_one=True
     )
-    return result[0][0] if result else 0
+    return result[0] if result else 0
 
 def get_settings(guild_id, settings_key=None):
     """Retrieve the settings for a guild."""
@@ -77,13 +79,13 @@ def get_settings(guild_id, settings_key=None):
         fetch_one=True
     )
     response = json.loads(settings[0]) if settings else json.loads("{}")
-    encypted = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
-    if response=="True":
+    encrypted = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
+    if response == "True":
         response = True
-    elif response=="False":
+    elif response == "False":
         response = False
-    value = response if settings_key is None else response.get(settings_key, SETTINGS_SCHEMA.get(settings_key).default) if settings_key else response
-    if encypted and value:
+    value = response if settings_key is None else response.get(settings_key, SETTINGS_SCHEMA.get(settings_key).default)
+    if encrypted and value:
         value = fernet.decrypt(value.encode()).decode()
     return value
 
@@ -108,21 +110,24 @@ def update_settings(guild_id, settings_key, settings_value):
     )
     return success
 
-def check_offensive_message(message, threshold=90):
+def check_offensive_message(message, threshold=80):
     """
     Checks if a given message is similar to a known offensive message in the cache.
-    Returns (True, category) if found, else (False, None).
+    Returns the category if found, else None.
     """
-    result, _ = execute_query("SELECT message, category FROM offensive_cache WHERE category IS NOT NULL", fetch_all=True)
+    result, _ = execute_query(
+        "SELECT message, category FROM offensive_cache WHERE category IS NOT NULL",
+        fetch_all=True
+    )
     if not result:
         return None
 
     for cached_msg, category in result:
         similarity = fuzz.ratio(message.lower(), cached_msg.lower())
+        print(similarity)
         if similarity >= threshold:
             return category
     return None
-
 
 def cache_offensive_message(message, category):
     """
@@ -135,7 +140,60 @@ def cache_offensive_message(message, category):
     """
     _, rows = execute_query(query, (message, category))
     return rows > 0
+
+def check_phash(image_path, threshold=0.8):
+    """
+    Checks if a given perceptual hash is similar to any offensive ones.
+    
+    Parameters:
+        image_path (str): Path to the image file.
+        threshold (float): The minimum similarity required (0 to 1 range).
         
+    Returns:
+        category (str): The category from the cache if similarity exceeds threshold.
+                        Returns None if no match is found.
+    """
+    # Calculate the pHash of the input image.
+    checking_message_hash = imagehash.phash(Image.open(image_path))
+    
+    # Execute the query to retrieve hashes and their associated categories.
+    # Assuming that phash_cache table has columns 'phash' (as hex string) and 'category'
+    result, _ = execute_query(
+        "SELECT phash, category FROM phash_cache", 
+        fetch_all=True
+    )
+    
+    if not result:
+        return None
+
+    for cached_phash, category in result:
+        # Convert the stored hexadecimal hash to an ImageHash object.
+        cached_hash = imagehash.hex_to_hash(cached_phash)
+        # Calculate the Hamming distance between the two hashes.
+        hamming_distance = checking_message_hash - cached_hash
+        # Since typical pHash is 8x8 bits, there are 64 bits total.
+        similarity = 1 - (hamming_distance / 64.0)
+        # Check if the similarity meets the threshold.
+        if similarity >= threshold:
+            return category
+
+    return None
+
+def cache_phash(phash_value, category):
+    """
+    Caches an image identifier and its corresponding perceptual hash into the phash_cache table.
+    Returns True if a new record was inserted or the record was updated.
+    """
+    query = """
+        INSERT INTO phash_cache (phash, category)
+        VALUES (%s, %s)
+        ON DUPLICATE KEY UPDATE phash = VALUES(phash)
+    """
+    _, rows = execute_query(query, (phash_value, category))
+    return rows > 0
+
+# --- Database Initialization Function ---
+
 def initialize_database():
     """Initialize the database schema."""
     db = get_connection(use_database=False)
@@ -153,7 +211,7 @@ def initialize_database():
                     reason VARCHAR(255),
                     striked_by_id BIGINT,
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                           )
+                )
             """)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS settings (
@@ -174,6 +232,13 @@ def initialize_database():
                     message TEXT NOT NULL,
                     category VARCHAR(255) DEFAULT NULL,
                     UNIQUE KEY unique_message (message(255))
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS phash_cache (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    phash VARCHAR(255) NOT NULL UNIQUE,
+                    category VARCHAR(255) DEFAULT NULL
                 )
             """)
             db.commit()

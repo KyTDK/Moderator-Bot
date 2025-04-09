@@ -2,6 +2,7 @@ import os
 import traceback
 from nudenet import NudeDetector
 from PIL import Image
+import imagehash
 import cv2
 import filetype
 import uuid
@@ -256,10 +257,17 @@ async def process_image(original_filename, guld_id=None):
 
         # Run the NSFW detector on the converted image
         try:
-            if USE_MODERATOR_API:
-                return await moderator_api(image_path=converted_filename, guild_id=guld_id) is not None
-            else:
-                return nsfw_model(converted_filename)
+            phash = imagehash.phash(Image.open(original_filename))
+            category = mysql.check_phash(phash)
+
+            # Cache all
+            mysql.cache_phash(phash, category)
+            
+            if category is None:
+                if USE_MODERATOR_API:
+                    return await moderator_api(image_path=converted_filename, guild_id=guld_id) is not None
+                else:
+                    return nsfw_model(converted_filename)
         except Exception:
             print("Error during detection:")
             print(traceback.format_exc())
