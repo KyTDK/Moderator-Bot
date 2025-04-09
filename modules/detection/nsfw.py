@@ -239,8 +239,8 @@ def nsfw_model(converted_filename: str):
     print(results)
     for result in results:
         if result['class'] in nsfw_labels and result['score'] >= 0.8:
-            return True
-    return False
+            return result['class']
+    return None
 
 async def process_image(original_filename, guld_id=None):
     converted_filename = os.path.join(os.getcwd(), 'converted_image.jpg')
@@ -259,15 +259,16 @@ async def process_image(original_filename, guld_id=None):
         try:
             phash = imagehash.phash(Image.open(original_filename))
             category = mysql.check_phash(phash)
-
-            # Cache all
-            mysql.cache_phash(phash, category)
             
             if category is None:
                 if USE_MODERATOR_API:
-                    return await moderator_api(image_path=converted_filename, guild_id=guld_id) is not None
+                    category = await moderator_api(image_path=converted_filename, guild_id=guld_id)
                 else:
-                    return nsfw_model(converted_filename)
+                    category = nsfw_model(converted_filename)
+                
+            # Cache all
+            mysql.cache_phash(phash, category)
+            return category is not None
         except Exception:
             print("Error during detection:")
             print(traceback.format_exc())
