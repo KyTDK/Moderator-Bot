@@ -187,15 +187,22 @@ async def moderator_api(text: str = None,
     """Returns True if any moderation category (not excluded) is flagged."""
     # 1) Build the payload
     inputs = []
-    if text:
-        inputs.append({"type": "text", "text": text})
-    if image_path:
-        with open(image_path, "rb") as f:
-            b64 = base64.b64encode(f.read()).decode("utf-8")
-        inputs.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
-        })
+    if text and not image_path: # text-moderation
+        inputs = text
+    
+    # Only add the image payload if image_path is not None.
+    if image_path is not None:
+        try:
+            with open(image_path, "rb") as f:
+                img_data = f.read()
+            b64 = base64.b64encode(img_data).decode("utf-8")
+            inputs.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
+            })
+        except Exception as e:
+            print(f"Error opening image {image_path}: {e}")
+            # Optionally, you can decide to continue without the image or return an error.
 
     # 2) Initialize client
     key = mysql.get_settings(guild_id, "api-key") or OPENAI_API_KEY

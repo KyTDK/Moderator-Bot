@@ -110,15 +110,15 @@ def update_settings(guild_id, settings_key, settings_value):
     )
     return success
 
-def check_offensive_message(message, threshold=80):
+def check_offensive_message(message, threshold=80, not_null = False):
     """
     Checks if a given message is similar to a known offensive message in the cache.
     Returns the category if found, else None.
     """
-    result, _ = execute_query(
-        "SELECT message, category FROM offensive_cache WHERE category IS NOT NULL",
-        fetch_all=True
-    )
+    query = "SELECT message, category FROM offensive_cache WHERE category IS NOT NULL"
+    if not_null:
+        query = query+" WHERE category IS NOT NULL"
+    result, _ = execute_query(query, fetch_all=True)
     if not result:
         return None
 
@@ -140,7 +140,7 @@ def cache_offensive_message(message, category):
     _, rows = execute_query(query, (message, category))
     return rows > 0
 
-def check_phash(phash, threshold=0.8):
+def check_phash(phash, threshold=0.8, not_null=False):
     """
     Checks if a given perceptual hash is similar to any offensive ones in the cache.
     
@@ -166,10 +166,10 @@ def check_phash(phash, threshold=0.8):
         raise ValueError("Unsupported type for phash; must be ImageHash, str, or bytes.")
 
     # Retrieve stored hashes (stored as bytes) and their associated categories.
-    result, _ = execute_query(
-        "SELECT phash, category FROM phash_cache", 
-        fetch_all=True
-    )
+    query = "SELECT phash, category FROM phash_cache"
+    if not_null:
+        query = query+" WHERE category IS NOT NULL"
+    result, _ = execute_query(query, fetch_all=True)
     
     if not result:
         return None
