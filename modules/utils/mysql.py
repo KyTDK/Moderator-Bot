@@ -146,18 +146,27 @@ def check_phash(phash, threshold=0.8):
     Checks if a given perceptual hash is similar to any offensive ones in the cache.
     
     Parameters:
-        phash (ImageHash or str): The perceptual hash to compare, either as an ImageHash object or a hexadecimal string.
-        threshold (float): The minimum similarity required (0 to 1 range).
+        phash (ImageHash or bytes or str): The perceptual hash to compare. If provided as an ImageHash object or str,
+                                             it will be converted to bytes.
+        threshold (float): The minimum similarity required (0.0 to 1.0).
         
     Returns:
-        category (str): The category from the cache if similarity exceeds threshold.
+        category (str): The category from the cache if similarity meets/exceeds threshold.
                         Returns None if no match is found.
     """
-    # If the provided phash is a hex string, convert it to an ImageHash object
-    if isinstance(phash, str):
-        phash = imagehash.hex_to_hash(phash)
-    
-    # Execute the query to retrieve hashes and their associated categories.
+    # Convert the input phash into a bytes object.
+    if isinstance(phash, imagehash.ImageHash):
+        # Convert the ImageHash (via its hex representation) to bytes.
+        phash_bytes = bytes.fromhex(str(phash))
+    elif isinstance(phash, str):
+        # If provided as a hex string, convert it to bytes.
+        phash_bytes = bytes.fromhex(phash)
+    elif isinstance(phash, bytes):
+        phash_bytes = phash
+    else:
+        raise ValueError("Unsupported type for phash; must be ImageHash, str, or bytes.")
+
+    # Retrieve stored hashes (stored as bytes) and their associated categories.
     result, _ = execute_query(
         "SELECT phash, category FROM phash_cache", 
         fetch_all=True
@@ -166,17 +175,19 @@ def check_phash(phash, threshold=0.8):
     if not result:
         return None
 
-    for cached_phash, category in result:
-        # Convert the stored hexadecimal hash to an ImageHash object.
-        cached_hash = imagehash.hex_to_hash(cached_phash)
+    for cached_phash_bytes, category in result:
+        # Convert stored bytes back to a hex string then to an ImageHash object.
+        cached_hash = imagehash.hex_to_hash(cached_phash_bytes.hex())
         
-        # Calculate the Hamming distance between the two hashes.
-        hamming_distance = phash - cached_hash
+        # Convert our input phash_bytes back to an ImageHash object for comparison.
+        input_hash = imagehash.hex_to_hash(phash_bytes.hex())
         
-        # Since typical pHash is 8x8 bits, there are 64 bits total.
+        # Compute the Hamming distance between the two hashes.
+        hamming_distance = input_hash - cached_hash
+        
+        # Typical pHash is 8x8 bits (64 bits total)
         similarity = 1 - (hamming_distance / 64.0)
         
-        # Check if the similarity meets the threshold.
         if similarity >= threshold:
             return category
 
@@ -185,18 +196,26 @@ def check_phash(phash, threshold=0.8):
 def cache_phash(phash_value, category):
     """
     Caches an image identifier and its corresponding perceptual hash into the phash_cache table.
+    The hash is stored as raw bytes derived from its hexadecimal representation.
+    
     Returns True if a new record was inserted or the record was updated.
     """
-    # If phash_value is an ImageHash object, convert it to a hexadecimal string
+    # Convert phash_value into bytes.
     if isinstance(phash_value, imagehash.ImageHash):
-        phash_value = str(phash_value)  # This converts the ImageHash to a hex string representation
-    
+        phash_bytes = bytes.fromhex(str(phash_value))
+    elif isinstance(phash_value, str):
+        phash_bytes = bytes.fromhex(phash_value)
+    elif isinstance(phash_value, bytes):
+        phash_bytes = phash_value
+    else:
+        raise ValueError("Unsupported type for phash_value; must be ImageHash, str, or bytes.")
+        
     query = """
         INSERT INTO phash_cache (phash, category)
         VALUES (%s, %s)
         ON DUPLICATE KEY UPDATE phash = VALUES(phash)
     """
-    _, rows = execute_query(query, (phash_value, category))
+    _, rows = execute_query(query, (phash_bytes, category))
     return rows > 0
 
 # --- Database Initialization Function ---
@@ -244,7 +263,7 @@ def initialize_database():
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS phash_cache (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    phash VARCHAR(255) NOT NULL UNIQUE,
+                    phash BLOB NOT NULL UNIQUE,
                     category VARCHAR(255) DEFAULT NULL
                 )
             """)
