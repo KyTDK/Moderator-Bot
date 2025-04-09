@@ -124,7 +124,6 @@ def check_offensive_message(message, threshold=80):
 
     for cached_msg, category in result:
         similarity = fuzz.ratio(message.lower(), cached_msg.lower())
-        print(similarity)
         if similarity >= threshold:
             return category
     return None
