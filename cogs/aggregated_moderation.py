@@ -39,7 +39,9 @@ class AggregatedModeration(commands.Cog):
                 offensive, category =  mysql.check_offensive_message(message.content)
                 if offensive is None:
                     category = await nsfw.moderator_api(text=combined_content, guild_id=message.guild.id)
-                    mysql.cache_offensive_message(message.content, category)
+                
+                # Cache all
+                mysql.cache_offensive_message(message.content, category)
                 if category:
                     # Delete all cached messages
                     for _, msg in self.user_message_cache[user_id]:
