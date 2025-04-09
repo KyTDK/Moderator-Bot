@@ -187,6 +187,10 @@ def cache_phash(phash_value, category):
     Caches an image identifier and its corresponding perceptual hash into the phash_cache table.
     Returns True if a new record was inserted or the record was updated.
     """
+    # If phash_value is an ImageHash object, convert it to a hexadecimal string
+    if isinstance(phash_value, imagehash.ImageHash):
+        phash_value = str(phash_value)  # This converts the ImageHash to a hex string representation
+    
     query = """
         INSERT INTO phash_cache (phash, category)
         VALUES (%s, %s)
