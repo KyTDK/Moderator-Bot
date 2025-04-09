@@ -115,13 +115,13 @@ def check_offensive_message(message, threshold=90):
     """
     result, _ = execute_query("SELECT message, category FROM offensive_cache WHERE category IS NOT NULL", fetch_all=True)
     if not result:
-        return False, None
+        return None
 
     for cached_msg, category in result:
         similarity = fuzz.ratio(message.lower(), cached_msg.lower())
         if similarity >= threshold:
-            return True, category
-    return False, None
+            return category
+    return None
 
 
 def cache_offensive_message(message, category):
