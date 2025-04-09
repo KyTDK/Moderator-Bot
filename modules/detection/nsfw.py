@@ -182,7 +182,7 @@ async def moderator_api(text: str = None,
                   image_path: str = None,
                   guild_id: int = None,
                   retries: int = 2,
-                  backoff: float = 0.5) -> bool:
+                  backoff: float = 0.5) -> str:
     """Returns True if any moderation category (not excluded) is flagged."""
     # 1) Build the payload
     inputs = []
@@ -210,7 +210,7 @@ async def moderator_api(text: str = None,
         except Exception:
             print(f"[moderator_api] API call error (attempt {attempt}):")
             print(traceback.format_exc())
-            return False
+            return None
 
         results = getattr(response, "results", [])
         if not results:
@@ -219,19 +219,19 @@ async def moderator_api(text: str = None,
                 time.sleep(backoff)
                 continue
             # final attempt, bail out
-            return False
+            return None
 
         # we have at least one result, inspect the first
         first = results[0]
         for category, flagged in vars(first.categories).items():
             if flagged and category not in moderator_api_category_exclusions:
                 print(f"Category {category} is flagged.")
-                return True
+                return category
         # none of the categories (after exclusions) were flagged
-        return False
+        return None
 
     # shouldn't get here, but safe default
-    return False
+    return None
 
 def nsfw_model(converted_filename: str):
     results = detector.detect(converted_filename)
@@ -257,7 +257,7 @@ async def process_image(original_filename, guld_id=None):
         # Run the NSFW detector on the converted image
         try:
             if USE_MODERATOR_API:
-                return await moderator_api(image_path=converted_filename, guild_id=guld_id)
+                return await moderator_api(image_path=converted_filename, guild_id=guld_id) is not None
             else:
                 return nsfw_model(converted_filename)
         except Exception:

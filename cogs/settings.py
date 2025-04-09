@@ -204,6 +204,7 @@ class Settings(commands.Cog):
         help_message += "`/settings strike <number_of_strikes> <action> <duration>`: Configure strike actions.\n"
         help_message += "`/strike <user>`: Strike a user.\n"
         help_message += "`/strikes get <user>`: Get strikes of a user.\n"
+        help_message += "`/strikes clear <user>`: Clear strikes of a user.\n"
         help_message += "`/bannedwords add <word>`: Add a word to the banned words list.\n"
         help_message += "`/bannedwords remove <word>`: Remove a word from the banned words list.\n"
         help_message += "`/bannedwords list`: List all banned words.\n"

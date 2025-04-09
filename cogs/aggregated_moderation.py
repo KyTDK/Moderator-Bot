@@ -36,7 +36,11 @@ class AggregatedModeration(commands.Cog):
             ]
             if len(self.user_message_cache[user_id]) > 0:
                 combined_content = " ".join([m.content for _, m in self.user_message_cache[user_id]])
-                if await nsfw.moderator_api(text=combined_content, guild_id=message.guild.id):
+                offensive, category =  mysql.check_offensive_message(message.content)
+                if offensive is None:
+                    category = await nsfw.moderator_api(text=combined_content, guild_id=message.guild.id)
+                    mysql.cache_offensive_message(message.content, category)
+                if category:
                     # Delete all cached messages
                     for _, msg in self.user_message_cache[user_id]:
                         try:
@@ -46,7 +50,7 @@ class AggregatedModeration(commands.Cog):
                             print("Bot does not have permission to delete a message or the message no longer exists.")
                     # Clear cache for this user
                     self.user_message_cache[user_id].clear()
-        if (mysql.get_settings(message.guild.id, "delete-nsfw") == True) and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):
+        if (mysql.get_settings(message.guild.id, "delete-nsfw") == True) and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):           
             if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content):
                 try:
                     await message.delete()

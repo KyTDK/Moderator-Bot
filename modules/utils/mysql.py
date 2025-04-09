@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from  modules.config.settings_schema import SETTINGS_SCHEMA
 import json
 from cryptography.fernet import Fernet
+from rapidfuzz import fuzz
 
 load_dotenv()
 
@@ -106,6 +107,34 @@ def update_settings(guild_id, settings_key, settings_value):
         (guild_id, settings_json, settings_json)
     )
     return success
+
+def check_offensive_message(message, threshold=90):
+    """
+    Checks if a given message is similar to a known offensive message in the cache.
+    Returns (True, category) if found, else (False, None).
+    """
+    result, _ = execute_query("SELECT message, category FROM offensive_cache WHERE category IS NOT NULL", fetch_all=True)
+    if not result:
+        return False, None
+
+    for cached_msg, category in result:
+        similarity = fuzz.ratio(message.lower(), cached_msg.lower())
+        if similarity >= threshold:
+            return True, category
+    return False, None
+
+
+def cache_offensive_message(message, category):
+    """
+    Caches a message and its category into the offensive_cache table.
+    """
+    query = """
+        INSERT INTO offensive_cache (message, category)
+        VALUES (%s, %s)
+        ON DUPLICATE KEY UPDATE category = VALUES(category)
+    """
+    _, rows = execute_query(query, (message, category))
+    return rows > 0
         
 def initialize_database():
     """Initialize the database schema."""
@@ -137,6 +166,14 @@ def initialize_database():
                     guild_id BIGINT,
                     word VARCHAR(255),
                     PRIMARY KEY (guild_id, word)
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS offensive_cache (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    message TEXT NOT NULL,
+                    category VARCHAR(255) DEFAULT NULL,
+                    UNIQUE KEY unique_message (message(255))
                 )
             """)
             db.commit()
