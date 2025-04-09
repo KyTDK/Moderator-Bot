@@ -141,23 +141,23 @@ def cache_offensive_message(message, category):
     _, rows = execute_query(query, (message, category))
     return rows > 0
 
-def check_phash(image_path, threshold=0.8):
+def check_phash(phash, threshold=0.8):
     """
-    Checks if a given perceptual hash is similar to any offensive ones.
+    Checks if a given perceptual hash is similar to any offensive ones in the cache.
     
     Parameters:
-        image_path (str): Path to the image file.
+        phash (ImageHash or str): The perceptual hash to compare, either as an ImageHash object or a hexadecimal string.
         threshold (float): The minimum similarity required (0 to 1 range).
         
     Returns:
         category (str): The category from the cache if similarity exceeds threshold.
                         Returns None if no match is found.
     """
-    # Calculate the pHash of the input image.
-    checking_message_hash = imagehash.phash(Image.open(image_path))
+    # If the provided phash is a hex string, convert it to an ImageHash object
+    if isinstance(phash, str):
+        phash = imagehash.hex_to_hash(phash)
     
     # Execute the query to retrieve hashes and their associated categories.
-    # Assuming that phash_cache table has columns 'phash' (as hex string) and 'category'
     result, _ = execute_query(
         "SELECT phash, category FROM phash_cache", 
         fetch_all=True
@@ -169,10 +169,13 @@ def check_phash(image_path, threshold=0.8):
     for cached_phash, category in result:
         # Convert the stored hexadecimal hash to an ImageHash object.
         cached_hash = imagehash.hex_to_hash(cached_phash)
+        
         # Calculate the Hamming distance between the two hashes.
-        hamming_distance = checking_message_hash - cached_hash
+        hamming_distance = phash - cached_hash
+        
         # Since typical pHash is 8x8 bits, there are 64 bits total.
         similarity = 1 - (hamming_distance / 64.0)
+        
         # Check if the similarity meets the threshold.
         if similarity >= threshold:
             return category
