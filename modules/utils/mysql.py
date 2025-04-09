@@ -125,7 +125,7 @@ def check_offensive_message(message, threshold=80, not_null = False):
     for cached_msg, category in result:
         similarity = fuzz.ratio(message.lower(), cached_msg.lower())
         if similarity >= threshold:
-            return category
+            return category if category else "safe"
     return None
 
 def cache_offensive_message(message, category):
@@ -187,7 +187,7 @@ def check_phash(phash, threshold=0.8, not_null=False):
         # Typical pHash is 8x8 bits (64 bits total)
         similarity = 1 - (hamming_distance / 64.0)
         if similarity >= threshold:
-            return category
+            return category if category else "safe"
 
     return None
 
