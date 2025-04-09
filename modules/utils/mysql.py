@@ -115,7 +115,7 @@ def check_offensive_message(message, threshold=80, not_null = False):
     Checks if a given message is similar to a known offensive message in the cache.
     Returns the category if found, else None.
     """
-    query = "SELECT message, category FROM offensive_cache WHERE category IS NOT NULL"
+    query = "SELECT message, category FROM offensive_cache"
     if not_null:
         query = query+" WHERE category IS NOT NULL"
     result, _ = execute_query(query, fetch_all=True)
