@@ -205,7 +205,7 @@ async def moderator_api(text: str = None,
     for attempt in range(1, retries + 1):
         try:
             response = await client.moderations.create(
-                model="omni-moderation-latest",
+                model="omni-moderation-latest" if image_path else "text-moderation-latest", # switch to text-moderation to avoid RPD
                 input=inputs
             )
         except Exception:
