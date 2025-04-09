@@ -186,7 +186,6 @@ def check_phash(phash, threshold=0.8):
         
         # Typical pHash is 8x8 bits (64 bits total)
         similarity = 1 - (hamming_distance / 64.0)
-        
         if similarity >= threshold:
             return category
 
