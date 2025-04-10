@@ -1,6 +1,6 @@
 ---
 
-# 🛡️ Moderator Bot
+# Moderator Bot
 
 **Moderator Bot** is an advanced Discord moderation tool built to maintain a safe, respectful, and well-organized server environment. It offers comprehensive moderation capabilities, including disciplinary enforcement, AI-powered content monitoring, and robust activity tracking.
 
