@@ -2,6 +2,13 @@
 
   **Moderator Bot** is an advanced Discord moderation tool built to maintain a safe, respectful, and well-organized server environment. It offers comprehensive moderation capabilities, including disciplinary enforcement, AI-powered content monitoring, and robust activity tracking.
 
+## ➕ Add the Bot
+
+You can add **Moderator Bot** to your server using the following platforms:
+
+- [Top.gg](https://top.gg/bot/1342035474201575424)  
+- [Discord Bot List](https://discordbotlist.com/bots/moderator-bot-9179)
+
   ## 🔑 Key Features
 
   ### ⚠️ Strike System (Customizable)
