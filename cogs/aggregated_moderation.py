@@ -16,47 +16,55 @@ class AggregatedModeration(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        # Skip messages sent by bots to prevent potential loops
         if message.author.bot:
             return
-        
-        user_id = message.author.id
 
-        # If multiple messages exist in the cache, combine them for moderation check
-        if mysql.get_settings(message.guild.id, "delete-offensive") == True or \
-        (mysql.get_strike_count(message.author.id, message.guild.id) > 0 and mysql.get_settings(message.guild.id, "restrict-striked-users") == True):
-            now = time.time()
+        guild_id = message.guild.id
+        user_id = message.author.id
+        now = time.time()
+
+        # Retrieve settings only once
+        delete_offensive = mysql.get_settings(guild_id, "delete-offensive")
+        restrict_users = mysql.get_settings(guild_id, "restrict-striked-users")
+        has_strike = mysql.get_strike_count(user_id, guild_id) > 0
+
+        if delete_offensive or (has_strike and restrict_users):
+            # Initialize user cache if it doesn't exist
+            self.user_message_cache.setdefault(user_id, [])
 
             if len(message.content) <= 10:
                 self.user_message_cache[user_id].append((now, message))
 
-            # Remove messages older than the aggregation window
+            # Remove old messages from cache
             self.user_message_cache[user_id] = [
                 (t, m) for t, m in self.user_message_cache[user_id] if now - t < self.AGGREGATION_WINDOW
             ]
-            # Group small messages together, could be a bypass
-            if len(self.user_message_cache[user_id]) > 0:
-                combined_content = " ".join([m.content for _, m in self.user_message_cache[user_id]])
-            else:
-                combined_content = message.content
 
-            # Perform check  
-            category =  mysql.check_offensive_message(combined_content, not_null=True)
+            # Combine messages for content check
+            messages_to_check = [m.content for _, m in self.user_message_cache[user_id]] or [message.content]
+            combined_content = " ".join(messages_to_check)
+
+            # Check message category
+            category = mysql.check_offensive_message(combined_content, not_null=True)
             if category is None:
-                category = await nsfw.moderator_api(text=combined_content, guild_id=message.guild.id)
+                category = await nsfw.moderator_api(text=combined_content, guild_id=guild_id)
             mysql.cache_offensive_message(combined_content, category)
 
-            # Handle offense
+            # If offensive, delete messages
             if category:
-                # Delete all cached messages
-                for _, msg in self.user_message_cache[user_id]:
+                cached_messages = self.user_message_cache[user_id]
+                if cached_messages:
+                    for _, msg in cached_messages:
+                        try:
+                            await msg.delete()
+                        except (discord.Forbidden, discord.NotFound):
+                            print("Cannot delete cached message.")
+                    self.user_message_cache[user_id].clear()
+                else:
                     try:
-                        await msg.delete()
+                        await message.delete()
                     except (discord.Forbidden, discord.NotFound):
-                        # Either bot lacks permissions or the message has already been deleted.
-                        print("Bot does not have permission to delete a message or the message no longer exists.")
-                # Clear cache for this user
-                self.user_message_cache[user_id].clear()
+                        print("Cannot delete new message.")
         
         # Handle NSFW content (not text)
         if (mysql.get_settings(message.guild.id, "delete-nsfw") == True) and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):           
