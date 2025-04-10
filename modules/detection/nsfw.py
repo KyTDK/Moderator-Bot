@@ -265,7 +265,7 @@ async def process_image(original_filename, guld_id=None):
         # Run the NSFW detector on the converted image
         try:
             phash = imagehash.phash(Image.open(original_filename))
-            category = mysql.check_phash(phash, not_null=False)
+            category = mysql.check_phash(phash, not_null=True)
             
             if category is None:
                 if USE_MODERATOR_API:

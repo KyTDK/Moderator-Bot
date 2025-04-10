@@ -36,7 +36,7 @@ class AggregatedModeration(commands.Cog):
             ]
             if len(self.user_message_cache[user_id]) > 0:
                 combined_content = " ".join([m.content for _, m in self.user_message_cache[user_id]])
-                category =  mysql.check_offensive_message(combined_content, not_null=False)
+                category =  mysql.check_offensive_message(combined_content, not_null=True)
                 if category is None:
                     category = await nsfw.moderator_api(text=combined_content, guild_id=message.guild.id)
                 
