@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import time
 from collections import defaultdict
+from difflib import SequenceMatcher
 
 # Replace these with your actual implementations or imports
 from modules.utils import mysql
@@ -13,7 +14,46 @@ class AggregatedModeration(commands.Cog):
         # Cache to store recent messages by user (user_id: list of (timestamp, message))
         self.user_message_cache = defaultdict(list)
         self.AGGREGATION_WINDOW = 10  # seconds
+        self.DIFFERENCE_THRESHOLD = 0.7  # for edits
 
+    async def check_offensive_content(self, text: str, guild_id: int) -> bool:
+        """
+        Returns an offensive category if text is flagged, otherwise None.
+        Leverages an internal cache/database and the 'moderator_api'.
+        """
+        category = mysql.check_offensive_message(text, not_null=True)
+        if category is None:
+            category = await nsfw.moderator_api(text=text, guild_id=guild_id)
+            mysql.cache_offensive_message(text, category)
+        return category
+
+    async def handle_deletion(self, messages: list):
+        """
+        Safely delete a list of discord.Message objects.
+        """
+        for msg in messages:
+            try:
+                await msg.delete()
+            except (discord.Forbidden, discord.NotFound):
+                print(f"Cannot delete message (ID={msg.id}).")
+
+    async def check_and_delete_if_offensive(self, content: str, guild_id: int, messages_to_delete: list) -> bool:
+        """
+        Check if 'content' is offensive. If it is, delete all 'messages_to_delete'.
+        Returns True if deleted (i.e., was offensive), else False.
+        """
+        category = await self.check_offensive_content(content, guild_id)
+        if category:
+            await self.handle_deletion(messages_to_delete)
+            return True
+        return False
+    
+    def should_perform_check(self, user_id, guild_id):
+        delete_offensive = mysql.get_settings(guild_id, "delete-offensive")
+        restrict_users = mysql.get_settings(guild_id, "restrict-striked-users")
+        has_strike = mysql.get_strike_count(user_id, guild_id) > 0
+        return delete_offensive or (has_strike and restrict_users)
+    
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
@@ -23,50 +63,41 @@ class AggregatedModeration(commands.Cog):
         user_id = message.author.id
         now = time.time()
 
-        # Retrieve settings only once
-        delete_offensive = mysql.get_settings(guild_id, "delete-offensive")
-        restrict_users = mysql.get_settings(guild_id, "restrict-striked-users")
-        has_strike = mysql.get_strike_count(user_id, guild_id) > 0
-
-        if delete_offensive or (has_strike and restrict_users):
-            # Initialize user cache if it doesn't exist
+        # Offensive text checks (aggregation logic)
+        if self.should_perform_check(user_id, guild_id):
+            # Maintain a rolling window of short messages
             self.user_message_cache.setdefault(user_id, [])
-
             if len(message.content) <= 10:
                 self.user_message_cache[user_id].append((now, message))
 
-            # Remove old messages from cache
+            # Remove old messages from the cache
             self.user_message_cache[user_id] = [
-                (t, m) for t, m in self.user_message_cache[user_id] if now - t < self.AGGREGATION_WINDOW
+                (t, m)
+                for t, m in self.user_message_cache[user_id]
+                if now - t < self.AGGREGATION_WINDOW
             ]
 
-            # Combine messages for content check
+            # Create a combined view of recent short messages
             messages_to_check = [m.content for _, m in self.user_message_cache[user_id]] or [message.content]
             combined_content = " ".join(messages_to_check)
-            # Check message category
-            category = mysql.check_offensive_message(combined_content, not_null=True)
-            if category is None:
-                category = await nsfw.moderator_api(text=combined_content, guild_id=guild_id)
-                mysql.cache_offensive_message(combined_content, category)
 
-            # If offensive, delete messages
-            if category:
-                cached_messages = self.user_message_cache[user_id]
-                if cached_messages:
-                    for _, msg in cached_messages:
-                        try:
-                            await msg.delete()
-                        except (discord.Forbidden, discord.NotFound):
-                            print("Cannot delete cached message.")
-                    self.user_message_cache[user_id].clear()
-                else:
-                    try:
-                        await message.delete()
-                    except (discord.Forbidden, discord.NotFound):
-                        print("Cannot delete new message.")
-        
-        # Handle NSFW content (not text)
-        if (mysql.get_settings(message.guild.id, "delete-nsfw") == True) and not message.channel.id in mysql.get_settings(message.guild.id, "exclude-channels"):           
+            # Prepare the list of messages to delete if offensive
+            cached_messages = [msg for _, msg in self.user_message_cache[user_id]]
+            messages_to_delete = cached_messages if cached_messages else [message]
+
+            was_deleted = await self.check_and_delete_if_offensive(
+                combined_content, guild_id, messages_to_delete
+            )
+
+            # If flagged, clear the cache for this user
+            if was_deleted:
+                self.user_message_cache[user_id].clear()
+
+        # NSFW (non-text) checks
+        if (
+            mysql.get_settings(guild_id, "delete-nsfw") is True
+            and message.channel.id not in mysql.get_settings(guild_id, "exclude-channels")
+        ):
             if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content):
                 try:
                     await message.delete()
@@ -74,7 +105,25 @@ class AggregatedModeration(commands.Cog):
                         f"{message.author.mention}, your message was detected to contain explicit content and was removed."
                     )
                 except (discord.Forbidden, discord.NotFound):
-                    print("Bot does not have permission to delete the message or the message no longer exists.")
+                    print("Cannot delete message or message no longer exists.")
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        # Only proceed if content changed and it's not from a bot
+        if before.author.bot or before.content == after.content:
+            return
+
+        guild_id = after.guild.id
+        user_id = after.author.id
+
+        old_message = before.content
+        new_message = after.content
+
+        if self.should_perform_check(user_id, guild_id):
+            similarity_ratio = SequenceMatcher(None, old_message, new_message).ratio()
+            if similarity_ratio < self.DIFFERENCE_THRESHOLD:
+                await self.check_and_delete_if_offensive(new_message, guild_id, [after])
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AggregatedModeration(bot))
