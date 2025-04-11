@@ -110,7 +110,7 @@ def update_settings(guild_id, settings_key, settings_value):
     )
     return success
 
-def check_offensive_message(message, threshold=80, not_null = False):
+def check_offensive_message(message, threshold=90, not_null = False):
     """
     Checks if a given message is similar to a known offensive message in the cache.
     Returns the category if found, else None.
