@@ -129,7 +129,7 @@ def check_offensive_message(message, threshold=90, not_null = False):
             return category if category else "safe"
     return None
 
-def cache_offensive_message(message, category, user_id):
+def cache_offensive_message(message: discord.Message, category, user_id):
     """
     Caches a message, its category, and the encrypted user_id into the offensive_cache table.
     """
@@ -144,7 +144,7 @@ def cache_offensive_message(message, category, user_id):
         VALUES (%s, %s, %s)
         ON DUPLICATE KEY UPDATE category = VALUES(category), encrypted_user_id = VALUES(encrypted_user_id)
     """
-    _, rows = execute_query(query, (message, category, encrypted_user_id))
+    _, rows = execute_query(query, (message.content, category, encrypted_user_id))
     return rows > 0
 
 def opt_out_user(user_id):
