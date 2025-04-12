@@ -47,6 +47,7 @@ async def on_guild_join(guild):
         "I'm your new moderation bot. Here's how I handle your data:\n\n"
         "🔐 **Data Storage**: I store message content to help categorize messages as safe or not safe. "
         "User IDs are stored in an encrypted format to ensure your privacy.\n\n"
+        "💡 **Why Store Data?**: Caching data reduces the number of API calls to Discord, which helps lower operational costs and ensures the bot remains responsive and available to all users.\n\n"
         "🗑️ **Data Deletion**: You can delete all data associated with your account at any time by using the `/delete_my_data` command.\n\n"
         "🔄 **Opting In/Out**: You have control over your data. Use `/opt_out` to prevent any future data from being stored, or `/opt_in` to allow data storage again.\n\n"
         "⚙️ **Server-Wide Settings**: Server administrators can disable data storage for all members by setting the `opt-in` setting to `False` using the `/settings set opt-in False` command.\n\n"
