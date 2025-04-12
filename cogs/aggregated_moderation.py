@@ -31,7 +31,7 @@ class AggregatedModeration(commands.Cog):
         Check if 'content' is offensive. If it is, delete all 'messages_to_delete'.
         Returns True if deleted (i.e., was offensive), else False.
         """
-        category = await nsfw.moderator_api(text=message_content)
+        category = await nsfw.moderator_api(text=message_content, guild_id=self.bot.guild.id)
         if category:
             await self.handle_deletion(messages_to_delete)
             return True
