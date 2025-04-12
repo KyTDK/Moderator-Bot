@@ -26,12 +26,12 @@ class AggregatedModeration(commands.Cog):
             except (discord.Forbidden, discord.NotFound):
                 print(f"Cannot delete message (ID={msg.id}).")
 
-    async def check_and_delete_if_offensive(self, message_content: str, messages_to_delete: list) -> bool:
+    async def check_and_delete_if_offensive(self, message_content: str, messages_to_delete: list, guild_id:str) -> bool:
         """
         Check if 'content' is offensive. If it is, delete all 'messages_to_delete'.
         Returns True if deleted (i.e., was offensive), else False.
         """
-        category = await nsfw.moderator_api(text=message_content, guild_id=self.bot.guild.id)
+        category = await nsfw.moderator_api(text=message_content, guild_id=guild_id)
         if category:
             await self.handle_deletion(messages_to_delete)
             return True
@@ -75,7 +75,7 @@ class AggregatedModeration(commands.Cog):
             messages_to_delete = cached_messages if cached_messages else [message]
 
             was_deleted = await self.check_and_delete_if_offensive(
-                combined_content, messages_to_delete
+                combined_content, messages_to_delete, guild_id
             )
 
             # If flagged, clear the cache for this user
@@ -111,7 +111,7 @@ class AggregatedModeration(commands.Cog):
         if self.should_perform_check(user_id, guild_id):
             similarity_ratio = SequenceMatcher(None, old_message, new_message).ratio()
             if similarity_ratio < self.DIFFERENCE_THRESHOLD:
-                await self.check_and_delete_if_offensive(new_message, [after])
+                await self.check_and_delete_if_offensive(new_message, [after], guild_id)
 
 
 async def setup(bot: commands.Bot):
