@@ -16,14 +16,14 @@ class AggregatedModeration(commands.Cog):
         self.AGGREGATION_WINDOW = 10  # seconds
         self.DIFFERENCE_THRESHOLD = 0.7  # for edits
 
-    async def check_offensive_content(self, text: str, guild_id: int) -> bool:
+    async def check_offensive_content(self, text: str, message: discord.Message) -> bool:
         """
         Returns an offensive category if text is flagged, otherwise None.
         Leverages an internal cache/database and the 'moderator_api'.
         """
         category = mysql.check_offensive_message(text, not_null=True)
         if category is None:
-            category = await nsfw.moderator_api(text=text, guild_id=guild_id)
+            category = await nsfw.moderator_api(text=text, message=message)
             mysql.cache_offensive_message(text, category)
         return category
 
@@ -37,12 +37,12 @@ class AggregatedModeration(commands.Cog):
             except (discord.Forbidden, discord.NotFound):
                 print(f"Cannot delete message (ID={msg.id}).")
 
-    async def check_and_delete_if_offensive(self, content: str, guild_id: int, messages_to_delete: list) -> bool:
+    async def check_and_delete_if_offensive(self, content: str, message: discord.Message, messages_to_delete: list) -> bool:
         """
         Check if 'content' is offensive. If it is, delete all 'messages_to_delete'.
         Returns True if deleted (i.e., was offensive), else False.
         """
-        category = await self.check_offensive_content(content, guild_id)
+        category = await self.check_offensive_content(content, message)
         if category:
             await self.handle_deletion(messages_to_delete)
             return True
@@ -86,7 +86,7 @@ class AggregatedModeration(commands.Cog):
             messages_to_delete = cached_messages if cached_messages else [message]
 
             was_deleted = await self.check_and_delete_if_offensive(
-                combined_content, guild_id, messages_to_delete
+                combined_content, message, messages_to_delete
             )
 
             # If flagged, clear the cache for this user

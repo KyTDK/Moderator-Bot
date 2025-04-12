@@ -9,6 +9,7 @@ from cryptography.fernet import Fernet
 from rapidfuzz import fuzz
 import imagehash
 from PIL import Image
+import discord
 
 load_dotenv()
 
@@ -132,6 +133,10 @@ def cache_offensive_message(message, category, user_id):
     """
     Caches a message, its category, and the encrypted user_id into the offensive_cache table.
     """
+
+    if has_user_opted_out(user_id):
+        return
+    
     encrypted_user_id = fernet.encrypt(str(user_id).encode())
 
     query = """
@@ -141,6 +146,43 @@ def cache_offensive_message(message, category, user_id):
     """
     _, rows = execute_query(query, (message, category, encrypted_user_id))
     return rows > 0
+
+def opt_out_user(user_id):
+    """
+    Adds a user to the opt_out table, indicating they've opted out of data storage.
+    """
+    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+
+    query = """
+        INSERT INTO opt_out (user_id)
+        VALUES (%s)
+        ON DUPLICATE KEY UPDATE opt_out_date = CURRENT_TIMESTAMP
+    """
+    _, rows_affected = execute_query(query, (encrypted_user_id,))
+
+    return rows_affected > 0
+
+def opt_in_user(user_id):
+    """
+    Removes a user from the opt_out table, indicating they've opted back into data storage.
+    """
+    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+
+    query = "DELETE FROM opt_out WHERE user_id = %s"
+    _, rows_affected = execute_query(query, (encrypted_user_id,))
+
+    return rows_affected > 0
+
+def has_user_opted_out(user_id):
+    """
+    Checks if a user has opted out of data storage.
+    """
+    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+
+    query = "SELECT 1 FROM opt_out WHERE user_id = %s"
+    result, _ = execute_query(query, (encrypted_user_id,), fetch_one=True)
+
+    return result is not None
 
 def delete_user_messages(user_id):
     """
@@ -208,13 +250,17 @@ def check_phash(phash, threshold=0.8, not_null=False):
 
     return None
 
-def cache_phash(phash_value, category):
+def cache_phash(phash_value, message:discord.Message, category):
     """
     Caches an image identifier and its corresponding perceptual hash into the phash_cache table.
     The hash is stored as raw bytes derived from its hexadecimal representation.
     
     Returns True if a new record was inserted or the record was updated.
     """
+
+    if has_user_opted_out(message.author.id):
+        return
+
     # Convert phash_value into bytes.
     if isinstance(phash_value, imagehash.ImageHash):
         phash_bytes = bytes.fromhex(str(phash_value))
@@ -280,6 +326,12 @@ def initialize_database():
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     phash BLOB NOT NULL UNIQUE,
                     category VARCHAR(255) DEFAULT NULL
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS opt_out (
+                    user_id VARBINARY(255) PRIMARY KEY,
+                    opt_out_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             db.commit()

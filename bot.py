@@ -38,7 +38,27 @@ async def setup_hook():
             print(f"Loaded Cog: {filename[:-3]}")
         else:
             print("Unable to load pycache folder.")
-    
+
+@bot.event
+async def on_guild_join(guild):
+    privacy_message = (
+        "Hello! 👋\n\n"
+        "I'm your new moderation bot. Here's how I handle your data:\n\n"
+        "🔐 **Data Storage**: I store message content to help categorize messages as safe or not safe. "
+        "User IDs are stored in an encrypted format to ensure your privacy.\n\n"
+        "🗑️ **Data Deletion**: You can delete all data associated with your account at any time by using the `/delete_my_data` command.\n\n"
+        "If you have any questions or concerns about your data, feel free to reach out to the server administrators."
+    )
+
+    # Attempt to send the message to the system channel
+    if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
+        await guild.system_channel.send(privacy_message)
+    else:
+        # Fallback: find the first channel where the bot has permission to send messages
+        for channel in guild.text_channels:
+            if channel.permissions_for(guild.me).send_messages:
+                await channel.send(privacy_message)
+                break
 
 if __name__ == "__main__":
     bot.run(TOKEN)
