@@ -87,7 +87,6 @@ SETTINGS_SCHEMA = {
         name="opt-in",
         description="Set to False for all users to not have data tracked in your server.",
         setting_type=bool,
-        hidden=True,
         default=True
     ),
 }
