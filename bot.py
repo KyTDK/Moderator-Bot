@@ -28,6 +28,7 @@ async def on_ready():
     for guild in bot.guilds:
         print(f"Connected to {guild.name} (ID: {guild.id}) with {len([member for member in guild.members if not member.bot])} members ")
     total_users_not_bots = sum(len([member for member in guild.members if not member.bot]) for guild in bot.guilds)
+    await bot.tree.sync()
     print(f"Connected to {len(bot.guilds)} guilds with a total of {total_users_not_bots} users.")
 
 @bot.event
