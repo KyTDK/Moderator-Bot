@@ -91,7 +91,7 @@ async def process_video(
                 cv2.imwrite(frame_filename, image)
                 try:
                     # Process the extracted frame
-                    if await process_image(frame_filename, guld_id=message.guild.id):
+                    if await process_image(frame_filename, message=message):
                         if nsfw_callback:
                             file_to_send = discord.File(
                                 frame_filename, filename=os.path.basename(frame_filename)
