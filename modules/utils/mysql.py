@@ -184,20 +184,22 @@ def has_user_opted_out(user_id):
 
     return result is not None
 
-def delete_user_messages(user_id):
+def delete_user_data(user_id):
     """
-    Deletes all messages from the offensive_cache table associated with the given user_id.
+    Deletes all records associated with the given user_id from offensive_cache and phash_cache tables.
     """
-    # Encrypt the user_id using the same Fernet key
+    # Encrypt the user_id
     encrypted_user_id = fernet.encrypt(str(user_id).encode())
 
-    # Prepare the SQL query to delete messages
-    query = "DELETE FROM offensive_cache WHERE encrypted_user_id = %s"
+    # Delete records from offensive_cache
+    offensive_query = "DELETE FROM offensive_cache WHERE encrypted_user_id = %s"
+    _, offensive_rows = execute_query(offensive_query, (encrypted_user_id,))
 
-    # Execute the query
-    _, rows_affected = execute_query(query, (encrypted_user_id,))
+    # Delete records from phash_cache
+    phash_query = "DELETE FROM phash_cache WHERE encrypted_user_id = %s"
+    _, phash_rows = execute_query(phash_query, (encrypted_user_id,))
 
-    return rows_affected > 0
+    return offensive_rows > 0 or phash_rows > 0
 
 def check_phash(phash, threshold=0.8, not_null=False):
     """
@@ -250,18 +252,19 @@ def check_phash(phash, threshold=0.8, not_null=False):
 
     return None
 
-def cache_phash(phash_value, message:discord.Message, category):
+def cache_phash(phash_value, message: discord.Message, category):
     """
-    Caches an image identifier and its corresponding perceptual hash into the phash_cache table.
-    The hash is stored as raw bytes derived from its hexadecimal representation.
-    
-    Returns True if a new record was inserted or the record was updated.
+    Caches an image's perceptual hash along with its category and the encrypted user_id into the phash_cache table.
     """
 
+    # Check if the user has opted out of data storage
     if has_user_opted_out(message.author.id):
-        return
+        return False
 
-    # Convert phash_value into bytes.
+    # Encrypt the user_id
+    encrypted_user_id = fernet.encrypt(str(message.author.id).encode())
+
+    # Convert phash_value into bytes
     if isinstance(phash_value, imagehash.ImageHash):
         phash_bytes = bytes.fromhex(str(phash_value))
     elif isinstance(phash_value, str):
@@ -270,13 +273,14 @@ def cache_phash(phash_value, message:discord.Message, category):
         phash_bytes = phash_value
     else:
         raise ValueError("Unsupported type for phash_value; must be ImageHash, str, or bytes.")
-        
+
+    # Insert or update the phash_cache table
     query = """
-        INSERT INTO phash_cache (phash, category)
-        VALUES (%s, %s)
-        ON DUPLICATE KEY UPDATE phash = VALUES(phash)
+        INSERT INTO phash_cache (phash, category, encrypted_user_id)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE category = VALUES(category), encrypted_user_id = VALUES(encrypted_user_id)
     """
-    _, rows = execute_query(query, (phash_bytes, category))
+    _, rows = execute_query(query, (phash_bytes, category, encrypted_user_id))
     return rows > 0
 
 # --- Database Initialization Function ---
@@ -325,7 +329,8 @@ def initialize_database():
                 CREATE TABLE IF NOT EXISTS phash_cache (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     phash BLOB NOT NULL UNIQUE,
-                    category VARCHAR(255) DEFAULT NULL
+                    category VARCHAR(255) DEFAULT NULL,
+                    encrypted_user_id VARBINARY(255)
                 )
             """)
             cursor.execute("""
