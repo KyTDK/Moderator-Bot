@@ -128,17 +128,34 @@ def check_offensive_message(message, threshold=90, not_null = False):
             return category if category else "safe"
     return None
 
-def cache_offensive_message(message, category):
+def cache_offensive_message(message, category, user_id):
     """
-    Caches a message and its category into the offensive_cache table.
+    Caches a message, its category, and the encrypted user_id into the offensive_cache table.
     """
+    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+
     query = """
-        INSERT INTO offensive_cache (message, category)
-        VALUES (%s, %s)
-        ON DUPLICATE KEY UPDATE category = VALUES(category)
+        INSERT INTO offensive_cache (message, category, encrypted_user_id)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE category = VALUES(category), encrypted_user_id = VALUES(encrypted_user_id)
     """
-    _, rows = execute_query(query, (message, category))
+    _, rows = execute_query(query, (message, category, encrypted_user_id))
     return rows > 0
+
+def delete_user_messages(user_id):
+    """
+    Deletes all messages from the offensive_cache table associated with the given user_id.
+    """
+    # Encrypt the user_id using the same Fernet key
+    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+
+    # Prepare the SQL query to delete messages
+    query = "DELETE FROM offensive_cache WHERE encrypted_user_id = %s"
+
+    # Execute the query
+    _, rows_affected = execute_query(query, (encrypted_user_id,))
+
+    return rows_affected > 0
 
 def check_phash(phash, threshold=0.8, not_null=False):
     """
@@ -255,9 +272,9 @@ def initialize_database():
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     message TEXT NOT NULL,
                     category VARCHAR(255) DEFAULT NULL,
+                    encrypted_user_id VARBINARY(255),
                     UNIQUE KEY unique_message (message(255))
-                )
-            """)
+            )""")
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS phash_cache (
                     id INT AUTO_INCREMENT PRIMARY KEY,
