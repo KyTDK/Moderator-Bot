@@ -14,7 +14,7 @@ class PrivacyCog(commands.Cog):
         if mysql.delete_user_data(interaction.user.id):
             await interaction.followup.send("Your data was successfully deleted, please keep in mind this doesn't stop your data from being logged.")
         else:
-            await interaction.followup.send("Something went wrong, please contact a server administrator.")
+            await interaction.followup.send("No data was found to delete.")
             
 async def setup(bot: commands.Bot):
     await bot.add_cog(PrivacyCog(bot))

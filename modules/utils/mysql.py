@@ -155,7 +155,7 @@ def opt_out_user(user_id):
     """
     Adds a user to the opt_out table, indicating they've opted out of data storage.
     """
-    encrypted_user_id = hash_user_id(hash_user_id)
+    encrypted_user_id = hash_user_id(user_id)
 
     query = """
         INSERT INTO opt_out (user_id)
@@ -170,7 +170,7 @@ def opt_in_user(user_id):
     """
     Removes a user from the opt_out table, indicating they've opted back into data storage.
     """
-    encrypted_user_id = hash_user_id(hash_user_id)
+    encrypted_user_id = hash_user_id(user_id)
 
     query = "DELETE FROM opt_out WHERE user_id = %s"
     _, rows_affected = execute_query(query, (encrypted_user_id,))
