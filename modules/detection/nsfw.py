@@ -2,7 +2,6 @@ import os
 import traceback
 from nudenet import NudeDetector
 from PIL import Image
-import imagehash
 import cv2
 import filetype
 import uuid
@@ -91,7 +90,7 @@ async def process_video(
                 cv2.imwrite(frame_filename, image)
                 try:
                     # Process the extracted frame
-                    if await process_image(frame_filename):
+                    if await process_image(frame_filename, guild_id=message.guild.id):
                         if nsfw_callback:
                             file_to_send = discord.File(
                                 frame_filename, filename=os.path.basename(frame_filename)
@@ -122,7 +121,7 @@ async def is_nsfw(
         try:
             file_type = determine_file_type(temp_filename)
             if file_type == "Image":
-                if await process_image(temp_filename):
+                if await process_image(temp_filename, guild_id=message.guild.id):
                     if nsfw_callback:
                         file = discord.File(temp_filename, filename=attachment.filename)
                         await nsfw_callback(message.author, bot, "Uploading explicit content", file)
@@ -181,6 +180,7 @@ async def is_nsfw(
 
 async def moderator_api(text: str = None,
                   image_path: str = None,
+                  guild_id: int = None,
                   retries: int = 2,
                   backoff: float = 0.5) -> str:
     """Returns True if any moderation category (not excluded) is flagged."""
@@ -204,7 +204,7 @@ async def moderator_api(text: str = None,
             # Optionally, you can decide to continue without the image or return an error.
 
     # 2) Initialize client
-    key = mysql.get_settings(message.guild.id, "api-key") or OPENAI_API_KEY
+    key = mysql.get_settings(guild_id, "api-key") or OPENAI_API_KEY
     client = AsyncOpenAI(api_key=key)
 
     # 3) Attempt the call, with a simple retry if results list is empty
@@ -248,7 +248,7 @@ def nsfw_model(converted_filename: str):
             return result['class']
     return None
 
-async def process_image(original_filename):
+async def process_image(original_filename, guild_id=None):
     converted_filename = os.path.join(os.getcwd(), 'converted_image.jpg')
     try:
         # Convert the image to JPEG using Pillow
@@ -264,7 +264,7 @@ async def process_image(original_filename):
         # Run the NSFW detector on the converted image
         try:            
             if USE_MODERATOR_API:
-                category = await moderator_api(image_path=converted_filename)
+                category = await moderator_api(image_path=converted_filename, guild_id=guild_id)
             else:
                 category = nsfw_model(converted_filename)
                 
