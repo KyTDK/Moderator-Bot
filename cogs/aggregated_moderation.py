@@ -24,7 +24,7 @@ class AggregatedModeration(commands.Cog):
         category = mysql.check_offensive_message(text, not_null=True)
         if category is None:
             category = await nsfw.moderator_api(text=text, message=message)
-            mysql.cache_offensive_message(text, category)
+            mysql.cache_offensive_message(message, text, category)
         return category
 
     async def handle_deletion(self, messages: list):
