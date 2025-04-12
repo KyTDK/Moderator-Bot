@@ -133,15 +133,15 @@ def check_offensive_message(message, threshold=90, not_null = False):
             return category if category else "safe"
     return None
 
-def cache_offensive_message(message: discord.Message, category, user_id):
+def cache_offensive_message(message: discord.Message, category):
     """
     Caches a message, its category, and the encrypted user_id into the offensive_cache table.
     """
-
+    user_id = message.author.id
     if has_user_opted_out(user_id):
         return
     
-    encrypted_user_id = hash_user_id(hash_user_id)
+    encrypted_user_id = hash_user_id(user_id)
 
     query = """
         INSERT INTO offensive_cache (message, category, encrypted_user_id)
@@ -197,7 +197,6 @@ def delete_user_data(user_id):
     Deletes all records associated with the given user_id from offensive_cache and phash_cache tables.
     """
     # Encrypt the user_id
-    print(user_id)
     encrypted_user_id = hash_user_id(user_id)
     # Delete records from offensive_cache
     offensive_query = "DELETE FROM offensive_cache WHERE encrypted_user_id = %s"

@@ -11,7 +11,6 @@ class PrivacyCog(commands.Cog):
     @app_commands.command(name="delete_my_data", description="Delete all your stored messages from the cache.")
     async def delete_my_data(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        print(interaction.user.id)
         if mysql.delete_user_data(interaction.user.id):
             await interaction.followup.send("Your data was successfully deleted, please keep in mind this doesn't stop your data from being logged.")
         else:
