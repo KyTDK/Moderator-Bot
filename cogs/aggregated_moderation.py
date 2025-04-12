@@ -123,7 +123,7 @@ class AggregatedModeration(commands.Cog):
         if self.should_perform_check(user_id, guild_id):
             similarity_ratio = SequenceMatcher(None, old_message, new_message).ratio()
             if similarity_ratio < self.DIFFERENCE_THRESHOLD:
-                await self.check_and_delete_if_offensive(new_message, [after])
+                await self.check_and_delete_if_offensive(after, [after])
 
 
 async def setup(bot: commands.Bot):

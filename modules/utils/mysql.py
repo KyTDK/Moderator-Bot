@@ -197,8 +197,8 @@ def delete_user_data(user_id):
     Deletes all records associated with the given user_id from offensive_cache and phash_cache tables.
     """
     # Encrypt the user_id
+    print(user_id)
     encrypted_user_id = hash_user_id(user_id)
-
     # Delete records from offensive_cache
     offensive_query = "DELETE FROM offensive_cache WHERE encrypted_user_id = %s"
     _, offensive_rows = execute_query(offensive_query, (encrypted_user_id,))
