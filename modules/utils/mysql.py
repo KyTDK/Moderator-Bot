@@ -12,9 +12,6 @@ from PIL import Image
 import discord
 import hashlib
 
-def hash_user_id(user_id):
-    return hashlib.sha256(str(user_id).encode()).hexdigest()
-
 load_dotenv()
 
 MYSQL_CONFIG = {
