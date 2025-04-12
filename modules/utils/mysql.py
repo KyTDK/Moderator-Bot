@@ -10,6 +10,10 @@ from rapidfuzz import fuzz
 import imagehash
 from PIL import Image
 import discord
+import hashlib
+
+def hash_user_id(user_id):
+    return hashlib.sha256(str(user_id).encode()).hexdigest()
 
 load_dotenv()
 
@@ -137,7 +141,7 @@ def cache_offensive_message(message: discord.Message, category, user_id):
     if has_user_opted_out(user_id):
         return
     
-    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+    encrypted_user_id = hash_user_id(hash_user_id)
 
     query = """
         INSERT INTO offensive_cache (message, category, encrypted_user_id)
@@ -151,7 +155,7 @@ def opt_out_user(user_id):
     """
     Adds a user to the opt_out table, indicating they've opted out of data storage.
     """
-    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+    encrypted_user_id = hash_user_id(hash_user_id)
 
     query = """
         INSERT INTO opt_out (user_id)
@@ -166,7 +170,7 @@ def opt_in_user(user_id):
     """
     Removes a user from the opt_out table, indicating they've opted back into data storage.
     """
-    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+    encrypted_user_id = hash_user_id(hash_user_id)
 
     query = "DELETE FROM opt_out WHERE user_id = %s"
     _, rows_affected = execute_query(query, (encrypted_user_id,))
@@ -181,7 +185,7 @@ def has_user_opted_out(user_id):
     if get_settings("opt-in") == False:
         return True
 
-    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+    encrypted_user_id = hash_user_id(user_id)
 
     query = "SELECT 1 FROM opt_out WHERE user_id = %s"
     result, _ = execute_query(query, (encrypted_user_id,), fetch_one=True)
@@ -193,7 +197,7 @@ def delete_user_data(user_id):
     Deletes all records associated with the given user_id from offensive_cache and phash_cache tables.
     """
     # Encrypt the user_id
-    encrypted_user_id = fernet.encrypt(str(user_id).encode())
+    encrypted_user_id = hash_user_id(user_id)
 
     # Delete records from offensive_cache
     offensive_query = "DELETE FROM offensive_cache WHERE encrypted_user_id = %s"
@@ -266,7 +270,7 @@ def cache_phash(phash_value, message: discord.Message, category):
         return False
 
     # Encrypt the user_id
-    encrypted_user_id = fernet.encrypt(str(message.author.id).encode())
+    encrypted_user_id = hash_user_id(message.author.id)
 
     # Convert phash_value into bytes
     if isinstance(phash_value, imagehash.ImageHash):
