@@ -83,4 +83,11 @@ SETTINGS_SCHEMA = {
             "3": ("ban", "-1"), 
         },
     ),
+    "opt-in": Setting(
+        name="opt-in",
+        description="Set to False for all users to not have data tracked in your server.",
+        setting_type=dict[str, tuple[str, str]],
+        hidden=True,
+        default=True
+    ),
 }

@@ -177,6 +177,10 @@ def has_user_opted_out(user_id):
     """
     Checks if a user has opted out of data storage.
     """
+
+    if get_settings("opt-in") == False:
+        return True
+
     encrypted_user_id = fernet.encrypt(str(user_id).encode())
 
     query = "SELECT 1 FROM opt_out WHERE user_id = %s"
