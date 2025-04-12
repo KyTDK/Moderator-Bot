@@ -16,18 +16,6 @@ class AggregatedModeration(commands.Cog):
         self.AGGREGATION_WINDOW = 10  # seconds
         self.DIFFERENCE_THRESHOLD = 0.7  # for edits
 
-    async def check_offensive_content(self, message: discord.Message) -> bool:
-        """
-        Returns an offensive category if text is flagged, otherwise None.
-        Leverages an internal cache/database and the 'moderator_api'.
-        """
-        text = message.content
-        category = mysql.check_offensive_message(text, not_null=True)
-        if category is None:
-            category = await nsfw.moderator_api(text=text, message=message)
-            mysql.cache_offensive_message(message, category)
-        return category
-
     async def handle_deletion(self, messages: list):
         """
         Safely delete a list of discord.Message objects.
@@ -38,12 +26,12 @@ class AggregatedModeration(commands.Cog):
             except (discord.Forbidden, discord.NotFound):
                 print(f"Cannot delete message (ID={msg.id}).")
 
-    async def check_and_delete_if_offensive(self, message: discord.Message, messages_to_delete: list) -> bool:
+    async def check_and_delete_if_offensive(self, message_content: str, messages_to_delete: list) -> bool:
         """
         Check if 'content' is offensive. If it is, delete all 'messages_to_delete'.
         Returns True if deleted (i.e., was offensive), else False.
         """
-        category = await self.check_offensive_content(message)
+        category = await nsfw.moderator_api(text=message_content)
         if category:
             await self.handle_deletion(messages_to_delete)
             return True
@@ -87,7 +75,7 @@ class AggregatedModeration(commands.Cog):
             messages_to_delete = cached_messages if cached_messages else [message]
 
             was_deleted = await self.check_and_delete_if_offensive(
-                message, messages_to_delete
+                combined_content, messages_to_delete
             )
 
             # If flagged, clear the cache for this user

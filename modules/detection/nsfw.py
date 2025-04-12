@@ -91,7 +91,7 @@ async def process_video(
                 cv2.imwrite(frame_filename, image)
                 try:
                     # Process the extracted frame
-                    if await process_image(frame_filename, message=message):
+                    if await process_image(frame_filename):
                         if nsfw_callback:
                             file_to_send = discord.File(
                                 frame_filename, filename=os.path.basename(frame_filename)
@@ -122,7 +122,7 @@ async def is_nsfw(
         try:
             file_type = determine_file_type(temp_filename)
             if file_type == "Image":
-                if await process_image(temp_filename, message=message):
+                if await process_image(temp_filename):
                     if nsfw_callback:
                         file = discord.File(temp_filename, filename=attachment.filename)
                         await nsfw_callback(message.author, bot, "Uploading explicit content", file)
@@ -181,7 +181,6 @@ async def is_nsfw(
 
 async def moderator_api(text: str = None,
                   image_path: str = None,
-                  message: discord.Message = None,
                   retries: int = 2,
                   backoff: float = 0.5) -> str:
     """Returns True if any moderation category (not excluded) is flagged."""
@@ -249,7 +248,7 @@ def nsfw_model(converted_filename: str):
             return result['class']
     return None
 
-async def process_image(original_filename, message: discord.Message = None):
+async def process_image(original_filename):
     converted_filename = os.path.join(os.getcwd(), 'converted_image.jpg')
     try:
         # Convert the image to JPEG using Pillow
@@ -263,18 +262,12 @@ async def process_image(original_filename, message: discord.Message = None):
             return False
 
         # Run the NSFW detector on the converted image
-        try:
-            phash = imagehash.phash(Image.open(original_filename))
-            category = mysql.check_phash(phash, not_null=True)
-            
-            if category is None:
-                if USE_MODERATOR_API:
-                    category = await moderator_api(image_path=converted_filename, message=message)
-                else:
-                    category = nsfw_model(converted_filename)
+        try:            
+            if USE_MODERATOR_API:
+                category = await moderator_api(image_path=converted_filename)
+            else:
+                category = nsfw_model(converted_filename)
                 
-            # Cache all
-            mysql.cache_phash(phash, message, category)
             return category is not None
         except Exception:
             print("Error during detection:")
