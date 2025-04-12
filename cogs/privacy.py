@@ -12,9 +12,9 @@ class PrivacyCog(commands.Cog):
     async def delete_my_data(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         if mysql.delete_user_data(interaction.user.id):
-            interaction.followup.send("Your data was successfully deleted, please keep in mind this doesn't stop your data from being logged.")
+            await interaction.followup.send("Your data was successfully deleted, please keep in mind this doesn't stop your data from being logged.")
         else:
-            interaction.followup.send("Something went wrong, please contact a server administrator.")
+            await interaction.followup.send("Something went wrong, please contact a server administrator.")
             
 async def setup(bot: commands.Bot):
     await bot.add_cog(PrivacyCog(bot))
