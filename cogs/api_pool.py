@@ -10,8 +10,6 @@ load_dotenv()
 FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
 fernet = Fernet(FERNET_KEY)
 
-
-
 class ApiPoolCog(commands.Cog):
     """A cog for managing the API pool."""
 
