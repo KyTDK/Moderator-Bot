@@ -6,11 +6,7 @@ from dotenv import load_dotenv
 from modules.config.settings_schema import SETTINGS_SCHEMA
 import json
 from cryptography.fernet import Fernet
-from rapidfuzz import fuzz
-import imagehash
 from PIL import Image
-import discord
-import hashlib
 
 load_dotenv()
 

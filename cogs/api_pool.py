@@ -1,6 +1,16 @@
 from discord import app_commands, Interaction
 from discord.ext import commands
 from modules.utils.mysql import execute_query
+from cryptography.fernet import Fernet
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
+fernet = Fernet(FERNET_KEY)
+
+
 
 class ApiPoolCog(commands.Cog):
     """A cog for managing the API pool."""
@@ -38,7 +48,7 @@ class ApiPoolCog(commands.Cog):
     async def add_api(self, interaction: Interaction, api_key: str):
         user_id = interaction.user.id
         query = "INSERT INTO api_pool (user_id, api_key) VALUES (%s, %s)"
-        _, affected_rows = execute_query(query, (user_id, api_key))
+        _, affected_rows = execute_query(query, (user_id, fernet.encrypt(api_key.encode()).decode()))
         if affected_rows > 0:
             await interaction.response.send_message("API key added to your pool.", ephemeral=True)
         else:
