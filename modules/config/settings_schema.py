@@ -1,7 +1,7 @@
-# settings_schema.py
-
+from modules.utils import api
 from typing import Any, Callable, Optional
 import discord
+
 
 class Setting:
     def __init__(self, name: str, description: str, setting_type: type, default: Any = None, encrypted: bool = False, hidden: bool = False, validator: Optional[Callable] = None):
@@ -17,6 +17,7 @@ class Setting:
         if self.validator:
             return self.validator(value)
         return True
+
 
 SETTINGS_SCHEMA = {
     "strike-channel": Setting(
@@ -69,6 +70,7 @@ SETTINGS_SCHEMA = {
         description="OPENAI API key for NSFW detection.",
         setting_type=str,
         default=None,
+        validator=api.check_openai_api_key,
         encrypted=True,
     ),
     # strike actions, type is dict[int, str]
