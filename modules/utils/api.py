@@ -7,8 +7,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from itertools import cycle
-
 _working_keys = []
 _non_working_keys = []
 
