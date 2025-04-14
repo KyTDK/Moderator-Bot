@@ -236,7 +236,7 @@ class Settings(commands.Cog):
         else:
             if schema.private:
                 await interaction.followup.send(
-                    f"For privacy reasons this setting has hidden.", ephemeral=True
+                    "For privacy reasons, this setting is hidden."
                 )
                 return
             # If the setting is a list of channels, convert to channel mentions
