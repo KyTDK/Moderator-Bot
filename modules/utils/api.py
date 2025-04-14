@@ -31,34 +31,57 @@ def get_user_api_key(guild_id):
 def get_next_shared_api_key():
     global _working_cycle, _non_working_cycle
     global _working_keys_cache, _non_working_keys_cache
+    global _last_working_key, _last_non_working_key
 
-    # Refresh working keys if cache is empty
+    # === WORKING KEYS ===
     if not _working_keys_cache:
         _working_keys_cache = get_working_api_keys()
-        _working_cycle = cycle(_working_keys_cache) if _working_keys_cache else None
+        if _working_keys_cache:
+            _working_cycle = cycle(_working_keys_cache)
+            _last_working_key = _working_keys_cache[0]
 
     if _working_cycle:
         try:
-            return next(_working_cycle)
+            key = next(_working_cycle)
+            if key == _last_working_key:
+                # We've completed a full cycle – refresh cache
+                _working_keys_cache = get_working_api_keys()
+                if not _working_keys_cache:
+                    _working_cycle = None
+                else:
+                    _working_cycle = cycle(_working_keys_cache)
+                    _last_working_key = _working_keys_cache[0]
+                    key = next(_working_cycle)
+            return key
         except StopIteration:
-            # Shouldn't normally hit this due to cycle, but reset just in case
-            _working_keys_cache = []
             _working_cycle = None
+            _working_keys_cache = []
 
-    # Working pool is empty or exhausted — fall back to non-working
+    # === NON-WORKING KEYS ===
     if not _non_working_keys_cache:
         _non_working_keys_cache = get_non_working_api_keys()
-        _non_working_cycle = cycle(_non_working_keys_cache) if _non_working_keys_cache else None
+        if _non_working_keys_cache:
+            _non_working_cycle = cycle(_non_working_keys_cache)
+            _last_non_working_key = _non_working_keys_cache[0]
 
     if _non_working_cycle:
         try:
-            return next(_non_working_cycle)
+            key = next(_non_working_cycle)
+            if key == _last_non_working_key:
+                # Full cycle complete – refresh
+                _non_working_keys_cache = get_non_working_api_keys()
+                if not _non_working_keys_cache:
+                    _non_working_cycle = None
+                else:
+                    _non_working_cycle = cycle(_non_working_keys_cache)
+                    _last_non_working_key = _non_working_keys_cache[0]
+                    key = next(_non_working_cycle)
+            return key
         except StopIteration:
-            # Reset fallback cycle
-            _non_working_keys_cache = []
             _non_working_cycle = None
+            _non_working_keys_cache = []
 
-    # No keys available
+    # No keys left at all
     return None
 
 def get_api_client(guild_id):
