@@ -151,7 +151,7 @@ def initialize_database():
                     user_id BIGINT,
                     api VARCHAR(255),
                     working BOOLEAN NOT NULL DEFAULT TRUE,
-                    PRIMARY KEY (user_id, word)
+                    PRIMARY KEY (user_id, api)
                 )
             """)
             db.commit()
