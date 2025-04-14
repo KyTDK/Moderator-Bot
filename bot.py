@@ -43,8 +43,9 @@ async def on_guild_join(guild):
         "`/settings set api-key YOUR_API_KEY_HERE`\n"
         "Replace `YOUR_API_KEY_HERE` with the key you obtained.\n\n"
         "🔒 **Privacy Notice:**\n"
-        "We've enhanced our privacy measures. All previously logged user data has been deleted to ensure compliance with privacy standards. Consequently, opt-in and opt-out features have been removed. Moderator Bot no longer tracks user data.\n\n"
-        "If you have any questions or need assistance, feel free to reach out. Thank you for choosing Moderator Bot!"
+        "Your privacy is our priority. All sensitive information is encrypted, and user data is not stored. The only data that is retained pertains to strikes and settings.\n\n"
+        "Moderator Bot is fully open source and built with transparency in mind — you can review or contribute to the project here: https://github.com/KyTDK/Moderator-Bot\n\n"
+        "If you have any questions or need assistance, feel free to join our support Discord server — the link can be found at the bottom of the `/help` page. Thank you for choosing Moderator Bot!"
     )
 
     # Attempt to send the message to the system channel
