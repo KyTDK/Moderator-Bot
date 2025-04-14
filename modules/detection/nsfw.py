@@ -184,10 +184,13 @@ async def moderator_api(text: str = None,
                         guild_id: int = None,
                         max_attempts: int = 3) -> str:
     inputs = []
-    if text and not image_path:  # text-moderation
-        inputs = text
 
-    if image_path is not None:
+    # Add text
+    if text:
+        inputs.append({"type": "text", "text": text})
+
+    # Add image
+    if image_path:
         try:
             with open(image_path, "rb") as f:
                 img_data = f.read()
@@ -208,7 +211,7 @@ async def moderator_api(text: str = None,
 
         try:
             response = await client.moderations.create(
-                model="omni-moderation-latest" if image_path else "text-moderation-latest",
+                model="omni-moderation-latest",
                 input=inputs
             )
         except openai.AuthenticationError:
