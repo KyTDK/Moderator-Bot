@@ -205,7 +205,7 @@ async def moderator_api(text: str = None,
             # Optionally, you can decide to continue without the image or return an error.
 
     # 2) Initialize client
-    client = api.get_api_client(guild_id)
+    client, encrypted_key = api.get_api_client(guild_id)
     if not client:
         print("No available API key.")
         return None
@@ -218,14 +218,14 @@ async def moderator_api(text: str = None,
                 input=inputs
             )
         except openai.AuthenticationError: # No access, mark as not working
-            api.set_api_key_not_working(client.api_key)
+            api.set_api_key_not_working(encrypted_key)
             break 
         except openai.RateLimitError as e: # Keep trying, might be brief rate limit
             if attempt < retries:
                 asyncio.sleep(backoff)
                 continue
             else: # Rate limit reached, mark as not working
-                api.set_api_key_not_working(client.api_key)
+                api.set_api_key_not_working(encrypted_key)
                 print(f"Rate limit exceeded: {e}")
                 break
 
@@ -239,8 +239,8 @@ async def moderator_api(text: str = None,
             return None
         
         # API key now works, change in DB
-        if not api.is_api_key_working(client.api_key):
-            api.set_api_key_working(client.api_key)
+        if not api.is_api_key_working(encrypted_key):
+            api.set_api_key_working(encrypted_key)
 
         # we have at least one result, inspect the first
         first = results[0]

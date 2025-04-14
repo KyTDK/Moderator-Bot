@@ -80,7 +80,7 @@ class ApiPoolCog(commands.Cog):
 
     @api_pool_group.command(
         name="list",
-        description="List all API keys in your pool."
+        description="List all API keys in your pool (encrypted)."
     )
     async def list_apis(self, interaction: Interaction):
         user_id = interaction.user.id

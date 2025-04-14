@@ -2,9 +2,17 @@ import openai
 from openai import AsyncOpenAI
 import itertools
 from modules.utils import mysql
+from cryptography.fernet import Fernet
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 _api_key_cycle = None
 _api_keys_list = []
+
+FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
+fernet = Fernet(FERNET_KEY)
 
 def check_openai_api_key(api_key):
     try:
@@ -41,23 +49,31 @@ def get_next_shared_api_key():
 
 def get_api_client(guild_id):
     api_key = get_user_api_key(guild_id)
+    encrypted_key = None
     if not api_key:
-        api_key = get_next_shared_api_key()
+        encrypted_key = get_next_shared_api_key()
+        api_key = fernet.decrypt(encrypted_key.encode()).decode()
     if not api_key:
-        return None
-    return AsyncOpenAI(api_key=api_key)
+        return None, None
+    return AsyncOpenAI(api_key=api_key), encrypted_key
 
 def set_api_key_not_working(api_key):
+    if not api_key:
+        return
     query = "UPDATE api_pool SET working = FALSE WHERE api_key = %s"
     _, affected_rows = mysql.execute_query(query, (api_key,))
     return affected_rows > 0
 
 def set_api_key_working(api_key):
+    if not api_key:
+        return
     query = "UPDATE api_pool SET working = TRUE WHERE api_key = %s"
     _, affected_rows = mysql.execute_query(query, (api_key,))
     return affected_rows > 0
 
 def is_api_key_working(api_key: str) -> bool:
+    if not api_key:
+        return
     query = "SELECT working FROM api_pool WHERE api_key = %s"
     result, _ = mysql.execute_query(query, (api_key,), fetch_one=True)
     return result is not None and result[0] == 1
