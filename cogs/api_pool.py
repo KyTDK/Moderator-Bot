@@ -55,7 +55,7 @@ class ApiPoolCog(commands.Cog):
         # Check if the hash already exists in the database
         existing, _ = execute_query(
             "SELECT 1 FROM api_pool WHERE api_key_hash = %s",
-            (api_key_hash,)
+            (api_key_hash,), fetch_one=True
         )
         
         if existing:
