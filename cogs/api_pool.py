@@ -59,14 +59,14 @@ class ApiPoolCog(commands.Cog):
         )
         
         if existing:
-            interaction.response.send_message("This API key already exists in the pool.")
+            await interaction.response.send_message("This API key already exists in the pool.")
         else:
             # Insert the hash into the database
             execute_query(
                 "INSERT INTO api_pool (user_id, api_key_hash) VALUES (%s, %s)",
                 (user_id, api_key_hash)
             )
-            interaction.response.send_message("API key added to the pool.")
+            await interaction.response.send_message("API key added to the pool.")
 
     @api_pool_group.command(
         name="remove",
