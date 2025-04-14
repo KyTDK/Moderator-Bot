@@ -4,13 +4,14 @@ import discord
 
 
 class Setting:
-    def __init__(self, name: str, description: str, setting_type: type, default: Any = None, encrypted: bool = False, hidden: bool = False, validator: Optional[Callable] = None):
+    def __init__(self, name: str, description: str, setting_type: type, default: Any = None, encrypted: bool = False, hidden: bool = False, private=False, validator: Optional[Callable] = None):
         self.name = name
         self.description = description
         self.type = setting_type
         self.default = default
         self.encrypted = encrypted
         self.hidden = hidden
+        self.private = private
         self.validator = validator
 
     def validate(self, value: Any) -> bool:

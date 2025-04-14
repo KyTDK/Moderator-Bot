@@ -234,6 +234,11 @@ class Settings(commands.Cog):
                 f"`{name}` is not set.", ephemeral=True
             )
         else:
+            if schema.private:
+                await interaction.followup.send(
+                    f"For privacy reasons this setting has hidden.", ephemeral=True
+                )
+                return
             # If the setting is a list of channels, convert to channel mentions
             if type == list[discord.TextChannel]:
                 # Convert channel IDs to mentions
