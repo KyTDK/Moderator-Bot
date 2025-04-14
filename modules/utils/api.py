@@ -9,10 +9,8 @@ load_dotenv()
 
 from itertools import cycle
 
-_working_cycle = None
-_non_working_cycle = None
-_working_keys_cache = []
-_non_working_keys_cache = []
+_working_keys = []
+_non_working_keys = []
 
 FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
 fernet = Fernet(FERNET_KEY)
@@ -29,60 +27,23 @@ def get_user_api_key(guild_id):
     return mysql.get_settings(guild_id, "api-key")
 
 def get_next_shared_api_key():
-    global _working_cycle, _non_working_cycle
-    global _working_keys_cache, _non_working_keys_cache
-    global _last_working_key, _last_non_working_key
+    global _working_keys, _non_working_keys
 
-    # === WORKING KEYS ===
-    if not _working_keys_cache:
-        _working_keys_cache = get_working_api_keys()
-        if _working_keys_cache:
-            _working_cycle = cycle(_working_keys_cache)
-            _last_working_key = _working_keys_cache[0]
+    # If working keys are empty, refill
+    if not _working_keys:
+        _working_keys = get_working_api_keys()
 
-    if _working_cycle:
-        try:
-            key = next(_working_cycle)
-            if key == _last_working_key:
-                # We've completed a full cycle – refresh cache
-                _working_keys_cache = get_working_api_keys()
-                if not _working_keys_cache:
-                    _working_cycle = None
-                else:
-                    _working_cycle = cycle(_working_keys_cache)
-                    _last_working_key = _working_keys_cache[0]
-                    key = next(_working_cycle)
-            return key
-        except StopIteration:
-            _working_cycle = None
-            _working_keys_cache = []
+    if _working_keys:
+        return _working_keys.pop(0)
 
-    # === NON-WORKING KEYS ===
-    if not _non_working_keys_cache:
-        _non_working_keys_cache = get_non_working_api_keys()
-        if _non_working_keys_cache:
-            _non_working_cycle = cycle(_non_working_keys_cache)
-            _last_non_working_key = _non_working_keys_cache[0]
+    # If we’ve exhausted working keys, fall back to non-working
+    if not _non_working_keys:
+        _non_working_keys = get_non_working_api_keys()
 
-    if _non_working_cycle:
-        try:
-            key = next(_non_working_cycle)
-            if key == _last_non_working_key:
-                # Full cycle complete – refresh
-                _non_working_keys_cache = get_non_working_api_keys()
-                if not _non_working_keys_cache:
-                    _non_working_cycle = None
-                else:
-                    _non_working_cycle = cycle(_non_working_keys_cache)
-                    _last_non_working_key = _non_working_keys_cache[0]
-                    key = next(_non_working_cycle)
-            return key
-        except StopIteration:
-            _non_working_cycle = None
-            _non_working_keys_cache = []
+    if _non_working_keys:
+        return _non_working_keys.pop(0)
 
-    # No keys left at all
-    return None
+    return None  # No keys available
 
 def get_api_client(guild_id):
     api_key = get_user_api_key(guild_id)
