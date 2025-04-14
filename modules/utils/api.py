@@ -1,6 +1,5 @@
 import openai
 from openai import AsyncOpenAI
-import itertools
 from modules.utils import mysql
 from cryptography.fernet import Fernet
 import os
@@ -8,8 +7,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-_api_key_cycle = None
-_api_keys_list = []
+from itertools import cycle
+
+_working_cycle = None
+_non_working_cycle = None
+_working_keys_cache = []
+_non_working_keys_cache = []
 
 FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
 fernet = Fernet(FERNET_KEY)
@@ -26,26 +29,37 @@ def get_user_api_key(guild_id):
     return mysql.get_settings(guild_id, "api-key")
 
 def get_next_shared_api_key():
-    global _api_key_cycle, _api_keys_list
-    if _api_key_cycle is None or not _api_keys_list:
-        _api_keys_list = get_all_api_keys()
-        if not _api_keys_list:
-            return None
-        _api_key_cycle = itertools.cycle(_api_keys_list)
-    try:
-        next_key = next(_api_key_cycle)
-        # Check if we've completed a full cycle
-        if next_key == _api_keys_list[0]:
-            # Refresh the API keys list and cycle
-            _api_keys_list = get_all_api_keys()
-            if not _api_keys_list:
-                _api_key_cycle = None
-                return None
-            _api_key_cycle = itertools.cycle(_api_keys_list)
-            next_key = next(_api_key_cycle)
-        return next_key
-    except StopIteration:
-        return None
+    global _working_cycle, _non_working_cycle
+    global _working_keys_cache, _non_working_keys_cache
+
+    # Refresh working keys if cache is empty
+    if not _working_keys_cache:
+        _working_keys_cache = get_working_api_keys()
+        _working_cycle = cycle(_working_keys_cache) if _working_keys_cache else None
+
+    if _working_cycle:
+        try:
+            return next(_working_cycle)
+        except StopIteration:
+            # Shouldn't normally hit this due to cycle, but reset just in case
+            _working_keys_cache = []
+            _working_cycle = None
+
+    # Working pool is empty or exhausted — fall back to non-working
+    if not _non_working_keys_cache:
+        _non_working_keys_cache = get_non_working_api_keys()
+        _non_working_cycle = cycle(_non_working_keys_cache) if _non_working_keys_cache else None
+
+    if _non_working_cycle:
+        try:
+            return next(_non_working_cycle)
+        except StopIteration:
+            # Reset fallback cycle
+            _non_working_keys_cache = []
+            _non_working_cycle = None
+
+    # No keys available
+    return None
 
 def get_api_client(guild_id):
     api_key = get_user_api_key(guild_id)
@@ -88,3 +102,22 @@ def get_all_api_keys():
     if result:
         return [row[0] for row in result]
     return []
+
+def get_working_api_keys():
+    query = """
+        SELECT api_key
+        FROM api_pool
+        WHERE working = TRUE
+    """
+    result, _ = mysql.execute_query(query, fetch_all=True)
+    return [row[0] for row in result] if result else []
+
+def get_non_working_api_keys():
+    query = """
+        SELECT api_key
+        FROM api_pool
+        WHERE working = FALSE
+    """
+    result, _ = mysql.execute_query(query, fetch_all=True)
+    return [row[0] for row in result] if result else []
+
