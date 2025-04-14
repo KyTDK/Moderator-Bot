@@ -36,7 +36,7 @@ async def on_guild_join(guild):
         "👋 **Thanks for adding Moderator Bot!**\n\n"
         "We're thrilled to be part of your server. To ensure optimal performance, especially with our AI-powered moderation features, we recommend setting up your own OpenAI API key. This helps prevent potential rate limits due to high usage.\n\n"
         "**Setting up is easy and free:**\n"
-        "1. Visit: https://platform.openai.com/account/api-keys\n"
+        "1. Visit: <https://platform.openai.com/account/api-keys>\n"
         "2. Click on 'Create new secret key' and follow the prompts.\n"
         "3. Copy the generated API key.\n"
         "4. In your server, use the command:\n"
@@ -45,6 +45,8 @@ async def on_guild_join(guild):
         "🔒 **Privacy Notice:**\n"
         "Your privacy is our priority. All sensitive information is encrypted, and user data is not stored. The only data that is retained pertains to strikes and settings.\n\n"
         "Moderator Bot is fully open source and built with transparency in mind — you can review or contribute to the project here: <https://github.com/KyTDK/Moderator-Bot>\n\n"
+        "ℹ️ **Getting Started:**\n"
+        "To explore all the features and commands available, use the `/help` command in your server.\n\n"
         "If you have any questions or need assistance, feel free to join our support Discord server — the link can be found at the bottom of the `/help` page. Thank you for choosing Moderator Bot!"
     )
 
