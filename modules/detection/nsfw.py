@@ -182,7 +182,7 @@ async def is_nsfw(
 async def moderator_api(text: str = None,
                         image_path: str = None,
                         guild_id: int = None,
-                        max_attempts: int = 3) -> str:
+                        max_attempts: int = 10) -> str:
     inputs = []
     if text and not image_path:  # text-moderation
         inputs = text
