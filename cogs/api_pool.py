@@ -59,17 +59,17 @@ class ApiPoolCog(commands.Cog):
             (api_key_hash,), fetch_one=True
         )
         if not api.check_openai_api_key(api_key):
-            await interaction.response.send_message("You provided an invalid OpenAI API key.")
+            await interaction.response.send_message("You provided an invalid OpenAI API key.", ephemeral=True)
             return
         if existing:
-            await interaction.response.send_message("This API key already exists in the pool.")
+            await interaction.response.send_message("This API key already exists in the pool.", ephemeral=True)
         else:
             # Insert the hash into the database
             execute_query(
                 "INSERT INTO api_pool (user_id, api_key, api_key_hash) VALUES (%s, %s, %s)",
                 (user_id, fernet.encrypt(api_key.encode()).decode(), api_key_hash)
             )
-            await interaction.response.send_message("API key added to the pool.")
+            await interaction.response.send_message("API key added to the pool.", ephemeral=True)
 
     @api_pool_group.command(
         name="remove",
