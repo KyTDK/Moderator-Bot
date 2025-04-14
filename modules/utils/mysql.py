@@ -146,6 +146,14 @@ def initialize_database():
                     PRIMARY KEY (guild_id, word)
                 )
             """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS api_pool (
+                    user_id BIGINT,
+                    word VARCHAR(255),
+                    working BOOLEAN NOT NULL DEFAULT TRUE,
+                    PRIMARY KEY (user_id, word)
+                )
+            """)
             db.commit()
     except Error as e:
         logging.error(f"Error initializing database: {e}")

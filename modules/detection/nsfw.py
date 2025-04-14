@@ -15,9 +15,10 @@ from dotenv import load_dotenv
 from lottie.exporters.gif import export_gif
 import lottie
 import base64
-from modules.utils import mysql
-from openai import AsyncOpenAI
+from modules.utils import mysql, api
 import time
+import openai
+import asyncio
 
 USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 
@@ -204,8 +205,10 @@ async def moderator_api(text: str = None,
             # Optionally, you can decide to continue without the image or return an error.
 
     # 2) Initialize client
-    key = mysql.get_settings(guild_id, "api-key") or OPENAI_API_KEY
-    client = AsyncOpenAI(api_key=key)
+    client = api.get_api_client(guild_id)
+    if not client:
+        print("No available API key.")
+        return None
 
     # 3) Attempt the call, with a simple retry if results list is empty
     for attempt in range(1, retries + 1):
@@ -214,10 +217,17 @@ async def moderator_api(text: str = None,
                 model="omni-moderation-latest" if image_path else "text-moderation-latest", # switch to text-moderation to avoid RPD
                 input=inputs
             )
-        except Exception:
-            print(f"[moderator_api] API call error (attempt {attempt}):")
-            print(traceback.format_exc())
-            return None
+        except openai.AuthenticationError: # No access, mark as not working
+            api.set_api_key_not_working(client.api_key)
+            break 
+        except openai.RateLimitError as e: # Keep trying, might be brief rate limit
+            if attempt < retries:
+                asyncio.sleep(backoff)
+                continue
+            else: # Rate limit reached, mark as not working
+                api.set_api_key_not_working(client.api_key)
+                print(f"Rate limit exceeded: {e}")
+                break
 
         results = getattr(response, "results", [])
         if not results:
@@ -227,6 +237,10 @@ async def moderator_api(text: str = None,
                 continue
             # final attempt, bail out
             return None
+        
+        # API key now works, change in DB
+        if not api.is_api_key_working(client.api_key):
+            api.set_api_key_working(client.api_key)
 
         # we have at least one result, inspect the first
         first = results[0]
