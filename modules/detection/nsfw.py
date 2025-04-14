@@ -180,17 +180,13 @@ async def is_nsfw(
 
 
 async def moderator_api(text: str = None,
-                  image_path: str = None,
-                  guild_id: int = None,
-                  retries: int = 2,
-                  backoff: float = 0.5) -> str:
-    """Returns True if any moderation category (not excluded) is flagged."""
-    # 1) Build the payload
+                        image_path: str = None,
+                        guild_id: int = None,
+                        max_attempts: int = 3) -> str:
     inputs = []
-    if text and not image_path: # text-moderation
+    if text and not image_path:  # text-moderation
         inputs = text
-    
-    # Only add the image payload if image_path is not None.
+
     if image_path is not None:
         try:
             with open(image_path, "rb") as f:
@@ -202,56 +198,48 @@ async def moderator_api(text: str = None,
             })
         except Exception as e:
             print(f"Error opening image {image_path}: {e}")
-            # Optionally, you can decide to continue without the image or return an error.
+            return None
 
-    # 2) Initialize client
-    client, encrypted_key = api.get_api_client(guild_id)
-    if not client:
-        print("No available API key.")
-        return None
+    for attempt in range(max_attempts):
+        client, encrypted_key = api.get_api_client(guild_id)
+        if not client:
+            print("No available API key.")
+            return None
 
-    # 3) Attempt the call, with a simple retry if results list is empty
-    for attempt in range(1, retries + 1):
         try:
             response = await client.moderations.create(
-                model="omni-moderation-latest" if image_path else "text-moderation-latest", # switch to text-moderation to avoid RPD
+                model="omni-moderation-latest" if image_path else "text-moderation-latest",
                 input=inputs
             )
-        except openai.AuthenticationError: # No access, mark as not working
+        except openai.AuthenticationError:
+            print("Authentication failed. Marking key as not working.")
             api.set_api_key_not_working(encrypted_key)
-            break 
-        except openai.RateLimitError as e: # Keep trying, might be brief rate limit
-            if attempt < retries:
-                asyncio.sleep(backoff)
-                continue
-            else: # Rate limit reached, mark as not working
-                api.set_api_key_not_working(encrypted_key)
-                print(f"Rate limit exceeded: {e}")
-                break
+            continue  # try next key
+        except openai.RateLimitError as e:
+            print(f"Rate limit error: {e}. Marking key as not working.")
+            api.set_api_key_not_working(encrypted_key)
+            continue  # try next key
+        except Exception as e:
+            print(f"Unexpected error from OpenAI API: {e}")
+            continue  # try next key
 
         results = getattr(response, "results", [])
         if not results:
-            # no results returned — maybe transient; retry if we still can
-            if attempt < retries:
-                time.sleep(backoff)
-                continue
-            # final attempt, bail out
-            return None
-        
-        # API key now works, change in DB
+            print("No moderation results returned.")
+            continue  # try next key
+
         if not api.is_api_key_working(encrypted_key):
             api.set_api_key_working(encrypted_key)
 
-        # we have at least one result, inspect the first
         first = results[0]
         for category, flagged in vars(first.categories).items():
             if flagged and category not in moderator_api_category_exclusions:
                 print(f"Category {category} is flagged.")
                 return category
-        # none of the categories (after exclusions) were flagged
-        return None
+        return None  # No categories flagged
 
-    # shouldn't get here, but safe default
+    # All attempts failed
+    print("All API key attempts failed.")
     return None
 
 def nsfw_model(converted_filename: str):
