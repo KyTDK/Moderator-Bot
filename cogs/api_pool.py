@@ -63,8 +63,8 @@ class ApiPoolCog(commands.Cog):
         else:
             # Insert the hash into the database
             execute_query(
-                "INSERT INTO api_pool (user_id, api_key_hash) VALUES (%s, %s)",
-                (user_id, api_key_hash)
+                "INSERT INTO api_pool (user_id, api_key, api_key_hash) VALUES (%s, %s, %s)",
+                (user_id, fernet.encrypt(api_key.encode()).decode(), api_key_hash)
             )
             await interaction.response.send_message("API key added to the pool.")
 
