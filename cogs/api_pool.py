@@ -1,6 +1,7 @@
 from discord import app_commands, Interaction
 from discord.ext import commands
 from modules.utils.mysql import execute_query
+from modules.utils import api
 from cryptography.fernet import Fernet
 import os
 from dotenv import load_dotenv
@@ -57,7 +58,9 @@ class ApiPoolCog(commands.Cog):
             "SELECT 1 FROM api_pool WHERE api_key_hash = %s",
             (api_key_hash,), fetch_one=True
         )
-        
+        if not api.check_openai_api_key(api_key):
+            await interaction.response.send_message("You provided an invalid OpenAI API key.")
+            return
         if existing:
             await interaction.response.send_message("This API key already exists in the pool.")
         else:
