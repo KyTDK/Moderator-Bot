@@ -71,6 +71,7 @@ SETTINGS_SCHEMA = {
         description="OPENAI API key for NSFW detection.",
         setting_type=str,
         default=None,
+        private=True,
         validator=api.check_openai_api_key,
         encrypted=True,
     ),
