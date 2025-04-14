@@ -144,10 +144,11 @@ def initialize_database():
             """)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS api_pool (
-                    user_id BIGINT,
-                    api_key TEXT,
+                    user_id BIGINT NOT NULL,
+                    api_key TEXT NOT NULL,
+                    api_key_hash VARCHAR(64) NOT NULL,
                     working BOOLEAN NOT NULL DEFAULT TRUE,
-                    PRIMARY KEY (user_id, api_key(255))
+                    PRIMARY KEY (user_id, api_key_hash)
                 )
             """)
             db.commit()
