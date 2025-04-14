@@ -149,7 +149,7 @@ def initialize_database():
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS api_pool (
                     user_id BIGINT,
-                    word VARCHAR(255),
+                    api VARCHAR(255),
                     working BOOLEAN NOT NULL DEFAULT TRUE,
                     PRIMARY KEY (user_id, word)
                 )
