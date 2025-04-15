@@ -24,10 +24,23 @@ async def make_announcement(guild, message):
 @bot.event
 async def on_ready():
     mysql.initialize_database()
-    # show info of guilds the bot is in
-    for guild in bot.guilds:
-        print(f"Connected to {guild.name} (ID: {guild.id}) with {len([member for member in guild.members if not member.bot])} members ")
-    total_users_not_bots = sum(len([member for member in guild.members if not member.bot]) for guild in bot.guilds)
+
+    # Sort guilds by non-bot member count (descending)
+    sorted_guilds = sorted(
+        bot.guilds,
+        key=lambda g: len([member for member in g.members if not member.bot]),
+        reverse=True
+    )
+
+    # Show info of each guild
+    for guild in sorted_guilds:
+        non_bot_members = len([member for member in guild.members if not member.bot])
+        print(f"Connected to {guild.name} (ID: {guild.id}) with {non_bot_members} members")
+
+    total_users_not_bots = sum(
+        len([member for member in guild.members if not member.bot])
+        for guild in bot.guilds
+    )
     print(f"Connected to {len(bot.guilds)} guilds with a total of {total_users_not_bots} users.")
 
 @bot.event
