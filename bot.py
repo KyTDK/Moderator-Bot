@@ -24,7 +24,16 @@ async def make_announcement(guild, message):
 @bot.event
 async def on_ready():
     mysql.initialize_database()
-    print(f"Connected to {len(bot.guilds)} guilds.")
+    # show info of guilds the bot is in
+    bot.tree.remove_command(guild=None)
+    for guild in bot.guilds:
+        bot.tree.remove_command(guild=guild)
+        bot.tree.copy_global_to(guild=guild)
+        await bot.tree.sync(guild=guild)
+        print(f"Connected to {guild.name} (ID: {guild.id}) with {len([member for member in guild.members if not member.bot])} members ")
+    await bot.tree.sync()
+    total_users_not_bots = sum(len([member for member in guild.members if not member.bot]) for guild in bot.guilds)
+    print(f"Connected to {len(bot.guilds)} guilds with a total of {total_users_not_bots} users.")
 
 @bot.event
 async def on_guild_join(guild):
