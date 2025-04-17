@@ -210,7 +210,8 @@ class Settings(commands.Cog):
         help_message += "`/bannedwords list`: List all banned words.\n"
         help_message += "`/help`: Get help on settings.\n"
         # support discord servrer link
-        help_message += "\nPost suggestions and bugs on the support discord server: [Support Server](https://discord.gg/invite/33VcwjfEXC)"
+        help_message += "\nPost suggestions and bugs on the support discord server: [Support Server](https://discord.gg/invite/33VcwjfEXC)\n"
+        help_message += "Donation link: <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
         await interaction.response.send_message(help_message, ephemeral=True)
 
     @settings_group.command(name="get", description="Get the current value of a server setting.")
