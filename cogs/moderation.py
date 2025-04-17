@@ -145,10 +145,9 @@ class moderation(commands.Cog):
                 title="Official Moderation Notice",
                 description=(
                     "Please be advised that Moderator Bot is actively monitoring all activity in this channel. "
-                    "Any violation of community guidelines will trigger progressive disciplinary measures. "
-                    "A first offense will result in a **24-hour timeout**, a second offense in a **7-day timeout**, "
-                    "and a third offense will lead to a **permanent ban**. "
-                    "We appreciate your cooperation in maintaining a respectful environment."
+                    "Any violations of community guidelines may result in disciplinary action. "
+                    "The severity and nature of these actions will depend on the circumstances of each case. "
+                    "We appreciate your cooperation in helping maintain a respectful and safe environment."
                 ),
                 color=Color.red()
             )
