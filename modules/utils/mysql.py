@@ -72,7 +72,7 @@ def get_strike_count(user_id, guild_id):
 def get_strikes(user_id, guild_id):
         strikes, _ = execute_query(
             "SELECT id, reason, striked_by_id, timestamp FROM strikes WHERE user_id = %s AND guild_id = %s ORDER BY timestamp DESC",
-            (guild_id, user_id),
+            (user_id, guild_id),
             fetch_all=True
         )
         return strikes
