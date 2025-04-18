@@ -98,23 +98,27 @@ class moderation(commands.Cog):
         description="Remove a specific strike by its ID."
     )
     @app_commands.describe(
-        strike_id="The ID of the strike to remove"
+        strike_id="The ID of the strike to remove",
+        user="The user who received the strike"
     )
     @app_commands.default_permissions(moderate_members=True)
-    async def remove_strike(self, interaction: Interaction, strike_id: int):
-        """Remove a strike by its unique ID."""
+    async def remove_strike(self, interaction: Interaction, strike_id: int, user: Member):
+        """Remove a strike by its unique ID and target user."""
         await interaction.response.defer(ephemeral=True)
 
-        # Attempt to delete the strike by ID and guild
+        # Ensure the strike matches the guild and the user
         _, rows_affected = execute_query(
-            "DELETE FROM strikes WHERE id = %s AND guild_id = %s",
-            (strike_id, interaction.guild.id)
+            "DELETE FROM strikes WHERE id = %s AND guild_id = %s AND user_id = %s",
+            (strike_id, interaction.guild.id, user.id)
         )
 
         if rows_affected > 0:
-            message = f"Strike with ID `{strike_id}` has been successfully removed."
+            message = f"Strike with ID `{strike_id}` for {user.mention} has been successfully removed."
         else:
-            message = f"No strike with ID `{strike_id}` found in this guild. Use `/strikes get <user>` to display all strikes and their IDs."
+            message = (
+                f"No strike with ID `{strike_id}` found for {user.mention} in this guild.\n"
+                f"Use `/strikes get <user>` to display all strikes and their IDs."
+            )
 
         await interaction.followup.send(message, ephemeral=True)
 
