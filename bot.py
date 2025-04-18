@@ -25,24 +25,6 @@ async def make_announcement(guild, message):
 async def on_ready():
     mysql.initialize_database()
 
-    # Sort guilds by non-bot member count (descending)
-    sorted_guilds = sorted(
-        bot.guilds,
-        key=lambda g: len([member for member in g.members if not member.bot]),
-        reverse=True
-    )
-
-    # Show info of each guild
-    for guild in sorted_guilds:
-        non_bot_members = len([member for member in guild.members if not member.bot])
-        print(f"Connected to {guild.name} (ID: {guild.id}) with {non_bot_members} members")
-
-    total_users_not_bots = sum(
-        len([member for member in guild.members if not member.bot])
-        for guild in bot.guilds
-    )
-    print(f"Connected to {len(bot.guilds)} guilds with a total of {total_users_not_bots} users.")
-
 @bot.event
 async def on_guild_join(guild):
     welcome_message = (
@@ -95,6 +77,7 @@ async def setup_hook():
             print(f"Loaded Cog: {filename[:-3]}")
         else:
             print("Unable to load pycache folder.")
+    await bot.tree.sync()
 
 if __name__ == "__main__":
     bot.run(TOKEN)

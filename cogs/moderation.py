@@ -73,7 +73,7 @@ class moderation(commands.Cog):
             strike_by = interaction.guild.get_member(striked_by_id)
             strike_by_name = strike_by.display_name if strike_by else "Unknown"
             entry = {
-                "title": f"Strike ID: {strike_id} | By: {strike_by_name}",
+                "title": f"Strike ID: {strike_id} | By: {strike_by_name} ({strike_by.mention})",
                 "value": f"Reason: {reason}\nTime: {timestamp}"
             }
             entries.append(entry)
