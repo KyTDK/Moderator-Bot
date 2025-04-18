@@ -1,10 +1,10 @@
 from discord.ext import commands
 from discord import app_commands, Interaction, Member, Embed, Color
 from modules.utils.mysql import execute_query
-from modules.utils.user_utils import has_role_or_permission
-from discord.app_commands.errors import MissingPermissions
 from modules.moderation import strike
 import discord
+import io
+from discord import File
 
 
 class moderation(commands.Cog):
@@ -44,44 +44,80 @@ class moderation(commands.Cog):
         else:
             await interaction.followup.send("An error occured, please try again")
     
-    # Get strikes
+
     @strike_group.command(
         name="get",
         description="Get strikes of a specific user."
     )
     async def get_strikes(self, interaction: Interaction, user: Member):
         """Retrieve strikes for a specified user."""
-        # Defer the response to acknowledge the interaction
         await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild.id
-        # Retrieve strikes from the database.
-        # Adjust the SELECT query as needed for your database schema.
+
         strikes, _ = execute_query(
-            "SELECT reason, striked_by_id, timestamp FROM strikes WHERE guild_id = %s AND user_id = %s ORDER BY timestamp DESC",
-            (guild_id, user.id),  # Passing both guild_id and user_id as parameters
+            "SELECT id, reason, striked_by_id, timestamp FROM strikes WHERE guild_id = %s AND user_id = %s ORDER BY timestamp DESC",
+            (guild_id, user.id),
             fetch_all=True
         )
 
-        # Create an embed to display the strikes
-        embed = Embed(
-            title=f"Strikes for {user.display_name}",
-            color=Color.red()
-        )
         if not strikes:
-            embed.description = "No strikes found for this user."
+            await interaction.followup.send(embed=Embed(
+                title=f"Strikes for {user.display_name}",
+                description="No strikes found for this user.",
+                color=Color.red()
+            ))
+            return
+
+        entries = []
+        for strike_id, reason, striked_by_id, timestamp in strikes:
+            strike_by = interaction.guild.get_member(striked_by_id)
+            strike_by_name = strike_by.display_name if strike_by else "Unknown"
+            entry = {
+                "title": f"Strike ID: {strike_id} | By: {strike_by_name}",
+                "value": f"Reason: {reason}\nTime: {timestamp}"
+            }
+            entries.append(entry)
+
+        # Build plain text version
+        content = f"Strikes for {user.display_name}:\n\n"
+        for entry in entries:
+            content += f"{entry['title']}\n{entry['value']}\n\n"
+
+        # Send based on length
+        if len(content) > 6000:
+            file = File(io.BytesIO(content.encode()), filename=f"{user.name}_strikes.txt")
+            await interaction.followup.send(content="Strike list is too long, sent as a file:", file=file)
         else:
-            for strike in strikes:
-                reason, striked_by_id, timestamp = strike
-                # Retrieve the member who issued the strike (if possible)
-                strike_by = interaction.guild.get_member(striked_by_id)
-                strike_by_name = strike_by.display_name if strike_by else "Unknown"
-                embed.add_field(
-                    name=f"Strike by: {strike_by_name}",
-                    value=f"Reason: {reason}\nTime: {timestamp}",
-                    inline=False
-                )
-        await interaction.followup.send(embed=embed)
+            embed = Embed(title=f"Strikes for {user.display_name}", color=Color.red())
+            for entry in entries:
+                embed.add_field(name=entry["title"], value=entry["value"], inline=False)
+            await interaction.followup.send(embed=embed)
     
+    @strike_group.command(
+        name="remove",
+        description="Remove a specific strike by its ID."
+    )
+    @app_commands.describe(
+        strike_id="The ID of the strike to remove"
+    )
+    @app_commands.default_permissions(moderate_members=True)
+    async def remove_strike(self, interaction: Interaction, strike_id: int):
+        """Remove a strike by its unique ID."""
+        await interaction.response.defer(ephemeral=True)
+
+        # Attempt to delete the strike by ID and guild
+        _, rows_affected = execute_query(
+            "DELETE FROM strikes WHERE id = %s AND guild_id = %s",
+            (strike_id, interaction.guild.id)
+        )
+
+        if rows_affected > 0:
+            message = f"Strike with ID `{strike_id}` has been successfully removed."
+        else:
+            message = f"No strike with ID `{strike_id}` found in this guild. Use `/strikes get <user>` to display all strikes and their IDs."
+
+        await interaction.followup.send(message, ephemeral=True)
+
     #Clear strikes
     @strike_group.command(
         name="clear",
