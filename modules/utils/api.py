@@ -21,9 +21,6 @@ def check_openai_api_key(api_key):
     except openai.AuthenticationError:
         return False
 
-def get_user_api_key(guild_id):
-    return mysql.get_settings(guild_id, "api-key")
-
 def get_next_shared_api_key():
     global _working_keys, _non_working_keys
 
@@ -44,7 +41,7 @@ def get_next_shared_api_key():
     return None  # No keys available
 
 def get_api_client(guild_id):
-    api_key = get_user_api_key(guild_id)
+    api_key = mysql.get_settings(guild_id, "api-key")
     encrypted_key = None
     if not api_key:
         encrypted_key = get_next_shared_api_key()

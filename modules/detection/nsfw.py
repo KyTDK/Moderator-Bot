@@ -211,6 +211,9 @@ async def moderator_api(text: str = None,
             print(f"Error opening image {image_path}: {e}")
             return None
 
+    if not inputs:
+        return
+
     for attempt in range(max_attempts):
         client, encrypted_key = api.get_api_client(guild_id)
         if not client:
