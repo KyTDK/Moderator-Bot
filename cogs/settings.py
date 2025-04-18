@@ -3,7 +3,7 @@ from discord import app_commands, Interaction
 import discord
 from modules.utils import mysql, time
 from modules.config.settings_schema import SETTINGS_SCHEMA
-from discord.app_commands import MissingPermissions, AppCommandError
+from modules.variables import TimeString
 
 class Settings(commands.Cog):
     """A cog for settings commands."""
@@ -94,11 +94,15 @@ class Settings(commands.Cog):
                         f"Usage: `/set_setting {name} true` or `/set_setting {name} false`"
                     )
             elif expected is discord.TextChannel:
-                # you might handle channel‐mentions elsewhere
                 raise ValueError(
                     f"**`{name}` expects a channel.**\n"
                     f"Use `/set_channel {name} #channel-name` instead."
                 )
+            elif expected is TimeString:
+                try:
+                    parsed = TimeString(value)
+                except ValueError:
+                    raise ValueError("Invalid duration format. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively.",)
             else:
                 # fallback to string
                 parsed = value
@@ -301,7 +305,7 @@ class Settings(commands.Cog):
         
         if time.parse_duration(duration) is None and duration is not None:
             await interaction.followup.send(
-                "Invalid duration format. Use formats like 1h, 30m, 30d.",
+                "Invalid duration format. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively.",
                 ephemeral=True,
             )
             return

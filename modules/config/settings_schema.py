@@ -1,6 +1,7 @@
 from modules.utils import api
 from typing import Any, Callable, Optional
 import discord
+from modules.variables import TimeString
 
 
 class Setting:
@@ -75,7 +76,6 @@ SETTINGS_SCHEMA = {
         validator=api.check_openai_api_key,
         encrypted=True,
     ),
-    # strike actions, type is dict[int, str]
     "strike-actions": Setting(
         name="strike-actions",
         description="Actions to take for each strike level.",

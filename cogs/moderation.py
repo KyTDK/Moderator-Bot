@@ -1,10 +1,10 @@
 from discord.ext import commands
 from discord import app_commands, Interaction, Member, Embed, Color
-from modules.utils.mysql import execute_query
 from modules.moderation import strike
 import discord
 import io
 from discord import File
+from modules.utils import mysql
 
 
 class moderation(commands.Cog):
@@ -52,13 +52,8 @@ class moderation(commands.Cog):
     async def get_strikes(self, interaction: Interaction, user: Member):
         """Retrieve strikes for a specified user."""
         await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild.id
 
-        strikes, _ = execute_query(
-            "SELECT id, reason, striked_by_id, timestamp FROM strikes WHERE guild_id = %s AND user_id = %s ORDER BY timestamp DESC",
-            (guild_id, user.id),
-            fetch_all=True
-        )
+        strikes = mysql.get_strikes(user.id, interaction.guild.id)
 
         if not strikes:
             await interaction.followup.send(embed=Embed(
@@ -107,7 +102,7 @@ class moderation(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         # Ensure the strike matches the guild and the user
-        _, rows_affected = execute_query(
+        _, rows_affected = mysql.execute_query(
             "DELETE FROM strikes WHERE id = %s AND guild_id = %s AND user_id = %s",
             (strike_id, interaction.guild.id, user.id)
         )
@@ -133,7 +128,7 @@ class moderation(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         # Delete strikes from the database
-        _, rows_affected = execute_query(
+        _, rows_affected = mysql.execute_query(
             "DELETE FROM strikes WHERE user_id = %s AND guild_id = %s",
             (user.id, interaction.guild.id)  # Passing both guild_id and user_id as parameters
         )

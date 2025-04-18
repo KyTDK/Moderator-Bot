@@ -69,6 +69,14 @@ def get_strike_count(user_id, guild_id):
     )
     return result[0] if result else 0
 
+def get_strikes(user_id, guild_id):
+        strikes, _ = execute_query(
+            "SELECT id, reason, striked_by_id, timestamp FROM strikes WHERE user_id = %s AND guild_id = %s ORDER BY timestamp DESC",
+            (guild_id, user_id),
+            fetch_all=True
+        )
+        return strikes
+
 def get_settings(guild_id, settings_key=None):
     """Retrieve the settings for a guild."""
     settings, _ = execute_query(
