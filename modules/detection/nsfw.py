@@ -16,9 +16,9 @@ from lottie.exporters.gif import export_gif
 import lottie
 import base64
 from modules.utils import mysql, api
-import time
 import openai
-import asyncio
+from urllib.parse import urlparse
+
 
 USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 
@@ -139,9 +139,20 @@ async def is_nsfw(
 
     # Process embeds (e.g. GIFs from image or thumbnail URLs)
     for embed in message.embeds:
-        gif_url = embed.image.proxy_url if embed.image else embed.video.url if embed.video else embed.thumbnail.proxy_url if embed.thumbnail else None
-        temp_location = f"{uuid.uuid4().hex[:12]}.gif"
+        gif_url = (
+            embed.image.proxy_url if embed.image else
+            embed.video.url if embed.video else
+            embed.thumbnail.proxy_url if embed.thumbnail else None
+        )
+
         if gif_url:
+            domain = urlparse(gif_url).netloc.lower()
+
+            # Check if it's a Tenor URL since its unlikely to be NSFW (less API calls)
+            if "tenor.com" in domain:
+                continue
+
+            temp_location = f"{uuid.uuid4().hex[:12]}.gif"
             try:
                 data = requests.get(gif_url).content
                 with open(temp_location, "wb") as f:
