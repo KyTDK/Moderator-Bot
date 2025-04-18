@@ -40,6 +40,12 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
 
     # Fetch the updated strike count for the user.
     strike_count = mysql.get_strike_count(user.id, guild_id)
+
+    # Limit strike count
+    if interaction and strike_count>100:
+            interaction.followup.send("You cannot give the same player more than 100 strikes. Use `strikes clear <user>` to reset their strikes.")
+            return
+    
     now = utcnow()
 
     # Retrieve the strike actions setting; if not found, use the hardcoded default.
