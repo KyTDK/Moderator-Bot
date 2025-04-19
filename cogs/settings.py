@@ -229,7 +229,7 @@ class Settings(commands.Cog):
 
         # Support and donation links
         help_message += (
-            "**Support Server:** <https://discord.gg/invite/33VcwjfEXC>\n"
+            "\n**Support Server:** <https://discord.gg/invite/33VcwjfEXC>\n"
             "**Donation link:** <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
         )
 
