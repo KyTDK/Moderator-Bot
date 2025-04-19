@@ -282,6 +282,7 @@ class Settings(commands.Cog):
             app_commands.Choice(name="Permanent ban", value="ban"),
             app_commands.Choice(name="kick", value="kick"),
             app_commands.Choice(name="timeout", value="timeout"),
+            app_commands.Choice(name="Remove action", value="None"),
         ]
     )
     async def strike_action(self, interaction: Interaction, number_of_strikes: int, action: str, duration: str = None):
@@ -313,6 +314,22 @@ class Settings(commands.Cog):
         strike_actions = mysql.get_settings(interaction.guild.id, "strike-actions") or {}
 
         number_of_strikes = str(number_of_strikes)
+
+        if action == "None":
+            # Remove the action
+            if number_of_strikes in strike_actions:
+                removed_action = strike_actions.pop(number_of_strikes)
+                mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
+                await interaction.followup.send(
+                    f"Removed strike action for `{number_of_strikes}` strikes: `{removed_action}`.",
+                    ephemeral=True,
+                )
+            else:
+                await interaction.followup.send(
+                    f"No strike action found for `{number_of_strikes}` strikes.",
+                    ephemeral=True,
+                )
+            return
 
         # Update the dictionary, telling the user the new and old values
         if number_of_strikes in strike_actions:

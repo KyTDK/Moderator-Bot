@@ -53,7 +53,6 @@ class Monitoring(commands.Cog):
 
         await self.log_event(channel.guild, log_message)
 
-
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         # Only log when content actually changes and ignore bot messages
