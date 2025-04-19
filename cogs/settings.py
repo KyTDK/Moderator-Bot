@@ -234,7 +234,7 @@ class Settings(commands.Cog):
             "Donation link: <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
         )
 
-        await interaction.followup.send(help_message, ephemeral=True)
+        await interaction.response.send_message(help_message, ephemeral=True)
 
     @settings_group.command(name="get", description="Get the current value of a server setting.")
     @app_commands.choices(name=non_channel_choices_all+channel_choices)
