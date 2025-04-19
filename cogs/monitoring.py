@@ -36,13 +36,23 @@ class Monitoring(commands.Cog):
         await self.log_event(member.guild, message)
 
     @commands.Cog.listener()
-    async def on_message_delete(self, message: discord.Message):
-        # Avoid logging if the deleted message is from a bot
-        if message.author.bot:
-            return
-        log_message = (f":wastebasket: **Message Deleted:** In {message.channel.mention}, "
-                       f"{message.author.mention} said: {message.content}")
-        await self.log_event(message.guild, log_message)
+    async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
+        channel = self.bot.get_channel(payload.channel_id)
+        if channel is None:
+            return  # Channel not found
+
+        # Attempt to retrieve the message from cache
+        message = payload.cached_message
+        if message:
+            if message.author.bot:
+                return  # Ignore bot messages
+            log_message = (f":wastebasket: **Message Deleted:** In {channel.mention}, "
+                        f"{message.author.mention} said: {message.content}")
+        else:
+            log_message = f":wastebasket: A message was deleted in {channel.mention}, but content is unavailable."
+
+        await self.log_event(channel.guild, log_message)
+
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
