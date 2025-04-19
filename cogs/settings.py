@@ -280,8 +280,8 @@ class Settings(commands.Cog):
     @app_commands.choices(
         action=[
             app_commands.Choice(name="Permanent ban", value="ban"),
-            app_commands.Choice(name="kick", value="kick"),
-            app_commands.Choice(name="timeout", value="timeout"),
+            app_commands.Choice(name="Kick", value="kick"),
+            app_commands.Choice(name="Timeout", value="timeout"),
             app_commands.Choice(name="Remove action", value="remove"),
         ]
     )
