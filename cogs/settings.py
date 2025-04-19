@@ -229,9 +229,8 @@ class Settings(commands.Cog):
 
         # Support and donation links
         help_message += (
-            "\nPost suggestions and bugs on the support Discord server: "
-            "Support Server: <https://discord.gg/invite/33VcwjfEXC>\n"
-            "Donation link: <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
+            "**Support Server:** <https://discord.gg/invite/33VcwjfEXC>\n"
+            "**Donation link:** <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
         )
 
         await interaction.response.send_message(help_message, ephemeral=True)
