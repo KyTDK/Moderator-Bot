@@ -282,14 +282,14 @@ class Settings(commands.Cog):
             app_commands.Choice(name="Permanent ban", value="ban"),
             app_commands.Choice(name="kick", value="kick"),
             app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="Remove action", value="None"),
+            app_commands.Choice(name="Remove action", value="remove"),
         ]
     )
     async def strike_action(self, interaction: Interaction, number_of_strikes: int, action: str, duration: str = None):
         """Configure strike actions."""
         await interaction.response.defer(ephemeral=True)
         # Validate action and duration
-        valid_actions = ["ban", "kick", "timeout"]
+        valid_actions = ["ban", "kick", "timeout", "remove"]
         if action not in valid_actions:
             await interaction.followup.send(
                 f"Invalid action. Valid actions are: {', '.join(valid_actions)}.",
@@ -315,7 +315,7 @@ class Settings(commands.Cog):
 
         number_of_strikes = str(number_of_strikes)
 
-        if action == "None":
+        if action == "remove":
             # Remove the action
             if number_of_strikes in strike_actions:
                 removed_action = strike_actions.pop(number_of_strikes)
