@@ -36,6 +36,15 @@ class Settings(commands.Cog):
         guild_only=True,
         default_permissions=discord.Permissions(manage_guild=True),
     )
+
+    @settings_group.command(name="help", description="Get help on settings.")
+    async def help_settings(self, interaction: Interaction):
+        help_message = "**Available Settings:**\n"
+        for setting in SETTINGS_SCHEMA.values():
+            help_message += (
+                f"**{setting.name}**: {setting.description} (Type: {setting.type.__name__})\n"
+            )
+        await interaction.response.send_message(help_message, ephemeral=True)
     
     @settings_group.command(name="remove", description="Remove a server setting.")
     @app_commands.choices(name=non_channel_choices_all)
@@ -59,6 +68,15 @@ class Settings(commands.Cog):
                 f"`{name}` has already been removed.", ephemeral=True
             )
 
+    @settings_group.command(name="reset", description="Wipe all settings are start with default. This can't be undone")
+    async def reset(self, interaction: Interaction):
+        """Reset server settings."""
+        await interaction.response.defer(ephemeral=True)
+        _, rows = mysql.execute_query("DELETE FROM settings WHERE guild_id = %s", (interaction.guild.id,))
+        if rows>0:
+            await interaction.followup.send("Reset all settings to defaults.")
+        else:
+            await interaction.followup.send("You are already using default settings.")
 
     @settings_group.command(name="set", description="Set a server setting.")
     @app_commands.choices(name=non_channel_choices_without_hidden)
@@ -188,35 +206,35 @@ class Settings(commands.Cog):
 
             mysql.update_settings(interaction.guild.id, name, None)
             await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
-
-
-    @app_commands.command(name="help", description="Get help on settings.")
+ 
+    @app_commands.command(name="help", description="Get help.")
     @app_commands.default_permissions(moderate_members=True)
     async def help(self, interaction: Interaction):
-        """Provide help information for settings, showing description, name and expected type."""
-        help_message = "Available settings:\n"
-        for setting in SETTINGS_SCHEMA.values():
-            help_message += (
-                f"**{setting.name}**: {setting.description} (Type: {setting.type.__name__})\n"
-            )
-        help_message += "\nAvailable commands:\n"
-        help_message += "`/settings get <name>`: Get the current value of a server setting.\n"
-        help_message += "`/settings set <name> <value>`: Set a server setting.\n"
-        help_message += "`/settings remove <name>`: Remove a server setting.\n"
-        help_message += "`/settings channel_remove <name> <channel>`: Remove a channel from a setting.\n"
-        help_message += "`/settings channel_set <name> <channel>`: Set a channel for a setting.\n"
-        help_message += "`/settings strike <number_of_strikes> <action> <duration>`: Configure strike actions.\n"
-        help_message += "`/strike <user>`: Strike a user.\n"
-        help_message += "`/strikes get <user>`: Get strikes of a user.\n"
-        help_message += "`/strikes clear <user>`: Clear strikes of a user.\n"
-        help_message += "`/bannedwords add <word>`: Add a word to the banned words list.\n"
-        help_message += "`/bannedwords remove <word>`: Remove a word from the banned words list.\n"
-        help_message += "`/bannedwords list`: List all banned words.\n"
-        help_message += "`/help`: Get help on settings.\n"
-        # support discord servrer link
-        help_message += "\nPost suggestions and bugs on the support discord server: [Support Server](https://discord.gg/invite/33VcwjfEXC)\n"
-        help_message += "Donation link: <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
-        await interaction.response.send_message(help_message, ephemeral=True)
+        """Provide help information for settings, showing description, name, and expected type."""
+        help_message = "**Available Settings:**\n"
+        help_message += ("Use `/settings help` for help on available settings\n")
+
+        help_message += "\n**Available Commands:**\n"
+        for command in self.bot.tree.walk_commands():
+            # Skip commands the user doesn't have permission to use
+            if command.default_permissions:
+                # Check if the user has the required permissions
+                permissions = command.default_permissions
+                if not interaction.user.guild_permissions.is_superset(permissions):
+                    continue
+            # Format command name with its parent group if it exists
+            full_command_name = f"/{command.qualified_name}"
+            description = command.description or "No description provided."
+            help_message += f"`{full_command_name}`: {description}\n"
+
+        # Support and donation links
+        help_message += (
+            "\nPost suggestions and bugs on the support Discord server: "
+            "Support Server: <https://discord.gg/invite/33VcwjfEXC>\n"
+            "Donation link: <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
+        )
+
+        await interaction.followup.send(help_message, ephemeral=True)
 
     @settings_group.command(name="get", description="Get the current value of a server setting.")
     @app_commands.choices(name=non_channel_choices_all+channel_choices)
