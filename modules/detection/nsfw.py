@@ -35,7 +35,7 @@ def determine_file_type(file_path):
     elif kind.mime.startswith('video'):
         return 'Video'
     else:
-        return 'Other'
+        return kind.mime
 #todo: enable user to set the categories to exclude from the nsfw check
 moderator_api_category_exclusions = {
     "violence", # Exclude violence category from the NSFW check as triggers too many false positives
@@ -132,7 +132,7 @@ async def is_nsfw(
                 if result:
                     return True
             else:
-                print("Unable to check media")
+                print("Unable to check media: "+file_type)
         finally:
             if os.path.exists(temp_filename):
                 os.remove(temp_filename)
