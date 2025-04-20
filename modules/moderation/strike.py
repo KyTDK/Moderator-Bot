@@ -8,7 +8,6 @@ from discord.utils import utcnow
 from modules.utils import logging
 from modules.utils import mysql
 from modules.utils.time import parse_duration
-from modules.variables.TimeString import TimeString
 import discord
 
 def get_ban_threshold(strike_settings):
@@ -50,9 +49,12 @@ async def strike(
     expires_at = None
 
     if expiry:
-        delta = parse_duration(str(expiry))
-        if delta:
-            expires_at = now + delta
+        try: 
+            delta = parse_duration(str(expiry))
+            if delta:
+                expires_at = now + delta
+        except ValueError as ve:
+            await interaction.response.send_message(str(ve), ephemeral=True)
 
     query = """
         INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp, expires_at)
