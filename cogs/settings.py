@@ -122,7 +122,7 @@ class Settings(commands.Cog):
                 # fallback to string
                 parsed = value
 
-            if not schema.validate(parsed):
+            if not await schema.validate(parsed):
                 raise ValueError(
                     f"**Invalid value for `{name}`.**\n"
                     f"Please ensure it meets the required criteria."
