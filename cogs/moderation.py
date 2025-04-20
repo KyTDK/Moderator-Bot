@@ -42,18 +42,17 @@ class moderation(commands.Cog):
         expiry: Optional[str] = None
     ):
         """Strike a specific user."""
-        await interaction.response.defer(ephemeral=True)
         try:
             embed = await strike.strike(user=user, bot=self.bot, reason=reason, interaction=interaction, expiry=TimeString(expiry))
         except ValueError as ve:
-            await interaction.followup.send(str(ve), ephemeral=True)
+            await interaction.response.send_message(str(ve), ephemeral=True)
             return
 
         if embed:
             embed.set_thumbnail(url=user.display_avatar.url)
-            await interaction.followup.send(embed=embed, ephemeral=True)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
-            await interaction.followup.send(
+            await interaction.response.send_message(
                 "An error occurred, please try again. If the issue persists, please join the support server. The link can be found at the bottom of `/help`.",
                 ephemeral=True
             )
