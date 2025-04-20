@@ -3,8 +3,7 @@ from discord import Interaction, Member, Embed, Color
 from discord.ext import commands
 from modules.utils.user_utils import message_user
 from modules.utils.mysql import execute_query
-from datetime import datetime, timedelta
-from discord.utils import utcnow
+from datetime import datetime, timedelta, timezone
 from modules.utils import logging
 from modules.utils import mysql
 from modules.utils.time import parse_duration
@@ -45,7 +44,8 @@ async def strike(
     if not expiry:
         expiry = mysql.get_settings(guild_id, "strike-expiry")
 
-    now = utcnow()
+    now = datetime.now(timezone.utc)
+    print(f"now is {now.timestamp()}")
     expires_at = None
 
     if expiry:
@@ -62,8 +62,8 @@ async def strike(
         user.id,
         reason,
         strike_by.id,
-        now.strftime('%Y-%m-%d %H:%M:%S'),
-        expires_at.strftime('%Y-%m-%d %H:%M:%S') if expires_at else None
+        now,
+        expires_at
     ))
 
 
@@ -146,7 +146,7 @@ async def strike(
     # Apply the disciplinary action.
     try:
         if action == "timeout":
-            until = utcnow() + duration
+            until = now + duration
             await user.timeout(until, reason=reason)
         elif action == "ban":
             await user.ban(reason=reason)

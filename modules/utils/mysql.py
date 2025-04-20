@@ -64,7 +64,7 @@ def get_connection(database=None, user=None, password=None, use_database=True):
     
 def get_strike_count(user_id, guild_id):
     result, _ = execute_query(
-        "SELECT COUNT(*) FROM strikes WHERE user_id = %s AND guild_id = %s AND (expires_at IS NULL OR expires_at > NOW())",
+        "SELECT COUNT(*) FROM strikes WHERE user_id = %s AND guild_id = %s AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())",
         (user_id, guild_id,), fetch_one=True
     )
     return result[0] if result else 0
@@ -76,7 +76,7 @@ def get_strikes(user_id, guild_id):
         FROM strikes
         WHERE user_id = %s
           AND guild_id = %s
-          AND (expires_at IS NULL OR expires_at > NOW())
+          AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())
         ORDER BY timestamp DESC
         """,
         (user_id, guild_id),
@@ -141,8 +141,8 @@ def initialize_database():
                     user_id BIGINT,
                     reason VARCHAR(255),
                     striked_by_id BIGINT,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    expires_at TIMESTAMP NULL DEFAULT NULL
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    expires_at DATETIME NULL DEFAULT NULL
                 )
             """)
             cursor.execute("""

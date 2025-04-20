@@ -1,3 +1,4 @@
+from datetime import timezone
 from typing import Optional
 from discord.ext import commands
 from discord import app_commands, Interaction, Member, Embed, Color
@@ -7,8 +8,6 @@ import io
 from discord import File
 from modules.utils import mysql
 from modules.variables.TimeString import TimeString
-from discord.utils import utcnow
-from modules.utils.time import parse_duration
 
 class moderation(commands.Cog):
     """A cog for moderation commands."""
@@ -81,23 +80,24 @@ class moderation(commands.Cog):
             # Unpack the strike details
             strike_id, reason, striked_by_id, timestamp, expires_at = strike
 
+            # Ensure UTC to work properly with discord UNIX embed
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
+            expires_at = expires_at.replace(tzinfo=timezone.utc) if expires_at else None            
+
             # Get the name of the user who issued the strike
             strike_by = await interaction.guild.fetch_member(striked_by_id)
             strike_by_name = strike_by.display_name if strike_by else "Unknown"
 
-            # Format the issue time
-            issued_time = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
             # Format the expiry time using Discord's dynamic timestamp
             if expires_at:
-                expiry_str = f"<t:{int(expires_at.timestamp())}:R>"  # Relative time format
+                expiry_str = f"<t:{int(expires_at.timestamp())}:R>"
             else:
                 expiry_str = "Never"
 
             # Create the entry
             entry = {
                 "title": f"Strike ID: {strike_id} | By: {strike_by_name}",
-                "value": f"Reason: {reason}\nIssued: {issued_time}\nExpires: {expiry_str}"
+                "value": f"Reason: {reason}\nIssued: <t:{int(timestamp.timestamp())}:R>\nExpires: {expiry_str}"
             }
             entries.append(entry)
 
@@ -145,7 +145,7 @@ class moderation(commands.Cog):
 
         await interaction.followup.send(message, ephemeral=True)
 
-    #Clear strikes
+    # Clear strikes
     @strike_group.command(
         name="clear",
         description="Clear all strikes of a specific user."
@@ -160,7 +160,7 @@ class moderation(commands.Cog):
             DELETE FROM strikes
             WHERE user_id = %s
             AND guild_id = %s
-            AND (expires_at IS NULL OR expires_at > NOW())
+            AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())
             """,
             (user.id, interaction.guild.id)
         )
@@ -173,8 +173,6 @@ class moderation(commands.Cog):
 
         await interaction.followup.send(message, ephemeral=True)
 
-
-    
     # Warn channel or optionally user
     @app_commands.command(
         name="intimidate",
