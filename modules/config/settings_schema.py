@@ -14,9 +14,9 @@ class Setting:
         self.private = private
         self.validator = validator
 
-    def validate(self, value: Any) -> bool:
+    async def validate(self, value: Any) -> bool:
         if self.validator:
-            return self.validator(value)
+            return await self.validator(value)
         return True
 
 
