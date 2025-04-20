@@ -52,7 +52,6 @@ async def strike(
         delta = parse_duration(str(expiry))
         if delta:
             expires_at = now + delta
-        await interaction.response.send_message(str(ve), ephemeral=True)
         return
 
     query = """
