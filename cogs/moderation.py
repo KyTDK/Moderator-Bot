@@ -42,10 +42,11 @@ class moderation(commands.Cog):
         expiry: Optional[str] = None
     ):
         """Strike a specific user."""
+        await interaction.response.defer(ephemeral=True)
         try:
             embed = await strike.strike(user=user, bot=self.bot, reason=reason, interaction=interaction, expiry=TimeString(expiry))
         except ValueError as ve:
-            await interaction.response.send_message(str(ve), ephemeral=True)
+            await interaction.followup.send(str(ve), ephemeral=True)
             return
 
         if embed:
