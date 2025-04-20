@@ -169,7 +169,7 @@ async def is_nsfw(
                     # Load the Lottie animation
                     gif_location = f"{uuid.uuid4().hex[:12]}.gif"
                     animation = lottie.parsers.tgs.parse_tgs(temp_location)
-                    export_gif(animation, gif_location, skip_frames=4)
+                    export_gif(animation, gif_location, skip_frames=20)
                     if os.path.exists(temp_location):
                         os.remove(temp_location)
                     temp_location = gif_location
