@@ -55,6 +55,7 @@ class ApiPoolCog(commands.Cog):
         description="Add an API key to the pool."
     )
     async def add_api(self, interaction: Interaction, api_key: str):
+        await interaction.response.defer(ephemeral=True)
         user_id = interaction.user.id
         api_key_hash = compute_api_key_hash(api_key)
         
@@ -64,7 +65,7 @@ class ApiPoolCog(commands.Cog):
             (api_key_hash,), fetch_one=True
         )
         if not api.check_openai_api_key(api_key):
-            await interaction.response.send_message("You provided an invalid OpenAI API key.", ephemeral=True)
+            await interaction.followup.send("You provided an invalid OpenAI API key.", ephemeral=True)
             return
         else:
             client = AsyncOpenAI(api_key=api_key)
@@ -76,13 +77,13 @@ class ApiPoolCog(commands.Cog):
                     ]
                 )
             except:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly.",
                     ephemeral=True
                 )
                 return
         if existing:
-            await interaction.response.send_message("This API key already exists in the pool.", ephemeral=True)
+            await interaction.followup.send("This API key already exists in the pool.", ephemeral=True)
         else:
             # Insert the hash into the database
             execute_query(
