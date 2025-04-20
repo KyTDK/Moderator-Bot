@@ -101,7 +101,7 @@ async def strike(
             # Fallback duration if parsing fails.
             duration = timedelta(days=1)
         until = now + duration
-        action_description = f"\n**Action Taken:** Timed out until __{until.strftime('%A, %B %d at %I:%M %p %Z')}__"
+        action_description = f"\n**Action Taken:** Timeout, will expire <t:{int(until.timestamp())}:R>"
     elif action == "ban":
         action_description = "\n**Action Taken:** Banned from the server"
     elif action == "kick":
@@ -120,8 +120,7 @@ async def strike(
 
     # Construct the embed message for the user.
     if expires_at:
-        unix_expiry = int(expires_at.timestamp())
-        expiry_str = f"<t:{unix_expiry}:R>"  # Relative time format
+        expiry_str = f"<t:{int(expires_at.timestamp())}:R>"  # Relative time format
     else:
         expiry_str = "Never"
 

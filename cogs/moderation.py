@@ -88,8 +88,7 @@ class moderation(commands.Cog):
 
             # Format the expiry time using Discord's dynamic timestamp
             if expires_at:
-                unix_expiry = int(expires_at.timestamp())
-                expiry_str = f"<t:{unix_expiry}:R>"  # Relative time format
+                expiry_str = f"<t:{int(expires_at.timestamp())}:R>"  # Relative time format
             else:
                 expiry_str = "Never"
 
