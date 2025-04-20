@@ -18,7 +18,7 @@ import base64
 from modules.utils import mysql, api
 import openai
 from urllib.parse import urlparse
-
+from typing import Optional, Tuple
 
 USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 
@@ -58,14 +58,6 @@ if not USE_MODERATOR_API:
 else:
     if not OPENAI_API_KEY :
         raise ValueError("OPENAI_API_KEY  is not set.")
-
-import os
-import uuid
-import cv2
-import requests
-import discord
-from discord.ext import commands
-from typing import Optional, Tuple
 
 async def process_video(
     original_filename: str,
