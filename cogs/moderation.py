@@ -50,9 +50,9 @@ class moderation(commands.Cog):
 
         if embed:
             embed.set_thumbnail(url=user.display_avatar.url)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.followup.send(embed=embed, ephemeral=True)
         else:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "An error occurred, please try again. If the issue persists, please join the support server. The link can be found at the bottom of `/help`.",
                 ephemeral=True
             )
