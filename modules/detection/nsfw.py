@@ -210,7 +210,7 @@ async def moderator_api(text: str = None,
         client, encrypted_key = api.get_api_client(guild_id)
         if not client:
             print("No available API key.")
-            return None
+            continue
 
         try:
             response = await client.moderations.create(
