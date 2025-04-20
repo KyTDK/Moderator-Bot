@@ -7,6 +7,8 @@ import io
 from discord import File
 from modules.utils import mysql
 from modules.variables.TimeString import TimeString
+from discord.utils import utcnow
+from modules.utils.time import parse_duration
 
 class moderation(commands.Cog):
     """A cog for moderation commands."""
@@ -40,9 +42,11 @@ class moderation(commands.Cog):
         reason: str,
         expiry: Optional[str] = None
     ):
-        """strike a specific user."""
+        """Strike a specific user."""
+        expiry_duration = parse_duration(expiry) if expiry else None
+        expires_at = utcnow() + expiry_duration if expiry_duration else None
+
         if await strike.strike(user=user, bot=self.bot, reason=reason, interaction=interaction, expiry=TimeString(expiry)):
-            # Log the strike in the current channel
             log_embed = Embed(
                 title="User Strike",
                 description=f"{user.display_name} has received a strike.",
@@ -50,11 +54,21 @@ class moderation(commands.Cog):
             )
             log_embed.add_field(name="Reason", value=reason, inline=False)
             log_embed.add_field(name="Strike by", value=interaction.user.mention, inline=False)
+
+            if expires_at:
+                log_embed.add_field(name="Expires", value=f"<t:{int(expires_at.timestamp())}:R>", inline=False)
+            else:
+                log_embed.add_field(name="Expires", value="Never", inline=False)
+
             log_embed.set_thumbnail(url=user.display_avatar.url)
             log_embed.timestamp = interaction.created_at
+
             await interaction.followup.send(embed=log_embed, ephemeral=True)
         else:
-            await interaction.followup.send("An error occured, please try again. If the issue persists please join the support server, link found at the bottom of `/help`.")
+            await interaction.followup.send(
+                "An error occurred, please try again. If the issue persists, please join the support server. The link can be found at the bottom of `/help`.",
+                ephemeral=True
+            )
 
     @strike_group.command(
         name="get",
