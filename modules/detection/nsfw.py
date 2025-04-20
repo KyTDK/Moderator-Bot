@@ -72,7 +72,7 @@ async def process_video(
     nsfw_callback,
     message: discord.Message,
     bot: commands.Bot,
-    frame_interval: int = 20  # Extract every 20th frame
+    frame_interval: int = 10  # Extract every 10th frame
 ) -> Tuple[Optional[discord.File], bool]:
     """Process a video file frame by frame, calling process_image on selected frames."""
     vidcap = cv2.VideoCapture(original_filename)
