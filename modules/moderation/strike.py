@@ -49,12 +49,11 @@ async def strike(
     expires_at = None
 
     if expiry:
-        try: 
-            delta = parse_duration(str(expiry))
-            if delta:
-                expires_at = now + delta
-        except ValueError as ve:
-            await interaction.response.send_message(str(ve), ephemeral=True)
+        delta = parse_duration(str(expiry))
+        if delta:
+            expires_at = now + delta
+        await interaction.response.send_message(str(ve), ephemeral=True)
+        return
 
     query = """
         INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp, expires_at)

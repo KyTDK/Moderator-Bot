@@ -43,8 +43,12 @@ class moderation(commands.Cog):
         expiry: Optional[str] = None
     ):
         """Strike a specific user."""
-        embed = await strike.strike(user=user, bot=self.bot, reason=reason, interaction=interaction, expiry=TimeString(expiry))
-        
+        try:
+            embed = await strike.strike(user=user, bot=self.bot, reason=reason, interaction=interaction, expiry=TimeString(expiry))
+        except ValueError as ve:
+            await interaction.response.send_message(str(ve), ephemeral=True)
+            return
+
         if embed:
             embed.set_thumbnail(url=user.display_avatar.url)
             await interaction.followup.send(embed=embed, ephemeral=True)
