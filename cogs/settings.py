@@ -3,7 +3,8 @@ from discord import app_commands, Interaction
 import discord
 from modules.utils import mysql, time
 from modules.config.settings_schema import SETTINGS_SCHEMA
-from modules.variables import TimeString
+import traceback
+from modules.variables.TimeString import TimeString
 
 class Settings(commands.Cog):
     """A cog for settings commands."""
@@ -91,7 +92,6 @@ class Settings(commands.Cog):
 
         expected = schema.type
         try:
-            # 1) Parse & type‐check
             if expected is int:
                 try:
                     parsed = int(value)
@@ -117,35 +117,29 @@ class Settings(commands.Cog):
                     f"Use `/set_channel {name} #channel-name` instead."
                 )
             elif expected is TimeString:
-                try:
-                    parsed = TimeString(value)
-                except ValueError:
-                    raise ValueError("Invalid duration format. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively.",)
+                parsed = TimeString(value)
             else:
                 # fallback to string
                 parsed = value
 
-            # 2) Custom validation
             if not schema.validate(parsed):
                 raise ValueError(
                     f"**Invalid value for `{name}`.**\n"
                     f"Please ensure it meets the required criteria."
                 )
 
-            # 3) Persist
             mysql.update_settings(interaction.guild.id, name, parsed)
             await interaction.response.send_message(
                 f"Updated `{name}` to `{parsed}`.", ephemeral=True
             )
 
         except ValueError as ve:
-            # user‐facing error
             await interaction.response.send_message(str(ve), ephemeral=True)
 
-        except Exception:
-            # catch‐all for unexpected issues
+        except Exception as e:
+            traceback.print_exc()
             await interaction.response.send_message(
-                "An unexpected error occurred while updating your setting. Please try again later.",
+                f"An unexpected error occurred: `{e}`",
                 ephemeral=True
             )
 

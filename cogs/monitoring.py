@@ -10,7 +10,6 @@ class Monitoring(commands.Cog):
         self.bot = bot
 
     def get_monitor_channel(self, guild_id: int) -> Optional[int]:
-        # Retrieve the monitor channel ID from your settings using mysql module
         id = mysql.get_settings(guild_id, "monitor-channel")
         if id:
             id = int(id)

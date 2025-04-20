@@ -1,3 +1,4 @@
+from typing import Optional
 from discord import Interaction, Member, Embed, Color
 from discord.ext import commands
 from modules.utils.user_utils import message_user
@@ -7,6 +8,8 @@ from discord.utils import utcnow
 from modules.utils import logging
 from modules.utils import mysql
 from modules.utils.time import parse_duration
+from modules.variables.TimeString import TimeString
+import discord
 
 def get_ban_threshold(strike_settings):
     """
@@ -23,7 +26,13 @@ def get_ban_threshold(strike_settings):
             return int(strike)
     return None
 
-async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provided", interaction: Interaction = None) -> bool:
+async def strike(
+    user: Member,
+    bot: commands.Bot,
+    reason: str = "No reason provided",
+    interaction: Optional[Interaction] = None,
+    expiry: Optional[str] = None
+) -> discord.Embed:
     """Strike a specific user with escalating consequences based on settings."""
     if interaction:
         await interaction.response.defer(ephemeral=True)
@@ -33,18 +42,39 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
 
     # Record the strike in the database.
     guild_id = user.guild.id
-    execute_query(
-        "INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp) VALUES (%s, %s, %s, %s, %s)",
-        (guild_id, user.id, reason, strike_by.id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    )
+
+    if not expiry:
+        expiry = mysql.get_settings(guild_id, "strike-expiry")
+
+    now = datetime.now()
+    expires_at = None
+
+    if expiry:
+        delta = parse_duration(str(expiry))
+        if delta:
+            expires_at = now + delta
+
+    query = """
+        INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp, expires_at)
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """
+    execute_query(query, (
+        guild_id,
+        user.id,
+        reason,
+        strike_by.id,
+        now.strftime('%Y-%m-%d %H:%M:%S'),
+        expires_at.strftime('%Y-%m-%d %H:%M:%S') if expires_at else None
+    ))
+
 
     # Fetch the updated strike count for the user.
     strike_count = mysql.get_strike_count(user.id, guild_id)
 
     # Limit strike count
     if interaction and strike_count>100:
-            interaction.followup.send("You cannot give the same player more than 100 strikes. Use `strikes clear <user>` to reset their strikes.")
-            return
+        interaction.followup.send("You cannot give the same player more than 100 strikes. Use `strikes clear <user>` to reset their strikes.")
+        return None
     
     now = utcnow()
 
@@ -89,9 +119,21 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
         strike_info = f"\n**Strike Count:** {strike_count} strike(s)."
 
     # Construct the embed message for the user.
+    if expires_at:
+        unix_expiry = int(expires_at.timestamp())
+        expiry_str = f"<t:{unix_expiry}:R>"  # Relative time format
+    else:
+        expiry_str = "Never"
+
+    # Construct the embed message for the user.
     embed = Embed(
         title="⚠️ You have received a strike",
-        description=f"**Reason:** {reason}{action_description}{strike_info}",
+        description=(
+            f"**Reason:** {reason}"
+            f"{action_description}"
+            f"{strike_info}"
+            f"\n**Expires:** {expiry_str}"
+        ),
         color=Color.red(),
         timestamp=now
     )
@@ -103,7 +145,7 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
     except Exception as e:
         if interaction:
             await interaction.channel.send(user.mention, embed=embed)
-        return True
+        return embed
 
     # Apply the disciplinary action.
     try:
@@ -124,4 +166,4 @@ async def strike(user: Member, bot: commands.Bot, reason: str = "No reason provi
     if STRIKES_CHANNEL_ID:
         await logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)
 
-    return True
+    return embed

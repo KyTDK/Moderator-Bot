@@ -287,15 +287,9 @@ async def process_image(original_filename, guild_id=None):
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
     if mysql.get_settings(user.guild.id, "strike-nsfw") == True:
-        await strike.strike(user=user, bot=bot, reason=reason, interaction=None)
-        embed = discord.Embed(
-            title="NSFW Content strike",
-            description=f"{user.mention} has received a strike for posting NSFW content.",
-            color=discord.Color.red()
-        )
+        embed = await strike.strike(user=user, bot=bot, reason=reason, interaction=None)
+        embed.title = "NSFW Content strike"
         embed.set_image(url=f"attachment://{image.filename}")
-        # Add a field for the reason
-        embed.add_field(name="Reason", value=reason, inline=False)
         NSFW_STRIKES_ID = mysql.get_settings(user.guild.id, "nsfw-channel")
         STRIKE_CHANNEL_ID = mysql.get_settings(user.guild.id, "strike-channel")
         if NSFW_STRIKES_ID:

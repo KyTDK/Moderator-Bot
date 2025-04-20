@@ -1,3 +1,4 @@
+from typing import Optional
 from discord.ext import commands
 from discord import app_commands, Interaction, Member, Embed, Color
 from modules.moderation import strike
@@ -5,7 +6,7 @@ import discord
 import io
 from discord import File
 from modules.utils import mysql
-
+from modules.variables.TimeString import TimeString
 
 class moderation(commands.Cog):
     """A cog for moderation commands."""
@@ -26,10 +27,21 @@ class moderation(commands.Cog):
         name="strike",
         description="Strike a specific user."
     )
+    @app_commands.describe(
+        user="The member to strike.",
+        reason="The reason for the strike.",
+        expiry="Optional expiry duration (e.g., 30d, 2w)."
+    )
     @app_commands.default_permissions(moderate_members=True)
-    async def strike(self, interaction: Interaction, user: Member, reason: str):
+    async def strike(
+        self,
+        interaction: Interaction,
+        user: Member,
+        reason: str,
+        expiry: Optional[str] = None
+    ):
         """strike a specific user."""
-        if await strike.strike(user=user, bot=self.bot, reason=reason, interaction=interaction):
+        if await strike.strike(user=user, bot=self.bot, reason=reason, interaction=interaction, expiry=TimeString(expiry)):
             # Log the strike in the current channel
             log_embed = Embed(
                 title="User Strike",
@@ -42,8 +54,7 @@ class moderation(commands.Cog):
             log_embed.timestamp = interaction.created_at
             await interaction.followup.send(embed=log_embed, ephemeral=True)
         else:
-            await interaction.followup.send("An error occured, please try again")
-    
+            await interaction.followup.send("An error occured, please try again. If the issue persists please join the support server, link found at the bottom of `/help`.")
 
     @strike_group.command(
         name="get",
@@ -64,21 +75,37 @@ class moderation(commands.Cog):
             return
 
         entries = []
-        for strike_id, reason, striked_by_id, timestamp in strikes:
+        for strike in strikes:
+            # Unpack the strike details
+            strike_id, reason, striked_by_id, timestamp, expires_at = strike
+
+            # Get the name of the user who issued the strike
             strike_by = interaction.guild.get_member(striked_by_id)
             strike_by_name = strike_by.display_name if strike_by else "Unknown"
+
+            # Format the issue time
+            issued_time = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
+            # Format the expiry time using Discord's dynamic timestamp
+            if expires_at:
+                unix_expiry = int(expires_at.timestamp())
+                expiry_str = f"<t:{unix_expiry}:R>"  # Relative time format
+            else:
+                expiry_str = "Never"
+
+            # Create the entry
             entry = {
                 "title": f"Strike ID: {strike_id} | By: {strike_by_name}",
-                "value": f"Reason: {reason}\nTime: {timestamp}"
+                "value": f"Reason: {reason}\nIssued: {issued_time}\nExpires: {expiry_str}"
             }
             entries.append(entry)
 
-        # Build plain text version
+        # Build the content string
         content = f"Strikes for {user.display_name}:\n\n"
         for entry in entries:
             content += f"{entry['title']}\n{entry['value']}\n\n"
 
-        # Send based on length
+        # Send the response
         if len(content) > 6000:
             file = File(io.BytesIO(content.encode()), filename=f"{user.name}_strikes.txt")
             await interaction.followup.send(content="Strike list is too long, sent as a file:", file=file)
@@ -124,13 +151,17 @@ class moderation(commands.Cog):
     )
     async def clear_strikes(self, interaction: Interaction, user: Member):
         """Clear all strikes for a specified user."""
-        # Defer the response to acknowledge the interaction
         await interaction.response.defer(ephemeral=True)
 
-        # Delete strikes from the database
+        # Delete only active strikes from the database, we keep inactive ones for analytics
         _, rows_affected = mysql.execute_query(
-            "DELETE FROM strikes WHERE user_id = %s AND guild_id = %s",
-            (user.id, interaction.guild.id)  # Passing both guild_id and user_id as parameters
+            """
+            DELETE FROM strikes
+            WHERE user_id = %s
+            AND guild_id = %s
+            AND (expires_at IS NULL OR expires_at > NOW())
+            """,
+            (user.id, interaction.guild.id)
         )
 
         # Provide feedback
@@ -140,6 +171,8 @@ class moderation(commands.Cog):
             message = f"No strikes found for {user.mention}."
 
         await interaction.followup.send(message, ephemeral=True)
+
+
     
     # Warn channel or optionally user
     @app_commands.command(

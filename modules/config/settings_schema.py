@@ -1,8 +1,7 @@
 from modules.utils import api
 from typing import Any, Callable, Optional
 import discord
-from modules.variables import TimeString
-
+from modules.variables.TimeString import TimeString
 
 class Setting:
     def __init__(self, name: str, description: str, setting_type: type, default: Any = None, encrypted: bool = False, hidden: bool = False, private=False, validator: Optional[Callable] = None):
@@ -86,5 +85,11 @@ SETTINGS_SCHEMA = {
             "2": ("timeout", "7d"),
             "3": ("ban", "-1"), 
         },
-    )
+    ),
+    "strike-expiry": Setting(
+        name="strike-expiry",
+        description="Time a strike lasts for. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively.",
+        setting_type=TimeString,
+        default=None
+    ),
 }

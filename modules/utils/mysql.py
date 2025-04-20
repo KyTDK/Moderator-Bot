@@ -64,18 +64,25 @@ def get_connection(database=None, user=None, password=None, use_database=True):
     
 def get_strike_count(user_id, guild_id):
     result, _ = execute_query(
-        "SELECT COUNT(*) FROM strikes WHERE user_id = %s AND guild_id = %s",
+        "SELECT COUNT(*) FROM strikes WHERE user_id = %s AND guild_id = %s AND (expires_at IS NULL OR expires_at > NOW())",
         (user_id, guild_id,), fetch_one=True
     )
     return result[0] if result else 0
 
 def get_strikes(user_id, guild_id):
-        strikes, _ = execute_query(
-            "SELECT id, reason, striked_by_id, timestamp FROM strikes WHERE user_id = %s AND guild_id = %s ORDER BY timestamp DESC",
-            (user_id, guild_id),
-            fetch_all=True
-        )
-        return strikes
+    strikes, _ = execute_query(
+        """
+        SELECT id, reason, striked_by_id, timestamp, expires_at
+        FROM strikes
+        WHERE user_id = %s
+          AND guild_id = %s
+          AND (expires_at IS NULL OR expires_at > NOW())
+        ORDER BY timestamp DESC
+        """,
+        (user_id, guild_id),
+        fetch_all=True
+    )
+    return strikes
 
 def get_settings(guild_id, settings_key=None):
     """Retrieve the settings for a guild."""
@@ -134,7 +141,8 @@ def initialize_database():
                     user_id BIGINT,
                     reason VARCHAR(255),
                     striked_by_id BIGINT,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP NULL DEFAULT NULL
                 )
             """)
             cursor.execute("""
