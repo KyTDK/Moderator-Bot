@@ -45,7 +45,6 @@ async def strike(
         expiry = mysql.get_settings(guild_id, "strike-expiry")
 
     now = datetime.now(timezone.utc)
-    print(f"now is {now.timestamp()}")
     expires_at = None
 
     if expiry:
