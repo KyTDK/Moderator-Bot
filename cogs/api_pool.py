@@ -90,7 +90,7 @@ class ApiPoolCog(commands.Cog):
                 "INSERT INTO api_pool (user_id, api_key, api_key_hash) VALUES (%s, %s, %s)",
                 (user_id, fernet.encrypt(api_key.encode()).decode(), api_key_hash)
             )
-            await interaction.response.send_message("API key added to the pool.", ephemeral=True)
+            await interaction.followup.send("API key added to the pool.", ephemeral=True)
 
     @api_pool_group.command(
         name="remove",
