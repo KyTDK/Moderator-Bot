@@ -45,7 +45,7 @@ async def strike(
     if not expiry:
         expiry = mysql.get_settings(guild_id, "strike-expiry")
 
-    now = datetime.now()
+    now = utcnow()
     expires_at = None
 
     if expiry:
@@ -75,8 +75,6 @@ async def strike(
         interaction.followup.send("You cannot give the same player more than 100 strikes. Use `strikes clear <user>` to reset their strikes.")
         return None
     
-    now = utcnow()
-
     # Retrieve the strike actions setting; if not found, use the hardcoded default.
     strike_settings = mysql.get_settings(guild_id, "strike-actions")
     
