@@ -124,11 +124,7 @@ class Settings(commands.Cog):
                 parsed = value
 
             try:
-                if not await schema.validate(parsed):
-                    raise ValueError(
-                        f"**Invalid value for `{name}`.**\n"
-                        f"Please ensure it meets the required criteria."
-                    )
+                await schema.validate(parsed)
             except Exception as e:
                 await interaction.followup.send(content=str(e), ephemeral=True)
                 return
