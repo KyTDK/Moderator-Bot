@@ -7,7 +7,6 @@ import os
 from dotenv import load_dotenv
 import hashlib
 from openai import AsyncOpenAI
-import openai
 
 
 load_dotenv()
