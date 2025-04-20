@@ -82,6 +82,7 @@ class Settings(commands.Cog):
     @settings_group.command(name="set", description="Set a server setting.")
     @app_commands.choices(name=non_channel_choices_without_hidden)
     async def set_setting(self, interaction: Interaction, name: str, value: str):
+        await interaction.response.defer(ephemeral=True)
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
             await interaction.response.send_message(
@@ -122,23 +123,27 @@ class Settings(commands.Cog):
                 # fallback to string
                 parsed = value
 
-            if not await schema.validate(parsed):
-                raise ValueError(
-                    f"**Invalid value for `{name}`.**\n"
-                    f"Please ensure it meets the required criteria."
-                )
+            try:
+                if not await schema.validate(parsed):
+                    raise ValueError(
+                        f"**Invalid value for `{name}`.**\n"
+                        f"Please ensure it meets the required criteria."
+                    )
+            except Exception as e:
+                await interaction.followup.send(content=str(e), ephemeral=True)
+                return
 
             mysql.update_settings(interaction.guild.id, name, parsed)
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"Updated `{name}` to `{parsed}`.", ephemeral=True
             )
 
         except ValueError as ve:
-            await interaction.response.send_message(str(ve), ephemeral=True)
+            await interaction.followup.send(str(ve), ephemeral=True)
 
         except Exception as e:
             traceback.print_exc()
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"An unexpected error occurred: `{e}`",
                 ephemeral=True
             )

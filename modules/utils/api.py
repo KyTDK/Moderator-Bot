@@ -14,17 +14,13 @@ FERNET_KEY = os.getenv("FERNET_SECRET_KEY")
 fernet = Fernet(FERNET_KEY)
 
 async def check_openai_api_key(api_key):
-    try:
-        client = AsyncOpenAI(api_key=api_key)
-        await client.moderations.create(
-            model="omni-moderation-latest",
-            input=[
-                {"type": "text", "text": "This is a test message."}
-            ]
-        )
-        return True
-    except:
-        return False
+    client = AsyncOpenAI(api_key=api_key)
+    await client.moderations.create(
+        model="omni-moderation-latest",
+        input=[
+            {"type": "text", "text": "This is a test message."}
+        ]
+    )
 
 def get_next_shared_api_key():
     global _working_keys, _non_working_keys

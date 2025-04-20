@@ -14,11 +14,9 @@ class Setting:
         self.private = private
         self.validator = validator
 
-    async def validate(self, value: Any) -> bool:
+    async def validate(self, value: Any):
         if self.validator:
-            return await self.validator(value)
-        return True
-
+            await self.validator(value)
 
 SETTINGS_SCHEMA = {
     "strike-channel": Setting(
