@@ -6,6 +6,9 @@ from cryptography.fernet import Fernet
 import os
 from dotenv import load_dotenv
 import hashlib
+from openai import AsyncOpenAI
+import openai
+
 
 load_dotenv()
 
@@ -41,6 +44,9 @@ class ApiPoolCog(commands.Cog):
             "- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n"
             "- Your API key remains confidential; no one, including the bot developers, can view it.\n"
             "- You have full control and can remove your API key from the pool at any time.\n\n"
+            "**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. "
+            "Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. "
+            "You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\n"
             "By contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
         )
         await interaction.response.send_message(explanation, ephemeral=True)
@@ -61,6 +67,21 @@ class ApiPoolCog(commands.Cog):
         if not api.check_openai_api_key(api_key):
             await interaction.response.send_message("You provided an invalid OpenAI API key.", ephemeral=True)
             return
+        else:
+            client = AsyncOpenAI(api_key=api_key)
+            try:
+                await client.moderations.create(
+                    model="omni-moderation-latest",
+                    input=[
+                        {"type": "text", "text": "This is a test message."}
+                    ]
+                )
+            except:
+                await interaction.response.send_message(
+                    "Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly.",
+                    ephemeral=True
+                )
+                return
         if existing:
             await interaction.response.send_message("This API key already exists in the pool.", ephemeral=True)
         else:

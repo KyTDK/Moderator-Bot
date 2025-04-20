@@ -30,10 +30,12 @@ async def on_guild_join(guild):
     welcome_message = (
         "👋 **Thanks for adding Moderator Bot!**\n\n"
         "We're excited to be part of your server! 🎉 Moderator Bot works out of the box — no setup is required to start moderating effectively.\n\n"
+        "📖 **Next Steps:**\n"
+        "Use `/help` to explore all the commands and features. For any support, our Discord server is linked at the bottom of the help page.\n\n"
         "⚙️ **How Does This Work?**\n"
         "Moderator Bot uses AI to help moderate messages — and thanks to our **shared API key pool**, it can do this right away, without needing any setup on your end.\n\n"
         "🔄 **Want to Help Keep It Free & Fast for Everyone?**\n"
-        "You can support the community by contributing your own OpenAI API key to the **shared pool**. This is **completely optional** and **100% free** — but it helps reduce rate limits and keeps the bot running smoothly across all servers.\n\n"
+        "Contributing your OpenAI API key to the **shared pool** is **completely optional** and **won't use any of your credits**, as the moderation model is free. However, your OpenAI account must have at least $5 in prepaid credits to contribute. You can add credit here: <https://platform.openai.com/account/billing/overview>\n\n"
         "**To contribute your key (takes less than a minute):**\n"
         "1. Visit: <https://platform.openai.com/account/api-keys>\n"
         "2. Click **'Create new secret key'**\n"
@@ -47,8 +49,6 @@ async def on_guild_join(guild):
         "🛠️ **Open Source & Community-Driven:**\n"
         "Moderator Bot is fully open source. Check it out or contribute on GitHub:\n"
         "<https://github.com/KyTDK/Moderator-Bot>\n\n"
-        "📖 **Next Steps:**\n"
-        "Use `/help` to explore all the commands and features. For any support, our Discord server is linked at the bottom of the help page.\n\n"
         "Thanks for using Moderator Bot — let's build safer, more positive communities together! 🚀"
     )
 
