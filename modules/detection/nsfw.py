@@ -173,6 +173,8 @@ async def is_nsfw(
                     if os.path.exists(temp_location):
                         os.remove(temp_location)
                     temp_location = gif_location
+                else:
+                    print(f"Unhandled extension: {extension}")
                 file, result = await process_video(temp_location, nsfw_callback, message, bot)
                 if result:
                     return True
