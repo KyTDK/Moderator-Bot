@@ -82,7 +82,7 @@ class moderation(commands.Cog):
             strike_id, reason, striked_by_id, timestamp, expires_at = strike
 
             # Get the name of the user who issued the strike
-            strike_by = interaction.guild.get_member(striked_by_id)
+            strike_by = await interaction.guild.fetch_member(striked_by_id)
             strike_by_name = strike_by.display_name if strike_by else "Unknown"
 
             # Format the issue time
