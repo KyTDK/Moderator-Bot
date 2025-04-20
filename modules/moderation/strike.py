@@ -52,7 +52,6 @@ async def strike(
         delta = parse_duration(str(expiry))
         if delta:
             expires_at = now + delta
-        return
 
     query = """
         INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp, expires_at)
