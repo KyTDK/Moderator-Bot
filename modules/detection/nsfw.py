@@ -19,6 +19,7 @@ from modules.utils import mysql, api
 import openai
 from urllib.parse import urlparse
 from typing import Optional, Tuple
+from apnggif import apnggif
 
 USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 
@@ -165,22 +166,23 @@ async def is_nsfw(
                 data = requests.get(sticker_url).content
                 with open(temp_location, 'wb') as f:
                     f.write(data)
+                gif_location = f"{uuid.uuid4().hex[:12]}.gif"
                 if extension == "lottie":
-                    # Load the Lottie animation
-                    gif_location = f"{uuid.uuid4().hex[:12]}.gif"
                     animation = lottie.parsers.tgs.parse_tgs(temp_location)
                     export_gif(animation, gif_location, skip_frames=4)
-                    if os.path.exists(temp_location):
-                        os.remove(temp_location)
-                    temp_location = gif_location
+                elif extension == "apng":
+                    apnggif(temp_location, gif_location)
                 else:
+                    gif_location = temp_location # try it anyways
                     print(f"Unhandled extension: {extension}")
-                file, result = await process_video(temp_location, nsfw_callback, message, bot)
+                file, result = await process_video(gif_location, nsfw_callback, message, bot)
                 if result:
                     return True
             finally:
                 if os.path.exists(temp_location):
                     os.remove(temp_location)
+                if os.path.exists(gif_location):
+                    os.remove(gif_location)
     return False    
 
 
