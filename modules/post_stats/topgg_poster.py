@@ -28,4 +28,9 @@ async def post_guild_count(bot: AutoShardedBot):
 
 
 def start_topgg_poster(bot: AutoShardedBot):
-    post_guild_count.start(bot)
+    async def starter():
+        await bot.wait_until_ready()
+        if not post_guild_count.is_running():
+            post_guild_count.start(bot)
+
+    bot.loop.create_task(starter())
