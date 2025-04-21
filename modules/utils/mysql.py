@@ -7,6 +7,7 @@ from modules.config.settings_schema import SETTINGS_SCHEMA
 import json
 from cryptography.fernet import Fernet
 from PIL import Image
+import copy
 
 load_dotenv()
 
@@ -84,6 +85,7 @@ def get_strikes(user_id, guild_id):
     )
     return strikes
 
+
 def get_settings(guild_id, settings_key=None):
     """Retrieve the settings for a guild."""
     settings, _ = execute_query(
@@ -93,11 +95,15 @@ def get_settings(guild_id, settings_key=None):
     )
     response = json.loads(settings[0]) if settings else json.loads("{}")
     encrypted = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
+
     if response == "True":
         response = True
     elif response == "False":
         response = False
-    value = response if settings_key is None else response.get(settings_key, SETTINGS_SCHEMA.get(settings_key).default)
+
+    default = SETTINGS_SCHEMA.get(settings_key).default if settings_key else None
+    value = response if settings_key is None else response.get(settings_key, copy.deepcopy(default))
+
     if encrypted and value:
         value = fernet.decrypt(value.encode()).decode()
     return value
