@@ -71,7 +71,7 @@ async def process_video(
     vidcap = cv2.VideoCapture(original_filename)
     count = 0
     file_to_send = None
-
+    print("Processing video for "+str(original_filename))
     try:
         while True:
             success, image = vidcap.read()
@@ -155,6 +155,8 @@ async def is_nsfw(
             finally:
                 if os.path.exists(temp_location):
                     os.remove(temp_location)
+        else:
+            print("No gif url")
 
     # Process stickers
     for sticker in message.stickers:
@@ -191,10 +193,12 @@ async def moderator_api(text: str = None,
                         guild_id: int = None,
                         max_attempts: int = 10) -> str:
     inputs = []
+    is_video = image_path is not None 
+
     if text and not image_path:  # text-moderation
         inputs = text
 
-    if image_path is not None:
+    if is_video:
         try:
             with open(image_path, "rb") as f:
                 img_data = f.read()
@@ -224,31 +228,32 @@ async def moderator_api(text: str = None,
         except openai.AuthenticationError:
             print("Authentication failed. Marking key as not working.")
             api.set_api_key_not_working(encrypted_key)
-            continue  # try next key
+            continue
         except openai.RateLimitError as e:
             print(f"Rate limit error: {e}. Marking key as not working.")
             api.set_api_key_not_working(encrypted_key)
-            continue  # try next key
+            continue
         except Exception as e:
             print(f"Unexpected error from OpenAI API: {e}")
-            continue  # try next key
+            continue
 
         results = getattr(response, "results", [])
         if not results:
             print("No moderation results returned.")
-            continue  # try next key
+            continue
 
         if not api.is_api_key_working(encrypted_key):
             api.set_api_key_working(encrypted_key)
 
         first = results[0]
         for category, flagged in vars(first.categories).items():
-            if flagged and category not in moderator_api_category_exclusions:
+            if flagged:
+                if is_video and category in moderator_api_category_exclusions:
+                    continue  # Skip excluded categories only for videos
                 print(f"Category {category} is flagged.")
                 return category
-        return None  # No categories flagged
+        return None
 
-    # All attempts failed
     print("All API key attempts failed.")
     return None
 
