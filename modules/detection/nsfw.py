@@ -1,31 +1,41 @@
 import os
 import traceback
+import asyncio
+from dotenv import load_dotenv
 from nudenet import NudeDetector
 from PIL import Image
 import cv2
 import filetype
 import uuid
-import requests
+import aiohttp
+import aiofiles
 from discord import Member
 from discord.ext import commands
-from modules.moderation import strike
 import discord
-from modules.utils import logging
-from dotenv import load_dotenv
 from lottie.exporters.gif import export_gif
 import lottie
 import base64
-from modules.utils import mysql, api
-import openai
+from modules.utils import logging, mysql, api
+from modules.moderation import strike
 from urllib.parse import urlparse
 from typing import Optional, Tuple
 from apnggif import apnggif
+import openai
 
 USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
-
-
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API')
+
+moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
+nsfw_labels = {
+    "BUTTOCKS_EXPOSED", "FEMALE_BREAST_EXPOSED", "FEMALE_GENITALIA_EXPOSED",
+    "ANUS_EXPOSED", "MALE_GENITALIA_EXPOSED"
+}
+
+if not USE_MODERATOR_API:
+    detector = NudeDetector(model_path="640m.onnx", inference_resolution=640)
+elif not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY is not set.")
 
 def determine_file_type(file_path):
     kind = filetype.guess(file_path)
@@ -37,58 +47,25 @@ def determine_file_type(file_path):
         return 'Video'
     else:
         return kind.mime
-#todo: enable user to set the categories to exclude from the nsfw check
-moderator_api_category_exclusions = {
-    "violence", # Exclude violence category from the NSFW check as triggers too many false positives
-    "self_harm", # Exclude self-harm category from the NSFW check as triggers too many false positives
-    "harassment", # Exclude harassment category from the NSFW check as triggers too many false positives
-    } 
-# NSFW labels to check against
-nsfw_labels = {
-    "BUTTOCKS_EXPOSED",
-    "FEMALE_BREAST_EXPOSED",
-    "FEMALE_GENITALIA_EXPOSED",
-    #"MALE_BREAST_EXPOSED",
-    "ANUS_EXPOSED",
-    "MALE_GENITALIA_EXPOSED",
-}
 
-# Initialize the NSFW detector
-if not USE_MODERATOR_API:
-    detector = NudeDetector(model_path="640m.onnx", inference_resolution=640)
-else:
-    if not OPENAI_API_KEY :
-        raise ValueError("OPENAI_API_KEY  is not set.")
-
-async def process_video(
-    original_filename: str,
-    nsfw_callback,
-    message: discord.Message,
-    bot: commands.Bot,
-    frame_interval: int = 20  # Extract every 20th frame
-) -> Tuple[Optional[discord.File], bool]:
-    """Process a video file frame by frame, calling process_image on selected frames."""
-    vidcap = cv2.VideoCapture(original_filename)
-    count = 0
+async def process_video(original_filename: str, nsfw_callback, message: discord.Message, bot: commands.Bot, frame_interval: int = 20) -> Tuple[Optional[discord.File], bool]:
     file_to_send = None
-    print("Processing video for "+str(original_filename))
+    print("Processing video for " + str(original_filename))
     try:
+        vidcap = await asyncio.to_thread(cv2.VideoCapture, original_filename)
+        count = 0
         while True:
-            success, image = vidcap.read()
+            success, image = await asyncio.to_thread(vidcap.read)
             if not success:
                 break
-            
+
             if count % frame_interval == 0:
-                # Generate a unique filename for the frame
                 frame_filename = f"{uuid.uuid4().hex[:8]}_frame{count}.jpg"
-                cv2.imwrite(frame_filename, image)
+                await asyncio.to_thread(cv2.imwrite, frame_filename, image)
                 try:
-                    # Process the extracted frame
                     if await process_image(frame_filename, guild_id=message.guild.id):
                         if nsfw_callback:
-                            file_to_send = discord.File(
-                                frame_filename, filename=os.path.basename(frame_filename)
-                            )
+                            file_to_send = discord.File(frame_filename, filename=os.path.basename(frame_filename))
                             await nsfw_callback(message.author, bot, "Uploading explicit content", file_to_send)
                         return file_to_send, True
                 finally:
@@ -96,19 +73,12 @@ async def process_video(
                         os.remove(frame_filename)
             count += 1
     finally:
-        vidcap.release()
+        await asyncio.to_thread(vidcap.release)
         if os.path.exists(original_filename):
             os.remove(original_filename)
-
     return None, False
 
-async def is_nsfw(
-    message: discord.Message,
-    bot: commands.Bot,
-    nsfw_callback=None
-) -> bool:
-    """Check attachments, embeds, and stickers for explicit content."""
-    # Process attachments (images or videos)
+async def is_nsfw(message: discord.Message, bot: commands.Bot, nsfw_callback=None) -> bool:
     for attachment in message.attachments:
         temp_filename = os.path.join(os.getcwd(), f"temp_{attachment.filename}")
         await attachment.save(temp_filename)
@@ -125,79 +95,85 @@ async def is_nsfw(
                 if result:
                     return True
             else:
-                print("Unable to check media: "+file_type)
+                print("Unable to check media: " + file_type)
         finally:
             if os.path.exists(temp_filename):
                 os.remove(temp_filename)
 
-    # Process embeds (e.g. GIFs from image or thumbnail URLs)
     for embed in message.embeds:
         gif_url = (
-            embed.image.proxy_url if embed.image else
+            embed.image.url if embed.image else
             embed.video.url if embed.video else
-            embed.thumbnail.proxy_url if embed.thumbnail else None
+            embed.thumbnail.url if embed.thumbnail else None
         )
 
         if gif_url:
             domain = urlparse(gif_url).netloc.lower()
-
-            # Check if it's a Tenor URL since its unlikely to be NSFW (less API calls)
             if domain == "tenor.com" or domain.endswith(".tenor.com"):
                 continue
 
             temp_location = f"{uuid.uuid4().hex[:12]}.gif"
             try:
-                data = requests.get(gif_url).content
-                with open(temp_location, "wb") as f:
-                    f.write(data)
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(gif_url) as resp:
+                        if resp.status == 200:
+                            content = await resp.read()
+                            async with aiofiles.open(temp_location, "wb") as f:
+                                await f.write(content)
+                        else:
+                            print(f"Failed to get media: {resp.status}")
+                            continue
                 file, result = await process_video(temp_location, nsfw_callback, message, bot)
                 return result
             finally:
                 if os.path.exists(temp_location):
                     os.remove(temp_location)
-        else:
-            print("No gif url")
 
-    # Process stickers
     for sticker in message.stickers:
         sticker_url = sticker.url
-        if sticker_url:
-            extension = sticker.format.name.lower()
-            temp_location = f"{uuid.uuid4().hex[:12]}.{extension}"
-            try:
-                data = requests.get(sticker_url).content
-                with open(temp_location, 'wb') as f:
-                    f.write(data)
-                gif_location = f"{uuid.uuid4().hex[:12]}.gif"
-                if extension == "lottie":
-                    animation = lottie.parsers.tgs.parse_tgs(temp_location)
-                    export_gif(animation, gif_location, skip_frames=4)
-                elif extension == "apng":
-                    apnggif(temp_location, gif_location)
-                else:
-                    gif_location = temp_location # try it anyways
-                    print(f"Unhandled extension: {extension}")
-                file, result = await process_video(gif_location, nsfw_callback, message, bot)
-                if result:
-                    return True
-            finally:
-                if os.path.exists(temp_location):
-                    os.remove(temp_location)
-                if os.path.exists(gif_location):
-                    os.remove(gif_location)
-    return False    
+        if not sticker_url:
+            continue
 
+        extension = sticker.format.name.lower()
+        temp_location = f"{uuid.uuid4().hex[:12]}.{extension}"
+        gif_location = f"{uuid.uuid4().hex[:12]}.gif"
 
-async def moderator_api(text: str = None,
-                        image_path: str = None,
-                        guild_id: int = None,
-                        max_attempts: int = 10) -> str:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(sticker_url) as resp:
+                    if resp.status == 200:
+                        content = await resp.read()
+                        async with aiofiles.open(temp_location, 'wb') as f:
+                            await f.write(content)
+                    else:
+                        continue
+
+            if extension == "lottie":
+                animation = await asyncio.to_thread(lottie.parsers.tgs.parse_tgs, temp_location)
+                await asyncio.to_thread(export_gif, animation, gif_location, skip_frames=4)
+            elif extension == "apng":
+                await asyncio.to_thread(apnggif, temp_location, gif_location)
+            else:
+                gif_location = temp_location
+                print(f"Unhandled extension: {extension}")
+
+            file, result = await process_video(gif_location, nsfw_callback, message, bot)
+            if result:
+                return True
+
+        finally:
+            if os.path.exists(temp_location):
+                os.remove(temp_location)
+            if os.path.exists(gif_location):
+                os.remove(gif_location)
+
+    return False
+
+async def moderator_api(text: str = None, image_path: str = None, guild_id: int = None, max_attempts: int = 10) -> str:
     inputs = []
-    is_video = image_path is not None 
-
-    if text and not image_path:  # text-moderation
+    is_video = image_path is not None
+    if text and not image_path:
         inputs = text
-
     if is_video:
         try:
             with open(image_path, "rb") as f:
@@ -236,30 +212,28 @@ async def moderator_api(text: str = None,
         except Exception as e:
             print(f"Unexpected error from OpenAI API: {e}")
             continue
-
-        results = getattr(response, "results", [])
-        if not results:
+        
+        if not response or not response.results:
             print("No moderation results returned.")
             continue
-
         if not api.is_api_key_working(encrypted_key):
             api.set_api_key_working(encrypted_key)
 
-        first = results[0]
-        for category, flagged in vars(first.categories).items():
-            if flagged:
+        results = response.results[0]
+        categories = results.categories
+
+        for category, is_flagged in categories.__dict__.items():
+            if is_flagged:
                 if is_video and category in moderator_api_category_exclusions:
-                    continue  # Skip excluded categories only for videos
+                    continue
                 print(f"Category {category} is flagged.")
                 return category
         return None
-
     print("All API key attempts failed.")
     return None
 
 def nsfw_model(converted_filename: str):
     results = detector.detect(converted_filename)
-    print(results)
     for result in results:
         if result['class'] in nsfw_labels and result['score'] >= 0.8:
             return result['class']
@@ -268,23 +242,18 @@ def nsfw_model(converted_filename: str):
 async def process_image(original_filename, guild_id=None):
     converted_filename = os.path.join(os.getcwd(), 'converted_image.jpg')
     try:
-        # Convert the image to JPEG using Pillow
         try:
-            with Image.open(original_filename) as img:
-                rgb_img = img.convert("RGB")  # JPEG doesn't support alpha channels
-                rgb_img.save(converted_filename, "JPEG")
+            await asyncio.to_thread(convert_to_jpeg, original_filename, converted_filename)
         except Exception:
             print("Error converting image:")
             print(traceback.format_exc())
             return False
 
-        # Run the NSFW detector on the converted image
-        try:            
+        try:
             if USE_MODERATOR_API:
                 category = await moderator_api(image_path=converted_filename, guild_id=guild_id)
             else:
-                category = nsfw_model(converted_filename)
-                
+                category = await asyncio.to_thread(nsfw_model, converted_filename)
             return category is not None
         except Exception:
             print("Error during detection:")
@@ -293,6 +262,11 @@ async def process_image(original_filename, guild_id=None):
     finally:
         if os.path.exists(converted_filename):
             os.remove(converted_filename)
+
+def convert_to_jpeg(src_path, dst_path):
+    with Image.open(src_path) as img:
+        rgb_img = img.convert("RGB")
+        rgb_img.save(dst_path, "JPEG")
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
     if mysql.get_settings(user.guild.id, "strike-nsfw") == True:
@@ -304,5 +278,4 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, imag
         if NSFW_STRIKES_ID:
             await logging.log_to_channel(embed, NSFW_STRIKES_ID, bot, image)
         elif STRIKE_CHANNEL_ID:
-            # exclude image from logging as it is not allowed in the strike channel
             await logging.log_to_channel(embed, STRIKE_CHANNEL_ID, bot)
