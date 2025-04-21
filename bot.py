@@ -3,7 +3,7 @@ import discord
 import os
 from dotenv import load_dotenv
 from modules.utils import mysql
-
+from modules.post_stats.topgg_poster import start_topgg_poster
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
@@ -78,6 +78,7 @@ async def setup_hook():
         else:
             print("Unable to load pycache folder.")
     await bot.tree.sync()
+    start_topgg_poster(bot)
 
 if __name__ == "__main__":
     bot.run(TOKEN)
