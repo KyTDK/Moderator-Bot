@@ -142,7 +142,7 @@ async def is_nsfw(
             domain = urlparse(gif_url).netloc.lower()
 
             # Check if it's a Tenor URL since its unlikely to be NSFW (less API calls)
-            if "tenor.com" in domain:
+            if domain == "tenor.com" or domain.endswith(".tenor.com"):
                 continue
 
             temp_location = f"{uuid.uuid4().hex[:12]}.gif"
