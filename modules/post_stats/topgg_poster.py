@@ -15,10 +15,7 @@ async def post_guild_count(bot: AutoShardedBot):
             "Content-Type": "application/json"
         }
 
-        payload = {
-            "server_count": len(bot.guilds),
-            "shard_count": bot.shard_count
-        }
+        payload = {"server_count": len(bot.guilds)}
 
         url = f"https://top.gg/api/bots/{bot.user.id}/stats"
 
