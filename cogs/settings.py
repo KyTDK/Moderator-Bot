@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
 import discord
-from modules.utils import mysql, time
+from modules.utils import mysql
 from modules.config.settings_schema import SETTINGS_SCHEMA
 import traceback
 from modules.variables.TimeString import TimeString
@@ -281,85 +281,6 @@ class Settings(commands.Cog):
                 await interaction.followup.send(
                     f"`{name}` is currently set to `{current_value}`.", ephemeral=True
                 )
-
-    # Command to configure strike actions, allowing user to define punishment for x amount of strikes, so it will be a list of actions they can define
-    @settings_group.command(name="strike", description="Configure strike actions.")
-    @app_commands.describe(
-        number_of_strikes="Number of strikes required to trigger the action.",
-        action="Action to take (ban, kick, timeout).",
-        duration="Duration for mute action (e.g., 1h, 30m, 30d). Leave empty for permanent or if not applicable.",
-    )
-    @app_commands.choices(
-        action=[
-            app_commands.Choice(name="Permanent ban", value="ban"),
-            app_commands.Choice(name="Kick", value="kick"),
-            app_commands.Choice(name="Timeout", value="timeout"),
-            app_commands.Choice(name="Remove action", value="remove"),
-        ]
-    )
-    async def strike_action(self, interaction: Interaction, number_of_strikes: int, action: str, duration: str = None):
-        """Configure strike actions."""
-        await interaction.response.defer(ephemeral=True)
-        # Validate action and duration
-        valid_actions = ["ban", "kick", "timeout", "remove"]
-        if action not in valid_actions:
-            await interaction.followup.send(
-                f"Invalid action. Valid actions are: {', '.join(valid_actions)}.",
-                ephemeral=True,
-            )
-            return
-
-        if action == "timeout" and duration is None:
-            await interaction.followup.send(
-                "Duration is required for timeout action.",
-                ephemeral=True,
-            )
-            return
-        
-        if time.parse_duration(duration) is None and duration is not None:
-            await interaction.followup.send(
-                "Invalid duration format. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively.",
-                ephemeral=True,
-            )
-            return
-
-        strike_actions = mysql.get_settings(interaction.guild.id, "strike-actions") or {}
-
-        number_of_strikes = str(number_of_strikes)
-
-        if action == "remove":
-            # Remove the action
-            if number_of_strikes in strike_actions:
-                removed_action = strike_actions.pop(number_of_strikes)
-                mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
-                await interaction.followup.send(
-                    f"Removed strike action for `{number_of_strikes}` strikes: `{removed_action}`.",
-                    ephemeral=True,
-                )
-            else:
-                await interaction.followup.send(
-                    f"No strike action found for `{number_of_strikes}` strikes.",
-                    ephemeral=True,
-                )
-            return
-
-        # Update the dictionary, telling the user the new and old values
-        if number_of_strikes in strike_actions:
-            old_action = strike_actions[number_of_strikes]
-            strike_actions[number_of_strikes] = (action, duration)
-            await interaction.followup.send(
-                f"Updated strike action for `{number_of_strikes}` strikes: `{old_action}` -> `{action}` {duration or ''}.",
-                ephemeral=True,
-            )
-        else:
-            strike_actions[number_of_strikes] = (action, duration)
-            await interaction.followup.send(
-                f"Added strike action for `{number_of_strikes}` strikes: `{action}` {duration or ''}.",
-                ephemeral=True,
-            )
-
-        # Store the strike action in the database
-        mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Settings(bot))
