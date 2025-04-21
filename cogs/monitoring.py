@@ -53,13 +53,15 @@ class Monitoring(commands.Cog):
         await self.log_event(channel.guild, log_message)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        # Only log when content actually changes and ignore bot messages
-        if before.author.bot or before.content == after.content:
-            return
-        log_message = (f":pencil2: **Message Edited:** In {before.channel.mention}, "
-                       f"{before.author.mention} changed from:\n`{before.content}`\n to:\n`{after.content}`")
-        await self.log_event(before.guild, log_message)
+    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
+        channel = reaction.message.channel
+        channel_display = f"#{channel.name}" if hasattr(channel, "name") else f"<#{channel.id}>"
+
+        log_message = (
+            f"{user.mention} reacted with {reaction.emoji} "
+            f"to a message in {channel_display}."
+        )
+        await self.log_event(reaction.message.guild, log_message)
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
