@@ -134,7 +134,7 @@ async def is_nsfw(message: discord.Message, bot: commands.Bot, nsfw_callback=Non
         try:
             file_type = determine_file_type(temp_filename)
             if file_type == "Image":
-                category = await process_image(temp_filename, guild_id=message.guild.id)
+                category = await process_image(temp_filename, guild_id=message.guild.id, clean_up=False)
                 if category != None:
                     if nsfw_callback:
                         file = discord.File(temp_filename, filename=attachment.filename)
