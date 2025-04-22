@@ -22,8 +22,8 @@ from typing import Optional, Tuple
 from apnggif import apnggif
 import openai
 
-USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 load_dotenv()
+USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 OPENAI_API_KEY = os.getenv('OPENAI_API')
 
 moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
