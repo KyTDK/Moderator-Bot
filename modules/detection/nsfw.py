@@ -48,11 +48,31 @@ def determine_file_type(file_path):
     else:
         return kind.mime
 
-async def process_video(original_filename: str, nsfw_callback, message: discord.Message, bot: commands.Bot, frame_interval: int = 20) -> Tuple[Optional[discord.File], bool]:
+async def process_video(original_filename: str, nsfw_callback, message: discord.Message, bot: commands.Bot, seconds_interval: float = None) -> Tuple[Optional[discord.File], bool]:
+    print(f"Processing video: {original_filename}")
+    temp_frames = []
     file_to_send = None
-    print("Processing video for " + str(original_filename))
+    semaphore = asyncio.Semaphore(5)
+
     try:
         vidcap = await asyncio.to_thread(cv2.VideoCapture, original_filename)
+        fps = await asyncio.to_thread(vidcap.get, cv2.CAP_PROP_FPS)
+        total_frames = await asyncio.to_thread(vidcap.get, cv2.CAP_PROP_FRAME_COUNT)
+        duration_secs = total_frames / fps if fps else 0
+
+        if not seconds_interval:
+            if duration_secs <= 30:
+                seconds_interval = 0.5
+            elif duration_secs <= 60:
+                seconds_interval = 2
+            elif duration_secs <= 300:
+                seconds_interval = 3
+            else:
+                seconds_interval = 5
+
+        frame_interval = max(1, int(fps * seconds_interval))
+        print(f"FPS: {fps}, Duration: {duration_secs:.2f}s, Frame Interval: {frame_interval}")
+
         count = 0
         while True:
             success, image = await asyncio.to_thread(vidcap.read)
@@ -62,21 +82,50 @@ async def process_video(original_filename: str, nsfw_callback, message: discord.
             if count % frame_interval == 0:
                 frame_filename = f"{uuid.uuid4().hex[:8]}_frame{count}.jpg"
                 await asyncio.to_thread(cv2.imwrite, frame_filename, image)
-                try:
-                    if await process_image(frame_filename, guild_id=message.guild.id):
-                        if nsfw_callback:
-                            file_to_send = discord.File(frame_filename, filename=os.path.basename(frame_filename))
-                            await nsfw_callback(message.author, bot, "Uploading explicit content", file_to_send)
-                        return file_to_send, True
-                finally:
-                    if os.path.exists(frame_filename):
-                        os.remove(frame_filename)
+                temp_frames.append(frame_filename)
+
             count += 1
-    finally:
+
         await asyncio.to_thread(vidcap.release)
+
+        async def analyze_frame(frame_path):
+            try:
+                if os.path.exists(frame_path):
+                    async with semaphore:
+                        category = await process_image(frame_path, guild_id=message.guild.id, clean_up=False)
+                        return (frame_path, category) if category else None
+            except Exception as e:
+                print(traceback.format_exc())
+                print(f"Error processing frame {frame_path}: {e}")
+                return None
+
+        tasks = [asyncio.create_task(analyze_frame(f)) for f in temp_frames]
+
+        for coro in asyncio.as_completed(tasks):
+            try:
+                result = await coro
+                if result:
+                    frame_path, category = result
+                    if os.path.exists(frame_path):
+                        for task in tasks:
+                            if not task.done():
+                                task.cancel()
+                        if nsfw_callback:
+                            file_to_send = discord.File(frame_path, filename=os.path.basename(frame_path))
+                            await nsfw_callback(message.author, bot, f"Detected potential policy violation (Category: **{category.title()}**)", file_to_send)
+                        return file_to_send, True
+            except asyncio.CancelledError:
+                print("Task was cancelled.")
+                continue
+
+        return None, False
+
+    finally:
+        for f in temp_frames:
+            if os.path.exists(f):
+                os.remove(f)
         if os.path.exists(original_filename):
             os.remove(original_filename)
-    return None, False
 
 async def is_nsfw(message: discord.Message, bot: commands.Bot, nsfw_callback=None) -> bool:
     for attachment in message.attachments:
@@ -85,10 +134,11 @@ async def is_nsfw(message: discord.Message, bot: commands.Bot, nsfw_callback=Non
         try:
             file_type = determine_file_type(temp_filename)
             if file_type == "Image":
-                if await process_image(temp_filename, guild_id=message.guild.id):
+                category = await process_image(temp_filename, guild_id=message.guild.id)
+                if category:
                     if nsfw_callback:
                         file = discord.File(temp_filename, filename=attachment.filename)
-                        await nsfw_callback(message.author, bot, "Uploading explicit content", file)
+                        await nsfw_callback(message.author, bot, f"Detected potential policy violation (Category: **{category.title()}**)", file)
                     return True
             elif file_type == "Video":
                 file, result = await process_video(temp_filename, nsfw_callback, message, bot)
@@ -176,6 +226,9 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
         inputs = text
     if is_video:
         try:
+            if not os.path.exists(image_path):
+                print(f"Image path does not exist: {image_path}")
+                return None
             with open(image_path, "rb") as f:
                 img_data = f.read()
             b64 = base64.b64encode(img_data).decode("utf-8")
@@ -223,6 +276,7 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
         categories = results.categories
 
         for category, is_flagged in categories.__dict__.items():
+            print(f"Category: {category}, Flagged: {is_flagged}")
             if is_flagged:
                 if is_video and category in moderator_api_category_exclusions:
                     continue
@@ -239,29 +293,25 @@ def nsfw_model(converted_filename: str):
             return result['class']
     return None
 
-async def process_image(original_filename, guild_id=None):
-    converted_filename = os.path.join(os.getcwd(), 'converted_image.jpg')
+async def process_image(original_filename, guild_id=None, clean_up=True):
     try:
-        try:
+        converted_filename = os.path.join(os.getcwd(), f"converted_{uuid.uuid4().hex[:8]}.jpg")
+        if USE_MODERATOR_API:
+            category = await moderator_api(image_path=original_filename, guild_id=guild_id)
+        else:
             await asyncio.to_thread(convert_to_jpeg, original_filename, converted_filename)
-        except Exception:
-            print("Error converting image:")
-            print(traceback.format_exc())
-            return False
-
-        try:
-            if USE_MODERATOR_API:
-                category = await moderator_api(image_path=converted_filename, guild_id=guild_id)
-            else:
-                category = await asyncio.to_thread(nsfw_model, converted_filename)
-            return category is not None
-        except Exception:
-            print("Error during detection:")
-            print(traceback.format_exc())
-            return False
+            category = await asyncio.to_thread(nsfw_model, converted_filename)
+        return category
+    except Exception as e:
+        print(traceback.format_exc())
+        print(f"Error processing image {original_filename}: {e}")
+        return False
     finally:
-        if os.path.exists(converted_filename):
-            os.remove(converted_filename)
+        if clean_up:
+            if os.path.exists(original_filename):
+                os.remove(original_filename)
+            if os.path.exists(converted_filename):
+                os.remove(converted_filename)
 
 def convert_to_jpeg(src_path, dst_path):
     with Image.open(src_path) as img:
