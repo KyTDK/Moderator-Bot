@@ -2,7 +2,6 @@ import os
 import traceback
 import asyncio
 from dotenv import load_dotenv
-from nudenet import NudeDetector
 from PIL import Image
 import cv2
 import filetype
@@ -27,15 +26,6 @@ USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
 OPENAI_API_KEY = os.getenv('OPENAI_API')
 
 moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
-nsfw_labels = {
-    "BUTTOCKS_EXPOSED", "FEMALE_BREAST_EXPOSED", "FEMALE_GENITALIA_EXPOSED",
-    "ANUS_EXPOSED", "MALE_GENITALIA_EXPOSED"
-}
-
-if not USE_MODERATOR_API:
-    detector = NudeDetector(model_path="640m.onnx", inference_resolution=640)
-elif not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY is not set.")
 
 def determine_file_type(file_path):
     kind = filetype.guess(file_path)
@@ -285,21 +275,10 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
     print("All API key attempts failed.")
     return None
 
-def nsfw_model(converted_filename: str):
-    results = detector.detect(converted_filename)
-    for result in results:
-        if result['class'] in nsfw_labels and result['score'] >= 0.8:
-            return result['class']
-    return None
-
 async def process_image(original_filename, guild_id=None, clean_up=True):
     try:
         converted_filename = os.path.join(os.getcwd(), f"converted_{uuid.uuid4().hex[:8]}.jpg")
-        if USE_MODERATOR_API:
-            category = await moderator_api(image_path=original_filename, guild_id=guild_id)
-        else:
-            await asyncio.to_thread(convert_to_jpeg, original_filename, converted_filename)
-            category = await asyncio.to_thread(nsfw_model, converted_filename)
+        category = await moderator_api(image_path=original_filename, guild_id=guild_id)
         return category
     except Exception as e:
         print(traceback.format_exc())
