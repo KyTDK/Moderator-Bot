@@ -60,7 +60,7 @@ class ApiPoolCog(commands.Cog):
         api_key_hash = compute_api_key_hash(api_key)
         
         # Check if the hash already exists in the database
-        existing, _ = execute_query(
+        existing, _ = await execute_query(
             "SELECT 1 FROM api_pool WHERE api_key_hash = %s",
             (api_key_hash,), fetch_one=True
         )
@@ -75,7 +75,7 @@ class ApiPoolCog(commands.Cog):
             await interaction.followup.send("This API key already exists in the pool.", ephemeral=True)
         else:
             # Insert the hash into the database
-            execute_query(
+            await execute_query(
                 "INSERT INTO api_pool (user_id, api_key, api_key_hash) VALUES (%s, %s, %s)",
                 (user_id, fernet.encrypt(api_key.encode()).decode(), api_key_hash)
             )
@@ -88,7 +88,7 @@ class ApiPoolCog(commands.Cog):
     async def remove_api(self, interaction: Interaction, api_key: str):
         user_id = interaction.user.id
         query = "DELETE FROM api_pool WHERE user_id = %s AND api_key_hash = %s"
-        _, affected_rows = execute_query(query, (user_id, compute_api_key_hash(api_key)))
+        _, affected_rows = await execute_query(query, (user_id, compute_api_key_hash(api_key)))
         if affected_rows > 0:
             await interaction.response.send_message("API key removed from your pool.", ephemeral=True)
         else:
@@ -101,7 +101,7 @@ class ApiPoolCog(commands.Cog):
     async def clear_api(self, interaction: Interaction):
         user_id = interaction.user.id
         query = "DELETE FROM api_pool WHERE user_id = %s"
-        _, affected_rows = execute_query(query, (user_id,))
+        _, affected_rows = await execute_query(query, (user_id,))
         if affected_rows > 0:
             await interaction.response.send_message("All API keys have been cleared from your pool.", ephemeral=True)
         else:
@@ -114,7 +114,7 @@ class ApiPoolCog(commands.Cog):
     async def list_apis(self, interaction: Interaction):
         user_id = interaction.user.id
         query = "SELECT api_key FROM api_pool WHERE user_id = %s"
-        result, _ = execute_query(query, (user_id,), fetch_all=True)
+        result, _ = await execute_query(query, (user_id,), fetch_all=True)
         if result:
             api_keys = [row[0] for row in result]
             formatted_keys = '\n'.join(f"- {fernet.decrypt(key.encode()).decode()}" for key in api_keys)

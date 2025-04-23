@@ -60,7 +60,7 @@ class Settings(commands.Cog):
             return
 
         # Remove the setting from the database
-        if mysql.update_settings(interaction.guild.id, name, None):
+        if await mysql.update_settings(interaction.guild.id, name, None):
             await interaction.response.send_message(
                 f"Removed `{name}` setting.", ephemeral=True
             )
@@ -73,7 +73,7 @@ class Settings(commands.Cog):
     async def reset(self, interaction: Interaction):
         """Reset server settings."""
         await interaction.response.defer(ephemeral=True)
-        _, rows = mysql.execute_query("DELETE FROM settings WHERE guild_id = %s", (interaction.guild.id,))
+        _, rows = await mysql.execute_query("DELETE FROM settings WHERE guild_id = %s", (interaction.guild.id,))
         if rows>0:
             await interaction.followup.send("Reset all settings to defaults.")
         else:
@@ -129,7 +129,7 @@ class Settings(commands.Cog):
                 await interaction.followup.send(content=str(e), ephemeral=True)
                 return
 
-            mysql.update_settings(interaction.guild.id, name, parsed)
+            await mysql.update_settings(interaction.guild.id, name, parsed)
             await interaction.followup.send(
                 f"Updated `{name}` to `{parsed}`.", ephemeral=True
             )
@@ -156,10 +156,10 @@ class Settings(commands.Cog):
             return
         if schema.type == list[discord.TextChannel]:
             # If the setting is a list of channels, append the new channel
-            current_channels = mysql.get_settings(interaction.guild.id, name) or []
+            current_channels = await mysql.get_settings(interaction.guild.id, name) or []
             if channel.id not in current_channels:
                 current_channels.append(channel.id)
-                mysql.update_settings(interaction.guild.id, name, current_channels)
+                await mysql.update_settings(interaction.guild.id, name, current_channels)
                 await interaction.response.send_message(
                     f"Added `{channel.name}` to `{name}`.", ephemeral=True
                 )
@@ -168,7 +168,7 @@ class Settings(commands.Cog):
                     f"`{channel.name}` is already in `{name}`.", ephemeral=True
                 )
             return
-        mysql.update_settings(interaction.guild.id, name, channel.id)
+        await mysql.update_settings(interaction.guild.id, name, channel.id)
         await interaction.response.send_message(
             f"Updated `{name}` to channel `{channel.name}`.", ephemeral=True
         )
@@ -183,7 +183,7 @@ class Settings(commands.Cog):
             await interaction.followup.send("Invalid setting name or type.", ephemeral=True)
             return
 
-        current = mysql.get_settings(interaction.guild.id, name)
+        current = await mysql.get_settings(interaction.guild.id, name)
 
         if schema.type == list[discord.TextChannel]:
             channels = current or []
@@ -192,14 +192,14 @@ class Settings(commands.Cog):
                 return
 
             channels.remove(channel.id)
-            mysql.update_settings(interaction.guild.id, name, channels)
+            await mysql.update_settings(interaction.guild.id, name, channels)
             await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
         else:
             if current != channel.id:
                 await interaction.followup.send(f"`{channel.name}` is not set for `{name}`.", ephemeral=True)
                 return
 
-            mysql.update_settings(interaction.guild.id, name, None)
+            await mysql.update_settings(interaction.guild.id, name, None)
             await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
  
     @app_commands.command(name="help", description="Get help.")
@@ -244,7 +244,7 @@ class Settings(commands.Cog):
             return
 
         # Retrieve the current value from the database
-        current_value = mysql.get_settings(interaction.guild.id, name)
+        current_value = await mysql.get_settings(interaction.guild.id, name)
         type = schema.type
         if current_value is None:
             await interaction.followup.send(

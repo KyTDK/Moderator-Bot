@@ -64,7 +64,7 @@ class StrikesCog(commands.Cog):
         """Retrieve strikes for a specified user."""
         await interaction.response.defer(ephemeral=True)
 
-        strikes = mysql.get_strikes(user.id, interaction.guild.id)
+        strikes = await mysql.get_strikes(user.id, interaction.guild.id)
 
         if not strikes:
             await interaction.followup.send(embed=Embed(
@@ -105,16 +105,29 @@ class StrikesCog(commands.Cog):
         for entry in entries:
             content += f"{entry['title']}\n{entry['value']}\n\n"
 
-        # Send the response
-        if len(content) > 6000:
+        # Decide how to deliver the data
+        if len(entries) > 25 or len(content) > 6000:
+            # Too many fields or the plain-text variant is too long → send a file
             file = File(io.BytesIO(content.encode()), filename=f"{user.name}_strikes.txt")
-            await interaction.followup.send(content="Strike list is too long, sent as a file:", file=file)
+            await interaction.followup.send(
+                content="Strike list is too long to display inline, sending as a file:",
+                file=file,
+                ephemeral=True,
+            )
         else:
-            embed = Embed(title=f"Strikes for {user.display_name}", color=Color.red())
+            # Safe to use a single embed
+            embed = Embed(
+                title=f"Strikes for {user.display_name}",
+                color=Color.red()
+            )
             for entry in entries:
-                embed.add_field(name=entry["title"], value=entry["value"], inline=False)
-            await interaction.followup.send(embed=embed)
-    
+                embed.add_field(
+                    name=entry["title"],
+                    value=entry["value"],
+                    inline=False
+                )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            
     @strike_group.command(
         name="remove",
         description="Remove a specific strike by its ID."
@@ -129,7 +142,7 @@ class StrikesCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         # Ensure the strike matches the guild and the user
-        _, rows_affected = mysql.execute_query(
+        _, rows_affected = await mysql.execute_query(
             "DELETE FROM strikes WHERE id = %s AND guild_id = %s AND user_id = %s",
             (strike_id, interaction.guild.id, user.id)
         )
@@ -154,7 +167,7 @@ class StrikesCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         # Delete only active strikes from the database, we keep inactive ones for analytics
-        _, rows_affected = mysql.execute_query(
+        _, rows_affected = await mysql.execute_query(
             """
             DELETE FROM strikes
             WHERE user_id = %s
@@ -213,7 +226,7 @@ class StrikesCog(commands.Cog):
             )
             return
 
-        strike_actions = mysql.get_settings(interaction.guild.id, "strike-actions") or {}
+        strike_actions = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}
 
         number_of_strikes = str(number_of_strikes)
 
@@ -221,7 +234,7 @@ class StrikesCog(commands.Cog):
             # Remove the action
             if number_of_strikes in strike_actions:
                 removed_action = strike_actions.pop(number_of_strikes)
-                mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
+                await mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
                 await interaction.followup.send(
                     f"Removed strike action for `{number_of_strikes}` strikes: `{removed_action}`.",
                     ephemeral=True,
@@ -249,7 +262,7 @@ class StrikesCog(commands.Cog):
             )
 
         # Store the strike action in the database
-        mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
+        await mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
 
     # Warn channel or optionally user
     @app_commands.command(

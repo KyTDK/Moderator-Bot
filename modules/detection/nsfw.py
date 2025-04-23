@@ -244,7 +244,7 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
         return
 
     for attempt in range(max_attempts):
-        client, encrypted_key = api.get_api_client(guild_id)
+        client, encrypted_key = await api.get_api_client(guild_id)
         if not client:
             print("No available API key.")
             continue
@@ -256,11 +256,11 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
             )
         except openai.AuthenticationError:
             print("Authentication failed. Marking key as not working.")
-            api.set_api_key_not_working(encrypted_key)
+            await api.set_api_key_not_working(encrypted_key)
             continue
         except openai.RateLimitError as e:
             print(f"Rate limit error: {e}. Marking key as not working.")
-            api.set_api_key_not_working(encrypted_key)
+            await api.set_api_key_not_working(encrypted_key)
             continue
         except Exception as e:
             print(f"Unexpected error from OpenAI API: {e}")
@@ -269,14 +269,13 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
         if not response or not response.results:
             print("No moderation results returned.")
             continue
-        if not api.is_api_key_working(encrypted_key):
-            api.set_api_key_working(encrypted_key)
+        if not await api.is_api_key_working(encrypted_key):
+            await api.set_api_key_working(encrypted_key)
 
         results = response.results[0]
         categories = results.categories
 
         for category, is_flagged in categories.__dict__.items():
-            print(f"Category: {category}, Flagged: {is_flagged}")
             if is_flagged:
                 if is_video and category in moderator_api_category_exclusions:
                     continue
@@ -319,12 +318,12 @@ def convert_to_jpeg(src_path, dst_path):
         rgb_img.save(dst_path, "JPEG")
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
-    if mysql.get_settings(user.guild.id, "strike-nsfw") == True:
+    if await mysql.get_settings(user.guild.id, "strike-nsfw") == True:
         embed = await strike.strike(user=user, bot=bot, reason=reason, interaction=None)
         embed.title = "NSFW Content strike"
         embed.set_image(url=f"attachment://{image.filename}")
-        NSFW_STRIKES_ID = mysql.get_settings(user.guild.id, "nsfw-channel")
-        STRIKE_CHANNEL_ID = mysql.get_settings(user.guild.id, "strike-channel")
+        NSFW_STRIKES_ID = await mysql.get_settings(user.guild.id, "nsfw-channel")
+        STRIKE_CHANNEL_ID = await mysql.get_settings(user.guild.id, "strike-channel")
         if NSFW_STRIKES_ID:
             await logging.log_to_channel(embed, NSFW_STRIKES_ID, bot, image)
         elif STRIKE_CHANNEL_ID:

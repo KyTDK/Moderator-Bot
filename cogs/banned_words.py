@@ -27,17 +27,17 @@ class banned_words(commands.Cog):
         """Add a word to the banned words list."""
         guild_id = interaction.guild.id
         # Check if the word is already in the database
-        existing_word = execute_query(
+        existing_word, _ = await execute_query(
             "SELECT * FROM banned_words WHERE guild_id = %s AND word = %s",
             (guild_id, word),
             fetch_one=True
         )
-        if existing_word[0]:
+        if existing_word:
             await interaction.response.send_message(f"The word '{word}' is already banned.", ephemeral=True)
             return
 
         # Insert the new banned word into the database
-        execute_query(
+        await execute_query(
             "INSERT INTO banned_words (guild_id, word) VALUES (%s, %s)",
             (guild_id, word)
         )
@@ -52,7 +52,7 @@ class banned_words(commands.Cog):
         """Remove a word from the banned words list."""
         guild_id = interaction.guild.id
         # Check if the word exists in the database
-        rows, _ = execute_query(
+        rows, _ = await execute_query(
             "SELECT * FROM banned_words WHERE guild_id = %s AND word = %s",
             (guild_id, word),
             fetch_one=True
@@ -63,7 +63,7 @@ class banned_words(commands.Cog):
             return
 
         # Remove the banned word from the database
-        execute_query(
+        await execute_query(
             "DELETE FROM banned_words WHERE guild_id = %s AND word = %s",
             (guild_id, word)
         )
@@ -78,7 +78,7 @@ class banned_words(commands.Cog):
         """List all banned words."""
         guild_id = interaction.guild.id
         # Retrieve all banned words from the database
-        rows, _ = execute_query(
+        rows, _ = await execute_query(
                     "SELECT word FROM banned_words WHERE guild_id = %s",
                     (guild_id,),
                     fetch_all=True
@@ -107,7 +107,7 @@ class banned_words(commands.Cog):
 
         guild_id = message.guild.id
         # unpack rows, ignore count
-        rows, _ = execute_query(
+        rows, _ = await execute_query(
             "SELECT word FROM banned_words WHERE guild_id = %s",
             (guild_id,),
             fetch_all=True

@@ -42,7 +42,7 @@ async def strike(
     guild_id = user.guild.id
 
     if not expiry:
-        expiry = mysql.get_settings(guild_id, "strike-expiry")
+        expiry = await mysql.get_settings(guild_id, "strike-expiry")
 
     now = datetime.now(timezone.utc)
     expires_at = None
@@ -56,7 +56,7 @@ async def strike(
         INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp, expires_at)
         VALUES (%s, %s, %s, %s, %s, %s)
     """
-    execute_query(query, (
+    await execute_query(query, (
         guild_id,
         user.id,
         reason,
@@ -67,15 +67,15 @@ async def strike(
 
 
     # Fetch the updated strike count for the user.
-    strike_count = mysql.get_strike_count(user.id, guild_id)
+    strike_count = await mysql.get_strike_count(user.id, guild_id)
 
     # Limit strike count
     if interaction and strike_count>100:
-        interaction.followup.send("You cannot give the same player more than 100 strikes. Use `strikes clear <user>` to reset their strikes.")
+        await interaction.followup.send("You cannot give the same player more than 100 strikes. Use `strikes clear <user>` to reset their strikes.")
         return None
     
     # Retrieve the strike actions setting; if not found, use the hardcoded default.
-    strike_settings = mysql.get_settings(guild_id, "strike-actions")
+    strike_settings = await mysql.get_settings(guild_id, "strike-actions")
     
     # Get the approriate action based on the strike count.
     # strike_settings = {"1": ["timeout", "1d"], "2": ["Timeout", "7d"], "3": ["Ban", "-1"], "1": ["timeout", "1d"]}}
@@ -156,7 +156,7 @@ async def strike(
 
     # Log the strike in a designated strikes channel.
     embed.title = f"{user.display_name} received a strike"
-    settings = mysql.get_settings(user.guild.id)
+    settings = await mysql.get_settings(user.guild.id)
     STRIKES_CHANNEL_ID = settings.get("strike-channel") if settings else None
     if STRIKES_CHANNEL_ID:
         await logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)

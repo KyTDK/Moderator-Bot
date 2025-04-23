@@ -37,10 +37,10 @@ class AggregatedModeration(commands.Cog):
             return True
         return False
     
-    def should_perform_check(self, user_id, guild_id):
-        delete_offensive = mysql.get_settings(guild_id, "delete-offensive")
-        restrict_users = mysql.get_settings(guild_id, "restrict-striked-users")
-        has_strike = mysql.get_strike_count(user_id, guild_id) > 0
+    async def should_perform_check(self, user_id, guild_id):
+        delete_offensive = await mysql.get_settings(guild_id, "delete-offensive")
+        restrict_users = await mysql.get_settings(guild_id, "restrict-striked-users")
+        has_strike = await mysql.get_strike_count(user_id, guild_id) > 0
         return delete_offensive or (has_strike and restrict_users)
     
     @commands.Cog.listener()
@@ -53,7 +53,7 @@ class AggregatedModeration(commands.Cog):
         now = time.time()
 
         # Offensive text checks (aggregation logic)
-        if self.should_perform_check(user_id, guild_id):
+        if await self.should_perform_check(user_id, guild_id):
             # Maintain a rolling window of short messages
             self.user_message_cache.setdefault(user_id, [])
             if len(message.content) <= 10:
@@ -84,8 +84,8 @@ class AggregatedModeration(commands.Cog):
 
         # NSFW (non-text) checks
         if (
-            mysql.get_settings(guild_id, "delete-nsfw") is True
-            and message.channel.id not in mysql.get_settings(guild_id, "exclude-channels")
+            await mysql.get_settings(guild_id, "delete-nsfw") is True
+            and message.channel.id not in await mysql.get_settings(guild_id, "exclude-channels")
         ):
             if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content):
                 try:
@@ -108,7 +108,7 @@ class AggregatedModeration(commands.Cog):
         old_message = before.content
         new_message = after.content
 
-        if self.should_perform_check(user_id, guild_id):
+        if await self.should_perform_check(user_id, guild_id):
             similarity_ratio = SequenceMatcher(None, old_message, new_message).ratio()
             if similarity_ratio < self.DIFFERENCE_THRESHOLD:
                 await self.check_and_delete_if_offensive(new_message, [after], guild_id)

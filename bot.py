@@ -23,7 +23,7 @@ async def make_announcement(guild, message):
 
 @bot.event
 async def on_ready():
-    mysql.initialize_database()
+    await mysql.initialise_and_get_pool()
 
 @bot.event
 async def on_guild_join(guild):

@@ -1,77 +1,160 @@
 import logging
-import mysql.connector
-from mysql.connector import Error
+import aiomysql
 import os
+import json
+import copy
+from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from modules.config.settings_schema import SETTINGS_SCHEMA
-import json
-from cryptography.fernet import Fernet
-from PIL import Image
-import copy
 
 load_dotenv()
 
 MYSQL_CONFIG = {
-    'host': os.getenv('MYSQL_HOST'),
-    'user': os.getenv('MYSQL_USER'),
-    'password': os.getenv('MYSQL_PASSWORD'),
-    'database': os.getenv('MYSQL_DATABASE')
+    "host": os.getenv("MYSQL_HOST"),
+    "user": os.getenv("MYSQL_USER"),
+    "password": os.getenv("MYSQL_PASSWORD"),
+    "db": os.getenv("MYSQL_DATABASE"), 
+    "autocommit": False,
+    "charset": "utf8mb4"
 }
 
-FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
+FERNET_KEY = os.getenv("FERNET_SECRET_KEY")
 fernet = Fernet(FERNET_KEY)
 
-def execute_query(query, params=(), *, commit=True, fetch_one=False, fetch_all=False, buffered=True, database=None, user=None, password=None):
-    db = get_connection(database=database, user=user, password=password)
-    if not db:
-        return None, 0
-    try:
-        with db.cursor(buffered=buffered) as cursor:
-            cursor.execute(query, params)
-            affected_rows = cursor.rowcount  # Capture the number of affected rows
-            result = None
-            if fetch_one:
-                result = cursor.fetchone()
-            elif fetch_all:
-                result = cursor.fetchall()
-            if commit:
-                db.commit()
-            return result, affected_rows  # Return both the result and affected rows
-    except Exception as e:
-        logging.error("Error executing query", exc_info=True)
-        if commit:
-            db.rollback()
-        return None, 0  # Return 0 affected rows in case of error
-    finally:
-        db.close()
+_pool: aiomysql.Pool | None = None
 
-def get_connection(database=None, user=None, password=None, use_database=True):
-    """Establish and return a database connection."""
-    try:
-        config = MYSQL_CONFIG.copy()
-        if database:
-            config["database"] = database
-        if user:
-            config["user"] = user
-        if password:
-            config["password"] = password
-        if not use_database:
-            config.pop('database', None)  # Connect without specifying a database.
-        connection = mysql.connector.connect(**config)
-        return connection
-    except Error as e:
-        logging.error(f"Error connecting to MySQL: {e}")
-        return None
-    
-def get_strike_count(user_id, guild_id):
-    result, _ = execute_query(
-        "SELECT COUNT(*) FROM strikes WHERE user_id = %s AND guild_id = %s AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())",
-        (user_id, guild_id,), fetch_one=True
+async def init_pool(minsize: int = 1, maxsize: int = 10):
+    """Create the global aiomysql connection pool (if not already created)."""
+    global _pool
+    if _pool is not None:
+        return _pool
+
+    await _ensure_database_exists()
+
+    _pool = await aiomysql.create_pool(
+        minsize=minsize,
+        maxsize=maxsize,
+        **MYSQL_CONFIG,
+    )
+    return _pool
+
+async def close_pool():
+    """Gracefully close the global pool (e.g. on bot shutdown)."""
+    global _pool
+    if _pool is not None:
+        _pool.close()
+        await _pool.wait_closed()
+        _pool = None
+
+async def get_pool():
+    if _pool is None:
+        await init_pool()
+    return _pool
+
+async def _connect_raw(use_database: bool = True):
+    """Open a *single* connection (no pool) — used internally for bootstrap tasks."""
+    cfg = MYSQL_CONFIG.copy()
+    if not use_database:
+        cfg.pop("db", None)
+    return await aiomysql.connect(**cfg)
+
+async def _ensure_database_exists():
+    """Create the target database and tables if they are missing."""
+    conn = await _connect_raw(use_database=False)
+    async with conn.cursor() as cur:
+        try:
+            await cur.execute(f"CREATE DATABASE IF NOT EXISTS `{MYSQL_CONFIG['db']}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+            await cur.execute(f"USE `{MYSQL_CONFIG['db']}`")
+            # ---------- Core tables ----------
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS strikes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    guild_id BIGINT,
+                    user_id BIGINT,
+                    reason VARCHAR(255),
+                    striked_by_id BIGINT,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    expires_at DATETIME NULL DEFAULT NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS settings (
+                    guild_id BIGINT PRIMARY KEY,
+                    settings_json JSON
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS banned_words (
+                    guild_id BIGINT,
+                    word VARCHAR(255),
+                    PRIMARY KEY (guild_id, word)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS api_pool (
+                    user_id BIGINT NOT NULL,
+                    api_key TEXT NOT NULL,
+                    api_key_hash VARCHAR(64) NOT NULL,
+                    working BOOLEAN NOT NULL DEFAULT TRUE,
+                    PRIMARY KEY (user_id, api_key_hash)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await conn.commit()
+        finally:
+            conn.close()
+
+async def execute_query(
+    query: str,
+    params: tuple | list = (),
+    *,
+    commit: bool = True,
+    fetch_one: bool = False,
+    fetch_all: bool = False,
+):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            try:
+                await cur.execute(query, params)
+                affected_rows = cur.rowcount
+                result = None
+                if fetch_one:
+                    result = await cur.fetchone()
+                elif fetch_all:
+                    result = await cur.fetchall()
+                if commit:
+                    await conn.commit()
+                return result, affected_rows
+            except Exception:
+                logging.exception("Error executing query")
+                if commit:
+                    await conn.rollback()
+                return None, 0
+
+async def get_strike_count(user_id: int, guild_id: int) -> int:
+    result, _ = await execute_query(
+        """
+        SELECT COUNT(*)
+        FROM strikes
+        WHERE user_id = %s
+          AND guild_id = %s
+          AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())
+        """,
+        (user_id, guild_id),
+        fetch_one=True,
     )
     return result[0] if result else 0
 
-def get_strikes(user_id, guild_id):
-    strikes, _ = execute_query(
+async def get_strikes(user_id: int, guild_id: int):
+    strikes, _ = await execute_query(
         """
         SELECT id, reason, striked_by_id, timestamp, expires_at
         FROM strikes
@@ -81,100 +164,59 @@ def get_strikes(user_id, guild_id):
         ORDER BY timestamp DESC
         """,
         (user_id, guild_id),
-        fetch_all=True
+        fetch_all=True,
     )
     return strikes
 
-
-def get_settings(guild_id, settings_key=None):
-    """Retrieve the settings for a guild."""
-    settings, _ = execute_query(
+# --------------------------- Settings helpers ---------------------------
+async def get_settings(guild_id: int, settings_key: str | None = None):
+    settings_row, _ = await execute_query(
         "SELECT settings_json FROM settings WHERE guild_id = %s",
         (guild_id,),
-        fetch_one=True
+        fetch_one=True,
     )
-    response = json.loads(settings[0]) if settings else json.loads("{}")
+    raw = json.loads(settings_row[0]) if settings_row else {}
+
+    # Coerce legacy True/False strings into bools --------
+    if raw == "True":
+        raw = True
+    elif raw == "False":
+        raw = False
+
     encrypted = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
-
-    if response == "True":
-        response = True
-    elif response == "False":
-        response = False
-
     default = SETTINGS_SCHEMA.get(settings_key).default if settings_key else None
-    value = response if settings_key is None else response.get(settings_key, copy.deepcopy(default))
+
+    value = raw if settings_key is None else raw.get(settings_key, copy.deepcopy(default))
 
     if encrypted and value:
         value = fernet.decrypt(value.encode()).decode()
     return value
 
-def update_settings(guild_id, settings_key, settings_value):
-    """Update the settings for a guild."""
-    settings = get_settings(guild_id)
-    success = False
+async def update_settings(guild_id: int, settings_key: str, settings_value):
+    settings = await get_settings(guild_id)
 
+    # Update / remove ----------------------------------------------------
     if settings_value is None:
-        success = settings.pop(settings_key, None) is not None
+        changed = settings.pop(settings_key, None) is not None
     else:
         encrypt = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
         if encrypt:
             settings_value = fernet.encrypt(settings_value.encode()).decode()
         settings[settings_key] = settings_value
-        success = True
+        changed = True
 
     settings_json = json.dumps(settings)
-    execute_query(
-        "INSERT INTO settings (guild_id, settings_json) VALUES (%s, %s) ON DUPLICATE KEY UPDATE settings_json = %s",
-        (guild_id, settings_json, settings_json)
+    await execute_query(
+        """
+        INSERT INTO settings (guild_id, settings_json)
+        VALUES (%s, %s)
+        ON DUPLICATE KEY UPDATE settings_json = VALUES(settings_json)
+        """,
+        (guild_id, settings_json),
     )
-    return success
+    return changed
 
-# --- Database Initialization Function ---
 
-def initialize_database():
-    """Initialize the database schema."""
-    db = get_connection(use_database=False)
-    if not db:
-        return
-    try:
-        with db.cursor(buffered=True) as cursor:
-            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {MYSQL_CONFIG['database']}")
-            cursor.execute(f"USE {MYSQL_CONFIG['database']}")
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS strikes (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    guild_id BIGINT,
-                    user_id BIGINT,
-                    reason VARCHAR(255),
-                    striked_by_id BIGINT,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    expires_at DATETIME NULL DEFAULT NULL
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS settings (
-                    guild_id BIGINT PRIMARY KEY,
-                    settings_json JSON
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS banned_words (
-                    guild_id BIGINT,
-                    word VARCHAR(255),
-                    PRIMARY KEY (guild_id, word)
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS api_pool (
-                    user_id BIGINT NOT NULL,
-                    api_key TEXT NOT NULL,
-                    api_key_hash VARCHAR(64) NOT NULL,
-                    working BOOLEAN NOT NULL DEFAULT TRUE,
-                    PRIMARY KEY (user_id, api_key_hash)
-                )
-            """)
-            db.commit()
-    except Error as e:
-        logging.error(f"Error initializing database: {e}")
-    finally:
-        db.close()
+async def initialise_and_get_pool():
+    """Convenience wrapper that callers can await during startup."""
+    return await init_pool()

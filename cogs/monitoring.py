@@ -9,8 +9,8 @@ class Monitoring(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    def get_monitor_channel(self, guild_id: int) -> Optional[int]:
-        id = mysql.get_settings(guild_id, "monitor-channel")
+    async def get_monitor_channel(self, guild_id: int) -> Optional[int]:
+        id = await mysql.get_settings(guild_id, "monitor-channel")
         if id:
             id = int(id)
         return id
@@ -18,7 +18,7 @@ class Monitoring(commands.Cog):
 
     async def log_event(self, guild: discord.Guild, message: str):
         """Sends the log message to the monitor channel if set."""
-        channel_id = self.get_monitor_channel(guild.id)
+        channel_id = await self.get_monitor_channel(guild.id)
         if channel_id:
             channel = guild.get_channel(channel_id)
             if channel:
