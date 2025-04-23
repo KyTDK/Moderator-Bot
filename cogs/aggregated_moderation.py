@@ -3,15 +3,12 @@ from discord.ext import commands
 import time
 from collections import defaultdict
 from difflib import SequenceMatcher
-
-# Replace these with your actual implementations or imports
 from modules.utils import mysql
 from modules.detection import nsfw
 
 class AggregatedModeration(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # Cache to store recent messages by user (user_id: list of (timestamp, message))
         self.user_message_cache = defaultdict(list)
         self.AGGREGATION_WINDOW = 10  # seconds
         self.DIFFERENCE_THRESHOLD = 0.7  # for edits
