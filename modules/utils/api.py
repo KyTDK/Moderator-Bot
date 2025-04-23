@@ -1,4 +1,3 @@
-import openai
 from openai import AsyncOpenAI
 from modules.utils import mysql
 from cryptography.fernet import Fernet
