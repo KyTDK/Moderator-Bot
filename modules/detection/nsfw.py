@@ -2,7 +2,6 @@ import os
 import traceback
 import asyncio
 from dotenv import load_dotenv
-from PIL import Image
 import cv2
 import filetype
 import uuid
@@ -290,11 +289,6 @@ async def process_image(original_filename, guild_id=None, clean_up=True):
                 os.remove(original_filename)
             if os.path.exists(converted_filename):
                 os.remove(converted_filename)
-
-def convert_to_jpeg(src_path, dst_path):
-    with Image.open(src_path) as img:
-        rgb_img = img.convert("RGB")
-        rgb_img.save(dst_path, "JPEG")
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
     if await mysql.get_settings(user.guild.id, "strike-nsfw") == True:
