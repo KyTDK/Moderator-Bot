@@ -99,6 +99,24 @@ class banned_words(commands.Cog):
 
         await interaction.response.send_message(file=file, ephemeral=True)
 
+    # Clear all banned words
+    @bannedwords_group.command(
+        name="clear",
+        description="Clear all banned words."
+    )
+    async def clear_banned_words(self, interaction: Interaction):
+        """Clear all banned words."""
+        guild_id = interaction.guild.id
+        # Clear all banned words from the database
+        _, affected_rows = await execute_query(
+            "DELETE FROM banned_words WHERE guild_id = %s",
+            (guild_id,)
+        )
+        if affected_rows == 0:
+            await interaction.response.send_message("No banned words found to clear.", ephemeral=True)
+            return
+        await interaction.response.send_message("All banned words have been cleared.", ephemeral=True)
+
     # Logic for banning words in messages
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
