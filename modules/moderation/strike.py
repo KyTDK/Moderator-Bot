@@ -29,7 +29,8 @@ async def strike(
     bot: commands.Bot,
     reason: str = "No reason provided",
     interaction: Optional[Interaction] = None,
-    expiry: Optional[str] = None
+    expiry: Optional[str] = None,
+    log_to_channel: bool = True
 ) -> discord.Embed:
     """Strike a specific user with escalating consequences based on settings."""
     if interaction:
@@ -158,7 +159,7 @@ async def strike(
     embed.title = f"{user.display_name} received a strike"
     settings = await mysql.get_settings(user.guild.id)
     STRIKES_CHANNEL_ID = settings.get("strike-channel") if settings else None
-    if STRIKES_CHANNEL_ID:
+    if STRIKES_CHANNEL_ID is not None and log_to_channel:
         await logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)
 
     return embed
