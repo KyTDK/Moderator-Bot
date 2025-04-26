@@ -258,12 +258,16 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
 
         results = response.results[0]
         categories = results.categories
-
+        print(f"Moderation results: {results}")
         for category, is_flagged in categories.__dict__.items():
             if is_flagged:
+                score = results.category_scores.__dict__.get(category, 0)
+                percent = round(score * 100, 2)
                 if is_video and category in moderator_api_category_exclusions:
                     continue
-                print(f"Category {category} is flagged.")
+                if not is_video and score < 0.6: # From my testing, this is a good threshold for text, ideally we should be using omni-moderation-latest for text moderation
+                    continue
+                print(f"Category {category} is flagged with {percent}% certainty.")
                 return category
         return None
     print("All API key attempts failed.")
