@@ -1,7 +1,6 @@
 import os
 import traceback
 import asyncio
-from dotenv import load_dotenv
 import cv2
 import filetype
 import uuid
@@ -19,10 +18,6 @@ from urllib.parse import urlparse
 from typing import Optional, Tuple
 from apnggif import apnggif
 import openai
-
-load_dotenv()
-USE_MODERATOR_API = os.getenv('USE_MODERATOR_API') == 'True'
-OPENAI_API_KEY = os.getenv('OPENAI_API')
 
 moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
 
@@ -210,10 +205,9 @@ async def is_nsfw(message: discord.Message, bot: commands.Bot, nsfw_callback=Non
 
 async def moderator_api(text: str = None, image_path: str = None, guild_id: int = None, max_attempts: int = 10) -> str:
     inputs = []
-    is_video = image_path is not None
     if text and not image_path:
         inputs = text
-    if is_video:
+    if image_path is not None:
         try:
             if not os.path.exists(image_path):
                 print(f"Image path does not exist: {image_path}")
@@ -266,7 +260,7 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
 
         for category, is_flagged in categories.__dict__.items():
             if is_flagged:
-                if is_video and category in moderator_api_category_exclusions:
+                if category in moderator_api_category_exclusions:
                     continue
                 print(f"Category {category} is flagged.")
                 return category
