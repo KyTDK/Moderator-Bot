@@ -205,9 +205,10 @@ async def is_nsfw(message: discord.Message, bot: commands.Bot, nsfw_callback=Non
 
 async def moderator_api(text: str = None, image_path: str = None, guild_id: int = None, max_attempts: int = 10) -> str:
     inputs = []
+    is_video = image_path is not None
     if text and not image_path:
         inputs = text
-    if image_path is not None:
+    if is_video:
         try:
             if not os.path.exists(image_path):
                 print(f"Image path does not exist: {image_path}")
@@ -260,7 +261,7 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
 
         for category, is_flagged in categories.__dict__.items():
             if is_flagged:
-                if category in moderator_api_category_exclusions:
+                if is_video and category in moderator_api_category_exclusions:
                     continue
                 print(f"Category {category} is flagged.")
                 return category
