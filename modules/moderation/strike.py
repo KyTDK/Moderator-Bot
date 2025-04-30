@@ -135,13 +135,14 @@ async def strike(
     )
     embed.set_footer(text=f"Strike by {strike_by.display_name}", icon_url=strike_by.display_avatar.url)
 
-    # Attempt to send the strike message.
-    try:
-        await message_user(user, "", embed=embed)
-    except Exception as e:
-        if interaction:
-            await interaction.channel.send(user.mention, embed=embed)
-        return embed
+    # Send DM if enabled in settings.
+    if await mysql.get_settings(user.guild.id, "dm-on-strike") == True:
+        try:
+            await message_user(user, "", embed=embed)
+        except Exception as e:
+            if interaction:
+                await interaction.channel.send(user.mention, embed=embed)
+            return embed
 
     # Apply the disciplinary action.
     try:

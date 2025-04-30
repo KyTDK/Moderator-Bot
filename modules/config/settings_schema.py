@@ -90,4 +90,10 @@ SETTINGS_SCHEMA = {
         setting_type=TimeString,
         default=None
     ),
+    "dm-on-strike": Setting(
+        name="dm-on-strike",
+        description="DM the user when they receive a strike.",
+        setting_type=bool,
+        default=True,
+    ),
 }
