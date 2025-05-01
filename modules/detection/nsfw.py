@@ -258,7 +258,6 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
 
         results = response.results[0]
         categories = results.categories
-        print(f"Moderation results: {results}")
         for category, is_flagged in categories.__dict__.items():
             if is_flagged:
                 score = results.category_scores.__dict__.get(category, 0)
