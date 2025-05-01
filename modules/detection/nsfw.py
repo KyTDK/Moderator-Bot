@@ -166,7 +166,7 @@ async def is_nsfw(bot: commands.Bot,
                   filename=None) -> bool:
     
     if url:
-        temp_filename = download_temp_file(url)
+        temp_filename = await download_temp_file(url)
         return await check_attachment(member, 
                                       temp_filename,
                                       nsfw_callback,
