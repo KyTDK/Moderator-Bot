@@ -134,7 +134,7 @@ SETTINGS_SCHEMA = {
         default="Your profile picture was detected to contain explicit content"
     ),
     "unmute-on-safe-pfp": Setting(
-        name="nsfw-pfp-message",
+        name="unmute-on-safe-pfp",
         description="Remove timeout of a user once they have changed their profile picture to something appropriate.",
         setting_type=bool,
         default=False
