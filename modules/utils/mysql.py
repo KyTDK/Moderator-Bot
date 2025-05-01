@@ -114,6 +114,7 @@ async def _ensure_database_exists():
                     guild_id BIGINT NOT NULL,
                     timeout_until DATETIME NOT NULL,
                     reason VARCHAR(255),
+                    source VARCHAR(32) DEFAULT 'generic',
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (user_id, guild_id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

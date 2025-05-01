@@ -28,7 +28,8 @@ async def perform_disciplinary_action(
     user: Member,
     bot: commands.Bot,
     action_string: str,
-    reason: str = "NSFW profile picture detected"
+    reason: str = "NSFW profile picture detected",
+    source: str = "generic"
 ) -> Optional[str]:
     """Executes a configured action string on a user."""
     now = datetime.now(timezone.utc)
@@ -60,11 +61,11 @@ async def perform_disciplinary_action(
             # Record timeout
             await execute_query(
                 """
-                INSERT INTO timeouts (user_id, guild_id, timeout_until, reason)
-                VALUES (%s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE timeout_until = VALUES(timeout_until), reason = VALUES(reason)
+                INSERT INTO timeouts (user_id, guild_id, timeout_until, reason, source)
+                VALUES (%s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE timeout_until = VALUES(timeout_until), reason = VALUES(reason), source = VALUES(source)
                 """,
-                (user.id, user.guild.id, until, reason)
+                (user.id, user.guild.id, until, reason, source)
             )
             return f"User timed out until <t:{int(until.timestamp())}:R>."
 

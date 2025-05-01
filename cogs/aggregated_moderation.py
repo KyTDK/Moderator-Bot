@@ -143,12 +143,14 @@ class AggregatedModeration(commands.Cog):
         if is_nsfw:
             action = await mysql.get_settings(guild.id, "nsfw-pfp-action")
             message = await mysql.get_settings(guild.id, "nsfw-pfp-message")
-            await strike.perform_disciplinary_action(member, self.bot, action, message)
+            await strike.perform_disciplinary_action(member, self.bot, action, message, source="pfp")
         else:
             result, _ = await mysql.execute_query(
                 """
                 SELECT timeout_until FROM timeouts
-                WHERE user_id = %s AND guild_id = %s AND timeout_until > UTC_TIMESTAMP()
+                WHERE user_id = %s AND guild_id = %s
+                AND timeout_until > UTC_TIMESTAMP()
+                AND source = 'pfp'
                 """,
                 (member.id, guild.id),
                 fetch_one=True,
