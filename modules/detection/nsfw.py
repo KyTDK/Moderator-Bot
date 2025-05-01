@@ -21,6 +21,26 @@ import openai
 
 moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
 
+async def download_temp_file(url: str, extension: str = None) -> Optional[str]:
+    """Downloads a file from a URL to a temp location and returns the path."""
+    try:
+        parsed = urlparse(url)
+        ext = extension or os.path.splitext(parsed.path)[1].lstrip('.') or 'bin'
+        temp_path = f"{uuid.uuid4().hex[:12]}.{ext}"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    print(f"Failed to download media: {resp.status}")
+                    return None
+                content = await resp.read()
+                async with aiofiles.open(temp_path, "wb") as f:
+                    await f.write(content)
+        return temp_path
+    except Exception as e:
+        print(f"Error downloading file from {url}: {e}")
+        return None
+
 def determine_file_type(file_path):
     kind = filetype.guess(file_path)
     if kind is None:
@@ -32,7 +52,12 @@ def determine_file_type(file_path):
     else:
         return kind.mime
 
-async def process_video(original_filename: str, nsfw_callback, message: discord.Message, bot: commands.Bot, seconds_interval: float = None) -> Tuple[Optional[discord.File], bool]:
+async def process_video(original_filename: str, 
+                        nsfw_callback, 
+                        member: discord.Member, 
+                        guild_id:int, 
+                        bot: commands.Bot, 
+                        seconds_interval: float = None) -> Tuple[Optional[discord.File], bool]:
     print(f"Processing video: {original_filename}")
     temp_frames = []
     file_to_send = None
@@ -76,7 +101,7 @@ async def process_video(original_filename: str, nsfw_callback, message: discord.
             try:
                 if os.path.exists(frame_path):
                     async with semaphore:
-                        category = await process_image(frame_path, guild_id=message.guild.id, clean_up=False)
+                        category = await process_image(frame_path, guild_id=guild_id, clean_up=False)
                         return (frame_path, category) if category else None
             except Exception as e:
                 print(traceback.format_exc())
@@ -96,7 +121,7 @@ async def process_video(original_filename: str, nsfw_callback, message: discord.
                                 task.cancel()
                         if nsfw_callback:
                             file_to_send = discord.File(frame_path, filename=os.path.basename(frame_path))
-                            await nsfw_callback(message.author, bot, f"Detected potential policy violation (Category: **{category.title()}**)", file_to_send)
+                            await nsfw_callback(member, bot, f"Detected potential policy violation (Category: **{category.title()}**)", file_to_send)
                         return file_to_send, True
             except asyncio.CancelledError:
                 print("Task was cancelled.")
@@ -111,28 +136,61 @@ async def process_video(original_filename: str, nsfw_callback, message: discord.
         if os.path.exists(original_filename):
             os.remove(original_filename)
 
-async def is_nsfw(message: discord.Message, bot: commands.Bot, nsfw_callback=None) -> bool:
+async def check_attachment(author: discord.Member, temp_filename, nsfw_callback, filename, bot):
+    file_type = determine_file_type(temp_filename)
+    if file_type == "Image":
+        category = await process_image(temp_filename, 
+                                        guild_id=author.guild.id, 
+                                        clean_up=False)
+        if category != None:
+            if nsfw_callback:
+                file = discord.File(temp_filename, filename=filename)
+                await nsfw_callback(author, bot, f"Detected potential policy violation (Category: **{category.title()}**)", file)
+            return True
+    elif file_type == "Video":
+        file, result = await process_video(temp_filename, 
+                                            nsfw_callback,
+                                            author,
+                                            author.guild.id,
+                                            bot)
+        if result:
+            return True
+    else:
+        print("Unable to check media: " + file_type)
+
+async def is_nsfw(bot: commands.Bot,
+                  message: discord.Message = None, 
+                  nsfw_callback=None, 
+                  url=None, 
+                  member:discord.Member = None, 
+                  filename=None) -> bool:
+    
+    if url:
+        temp_filename = download_temp_file(url)
+        return await check_attachment(member, 
+                                      temp_filename,
+                                      nsfw_callback,
+                                      filename,
+                                      bot)
+
+    if not message:
+        print("Not message")
+        return False
+
+    # Handle forwarded messages
+    if message and message.reference:
+        message = message.reference.cached_message
+        if not message:
+            return False
+
     for attachment in message.attachments:
         temp_filename = os.path.join(os.getcwd(), f"temp_{attachment.filename}")
         await attachment.save(temp_filename)
-        try:
-            file_type = determine_file_type(temp_filename)
-            if file_type == "Image":
-                category = await process_image(temp_filename, guild_id=message.guild.id, clean_up=False)
-                if category != None:
-                    if nsfw_callback:
-                        file = discord.File(temp_filename, filename=attachment.filename)
-                        await nsfw_callback(message.author, bot, f"Detected potential policy violation (Category: **{category.title()}**)", file)
-                    return True
-            elif file_type == "Video":
-                file, result = await process_video(temp_filename, nsfw_callback, message, bot)
-                if result:
-                    return True
-            else:
-                print("Unable to check media: " + file_type)
-        finally:
-            if os.path.exists(temp_filename):
-                os.remove(temp_filename)
+        return await check_attachment(message.author, 
+                                      temp_filename,
+                                      nsfw_callback,
+                                      filename,
+                                      bot)
 
     for embed in message.embeds:
         gif_url = (
@@ -146,18 +204,13 @@ async def is_nsfw(message: discord.Message, bot: commands.Bot, nsfw_callback=Non
             if domain == "tenor.com" or domain.endswith(".tenor.com"):
                 continue
 
-            temp_location = f"{uuid.uuid4().hex[:12]}.gif"
             try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(gif_url) as resp:
-                        if resp.status == 200:
-                            content = await resp.read()
-                            async with aiofiles.open(temp_location, "wb") as f:
-                                await f.write(content)
-                        else:
-                            print(f"Failed to get media: {resp.status}")
-                            continue
-                file, result = await process_video(temp_location, nsfw_callback, message, bot)
+                temp_location = await download_temp_file(gif_url, "gif")
+                file, result = await process_video(temp_location, 
+                                                   nsfw_callback, 
+                                                   message.author,
+                                                   message.guild.id,
+                                                   bot)
                 return result
             finally:
                 if os.path.exists(temp_location):
@@ -191,7 +244,11 @@ async def is_nsfw(message: discord.Message, bot: commands.Bot, nsfw_callback=Non
                 gif_location = temp_location
                 print(f"Unhandled extension: {extension}")
 
-            file, result = await process_video(gif_location, nsfw_callback, message, bot)
+            file, result = await process_video(gif_location, 
+                                               nsfw_callback,
+                                               message.author,
+                                               message.guild.id,
+                                               bot)
             if result:
                 return True
 

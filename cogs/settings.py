@@ -12,6 +12,18 @@ class Settings(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    async def value_autocomplete(this, interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
+        name_option = getattr(interaction.namespace, "name", None)
+        if not name_option:
+            return []
+        schema = SETTINGS_SCHEMA.get(name_option)
+        if not schema or not schema.choices:
+            return []
+        return [
+            app_commands.Choice(name=choice, value=choice)
+            for choice in schema.choices if current.lower() in choice.lower()
+        ][:25]
+
     # List to hold choices for non-channel settings
     non_channel_choices_without_hidden = [
         app_commands.Choice(name=setting.name, value=setting_name)
@@ -80,6 +92,7 @@ class Settings(commands.Cog):
             await interaction.followup.send("You are already using default settings.")
 
     @settings_group.command(name="set", description="Set a server setting.")
+    @app_commands.autocomplete(value=value_autocomplete)
     @app_commands.choices(name=non_channel_choices_without_hidden)
     async def set_setting(self, interaction: Interaction, name: str, value: str):
         await interaction.response.defer(ephemeral=True)

@@ -5,9 +5,10 @@ from collections import defaultdict
 from difflib import SequenceMatcher
 from modules.utils import mysql
 from modules.detection import nsfw
+from modules.moderation import strike
 
 class AggregatedModeration(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.user_message_cache = defaultdict(list)
         self.AGGREGATION_WINDOW = 10  # seconds
@@ -84,7 +85,9 @@ class AggregatedModeration(commands.Cog):
             await mysql.get_settings(guild_id, "delete-nsfw") is True
             and message.channel.id not in await mysql.get_settings(guild_id, "exclude-channels")
         ):
-            if await nsfw.is_nsfw(message, self.bot, nsfw.handle_nsfw_content):
+            if await nsfw.is_nsfw(self.bot, 
+                                  message=message, 
+                                  nsfw_callback=nsfw.handle_nsfw_content):
                 try:
                     await message.delete()
                     await message.channel.send(
@@ -114,15 +117,34 @@ class AggregatedModeration(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         # Check pfp for NSFW content
         if await mysql.get_settings(member.guild.id, "check-pfp") == True:
-            if await nsfw.is_nsfw(member.avatar.url, self.bot, nsfw.handle_nsfw_content):
-                try:
-                    await member.kick(reason="NSFW profile picture detected.")
-                    await member.send(
-                        "Your profile picture was detected to contain explicit content and you have been removed from the server."
-                    )
-                except (discord.Forbidden, discord.NotFound):
-                    print("Cannot kick member or member no longer exists.")
+            if await nsfw.is_nsfw(self.bot, 
+                                  url = member.avatar.url, 
+                                  member=member, 
+                                  nsfw_callback=nsfw.handle_nsfw_content):
+                await strike.perform_disciplinary_action(member, 
+                                                         self.bot, 
+                                                         await mysql.get_settings(member.guild.id, "nsfw-pfp-action"), 
+                                                         await mysql.get_settings(member.guild.id, "nsfw-pfp-message"))
 
+    @commands.Cog.listener()
+    async def on_user_update(self, before: discord.User, after: discord.User):
+        # Check if the avatar has changed
+        if before.avatar != after.avatar:
+            avatar_url = after.avatar.url if after.avatar else None
+            if avatar_url:
+                # Check if the new avatar is NSFW
+                for guild in self.bot.guilds:
+                    member = guild.get_member(after.id)
+                    if member:
+                        is_nsfw = await nsfw.is_nsfw(self.bot, 
+                                                     url = avatar_url, 
+                                                     member=member, 
+                                                     nsfw_callback = nsfw.handle_nsfw_content)
+                        if is_nsfw:
+                            await strike.perform_disciplinary_action(member, 
+                                                                    self.bot, 
+                                                                    await mysql.get_settings(guild.id, "nsfw-pfp-action"), 
+                                                                    await mysql.get_settings(member.guild.id, "nsfw-pfp-message"))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AggregatedModeration(bot))

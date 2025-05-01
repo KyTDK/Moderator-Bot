@@ -27,7 +27,6 @@ def has_role_or_permission(*role_names: str):
 
     return app_commands.check(predicate)
 
-
 async def message_user(user: discord.User, content: str, embed: discord.Embed = None):
     # Attempt to send a DM
     try:

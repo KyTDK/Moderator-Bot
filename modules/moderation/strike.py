@@ -24,6 +24,46 @@ def get_ban_threshold(strike_settings):
             return int(strike)
     return None
 
+async def perform_disciplinary_action(
+    user: Member,
+    bot: commands.Bot,
+    action_string: str,
+    reason: str = "NSFW profile picture detected"
+) -> Optional[str]:
+    """Executes a configured action string on a user."""
+    now = datetime.now(timezone.utc)
+
+    try:
+        if action_string == "none":
+            return "No action taken."
+
+        elif action_string == "strike":
+            await strike(user=user, bot=bot, reason=reason, expiry=duration_str)
+            return "Strike issued."
+
+        elif action_string == "kick":
+            await user.kick(reason=reason)
+            return "User kicked."
+
+        elif action_string == "ban":
+            await user.ban(reason=reason)
+            return "User banned."
+
+        elif action_string.startswith("timeout:"):
+            duration_str = action_string.split("timeout:", 1)[1]
+            delta = parse_duration(duration_str)
+            if not delta:
+                return f"Invalid timeout duration: '{duration_str}'"
+            until = now + delta
+            await user.timeout(until, reason=reason)
+            return f"User timed out until <t:{int(until.timestamp())}:R>."
+
+        return f"Unknown action: '{action_string}'"
+
+    except Exception as e:
+        print(f"[NSFW PFP Action Error] {user}: {e}")
+        return f"Action failed: {action_string}"
+
 async def strike(
     user: Member,
     bot: commands.Bot,
@@ -32,22 +72,18 @@ async def strike(
     expiry: Optional[str] = None,
     log_to_channel: bool = True
 ) -> discord.Embed:
-    """Strike a specific user with escalating consequences based on settings."""
     if interaction:
         await interaction.response.defer(ephemeral=True)
         strike_by = interaction.user
     else:
         strike_by = bot.user
 
-    # Record the strike in the database.
     guild_id = user.guild.id
-
     if not expiry:
         expiry = await mysql.get_settings(guild_id, "strike-expiry")
 
     now = datetime.now(timezone.utc)
     expires_at = None
-
     if expiry:
         delta = parse_duration(str(expiry))
         if delta:
@@ -66,36 +102,24 @@ async def strike(
         expires_at
     ))
 
-
-    # Fetch the updated strike count for the user.
     strike_count = await mysql.get_strike_count(user.id, guild_id)
-
-    # Limit strike count
-    if interaction and strike_count>100:
+    if interaction and strike_count > 100:
         await interaction.followup.send("You cannot give the same player more than 100 strikes. Use `strikes clear <user>` to reset their strikes.")
         return None
-    
-    # Retrieve the strike actions setting; if not found, use the hardcoded default.
-    strike_settings = await mysql.get_settings(guild_id, "strike-actions")
-    
-    # Get the approriate action based on the strike count.
-    # strike_settings = {"1": ["timeout", "1d"], "2": ["Timeout", "7d"], "3": ["Ban", "-1"], "1": ["timeout", "1d"]}}
-    available_strikes = sorted(strike_settings.keys(), key=int)
 
+    strike_settings = await mysql.get_settings(guild_id, "strike-actions")
+    available_strikes = sorted(strike_settings.keys(), key=int)
     action, duration_str = strike_settings.get(str(strike_count), (None, None))
 
     strikes_for_ban = get_ban_threshold(strike_settings)
-    strikes_till_ban =  strikes_for_ban - strike_count if strikes_for_ban is not None else None
+    strikes_till_ban = strikes_for_ban - strike_count if strikes_for_ban is not None else None
 
     duration = parse_duration(duration_str)
-
     if action is not None:
         action = action.lower()
 
-    # Build the action description.
     if action == "timeout":
         if duration is None:
-            # Fallback duration if parsing fails.
             duration = timedelta(days=1)
         until = now + duration
         action_description = f"\n**Action Taken:** Timeout, will expire <t:{int(until.timestamp())}:R>"
@@ -106,8 +130,6 @@ async def strike(
     else:
         action_description = "\n**Action Taken:** No action applied"
 
-
-    # Add strike information.
     if strike_count < len(available_strikes):
         strike_info = f"\n**Strike Count:** {strike_count} strike(s)."
         if strikes_till_ban:
@@ -115,13 +137,7 @@ async def strike(
     else:
         strike_info = f"\n**Strike Count:** {strike_count} strike(s)."
 
-    # Construct the embed message for the user.
-    if expires_at:
-        expiry_str = f"<t:{int(expires_at.timestamp())}:R>"  # Relative time format
-    else:
-        expiry_str = "Never"
-
-    # Construct the embed message for the user.
+    expiry_str = f"<t:{int(expires_at.timestamp())}:R>" if expires_at else "Never"
     embed = Embed(
         title="⚠️ You have received a strike",
         description=(
@@ -135,7 +151,6 @@ async def strike(
     )
     embed.set_footer(text=f"Strike by {strike_by.display_name}", icon_url=strike_by.display_avatar.url)
 
-    # Send DM if enabled in settings.
     if await mysql.get_settings(user.guild.id, "dm-on-strike") == True:
         try:
             await message_user(user, "", embed=embed)
@@ -144,19 +159,14 @@ async def strike(
                 await interaction.channel.send(user.mention, embed=embed)
             return embed
 
-    # Apply the disciplinary action.
-    try:
-        if action == "timeout":
-            until = now + duration
-            await user.timeout(until, reason=reason)
-        elif action == "ban":
-            await user.ban(reason=reason)
-        elif action == "kick":
-            await user.kick(reason=reason)
-    except Exception as e:
-        print(f"Failed to apply disciplinary action for user {user}: {e}")
+    if action:
+        await perform_disciplinary_action(
+            user=user,
+            bot=bot,
+            action_string=f"{action}:{duration_str}" if action == "timeout" else action,
+            reason=reason
+        )
 
-    # Log the strike in a designated strikes channel.
     embed.title = f"{user.display_name} received a strike"
     settings = await mysql.get_settings(user.guild.id)
     STRIKES_CHANNEL_ID = settings.get("strike-channel") if settings else None

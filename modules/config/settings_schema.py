@@ -4,7 +4,18 @@ import discord
 from modules.variables.TimeString import TimeString
 
 class Setting:
-    def __init__(self, name: str, description: str, setting_type: type, default: Any = None, encrypted: bool = False, hidden: bool = False, private=False, validator: Optional[Callable] = None):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        setting_type: type,
+        default: Any = None,
+        encrypted: bool = False,
+        hidden: bool = False,
+        private: bool = False,
+        validator: Optional[Callable] = None,
+        choices: Optional[list[str]] = None,  # New field
+    ):
         self.name = name
         self.description = description
         self.type = setting_type
@@ -13,6 +24,7 @@ class Setting:
         self.hidden = hidden
         self.private = private
         self.validator = validator
+        self.choices = choices
 
     async def validate(self, value: Any):
         if self.validator:
@@ -39,24 +51,28 @@ SETTINGS_SCHEMA = {
         description="Automatically delete messages containing offensive content, such as harassment or hate speech.",
         setting_type=bool,
         default=False,
+        choices=["true", "false"]
     ),
     "delete-nsfw": Setting(
         name="delete-nsfw",
         description="Automatically delete messages containing NSFW content.",
         setting_type=bool,
         default=True,
+        choices=["true", "false"]
     ),
     "strike-nsfw": Setting(
         name="strike-nsfw",
         description="Strike users for sending NSFW content.",
         setting_type=bool,
         default=True,
+        choices=["true", "false"]
     ),
     "restrict-striked-users": Setting(
         name="restrict-striked-users",
         description="Restrict striked users by scanning their messages for offensive content (TEXT ONLY).",
         setting_type=bool,
         default=False,
+        choices=["true", "false"]
     ),
     "exclude-channels": Setting(
         name="exclude-channels",
@@ -95,11 +111,26 @@ SETTINGS_SCHEMA = {
         description="DM the user when they receive a strike.",
         setting_type=bool,
         default=True,
+        choices=["true", "false"]
     ),
     "check-pfp": Setting(
         name="check-pfp",
         description="Check the profile picture of the user for NSFW content.",
         setting_type=bool,
         default=False, # False by default to avoid unnecessary API calls
+        choices=["true", "false"]
+    ),
+    "nsfw-pfp-action": Setting(
+        name="nsfw-pfp-action",
+        description="Action to take when a user sets an NSFW profile picture.",
+        setting_type=str,
+        default="kick",
+        choices=["strike", "strike:2d", "kick", "ban", "timeout:1d", "timeout:7d"],
+    ),
+    "nsfw-pfp-message": Setting(
+        name="nsfw-pfp-message",
+        description="The message to send when a player has had their profile picture flagged.",
+        setting_type=str,
+        default="Your profile picture was detected to contain explicit content"
     ),
 }
