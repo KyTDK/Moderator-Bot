@@ -110,6 +110,18 @@ class AggregatedModeration(commands.Cog):
             if similarity_ratio < self.DIFFERENCE_THRESHOLD:
                 await self.check_and_delete_if_offensive(new_message, [after], guild_id)
 
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member):
+        # Check pfp for NSFW content
+        if await nsfw.is_nsfw(member.avatar.url, self.bot, nsfw.handle_nsfw_content):
+            try:
+                await member.kick(reason="NSFW profile picture detected.")
+                await member.send(
+                    "Your profile picture was detected to contain explicit content and you have been removed from the server."
+                )
+            except (discord.Forbidden, discord.NotFound):
+                print("Cannot kick member or member no longer exists.")
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AggregatedModeration(bot))

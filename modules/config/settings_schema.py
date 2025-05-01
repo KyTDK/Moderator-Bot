@@ -96,4 +96,10 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=True,
     ),
+    "check-pfp": Setting(
+        name="check-pfp",
+        description="Check the profile picture of the user for NSFW content.",
+        setting_type=bool,
+        default=False, # False by default to avoid unnecessary API calls
+    ),
 }
