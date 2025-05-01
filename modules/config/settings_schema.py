@@ -137,6 +137,7 @@ SETTINGS_SCHEMA = {
         name="unmute-on-safe-pfp",
         description="Remove timeout of a user once they have changed their profile picture to something appropriate.",
         setting_type=bool,
-        default=False
+        default=False,
+        choices=["true", "false"]
     ),
 }
