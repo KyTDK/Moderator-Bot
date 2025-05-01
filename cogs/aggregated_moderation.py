@@ -113,14 +113,15 @@ class AggregatedModeration(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         # Check pfp for NSFW content
-        if await nsfw.is_nsfw(member.avatar.url, self.bot, nsfw.handle_nsfw_content):
-            try:
-                await member.kick(reason="NSFW profile picture detected.")
-                await member.send(
-                    "Your profile picture was detected to contain explicit content and you have been removed from the server."
-                )
-            except (discord.Forbidden, discord.NotFound):
-                print("Cannot kick member or member no longer exists.")
+        if await mysql.get_settings(member.guild.id, "check-pfp") == True:
+            if await nsfw.is_nsfw(member.avatar.url, self.bot, nsfw.handle_nsfw_content):
+                try:
+                    await member.kick(reason="NSFW profile picture detected.")
+                    await member.send(
+                        "Your profile picture was detected to contain explicit content and you have been removed from the server."
+                    )
+                except (discord.Forbidden, discord.NotFound):
+                    print("Cannot kick member or member no longer exists.")
 
 
 async def setup(bot: commands.Bot):
