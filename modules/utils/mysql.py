@@ -107,6 +107,18 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS timeouts (
+                    user_id BIGINT NOT NULL,
+                    guild_id BIGINT NOT NULL,
+                    timeout_until DATETIME NOT NULL,
+                    reason VARCHAR(255),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (user_id, guild_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
             await conn.commit()
         finally:
             conn.close()

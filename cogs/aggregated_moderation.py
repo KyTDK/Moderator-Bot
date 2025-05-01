@@ -115,36 +115,59 @@ class AggregatedModeration(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        # Check pfp for NSFW content
-        if await mysql.get_settings(member.guild.id, "check-pfp") == True:
-            if await nsfw.is_nsfw(self.bot, 
-                                  url = member.avatar.url, 
-                                  member=member, 
-                                  nsfw_callback=nsfw.handle_nsfw_content):
-                await strike.perform_disciplinary_action(member, 
-                                                         self.bot, 
-                                                         await mysql.get_settings(member.guild.id, "nsfw-pfp-action"), 
-                                                         await mysql.get_settings(member.guild.id, "nsfw-pfp-message"))
+        await self._handle_member_avatar(member.guild, member, is_join=True)
 
     @commands.Cog.listener()
     async def on_user_update(self, before: discord.User, after: discord.User):
-        # Check if the avatar has changed
-        if before.avatar != after.avatar:
-            avatar_url = after.avatar.url if after.avatar else None
-            if avatar_url:
-                # Check if the new avatar is NSFW
-                for guild in self.bot.guilds:
-                    member = guild.get_member(after.id)
-                    if member:
-                        is_nsfw = await nsfw.is_nsfw(self.bot, 
-                                                     url = avatar_url, 
-                                                     member=member, 
-                                                     nsfw_callback = nsfw.handle_nsfw_content)
-                        if is_nsfw:
-                            await strike.perform_disciplinary_action(member, 
-                                                                    self.bot, 
-                                                                    await mysql.get_settings(guild.id, "nsfw-pfp-action"), 
-                                                                    await mysql.get_settings(member.guild.id, "nsfw-pfp-message"))
+        if before.avatar != after.avatar and after.avatar:
+            for guild in self.bot.guilds:
+                member = guild.get_member(after.id)
+                if member:
+                    await self._handle_member_avatar(guild, member)
+
+    async def _handle_member_avatar(self, guild: discord.Guild, member: discord.Member, is_join: bool = False):
+        if await mysql.get_settings(guild.id, "check-pfp") != True:
+            return
+
+        avatar_url = member.avatar.url if member.avatar else None
+        if not avatar_url:
+            return
+
+        is_nsfw = await nsfw.is_nsfw(
+            self.bot,
+            url=avatar_url,
+            member=member,
+            nsfw_callback=nsfw.handle_nsfw_content
+        )
+
+        if is_nsfw:
+            action = await mysql.get_settings(guild.id, "nsfw-pfp-action")
+            message = await mysql.get_settings(guild.id, "nsfw-pfp-message")
+            await strike.perform_disciplinary_action(member, self.bot, action, message)
+        else:
+            result, _ = await mysql.execute_query(
+                """
+                SELECT timeout_until FROM timeouts
+                WHERE user_id = %s AND guild_id = %s AND timeout_until > UTC_TIMESTAMP()
+                """,
+                (member.id, guild.id),
+                fetch_one=True,
+            )
+            if await mysql.get_settings(guild.id, "unmute-on-safe-pfp") == True and result is not None:
+                if member.timed_out_until:
+                    try:
+                        await member.edit(timeout=None, reason="Profile picture updated to a safe image.")
+                        print(f"Removed timeout from {member.display_name} for safe profile picture.")
+
+                        # Remove timeout from dB
+                        await mysql.execute_query(
+                            "DELETE FROM timeouts WHERE user_id = %s AND guild_id = %s",
+                            (member.id, guild.id)
+                        )
+                    except discord.Forbidden:
+                        print(f"Missing permissions to untimeout {member.display_name}.")
+                    except discord.HTTPException as e:
+                        print(f"Failed to untimeout {member.display_name}: {e}")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AggregatedModeration(bot))

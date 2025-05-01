@@ -56,6 +56,16 @@ async def perform_disciplinary_action(
                 return f"Invalid timeout duration: '{duration_str}'"
             until = now + delta
             await user.timeout(until, reason=reason)
+
+            # Record timeout
+            await execute_query(
+                """
+                INSERT INTO timeouts (user_id, guild_id, timeout_until, reason)
+                VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE timeout_until = VALUES(timeout_until), reason = VALUES(reason)
+                """,
+                (user.id, user.guild.id, until, reason)
+            )
             return f"User timed out until <t:{int(until.timestamp())}:R>."
 
         return f"Unknown action: '{action_string}'"
