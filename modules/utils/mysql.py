@@ -182,7 +182,6 @@ async def get_strikes(user_id: int, guild_id: int):
     )
     return strikes
 
-# --------------------------- Settings helpers ---------------------------
 async def get_settings(guild_id: int, settings_key: str | None = None):
     settings_row, _ = await execute_query(
         "SELECT settings_json FROM settings WHERE guild_id = %s",
@@ -191,21 +190,35 @@ async def get_settings(guild_id: int, settings_key: str | None = None):
     )
     raw = json.loads(settings_row[0]) if settings_row else {}
 
-    # Coerce legacy True/False strings into bools --------
-    value = raw.get(settings_key, copy.deepcopy(default))
-    expected_type = SETTINGS_SCHEMA[settings_key].type
-    if expected_type is bool and isinstance(value, str):
-        value = value.lower() == "true"
+    # Handle single-key fetch
+    if settings_key is not None:
+        schema = SETTINGS_SCHEMA.get(settings_key)
+        default = schema.default if schema else None
+        encrypted = schema.encrypted if schema else False
+        value = raw.get(settings_key, copy.deepcopy(default))
 
+        # Decrypt if needed
+        if encrypted and value:
+            value = fernet.decrypt(value.encode()).decode()
 
-    encrypted = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
-    default = SETTINGS_SCHEMA.get(settings_key).default if settings_key else None
+        # Coerce string "true"/"false" into actual booleans
+        if schema and schema.type is bool and isinstance(value, str):
+            value = value.lower() == "true"
 
-    value = raw if settings_key is None else raw.get(settings_key, copy.deepcopy(default))
+        return value
 
-    if encrypted and value:
-        value = fernet.decrypt(value.encode()).decode()
-    return value
+    # Handle full settings dict return
+    result = {}
+    for key, schema in SETTINGS_SCHEMA.items():
+        value = raw.get(key, copy.deepcopy(schema.default))
+        if schema.encrypted and value:
+            value = fernet.decrypt(value.encode()).decode()
+        if schema.type is bool and isinstance(value, str):
+            value = value.lower() == "true"
+        result[key] = value
+
+    return result
+
 
 async def update_settings(guild_id: int, settings_key: str, settings_value):
     settings = await get_settings(guild_id)
