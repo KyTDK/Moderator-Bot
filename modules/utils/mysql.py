@@ -47,7 +47,8 @@ async def close_pool():
         _pool = None
 
 async def get_pool():
-    if _pool is None:
+    global _pool
+    if _pool is None or _pool._closed:
         await init_pool()
     return _pool
 
@@ -191,10 +192,11 @@ async def get_settings(guild_id: int, settings_key: str | None = None):
     raw = json.loads(settings_row[0]) if settings_row else {}
 
     # Coerce legacy True/False strings into bools --------
-    if raw == "True":
-        raw = True
-    elif raw == "False":
-        raw = False
+    value = raw.get(settings_key, copy.deepcopy(default))
+    expected_type = SETTINGS_SCHEMA[settings_key].type
+    if expected_type is bool and isinstance(value, str):
+        value = value.lower() == "true"
+
 
     encrypted = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
     default = SETTINGS_SCHEMA.get(settings_key).default if settings_key else None
