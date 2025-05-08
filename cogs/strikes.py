@@ -7,6 +7,7 @@ import discord
 import io
 from discord import File
 from modules.utils import mysql, time
+from modules.utils.discord_utils import safe_get_user
 from modules.variables.TimeString import TimeString
 
 class StrikesCog(commands.Cog):
@@ -84,7 +85,7 @@ class StrikesCog(commands.Cog):
             expires_at = expires_at.replace(tzinfo=timezone.utc) if expires_at else None            
 
             # Get the name of the user who issued the strike
-            strike_by = await interaction.guild.fetch_member(striked_by_id)
+            strike_by = await safe_get_user(self.bot, striked_by_id)
             strike_by_name = strike_by.display_name if strike_by else "Unknown"
 
             # Format the expiry time using Discord's dynamic timestamp
