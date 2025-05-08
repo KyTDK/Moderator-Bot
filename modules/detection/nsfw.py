@@ -15,11 +15,14 @@ import base64
 from modules.utils import logging, mysql, api
 from modules.moderation import strike
 from urllib.parse import urlparse
-from typing import Optional, Tuple
+from typing import Optional
 from apnggif import apnggif
 import openai
+import numpy as np
 
 moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
+MAX_FRAMES_PER_VIDEO = 10          # hard cap so we never spawn hundreds of tasks
+MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
 
 async def download_temp_file(url: str, extension: str = None) -> Optional[str]:
     """Downloads a file from a URL to a temp location and returns the path."""
@@ -52,111 +55,119 @@ def determine_file_type(file_path):
     else:
         return kind.mime
 
-async def process_video(original_filename: str, 
-                        nsfw_callback, 
-                        member: discord.Member, 
-                        guild_id:int, 
-                        bot: commands.Bot, 
-                        seconds_interval: float = None) -> Tuple[Optional[discord.File], bool]:
-    print(f"Processing video: {original_filename}")
-    temp_frames = []
-    file_to_send = None
-    semaphore = asyncio.Semaphore(5)
+async def process_video(
+    original_filename: str,
+    nsfw_callback,
+    member: discord.Member,
+    guild_id: int,
+    bot: commands.Bot,
+    seconds_interval: float | None = None,
+) -> tuple[Optional[discord.File], bool]:
+    """
+    Extract at most MAX_FRAMES_PER_VIDEO frames (evenly spaced) in a
+    background thread, then analyse them with a small async worker pool.
+    The event‑loop is never blocked for CPU‑heavy work.
+    """
+
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
+    temp_frames: list[str] = []
+    file_to_send: discord.File | None = None
+
+    async def _extract_frames() -> tuple[list[str], float]:
+        try:
+            cap = cv2.VideoCapture(original_filename)
+            fps = cap.get(cv2.CAP_PROP_FPS) or 1
+            total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+            duration = total / fps
+
+            # pick evenly‑spaced positions (≤ MAX_FRAMES_PER_VIDEO)
+            wanted = min(MAX_FRAMES_PER_VIDEO, total)
+            idxs = np.linspace(0, total - 1, wanted, dtype=int)
+
+            for idx in idxs:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+                ok, frame = cap.read()
+                if not ok:
+                    continue
+                name = f"{uuid.uuid4().hex[:8]}_{idx}.jpg"
+                cv2.imwrite(name, frame)
+                temp_frames.append(name)
+            cap.release()
+            return temp_frames, duration
+        except Exception:  # make absolutely sure we never leak the capture
+            cap.release()
+            raise
+
+    # run heavy OpenCV work in a thread
+    temp_frames, duration_secs = await asyncio.to_thread(_extract_frames)
+    print(
+        f"[process_video] Extracted {len(temp_frames)} frame(s) "
+        f"from {original_filename} ({duration_secs:.1f}s)"
+    )
+
+    async def analyse(path: str):
+        try:
+            async with semaphore:
+                cat = await process_image(path, guild_id=guild_id, clean_up=False)
+                return (path, cat) if cat else None
+        except Exception as e:
+            print(f"[process_video] analyse error {path}: {e}")
+
+    tasks = [asyncio.create_task(analyse(p)) for p in temp_frames]
 
     try:
-        vidcap = await asyncio.to_thread(cv2.VideoCapture, original_filename)
-        fps = await asyncio.to_thread(vidcap.get, cv2.CAP_PROP_FPS)
-        total_frames = await asyncio.to_thread(vidcap.get, cv2.CAP_PROP_FRAME_COUNT)
-        duration_secs = total_frames / fps if fps else 0
-
-        if not seconds_interval:
-            if duration_secs <= 30:
-                seconds_interval = 0.5
-            elif duration_secs <= 60:
-                seconds_interval = 2
-            elif duration_secs <= 300:
-                seconds_interval = 3
-            else:
-                seconds_interval = 5
-
-        frame_interval = max(1, int(fps * seconds_interval))
-        print(f"FPS: {fps}, Duration: {duration_secs:.2f}s, Frame Interval: {frame_interval}")
-
-        count = 0
-        while True:
-            success, image = await asyncio.to_thread(vidcap.read)
-            if not success:
-                break
-
-            if count % frame_interval == 0:
-                frame_filename = f"{uuid.uuid4().hex[:8]}_frame{count}.jpg"
-                await asyncio.to_thread(cv2.imwrite, frame_filename, image)
-                temp_frames.append(frame_filename)
-
-            count += 1
-
-        await asyncio.to_thread(vidcap.release)
-
-        async def analyze_frame(frame_path):
-            try:
-                if os.path.exists(frame_path):
-                    async with semaphore:
-                        category = await process_image(frame_path, guild_id=guild_id, clean_up=False)
-                        return (frame_path, category) if category else None
-            except Exception as e:
-                print(traceback.format_exc())
-                print(f"Error processing frame {frame_path}: {e}")
-                return None
-
-        tasks = [asyncio.create_task(analyze_frame(f)) for f in temp_frames]
-
-        for coro in asyncio.as_completed(tasks):
-            try:
-                result = await coro
-                if result:
-                    frame_path, category = result
-                    if os.path.exists(frame_path):
-                        for task in tasks:
-                            if not task.done():
-                                task.cancel()
-                        if nsfw_callback:
-                            file_to_send = discord.File(frame_path, filename=os.path.basename(frame_path))
-                            await nsfw_callback(member, bot, f"Detected potential policy violation (Category: **{category.title()}**)", file_to_send)
-                        return file_to_send, True
-            except asyncio.CancelledError:
-                print("Task was cancelled.")
-                continue
-
+        for done in asyncio.as_completed(tasks):
+            res = await done
+            if res:
+                frame_path, category = res
+                # cancel the rest — we already found a hit
+                for t in tasks:
+                    t.cancel()
+                if nsfw_callback:
+                    file_to_send = discord.File(frame_path, filename=os.path.basename(frame_path))
+                    await nsfw_callback(
+                        member,
+                        bot,
+                        f"Detected potential policy violation (Category: **{category.title()}**)",
+                        file_to_send,
+                    )
+                return file_to_send, True
         return None, False
-
     finally:
-        for f in temp_frames:
-            if os.path.exists(f):
-                os.remove(f)
+        for p in temp_frames:
+            if os.path.exists(p):
+                os.remove(p)
         if os.path.exists(original_filename):
             os.remove(original_filename)
 
-async def check_attachment(author: discord.Member, temp_filename, nsfw_callback, filename, bot):
+
+async def check_attachment(author, temp_filename, nsfw_callback, filename, bot):
     file_type = determine_file_type(temp_filename)
+
+    guild_id = author.guild.id if isinstance(author, discord.Member) else None
+    if guild_id is None:  # DM or system message — nothing to moderate
+        return False
+
     if file_type == "Image":
-        category = await process_image(temp_filename, 
-                                        guild_id=author.guild.id, 
-                                        clean_up=False)
-        if category != None:
-            if nsfw_callback:
-                file = discord.File(temp_filename, filename=filename)
-                await nsfw_callback(author, bot, f"Detected potential policy violation (Category: **{category.title()}**)", file)
-            return True
-    elif file_type == "Video":
-        file, result = await process_video(temp_filename, 
-                                            nsfw_callback,
-                                            author,
-                                            author.guild.id,
-                                            bot)
-        if result:
-            return True
-    else:
-        print("Unable to check media: " + file_type)
+        category = await process_image(temp_filename, guild_id=guild_id, clean_up=False)
+        if category and nsfw_callback:
+            await nsfw_callback(
+                author,
+                bot,
+                f"Detected potential policy violation (Category: **{category.title()}**)",
+                discord.File(temp_filename, filename=filename),
+            )
+        return bool(category)
+
+    if file_type == "Video":
+        _file, flagged = await process_video(
+            temp_filename, nsfw_callback, author, guild_id, bot
+        )
+        return flagged
+
+    print(f"[check_attachment] Unsupported media type: {file_type}")
+    return False
+
 
 async def is_nsfw(bot: commands.Bot,
                   message: discord.Message = None, 
