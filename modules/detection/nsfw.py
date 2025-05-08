@@ -63,24 +63,20 @@ async def process_video(
     bot: commands.Bot,
     seconds_interval: float | None = None,
 ) -> tuple[Optional[discord.File], bool]:
-    """
-    Extract at most MAX_FRAMES_PER_VIDEO frames (evenly spaced) in a
-    background thread, then analyse them with a small async worker pool.
-    The event‑loop is never blocked for CPU‑heavy work.
-    """
+    from functools import partial
+    import numpy as np
 
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
     temp_frames: list[str] = []
     file_to_send: discord.File | None = None
 
-    async def _extract_frames() -> tuple[list[str], float]:
+    def _extract_frames() -> tuple[list[str], float]:
+        cap = cv2.VideoCapture(original_filename)
         try:
-            cap = cv2.VideoCapture(original_filename)
             fps = cap.get(cv2.CAP_PROP_FPS) or 1
             total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
             duration = total / fps
 
-            # pick evenly‑spaced positions (≤ MAX_FRAMES_PER_VIDEO)
             wanted = min(MAX_FRAMES_PER_VIDEO, total)
             idxs = np.linspace(0, total - 1, wanted, dtype=int)
 
@@ -92,26 +88,23 @@ async def process_video(
                 name = f"{uuid.uuid4().hex[:8]}_{idx}.jpg"
                 cv2.imwrite(name, frame)
                 temp_frames.append(name)
-            cap.release()
             return temp_frames, duration
-        except Exception:  # make absolutely sure we never leak the capture
+        finally:
             cap.release()
-            raise
 
-    # run heavy OpenCV work in a thread
+    # run extractor in a background thread
     temp_frames, duration_secs = await asyncio.to_thread(_extract_frames)
-    print(
-        f"[process_video] Extracted {len(temp_frames)} frame(s) "
-        f"from {original_filename} ({duration_secs:.1f}s)"
-    )
+    print(f"[process_video] Extracted {len(temp_frames)} frame(s) from "
+          f"{original_filename} ({duration_secs:.1f}s)")
 
+    # ---------- 2️⃣ analyse each frame async with a small worker pool ----------
     async def analyse(path: str):
-        try:
-            async with semaphore:
+        async with semaphore:
+            try:
                 cat = await process_image(path, guild_id=guild_id, clean_up=False)
                 return (path, cat) if cat else None
-        except Exception as e:
-            print(f"[process_video] analyse error {path}: {e}")
+            except Exception as e:
+                print(f"[process_video] analyse error {path}: {e}")
 
     tasks = [asyncio.create_task(analyse(p)) for p in temp_frames]
 
@@ -120,11 +113,12 @@ async def process_video(
             res = await done
             if res:
                 frame_path, category = res
-                # cancel the rest — we already found a hit
+                # cancel remaining workers – we already found a hit
                 for t in tasks:
                     t.cancel()
                 if nsfw_callback:
-                    file_to_send = discord.File(frame_path, filename=os.path.basename(frame_path))
+                    file_to_send = discord.File(frame_path,
+                                                filename=os.path.basename(frame_path))
                     await nsfw_callback(
                         member,
                         bot,
@@ -132,8 +126,9 @@ async def process_video(
                         file_to_send,
                     )
                 return file_to_send, True
-        return None, False
+        return None, False  # nothing flagged
     finally:
+        # cleanup temp files no matter what
         for p in temp_frames:
             if os.path.exists(p):
                 os.remove(p)
