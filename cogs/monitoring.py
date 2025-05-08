@@ -22,8 +22,10 @@ class Monitoring(commands.Cog):
         if channel_id:
             channel = guild.get_channel(channel_id)
             if channel:
-                await channel.send(message)
-
+                try:
+                    await channel.send(message)
+                except discord.Forbidden:
+                    print(f"Missing access to send messages in channel ID {channel.id}")
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         message = f":green_circle: **Member Joined:** {member.mention} has joined the server."
@@ -57,9 +59,31 @@ class Monitoring(commands.Cog):
         # Ignore reactions from bots
         if user.bot:
             return
-        log_message = (f":thumbsup: **Reaction Added:** {user.mention} added {reaction.emoji} "
-                       f"to a message in #{reaction.message.channel.mention}.")
-        await self.log_event(reaction.message.guild, log_message)
+
+        try:
+            # Safely get channel name or fallback
+            channel = reaction.message.channel
+            if isinstance(channel, discord.TextChannel):
+                channel_name = f"#{channel.name}"
+            else:
+                channel_name = f"Channel ID {channel.id}"
+
+            # Safely get guild
+            guild = reaction.message.guild
+            if not guild:
+                return  # Skip if we can't resolve the guild
+
+            log_message = (f":thumbsup: **Reaction Added:** {user.mention} added {reaction.emoji} "
+                        f"to a message in {channel_name}.")
+
+            await self.log_event(guild, log_message)
+
+        except AttributeError as e:
+            print(f"[on_reaction_add] Attribute error: {e}")
+        except discord.Forbidden:
+            print(f"[on_reaction_add] Missing access when trying to log event.")
+        except Exception as e:
+            print(f"[on_reaction_add] Unexpected error: {e}")
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
