@@ -1,9 +1,16 @@
-from discord import Embed
+from discord import Embed, Forbidden, HTTPException
 from discord.ext import commands
 
 async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=None):
-    channel = await bot.fetch_channel(channel_id)
-    if file:
-        await channel.send(embed=embed, files=[file])
-    else:
-        await channel.send(embed=embed)
+    try:
+        channel = await bot.fetch_channel(channel_id)
+        if file:
+            await channel.send(embed=embed, files=[file])
+        else:
+            await channel.send(embed=embed)
+    except Forbidden:
+        print(f"[log_to_channel] Missing permission to send messages in channel {channel_id}.")
+    except HTTPException as e:
+        print(f"[log_to_channel] HTTP error while sending message to channel {channel_id}: {e}")
+    except Exception as e:
+        print(f"[log_to_channel] Unexpected error: {e}")

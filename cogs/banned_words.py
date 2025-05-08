@@ -139,10 +139,17 @@ class banned_words(commands.Cog):
         # build a regex that only matches whole words, case‑insensitive
         pattern = r'\b(?:' + '|'.join(re.escape(w) for w in banned_words) + r')\b'
         if re.search(pattern, message.content, re.IGNORECASE):
-            await message.delete()
-            await message.channel.send(
-                f"{message.author.mention}, your message contained a banned word and was removed."
-            )
+            try:
+                await message.delete()
+            except (discord.Forbidden, discord.NotFound):
+                print(f"Could not delete message {message.id} in {message.channel.id}")
+
+            try:
+                await message.channel.send(
+                    f"{message.author.mention}, your message contained a banned word and was removed."
+                )
+            except discord.Forbidden:
+                print(f"Missing permission to send message in {message.channel.id}")
 
         # important: let commands still be processed
         await self.bot.process_commands(message)
