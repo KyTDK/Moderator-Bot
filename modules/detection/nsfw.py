@@ -75,6 +75,8 @@ async def process_video(
         try:
             fps = cap.get(cv2.CAP_PROP_FPS) or 1
             total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+            if total <= 0:
+                return [], 0
             duration = total / fps
 
             wanted = min(MAX_FRAMES_PER_VIDEO, total)
