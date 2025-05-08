@@ -1,9 +1,11 @@
 from discord import Embed, Forbidden, HTTPException
 from discord.ext import commands
 
+from modules.utils.discord_utils import safe_get_channel
+
 async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=None):
     try:
-        channel = await bot.fetch_channel(channel_id)
+        channel = await safe_get_channel(channel_id)
         if file:
             await channel.send(embed=embed, files=[file])
         else:

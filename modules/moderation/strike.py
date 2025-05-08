@@ -1,7 +1,7 @@
 from typing import Optional
 from discord import Interaction, Member, Embed, Color
 from discord.ext import commands
-from modules.utils.user_utils import message_user
+from modules.utils.discord_utils import message_user
 from modules.utils.mysql import execute_query
 from datetime import datetime, timedelta, timezone
 from modules.utils import logging
