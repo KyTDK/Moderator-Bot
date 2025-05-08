@@ -10,7 +10,14 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
-bot = commands.AutoShardedBot(command_prefix='/', intents=intents, help_command=None)
+bot = commands.AutoShardedBot(command_prefix='/', 
+                                intents=intents, 
+                                heartbeat_timeout=120,
+                                guild_chunk_timeout=10,
+                                max_messages=5_000,
+                                help_command=None,
+                                allowed_mentions=discord.AllowedMentions.none(),
+                                )
 
 async def make_announcement(guild, message):
     if guild:
