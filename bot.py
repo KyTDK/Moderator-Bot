@@ -37,10 +37,7 @@ async def make_announcement(guild, message):
 
 @bot.event
 async def on_ready():
-    await bot.wait_until_ready()
     print(f"Bot connected as {bot.user} in {len(bot.guilds)} guilds")
-    await asyncio.sleep(5)
-    await mysql.initialise_and_get_pool()
 
 @bot.event
 async def on_resumed():
@@ -108,6 +105,7 @@ async def setup_hook():
             print("Unable to load pycache folder.")
     #await bot.tree.sync()
     start_topgg_poster(bot)
+    await mysql.initialise_and_get_pool()
 
 if __name__ == "__main__":
     bot.run(TOKEN)
