@@ -91,8 +91,6 @@ async def process_video(
     temp_frames, duration_secs = await asyncio.to_thread(
         _extract_frames_threaded, original_filename, MAX_FRAMES_PER_VIDEO
     )
-    print(f"[process_video] extracted {len(temp_frames)} frame(s) from"
-          f" {original_filename} ({duration_secs:.1f}s)")
 
     if not temp_frames:
         if os.path.exists(original_filename):
@@ -319,7 +317,6 @@ async def moderator_api(text: str | None = None,
                 continue
             if not is_video and score < 0.6:
                 continue
-            print(f"Category {category} flagged with {round(score * 100, 2)}% certainty.")
             return category
         return None
     print("All API key attempts failed.")

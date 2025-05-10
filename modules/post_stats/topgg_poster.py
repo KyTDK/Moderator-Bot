@@ -20,9 +20,7 @@ async def post_guild_count(bot: AutoShardedBot):
         url = f"https://top.gg/api/bots/{bot.user.id}/stats"
 
         async with session.post(url, json=payload, headers=headers) as resp:
-            if resp.status == 200:
-                print("[top.gg] Server count posted successfully.")
-            else:
+            if not resp.status == 200:
                 error = await resp.text()
                 print(f"[top.gg] Failed to post server count: {resp.status} | {error}")
 
