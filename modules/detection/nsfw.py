@@ -19,31 +19,47 @@ from typing import Optional
 from apnggif import apnggif
 import openai
 import numpy as np
+from contextlib import asynccontextmanager
+from tempfile import NamedTemporaryFile, gettempdir
+
+TMP_DIR = os.path.join(gettempdir(), "modbot")
+os.makedirs(TMP_DIR, exist_ok=True)
 
 moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
 MAX_FRAMES_PER_VIDEO = 10          # hard cap so we never spawn hundreds of tasks
 MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
 
-async def download_temp_file(url: str, extension: str | None = None) -> Optional[str]:
-    """Download *url* to a throw‑away file and return the local path."""
+@asynccontextmanager
+async def temp_download(url: str, ext: str | None = None):
+    """Download *url* into our tmp dir and yield the path, cleaning up automatically."""
+    # normalise extension – always starts with a dot
+    if ext and not ext.startswith('.'):
+        ext = '.' + ext
+    ext = ext or os.path.splitext(urlparse(url).path)[1] or ".bin"
+
+    path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{ext}")
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            resp.raise_for_status()
+            async with aiofiles.open(path, "wb") as f:
+                async for chunk in resp.content.iter_chunked(1 << 14):
+                    await f.write(chunk)
+
     try:
-        parsed = urlparse(url)
-        ext = extension or os.path.splitext(parsed.path)[1].lstrip('.') or 'bin'
-        temp_path = f"{uuid.uuid4().hex[:12]}.{ext}"
+        yield path
+    finally:
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.status != 200:
-                    print(f"Failed to download media: {resp.status}")
-                    return None
-                async with aiofiles.open(temp_path, "wb") as f:
-                    async for chunk in resp.content.iter_chunked(1 << 14):
-                        await f.write(chunk)
-        return temp_path
+def _safe_delete(path: str):
+    try:
+        if os.path.exists(path):
+            os.remove(path)
     except Exception as e:
-        print(f"Error downloading file from {url}: {e}")
-        return None
-
+        print(f"[safe_delete] Failed to delete {path}: {e}")
 
 def determine_file_type(file_path: str) -> str:
     kind = filetype.guess(file_path)
@@ -78,7 +94,6 @@ def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], flo
     finally:
         cap.release()
 
-
 async def process_video(
     original_filename: str,
     nsfw_callback,
@@ -86,15 +101,12 @@ async def process_video(
     guild_id: int,
     bot: commands.Bot,
 ) -> tuple[Optional[discord.File], bool]:
-    """Sample *original_filename* and analyse a handful of frames."""
-
-    temp_frames, duration_secs = await asyncio.to_thread(
+    temp_frames, _ = await asyncio.to_thread(
         _extract_frames_threaded, original_filename, MAX_FRAMES_PER_VIDEO
     )
 
     if not temp_frames:
-        if os.path.exists(original_filename):
-            os.remove(original_filename)
+        _safe_delete(original_filename)
         return None, False
 
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
@@ -115,8 +127,11 @@ async def process_video(
             res = await done
             if res:
                 frame_path, category = res
+                # cancel remaining tasks & await them so file handles close
                 for t in tasks:
                     t.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+
                 if nsfw_callback:
                     flagged_file = discord.File(frame_path,
                                                 filename=os.path.basename(frame_path))
@@ -130,10 +145,8 @@ async def process_video(
         return None, False
     finally:
         for p in temp_frames:
-            if os.path.exists(p):
-                os.remove(p)
-        if os.path.exists(original_filename):
-            os.remove(original_filename)
+            _safe_delete(p)
+        _safe_delete(original_filename)
 
 async def check_attachment(author,
                            temp_filename,
@@ -166,7 +179,6 @@ async def check_attachment(author,
     print(f"[check_attachment] Unsupported media type: {file_type}")
     return False
 
-
 async def is_nsfw(bot: commands.Bot,
                   message: discord.Message | None = None,
                   nsfw_callback=None,
@@ -175,8 +187,8 @@ async def is_nsfw(bot: commands.Bot,
                   filename: str | None = None) -> bool:
 
     if url:
-        temp_filename = await download_temp_file(url)
-        return await check_attachment(member, temp_filename, nsfw_callback, filename, bot)
+        async with temp_download(url) as temp_filename:
+            return await check_attachment(member, temp_filename, nsfw_callback, filename, bot)
 
     if message is None:
         return False
@@ -185,9 +197,14 @@ async def is_nsfw(bot: commands.Bot,
         message = message.reference.cached_message
 
     for attachment in message.attachments:
-        temp_filename = os.path.join(os.getcwd(), f"temp_{attachment.filename}")
-        await attachment.save(temp_filename)
-        return await check_attachment(message.author, temp_filename, nsfw_callback, filename, bot)
+        suffix = os.path.splitext(attachment.filename)[1] or ""
+        with NamedTemporaryFile(delete=False, dir=TMP_DIR, suffix=suffix) as tmp:
+            await attachment.save(tmp.name)
+            temp_filename = tmp.name
+        try:
+            return await check_attachment(message.author, temp_filename, nsfw_callback, filename, bot)
+        finally:
+            _safe_delete(temp_filename)
 
     for embed in message.embeds:
         gif_url = (
@@ -199,15 +216,11 @@ async def is_nsfw(bot: commands.Bot,
             continue
         domain = urlparse(gif_url).netloc.lower()
         if domain == "tenor.com" or domain.endswith(".tenor.com"):
-            continue  # ignore Tenor – too many false positives / DMCA issues
-        temp_location = await download_temp_file(gif_url, "gif")
-        try:
+            continue  # ignore Tenor – too many false positives
+        async with temp_download(gif_url, "gif") as temp_location:
             _, flagged = await process_video(temp_location, nsfw_callback,
                                              message.author, message.guild.id, bot)
             return flagged
-        finally:
-            if os.path.exists(temp_location):
-                os.remove(temp_location)
 
     for sticker in message.stickers:
         sticker_url = sticker.url
@@ -215,8 +228,8 @@ async def is_nsfw(bot: commands.Bot,
             continue
 
         extension = sticker.format.name.lower()
-        temp_location = f"{uuid.uuid4().hex[:12]}.{extension}"
-        gif_location = f"{uuid.uuid4().hex[:12]}.gif"
+        temp_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.{extension}")
+        gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -240,9 +253,8 @@ async def is_nsfw(bot: commands.Bot,
             if flagged:
                 return True
         finally:
-            for path in (temp_location, gif_location):
-                if os.path.exists(path):
-                    os.remove(path)
+            _safe_delete(temp_location)
+            _safe_delete(gif_location)
 
     return False
 
@@ -333,7 +345,7 @@ async def process_image(original_filename: str,
         return None
     finally:
         if clean_up and os.path.exists(original_filename):
-            os.remove(original_filename)
+            _safe_delete(original_filename)
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
     if await mysql.get_settings(user.guild.id, "strike-nsfw") is not True:
