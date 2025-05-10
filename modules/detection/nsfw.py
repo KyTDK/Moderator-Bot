@@ -24,8 +24,8 @@ moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
 MAX_FRAMES_PER_VIDEO = 10          # hard cap so we never spawn hundreds of tasks
 MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
 
-async def download_temp_file(url: str, extension: str = None) -> Optional[str]:
-    """Downloads a file from a URL to a temp location and returns the path."""
+async def download_temp_file(url: str, extension: str | None = None) -> Optional[str]:
+    """Download *url* to a throw‑away file and return the local path."""
     try:
         parsed = urlparse(url)
         ext = extension or os.path.splitext(parsed.path)[1].lstrip('.') or 'bin'
@@ -36,24 +36,48 @@ async def download_temp_file(url: str, extension: str = None) -> Optional[str]:
                 if resp.status != 200:
                     print(f"Failed to download media: {resp.status}")
                     return None
-                content = await resp.read()
                 async with aiofiles.open(temp_path, "wb") as f:
-                    await f.write(content)
+                    async for chunk in resp.content.iter_chunked(1 << 14):
+                        await f.write(chunk)
         return temp_path
     except Exception as e:
         print(f"Error downloading file from {url}: {e}")
         return None
 
-def determine_file_type(file_path):
+
+def determine_file_type(file_path: str) -> str:
     kind = filetype.guess(file_path)
     if kind is None:
         return 'Unknown'
-    elif kind.mime.startswith('image'):
+    if kind.mime.startswith('image'):
         return 'Image'
-    elif kind.mime.startswith('video'):
+    if kind.mime.startswith('video'):
         return 'Video'
-    else:
-        return kind.mime
+    return kind.mime
+
+def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], float]:
+    """Blocking OpenCV extraction, run in a thread."""
+    cap = cv2.VideoCapture(filename)
+    temp_frames: list[str] = []
+    try:
+        fps = cap.get(cv2.CAP_PROP_FPS) or 1
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        if total <= 0:
+            return [], 0
+        duration = total / fps
+        idxs = np.linspace(0, total - 1, min(wanted, total), dtype=int)
+        for idx in idxs:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
+            ok, frame = cap.read()
+            if not ok:
+                continue
+            name = f"{uuid.uuid4().hex[:8]}_{idx}.jpg"
+            cv2.imwrite(name, frame)
+            temp_frames.append(name)
+        return temp_frames, duration
+    finally:
+        cap.release()
+
 
 async def process_video(
     original_filename: str,
@@ -61,45 +85,23 @@ async def process_video(
     member: discord.Member,
     guild_id: int,
     bot: commands.Bot,
-    seconds_interval: float | None = None,
 ) -> tuple[Optional[discord.File], bool]:
-    from functools import partial
-    import numpy as np
+    """Sample *original_filename* and analyse a handful of frames."""
+
+    temp_frames, duration_secs = await asyncio.to_thread(
+        _extract_frames_threaded, original_filename, MAX_FRAMES_PER_VIDEO
+    )
+    print(f"[process_video] extracted {len(temp_frames)} frame(s) from"
+          f" {original_filename} ({duration_secs:.1f}s)")
+
+    if not temp_frames:
+        if os.path.exists(original_filename):
+            os.remove(original_filename)
+        return None, False
 
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
-    temp_frames: list[str] = []
-    file_to_send: discord.File | None = None
+    flagged_file: discord.File | None = None
 
-    def _extract_frames() -> tuple[list[str], float]:
-        cap = cv2.VideoCapture(original_filename)
-        try:
-            fps = cap.get(cv2.CAP_PROP_FPS) or 1
-            total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-            if total <= 0:
-                return [], 0
-            duration = total / fps
-
-            wanted = min(MAX_FRAMES_PER_VIDEO, total)
-            idxs = np.linspace(0, total - 1, wanted, dtype=int)
-
-            for idx in idxs:
-                cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-                ok, frame = cap.read()
-                if not ok:
-                    continue
-                name = f"{uuid.uuid4().hex[:8]}_{idx}.jpg"
-                cv2.imwrite(name, frame)
-                temp_frames.append(name)
-            return temp_frames, duration
-        finally:
-            cap.release()
-
-    # run extractor in a background thread
-    temp_frames, duration_secs = await asyncio.to_thread(_extract_frames)
-    print(f"[process_video] Extracted {len(temp_frames)} frame(s) from "
-          f"{original_filename} ({duration_secs:.1f}s)")
-
-    # ---------- 2️⃣ analyse each frame async with a small worker pool ----------
     async def analyse(path: str):
         async with semaphore:
             try:
@@ -115,35 +117,36 @@ async def process_video(
             res = await done
             if res:
                 frame_path, category = res
-                # cancel remaining workers – we already found a hit
                 for t in tasks:
                     t.cancel()
                 if nsfw_callback:
-                    file_to_send = discord.File(frame_path,
+                    flagged_file = discord.File(frame_path,
                                                 filename=os.path.basename(frame_path))
                     await nsfw_callback(
                         member,
                         bot,
                         f"Detected potential policy violation (Category: **{category.title()}**)",
-                        file_to_send,
+                        flagged_file,
                     )
-                return file_to_send, True
-        return None, False  # nothing flagged
+                return flagged_file, True
+        return None, False
     finally:
-        # cleanup temp files no matter what
         for p in temp_frames:
             if os.path.exists(p):
                 os.remove(p)
         if os.path.exists(original_filename):
             os.remove(original_filename)
 
-
-async def check_attachment(author, temp_filename, nsfw_callback, filename, bot):
+async def check_attachment(author,
+                           temp_filename,
+                           nsfw_callback,
+                           filename,
+                           bot):
     file_type = determine_file_type(temp_filename)
 
     guild_id = author.guild.id if isinstance(author, discord.Member) else None
-    if guild_id is None:  # DM or system message — nothing to moderate
-        return False
+    if guild_id is None:
+        return False  # DM or system message
 
     if file_type == "Image":
         category = await process_image(temp_filename, guild_id=guild_id, clean_up=False)
@@ -167,38 +170,26 @@ async def check_attachment(author, temp_filename, nsfw_callback, filename, bot):
 
 
 async def is_nsfw(bot: commands.Bot,
-                  message: discord.Message = None, 
-                  nsfw_callback=None, 
-                  url=None, 
-                  member:discord.Member = None, 
-                  filename=None) -> bool:
-    
+                  message: discord.Message | None = None,
+                  nsfw_callback=None,
+                  url: str | None = None,
+                  member: discord.Member | None = None,
+                  filename: str | None = None) -> bool:
+
     if url:
         temp_filename = await download_temp_file(url)
-        return await check_attachment(member, 
-                                      temp_filename,
-                                      nsfw_callback,
-                                      filename,
-                                      bot)
+        return await check_attachment(member, temp_filename, nsfw_callback, filename, bot)
 
-    if not message:
-        print("Not message")
+    if message is None:
         return False
 
-    # Handle forwarded messages
-    if message and message.reference:
+    if message.reference and message.reference.cached_message:
         message = message.reference.cached_message
-        if not message:
-            return False
 
     for attachment in message.attachments:
         temp_filename = os.path.join(os.getcwd(), f"temp_{attachment.filename}")
         await attachment.save(temp_filename)
-        return await check_attachment(message.author, 
-                                      temp_filename,
-                                      nsfw_callback,
-                                      filename,
-                                      bot)
+        return await check_attachment(message.author, temp_filename, nsfw_callback, filename, bot)
 
     for embed in message.embeds:
         gif_url = (
@@ -206,23 +197,19 @@ async def is_nsfw(bot: commands.Bot,
             embed.video.url if embed.video else
             embed.thumbnail.url if embed.thumbnail else None
         )
-
-        if gif_url:
-            domain = urlparse(gif_url).netloc.lower()
-            if domain == "tenor.com" or domain.endswith(".tenor.com"):
-                continue
-
-            try:
-                temp_location = await download_temp_file(gif_url, "gif")
-                file, result = await process_video(temp_location, 
-                                                   nsfw_callback, 
-                                                   message.author,
-                                                   message.guild.id,
-                                                   bot)
-                return result
-            finally:
-                if os.path.exists(temp_location):
-                    os.remove(temp_location)
+        if not gif_url:
+            continue
+        domain = urlparse(gif_url).netloc.lower()
+        if domain == "tenor.com" or domain.endswith(".tenor.com"):
+            continue  # ignore Tenor – too many false positives / DMCA issues
+        temp_location = await download_temp_file(gif_url, "gif")
+        try:
+            _, flagged = await process_video(temp_location, nsfw_callback,
+                                             message.author, message.guild.id, bot)
+            return flagged
+        finally:
+            if os.path.exists(temp_location):
+                os.remove(temp_location)
 
     for sticker in message.stickers:
         sticker_url = sticker.url
@@ -236,68 +223,68 @@ async def is_nsfw(bot: commands.Bot,
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(sticker_url) as resp:
-                    if resp.status == 200:
-                        content = await resp.read()
-                        async with aiofiles.open(temp_location, 'wb') as f:
-                            await f.write(content)
-                    else:
+                    if resp.status != 200:
                         continue
+                    async with aiofiles.open(temp_location, 'wb') as f:
+                        await f.write(await resp.read())
 
+            # Convert to GIF *off the loop*
             if extension == "lottie":
                 animation = await asyncio.to_thread(lottie.parsers.tgs.parse_tgs, temp_location)
                 await asyncio.to_thread(export_gif, animation, gif_location, skip_frames=4)
             elif extension == "apng":
                 await asyncio.to_thread(apnggif, temp_location, gif_location)
             else:
-                gif_location = temp_location
-                print(f"Unhandled extension: {extension}")
+                gif_location = temp_location  # already gif / webp
 
-            file, result = await process_video(gif_location, 
-                                               nsfw_callback,
-                                               message.author,
-                                               message.guild.id,
-                                               bot)
-            if result:
+            _, flagged = await process_video(gif_location, nsfw_callback,
+                                             message.author, message.guild.id, bot)
+            if flagged:
                 return True
-
         finally:
-            if os.path.exists(temp_location):
-                os.remove(temp_location)
-            if os.path.exists(gif_location):
-                os.remove(gif_location)
+            for path in (temp_location, gif_location):
+                if os.path.exists(path):
+                    os.remove(path)
 
     return False
 
-async def moderator_api(text: str = None, image_path: str = None, guild_id: int = None, max_attempts: int = 10) -> str:
-    inputs = []
+def _file_to_b64(path: str) -> str:
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+async def moderator_api(text: str | None = None,
+                        image_path: str | None = None,
+                        guild_id: int | None = None,
+                        max_attempts: int = 10) -> Optional[str]:
+    inputs: list | str = []
     is_video = image_path is not None
+
     if text and not image_path:
         inputs = text
+
     if is_video:
-        try:
-            if not os.path.exists(image_path):
-                print(f"Image path does not exist: {image_path}")
-                return None
-            with open(image_path, "rb") as f:
-                img_data = f.read()
-            b64 = base64.b64encode(img_data).decode("utf-8")
-            inputs.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
-            })
-        except Exception as e:
-            print(f"Error opening image {image_path}: {e}")
+        if not os.path.exists(image_path):
+            print(f"Image path does not exist: {image_path}")
             return None
+        try:
+            b64 = await asyncio.to_thread(_file_to_b64, image_path)
+        except Exception as e:
+            print(f"Error reading/encoding image {image_path}: {e}")
+            return None
+        inputs.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
+        })
 
     if not inputs:
-        return
+        return None
 
     for attempt in range(max_attempts):
         client, encrypted_key = await api.get_api_client(guild_id)
         if not client:
             print("No available API key.")
+            await asyncio.sleep(0.5)
             continue
-
         try:
             response = await client.moderations.create(
                 model="omni-moderation-latest" if image_path else "text-moderation-latest",
@@ -314,52 +301,55 @@ async def moderator_api(text: str = None, image_path: str = None, guild_id: int 
         except Exception as e:
             print(f"Unexpected error from OpenAI API: {e}")
             continue
-        
+
         if not response or not response.results:
             print("No moderation results returned.")
             continue
+
+        # Mark key healthy again if we got a good response
         if not await api.is_api_key_working(encrypted_key):
             await api.set_api_key_working(encrypted_key)
 
         results = response.results[0]
-        categories = results.categories
-        for category, is_flagged in categories.__dict__.items():
-            if is_flagged:
-                score = results.category_scores.__dict__.get(category, 0)
-                percent = round(score * 100, 2)
-                if is_video and category in moderator_api_category_exclusions:
-                    continue
-                if not is_video and score < 0.6: # From my testing, this is a good threshold for text, ideally we should be using omni-moderation-latest for text moderation
-                    continue
-                print(f"Category {category} is flagged with {percent}% certainty.")
-                return category
+        for category, is_flagged in results.categories.__dict__.items():
+            if not is_flagged:
+                continue
+            score = results.category_scores.__dict__.get(category, 0)
+            if is_video and category in moderator_api_category_exclusions:
+                continue
+            if not is_video and score < 0.6:
+                continue
+            print(f"Category {category} flagged with {round(score * 100, 2)}% certainty.")
+            return category
         return None
     print("All API key attempts failed.")
     return None
 
-async def process_image(original_filename, guild_id=None, clean_up=True):
+async def process_image(original_filename: str,
+                        guild_id: int | None = None,
+                        clean_up: bool = True) -> Optional[str]:
     try:
-        converted_filename = os.path.join(os.getcwd(), f"converted_{uuid.uuid4().hex[:8]}.jpg")
-        category = await moderator_api(image_path=original_filename, guild_id=guild_id)
-        return category
+        return await moderator_api(image_path=original_filename, guild_id=guild_id)
     except Exception as e:
         print(traceback.format_exc())
         print(f"Error processing image {original_filename}: {e}")
-        return False
+        return None
     finally:
-        if clean_up:
-            if os.path.exists(original_filename):
-                os.remove(original_filename)
-            if os.path.exists(converted_filename):
-                os.remove(converted_filename)
+        if clean_up and os.path.exists(original_filename):
+            os.remove(original_filename)
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
-    if await mysql.get_settings(user.guild.id, "strike-nsfw") == True:
-        embed = await strike.strike(user=user, bot=bot, reason=reason, interaction=None, log_to_channel=False)
-        embed.set_image(url=f"attachment://{image.filename}")
-        NSFW_STRIKES_ID = await mysql.get_settings(user.guild.id, "nsfw-channel")
-        STRIKE_CHANNEL_ID = await mysql.get_settings(user.guild.id, "strike-channel")
-        if NSFW_STRIKES_ID:
-            await logging.log_to_channel(embed, NSFW_STRIKES_ID, bot, image)
-        elif STRIKE_CHANNEL_ID:
-            await logging.log_to_channel(embed, STRIKE_CHANNEL_ID, bot)
+    if await mysql.get_settings(user.guild.id, "strike-nsfw") is not True:
+        return
+
+    embed = await strike.strike(user=user, bot=bot, reason=reason,
+                                interaction=None, log_to_channel=False)
+    embed.set_image(url=f"attachment://{image.filename}")
+
+    nsfw_channel_id = await mysql.get_settings(user.guild.id, "nsfw-channel")
+    strike_channel_id = await mysql.get_settings(user.guild.id, "strike-channel")
+
+    if nsfw_channel_id:
+        await logging.log_to_channel(embed, nsfw_channel_id, bot, image)
+    elif strike_channel_id:
+        await logging.log_to_channel(embed, strike_channel_id, bot)

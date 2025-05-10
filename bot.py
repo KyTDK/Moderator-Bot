@@ -1,3 +1,4 @@
+import asyncio
 from discord.ext import commands
 import discord
 import os
@@ -10,6 +11,8 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+
+member_cache = discord.MemberCacheFlags.none()
 bot = commands.AutoShardedBot(command_prefix='/', 
                                 intents=intents, 
                                 heartbeat_timeout=120,
@@ -17,6 +20,8 @@ bot = commands.AutoShardedBot(command_prefix='/',
                                 max_messages=5_000,
                                 help_command=None,
                                 allowed_mentions=discord.AllowedMentions.none(),
+                                member_cache_flags=member_cache, 
+                                chunk_guilds=False,
                                 )
 
 async def make_announcement(guild, message):
@@ -30,6 +35,9 @@ async def make_announcement(guild, message):
 
 @bot.event
 async def on_ready():
+    await bot.wait_until_ready()
+    print(f"Bot connected as {bot.user} in {len(bot.guilds)} guilds")
+    await asyncio.sleep(5)
     await mysql.initialise_and_get_pool()
 
 @bot.event
