@@ -122,7 +122,7 @@ class AggregatedModeration(commands.Cog):
     async def on_user_update(self, before: discord.User, after: discord.User):
         if before.avatar != after.avatar and after.avatar:
             for guild in self.bot.guilds:
-                member = safe_get_user(self.bot, after.id)
+                member = await safe_get_user(self.bot, after.id)
                 if member:
                     await self._handle_member_avatar(guild, member)
 
