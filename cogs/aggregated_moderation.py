@@ -6,6 +6,7 @@ from difflib import SequenceMatcher
 from modules.utils import mysql
 from modules.detection import nsfw
 from modules.moderation import strike
+from modules.utils.discord_utils import safe_get_user
 
 class AggregatedModeration(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -121,7 +122,7 @@ class AggregatedModeration(commands.Cog):
     async def on_user_update(self, before: discord.User, after: discord.User):
         if before.avatar != after.avatar and after.avatar:
             for guild in self.bot.guilds:
-                member = guild.get_member(after.id)
+                member = safe_get_user(self.bot, after.id)
                 if member:
                     await self._handle_member_avatar(guild, member)
 
