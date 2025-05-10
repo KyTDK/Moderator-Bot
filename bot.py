@@ -5,11 +5,6 @@ import os
 from dotenv import load_dotenv
 from modules.utils import mysql
 from modules.post_stats.topgg_poster import start_topgg_poster
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-discord_logger = logging.getLogger('discord')
-discord_logger.setLevel(logging.DEBUG)
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
