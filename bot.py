@@ -106,7 +106,7 @@ async def setup_hook():
             print(f"Loaded Cog: {filename[:-3]}")
         else:
             print("Unable to load pycache folder.")
-    await bot.tree.sync()
+    #await bot.tree.sync()
     start_topgg_poster(bot)
 
 if __name__ == "__main__":
