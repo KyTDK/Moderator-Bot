@@ -5,6 +5,9 @@ import os
 from dotenv import load_dotenv
 from modules.utils import mysql
 from modules.post_stats.topgg_poster import start_topgg_poster
+import time
+
+print(f"[BOOT] Starting Moderator Bot at {time.strftime('%X')}")
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
