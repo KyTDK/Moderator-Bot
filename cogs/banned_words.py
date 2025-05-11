@@ -4,6 +4,37 @@ from modules.utils.mysql import execute_query
 import io
 import re
 import discord
+from cleantext import clean
+from fuzzywuzzy import fuzz
+from cleantext import clean
+
+def normalize_text(text: str) -> str:
+    text = clean(
+        text,
+        lower=True,
+        to_ascii=True,
+        no_line_breaks=True,
+        no_urls=True,
+        no_emails=True,
+        no_phone_numbers=True,
+        no_digits=False,
+        no_currency_symbols=True,
+        no_punct=True,
+        lang="en"
+    )
+
+    leet_map = {
+        '1': 'i', '!': 'i', '|': 'i',
+        '@': 'a', '$': 's', '5': 's',
+        '0': 'o', '3': 'e', '7': 't',
+        '+': 't'
+    }
+    for k, v in leet_map.items():
+        text = text.replace(k, v)
+
+    text = re.sub(r'\s+', '', text)
+
+    return text
 
 class banned_words(commands.Cog):
     """A cog for banned words handling and relevant commands."""
@@ -117,41 +148,49 @@ class banned_words(commands.Cog):
             return
         await interaction.response.send_message("All banned words have been cleared.", ephemeral=True)
 
-    # Logic for banning words in messages
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
+        if message.author.bot or not message.guild:
             return
 
         guild_id = message.guild.id
-        # unpack rows, ignore count
+
         rows, _ = await execute_query(
             "SELECT word FROM banned_words WHERE guild_id = %s",
             (guild_id,),
             fetch_all=True
         )
 
-        banned_words = [row[0] for row in rows]
-
+        banned_words = [row[0].lower() for row in rows]
         if not banned_words:
             return
 
-        # build a regex that only matches whole words, case‑insensitive
-        pattern = r'\b(?:' + '|'.join(re.escape(w) for w in banned_words) + r')\b'
-        if re.search(pattern, message.content, re.IGNORECASE):
-            try:
-                await message.delete()
-            except (discord.Forbidden, discord.NotFound):
-                print(f"Could not delete message {message.id} in {message.channel.id}")
+        normalized = normalize_text(message.content)
 
-            try:
-                await message.channel.send(
-                    f"{message.author.mention}, your message contained a banned word and was removed."
-                )
-            except discord.Forbidden:
-                print(f"Missing permission to send message in {message.channel.id}")
+        for banned in banned_words:
+            # Fuzzy match with threshold
+            if fuzz.partial_ratio(normalized, banned) > 85:
+                break
+        else:
+            # Also allow exact match fallback via regex (for safety)
+            pattern = r'\b(?:' + '|'.join(re.escape(w) for w in banned_words) + r')\b'
+            if not re.search(pattern, message.content, re.IGNORECASE):
+                await self.bot.process_commands(message)
+                return
 
-        # important: let commands still be processed
+        # Delete + notify
+        try:
+            await message.delete()
+        except (discord.Forbidden, discord.NotFound):
+            print(f"Could not delete message {message.id} in {message.channel.id}")
+
+        try:
+            await message.channel.send(
+                f"{message.author.mention}, your message contained a banned word and was removed."
+            )
+        except discord.Forbidden:
+            print(f"Missing permission to send message in {message.channel.id}")
+
         await self.bot.process_commands(message)
 
 async def setup(bot: commands.Bot):
