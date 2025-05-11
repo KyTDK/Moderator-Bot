@@ -9,6 +9,15 @@ from fuzzywuzzy import fuzz
 from cleantext import clean
 
 def normalize_text(text: str) -> str:
+    leet_map = {
+        '1': 'i', '!': 'i', '|': 'i',
+        '@': 'a', '$': 's', '5': 's',
+        '0': 'o', '3': 'e', '7': 't',
+        '+': 't'
+    }
+    for k, v in leet_map.items():
+        text = text.replace(k, v)
+
     text = clean(
         text,
         lower=True,
@@ -22,15 +31,6 @@ def normalize_text(text: str) -> str:
         no_punct=True,
         lang="en"
     )
-
-    leet_map = {
-        '1': 'i', '!': 'i', '|': 'i',
-        '@': 'a', '$': 's', '5': 's',
-        '0': 'o', '3': 'e', '7': 't',
-        '+': 't'
-    }
-    for k, v in leet_map.items():
-        text = text.replace(k, v)
 
     text = re.sub(r'\s+', '', text)
 
