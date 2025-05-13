@@ -7,28 +7,40 @@ import re
 import discord
 from cleantext import clean
 from rapidfuzz.distance import Levenshtein
+from rapidfuzz import fuzz
 
 def is_match(normalized: str, banned: str) -> bool:
+    if normalized == banned:
+        return True
+
     distance = Levenshtein.distance(normalized, banned)
     max_len = max(len(normalized), len(banned))
     similarity = 1 - distance / max_len
+
     if similarity > 0.85:
         return True
 
     if normalized.startswith(banned) and len(normalized) <= len(banned) + 3:
         return True
 
+    if len(normalized) >= 4 and fuzz.partial_ratio(normalized, banned) > 88:
+        if normalized[0] == banned[0]:
+            return True
+
     return False
 
 RE_REPEATS = re.compile(r"(.)\1{2,}")
 def normalize_text(text: str) -> str:
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    
+    # Early collapse
+    text = RE_REPEATS.sub(r"\1\1", text)
+
     leet_map = {
         '1': 'i', '!': 'i', '|': 'i',
         '@': 'a', '$': 's', '5': 's',
         '0': 'o', '3': 'e', '7': 't',
-        '+': 't', '9': 'g',
-        '6': 'g'
+        '+': 't', '9': 'g', '6': 'g'
     }
     for k, v in leet_map.items():
         text = text.replace(k, v)
@@ -46,8 +58,8 @@ def normalize_text(text: str) -> str:
         no_punct=True,
         lang="en"
     )
+
     text = re.sub(r'\s+', '', text)
-    text = RE_REPEATS.sub(r"\1", text)
     return text
 
 class banned_words(commands.Cog):
