@@ -16,8 +16,8 @@ def is_match(normalized: str, banned: str) -> bool:
     if similarity > 0.85:
         return True
 
-    if len(normalized) < len(banned) and normalized[0] == banned[0]:
-        return fuzz.partial_ratio(normalized, banned) > 85
+    if normalized.startswith(banned) and len(normalized) <= len(banned) + 3:
+        return True
 
     return False
 
@@ -188,7 +188,7 @@ class banned_words(commands.Cog):
                 break
         else:
             # Also allow exact match fallback via regex (for safety)
-            pattern = r'\b(?:' + '|'.join(re.escape(w) for w in banned_words) + r')\b'
+            pattern = r'(?:' + '|'.join(re.escape(w) + r'(?:ed|er|ing)?' for w in banned_words) + r')'
             if not re.search(pattern, message.content, re.IGNORECASE):
                 await self.bot.process_commands(message)
                 return
