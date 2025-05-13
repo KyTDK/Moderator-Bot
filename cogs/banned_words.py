@@ -5,7 +5,7 @@ import io
 import re
 import discord
 from cleantext import clean
-from fuzzywuzzy import fuzz
+from rapidfuzz import fuzz
 from cleantext import clean
 
 def normalize_text(text: str) -> str:
