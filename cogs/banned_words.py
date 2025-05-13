@@ -15,7 +15,7 @@ def is_match(normalized: str, banned: str) -> bool:
     if similarity > 0.85:
         return True
 
-    if len(normalized) < len(banned):
+    if len(normalized) < len(banned) and normalized[0] == banned[0]:
         return fuzz.partial_ratio(normalized, banned) > 85
 
     return False
