@@ -1,3 +1,4 @@
+import unicodedata
 from discord.ext import commands
 from discord import app_commands, Interaction
 from modules.utils.mysql import execute_query
@@ -21,6 +22,7 @@ def is_match(normalized: str, banned: str) -> bool:
     return False
 
 def normalize_text(text: str) -> str:
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
     leet_map = {
         '1': 'i', '!': 'i', '|': 'i',
         '@': 'a', '$': 's', '5': 's',
