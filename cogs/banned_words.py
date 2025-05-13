@@ -6,12 +6,19 @@ import re
 import discord
 from cleantext import clean
 from rapidfuzz.distance import Levenshtein
+from rapidfuzz import fuzz
 
 def is_match(normalized: str, banned: str) -> bool:
     distance = Levenshtein.distance(normalized, banned)
     max_len = max(len(normalized), len(banned))
     similarity = 1 - distance / max_len
-    return similarity > 0.85
+    if similarity > 0.85:
+        return True
+
+    if len(normalized) < len(banned):
+        return fuzz.partial_ratio(normalized, banned) > 85
+
+    return False
 
 def normalize_text(text: str) -> str:
     leet_map = {
