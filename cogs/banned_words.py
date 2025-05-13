@@ -5,8 +5,13 @@ import io
 import re
 import discord
 from cleantext import clean
-from rapidfuzz import fuzz
-from cleantext import clean
+from rapidfuzz.distance import Levenshtein
+
+def is_match(normalized: str, banned: str) -> bool:
+    distance = Levenshtein.distance(normalized, banned)
+    max_len = max(len(normalized), len(banned))
+    similarity = 1 - distance / max_len
+    return similarity > 0.85
 
 def normalize_text(text: str) -> str:
     leet_map = {
@@ -170,7 +175,7 @@ class banned_words(commands.Cog):
 
         for banned in banned_words:
             # Fuzzy match with threshold
-            if fuzz.partial_ratio(normalized, banned) > 85 and len(normalized) >= len(banned) - 1:
+            if is_match(normalized, banned):
                 break
         else:
             # Also allow exact match fallback via regex (for safety)
