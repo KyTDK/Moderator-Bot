@@ -7,7 +7,6 @@ import re
 import discord
 from cleantext import clean
 from rapidfuzz.distance import Levenshtein
-from rapidfuzz import fuzz
 
 def is_match(normalized: str, banned: str) -> bool:
     distance = Levenshtein.distance(normalized, banned)
@@ -21,6 +20,7 @@ def is_match(normalized: str, banned: str) -> bool:
 
     return False
 
+RE_REPEATS = re.compile(r"(.)\1{2,}")
 def normalize_text(text: str) -> str:
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
     leet_map = {
@@ -46,9 +46,8 @@ def normalize_text(text: str) -> str:
         no_punct=True,
         lang="en"
     )
-
     text = re.sub(r'\s+', '', text)
-
+    text = RE_REPEATS.sub(r"\1", text)
     return text
 
 class banned_words(commands.Cog):
@@ -56,7 +55,6 @@ class banned_words(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
     
     bannedwords_group = app_commands.Group(
         name="bannedwords",
