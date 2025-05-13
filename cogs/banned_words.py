@@ -23,8 +23,8 @@ def is_match(normalized: str, banned: str) -> bool:
     if normalized.startswith(banned) and len(normalized) <= len(banned) + 3:
         return True
 
-    if len(normalized) >= 4 and fuzz.partial_ratio(normalized, banned) > 88:
-        if normalized[0] == banned[0]:
+    if len(normalized) >= 4 and normalized[0] == banned[0]:
+        if fuzz.partial_ratio(normalized, banned) > 88:
             return True
 
     return False
