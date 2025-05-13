@@ -170,7 +170,7 @@ class banned_words(commands.Cog):
 
         for banned in banned_words:
             # Fuzzy match with threshold
-            if fuzz.partial_ratio(normalized, banned) > 85:
+            if fuzz.partial_ratio(normalized, banned) > 85 and len(normalized) >= len(banned) - 1:
                 break
         else:
             # Also allow exact match fallback via regex (for safety)
