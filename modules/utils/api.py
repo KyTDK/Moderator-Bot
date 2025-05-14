@@ -1,3 +1,6 @@
+import asyncio
+import random
+import time
 from openai import AsyncOpenAI
 from modules.utils import mysql
 from cryptography.fernet import Fernet
@@ -8,9 +11,16 @@ load_dotenv()
 
 _working_keys = []
 _non_working_keys = []
+_quarantine: dict[str, float] = {}
+_clients = {}
 
 FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
 fernet = Fernet(FERNET_KEY)
+
+def _get_client(api_key: str) -> AsyncOpenAI:
+    if api_key not in _clients:
+        _clients[api_key] = AsyncOpenAI(api_key=api_key)
+    return _clients[api_key]
 
 async def check_openai_api_key(api_key):
     try:
@@ -24,48 +34,67 @@ async def check_openai_api_key(api_key):
     except:
         raise Exception("Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly.")
 
+_lock = asyncio.Lock()
 async def get_next_shared_api_key():
     global _working_keys, _non_working_keys
+    async with _lock:
+        now = time.monotonic()
+        for k, ts in list(_quarantine.items()):
+            if ts <= now:
+                _quarantine.pop(k, None)
+                _working_keys.append(k)
+        if not _working_keys:
+            _working_keys = await get_working_api_keys()
+            random.shuffle(_working_keys)
 
-    # If working keys are empty, refill
-    if not _working_keys:
-        _working_keys = await get_working_api_keys()
+        if _working_keys:
+            return _working_keys.pop(0)
 
-    if _working_keys:
-        return _working_keys.pop(0)
+        if not _non_working_keys:
+            _non_working_keys = await get_non_working_api_keys()
 
-    # If we’ve exhausted working keys, fall back to non-working
-    if not _non_working_keys:
-        _non_working_keys = await get_non_working_api_keys()
+        if _non_working_keys:
+            return _non_working_keys.pop(0)
 
-    if _non_working_keys:
-        return _non_working_keys.pop(0)
-
-    return None  # No keys available
+    return None
 
 async def get_api_client(guild_id):
     api_key = await mysql.get_settings(guild_id, "api-key")
     encrypted_key = None
+
     if not api_key:
         encrypted_key = await get_next_shared_api_key()
+        if encrypted_key is None:
+            return None, None
         api_key = fernet.decrypt(encrypted_key.encode()).decode()
-    if not api_key:
-        return None, None
-    return AsyncOpenAI(api_key=api_key), encrypted_key
 
-async def set_api_key_not_working(api_key):
-    if not api_key:
-        return
-    query = "UPDATE api_pool SET working = FALSE WHERE api_key = %s"
-    _, affected_rows = await mysql.execute_query(query, (api_key,))
-    return affected_rows > 0
+    client = _get_client(api_key)  
+    return client, encrypted_key
 
 async def set_api_key_working(api_key):
     if not api_key:
         return
+    async with _lock:
+        _quarantine.pop(api_key, None)
+        if api_key in _non_working_keys:
+            _non_working_keys.remove(api_key)
+        if api_key not in _working_keys:
+            _working_keys.append(api_key)
     query = "UPDATE api_pool SET working = TRUE WHERE api_key = %s"
     _, affected_rows = await mysql.execute_query(query, (api_key,))
     return affected_rows > 0
+
+async def set_api_key_not_working(api_key):
+    if not api_key:
+        return
+    async with _lock:
+        _quarantine[api_key] = time.monotonic() + 60
+        if api_key not in _non_working_keys:
+            _non_working_keys.append(api_key)
+    query = "UPDATE api_pool SET working = FALSE WHERE api_key = %s"
+    _, affected_rows = await mysql.execute_query(query, (api_key,))
+    return affected_rows > 0
+
 
 async def is_api_key_working(api_key: str) -> bool:
     if not api_key:
