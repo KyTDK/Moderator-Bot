@@ -257,7 +257,7 @@ async def is_nsfw(bot: commands.Bot,
         if domain == "tenor.com" or domain.endswith(".tenor.com"):
             continue  # ignore Tenor
         async with temp_download(gif_url, "gif") as temp_location:
-            return await check_attachment(message.author, gif_location, nsfw_callback, filename, bot)
+            return await check_attachment(message.author, temp_location, nsfw_callback, filename, bot)
         
     for sticker in message.stickers:
         sticker_url = sticker.url
