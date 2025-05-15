@@ -255,47 +255,39 @@ async def is_nsfw(bot: commands.Bot,
             continue
         domain = urlparse(gif_url).netloc.lower()
         if domain == "tenor.com" or domain.endswith(".tenor.com"):
-            continue  # ignore Tenor – too many false positives
+            continue  # ignore Tenor
         async with temp_download(gif_url, "gif") as temp_location:
-            _, flagged = await process_video(temp_location, nsfw_callback,
-                                             message.author, message.guild.id, bot)
-            return flagged
-
+            return await check_attachment(message.author, gif_location, nsfw_callback, filename, bot)
+        
     for sticker in message.stickers:
         sticker_url = sticker.url
         if not sticker_url:
             continue
 
         extension = sticker.format.name.lower()
-        temp_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.{extension}")
-        gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
 
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(sticker_url) as resp:
-                    if resp.status != 200:
-                        continue
-                    async with aiofiles.open(temp_location, 'wb') as f:
-                        await f.write(await resp.read())
+        async with temp_download(sticker_url, ext=extension) as temp_location:
+            gif_location = temp_location
 
-            # Convert to GIF *off the loop*
             if extension == "lottie":
+                gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
                 print(f"[sticker] Starting Lottie export: {temp_location} → {gif_location}")
                 animation = await asyncio.to_thread(lottie.parsers.tgs.parse_tgs, temp_location)
                 await asyncio.to_thread(export_gif, animation, gif_location, skip_frames=4)
                 print(f"[sticker] Finished Lottie export: {gif_location}")
+
             elif extension == "apng":
+                gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
                 await asyncio.to_thread(apnggif, temp_location, gif_location)
-            else:
-                gif_location = temp_location  # already gif / webp
-                try:
-                    return await check_attachment(message.author, gif_location, nsfw_callback, filename, bot)
-                finally:
-                    _safe_delete(temp_location)
+
+            try:
+                return await check_attachment(
+                    message.author, gif_location, nsfw_callback,
+                    os.path.basename(gif_location), bot
+                )
+            finally:
+                if gif_location != temp_location:
                     _safe_delete(gif_location)
-        finally:
-            _safe_delete(temp_location)
-            _safe_delete(gif_location)
 
     return False
 
