@@ -21,6 +21,7 @@ import openai
 import numpy as np
 from contextlib import asynccontextmanager
 from tempfile import NamedTemporaryFile, gettempdir
+from PIL import Image, ImageSequence
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
@@ -63,12 +64,37 @@ def _safe_delete(path: str):
 
 def determine_file_type(file_path: str) -> str:
     kind = filetype.guess(file_path)
+    ext = file_path.lower().split('.')[-1]
+
+    # Special-case check for .webp and .gif animation
+    if ext in {'webp', 'gif'}:
+        try:
+            media = Image.open(file_path)
+            index = 0
+            for frame in ImageSequence.Iterator(media):
+                index += 1
+            if index > 1:
+                return 'Video'
+            else:
+                return 'Image'
+        except Exception as e:
+            print(f"[determine_file_type] Failed to open {file_path}: {e}")
+            return 'Unknown'
+
     if kind is None:
+        if ext == 'lottie':
+            return 'Video'
         return 'Unknown'
+
     if kind.mime.startswith('image'):
         return 'Image'
+
     if kind.mime.startswith('video'):
         return 'Video'
+
+    if ext == 'lottie':
+        return 'Video'
+
     return kind.mime
 
 def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], float]:
@@ -101,11 +127,19 @@ async def process_video(
     guild_id: int,
     bot: commands.Bot,
 ) -> tuple[Optional[discord.File], bool]:
+    if not original_filename.lower().endswith(('.gif', '.webm', '.mp4')):
+        print(f"[process_video] ⚠️ Rejected non-video file: {original_filename}")
+        return None, False
+
+    print(f"[process_video] Starting video analysis: {original_filename}")
+    
     temp_frames, _ = await asyncio.to_thread(
         _extract_frames_threaded, original_filename, MAX_FRAMES_PER_VIDEO
     )
+    print(f"[process_video] Extracted {len(temp_frames)} frames")
 
     if not temp_frames:
+        print(f"[process_video] No frames extracted, deleting original: {original_filename}")
         _safe_delete(original_filename)
         return None, False
 
@@ -113,21 +147,26 @@ async def process_video(
     flagged_file: discord.File | None = None
 
     async def analyse(path: str):
+        print(f"[process_video] Analyzing frame: {path}")
         async with semaphore:
             try:
                 cat = await process_image(path, guild_id=guild_id, clean_up=False)
+                print(f"[process_video] Frame {path} result: {cat}")
                 return (path, cat) if cat else None
             except Exception as e:
-                print(f"[process_video] analyse error {path}: {e}")
+                print(f"[process_video] Analyse error {path}: {e}")
+                return None
 
     tasks = [asyncio.create_task(analyse(p)) for p in temp_frames]
+    print("[process_video] Analysis tasks started")
 
     try:
         for done in asyncio.as_completed(tasks):
             res = await done
             if res:
                 frame_path, category = res
-                # cancel remaining tasks & await them so file handles close
+                print(f"[process_video] NSFW detected in frame: {frame_path} (category: {category})")
+
                 for t in tasks:
                     t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
@@ -142,10 +181,13 @@ async def process_video(
                         flagged_file,
                     )
                 return flagged_file, True
+        print("[process_video] No frames were flagged")
         return None, False
     finally:
         for p in temp_frames:
+            print(f"[process_video] Deleting frame: {p}")
             _safe_delete(p)
+        print(f"[process_video] Deleting original file: {original_filename}")
         _safe_delete(original_filename)
 
 async def check_attachment(author,
@@ -241,8 +283,10 @@ async def is_nsfw(bot: commands.Bot,
 
             # Convert to GIF *off the loop*
             if extension == "lottie":
+                print(f"[sticker] Starting Lottie export: {temp_location} → {gif_location}")
                 animation = await asyncio.to_thread(lottie.parsers.tgs.parse_tgs, temp_location)
                 await asyncio.to_thread(export_gif, animation, gif_location, skip_frames=4)
+                print(f"[sticker] Finished Lottie export: {gif_location}")
             elif extension == "apng":
                 await asyncio.to_thread(apnggif, temp_location, gif_location)
             else:
