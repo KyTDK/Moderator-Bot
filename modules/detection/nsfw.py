@@ -127,10 +127,6 @@ async def process_video(
     guild_id: int,
     bot: commands.Bot,
 ) -> tuple[Optional[discord.File], bool]:
-    if not original_filename.lower().endswith(('.gif', '.webm', '.mp4')):
-        print(f"[process_video] ⚠️ Rejected non-video file: {original_filename}")
-        return None, False
-
     print(f"[process_video] Starting video analysis: {original_filename}")
     
     temp_frames, _ = await asyncio.to_thread(
@@ -291,11 +287,11 @@ async def is_nsfw(bot: commands.Bot,
                 await asyncio.to_thread(apnggif, temp_location, gif_location)
             else:
                 gif_location = temp_location  # already gif / webp
-
-            _, flagged = await process_video(gif_location, nsfw_callback,
-                                             message.author, message.guild.id, bot)
-            if flagged:
-                return True
+                try:
+                    return await check_attachment(message.author, gif_location, nsfw_callback, filename, bot)
+                finally:
+                    _safe_delete(temp_location)
+                    _safe_delete(gif_location)
         finally:
             _safe_delete(temp_location)
             _safe_delete(gif_location)
