@@ -62,7 +62,7 @@ def normalize_text(text: str) -> str:
     text = re.sub(r'\s+', '', text)
     return text
 
-class banned_words(commands.Cog):
+class BannedWordsCog(commands.Cog):
     """A cog for banned words handling and relevant commands."""
 
     def __init__(self, bot: commands.Bot):
@@ -173,8 +173,7 @@ class banned_words(commands.Cog):
             return
         await interaction.response.send_message("All banned words have been cleared.", ephemeral=True)
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
 
@@ -218,7 +217,5 @@ class banned_words(commands.Cog):
         except discord.Forbidden:
             print(f"Missing permission to send message in {message.channel.id}")
 
-        await self.bot.process_commands(message)
-
 async def setup(bot: commands.Bot):
-    await bot.add_cog(banned_words(bot))
+    await bot.add_cog(BannedWordsCog(bot))

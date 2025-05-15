@@ -9,13 +9,12 @@ from modules.detection import nsfw
 from modules.moderation import strike
 from modules.utils.discord_utils import safe_get_user
 
-class AggregatedModeration(commands.Cog):
+class AggregatedModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.user_message_cache = defaultdict(list)
         self.AGGREGATION_WINDOW = 10  # seconds
         self.DIFFERENCE_THRESHOLD = 0.7  # for edits
-        self.nsfw_scan_locks = defaultdict(asyncio.Lock)
 
     async def handle_deletion(self, messages: list):
         for msg in messages:
@@ -37,51 +36,50 @@ class AggregatedModeration(commands.Cog):
         has_strike = await mysql.get_strike_count(user_id, guild_id) > 0
         return delete_offensive or (has_strike and restrict_users)
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def handle_message(self, message: discord.Message):
         if message.author.bot:
             return
 
         user_id = message.author.id
-        async with self.nsfw_scan_locks[user_id]:
-            guild_id = message.guild.id
-            now = time.time()
+        guild_id = message.guild.id
+        now = time.time()
 
-            if await self.should_perform_check(user_id, guild_id):
-                self.user_message_cache.setdefault(user_id, [])
-                if len(message.content) <= 10:
-                    self.user_message_cache[user_id].append((now, message))
+        if (
+            await mysql.get_settings(guild_id, "delete-nsfw") is True
+            and message.channel.id not in await mysql.get_settings(guild_id, "exclude-channels")
+        ):
+            if await nsfw.is_nsfw(self.bot, message=message, nsfw_callback=nsfw.handle_nsfw_content):
+                try:
+                    await message.delete()
+                    await message.channel.send(
+                        f"{message.author.mention}, your message was detected to contain explicit content and was removed."
+                    )
+                except (discord.Forbidden, discord.NotFound):
+                    print("Cannot delete message or message no longer exists.")
 
-                self.user_message_cache[user_id] = [
-                    (t, m)
-                    for t, m in self.user_message_cache[user_id]
-                    if now - t < self.AGGREGATION_WINDOW
-                ]
 
-                messages_to_check = [m.content for _, m in self.user_message_cache[user_id]] or [message.content]
-                combined_content = " ".join(messages_to_check)
-                cached_messages = [msg for _, msg in self.user_message_cache[user_id]]
-                messages_to_delete = cached_messages if cached_messages else [message]
+        if await self.should_perform_check(user_id, guild_id):
+            self.user_message_cache.setdefault(user_id, [])
+            if len(message.content) <= 10:
+                self.user_message_cache[user_id].append((now, message))
 
-                was_deleted = await self.check_and_delete_if_offensive(
-                    combined_content, messages_to_delete, guild_id
-                )
+            self.user_message_cache[user_id] = [
+                (t, m)
+                for t, m in self.user_message_cache[user_id]
+                if now - t < self.AGGREGATION_WINDOW
+            ]
 
-                if was_deleted:
-                    self.user_message_cache[user_id].clear()
+            messages_to_check = [m.content for _, m in self.user_message_cache[user_id]] or [message.content]
+            combined_content = " ".join(messages_to_check)
+            cached_messages = [msg for _, msg in self.user_message_cache[user_id]]
+            messages_to_delete = cached_messages if cached_messages else [message]
 
-            if (
-                await mysql.get_settings(guild_id, "delete-nsfw") is True
-                and message.channel.id not in await mysql.get_settings(guild_id, "exclude-channels")
-            ):
-                if await nsfw.is_nsfw(self.bot, message=message, nsfw_callback=nsfw.handle_nsfw_content):
-                    try:
-                        await message.delete()
-                        await message.channel.send(
-                            f"{message.author.mention}, your message was detected to contain explicit content and was removed."
-                        )
-                    except (discord.Forbidden, discord.NotFound):
-                        print("Cannot delete message or message no longer exists.")
+            was_deleted = await self.check_and_delete_if_offensive(
+                combined_content, messages_to_delete, guild_id
+            )
+
+            if was_deleted:
+                self.user_message_cache[user_id].clear()
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -160,4 +158,4 @@ class AggregatedModeration(commands.Cog):
                         print(f"Failed to untimeout {member.display_name}: {e}")
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(AggregatedModeration(bot))
+    await bot.add_cog(AggregatedModerationCog(bot))
