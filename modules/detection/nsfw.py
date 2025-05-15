@@ -229,6 +229,7 @@ async def is_nsfw(bot: commands.Bot,
             return await check_attachment(member, temp_filename, nsfw_callback, filename, bot)
 
     if message is None:
+        print("Message is None")
         return False
 
     if message.reference and message.reference.cached_message:
@@ -378,14 +379,18 @@ async def moderator_api(text: str | None = None,
 async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True) -> Optional[str]:
+    print(f"[process_image] Starting scan for: {original_filename} (guild: {guild_id})")
     try:
-        return await moderator_api(image_path=original_filename, guild_id=guild_id)
+        result = await moderator_api(image_path=original_filename, guild_id=guild_id)
+        print(f"[process_image] Moderation result for {original_filename}: {result}")
+        return result
     except Exception as e:
         print(traceback.format_exc())
-        print(f"Error processing image {original_filename}: {e}")
+        print(f"[process_image] Error processing image {original_filename}: {e}")
         return None
     finally:
         if clean_up and os.path.exists(original_filename):
+            print(f"[process_image] Cleaning up file: {original_filename}")
             _safe_delete(original_filename)
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
