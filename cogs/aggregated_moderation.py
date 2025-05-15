@@ -89,19 +89,17 @@ class AggregatedModerationCog(commands.Cog):
         guild_id = after.guild.id
         user_id = after.author.id
 
-        async with self.nsfw_scan_locks[user_id]:
-            old_message = before.content
-            new_message = after.content
+        old_message = before.content
+        new_message = after.content
 
-            if await self.should_perform_check(user_id, guild_id):
-                similarity_ratio = SequenceMatcher(None, old_message, new_message).ratio()
-                if similarity_ratio < self.DIFFERENCE_THRESHOLD:
-                    await self.check_and_delete_if_offensive(new_message, [after], guild_id)
+        if await self.should_perform_check(user_id, guild_id):
+            similarity_ratio = SequenceMatcher(None, old_message, new_message).ratio()
+            if similarity_ratio < self.DIFFERENCE_THRESHOLD:
+                await self.check_and_delete_if_offensive(new_message, [after], guild_id)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        async with self.nsfw_scan_locks[member.id]:
-            await self._handle_member_avatar(member.guild, member, is_join=True)
+        await self._handle_member_avatar(member.guild, member, is_join=True)
 
     @commands.Cog.listener()
     async def on_user_update(self, before: discord.User, after: discord.User):
@@ -109,8 +107,7 @@ class AggregatedModerationCog(commands.Cog):
             for guild in self.bot.guilds:
                 member = await safe_get_user(self.bot, after.id)
                 if member:
-                    async with self.nsfw_scan_locks[after.id]:
-                        await self._handle_member_avatar(guild, member)
+                    await self._handle_member_avatar(guild, member)
 
     async def _handle_member_avatar(self, guild: discord.Guild, member: discord.Member, is_join: bool = False):
         if await mysql.get_settings(guild.id, "check-pfp") != True:
