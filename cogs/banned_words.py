@@ -197,10 +197,12 @@ class banned_words(commands.Cog):
             if is_match(normalized, banned):
                 break
         else:
-            # Also allow exact match fallback via regex (for safety)
-            pattern = r'(?:' + '|'.join(re.escape(w) + r'(?:ed|er|ing)?' for w in banned_words) + r')'
-            if not re.search(pattern, message.content, re.IGNORECASE):
-                await self.bot.process_commands(message)
+            suffix  = r'(?:ed|er|ing)?'
+            pattern = re.compile(
+                r'\b(?:' + '|'.join(fr'{re.escape(w)}{suffix}' for w in banned_words) + r')\b',
+                flags=re.I
+            )
+            if not pattern.search(message.content):
                 return
 
         # Delete + notify

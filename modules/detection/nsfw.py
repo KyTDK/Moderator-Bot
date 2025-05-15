@@ -287,6 +287,7 @@ async def moderator_api(text: str | None = None,
         })
 
     if not inputs:
+        print("No inputs were provided")
         return None
 
     for attempt in range(max_attempts):
