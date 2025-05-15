@@ -189,8 +189,8 @@ async def process_video(
 async def check_attachment(author,
                            temp_filename,
                            nsfw_callback,
-                           filename,
                            bot):
+    filename = os.path.basename(temp_filename)
     file_type = determine_file_type(temp_filename)
 
     guild_id = author.guild.id if isinstance(author, discord.Member) else None
@@ -221,12 +221,12 @@ async def is_nsfw(bot: commands.Bot,
                   message: discord.Message | None = None,
                   nsfw_callback=None,
                   url: str | None = None,
-                  member: discord.Member | None = None,
-                  filename: str | None = None) -> bool:
+                  member: discord.Member | None = None
+                  ) -> bool:
 
     if url:
         async with temp_download(url) as temp_filename:
-            return await check_attachment(member, temp_filename, nsfw_callback, filename, bot)
+            return await check_attachment(member, temp_filename, nsfw_callback, bot)
 
     if message is None:
         print("Message is None")
@@ -241,7 +241,7 @@ async def is_nsfw(bot: commands.Bot,
             await attachment.save(tmp.name)
             temp_filename = tmp.name
         try:
-            return await check_attachment(message.author, temp_filename, nsfw_callback, filename, bot)
+            return await check_attachment(message.author, temp_filename, nsfw_callback, bot)
         finally:
             _safe_delete(temp_filename)
 
@@ -257,7 +257,7 @@ async def is_nsfw(bot: commands.Bot,
         if domain == "tenor.com" or domain.endswith(".tenor.com"):
             continue  # ignore Tenor
         async with temp_download(gif_url, "gif") as temp_location:
-            return await check_attachment(message.author, temp_location, nsfw_callback, filename, bot)
+            return await check_attachment(message.author, temp_location, nsfw_callback, bot)
         
     for sticker in message.stickers:
         sticker_url = sticker.url
@@ -283,7 +283,7 @@ async def is_nsfw(bot: commands.Bot,
             try:
                 return await check_attachment(
                     message.author, gif_location, nsfw_callback,
-                    filename, bot
+                    bot
                 )
             finally:
                 if gif_location != temp_location:
