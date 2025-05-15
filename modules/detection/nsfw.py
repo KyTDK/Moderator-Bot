@@ -283,7 +283,7 @@ async def is_nsfw(bot: commands.Bot,
             try:
                 return await check_attachment(
                     message.author, gif_location, nsfw_callback,
-                    os.path.basename(gif_location), bot
+                    filename, bot
                 )
             finally:
                 if gif_location != temp_location:
