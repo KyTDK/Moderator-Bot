@@ -56,6 +56,10 @@ class AggregatedModerationCog(commands.Cog):
                     )
                 except (discord.Forbidden, discord.NotFound):
                     print("Cannot delete message or message no longer exists.")
+            else:
+                print(f"is_nfw returned False for {message.author}'s message.")
+        else:
+            print(f"Skipping check for {message.author}'s message.")
 
 
         if await self.should_perform_check(user_id, guild_id):
