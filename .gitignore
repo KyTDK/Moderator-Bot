@@ -1,2 +1,9 @@
 /.env
 test.py
+modules/config/__pycache__/settings_schema.cpython-310.pyc
+modules/utils/__pycache__/api.cpython-310.pyc
+modules/utils/__pycache__/logging.cpython-310.pyc
+modules/utils/__pycache__/mysql.cpython-310.pyc
+modules/utils/__pycache__/time.cpython-310.pyc
+modules/utils/__pycache__/user_utils.cpython-310.pyc
+modules/variables/__pycache__/TimeString.cpython-310.pyc
