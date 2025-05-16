@@ -84,6 +84,15 @@ class Monitoring(commands.Cog):
             print(f"[on_reaction_add] Missing access when trying to log event.")
         except Exception as e:
             print(f"[on_reaction_add] Unexpected error: {e}")
+    
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        # Only log when content actually changes and ignore bot messages
+        if before.author.bot or before.content == after.content:
+            return
+        log_message = (f":pencil2: **Message Edited:** In {before.channel.mention}, "
+                       f"{before.author.mention} changed from:\n`{before.content}`\n to:\n`{after.content}`")
+        await self.log_event(before.guild, log_message)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):

@@ -56,8 +56,6 @@ class AggregatedModerationCog(commands.Cog):
                     )
                 except (discord.Forbidden, discord.NotFound):
                     print("Cannot delete message or message no longer exists.")
-            else:
-                print(f"is_nfw returned False for {message.author}'s message.")
         else:
             print(f"Skipping check for {message.author}'s message.")
 
@@ -84,22 +82,6 @@ class AggregatedModerationCog(commands.Cog):
 
             if was_deleted:
                 self.user_message_cache[user_id].clear()
-
-    @commands.Cog.listener()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        if before.author.bot or before.content == after.content:
-            return
-
-        guild_id = after.guild.id
-        user_id = after.author.id
-
-        old_message = before.content
-        new_message = after.content
-
-        if await self.should_perform_check(user_id, guild_id):
-            similarity_ratio = SequenceMatcher(None, old_message, new_message).ratio()
-            if similarity_ratio < self.DIFFERENCE_THRESHOLD:
-                await self.check_and_delete_if_offensive(new_message, [after], guild_id)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

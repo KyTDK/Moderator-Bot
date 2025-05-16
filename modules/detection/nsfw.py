@@ -33,27 +33,38 @@ MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
 @asynccontextmanager
 async def temp_download(url: str, ext: str | None = None):
     """Download *url* into our tmp dir and yield the path, cleaning up automatically."""
-    # normalise extension – always starts with a dot
+    # Normalize extension – always starts with a dot
     if ext and not ext.startswith('.'):
         ext = '.' + ext
     ext = ext or os.path.splitext(urlparse(url).path)[1] or ".bin"
 
     path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{ext}")
+    print(f"[temp_download] Starting download: {url}")
+    print(f"[temp_download] Saving to: {path}")
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             resp.raise_for_status()
+            expected_length = resp.headers.get("Content-Length")
+            if expected_length:
+                print(f"[temp_download] Expected content length: {expected_length} bytes")
+
+            total_written = 0
             async with aiofiles.open(path, "wb") as f:
                 async for chunk in resp.content.iter_chunked(1 << 14):
                     await f.write(chunk)
+                    total_written += len(chunk)
+
+            print(f"[temp_download] Actual bytes written: {total_written}")
 
     try:
         yield path
     finally:
         try:
             os.remove(path)
+            print(f"[temp_download] Cleaned up: {path}")
         except FileNotFoundError:
-            pass
+            print(f"[temp_download] File already deleted: {path}")
 
 def _safe_delete(path: str):
     try:
@@ -365,6 +376,7 @@ async def moderator_api(text: str | None = None,
             if not is_video and score < 0.6:
                 continue
             return category
+        print("[moderator_api] Did not detect anything bad.")
         return None
     print("[moderator_api] All API key attempts failed.")
     return None
