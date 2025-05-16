@@ -195,6 +195,7 @@ async def check_attachment(author,
 
     guild_id = author.guild.id if isinstance(author, discord.Member) else None
     if guild_id is None:
+        print("[check_attachment] Guild_id is None")
         return False  # DM or system message
 
     if file_type == "Image":
@@ -307,12 +308,12 @@ async def moderator_api(text: str | None = None,
 
     if is_video:
         if not os.path.exists(image_path):
-            print(f"Image path does not exist: {image_path}")
+            print(f"[moderator_api] Image path does not exist: {image_path}")
             return None
         try:
             b64 = await asyncio.to_thread(_file_to_b64, image_path)
         except Exception as e:
-            print(f"Error reading/encoding image {image_path}: {e}")
+            print(f"[moderator_api] Error reading/encoding image {image_path}: {e}")
             return None
         inputs.append({
             "type": "image_url",
@@ -320,13 +321,13 @@ async def moderator_api(text: str | None = None,
         })
 
     if not inputs:
-        print("No inputs were provided")
+        print("[moderator_api] No inputs were provided")
         return None
 
     for attempt in range(max_attempts):
         client, encrypted_key = await api.get_api_client(guild_id)
         if not client:
-            print("No available API key.")
+            print("[moderator_api] No available API key.")
             await asyncio.sleep(0.5)
             continue
         try:
@@ -335,19 +336,19 @@ async def moderator_api(text: str | None = None,
                 input=inputs
             )
         except openai.AuthenticationError:
-            print("Authentication failed. Marking key as not working.")
+            print("[moderator_api] Authentication failed. Marking key as not working.")
             await api.set_api_key_not_working(encrypted_key)
             continue
         except openai.RateLimitError as e:
-            print(f"Rate limit error: {e}. Marking key as not working.")
+            print(f"[moderator_api] Rate limit error: {e}. Marking key as not working.")
             await api.set_api_key_not_working(encrypted_key)
             continue
         except Exception as e:
-            print(f"Unexpected error from OpenAI API: {e}")
+            print(f"[moderator_api] Unexpected error from OpenAI API: {e}")
             continue
 
         if not response or not response.results:
-            print("No moderation results returned.")
+            print("[moderator_api] No moderation results returned.")
             continue
 
         # Mark key healthy again if we got a good response
@@ -365,7 +366,7 @@ async def moderator_api(text: str | None = None,
                 continue
             return category
         return None
-    print("All API key attempts failed.")
+    print("[moderator_api] All API key attempts failed.")
     return None
 
 async def process_image(original_filename: str,
