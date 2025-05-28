@@ -43,6 +43,97 @@ class Monitoring(commands.Cog):
         self.invite_cache[invite.guild.id] = await invite.guild.invites()
 
     @commands.Cog.listener()
+    async def on_member_join(self, member):
+        try:
+            # Fetch the updated list of invites
+            new_invites = await member.guild.invites()
+            old_invites = self.invite_cache.get(member.guild.id, [])
+
+            # Find the invite that was used
+            used_invite = None
+            for old_invite in old_invites:
+                for new_invite in new_invites:
+                    if old_invite.code == new_invite.code and old_invite.uses < new_invite.uses:
+                        used_invite = new_invite
+                        break
+                if used_invite:
+                    break
+
+            # Update the cache
+            self.invite_cache[member.guild.id] = new_invites
+
+            # Create the embed message
+            embed = Embed(
+                title="Member Joined",
+                description=f"{member.mention} has joined the server.",
+                color=Color.green()
+            )
+
+            avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
+            embed.set_thumbnail(url=avatar_url)
+
+            embed.add_field(
+                name="Account Created",
+                value=format_dt(member.created_at or utcnow(), style='F'),
+                inline=True
+            )
+
+            embed.add_field(
+                name="Joined At",
+                value=format_dt(member.joined_at or utcnow(), style='F'),
+                inline=True
+            )
+
+            if used_invite:
+                inviter = used_invite.inviter
+                embed.add_field(
+                    name="Invited By",
+                    value=f"{inviter.mention} (Code: {used_invite.code})",
+                    inline=True
+                )
+            else:
+                embed.add_field(
+                    name="Invited By",
+                    value="Could not determine inviter.",
+                    inline=True
+                )
+
+            embed.set_footer(text="Bot account" if member.bot else "User account")
+
+            await self.log_event(member.guild, embed=embed)
+
+        except Exception as e:
+            print(f"Failed to log member join: {e}")
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member):
+        try:
+            embed = Embed(
+                title="Member Left",
+                description=f"{member.name} has left the server.",
+                color=Color.red()
+            )
+
+            avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
+            embed.set_thumbnail(url=avatar_url)
+
+            if member.joined_at:
+                duration = utcnow() - member.joined_at
+                days = duration.days
+                embed.add_field(
+                    name="Time in Server",
+                    value=f"{days} day(s)",
+                    inline=True
+                )
+
+            embed.set_footer(text="Bot account" if member.bot else "User account")
+
+            await self.log_event(member.guild, embed=embed)
+
+        except Exception as e:
+            print(f"Failed to log member leave: {e}")
+
+    @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
         channel = self.bot.get_channel(payload.channel_id)
         if not channel:
