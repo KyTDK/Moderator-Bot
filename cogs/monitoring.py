@@ -154,11 +154,21 @@ class Monitoring(commands.Cog):
             embed.set_footer(text=f"User ID: {user.id}")
 
             if message.attachments:
-                attachment = message.attachments[0]
-                if attachment.content_type and attachment.content_type.startswith("image/"):
-                    embed.set_image(url=attachment.url)
-                else:
-                    embed.add_field(name="Attachment", value=f"[{attachment.filename}]({attachment.url})", inline=False)
+                links: list[str] = []
+                for idx, att in enumerate(message.attachments, start=1):
+                    if (
+                        att.content_type
+                        and att.content_type.startswith("image/")
+                        and embed.image.url is None
+                    ):
+                        embed.set_image(url=att.url) 
+                    links.append(f"[{att.filename}]({att.url})")
+
+                embed.add_field(
+                    name=f"Attachments ({len(links)})",
+                    value="\n".join(links)[:1024],   
+                    inline=False,
+                )
         else:
             embed = Embed(
                 title="Message Deleted",
