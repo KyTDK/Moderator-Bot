@@ -133,7 +133,6 @@ class Monitoring(commands.Cog):
         except Exception as e:
             print(f"Failed to log member leave: {e}")
 
-    @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
         channel = self.bot.get_channel(payload.channel_id)
         if not channel:
@@ -154,20 +153,14 @@ class Monitoring(commands.Cog):
             embed.set_footer(text=f"User ID: {user.id}")
 
             if message.attachments:
-                links: list[str] = []
-                for idx, att in enumerate(message.attachments, start=1):
-                    if (
-                        att.content_type
-                        and att.content_type.startswith("image/")
-                        and embed.image.url is None
-                    ):
-                        embed.set_image(url=att.url) 
-                    links.append(f"[{att.filename}]({att.url})")
-
+                bullet_links: list[str] = [
+                    f"• [{att.filename}]({att.url})"
+                    for att in message.attachments
+                ]
                 embed.add_field(
-                    name=f"Attachments ({len(links)})",
-                    value="\n".join(links)[:1024],   
-                    inline=False,
+                    name=f"Attachments ({len(bullet_links)})",
+                    value="\n".join(bullet_links)[:1024],
+                    inline=False
                 )
         else:
             embed = Embed(
