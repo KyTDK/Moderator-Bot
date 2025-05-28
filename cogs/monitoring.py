@@ -144,12 +144,21 @@ class Monitoring(commands.Cog):
             user = message.author
             embed = Embed(
                 title="Message Deleted",
-                description=f"**Author:** {user.mention} ({user.name})\n"
-                            f"**Channel:** {channel.mention}\n"
-                            f"**Content:**\n{message.content}",
+                description=(
+                    f"**Author:** {user.mention} ({user.name})\n"
+                    f"**Channel:** {channel.mention}\n"
+                    f"**Content:**\n{message.content or '[No Text Content]'}"
+                ),
                 color=Color.orange()
             )
-            embed.set_footer(text=f"User ID: {message.author.id}")
+            embed.set_footer(text=f"User ID: {user.id}")
+
+            if message.attachments:
+                attachment = message.attachments[0]
+                if attachment.content_type and attachment.content_type.startswith("image/"):
+                    embed.set_image(url=attachment.url)
+                else:
+                    embed.add_field(name="Attachment", value=f"[{attachment.filename}]({attachment.url})", inline=False)
         else:
             embed = Embed(
                 title="Message Deleted",
