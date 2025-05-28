@@ -133,6 +133,7 @@ class Monitoring(commands.Cog):
         except Exception as e:
             print(f"Failed to log member leave: {e}")
 
+    @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
         channel = self.bot.get_channel(payload.channel_id)
         if not channel:
