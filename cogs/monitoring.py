@@ -15,13 +15,14 @@ class Monitoring(commands.Cog):
         id = await mysql.get_settings(guild_id, "monitor-channel")
         return int(id) if id else None
 
-    async def log_event(self, guild: discord.Guild, message=None, embed=None):
+    async def log_event(self, guild: discord.Guild, message=None, embed=None, mention_user: bool = True):
         channel_id = await self.get_monitor_channel(guild.id)
         if channel_id:
             channel = guild.get_channel(channel_id)
             if channel:
                 try:
-                    await channel.send(content=message if message else None, embed=embed)
+                    allowed = discord.AllowedMentions.all() if mention_user else discord.AllowedMentions.none()
+                    await channel.send(content=message if message else None, embed=embed, allowed_mentions=allowed)
                 except discord.Forbidden:
                     print(f"Missing access to send messages in channel ID {channel.id}")
 
@@ -49,9 +50,10 @@ class Monitoring(commands.Cog):
 
         message = payload.cached_message
         if message and not message.author.bot:
+            user = message.author
             embed = Embed(
                 title="Message Deleted",
-                description=f"**Author:** {message.author.name}#{message.author.discriminator}\n"
+                description=f"**Author:** {user.mention} ({user.name})\n"
                             f"**Channel:** {channel.mention}\n"
                             f"**Content:**\n{message.content}",
                 color=Color.orange()
@@ -64,7 +66,7 @@ class Monitoring(commands.Cog):
                 color=Color.orange()
             )
 
-        await self.log_event(channel.guild, embed=embed)
+        await self.log_event(channel.guild, embed=embed, mention_user=False)
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
@@ -78,11 +80,11 @@ class Monitoring(commands.Cog):
 
             embed = Embed(
                 title="Reaction Added",
-                description=(f"{user.mention} reacted with {reaction.emoji} in {channel.mention}"),
+                description=(f"{user.mention} ({user.name}) reacted with {reaction.emoji} in {channel.mention}"),
                 color=Color.blue()
             )
             embed.set_footer(text=f"User ID: {user.id}")
-            await self.log_event(guild, embed=embed)
+            await self.log_event(guild, embed=embed, mention_user=False)
 
         except Exception as e:
             print(f"[on_reaction_add] Error: {e}")
@@ -94,21 +96,22 @@ class Monitoring(commands.Cog):
 
         embed = Embed(
             title="Message Edited",
-            description=f"**Author:** {before.author.name}#{before.author.discriminator}\n"
+            description=f"**Author:** {before.author.mention} ({before.author.name})\n"
                         f"**Channel:** {before.channel.mention}\n",
             color=Color.gold()
         )
         embed.add_field(name="Before", value=before.content or "[No Content]", inline=False)
         embed.add_field(name="After", value=after.content or "[No Content]", inline=False)
         embed.set_footer(text=f"User ID: {before.author.id}")
-        await self.log_event(before.guild, embed=embed)
+        await self.log_event(before.guild, embed=embed, mention_user=False)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, MissingPermissions):
+            user = ctx.author
             embed = Embed(
                 title="Permission Error",
-                description=f"{ctx.author.mention} attempted to run `{ctx.command}` without required permissions.",
+                description=f"{user.mention} ({user.name}) attempted to run `{ctx.command}` without required permissions.",
                 color=Color.red()
             )
         else:
@@ -117,7 +120,7 @@ class Monitoring(commands.Cog):
                 description=f"An error occurred in `{ctx.command}`:\n```{error}```",
                 color=Color.red()
             )
-        await self.log_event(ctx.guild, embed=embed)
+        await self.log_event(ctx.guild, embed=embed, mention_user=False)
             
 async def setup(bot: commands.Bot):
     await bot.add_cog(Monitoring(bot))
