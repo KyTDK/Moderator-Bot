@@ -10,19 +10,30 @@ class Monitoring(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.invite_cache = {}
+        self.message_cache = {}
 
     async def get_monitor_channel(self, guild_id: int) -> Optional[int]:
         id = await mysql.get_settings(guild_id, "monitor-channel")
         return int(id) if id else None
 
-    async def log_event(self, guild: discord.Guild, message=None, embed=None, mention_user: bool = True):
+    async def log_event(
+        self,
+        guild: discord.Guild,
+        message=None,
+        embed=None,
+        mention_user: bool = True
+    ):
         channel_id = await self.get_monitor_channel(guild.id)
         if channel_id:
             channel = guild.get_channel(channel_id)
             if channel:
                 try:
                     allowed = discord.AllowedMentions.all() if mention_user else discord.AllowedMentions.none()
-                    await channel.send(content=message if message else None, embed=embed, allowed_mentions=allowed)
+                    await channel.send(
+                        content=message if message else None,
+                        embed=embed,
+                        allowed_mentions=allowed
+                    )
                 except discord.Forbidden:
                     print(f"Missing access to send messages in channel ID {channel.id}")
 
@@ -134,12 +145,22 @@ class Monitoring(commands.Cog):
             print(f"Failed to log member leave: {e}")
 
     @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if not message.author.bot:
+            self.message_cache[message.id] = message
+
+            if len(self.message_cache) > 10000:
+                oldest = next(iter(self.message_cache))
+                self.message_cache.pop(oldest)
+
+    @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
         channel = self.bot.get_channel(payload.channel_id)
         if not channel:
             return
 
-        message = payload.cached_message
+        message = payload.cached_message or self.message_cache.pop(payload.message_id, None)
+
         if message and not message.author.bot:
             user = message.author
             embed = Embed(
@@ -154,15 +175,26 @@ class Monitoring(commands.Cog):
             embed.set_footer(text=f"User ID: {user.id}")
 
             if message.attachments:
-                bullet_links: list[str] = [
-                    f"• [{att.filename}]({att.url})"
-                    for att in message.attachments
-                ]
+                bullet_links = []
+                for a in message.attachments:
+                    bullet_links.append(f"• [{a.filename}]({a.url})")
+
                 embed.add_field(
                     name=f"Attachments ({len(bullet_links)})",
                     value="\n".join(bullet_links)[:1024],
                     inline=False
                 )
+
+            if message.embeds:
+                for i, rich_embed in enumerate(message.embeds):
+                    try:
+                        embed.add_field(
+                            name=f"Embed {i+1}",
+                            value=f"{rich_embed.title or '[No Title]'}\n{rich_embed.description or '[No Description]'}",
+                            inline=False
+                        )
+                    except Exception as e:
+                        print(f"[Embed parse fail] {e}")
         else:
             embed = Embed(
                 title="Message Deleted",
