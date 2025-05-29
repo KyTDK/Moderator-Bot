@@ -161,29 +161,47 @@ class Monitoring(commands.Cog):
 
         message = payload.cached_message or self.message_cache.pop(payload.message_id, None)
 
-        if message.author.id != self.bot.user.id:
+        user = message.author if message else None
+
+        if user and user.bot:
             return
-        elif message:
-            user = message.author
+
+        deleter: str | None = None
+        try:
+            async for entry in channel.guild.audit_logs(
+                action=discord.AuditLogAction.message_delete,
+                limit=5
+            ):
+                if (
+                    entry.extra.channel.id == channel.id and
+                    entry.target.id == (user.id if user else None) and
+                    (utcnow() - entry.created_at).total_seconds() < 20
+                ):
+                    deleter = f"{entry.user.mention} ({entry.user.name})"
+                    break
+        except discord.Forbidden:
+            pass
+        except Exception as e:
+            print(f"[Audit-log lookup] {e}")
+
+        if message:
             embed = Embed(
                 title="Message Deleted",
                 description=(
                     f"**Author:** {user.mention} ({user.name})\n"
                     f"**Channel:** {channel.mention}\n"
-                    f"**Content:**\n{message.content or '[No Text Content]'}"
+                    + (f"**Deleted by:** {deleter}\n" if deleter else "")
+                    + f"**Content:**\n{message.content or '[No Text Content]'}"
                 ),
                 color=Color.orange()
             )
             embed.set_footer(text=f"User ID: {user.id}")
 
             if message.attachments:
-                bullet_links = []
-                for a in message.attachments:
-                    bullet_links.append(f"• [{a.filename}]({a.url})")
-
+                links = [f"• [{a.filename}]({a.url})" for a in message.attachments]
                 embed.add_field(
-                    name=f"Attachments ({len(bullet_links)})",
-                    value="\n".join(bullet_links)[:1024],
+                    name=f"Attachments ({len(links)})",
+                    value="\n".join(links)[:1024],
                     inline=False
                 )
 
@@ -191,7 +209,6 @@ class Monitoring(commands.Cog):
                 for i, rich_embed in enumerate(message.embeds):
                     try:
                         parts = []
-
                         if rich_embed.title:
                             parts.append(f"**{rich_embed.title}**")
                         if rich_embed.description:
@@ -207,7 +224,6 @@ class Monitoring(commands.Cog):
                             parts.append(f"_Footer: {rich_embed.footer.text}_")
 
                         summary = "\n".join(parts)[:1024]
-
                         embed.add_field(
                             name=f"Embed {i+1}",
                             value=summary or "*[Embed content unavailable]*",
@@ -218,7 +234,10 @@ class Monitoring(commands.Cog):
         else:
             embed = Embed(
                 title="Message Deleted",
-                description=f"A message was deleted in {channel.mention}, but content is unavailable.",
+                description=(
+                    f"A message was deleted in {channel.mention}."
+                    + (f"\n**Deleted by:** {deleter}" if deleter else "")
+                ),
                 color=Color.orange()
             )
 
