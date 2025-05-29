@@ -161,7 +161,9 @@ class Monitoring(commands.Cog):
 
         message = payload.cached_message or self.message_cache.pop(payload.message_id, None)
 
-        if message and message.author.id != self.bot.user.id:
+        if message.author.id != self.bot.user.id:
+            return
+        elif message:
             user = message.author
             embed = Embed(
                 title="Message Deleted",
