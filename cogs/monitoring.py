@@ -188,9 +188,27 @@ class Monitoring(commands.Cog):
             if message.embeds:
                 for i, rich_embed in enumerate(message.embeds):
                     try:
+                        parts = []
+
+                        if rich_embed.title:
+                            parts.append(f"**{rich_embed.title}**")
+                        if rich_embed.description:
+                            parts.append(rich_embed.description)
+                        if rich_embed.fields:
+                            for f in rich_embed.fields:
+                                parts.append(f"• **{f.name}**: {f.value}")
+                        if rich_embed.url:
+                            parts.append(f"[Link]({rich_embed.url})")
+                        if rich_embed.author:
+                            parts.append(f"_Author: {rich_embed.author.name}_")
+                        if rich_embed.footer:
+                            parts.append(f"_Footer: {rich_embed.footer.text}_")
+
+                        summary = "\n".join(parts)[:1024]
+
                         embed.add_field(
                             name=f"Embed {i+1}",
-                            value=f"{rich_embed.title or '[No Title]'}\n{rich_embed.description or '[No Description]'}",
+                            value=summary or "*[Embed content unavailable]*",
                             inline=False
                         )
                     except Exception as e:
