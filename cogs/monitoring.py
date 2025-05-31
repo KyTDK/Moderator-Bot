@@ -76,7 +76,7 @@ class Monitoring(commands.Cog):
             # Create the embed message
             embed = Embed(
                 title="Member Joined",
-                description=f"{member.mention} has joined the server.",
+                description=f"{member.mention} ({member.name}) has joined the server.",
                 color=Color.green()
             )
 
@@ -99,7 +99,7 @@ class Monitoring(commands.Cog):
                 inviter = used_invite.inviter
                 embed.add_field(
                     name="Invited By",
-                    value=f"{inviter.mention} (Code: {used_invite.code})",
+                    value=f"{inviter.mention} ({inviter.name}) (Code: {used_invite.code})",
                     inline=True
                 )
             else:
