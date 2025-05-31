@@ -54,26 +54,32 @@ class Monitoring(commands.Cog):
         self.invite_cache[invite.guild.id] = await invite.guild.invites()
 
     @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_join(self, member: discord.Member):
+        used_invite = None
+
+        new_invites = None
         try:
-            # Fetch the updated list of invites
             new_invites = await member.guild.invites()
-            old_invites = self.invite_cache.get(member.guild.id, [])
+        except discord.Forbidden:
+            print(f"[Join Log] Missing 'Manage Server' permission in {member.guild.name}")
+        except Exception as e:
+            print(f"[Join Log] Error fetching invites: {e}")
 
-            # Find the invite that was used
-            used_invite = None
-            for old_invite in old_invites:
-                for new_invite in new_invites:
-                    if old_invite.code == new_invite.code and old_invite.uses < new_invite.uses:
-                        used_invite = new_invite
+        try:
+            if new_invites is not None:
+                old_invites = self.invite_cache.get(member.guild.id, [])
+                for old_invite in old_invites:
+                    for new_invite in new_invites:
+                        if old_invite.code == new_invite.code and old_invite.uses < new_invite.uses:
+                            used_invite = new_invite
+                            break
+                    if used_invite:
                         break
-                if used_invite:
-                    break
+                self.invite_cache[member.guild.id] = new_invites
+        except Exception as e:
+            print(f"[Join Log] Error comparing invite usage: {e}")
 
-            # Update the cache
-            self.invite_cache[member.guild.id] = new_invites
-
-            # Create the embed message
+        try:
             embed = Embed(
                 title="Member Joined",
                 description=f"{member.mention} ({member.name}) has joined the server.",
@@ -114,7 +120,7 @@ class Monitoring(commands.Cog):
             await self.log_event(member.guild, embed=embed)
 
         except Exception as e:
-            print(f"Failed to log member join: {e}")
+            print(f"[Join Log] Failed to send join embed for {member}: {e}")
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
