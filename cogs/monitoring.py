@@ -55,35 +55,45 @@ class Monitoring(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        used_invite = None
+        used_invite: discord.Invite | None = None
+        inviter_reason: str | None = None
 
         new_invites = None
         try:
             new_invites = await member.guild.invites()
         except discord.Forbidden:
-            print(f"[Join Log] Missing 'Manage Server' permission in {member.guild.name}")
+            inviter_reason = "Missing Manage Server permission"
+            print(f"[Join Log] {inviter_reason} in {member.guild.name}")
         except Exception as e:
-            print(f"[Join Log] Error fetching invites: {e}")
+            inviter_reason = f"Error while fetching invites ({e})"
+            print(f"[Join Log] {inviter_reason}")
 
         try:
             if new_invites is not None:
                 old_invites = self.invite_cache.get(member.guild.id, [])
                 for old_invite in old_invites:
                     for new_invite in new_invites:
-                        if old_invite.code == new_invite.code and old_invite.uses < new_invite.uses:
+                        if (
+                            old_invite.code == new_invite.code
+                            and old_invite.uses < new_invite.uses
+                        ):
                             used_invite = new_invite
                             break
                     if used_invite:
                         break
                 self.invite_cache[member.guild.id] = new_invites
+
+                if used_invite is None and inviter_reason is None:
+                    inviter_reason = "Invite cache empty or invite not yet tracked"
         except Exception as e:
-            print(f"[Join Log] Error comparing invite usage: {e}")
+            inviter_reason = f"Error comparing invite usage ({e})"
+            print(f"[Join Log] {inviter_reason}")
 
         try:
             embed = Embed(
                 title="Member Joined",
                 description=f"{member.mention} ({member.name}) has joined the server.",
-                color=Color.green()
+                color=Color.green(),
             )
 
             avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
@@ -91,32 +101,31 @@ class Monitoring(commands.Cog):
 
             embed.add_field(
                 name="Account Created",
-                value=format_dt(member.created_at or utcnow(), style='F'),
-                inline=True
+                value=format_dt(member.created_at or utcnow(), style="F"),
+                inline=True,
             )
 
             embed.add_field(
                 name="Joined At",
-                value=format_dt(member.joined_at or utcnow(), style='F'),
-                inline=True
+                value=format_dt(member.joined_at or utcnow(), style="F"),
+                inline=True,
             )
 
             if used_invite:
                 inviter = used_invite.inviter
                 embed.add_field(
                     name="Invited By",
-                    value=f"{inviter.mention} ({inviter.name}) (Code: {used_invite.code})",
-                    inline=True
+                    value=f"{inviter.mention} — {inviter.name} • Code: `{used_invite.code}`",
+                    inline=True,
                 )
             else:
                 embed.add_field(
                     name="Invited By",
-                    value="Could not determine inviter.",
-                    inline=True
+                    value=f"Could not determine inviter → {inviter_reason or 'Unknown reason'}",
+                    inline=True,
                 )
 
             embed.set_footer(text="Bot account" if member.bot else "User account")
-
             await self.log_event(member.guild, embed=embed)
 
         except Exception as e:
