@@ -13,6 +13,10 @@ RE_REPEATS = re.compile(r"(.)\1{2,}")
 def normalize_text(text: str) -> str:
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
 
+    # Remove user mentions and channel mentions
+    text = re.sub(r"<[@#]!?[0-9]+>", "", text)
+
+    # Flatten repeated characters to a maximum of two
     text = RE_REPEATS.sub(r"\1\1", text)
 
     text = clean(
