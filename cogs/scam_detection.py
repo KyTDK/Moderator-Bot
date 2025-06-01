@@ -21,7 +21,7 @@ EXCLUDE_CHANNELS_SETTING = "exclude-scam-channels"
 
 URL_RE = re.compile(r"https?://[^\s]+")
 
-classifier = pipeline("text-classification", model="mrm8488/bert-tiny-finetuned-sms-spam-detection")
+classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
 
 SAFE_URLS = [
     "tensor.com",
@@ -68,6 +68,8 @@ def is_scam_message(message: str) -> bool:
         if check_url_google_safe_browsing(GOOGLE_API_KEY, url):
             return True
     message = normalize_text(message)
+    if len(message.split()) < 5:
+        return False
     result = classifier(message)[0]
     return result['label'] == 'LABEL_1' and result['score'] > 0.9
 
