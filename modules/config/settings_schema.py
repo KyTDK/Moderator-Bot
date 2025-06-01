@@ -140,4 +140,12 @@ SETTINGS_SCHEMA = {
         default=False,
         choices=["true", "false"]
     ),
+    "use-default-banned-words": Setting(
+        name="use-default-banned-words",
+        description="Use the built-in profanity list for this server.",
+        setting_type=bool,
+        default=False,
+        hidden=True,
+        choices=["true", "false"]
+    ),
 }

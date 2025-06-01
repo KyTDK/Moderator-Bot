@@ -93,7 +93,7 @@ async def setup_hook():
             print(f"Loaded Cog: {filename[:-3]}")
         else:
             print("Unable to load pycache folder.")
-    #await bot.tree.sync()
+    await bot.tree.sync()
     start_topgg_poster(bot)
     await mysql.initialise_and_get_pool()
 

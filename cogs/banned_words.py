@@ -5,45 +5,15 @@ from modules.utils.mysql import execute_query
 import io
 import re
 import discord
+from better_profanity import profanity
 from cleantext import clean
-from rapidfuzz.distance import Levenshtein
-from rapidfuzz import fuzz
-
-def is_match(normalized: str, banned: str) -> bool:
-    if normalized == banned:
-        return True
-
-    distance = Levenshtein.distance(normalized, banned)
-    max_len = max(len(normalized), len(banned))
-    similarity = 1 - distance / max_len
-
-    if similarity > 0.85:
-        return True
-
-    if normalized.startswith(banned) and len(normalized) <= len(banned) + 3:
-        return True
-
-    if len(normalized) >= 4 and normalized[0] == banned[0]:
-        if fuzz.partial_ratio(normalized, banned) > 88:
-            return True
-
-    return False
+from modules.utils import mysql
 
 RE_REPEATS = re.compile(r"(.)\1{2,}")
 def normalize_text(text: str) -> str:
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-    
-    # Early collapse
-    text = RE_REPEATS.sub(r"\1\1", text)
 
-    leet_map = {
-        '1': 'i', '!': 'i', '|': 'i',
-        '@': 'a', '$': 's', '5': 's',
-        '0': 'o', '3': 'e', '7': 't',
-        '+': 't', '9': 'g', '6': 'g'
-    }
-    for k, v in leet_map.items():
-        text = text.replace(k, v)
+    text = RE_REPEATS.sub(r"\1\1", text)
 
     text = clean(
         text,
@@ -59,12 +29,12 @@ def normalize_text(text: str) -> str:
         lang="en"
     )
 
-    text = re.sub(r'\s+', '', text)
+    text = re.sub(r'\s+', ' ', text).strip() 
     return text
 
 class BannedWordsCog(commands.Cog):
-    """A cog for banned words handling and relevant commands."""
 
+    """A cog for banned words handling and relevant commands."""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
     
@@ -74,6 +44,37 @@ class BannedWordsCog(commands.Cog):
         default_permissions=discord.Permissions(manage_messages=True),
         guild_only=True
     )
+
+    @bannedwords_group.command(
+        name="defaults",
+        description="Enable or disable the built-in profanity list."
+    )
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(name="enable",  value="true"),
+            app_commands.Choice(name="disable", value="false"),
+            app_commands.Choice(name="status",  value="status"),
+        ]
+    )
+    async def set_default_scan(self, interaction: Interaction, action: str):
+        """Toggle or view the default-list setting for this guild."""
+        guild_id = interaction.guild.id
+
+        if action == "status":
+            current = await mysql.get_settings(guild_id, "use-default-banned-words")
+            state   = "enabled" if current is not False else "disabled"
+            await interaction.response.send_message(
+                f"The built-in profanity list is **{state}**.", ephemeral=True
+            )
+            return
+
+        new_value = (action == "true")
+        await mysql.update_settings(guild_id, "use-default-banned-words", new_value)
+
+        await interaction.response.send_message(
+            f"Built-in profanity list **{'enabled' if new_value else 'disabled'}**.",
+            ephemeral=True
+        )
 
     @bannedwords_group.command(
         name="add",
@@ -179,43 +180,40 @@ class BannedWordsCog(commands.Cog):
 
         guild_id = message.guild.id
 
-        rows, _ = await execute_query(
-            "SELECT word FROM banned_words WHERE guild_id = %s",
-            (guild_id,),
-            fetch_all=True
-        )
+        use_defaults = await mysql.get_settings(guild_id, "use-default-banned-words") is not False
 
-        banned_words = [row[0].lower() for row in rows]
-        if not banned_words:
+        rows, _ = await execute_query(
+            "SELECT word FROM banned_words WHERE guild_id = %s", (guild_id,), fetch_all=True
+        )
+        custom = [r[0].lower() for r in rows]
+
+        if use_defaults:
+            profanity.load_censor_words()
+            if custom:
+                profanity.add_censor_words(custom)
+        else:
+            profanity.load_censor_words(custom)
+
+        normalised = normalize_text(message.content.lower())
+        collapsed = normalised.replace(" ", "")
+
+        if not (
+            profanity.contains_profanity(normalised)
+            or profanity.contains_profanity(collapsed)
+        ):
             return
 
-        normalized = normalize_text(message.content)
-
-        for banned in banned_words:
-            # Fuzzy match with threshold
-            if is_match(normalized, banned):
-                break
-        else:
-            suffix  = r'(?:ed|er|ing)?'
-            pattern = re.compile(
-                r'\b(?:' + '|'.join(fr'{re.escape(w)}{suffix}' for w in banned_words) + r')\b',
-                flags=re.I
-            )
-            if not pattern.search(message.content):
-                return
-
-        # Delete + notify
         try:
             await message.delete()
         except (discord.Forbidden, discord.NotFound):
-            print(f"Could not delete message {message.id} in {message.channel.id}")
+            print(f"Cannot delete message {message.id}")
 
         try:
             await message.channel.send(
                 f"{message.author.mention}, your message contained a banned word and was removed."
             )
         except discord.Forbidden:
-            print(f"Missing permission to send message in {message.channel.id}")
+            pass
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BannedWordsCog(bot))
