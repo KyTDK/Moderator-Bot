@@ -180,7 +180,7 @@ class BannedWordsCog(commands.Cog):
 
         guild_id = message.guild.id
 
-        use_defaults = await mysql.get_settings(guild_id, "use-default-banned-words") is not False
+        use_defaults = await mysql.get_settings(guild_id, "use-default-banned-words") == True
 
         rows, _ = await execute_query(
             "SELECT word FROM banned_words WHERE guild_id = %s", (guild_id,), fetch_all=True
