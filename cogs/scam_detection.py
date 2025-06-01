@@ -25,7 +25,7 @@ classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
 def check_url_google_safe_browsing(api_key, url):
     endpoint = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={api_key}"
     body = {
-        "client": {"clientId": "your-app", "clientVersion": "1.0"},
+        "client": {"clientId": "ModeratorBot", "clientVersion": "1.0"},
         "threatInfo": {
             "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
             "platformTypes": ["ANY_PLATFORM"],
