@@ -91,14 +91,7 @@ class ScamDetectionCog(commands.Cog):
         default_permissions=discord.Permissions(manage_messages=True),
     )
 
-    exclude_channel_group = app_commands.Group(
-        name="exclude_channels",
-        description="Manage channels excluded from scam detection.",
-        parent=settings_group,
-        default_permissions=discord.Permissions(manage_messages=True),
-    )
-
-    @exclude_channel_group.command(name="add", description="Exclude a channel from scam detection.")
+    @settings_group.command(name="exclude_channel_add", description="Exclude a channel from scam detection.")
     @app_commands.describe(channel="The channel to exclude")
     async def exclude_channel_add(self, interaction: Interaction, channel: discord.TextChannel):
         gid = interaction.guild.id
@@ -114,7 +107,7 @@ class ScamDetectionCog(commands.Cog):
             f"Channel {channel.mention} has been excluded from scam detection.", ephemeral=True
         )
     
-    @exclude_channel_group.command(name="remove", description="Remove a channel from the exclusion list.")
+    @settings_group.command(name="exclude_channel_remove", description="Remove a channel from the exclusion list.")
     @app_commands.describe(channel="The channel to remove from exclusion")
     async def exclude_channel_remove(self, interaction: Interaction, channel: discord.TextChannel):
         gid = interaction.guild.id
@@ -130,7 +123,7 @@ class ScamDetectionCog(commands.Cog):
             f"Channel {channel.mention} has been removed from the exclusion list.", ephemeral=True
         )
     
-    @exclude_channel_group.command(name="list", description="List all excluded channels.")
+    @settings_group.command(name="exclude_channel_list", description="List all excluded channels.")
     async def exclude_channel_list(self, interaction: Interaction):
         gid = interaction.guild.id
         excluded_channels = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
