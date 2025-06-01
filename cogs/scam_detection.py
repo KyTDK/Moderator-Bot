@@ -1,11 +1,17 @@
+import os
 from discord.ext import commands
 from discord import app_commands, Interaction, Message
+from dotenv import load_dotenv
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
 import re
 from modules.utils.strike import validate_action_with_duration
 from transformers import pipeline
 from cogs.banned_words import normalize_text
+import requests
+
+load_dotenv()
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 DELETE_SETTING = "delete-scam-messages"
 ACTION_SETTING = "scam-detection-action"
@@ -15,7 +21,29 @@ URL_RE = re.compile(r"(https?://|www\.)\S+")
 
 classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
 
+
+def check_url_google_safe_browsing(api_key, url):
+    endpoint = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={api_key}"
+    body = {
+        "client": {"clientId": "your-app", "clientVersion": "1.0"},
+        "threatInfo": {
+            "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+            "platformTypes": ["ANY_PLATFORM"],
+            "threatEntryTypes": ["URL"],
+            "threatEntries": [{"url": url}]
+        }
+    }
+    response = requests.post(endpoint, json=body)
+    data = response.json()
+    return bool(data.get("matches"))
+
 def is_scam_message(message: str) -> bool:
+    # Extract URLs from the message
+    urls = URL_RE.findall(message)
+    # Check each URL against Google Safe Browsing
+    for url in urls:
+        if not check_url_google_safe_browsing(GOOGLE_API_KEY, url):
+            return False
     message = normalize_text(message)
     result = classifier(message)[0]
     return result['label'] == 'LABEL_1' and result['score'] > 0.9
