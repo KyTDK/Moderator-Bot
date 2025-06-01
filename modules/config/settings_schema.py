@@ -172,4 +172,11 @@ SETTINGS_SCHEMA = {
         hidden=True,
         choices=["true", "false"]
     ),
+    "exclude-scam-channels": Setting(
+        name="exclude-scam-channels",
+        description="Channels to exclude from scam detection.",
+        setting_type=list[discord.TextChannel],
+        default=[],
+        hidden=True,
+    ),
 }

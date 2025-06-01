@@ -1,4 +1,5 @@
 import os
+import discord
 from discord.ext import commands
 from discord import app_commands, Interaction, Message
 from dotenv import load_dotenv
@@ -16,6 +17,7 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 DELETE_SETTING = "delete-scam-messages"
 ACTION_SETTING = "scam-detection-action"
 AI_DECTION_SETTING = "ai-scam-detection"
+EXCLUDE_CHANNELS_SETTING = "exclude-scam-channels"
 
 URL_RE = re.compile(r"https?://[^\s]+")
 
@@ -79,13 +81,70 @@ class ScamDetectionCog(commands.Cog):
         name="scam",
         description="Scam-detection configuration and pattern management.",
         guild_only=True,
+        default_permissions=discord.Permissions(manage_messages=True),
     )
 
     settings_group = app_commands.Group(
         name="settings",
         description="View / change scam-detection settings.",
         parent=scam_group,
+        default_permissions=discord.Permissions(manage_messages=True),
     )
+
+    exclude_channel_group = app_commands.Group(
+        name="exclude_channels",
+        description="Manage channels excluded from scam detection.",
+        parent=scam_group,
+        default_permissions=discord.Permissions(manage_messages=True),
+    )
+
+    @exclude_channel_group.command(name="add", description="Exclude a channel from scam detection.")
+    @app_commands.describe(channel="The channel to exclude")
+    async def exclude_channel_add(self, interaction: Interaction, channel: Message.channel):
+        gid = interaction.guild.id
+        if channel.id in await get_settings(gid, EXCLUDE_CHANNELS_SETTING):
+            await interaction.response.send_message(
+                f"Channel {channel.mention} is already excluded from scam detection.", ephemeral=True
+            )
+            return
+        current_excluded = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
+        current_excluded.append(channel.id)
+        await update_settings(gid, EXCLUDE_CHANNELS_SETTING, current_excluded)
+        await interaction.response.send_message(
+            f"Channel {channel.mention} has been excluded from scam detection.", ephemeral=True
+        )
+    
+    @exclude_channel_group.command(name="remove", description="Remove a channel from the exclusion list.")
+    @app_commands.describe(channel="The channel to remove from exclusion")
+    async def exclude_channel_remove(self, interaction: Interaction, channel: Message.channel):
+        gid = interaction.guild.id
+        current_excluded = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
+        if channel.id not in current_excluded:
+            await interaction.response.send_message(
+                f"Channel {channel.mention} is not excluded from scam detection.", ephemeral=True
+            )
+            return
+        current_excluded.remove(channel.id)
+        await update_settings(gid, EXCLUDE_CHANNELS_SETTING, current_excluded)
+        await interaction.response.send_message(
+            f"Channel {channel.mention} has been removed from the exclusion list.", ephemeral=True
+        )
+    
+    @exclude_channel_group.command(name="list", description="List all excluded channels.")
+    async def exclude_channel_list(self, interaction: Interaction):
+        gid = interaction.guild.id
+        excluded_channels = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
+        if not excluded_channels:
+            await interaction.response.send_message("No channels are currently excluded from scam detection.", ephemeral=True)
+            return
+        channels = [interaction.guild.get_channel(cid) for cid in excluded_channels if interaction.guild.get_channel(cid)]
+        if not channels:
+            await interaction.response.send_message("No valid excluded channels found.", ephemeral=True)
+            return
+        channel_mentions = ", ".join(channel.mention for channel in channels)
+        await interaction.response.send_message(
+            f"Excluded channels: {channel_mentions}", ephemeral=True
+        )
 
     @settings_group.command(name="delete", description="Toggle or view auto-delete.")
     @app_commands.describe(action="enable | disable | status")
