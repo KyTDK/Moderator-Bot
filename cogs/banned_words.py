@@ -191,8 +191,10 @@ class BannedWordsCog(commands.Cog):
             profanity.load_censor_words()
             if custom:
                 profanity.add_censor_words(custom)
-        else:
+        elif custom:
             profanity.load_censor_words(custom)
+        else:
+            return  # No banned words to check against
 
         normalised = normalize_text(message.content.lower())
         collapsed = normalised.replace(" ", "")
