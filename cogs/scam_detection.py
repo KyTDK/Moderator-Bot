@@ -21,7 +21,7 @@ EXCLUDE_CHANNELS_SETTING = "exclude-scam-channels"
 
 URL_RE = re.compile(r"https?://[^\s]+")
 
-classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
+classifier = pipeline("text-classification", model="mrm8488/bert-tiny-finetuned-sms-spam-detection")
 
 SAFE_URLS = [
     "tensor.com",
