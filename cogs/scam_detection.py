@@ -16,7 +16,7 @@ classifier = pipeline("text-classification", model="mrm8488/bert-tiny-finetuned-
 
 def is_scam_message(message: str) -> bool:
     result = classifier(message)[0]
-    return result['label'].lower() == 'spam' and result['score'] > 0.9
+    return result['label'].lower() == 'spam' and result['score'] > 0.8
 
 class ScamDetectionCog(commands.Cog):
     """Detect scam messages / URLs and let mods manage patterns + settings."""
