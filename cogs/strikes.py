@@ -8,6 +8,7 @@ import io
 from discord import File
 from modules.utils import mysql, time
 from modules.utils.discord_utils import safe_get_user
+from modules.utils.strike import validate_action_with_duration
 from modules.variables.TimeString import TimeString
 
 class StrikesCog(commands.Cog):
@@ -204,27 +205,16 @@ class StrikesCog(commands.Cog):
     async def strike_action(self, interaction: Interaction, number_of_strikes: int, action: str, duration: str = None):
         """Configure strike actions."""
         await interaction.response.defer(ephemeral=True)
-        # Validate action and duration
-        valid_actions = ["ban", "kick", "timeout", "remove"]
-        if action not in valid_actions:
-            await interaction.followup.send(
-                f"Invalid action. Valid actions are: {', '.join(valid_actions)}.",
-                ephemeral=True,
-            )
-            return
 
-        if action == "timeout" and duration is None:
-            await interaction.followup.send(
-                "Duration is required for timeout action.",
-                ephemeral=True,
-            )
-            return
-        
-        if time.parse_duration(duration) is None and duration is not None:
-            await interaction.followup.send(
-                "Invalid duration format. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively.",
-                ephemeral=True,
-            )
+        # Validate action and duration        
+        action_str = await validate_action_with_duration(
+            interaction=interaction,
+            action=action,
+            duration=duration,
+            valid_actions=["ban", "kick", "timeout", "remove"],
+            ephemeral=True,
+        )
+        if action_str is None:
             return
 
         strike_actions = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}

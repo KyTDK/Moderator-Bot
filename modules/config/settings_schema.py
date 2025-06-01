@@ -148,4 +148,20 @@ SETTINGS_SCHEMA = {
         hidden=True,
         choices=["true", "false"]
     ),
+    "delete-scam-messages": Setting(
+        name="delete-scam-messages",
+        description="Automatically delete messages that match scam patterns or URLs.",
+        setting_type=bool,
+        default=True,
+        hidden=True,
+        choices=["true", "false"]
+    ),
+    "scam-detection-action": Setting(
+        name="scam-detection-action",
+        description="Action to take when a scam message is detected.",
+        setting_type=str,
+        hidden=True,
+        default="timeout:1d",
+        choices=["strike", "strike:2d", "kick", "ban", "timeout:1d", "timeout:7d"],
+    ),
 }

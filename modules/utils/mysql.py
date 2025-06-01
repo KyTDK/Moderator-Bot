@@ -121,6 +121,49 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS scam_messages (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    guild_id BIGINT NOT NULL,
+                    pattern TEXT NOT NULL,
+                    added_by BIGINT,
+                    added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    global_verified BOOLEAN DEFAULT FALSE,
+                    INDEX (guild_id),
+                    INDEX (pattern(255))
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS scam_users (
+                    user_id BIGINT NOT NULL,
+                    guild_id BIGINT NOT NULL,
+                    first_detected DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    matched_message_id BIGINT,
+                    matched_pattern TEXT,
+                    matched_url TEXT,
+                    global_verified BOOLEAN DEFAULT FALSE,
+                    PRIMARY KEY (user_id, guild_id),
+                    INDEX (user_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS scam_urls (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    guild_id BIGINT NOT NULL,
+                    full_url TEXT NOT NULL,
+                    added_by BIGINT,
+                    added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    global_verified BOOLEAN DEFAULT FALSE,
+                    INDEX (guild_id),
+                    INDEX (full_url(255))
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
             await conn.commit()
         finally:
             conn.close()
@@ -218,7 +261,6 @@ async def get_settings(guild_id: int, settings_key: str | None = None):
         result[key] = value
 
     return result
-
 
 async def update_settings(guild_id: int, settings_key: str, settings_value):
     settings = await get_settings(guild_id)

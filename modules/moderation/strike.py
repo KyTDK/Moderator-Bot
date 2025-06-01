@@ -28,7 +28,7 @@ async def perform_disciplinary_action(
     user: Member,
     bot: commands.Bot,
     action_string: str,
-    reason: str = "NSFW profile picture detected",
+    reason: str = "No reason provided",
     source: str = "generic"
 ) -> Optional[str]:
     """Executes a configured action string on a user."""
@@ -72,7 +72,7 @@ async def perform_disciplinary_action(
         return f"Unknown action: '{action_string}'"
 
     except Exception as e:
-        print(f"[NSFW PFP Action Error] {user}: {e}")
+        print(f"[Disciplinary Action Error] {user}: {e}")
         return f"Action failed: {action_string}"
 
 async def strike(
