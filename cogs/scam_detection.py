@@ -94,7 +94,7 @@ class ScamDetectionCog(commands.Cog):
     exclude_channel_group = app_commands.Group(
         name="exclude_channels",
         description="Manage channels excluded from scam detection.",
-        parent=scam_group,
+        parent=settings_group,
         default_permissions=discord.Permissions(manage_messages=True),
     )
 
