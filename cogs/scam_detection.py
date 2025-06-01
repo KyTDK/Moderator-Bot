@@ -151,6 +151,19 @@ class ScamDetectionCog(commands.Cog):
         listing = "\n".join(f"- {p} ({'✅' if v else '❌'})" for p, v in rows)
         await interaction.response.send_message(f"**Patterns:**\n{listing}", ephemeral=True)
 
+    @scam_group.command(name="list_urls", description="Show this guild’s scam URLs.")
+    async def list_urls(self, interaction: Interaction):
+        gid = interaction.guild.id
+        rows, _ = await execute_query(
+            "SELECT full_url, global_verified FROM scam_urls WHERE guild_id=%s",
+            (gid,), fetch_all=True,
+        )
+        if not rows:
+            await interaction.response.send_message("No scam URLs recorded.", ephemeral=True)
+            return
+        listing = "\n".join(f"- {url} ({'✅' if v else '❌'})" for url, v in rows)
+        await interaction.response.send_message(f"**Scam URLs:**\n{listing}", ephemeral=True)
+
     @commands.Cog.listener()
     async def on_message(self, message: Message):
         if message.author.bot or not message.guild:
