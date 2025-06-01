@@ -311,6 +311,11 @@ class ScamDetectionCog(commands.Cog):
         delete_flag = await get_settings(gid, DELETE_SETTING)
         action_flag = await get_settings(gid, ACTION_SETTING)
         ai_detection_flag = await get_settings(gid, AI_DECTION_SETTING)
+        exclude_channels = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
+
+        # Check if the channel is excluded
+        if message.channel.id in exclude_channels:
+            return
 
         # fetch patterns / URLs
         patterns, _ = await execute_query(
