@@ -224,7 +224,6 @@ class ScamDetectionCog(commands.Cog):
 
         # If no pattern or URL matched, check via AI (if enabled)
         if not (matched_pattern or matched_url):
-            print("No pattern or URL matched, checking AI detection...")
             if not ai_detection_flag:
                 return
             if not is_scam_message(content_l):
