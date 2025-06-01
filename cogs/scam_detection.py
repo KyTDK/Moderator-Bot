@@ -21,8 +21,28 @@ URL_RE = re.compile(r"https?://[^\s]+")
 
 classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
 
+SAFE_URLS = [
+    "tensor.com",
+    "discord.com",
+    "youtube.com",
+    "google.com",
+    "reddit.com",
+    "github.com",
+    "twitter.com",
+    "facebook.com",
+    "instagram.com",
+    "linkedin.com",
+    "wikipedia.org",
+    "stackoverflow.com",
+    "medium.com"
+]
 
 def check_url_google_safe_browsing(api_key, url):
+    # Check if the URL is in the list of safe URLs
+    if any(safe_url in url for safe_url in SAFE_URLS):
+        print(f"URL {url} is in the safe list, skipping Google Safe Browsing check.")
+        return False
+
     endpoint = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={api_key}"
     body = {
         "client": {"clientId": "ModeratorBot", "clientVersion": "1.0"},
