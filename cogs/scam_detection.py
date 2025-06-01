@@ -5,6 +5,7 @@ from modules.moderation import strike
 import re
 from modules.utils.strike import validate_action_with_duration
 from transformers import pipeline
+from cogs.banned_words import normalize_text
 
 DELETE_SETTING = "delete-scam-messages"
 ACTION_SETTING = "scam-detection-action"
@@ -15,6 +16,7 @@ URL_RE = re.compile(r"(https?://|www\.)\S+")
 classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
 
 def is_scam_message(message: str) -> bool:
+    message = normalize_text(message)
     result = classifier(message)[0]
     return result['label'] == 'LABEL_1' and result['score'] > 0.9
 
