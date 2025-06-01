@@ -3,13 +3,20 @@ from discord import app_commands, Interaction, Message
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
 import re
-from modules.utils import time
 from modules.utils.strike import validate_action_with_duration
+from transformers import pipeline
 
 DELETE_SETTING = "delete-scam-messages"
 ACTION_SETTING = "scam-detection-action"
+AI_DECTION_SETTING = "ai-scam-detection"
 
 URL_RE = re.compile(r"(https?://|www\.)\S+")
+
+classifier = pipeline("text-classification", model="mrm8488/bert-tiny-finetuned-sms-spam-detection")
+
+def is_scam_message(message: str) -> bool:
+    result = classifier(message)[0]
+    return result['label'].lower() == 'spam' and result['score'] > 0.9
 
 class ScamDetectionCog(commands.Cog):
     """Detect scam messages / URLs and let mods manage patterns + settings."""
@@ -52,6 +59,29 @@ class ScamDetectionCog(commands.Cog):
             f"Auto-delete **{action.value}d**.", ephemeral=True
         )
 
+    @settings_group.command(name="ai_detection", description="Toggle or view AI scam detection.")
+    @app_commands.describe(action="enable | disable | status")
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(name="enable",  value="enable"),
+            app_commands.Choice(name="disable", value="disable"),
+            app_commands.Choice(name="status",  value="status"),
+        ]
+    )
+    async def setting_ai_detection(self, interaction: Interaction,
+                                   action: app_commands.Choice[str]):
+        gid = interaction.guild.id
+        if action.value == "status":
+            flag = await get_settings(gid, AI_DECTION_SETTING)
+            await interaction.response.send_message(
+                f"AI scam detection is **{'enabled' if flag else 'disabled'}**.", ephemeral=True
+            )
+            return
+        await update_settings(gid, AI_DECTION_SETTING, action.value == "enable")
+        await interaction.response.send_message(
+            f"AI scam detection **{action.value}d**.", ephemeral=True
+        )
+
     @settings_group.command(name="action", description="Set the scam punishment action.")
     @app_commands.describe(
         action="Action: strike, kick, ban, timeout",
@@ -84,10 +114,12 @@ class ScamDetectionCog(commands.Cog):
         gid = interaction.guild.id
         delete_setting = await get_settings(gid, DELETE_SETTING)
         action_setting = await get_settings(gid, ACTION_SETTING)
+        ai_scam_detection = await get_settings(gid, AI_DECTION_SETTING)
 
         await interaction.response.send_message(
             f"**Scam Settings:**\n"
             f"- Delete scam messages: `{delete_setting}`\n"
+            f"- AI scam detection: `{ai_scam_detection}`\n"
             f"- Scam action: `{action_setting}`",
             ephemeral=True
         )
@@ -175,6 +207,7 @@ class ScamDetectionCog(commands.Cog):
         # load settings
         delete_flag = await get_settings(gid, DELETE_SETTING)
         action_flag = await get_settings(gid, ACTION_SETTING)
+        ai_detection_flag = await get_settings(gid, AI_DECTION_SETTING)
 
         # fetch patterns / URLs
         patterns, _ = await execute_query(
@@ -187,16 +220,22 @@ class ScamDetectionCog(commands.Cog):
         )
 
         matched_pattern = next((p[0] for p in patterns if p[0].lower() in content_l), None)
-        matched_url     = next((u[0] for u in urls     if u[0].lower() in content_l), None)
+        matched_url = next((u[0] for u in urls if u[0].lower() in content_l), None)
 
+        # If no pattern or URL matched, check via AI (if enabled)
         if not (matched_pattern or matched_url):
-            return
+            if not ai_detection_flag:
+                return
+            if not is_scam_message(content_l):
+                return
+            matched_pattern = message.content  # Use the full message as the matched pattern
+            matched_url = None
 
         await execute_query(
             """INSERT INTO scam_users
-                 (user_id,guild_id,matched_message_id,matched_pattern,matched_url)
-               VALUES (%s,%s,%s,%s,%s)
-               ON DUPLICATE KEY UPDATE first_detected=first_detected""",
+                (user_id,guild_id,matched_message_id,matched_pattern,matched_url)
+            VALUES (%s,%s,%s,%s,%s)
+            ON DUPLICATE KEY UPDATE first_detected=first_detected""",
             (message.author.id, gid, message.id, matched_pattern, matched_url),
         )
 

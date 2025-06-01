@@ -164,4 +164,12 @@ SETTINGS_SCHEMA = {
         default="timeout:1d",
         choices=["strike", "strike:2d", "kick", "ban", "timeout:1d", "timeout:7d"],
     ),
+    "ai-scam-detection": Setting(
+        name="ai-scam-detection",
+        description="Use AI to detect scam messages.",
+        setting_type=bool,
+        default=False,
+        hidden=True,
+        choices=["true", "false"]
+    ),
 }
