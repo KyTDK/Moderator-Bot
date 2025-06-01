@@ -12,11 +12,11 @@ AI_DECTION_SETTING = "ai-scam-detection"
 
 URL_RE = re.compile(r"(https?://|www\.)\S+")
 
-classifier = pipeline("text-classification", model="mrm8488/bert-tiny-finetuned-sms-spam-detection")
+classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
 
 def is_scam_message(message: str) -> bool:
     result = classifier(message)[0]
-    return result['label'] == 'LABEL_1'
+    return result['label'] == 'LABEL_1' and result['score'] > 0.9
 
 class ScamDetectionCog(commands.Cog):
     """Detect scam messages / URLs and let mods manage patterns + settings."""
@@ -224,6 +224,7 @@ class ScamDetectionCog(commands.Cog):
 
         # If no pattern or URL matched, check via AI (if enabled)
         if not (matched_pattern or matched_url):
+            print("No pattern or URL matched, checking AI detection...")
             if not ai_detection_flag:
                 return
             if not is_scam_message(content_l):
