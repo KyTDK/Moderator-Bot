@@ -71,7 +71,7 @@ def is_scam_message(message: str) -> bool:
     if len(message.split()) < 5:
         return False
     result = classifier(message)[0]
-    return result['label'] == 'LABEL_1' and result['score'] > 0.9
+    return result['label'] == 'LABEL_1' and result['score'] > 0.95
 
 class ScamDetectionCog(commands.Cog):
     """Detect scam messages / URLs and let mods manage patterns + settings."""
@@ -332,22 +332,30 @@ class ScamDetectionCog(commands.Cog):
         matched_pattern = next((p[0] for p in patterns if p[0].lower() in content_l), None)
         matched_url = next((u[0] for u in urls if u[0].lower() in content_l), None)
 
-        # If no pattern or URL matched, check via AI (if enabled)
+        # If no pattern or URL matched, check via AI detection
+        ai_flagged = False
         if not (matched_pattern or matched_url):
-            if not ai_detection_flag:
-                return
-            if not is_scam_message(content_l):
-                return
-            matched_pattern = message.content  # Use the full message as the matched pattern
-            matched_url = None
+            ai_flagged = is_scam_message(content_l)
+            if ai_flagged:
+                matched_pattern = message.content
+                matched_url = None
 
-        await execute_query(
-            """INSERT INTO scam_users
-                (user_id,guild_id,matched_message_id,matched_pattern,matched_url)
-            VALUES (%s,%s,%s,%s,%s)
-            ON DUPLICATE KEY UPDATE first_detected=first_detected""",
-            (message.author.id, gid, message.id, matched_pattern, matched_url),
-        )
+        if matched_pattern or matched_url or ai_flagged: # Log suspected scam user if pattern, url, or AI detection flagged
+            await execute_query(
+                """INSERT INTO scam_users
+                    (user_id,guild_id,matched_message_id,matched_pattern,matched_url)
+                VALUES (%s,%s,%s,%s,%s)
+                ON DUPLICATE KEY UPDATE first_detected=first_detected""",
+                (message.author.id, gid, message.id, matched_pattern, matched_url),
+            )
+        else:
+            return  # No valid trigger; skip action entirely
+        
+        # If AI detected by user has disabled AI detection, skip any further actions
+        # This is to create a database of scammers without taking action that the user has opted out of or
+        # to prevent false positives from AI detection
+        if not ai_detection_flag and ai_flagged:
+            return
 
         if delete_flag:
             try:
