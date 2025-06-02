@@ -61,31 +61,82 @@ def check_url_google_safe_browsing(api_key, url):
     print(f"Checked URL: {url}, Response: {data}")
     return bool(data.get("matches"))
 
-async def is_scam_message(message: str, guild_id: int) -> bool:
-    # Check links setting first
-    check_links = await get_settings(guild_id, CHECK_LINKS_SETTING)
-    urls = URL_RE.findall(message)
+async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None, str | None]:
+    content_l = message.lower()
+    normalized_message = normalize_text(content_l)
 
+    check_links = await get_settings(guild_id, "check-links")
+    ai_detection_flag = await get_settings(guild_id, "ai-scam-detection")
+
+    # Match against DB patterns
+    patterns, _ = await execute_query(
+        "SELECT pattern FROM scam_messages WHERE guild_id=%s OR global_verified=TRUE",
+        (guild_id,), fetch_all=True,
+    )
+    matched_pattern = next((p[0] for p in patterns if p[0].lower() in normalized_message), None)
+
+    # Match against known URLs
+    urls, _ = await execute_query(
+        "SELECT full_url FROM scam_urls WHERE guild_id=%s OR global_verified=TRUE",
+        (guild_id,), fetch_all=True,
+    )
+    matched_url = next((u[0] for u in urls if u[0].lower() in content_l), None)
+
+    # If we found a pattern or URL, return immediately
+    if matched_pattern or matched_url:
+        return True, matched_pattern, matched_url
+
+    # External scan
+    found_urls = URL_RE.findall(message)
     if check_links:
-        for url in urls:
-            if check_url_google_safe_browsing(GOOGLE_API_KEY, url):
+        for url in found_urls:
+            url_lower = url.lower()
+            
+            # Check if the URL is already known
+            already_known, _ = await execute_query(
+                "SELECT 1 FROM scam_urls WHERE (guild_id=%s OR global_verified=TRUE) AND full_url=%s",
+                (guild_id, url_lower),
+                fetch_one=True,
+            )
+            if already_known:
+                return True, None, url
+
+            # Skip known safe URLs
+            if any(safe_url in url for safe_url in SAFE_URLS):
+                continue
+            
+            # Check with Google Safe Browsing API
+            response = requests.post(
+                f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GOOGLE_API_KEY}",
+                json={
+                    "client": {"clientId": "ModeratorBot", "clientVersion": "1.0"},
+                    "threatInfo": {
+                        "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+                        "platformTypes": ["ANY_PLATFORM"],
+                        "threatEntryTypes": ["URL"],
+                        "threatEntries": [{"url": url}]
+                    }
+                }
+            )
+            if response.json().get("matches"):
                 await execute_query(
                     """
                     INSERT INTO scam_urls (guild_id, full_url, added_by, global_verified)
                     VALUES (%s, %s, %s, TRUE)
                     ON DUPLICATE KEY UPDATE global_verified = TRUE
                     """,
-                    (guild_id, url.lower(), 0),  # Use user ID 0 or NULL to represent auto-added
+                    (guild_id, url_lower, 0),
                 )
-                return True
+                return True, None, url
 
-    # Normalize and apply AI classifier
-    message = normalize_text(message)
-    if len(message.split()) < 5:
-        return False
+    # If AI detection is enabled, use the classifier
+    if ai_detection_flag:
+        if len(normalized_message.split()) >= 5: # Too short of messages are more likely to be false positives
+            result = classifier(normalized_message)[0]
+            if result['label'] == 'LABEL_1' and result['score'] > 0.9:
+                return True, message, None
 
-    result = classifier(message)[0]
-    return result['label'] == 'LABEL_1' and result['score'] > 0.9
+    return False, None, None
 
 class ScamDetectionCog(commands.Cog):
     """Detect scam messages / URLs and let mods manage patterns + settings."""
@@ -326,35 +377,19 @@ class ScamDetectionCog(commands.Cog):
         # load settings
         delete_flag = await get_settings(gid, DELETE_SETTING)
         action_flag = await get_settings(gid, ACTION_SETTING)
-        ai_detection_flag = await get_settings(gid, AI_DECTION_SETTING)
         exclude_channels = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
 
         # Check if the channel is excluded
         if message.channel.id in exclude_channels:
             return
 
-        # fetch patterns / URLs
-        patterns, _ = await execute_query(
-            "SELECT pattern FROM scam_messages WHERE guild_id=%s OR global_verified=TRUE",
-            (gid,), fetch_all=True,
-        )
-        urls, _ = await execute_query(
-            "SELECT full_url FROM scam_urls WHERE guild_id=%s OR global_verified=TRUE",
-            (gid,), fetch_all=True,
-        )
+        # Run the scam detection
+        is_scam, matched_pattern, matched_url = await is_scam_message(content_l, gid)
 
-        matched_pattern = next((p[0] for p in patterns if p[0].lower() in content_l), None)
-        matched_url = next((u[0] for u in urls if u[0].lower() in content_l), None)
-
-        # If no pattern or URL matched, check via AI (if enabled)
-        if not (matched_pattern or matched_url):
-            if not ai_detection_flag:
-                return
-            if not await is_scam_message(content_l, gid):
-                return
-            matched_pattern = message.content  # Use the full message as the matched pattern
-            matched_url = None
-
+        if not is_scam:
+            return
+        
+        # Log the user and message
         await execute_query(
             """INSERT INTO scam_users
                 (user_id,guild_id,matched_message_id,matched_pattern,matched_url)
