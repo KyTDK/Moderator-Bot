@@ -18,6 +18,7 @@ DELETE_SETTING = "delete-scam-messages"
 ACTION_SETTING = "scam-detection-action"
 AI_DECTION_SETTING = "ai-scam-detection"
 EXCLUDE_CHANNELS_SETTING = "exclude-scam-channels"
+CHECK_LINKS_SETTING = "check-links"
 
 URL_RE = re.compile(r"https?://[^\s]+")
 
@@ -60,16 +61,29 @@ def check_url_google_safe_browsing(api_key, url):
     print(f"Checked URL: {url}, Response: {data}")
     return bool(data.get("matches"))
 
-def is_scam_message(message: str) -> bool:
-    # Extract URLs from the message
+async def is_scam_message(message: str, guild_id: int) -> bool:
+    # Check links setting first
+    check_links = await get_settings(guild_id, CHECK_LINKS_SETTING)
     urls = URL_RE.findall(message)
-    # Check each URL against Google Safe Browsing
-    for url in urls:
-        if check_url_google_safe_browsing(GOOGLE_API_KEY, url):
-            return True
+
+    if check_links:
+        for url in urls:
+            if check_url_google_safe_browsing(GOOGLE_API_KEY, url):
+                await execute_query(
+                    """
+                    INSERT INTO scam_urls (guild_id, full_url, added_by, global_verified)
+                    VALUES (%s, %s, %s, TRUE)
+                    ON DUPLICATE KEY UPDATE global_verified = TRUE
+                    """,
+                    (guild_id, url.lower(), 0),  # Use user ID 0 or NULL to represent auto-added
+                )
+                return True
+
+    # Normalize and apply AI classifier
     message = normalize_text(message)
     if len(message.split()) < 5:
         return False
+
     result = classifier(message)[0]
     return result['label'] == 'LABEL_1' and result['score'] > 0.9
 
@@ -336,7 +350,7 @@ class ScamDetectionCog(commands.Cog):
         if not (matched_pattern or matched_url):
             if not ai_detection_flag:
                 return
-            if not is_scam_message(content_l):
+            if not await is_scam_message(content_l, gid):
                 return
             matched_pattern = message.content  # Use the full message as the matched pattern
             matched_url = None

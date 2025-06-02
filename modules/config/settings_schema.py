@@ -179,6 +179,14 @@ SETTINGS_SCHEMA = {
         hidden=True,
         choices=["true", "false"]
     ),
+    "check-links": Setting(
+        name="check-links",
+        description="Check links in messages for malware, phishing, scamming etc.",
+        setting_type=bool,
+        default=True,
+        hidden=True,
+        choices=["true", "false"]
+    ),
     "exclude-scam-channels": Setting(
         name="exclude-scam-channels",
         description="Channels to exclude from scam detection.",
