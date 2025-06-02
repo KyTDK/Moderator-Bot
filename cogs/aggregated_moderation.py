@@ -125,19 +125,19 @@ class AggregatedModerationCog(commands.Cog):
                 fetch_one=True,
             )
             if await mysql.get_settings(guild.id, "unmute-on-safe-pfp") == True and result is not None:
-                if member.timed_out_until:
-                    try:
-                        await member.edit(timeout=None, reason="Profile picture updated to a safe image.")
-                        print(f"Removed timeout from {member.display_name} for safe profile picture.")
+                try:
+                    await member.edit(timeout=None, reason="Profile picture updated to a safe image.")
+                    print(f"Removed timeout from {member.display_name} for safe profile picture.")
 
-                        await mysql.execute_query(
-                            "DELETE FROM timeouts WHERE user_id = %s AND guild_id = %s",
-                            (member.id, guild.id)
-                        )
-                    except discord.Forbidden:
-                        print(f"Missing permissions to untimeout {member.display_name}.")
-                    except discord.HTTPException as e:
-                        print(f"Failed to untimeout {member.display_name}: {e}")
+                    await mysql.execute_query(
+                        "DELETE FROM timeouts WHERE user_id = %s AND guild_id = %s",
+                        (member.id, guild.id)
+                    )
+                except discord.Forbidden:
+                    print(f"Missing permissions to untimeout {member.display_name}.")
+                except discord.HTTPException as e:
+                    print(f"Failed to untimeout {member.display_name}: {e}")
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AggregatedModerationCog(bot))
