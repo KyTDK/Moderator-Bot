@@ -101,7 +101,6 @@ class AggregatedModerationCog(commands.Cog):
 
             await self._handle_member_avatar(guild, member)
 
-    @commands.Cog.listener()
     async def _handle_member_avatar(self, guild: discord.Guild, member: discord.Member, is_join: bool = False):
         if await mysql.get_settings(guild.id, "check-pfp") != True:
             return
