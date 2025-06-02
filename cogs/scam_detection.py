@@ -252,6 +252,30 @@ class ScamDetectionCog(commands.Cog):
             f"AI scam detection **{action.value}d**.", ephemeral=True
         )
 
+    @settings_group.command(name="check_links", description="Toggle or view link checking.")
+    @app_commands.describe(action="enable | disable | status")
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(name="enable",  value="enable"),
+            app_commands.Choice(name="disable", value="disable"),
+            app_commands.Choice(name="status",  value="status"),
+        ]
+    )
+    async def setting_check_links(self, interaction: Interaction,
+                                  action: app_commands.Choice[str]):
+        """Toggle or view link checking setting."""
+        gid = interaction.guild.id
+        if action.value == "status":
+            flag = await get_settings(gid, CHECK_LINKS_SETTING)
+            await interaction.response.send_message(
+                f"Link checking is **{'enabled' if flag else 'disabled'}**.", ephemeral=True
+            )
+            return
+        await update_settings(gid, CHECK_LINKS_SETTING, action.value == "enable")
+        await interaction.response.send_message(
+            f"Link checking **{action.value}d**.", ephemeral=True
+        )
+
     @settings_group.command(name="action", description="Set the scam punishment action.")
     @app_commands.describe(
         action="Action: strike, kick, ban, timeout",
