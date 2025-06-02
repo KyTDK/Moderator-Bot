@@ -136,7 +136,7 @@ class AggregatedModerationCog(commands.Cog):
             )
             if await mysql.get_settings(guild.id, "unmute-on-safe-pfp") and result is not None:
                 try:
-                    await member.edit(timeout=None, reason="Profile picture updated to a safe image.")
+                    await member.edit(timed_out_until=None, reason="Profile picture updated to a safe image.")
                     await mysql.execute_query(
                         "DELETE FROM timeouts WHERE user_id=%s AND guild_id=%s AND source='pfp'",
                         (member.id, guild.id)
