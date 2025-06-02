@@ -115,7 +115,6 @@ class AggregatedModerationCog(commands.Cog):
             self.bot,
             url=avatar_url,
             member=member,
-            nsfw_callback=nsfw.handle_nsfw_content,
             guild_id=guild.id,
         )
 
