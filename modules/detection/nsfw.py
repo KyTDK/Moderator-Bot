@@ -244,9 +244,6 @@ async def is_nsfw(bot: commands.Bot,
         print("Message is None")
         return False
 
-    if message.reference and message.reference.cached_message:
-        message = message.reference.cached_message
-
     for attachment in message.attachments:
         suffix = os.path.splitext(attachment.filename)[1] or ""
         with NamedTemporaryFile(delete=False, dir=TMP_DIR, suffix=suffix) as tmp:
