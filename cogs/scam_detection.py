@@ -333,7 +333,6 @@ class ScamDetectionCog(commands.Cog):
         matched_url = next((u[0] for u in urls if u[0].lower() in content_l), None)
 
         # If no pattern or URL matched, check via AI (if enabled)
-        ai
         if not (matched_pattern or matched_url):
             if not ai_detection_flag:
                 return
