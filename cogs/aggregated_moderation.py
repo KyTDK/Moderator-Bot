@@ -46,7 +46,7 @@ class AggregatedModerationCog(commands.Cog):
             await mysql.get_settings(guild_id, "delete-nsfw") is True
             and message.channel.id not in await mysql.get_settings(guild_id, "exclude-channels")
         ):
-            if await nsfw.is_nsfw(self.bot, message=message, nsfw_callback=nsfw.handle_nsfw_content):
+            if await nsfw.is_nsfw(self.bot, message=message, nsfw_callback=nsfw.handle_nsfw_content, guild_id=guild_id):
                 try:
                     await message.delete()
                     await message.channel.send(
@@ -105,7 +105,8 @@ class AggregatedModerationCog(commands.Cog):
             self.bot,
             url=avatar_url,
             member=member,
-            nsfw_callback=nsfw.handle_nsfw_content
+            nsfw_callback=nsfw.handle_nsfw_content,
+            guild_id=guild.id,
         )
 
         if is_nsfw:
