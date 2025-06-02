@@ -119,8 +119,15 @@ async def strike(
         return None
 
     strike_settings = await mysql.get_settings(guild_id, "strike-actions")
+    cycle_settings = await mysql.get_settings(guild_id, "cycle-strike-actions")
     available_strikes = sorted(strike_settings.keys(), key=int)
     action, duration_str = strike_settings.get(str(strike_count), (None, None))
+
+    # If no action is defined and cycling is enabled
+    if not action and cycle_settings:
+        available_strike_values = [strike_settings[k] for k in sorted(strike_settings.keys(), key=int)]
+        index = (strike_count - 1) % len(available_strike_values)
+        action, duration_str = available_strike_values[index]
 
     strikes_for_ban = get_ban_threshold(strike_settings)
     strikes_till_ban = strikes_for_ban - strike_count if strikes_for_ban is not None else None

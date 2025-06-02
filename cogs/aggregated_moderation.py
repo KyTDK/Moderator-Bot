@@ -1,9 +1,7 @@
-import asyncio
 import discord
 from discord.ext import commands
 import time
 from collections import defaultdict
-from difflib import SequenceMatcher
 from modules.utils import mysql
 from modules.detection import nsfw
 from modules.moderation import strike

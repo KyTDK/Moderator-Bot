@@ -74,6 +74,13 @@ SETTINGS_SCHEMA = {
         default=False,
         choices=["true", "false"]
     ),
+    "cycle-strike-actions": Setting(
+        name="cycle-strike-actions",
+        description="Cycle through strike actions when run out of actions to give user.",
+        setting_type=bool,
+        default=True,
+        choices=["true", "false"]
+    ),
     "exclude-channels": Setting(
         name="exclude-channels",
         description="Channels to exclude from detection.",
