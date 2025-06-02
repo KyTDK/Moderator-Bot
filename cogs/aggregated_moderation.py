@@ -87,12 +87,21 @@ class AggregatedModerationCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_user_update(self, before: discord.User, after: discord.User):
-        if before.avatar != after.avatar and after.avatar:
-            for guild in self.bot.guilds:
-                member = guild.get_member(after.id)
-                if member:
-                    await self._handle_member_avatar(guild, member)
-    
+        if before.avatar == after.avatar:
+            return
+
+        for guild in self.bot.guilds:
+            if not await mysql.get_settings(guild.id, "check-pfp"):
+                continue 
+
+            try:
+                member = await safe_get_user(guild, after.id)
+            except discord.NotFound:
+                continue 
+
+            await self._handle_member_avatar(guild, member)
+
+    @commands.Cog.listener()
     async def _handle_member_avatar(self, guild: discord.Guild, member: discord.Member, is_join: bool = False):
         if await mysql.get_settings(guild.id, "check-pfp") != True:
             return
@@ -124,19 +133,19 @@ class AggregatedModerationCog(commands.Cog):
                 (member.id, guild.id),
                 fetch_one=True,
             )
-            if await mysql.get_settings(guild.id, "unmute-on-safe-pfp") == True and result is not None:
+            if await mysql.get_settings(guild.id, "unmute-on-safe-pfp") and result is not None:
                 try:
                     await member.edit(timeout=None, reason="Profile picture updated to a safe image.")
-                    print(f"Removed timeout from {member.display_name} for safe profile picture.")
-
                     await mysql.execute_query(
-                        "DELETE FROM timeouts WHERE user_id = %s AND guild_id = %s",
+                        "DELETE FROM timeouts WHERE user_id=%s AND guild_id=%s AND source='pfp'",
                         (member.id, guild.id)
                     )
+                    print(f"[PFP] Cleared timeout for {member.display_name}")
                 except discord.Forbidden:
-                    print(f"Missing permissions to untimeout {member.display_name}.")
+                    print(f"[PFP] Missing permission to untimeout {member.display_name}")
                 except discord.HTTPException as e:
-                    print(f"Failed to untimeout {member.display_name}: {e}")
+                    if e.code != 50035:
+                        print(f"[PFP] Failed to untimeout {member.display_name}: {e}")
 
 
 async def setup(bot: commands.Bot):
