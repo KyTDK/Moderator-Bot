@@ -89,10 +89,10 @@ class AggregatedModerationCog(commands.Cog):
     async def on_user_update(self, before: discord.User, after: discord.User):
         if before.avatar != after.avatar and after.avatar:
             for guild in self.bot.guilds:
-                member = await safe_get_user(self.bot, after.id)
+                member = guild.get_member(after.id)
                 if member:
                     await self._handle_member_avatar(guild, member)
-
+    
     async def _handle_member_avatar(self, guild: discord.Guild, member: discord.Member, is_join: bool = False):
         if await mysql.get_settings(guild.id, "check-pfp") != True:
             return
