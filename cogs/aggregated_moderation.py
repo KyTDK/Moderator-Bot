@@ -122,6 +122,12 @@ class AggregatedModerationCog(commands.Cog):
             action = await mysql.get_settings(guild.id, "nsfw-pfp-action")
             message = await mysql.get_settings(guild.id, "nsfw-pfp-message")
             await strike.perform_disciplinary_action(member, self.bot, action, message, source="pfp")
+            # Send message
+            if message:
+                try:
+                    await member.send(message)
+                except discord.Forbidden:
+                    print(f"[PFP] Cannot send message to {member.display_name}. User may have DMs disabled.")
         else:
             result, _ = await mysql.execute_query(
                 """

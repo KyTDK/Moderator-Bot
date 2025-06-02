@@ -138,7 +138,12 @@ SETTINGS_SCHEMA = {
         name="nsfw-pfp-message",
         description="The message to send when a player has had their profile picture flagged.",
         setting_type=str,
-        default="Your profile picture was detected to contain explicit content"
+        default="Your profile picture was detected to contain explicit content",
+        choices=[
+            "Your profile picture was detected to contain explicit content",
+            "Your profile picture is not appropriate for this server.",
+            "Your profile picture has been flagged as NSFW.",
+        ]
     ),
     "unmute-on-safe-pfp": Setting(
         name="unmute-on-safe-pfp",
