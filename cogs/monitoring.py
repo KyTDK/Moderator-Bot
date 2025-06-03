@@ -259,25 +259,65 @@ class Monitoring(commands.Cog):
         await self.log_event(channel.guild, embed=embed, mention_user=False)
 
     @commands.Cog.listener()
-    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
-        if user.bot:
-            return
+    async def on_member_ban(self, guild: discord.Guild, user: discord.User):
         try:
-            channel = reaction.message.channel
-            guild = reaction.message.guild
-            if not guild:
-                return
-
-            embed = Embed(
-                title="Reaction Added",
-                description=(f"{user.mention} ({user.name}) reacted with {reaction.emoji} in {channel.mention}"),
-                color=Color.blue()
+            embed = discord.Embed(
+                title="Member Banned",
+                description=f"{user.mention} ({user.name}) was banned.",
+                color=discord.Color.dark_red()
             )
+
+            avatar_url = user.avatar.url if user.avatar else user.default_avatar.url
+            embed.set_thumbnail(url=avatar_url)
+
             embed.set_footer(text=f"User ID: {user.id}")
-            await self.log_event(guild, embed=embed, mention_user=False)
+
+            # Attempt to find the moderator responsible via audit logs
+            try:
+                async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.ban):
+                    if entry.target.id == user.id and (discord.utils.utcnow() - entry.created_at).total_seconds() < 20:
+                        embed.add_field(name="Banned By", value=f"{entry.user.mention} ({entry.user.name})", inline=False)
+                        if entry.reason:
+                            embed.add_field(name="Reason", value=entry.reason, inline=False)
+                        break
+            except discord.Forbidden:
+                pass  # Bot lacks permission to view audit logs
+
+            await self.log_event(guild, embed=embed)
 
         except Exception as e:
-            print(f"[on_reaction_add] Error: {e}")
+            print(f"[Ban Log] Failed to log ban for {user}: {e}")
+
+
+    @commands.Cog.listener()
+    async def on_member_unban(self, guild: discord.Guild, user: discord.User):
+        try:
+            embed = discord.Embed(
+                title="Member Unbanned",
+                description=f"{user.mention} ({user.name}) was unbanned.",
+                color=discord.Color.green()
+            )
+
+            avatar_url = user.avatar.url if user.avatar else user.default_avatar.url
+            embed.set_thumbnail(url=avatar_url)
+
+            embed.set_footer(text=f"User ID: {user.id}")
+
+            # Attempt to find the moderator responsible via audit logs
+            try:
+                async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.unban):
+                    if entry.target.id == user.id and (discord.utils.utcnow() - entry.created_at).total_seconds() < 20:
+                        embed.add_field(name="Unbanned By", value=f"{entry.user.mention} ({entry.user.name})", inline=False)
+                        if entry.reason:
+                            embed.add_field(name="Reason", value=entry.reason, inline=False)
+                        break
+            except discord.Forbidden:
+                pass  # Bot lacks permission to view audit logs
+
+            await self.log_event(guild, embed=embed)
+
+        except Exception as e:
+            print(f"[Unban Log] Failed to log unban for {user}: {e}")
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
