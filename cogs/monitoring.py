@@ -143,12 +143,23 @@ class Monitoring(commands.Cog):
 
         moderator = reason = None
         try:
-            async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.member_update):
-                if entry.target.id == after.id and (utcnow() - entry.created_at).total_seconds() < 20:
-                    if "communication_disabled_until" in entry.changes:
-                        moderator = entry.user
-                        reason = entry.reason
-                        break
+            async for entry in guild.audit_logs(limit=6, action=discord.AuditLogAction.member_update):
+                if entry.target.id != after.id:
+                    continue
+                if (utcnow() - entry.created_at).total_seconds() > 60:
+                    break
+
+                change = entry.changes.get("communication_disabled_until")
+                if change is None:
+                    continue
+
+                before_val, after_val = change
+                if timed_out and after_val is not None:
+                    moderator, reason = entry.user, entry.reason
+                    break
+                if not timed_out and before_val is not None and after_val is None:
+                    moderator, reason = entry.user, entry.reason
+                    break
         except discord.Forbidden:
             pass
         except Exception as e:
@@ -161,8 +172,8 @@ class Monitoring(commands.Cog):
             color=colour
         )
 
-        avatar = after.avatar.url if after.avatar else after.default_avatar.url
-        embed.set_thumbnail(url=avatar)
+        avatar_url = after.avatar.url if after.avatar else after.default_avatar.url
+        embed.set_thumbnail(url=avatar_url)
 
         if timed_out:
             ts = int(after.timed_out_until.timestamp())
