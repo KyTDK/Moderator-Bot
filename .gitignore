@@ -12,3 +12,12 @@ cogs/__pycache__/scam_detection.cpython-310.pyc
 modules/moderation/__pycache__/strike.cpython-310.pyc
 modules/utils/__pycache__/discord_utils.cpython-310.pyc
 modules/utils/__pycache__/strike.cpython-310.pyc
+cogs/__pycache__/.moderation.cpython-310.pyc.~5e57
+cogs/__pycache__/aggregated_moderation.cpython-310.pyc
+cogs/__pycache__/api_pool.cpython-310.pyc
+cogs/__pycache__/moderation.cpython-310 (case clash from 2025-02-21 012149).pyc
+cogs/__pycache__/Moderation.cpython-310.pyc
+cogs/__pycache__/monitoring.cpython-310.pyc
+cogs/__pycache__/scam_detection.cpython-310 (conflicted copy 2025-06-03 132323).pyc
+cogs/__pycache__/settings.cpython-310.pyc
+modules/moderation/__pycache__/warn.cpython-310.pyc
