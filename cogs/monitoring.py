@@ -176,7 +176,6 @@ class Monitoring(commands.Cog):
         embed.set_footer(text=f"User ID: {after.id}")
         await self.log_event(guild, embed=embed)
 
-
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         try:
