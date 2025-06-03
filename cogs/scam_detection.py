@@ -146,7 +146,7 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     # If AI detection is enabled
     if ai_detection_flag and len(normalized_message.split()) >= 5:
         result = classifier(normalized_message)[0]
-        if result['label'] == 'LABEL_1' and result['score'] > 0.95:
+        if result['label'] == 'LABEL_1' and result['score'] > 0.95: # High confidence spam as the model is highly sensitive
             return True, message, None
 
     return False, None, None
