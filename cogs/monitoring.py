@@ -145,7 +145,7 @@ class Monitoring(commands.Cog):
         try:
             async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.member_update):
                 if entry.target.id == after.id and (utcnow() - entry.created_at).total_seconds() < 20:
-                    if any(ch.key == "communication_disabled_until" for ch in entry.changes):
+                    if "communication_disabled_until" in entry.changes:
                         moderator = entry.user
                         reason = entry.reason
                         break
@@ -161,12 +161,12 @@ class Monitoring(commands.Cog):
             color=colour
         )
 
-        avatar_url = after.avatar.url if after.avatar else after.default_avatar.url
-        embed.set_thumbnail(url=avatar_url)
+        avatar = after.avatar.url if after.avatar else after.default_avatar.url
+        embed.set_thumbnail(url=avatar)
 
         if timed_out:
             ts = int(after.timed_out_until.timestamp())
-            embed.add_field(name="Ends", value=f"<t:{ts}:F> (<t:{ts}:R>)")
+            embed.add_field(name="Ends", value=f"<t:{ts}:F>  (<t:{ts}:R>)")
 
         if moderator:
             embed.add_field(name="Moderator", value=f"{moderator.mention} ({moderator.name})", inline=False)
