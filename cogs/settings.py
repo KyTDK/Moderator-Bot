@@ -6,6 +6,23 @@ from modules.config.settings_schema import SETTINGS_SCHEMA
 import traceback
 from modules.variables.TimeString import TimeString
 
+MAX_CHARS = 1900  # Leave buffer for formatting
+CHUNK_SEPARATOR = "\n"
+
+def paginate(text, limit=MAX_CHARS):
+    chunks = []
+    lines = text.split(CHUNK_SEPARATOR)
+    current = ""
+
+    for line in lines:
+        if len(current) + len(line) + len(CHUNK_SEPARATOR) > limit:
+            chunks.append(current)
+            current = ""
+        current += line + CHUNK_SEPARATOR
+    if current:
+        chunks.append(current)
+    return chunks
+
 class Settings(commands.Cog):
     """A cog for settings commands."""
 
@@ -57,29 +74,11 @@ class Settings(commands.Cog):
             help_message += (
                 f"**{setting.name}**: {setting.description} (Type: {setting.type.__name__})\n"
             )
-        await interaction.response.send_message(help_message, ephemeral=True)
-    
-    @settings_group.command(name="remove", description="Remove a server setting.")
-    @app_commands.choices(name=non_channel_choices_all)
-    async def remove_setting(self, interaction: Interaction, name: str):
-        """Remove a server setting."""
-        schema = SETTINGS_SCHEMA.get(name)
-        if not schema:
-            await interaction.response.send_message(
-                f"Invalid setting name.",
-                ephemeral=True,
-            )
-            return
 
-        # Remove the setting from the database
-        if await mysql.update_settings(interaction.guild.id, name, None):
-            await interaction.response.send_message(
-                f"Removed `{name}` setting.", ephemeral=True
-            )
-        else:
-            await interaction.response.send_message(
-                f"`{name}` has already been removed.", ephemeral=True
-            )
+        chunks = paginate(help_message)
+        await interaction.response.send_message(chunks[0], ephemeral=True)
+        for chunk in chunks[1:]:
+            await interaction.followup.send(chunk, ephemeral=True)
 
     @settings_group.command(name="reset", description="Wipe all settings are start with default. This can't be undone")
     async def reset(self, interaction: Interaction):
@@ -218,30 +217,26 @@ class Settings(commands.Cog):
     @app_commands.command(name="help", description="Get help.")
     @app_commands.default_permissions(moderate_members=True)
     async def help(self, interaction: Interaction):
-        """Provide help information for settings, showing description, name, and expected type."""
         help_message = "**Available Settings:**\n"
-        help_message += ("Use `/settings help` for help on available settings\n")
+        help_message += "Use `/settings help` for help on available settings\n"
 
         help_message += "\n**Available Commands:**\n"
         for command in self.bot.tree.walk_commands():
-            # Skip commands the user doesn't have permission to use
-            if command.default_permissions:
-                # Check if the user has the required permissions
-                permissions = command.default_permissions
-                if not interaction.user.guild_permissions.is_superset(permissions):
-                    continue
-            # Format command name with its parent group if it exists
+            if command.default_permissions and not interaction.user.guild_permissions.is_superset(command.default_permissions):
+                continue
             full_command_name = f"/{command.qualified_name}"
             description = command.description or "No description provided."
             help_message += f"`{full_command_name}`: {description}\n"
 
-        # Support and donation links
         help_message += (
             "\n**Support Server:** <https://discord.gg/invite/33VcwjfEXC>\n"
             "**Donation link:** <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
         )
 
-        await interaction.response.send_message(help_message, ephemeral=True)
+        chunks = paginate(help_message)
+        await interaction.response.send_message(chunks[0], ephemeral=True)
+        for chunk in chunks[1:]:
+            await interaction.followup.send(chunk, ephemeral=True)
 
     @settings_group.command(name="get", description="Get the current value of a server setting.")
     @app_commands.choices(name=non_channel_choices_all+channel_choices)
