@@ -211,7 +211,7 @@ class StrikesCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=["ban", "kick", "timeout", "remove"],
+            valid_actions=["ban", "kick", "timeout", "remove", "none"],
             ephemeral=True,
         )
         if action_str is None:

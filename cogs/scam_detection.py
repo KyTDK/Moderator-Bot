@@ -293,7 +293,7 @@ class ScamDetectionCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=["strike", "kick", "ban", "timeout"]
+            valid_actions=["strike", "kick", "ban", "timeout", "none"],
         )
         if action_str is None:
             return
