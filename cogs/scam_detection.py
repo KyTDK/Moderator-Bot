@@ -40,6 +40,12 @@ SAFE_URLS = [
     "medium.com"
 ]
 
+def check_phishtank(url: str) -> bool:
+    # NOTE: This is a dummy example; real use requires an API key + requests
+    # This would require async wrapper and queue rate limiting
+    response = requests.post("https://checkurl.phishtank.com/checkurl/", data={"url": url})
+    return "valid" in response.text
+
 def check_url_google_safe_browsing(api_key, url):
     # Check if the URL is in the list of safe URLs
     if any(safe_url in url for safe_url in SAFE_URLS):
@@ -65,8 +71,8 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     content_l = message.lower()
     normalized_message = normalize_text(content_l)
 
-    check_links = await get_settings(guild_id, "check-links")
-    ai_detection_flag = await get_settings(guild_id, "ai-scam-detection")
+    check_links = await get_settings(guild_id, CHECK_LINKS_SETTING)
+    ai_detection_flag = await get_settings(guild_id, AI_DECTION_SETTING)
 
     # Match against DB patterns
     patterns, _ = await execute_query(
@@ -91,8 +97,10 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     if check_links:
         for url in found_urls:
             url_lower = url.lower()
-            
-            # Check if the URL is already known
+
+            if any(safe_url in url_lower for safe_url in SAFE_URLS):
+                continue
+
             already_known, _ = await execute_query(
                 "SELECT 1 FROM scam_urls WHERE (guild_id=%s OR global_verified=TRUE) AND full_url=%s",
                 (guild_id, url_lower),
@@ -101,40 +109,21 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
             if already_known:
                 return True, None, url
 
-            # Skip known safe URLs
-            if any(safe_url in url for safe_url in SAFE_URLS):
-                continue
-            
-            # Check with Google Safe Browsing API
-            response = requests.post(
-                f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GOOGLE_API_KEY}",
-                json={
-                    "client": {"clientId": "ModeratorBot", "clientVersion": "1.0"},
-                    "threatInfo": {
-                        "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
-                        "platformTypes": ["ANY_PLATFORM"],
-                        "threatEntryTypes": ["URL"],
-                        "threatEntries": [{"url": url}]
-                    }
-                }
-            )
-            if response.json().get("matches"):
+            # Use Google Safe Browsing
+            if check_url_google_safe_browsing(GOOGLE_API_KEY, url) or check_phishtank(url):
                 await execute_query(
-                    """
-                    INSERT INTO scam_urls (guild_id, full_url, added_by, global_verified)
-                    VALUES (%s, %s, %s, TRUE)
-                    ON DUPLICATE KEY UPDATE global_verified = TRUE
-                    """,
+                    """INSERT INTO scam_urls (guild_id, full_url, added_by, global_verified)
+                       VALUES (%s, %s, %s, TRUE)
+                       ON DUPLICATE KEY UPDATE global_verified = TRUE""",
                     (guild_id, url_lower, 0),
                 )
                 return True, None, url
 
-    # If AI detection is enabled, use the classifier
-    if ai_detection_flag:
-        if len(normalized_message.split()) >= 5: # Too short of messages are more likely to be false positives
-            result = classifier(normalized_message)[0]
-            if result['label'] == 'LABEL_1' and result['score'] > 0.9:
-                return True, message, None
+    # If AI detection is enabled
+    if ai_detection_flag and len(normalized_message.split()) >= 5:
+        result = classifier(normalized_message)[0]
+        if result['label'] == 'LABEL_1' and result['score'] > 0.9:
+            return True, message, None
 
     return False, None, None
 
