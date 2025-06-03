@@ -12,7 +12,7 @@ from transformers import pipeline
 from cogs.banned_words import normalize_text
 import requests
 from discord.ext import tasks
-
+    
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
