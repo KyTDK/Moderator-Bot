@@ -31,7 +31,6 @@ URL_RE = re.compile(r"https?://[^\s]+")
 classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
 
 SAFE_URLS = [
-    "tensor.com",
     "discord.com",
     "youtube.com",
     "google.com",
@@ -43,7 +42,27 @@ SAFE_URLS = [
     "linkedin.com",
     "wikipedia.org",
     "stackoverflow.com",
-    "medium.com"
+    "medium.com",
+    "amazon.com",
+    "apple.com",
+    "microsoft.com",
+    "tiktok.com",
+    "netflix.com",
+    "paypal.com",
+    "docs.google.com",
+    "drive.google.com",
+    "dropbox.com",
+    "vercel.app",
+    "notion.so",
+    "openai.com",
+    "cloudflare.com",
+    "tenor.com"
+    "giphy.com",
+    "cdn.discordapp.com",
+    "discord.gg",
+    "discordapp.com",
+    "steamcommunity.com",
+    "store.steampowered.com",
 ]
 
 def update_cache():
