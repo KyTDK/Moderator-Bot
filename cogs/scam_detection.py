@@ -56,7 +56,7 @@ SAFE_URLS = [
     "notion.so",
     "openai.com",
     "cloudflare.com",
-    "tenor.com"
+    "tenor.com",
     "giphy.com",
     "cdn.discordapp.com",
     "discord.gg",
