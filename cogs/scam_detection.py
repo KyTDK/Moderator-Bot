@@ -1,3 +1,4 @@
+import json
 import os
 import discord
 from discord.ext import commands
@@ -10,6 +11,7 @@ from modules.utils.strike import validate_action_with_duration
 from transformers import pipeline
 from cogs.banned_words import normalize_text
 import requests
+from discord.ext import tasks
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -19,6 +21,10 @@ ACTION_SETTING = "scam-detection-action"
 AI_DECTION_SETTING = "ai-scam-detection"
 EXCLUDE_CHANNELS_SETTING = "exclude-scam-channels"
 CHECK_LINKS_SETTING = "check-links"
+
+PHISHTANK_URL = "http://data.phishtank.com/data/online-valid.json"
+PHISHTANK_CACHE_FILE = "phishtank_cache.json"
+PHISHTANK_USER_AGENT = {"User-Agent": "ModeratorBot/1.0"}
 
 URL_RE = re.compile(r"https?://[^\s]+")
 
@@ -40,12 +46,30 @@ SAFE_URLS = [
     "medium.com"
 ]
 
-def check_phishtank(url: str) -> bool:
-    # NOTE: This is a dummy example; real use requires an API key + requests
-    # This would require async wrapper and queue rate limiting
-    response = requests.post("https://checkurl.phishtank.com/checkurl/", data={"url": url})
-    return "valid" in response.text
+def update_cache():
+    try:
+        print("Downloading latest PhishTank data...")
+        r = requests.get(PHISHTANK_URL, headers=PHISHTANK_USER_AGENT, timeout=15)
+        r.raise_for_status()
+        with open(PHISHTANK_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(r.json(), f)
+        print("PhishTank data updated.")
+    except Exception as e:
+        print(f"Error updating cache: {e}")
 
+def check_phishtank(url: str) -> bool:
+    """
+    Checks if the given URL is listed in PhishTank's verified phishing database.
+    No API key required. Uses the public hourly-updated JSON feed.
+    """
+    try:
+        with open(PHISHTANK_CACHE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return any(entry["url"].strip("/") == url.strip("/") for entry in data)
+    except Exception as e:
+        print(f"Error reading cache: {e}")
+        return False
+    
 def check_url_google_safe_browsing(api_key, url):
     # Check if the URL is in the list of safe URLs
     if any(safe_url in url for safe_url in SAFE_URLS):
@@ -110,7 +134,7 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
                 return True, None, url
 
             # Use Google Safe Browsing
-            if check_url_google_safe_browsing(GOOGLE_API_KEY, url) or check_phishtank(url):
+            if check_phishtank(url) or check_url_google_safe_browsing(GOOGLE_API_KEY, url):
                 await execute_query(
                     """INSERT INTO scam_urls (guild_id, full_url, added_by, global_verified)
                        VALUES (%s, %s, %s, TRUE)
@@ -132,6 +156,7 @@ class ScamDetectionCog(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.refresh_phishtank_cache.start()
 
     scam_group = app_commands.Group(
         name="scam",
@@ -444,6 +469,17 @@ class ScamDetectionCog(commands.Cog):
         except Exception:
             pass
 
+    @tasks.loop(hours=6)
+    async def refresh_phishtank_cache(self):
+        try:
+            print("[PhishTank] Auto-refresh started...")
+            update_cache()
+            print("[PhishTank] Cache refreshed successfully.")
+        except Exception as e:
+            print(f"[PhishTank] Error during scheduled refresh: {e}")
+
+    def cog_unload(self):
+        self.refresh_phishtank_cache.cancel()
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ScamDetectionCog(bot))
