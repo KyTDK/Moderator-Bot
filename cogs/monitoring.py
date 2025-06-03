@@ -134,7 +134,7 @@ class Monitoring(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.timed_out_until == after.timed_out_until:
-            return                                  # nothing changed
+            return 
 
         guild      = after.guild
         timed_out  = after.timed_out_until is not None
@@ -148,12 +148,10 @@ class Monitoring(commands.Cog):
                 if entry.target.id != after.id:
                     continue
                 if (utcnow() - entry.created_at).total_seconds() > 60:
-                    break
+                        break
 
-                before_cd = getattr(entry.changes.before,
-                                    "communication_disabled_until", None)
-                after_cd  = getattr(entry.changes.after,
-                                    "communication_disabled_until", None)
+                before_cd = getattr(entry.changes.before, "timed_out_until", None)
+                after_cd = getattr(entry.changes.after, "timed_out_until", None)
 
                 if timed_out and after_cd:
                     moderator, reason = entry.user, entry.reason
@@ -161,6 +159,7 @@ class Monitoring(commands.Cog):
                 if not timed_out and before_cd and after_cd is None:
                     moderator, reason = entry.user, entry.reason
                     break
+                
         except discord.Forbidden:
             pass
         except Exception as e:
