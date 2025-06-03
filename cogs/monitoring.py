@@ -132,6 +132,65 @@ class Monitoring(commands.Cog):
             print(f"[Join Log] Failed to send join embed for {member}: {e}")
 
     @commands.Cog.listener()
+    async def on_member_update(self, before: discord.Member, after: discord.Member):
+        # No change in timeout state → ignore
+        if before.timed_out_until == after.timed_out_until:
+            return
+
+        guild = after.guild
+        timed_out = after.timed_out_until is not None
+        action_title = "Member Timed-Out" if timed_out else "Timeout Removed"
+        color = discord.Color.dark_orange() if timed_out else discord.Color.green()
+
+        moderator = reason = None
+
+        # Look for a recent audit-log entry that targets this user
+        try:
+            async for entry in guild.audit_logs(
+                limit=5, action=discord.AuditLogAction.member_update
+            ):
+                if (entry.target.id == after.id and
+                    (utcnow() - entry.created_at).total_seconds() < 20 and
+                    "communication_disabled_until" in entry.changes):
+                    moderator = entry.user
+                    reason = entry.reason
+                    break
+        except discord.Forbidden:
+            pass
+        except Exception as e:
+            print(f"[Timeout Log] Audit-log lookup failed: {e}")
+
+        embed = Embed(
+            title=action_title,
+            description=f"{after.mention} ({after.name}) has "
+                        f"{'been placed in' if timed_out else 'had'} a timeout.",
+            color=color
+        )
+
+        avatar = after.avatar.url if after.avatar else after.default_avatar.url
+        embed.set_thumbnail(url=avatar)
+
+        if timed_out:
+            until_ts = int(after.timed_out_until.timestamp())
+            embed.add_field(name="Ends", value=f"<t:{until_ts}:F> (<t:{until_ts}:R>)")
+        else:
+            if before.timed_out_until:
+                duration = before.timed_out_until - before.timeout_started_at
+                embed.add_field(name="Duration", value=str(duration).split('.')[0])
+
+        if moderator:
+            embed.add_field(
+                name="Moderator",
+                value=f"{moderator.mention} ({moderator.name})",
+                inline=False
+            )
+        if reason:
+            embed.add_field(name="Reason", value=reason, inline=False)
+
+        embed.set_footer(text=f"User ID: {after.id}")
+        await self.log_event(guild, embed=embed)
+
+    @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         try:
             guild = member.guild
