@@ -134,30 +134,31 @@ class Monitoring(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.timed_out_until == after.timed_out_until:
-            return
+            return                                  # nothing changed
 
-        guild = after.guild
-        timed_out = after.timed_out_until is not None
-        title = "Member Timed-Out" if timed_out else "Timeout Removed"
-        colour = discord.Color.dark_orange() if timed_out else discord.Color.green()
+        guild      = after.guild
+        timed_out  = after.timed_out_until is not None
+        title      = "Member Timed-Out" if timed_out else "Timeout Removed"
+        colour     = discord.Color.dark_orange() if timed_out else discord.Color.green()
 
-        moderator = reason = None
+        moderator  = reason = None
         try:
-            async for entry in guild.audit_logs(limit=6, action=discord.AuditLogAction.member_update):
+            async for entry in guild.audit_logs(limit=6,
+                                                action=discord.AuditLogAction.member_update):
                 if entry.target.id != after.id:
                     continue
                 if (utcnow() - entry.created_at).total_seconds() > 60:
                     break
 
-                change = entry.changes.get("communication_disabled_until")
-                if change is None:
-                    continue
+                before_cd = getattr(entry.changes.before,
+                                    "communication_disabled_until", None)
+                after_cd  = getattr(entry.changes.after,
+                                    "communication_disabled_until", None)
 
-                before_val, after_val = change
-                if timed_out and after_val is not None:
+                if timed_out and after_cd:
                     moderator, reason = entry.user, entry.reason
                     break
-                if not timed_out and before_val is not None and after_val is None:
+                if not timed_out and before_cd and after_cd is None:
                     moderator, reason = entry.user, entry.reason
                     break
         except discord.Forbidden:
@@ -172,7 +173,7 @@ class Monitoring(commands.Cog):
             color=colour
         )
 
-        avatar_url = after.avatar.url if after.avatar else after.default_avatar.url
+        avatar_url = after.avatar.url or after.default_avatar.url
         embed.set_thumbnail(url=avatar_url)
 
         if timed_out:
@@ -180,7 +181,9 @@ class Monitoring(commands.Cog):
             embed.add_field(name="Ends", value=f"<t:{ts}:F>  (<t:{ts}:R>)")
 
         if moderator:
-            embed.add_field(name="Moderator", value=f"{moderator.mention} ({moderator.name})", inline=False)
+            embed.add_field(name="Moderator",
+                            value=f"{moderator.mention} ({moderator.name})",
+                            inline=False)
         if reason:
             embed.add_field(name="Reason", value=reason, inline=False)
 
