@@ -134,10 +134,27 @@ class Monitoring(commands.Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         try:
+            guild = member.guild
+            kicked = False
+            kicker = None
+            reason = None
+
+            try:
+                async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
+                    if entry.target.id == member.id and (utcnow() - entry.created_at).total_seconds() < 20:
+                        kicked = True
+                        kicker = entry.user
+                        reason = entry.reason
+                        break
+            except discord.Forbidden:
+                print("[Kick Log] Missing permissions to view audit logs.")
+            except Exception as e:
+                print(f"[Kick Log] Audit log lookup failed: {e}")
+
             embed = Embed(
-                title="Member Left",
-                description=f"{member.name} has left the server.",
-                color=Color.red()
+                title="Member Kicked" if kicked else "Member Left",
+                description=f"{member.mention} ({member.name}) has {'been kicked' if kicked else 'left'} the server.",
+                color=Color.red() if not kicked else Color.orange()
             )
 
             avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
@@ -146,18 +163,18 @@ class Monitoring(commands.Cog):
             if member.joined_at:
                 duration = utcnow() - member.joined_at
                 days = duration.days
-                embed.add_field(
-                    name="Time in Server",
-                    value=f"{days} day(s)",
-                    inline=True
-                )
+                embed.add_field(name="Time in Server", value=f"{days} day(s)", inline=True)
+
+            if kicked and kicker:
+                embed.add_field(name="Kicked By", value=f"{kicker.mention} ({kicker.name})", inline=False)
+                if reason:
+                    embed.add_field(name="Reason", value=reason, inline=False)
 
             embed.set_footer(text="Bot account" if member.bot else "User account")
-
-            await self.log_event(member.guild, embed=embed)
+            await self.log_event(guild, embed=embed)
 
         except Exception as e:
-            print(f"Failed to log member leave: {e}")
+            print(f"[Leave Log] Failed to log member removal: {e}")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
