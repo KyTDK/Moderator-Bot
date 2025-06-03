@@ -278,9 +278,17 @@ class ScamDetectionCog(commands.Cog):
 
     @settings_group.command(name="action", description="Set the scam punishment action.")
     @app_commands.describe(
-        action="Action: strike, kick, ban, timeout",
+        action="Action: strike, kick, ban, timeout, none",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
     )
+    @app_commands.choices(
+    action=[
+        app_commands.Choice(name="strike", value="strike"),
+        app_commands.Choice(name="kick", value="kick"),
+        app_commands.Choice(name="ban", value="ban"),
+        app_commands.Choice(name="timeout", value="timeout"),
+        app_commands.Choice(name="none", value="none"),
+    ])
     async def setting_action(
         self,
         interaction: Interaction,
