@@ -429,7 +429,7 @@ class ScamDetectionCog(commands.Cog):
         if not rows:
             await interaction.response.send_message("No scam URLs recorded.", ephemeral=True)
             return
-        listing = "\n".join(f"- {url} ({'✅' if v else '❌'})" for url, v in rows)
+        listing = "\n".join(f"- <{url}> ({'✅' if v else '❌'})" for url, v in rows)
         await interaction.response.send_message(f"**Scam URLs:**\n{listing}", ephemeral=True)
 
     @commands.Cog.listener()
