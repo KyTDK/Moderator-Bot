@@ -12,12 +12,23 @@ from modules.utils.time import parse_duration
     "input_str,expected",
     [
         ("10s", timedelta(seconds=10)),
+        ("10second", timedelta(seconds=10)),
+        ("10 second", timedelta(seconds=10)),
+        ("10 seconds", timedelta(seconds=10)),
         ("5m", timedelta(minutes=5)),
+        ("5min", timedelta(minutes=5)),
+        ("5 min", timedelta(minutes=5)),
+        ("5minute", timedelta(minutes=5)),
+        ("5 minute", timedelta(minutes=5)),
+        ("5 minutes", timedelta(minutes=5)),
+        ("5 minu", None),
         ("2h", timedelta(hours=2)),
         ("3d", timedelta(days=3)),
         ("1w", timedelta(weeks=1)),
         ("2mo", timedelta(days=60)),
         ("1y", timedelta(days=365)),
+        ("3months", timedelta(days=90)),
+        ("3 months", timedelta(days=90))
     ],
 )
 def test_parse_duration_valid(input_str, expected):
