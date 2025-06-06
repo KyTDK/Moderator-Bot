@@ -81,7 +81,7 @@ class Settings(commands.Cog):
         for chunk in chunks[1:]:
             await interaction.followup.send(chunk, ephemeral=True)
 
-    @settings_group.command(name="reset", description="Wipe all settings are start with default. This can't be undone")
+    @settings_group.command(name="reset", description="Wipe all settings and start with defaults. This can't be undone")
     async def reset(self, interaction: Interaction):
         """Reset server settings."""
         await interaction.response.defer(ephemeral=True)
