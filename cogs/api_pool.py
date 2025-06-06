@@ -91,7 +91,7 @@ class ApiPoolCog(commands.Cog):
         if affected_rows > 0:
             await interaction.response.send_message("API key removed from your pool.", ephemeral=True)
         else:
-            await interaction.response.send_message("This API key was not found in your pool. Use /api_pool list to see your currnet api keys.", ephemeral=True)
+            await interaction.response.send_message("This API key was not found in your pool. Use /api_pool list to see your current api keys.", ephemeral=True)
 
     @api_pool_group.command(
         name="clear",
