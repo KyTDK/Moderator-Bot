@@ -215,7 +215,11 @@ class Settings(commands.Cog):
             await mysql.update_settings(interaction.guild.id, name, None)
             await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
  
-    @app_commands.command(name="help", description="Get help on a specific command group.")
+    @app_commands.command(
+        name="help",
+        description="Get help on a specific command group.",
+        default_permissions=discord.Permissions(manage_guild=True)
+    )
     @app_commands.describe(command="Optional: command group to get help with")
     async def help(self, interaction: Interaction, command: Optional[str] = None):
         await interaction.response.defer(ephemeral=True)
