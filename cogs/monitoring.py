@@ -172,8 +172,7 @@ class Monitoring(commands.Cog):
             color=colour
         )
 
-        avatar_url = after.avatar.url or after.default_avatar.url
-        embed.set_thumbnail(url=avatar_url)
+        embed.set_thumbnail(url=after.display_avatar.url)
 
         if timed_out:
             ts = int(after.timed_out_until.timestamp())
