@@ -1,3 +1,4 @@
+from typing import Optional
 from discord.ext import commands
 from discord import app_commands, Interaction
 import discord
@@ -214,29 +215,44 @@ class Settings(commands.Cog):
             await mysql.update_settings(interaction.guild.id, name, None)
             await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
  
-    @app_commands.command(name="help", description="Get help.")
-    @app_commands.default_permissions(moderate_members=True)
-    async def help(self, interaction: Interaction):
-        help_message = "**Available Settings:**\n"
-        help_message += "Use `/settings help` for help on available settings\n"
+    @app_commands.command(name="help", description="Get help on a specific command group.")
+    @app_commands.describe(command="Optional: command group to get help with")
+    async def help(self, interaction: Interaction, command: Optional[str] = None):
+        await interaction.response.defer(ephemeral=True)
 
-        help_message += "\n**Available Commands:**\n"
-        for command in self.bot.tree.walk_commands():
-            if command.default_permissions and not interaction.user.guild_permissions.is_superset(command.default_permissions):
-                continue
-            full_command_name = f"/{command.qualified_name}"
-            description = command.description or "No description provided."
-            help_message += f"`{full_command_name}`: {description}\n"
+        if command:
+            group = next((cmd for cmd in self.bot.tree.walk_commands() if cmd.name == command and isinstance(cmd, app_commands.Group)), None)
+            if not group:
+                await interaction.followup.send(f"No help found for `{command}`.", ephemeral=True)
+                return
 
-        help_message += (
-            "\n**Support Server:** <https://discord.gg/invite/33VcwjfEXC>\n"
-            "**Donation link:** <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
-        )
+            help_message = f"**/{group.name}** - {group.description or 'No description'}\n\n"
+            for sub in group.commands:
+                help_message += f"`/{sub.qualified_name}`: {sub.description or 'No description'}\n"
+
+        else:
+            help_message = "**Available Command Groups:**\n\n"
+            top_level = [cmd for cmd in self.bot.tree.walk_commands() if isinstance(cmd, app_commands.Group)]
+            for group in top_level:
+                help_message += f"`/{group.name}`: {group.description or 'No description'} — Try `/help {group.name}` for subcommands\n"
+
+            help_message += (
+                "\n**Support Server:** <https://discord.gg/invite/33VcwjfEXC>\n"
+                "**Donate:** <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>"
+            )
 
         chunks = paginate(help_message)
-        await interaction.response.send_message(chunks[0], ephemeral=True)
+        await interaction.followup.send(chunks[0], ephemeral=True)
         for chunk in chunks[1:]:
             await interaction.followup.send(chunk, ephemeral=True)
+
+    @help.autocomplete("command")
+    async def help_autocomplete(self, interaction: Interaction, current: str):
+        return [
+            app_commands.Choice(name=cmd.name, value=cmd.name)
+            for cmd in self.bot.tree.walk_commands()
+            if isinstance(cmd, app_commands.Group) and current.lower() in cmd.name.lower()
+        ][:25]
 
     @settings_group.command(name="get", description="Get the current value of a server setting.")
     @app_commands.choices(name=non_channel_choices_all+channel_choices)

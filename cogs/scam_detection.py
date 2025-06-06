@@ -185,14 +185,7 @@ class ScamDetectionCog(commands.Cog):
         default_permissions=discord.Permissions(manage_messages=True),
     )
 
-    settings_group = app_commands.Group(
-        name="settings",
-        description="View / change scam-detection settings.",
-        parent=scam_group,
-        default_permissions=discord.Permissions(manage_messages=True),
-    )
-
-    @settings_group.command(name="exclude_channel_add", description="Exclude a channel from scam detection.")
+    @scam_group.command(name="exclude_channel_add", description="Exclude a channel from scam detection.")
     @app_commands.describe(channel="The channel to exclude")
     async def exclude_channel_add(self, interaction: Interaction, channel: discord.TextChannel):
         gid = interaction.guild.id
@@ -208,7 +201,7 @@ class ScamDetectionCog(commands.Cog):
             f"Channel {channel.mention} has been excluded from scam detection.", ephemeral=True
         )
     
-    @settings_group.command(name="exclude_channel_remove", description="Remove a channel from the exclusion list.")
+    @scam_group.command(name="exclude_channel_remove", description="Remove a channel from the exclusion list.")
     @app_commands.describe(channel="The channel to remove from exclusion")
     async def exclude_channel_remove(self, interaction: Interaction, channel: discord.TextChannel):
         gid = interaction.guild.id
@@ -224,7 +217,7 @@ class ScamDetectionCog(commands.Cog):
             f"Channel {channel.mention} has been removed from the exclusion list.", ephemeral=True
         )
     
-    @settings_group.command(name="exclude_channel_list", description="List all excluded channels.")
+    @scam_group.command(name="exclude_channel_list", description="List all excluded channels.")
     async def exclude_channel_list(self, interaction: Interaction):
         gid = interaction.guild.id
         excluded_channels = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
@@ -240,7 +233,7 @@ class ScamDetectionCog(commands.Cog):
             f"Excluded channels: {channel_mentions}", ephemeral=True
         )
 
-    @settings_group.command(name="delete", description="Toggle or view auto-delete.")
+    @scam_group.command(name="delete", description="Toggle or view auto-delete.")
     @app_commands.describe(action="enable | disable | status")
     @app_commands.choices(
         action=[
@@ -263,7 +256,7 @@ class ScamDetectionCog(commands.Cog):
             f"Auto-delete **{action.value}d**.", ephemeral=True
         )
 
-    @settings_group.command(name="ai_detection", description="Toggle or view AI scam detection.")
+    @scam_group.command(name="ai_detection", description="Toggle or view AI scam detection.")
     @app_commands.describe(action="enable | disable | status")
     @app_commands.choices(
         action=[
@@ -286,7 +279,7 @@ class ScamDetectionCog(commands.Cog):
             f"AI scam detection **{action.value}d**.", ephemeral=True
         )
 
-    @settings_group.command(name="check_links", description="Toggle or view link checking.")
+    @scam_group.command(name="check_links", description="Toggle or view link checking.")
     @app_commands.describe(action="enable | disable | status")
     @app_commands.choices(
         action=[
@@ -310,7 +303,7 @@ class ScamDetectionCog(commands.Cog):
             f"Link checking **{action.value}d**.", ephemeral=True
         )
 
-    @settings_group.command(name="action", description="Set the scam punishment action.")
+    @scam_group.command(name="action", description="Set the scam punishment action.")
     @app_commands.describe(
         action="Action: strike, kick, ban, timeout, none",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
@@ -345,7 +338,7 @@ class ScamDetectionCog(commands.Cog):
             f"Scam action set to `{action_str}`.", ephemeral=True
         )
 
-    @settings_group.command(name="view", description="View current scam settings.")
+    @scam_group.command(name="view", description="View current scam settings.")
     async def settings_view(self, interaction: Interaction):
         gid = interaction.guild.id
         delete_setting = await get_settings(gid, DELETE_SETTING)
