@@ -1,10 +1,11 @@
 from typing import Optional
-from discord import Embed, Color
+from discord import Embed, Color, Interaction
 import discord
 from discord.ext import commands
 from modules.utils import mysql
 from discord.app_commands.errors import MissingPermissions
 from discord.utils import format_dt, utcnow
+from discord import app_commands
 
 class Monitoring(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -424,7 +425,38 @@ class Monitoring(commands.Cog):
                 description=f"An error occurred in `{ctx.command}`:\n```{error}```",
                 color=Color.red()
             )
-        await self.log_event(ctx.guild, embed=embed, mention_user=False)
+        await self.log_event(ctx.guild, embed=embed, mention_user=False)\
+        
+    monitor_group = app_commands.Group(
+        name="monitor",
+        description="Monitoring configuration",
+        guild_only=True,
+        default_permissions=discord.Permissions(manage_messages=True),
+    )
+
+    @monitor_group.command(name="set", description="Set channel to output logs.")
+    @app_commands.describe(channel="The channel to send logs to.")
+    async def monitor_set(self, interaction: Interaction, channel: discord.TextChannel):
+        await mysql.update_settings(interaction.guild.id, "monitor-channel", channel.id)
+        await interaction.response.send_message(f"Monitor channel set to {channel.mention}.", ephemeral=True)
+
+    @monitor_group.command(name="remove", description="Remove the monitor channel setting.")
+    async def monitor_remove(self, interaction: Interaction):
+        removed = await mysql.update_settings(interaction.guild.id, "monitor-channel", None)
+        if removed:
+            await interaction.response.send_message("Monitor channel has been removed.", ephemeral=True)
+        else:
+            await interaction.response.send_message("No monitor channel was set.", ephemeral=True)
+
+    @monitor_group.command(name="show", description="Show the current monitor channel.")
+    async def monitor_show(self, interaction: Interaction):
+        channel_id = await mysql.get_settings(interaction.guild.id, "monitor-channel")
+        if channel_id:
+            channel = interaction.guild.get_channel(channel_id)
+            mention = channel.mention if channel else f"`#{channel_id}` (not found)"
+            await interaction.response.send_message(f"Current monitor channel: {mention}", ephemeral=True)
+        else:
+            await interaction.response.send_message("No monitor channel is currently set.", ephemeral=True)
             
 async def setup(bot: commands.Bot):
     await bot.add_cog(Monitoring(bot))
