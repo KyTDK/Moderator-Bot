@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class EvenDispatcherCog(commands.Cog):
+class EventDispatcherCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -11,4 +11,4 @@ class EvenDispatcherCog(commands.Cog):
         await self.bot.get_cog("BannedWordsCog").handle_message(message)
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(EvenDispatcherCog(bot))
+    await bot.add_cog(EventDispatcherCog(bot))
