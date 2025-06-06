@@ -2,32 +2,33 @@ import re
 from datetime import timedelta
 
 def parse_duration(duration_str):
-    # Strip any leading/trailing whitespace
     if duration_str is None:
         return None
+
     duration_str = duration_str.strip()
-    
-    # Match digits followed by time units (s, m, h, d, w, mo, y)
-    match = re.match(r"(\d+)([smhdwmy])", duration_str)
+
+    pattern = r"(\d+)\s*(s|sec|second|seconds|m|min|minute|minutes|h|hr|hour|hours|d|day|days|w|week|weeks|mo|month|months|y|year|years)"
+    match = re.fullmatch(pattern, duration_str, flags=re.IGNORECASE)
     if not match:
-        return None  # Return None if the format is incorrect
-    
+        return None
+
     value, unit = match.groups()
     value = int(value)
-    
-    if unit == "s":
+    unit = unit.lower()
+
+    if unit in ("s", "sec", "second", "seconds"):
         return timedelta(seconds=value)
-    elif unit == "m":
+    elif unit in ("m", "min", "minute", "minutes"):
         return timedelta(minutes=value)
-    elif unit == "h":
+    elif unit in ("h", "hr", "hour", "hours"):
         return timedelta(hours=value)
-    elif unit == "d":
+    elif unit in ("d", "day", "days"):
         return timedelta(days=value)
-    elif unit == "w":  # weeks
+    elif unit in ("w", "week", "weeks"):
         return timedelta(weeks=value)
-    elif unit == "mo":  # months (approx. 30 days)
-        return timedelta(days=value * 30)  # This is an approximation
-    elif unit == "y":  # years (approx. 365 days)
-        return timedelta(days=value * 365)  # Approximate year length
+    elif unit in ("mo", "month", "months"):
+        return timedelta(days=value * 30)
+    elif unit in ("y", "year", "years"):
+        return timedelta(days=value * 365)
     else:
-        return None  # Return None for unrecognized unit
+        return None
