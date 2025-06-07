@@ -154,15 +154,12 @@ async def process_video(
     guild_id: int,
     bot: commands.Bot,
 ) -> tuple[Optional[discord.File], bool]:
-    print(f"[process_video] Starting video analysis: {original_filename}")
     
     temp_frames, _ = await asyncio.to_thread(
         _extract_frames_threaded, original_filename, MAX_FRAMES_PER_VIDEO
     )
-    print(f"[process_video] Extracted {len(temp_frames)} frames")
 
     if not temp_frames:
-        print(f"[process_video] No frames extracted, deleting original: {original_filename}")
         _safe_delete(original_filename)
         return None, False
 
@@ -174,14 +171,12 @@ async def process_video(
         async with semaphore:
             try:
                 cat = await process_image(path, guild_id=guild_id, clean_up=False)
-                print(f"[process_video] Frame {path} result: {cat}")
                 return (path, cat) if cat else None
             except Exception as e:
                 print(f"[process_video] Analyse error {path}: {e}")
                 return None
 
     tasks = [asyncio.create_task(analyse(p)) for p in temp_frames]
-    print("[process_video] Analysis tasks started")
 
     try:
         for done in asyncio.as_completed(tasks):
@@ -208,9 +203,7 @@ async def process_video(
         return None, False
     finally:
         for p in temp_frames:
-            print(f"[process_video] Deleting frame: {p}")
             _safe_delete(p)
-        print(f"[process_video] Deleting original file: {original_filename}")
         _safe_delete(original_filename)
 
 async def check_attachment(author,
@@ -393,7 +386,6 @@ async def moderator_api(text: str | None = None,
             if not is_video and score < 0.6:
                 continue
             return category
-        print("[moderator_api] Did not detect anything bad.")
         return None
     print("[moderator_api] All API key attempts failed.")
     return None
@@ -421,7 +413,6 @@ async def local_moderation(image_path: str) -> Optional[str]:
 async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True) -> Optional[str]:
-    print(f"[process_image] Starting scan for: {original_filename} (guild: {guild_id})")
     try:
         if await api.is_guild_in_api_pool(guild_id):
             result = await moderator_api(image_path=original_filename, guild_id=guild_id)
@@ -435,7 +426,6 @@ async def process_image(original_filename: str,
         return None
     finally:
         if clean_up and os.path.exists(original_filename):
-            print(f"[process_image] Cleaning up file: {original_filename}")
             _safe_delete(original_filename)
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
