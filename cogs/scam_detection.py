@@ -83,19 +83,15 @@ def update_cache():
         print(f"Error updating cache: {e}")
 
 async def unshorten_url(url: str) -> str:
-    import aiohttp
-    import ssl
-    ssl_context = ssl.create_default_context()
-    ssl_context.check_hostname = False
-    ssl_context.verify_mode = ssl.CERT_NONE
-
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(url, allow_redirects=True, ssl=ssl_context) as resp:
-                return str(resp.url)
-        except Exception as e:
-            print(f"[unshorten_url] Failed to unshorten {url}: {e}")
-            return url
+    import httpx
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, headers=headers, timeout=10.0, verify=False) as client:
+            resp = await client.get(url)
+            return str(resp.url)
+    except Exception as e:
+        print(f"[unshorten_url] Failed to unshorten {url}: {e}")
+        return url
 
 def check_phishtank(url: str) -> bool:
     """
@@ -145,17 +141,6 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     )
     matched_pattern = next((p[0] for p in patterns if p[0].lower() in normalized_message), None)
 
-    # Match against known URLs
-    urls, _ = await execute_query(
-        "SELECT full_url FROM scam_urls WHERE guild_id=%s OR global_verified=TRUE",
-        (guild_id,), fetch_all=True,
-    )
-    matched_url = next((u[0] for u in urls if u[0].lower() in content_l), None)
-
-    # If we found a pattern or URL, return immediately
-    if matched_pattern or matched_url:
-        return True, matched_pattern, matched_url
-
     # External scan
     found_urls = URL_RE.findall(message)
     if check_links:
@@ -168,6 +153,18 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
                 continue
 
             url_lower = url.lower()
+
+            match_row, _ = await execute_query(
+                """SELECT full_url FROM scam_urls
+                WHERE (guild_id=%s OR global_verified=TRUE)
+                AND %s LIKE CONCAT('%', full_url, '%')""",
+                (guild_id, url_lower),
+                fetch_one=True,
+            )
+
+            if match_row:
+                print(f"[ScamMatch] Matched against known URL: {match_row[0]}")
+                return True, None, url
 
             if any(safe_url in url_lower for safe_url in SAFE_URLS):
                 continue

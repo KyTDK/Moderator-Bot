@@ -1,23 +1,19 @@
-import aiohttp
+import httpx
 import asyncio
-import ssl
 
 async def unshorten_url(url: str) -> str:
-    ssl_context = ssl.create_default_context()
-    ssl_context.check_hostname = False
-    ssl_context.verify_mode = ssl.CERT_NONE
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, headers=headers, timeout=10.0, verify=False) as client:
+            resp = await client.get(url)
+            return str(resp.url)
+    except Exception as e:
+        print(f"[unshorten_url] Failed to unshorten {url}: {e}")
+        return url
 
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(url, allow_redirects=True, ssl=ssl_context) as resp:
-                return str(resp.url)
-        except Exception as e:
-            print(f"[unshorten_url] Failed to unshorten {url}: {e}")
-            return url
-
-# Usage
+# Test
 async def main():
-    short_url = "https://goo.su/Y5Mb7j"
+    short_url = "neomechanical.com:10000"
     print("🔗 Unshortened:", await unshorten_url(short_url))
 
 asyncio.run(main())

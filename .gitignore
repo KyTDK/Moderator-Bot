@@ -26,3 +26,4 @@ test/model.py
 test/announce.py
 __pycache__/bot.cpython-310.pyc
 modules/post_stats/__pycache__/topgg_poster.cpython-310.pyc
+test/url.py
