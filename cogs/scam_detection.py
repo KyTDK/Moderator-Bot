@@ -80,6 +80,21 @@ def update_cache():
     except Exception as e:
         print(f"Error updating cache: {e}")
 
+async def unshorten_url(url: str) -> str:
+    import aiohttp
+    import ssl
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url, allow_redirects=True, ssl=ssl_context) as resp:
+                return str(resp.url)
+        except Exception as e:
+            print(f"[unshorten_url] Failed to unshorten {url}: {e}")
+            return url
+
 def check_phishtank(url: str) -> bool:
     """
     Checks if the given URL is listed in PhishTank's verified phishing database.
@@ -143,6 +158,12 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     found_urls = URL_RE.findall(message)
     if check_links:
         for url in found_urls:
+            try:
+                url = await unshorten_url(url)
+            except Exception as e:
+                print(f"[is_scam_message] Error unshortening {url}: {e}")
+                continue
+
             url_lower = url.lower()
 
             if any(safe_url in url_lower for safe_url in SAFE_URLS):
