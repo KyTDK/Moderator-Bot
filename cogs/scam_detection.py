@@ -141,6 +141,9 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     )
     matched_pattern = next((p[0] for p in patterns if p[0].lower() in normalized_message), None)
 
+    if matched_pattern:
+        return True, matched_pattern, None
+
     # External scan
     found_urls = URL_RE.findall(message)
     if check_links:
