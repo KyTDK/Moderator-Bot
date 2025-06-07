@@ -73,6 +73,8 @@ SAFE_URLS = [
     "music.apple.com"
 ]
 
+INTERMEDIARY_DOMAINS = ["antiphishing.biz",]
+
 def update_cache():
     try:
         print("Downloading latest PhishTank data...")
@@ -90,7 +92,12 @@ async def unshorten_url(url: str) -> str:
     try:
         async with httpx.AsyncClient(follow_redirects=True, headers=headers, timeout=10.0, verify=False) as client:
             resp = await client.get(url)
-            return str(resp.url)
+            final_url = str(resp.url)
+            if any(domain in final_url for domain in INTERMEDIARY_DOMAINS):
+                print(f"[Redirect Skipped] Landed on intermediary: {final_url}")
+                return url
+            print(f"[URL Unshortened] {url} -> {final_url}")
+            return final_url
     except Exception as e:
         print(f"[unshorten_url] Failed to unshorten {url}: {e}")
         return url
@@ -152,7 +159,6 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
         for url in found_urls:
             try:
                 url = await unshorten_url(url)
-                print(f"[URL Unshortened] {url}")
             except Exception as e:
                 print(f"[is_scam_message] Error unshortening {url}: {e}")
                 continue
