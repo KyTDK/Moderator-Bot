@@ -68,7 +68,9 @@ SAFE_URLS = [
     "twitch.tv",
     "youtu.be",
     "spotify.com",
-    "open.spotify.com"
+    "open.spotify.com",
+    "huggingface.co",
+    "music.apple.com"
 ]
 
 def update_cache():
@@ -160,7 +162,7 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
             match_row, _ = await execute_query(
                 """SELECT full_url FROM scam_urls
                 WHERE (guild_id=%s OR global_verified=TRUE)
-                AND %s LIKE CONCAT('%', full_url, '%')""",
+                AND LOCATE(full_url, %s) > 0""",
                 (guild_id, url_lower),
                 fetch_one=True,
             )
