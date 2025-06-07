@@ -17,13 +17,12 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='/', intents=intents, help_command=None)
 
 async def make_announcement(guild, message):
-    if guild:
-        channel = guild.system_channel  # Default system channel for announcements
-        if channel:
-            try:
-                await channel.send(message)
-            except discord.Forbidden:
-                print(f"Cannot send message to {channel.name} in {guild.name}. Check permissions.")
+    try:
+        owner = await guild.fetch_owner()
+        await owner.send(f"📢 **Message from Moderator Bot for `{guild.name}`:**\n\n{message}")
+        print(f"Sent DM to owner of {guild.name}")
+    except discord.Forbidden:
+        print(f"Could not DM the owner of {guild.name}.")
 
 @bot.event
 async def on_ready():
