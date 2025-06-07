@@ -73,8 +73,6 @@ SAFE_URLS = [
     "music.apple.com"
 ]
 
-INTERMEDIARY_DOMAINS = ["antiphishing.biz",]
-
 def update_cache():
     try:
         print("Downloading latest PhishTank data...")
@@ -85,22 +83,6 @@ def update_cache():
         print("PhishTank data updated.")
     except Exception as e:
         print(f"Error updating cache: {e}")
-
-async def unshorten_url(url: str) -> str:
-    import httpx
-    headers = {"User-Agent": "Mozilla/5.0"}
-    try:
-        async with httpx.AsyncClient(follow_redirects=True, headers=headers, timeout=10.0, verify=False) as client:
-            resp = await client.get(url)
-            final_url = str(resp.url)
-            if any(domain in final_url for domain in INTERMEDIARY_DOMAINS):
-                print(f"[Redirect Skipped] Landed on intermediary: {final_url}")
-                return url
-            print(f"[URL Unshortened] {url} -> {final_url}")
-            return final_url
-    except Exception as e:
-        print(f"[unshorten_url] Failed to unshorten {url}: {e}")
-        return url
 
 def check_phishtank(url: str) -> bool:
     """
@@ -150,32 +132,22 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     )
     matched_pattern = next((p[0] for p in patterns if p[0].lower() in normalized_message), None)
 
-    if matched_pattern:
-        return True, matched_pattern, None
+    # Match against known URLs
+    urls, _ = await execute_query(
+        "SELECT full_url FROM scam_urls WHERE guild_id=%s OR global_verified=TRUE",
+        (guild_id,), fetch_all=True,
+    )
+    matched_url = next((u[0] for u in urls if u[0].lower() in content_l), None)
+
+    # If we found a pattern or URL, return immediately
+    if matched_pattern or matched_url:
+        return True, matched_pattern, matched_url
 
     # External scan
     found_urls = URL_RE.findall(message)
     if check_links:
         for url in found_urls:
-            try:
-                url = await unshorten_url(url)
-            except Exception as e:
-                print(f"[is_scam_message] Error unshortening {url}: {e}")
-                continue
-
             url_lower = url.lower()
-
-            match_row, _ = await execute_query(
-                """SELECT full_url FROM scam_urls
-                WHERE (guild_id=%s OR global_verified=TRUE)
-                AND LOCATE(full_url, %s) > 0""",
-                (guild_id, url_lower),
-                fetch_one=True,
-            )
-
-            if match_row:
-                print(f"[ScamMatch] Matched against known URL: {match_row[0]}")
-                return True, None, url
 
             if any(safe_url in url_lower for safe_url in SAFE_URLS):
                 continue
