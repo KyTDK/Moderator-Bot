@@ -17,7 +17,7 @@ async def unshorten_url(url: str) -> str:
 
 # Usage
 async def main():
-    short_url = "https://short-link.me/13Rhs"
+    short_url = "https://goo.su/Y5Mb7j"
     print("🔗 Unshortened:", await unshorten_url(short_url))
 
 asyncio.run(main())

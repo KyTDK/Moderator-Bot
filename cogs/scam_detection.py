@@ -66,7 +66,9 @@ SAFE_URLS = [
     "roblox.com",
     "media.discordapp.net",
     "twitch.tv",
-    "youtu.be"
+    "youtu.be",
+    "spotify.com",
+    "open.spotify.com"
 ]
 
 def update_cache():
@@ -160,6 +162,7 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
         for url in found_urls:
             try:
                 url = await unshorten_url(url)
+                print(f"[URL Unshortened] {url}")
             except Exception as e:
                 print(f"[is_scam_message] Error unshortening {url}: {e}")
                 continue
