@@ -26,6 +26,27 @@ from PIL import Image, ImageSequence
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
+# Toggle between OpenAI's moderation API and the local NSFW model. When set to
+# ``False`` the Falconsai/nsfw_image_detection model will be used instead of the
+# API for image moderation.
+USE_OPENAI_API = True
+
+# Minimum score returned by the local model for an image to be considered NSFW.
+LOCAL_NSFW_THRESHOLD = 0.8
+
+_local_model = None
+
+def _get_local_model():
+    """Load and cache the local NSFW detection model."""
+    global _local_model
+    if _local_model is None:
+        from transformers import pipeline
+        _local_model = pipeline(
+            "image-classification",
+            model="Falconsai/nsfw_image_detection",
+        )
+    return _local_model
+
 moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
 MAX_FRAMES_PER_VIDEO = 10          # hard cap so we never spawn hundreds of tasks
 MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
@@ -382,12 +403,34 @@ async def moderator_api(text: str | None = None,
     print("[moderator_api] All API key attempts failed.")
     return None
 
+async def local_moderation(image_path: str) -> Optional[str]:
+    """Run the local NSFW detection model on *image_path*."""
+    model = _get_local_model()
+    try:
+        results = await asyncio.to_thread(model, image_path)
+    except Exception as e:
+        print(f"[local_moderation] Error running model: {e}")
+        return None
+
+    nsfw_score = 0.0
+    for res in results:
+        if res.get("label", "").lower() == "nsfw":
+            nsfw_score = res.get("score", 0.0)
+            break
+
+    if nsfw_score >= LOCAL_NSFW_THRESHOLD:
+        return "nsfw"
+    return None
+
 async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True) -> Optional[str]:
     print(f"[process_image] Starting scan for: {original_filename} (guild: {guild_id})")
     try:
-        result = await moderator_api(image_path=original_filename, guild_id=guild_id)
+        if USE_OPENAI_API:
+            result = await moderator_api(image_path=original_filename, guild_id=guild_id)
+        else:
+            result = await local_moderation(original_filename)
         print(f"[process_image] Moderation result for {original_filename}: {result}")
         return result
     except Exception as e:
