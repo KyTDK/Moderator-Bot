@@ -16,14 +16,6 @@ intents.members = True
 intents.message_content = True
 bot = commands.Bot(command_prefix='/', intents=intents, help_command=None)
 
-async def make_announcement(guild, message):
-    try:
-        owner = await guild.fetch_owner()
-        await owner.send(f"📢 **Message from Moderator Bot for `{guild.name}`:**\n\n{message}")
-        print(f"Sent DM to owner of {guild.name}")
-    except discord.Forbidden:
-        print(f"Could not DM the owner of {guild.name}.")
-
 @bot.event
 async def on_ready():
     print(f"Bot connected as {bot.user} in {len(bot.guilds)} guilds")

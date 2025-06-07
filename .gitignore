@@ -24,3 +24,5 @@ modules/moderation/__pycache__/warn.cpython-310.pyc
 tests/__pycache__/test_time.cpython-310-pytest-8.4.0.pyc
 test/model.py
 test/announce.py
+__pycache__/bot.cpython-310.pyc
+modules/post_stats/__pycache__/topgg_poster.cpython-310.pyc
