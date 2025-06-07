@@ -26,11 +26,6 @@ from PIL import Image, ImageSequence
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
-# Toggle between OpenAI's moderation API and the local NSFW model. When set to
-# ``False`` the Falconsai/nsfw_image_detection model will be used instead of the
-# API for image moderation.
-USE_OPENAI_API = True
-
 # Minimum score returned by the local model for an image to be considered NSFW.
 LOCAL_NSFW_THRESHOLD = 0.8
 
@@ -416,6 +411,7 @@ async def local_moderation(image_path: str) -> Optional[str]:
     for res in results:
         if res.get("label", "").lower() == "nsfw":
             nsfw_score = res.get("score", 0.0)
+            print(f"Local model used with score {nsfw_score}")
             break
 
     if nsfw_score >= LOCAL_NSFW_THRESHOLD:
