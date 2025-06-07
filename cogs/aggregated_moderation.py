@@ -5,7 +5,6 @@ from collections import defaultdict
 from modules.utils import mysql
 from modules.detection import nsfw
 from modules.moderation import strike
-from modules.utils.discord_utils import safe_get_user
 
 class AggregatedModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

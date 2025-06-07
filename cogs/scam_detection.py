@@ -425,8 +425,7 @@ class ScamDetectionCog(commands.Cog):
         listing = "\n".join(f"- <{url}> ({'✅' if v else '❌'})" for url, v in rows)
         await interaction.response.send_message(f"**Scam URLs:**\n{listing}", ephemeral=True)
 
-    @commands.Cog.listener()
-    async def on_message(self, message: Message):
+    async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
 

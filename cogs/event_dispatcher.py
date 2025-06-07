@@ -9,6 +9,7 @@ class EventDispatcherCog(commands.Cog):
     async def on_message(self, message: discord.Message):
         await self.bot.get_cog("AggregatedModerationCog").handle_message(message)
         await self.bot.get_cog("BannedWordsCog").handle_message(message)
+        await self.bot.get_cog("ScamDetectionCog").handle_message(message)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(EventDispatcherCog(bot))
