@@ -2,7 +2,7 @@ import json
 import os
 import discord
 from discord.ext import commands
-from discord import app_commands, Interaction, Message
+from discord import app_commands, Interaction
 from dotenv import load_dotenv
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike

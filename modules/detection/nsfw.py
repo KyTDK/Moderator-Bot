@@ -28,19 +28,6 @@ os.makedirs(TMP_DIR, exist_ok=True)
 
 LOCAL_NSFW_THRESHOLD = 0.30
 
-_local_model = None
-
-def _get_local_model():
-    """Load and cache the local NSFW detection model."""
-    global _local_model
-    if _local_model is None:
-        from transformers import pipeline
-        _local_model = pipeline(
-            "image-classification",
-            model="Falconsai/nsfw_image_detection",
-        )
-    return _local_model
-
 moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
 MAX_FRAMES_PER_VIDEO = 10          # hard cap so we never spawn hundreds of tasks
 MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
@@ -387,34 +374,11 @@ async def moderator_api(text: str | None = None,
     print("[moderator_api] All API key attempts failed.")
     return None
 
-async def local_moderation(image_path: str) -> Optional[str]:
-    """Run the local NSFW detection model on *image_path*."""
-    model = _get_local_model()
-    try:
-        results = await asyncio.to_thread(model, image_path)
-    except Exception as e:
-        print(f"[local_moderation] Error running model: {e}")
-        return None
-
-    nsfw_score = 0.0
-    for res in results:
-        if res.get("label", "").lower() == "nsfw":
-            nsfw_score = res.get("score", 0.0)
-            print(f"[Local NSFW] Media checked — score: {nsfw_score:.2f}")
-            break
-
-    if nsfw_score >= LOCAL_NSFW_THRESHOLD:
-        return "nsfw"
-    return None
-
 async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True) -> Optional[str]:
     try:
-        if await api.is_guild_in_api_pool(guild_id) or await local_moderation(original_filename):
-            result = await moderator_api(image_path=original_filename, guild_id=guild_id)
-        else:
-            return
+        result = await moderator_api(image_path=original_filename, guild_id=guild_id)
         print(f"[process_image] Moderation result for {original_filename}: {result}")
         return result
     except Exception as e:
