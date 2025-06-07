@@ -411,7 +411,7 @@ async def local_moderation(image_path: str) -> Optional[str]:
     for res in results:
         if res.get("label", "").lower() == "nsfw":
             nsfw_score = res.get("score", 0.0)
-            print(f"Local model used with score {nsfw_score}")
+            print(f"[Local NSFW] Media checked — score: {nsfw_score:.2f}")
             break
 
     if nsfw_score >= LOCAL_NSFW_THRESHOLD:
