@@ -26,8 +26,7 @@ from PIL import Image, ImageSequence
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
-# Minimum score returned by the local model for an image to be considered NSFW.
-LOCAL_NSFW_THRESHOLD = 0.8
+LOCAL_NSFW_THRESHOLD = 0.30
 
 _local_model = None
 
@@ -412,10 +411,10 @@ async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True) -> Optional[str]:
     try:
-        if await api.is_guild_in_api_pool(guild_id):
+        if await api.is_guild_in_api_pool(guild_id) or await local_moderation(original_filename):
             result = await moderator_api(image_path=original_filename, guild_id=guild_id)
         else:
-            result = await local_moderation(original_filename)
+            return
         print(f"[process_image] Moderation result for {original_filename}: {result}")
         return result
     except Exception as e:

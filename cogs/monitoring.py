@@ -7,7 +7,7 @@ from discord.app_commands.errors import MissingPermissions
 from discord.utils import format_dt, utcnow
 from discord import app_commands
 
-class Monitoring(commands.Cog):
+class MonitoringCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.invite_cache = {}
@@ -234,8 +234,7 @@ class Monitoring(commands.Cog):
         except Exception as e:
             print(f"[Leave Log] Failed to log member removal: {e}")
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def handle_message(self, message: discord.Message):
         if not message.author.bot:
             self.message_cache[message.id] = message
 
@@ -459,4 +458,4 @@ class Monitoring(commands.Cog):
             await interaction.response.send_message("No monitor channel is currently set.", ephemeral=True)
             
 async def setup(bot: commands.Bot):
-    await bot.add_cog(Monitoring(bot))
+    await bot.add_cog(MonitoringCog(bot))
