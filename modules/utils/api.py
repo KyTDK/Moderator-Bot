@@ -121,3 +121,10 @@ async def get_non_working_api_keys():
     result, _ = await mysql.execute_query(query, fetch_all=True)
     return [row[0] for row in result] if result else []
 
+async def is_guild_in_api_pool(guild_id: int) -> bool:
+    result, _ = await mysql.execute_query(
+        "SELECT 1 FROM api_pool WHERE guild_id = %s LIMIT 1",
+        (guild_id,),
+        fetch_one=True
+    )
+    return result is not None

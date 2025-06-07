@@ -101,6 +101,7 @@ async def _ensure_database_exists():
                 """
                 CREATE TABLE IF NOT EXISTS api_pool (
                     user_id BIGINT NOT NULL,
+                    guild_id BIGINT NOT NULL,
                     api_key TEXT NOT NULL,
                     api_key_hash VARCHAR(64) NOT NULL,
                     working BOOLEAN NOT NULL DEFAULT TRUE,

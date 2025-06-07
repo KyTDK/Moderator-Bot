@@ -427,7 +427,7 @@ async def process_image(original_filename: str,
                         clean_up: bool = True) -> Optional[str]:
     print(f"[process_image] Starting scan for: {original_filename} (guild: {guild_id})")
     try:
-        if USE_OPENAI_API:
+        if await api.is_guild_in_api_pool(guild_id):
             result = await moderator_api(image_path=original_filename, guild_id=guild_id)
         else:
             result = await local_moderation(original_filename)
