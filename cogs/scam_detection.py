@@ -177,7 +177,6 @@ class ScamDetectionCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.refresh_phishtank_cache.start()
-        update_cache()
 
     scam_group = app_commands.Group(
         name="scam",
