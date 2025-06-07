@@ -63,7 +63,8 @@ SAFE_URLS = [
     "discordapp.com",
     "steamcommunity.com",
     "store.steampowered.com",
-    "roblox.com"
+    "roblox.com",
+    "media.discordapp.net"
 ]
 
 def update_cache():
