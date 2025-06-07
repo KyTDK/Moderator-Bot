@@ -37,6 +37,9 @@ class AggregatedModerationCog(commands.Cog):
     async def handle_message(self, message: discord.Message):
         if message.author.bot:
             return
+        
+        if message.guild is None:
+            return
 
         user_id = message.author.id
         guild_id = message.guild.id
