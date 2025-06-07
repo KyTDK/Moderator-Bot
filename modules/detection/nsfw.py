@@ -167,7 +167,6 @@ async def process_video(
     flagged_file: discord.File | None = None
 
     async def analyse(path: str):
-        print(f"[process_video] Analyzing frame: {path}")
         async with semaphore:
             try:
                 cat = await process_image(path, guild_id=guild_id, clean_up=False)
@@ -199,7 +198,6 @@ async def process_video(
                         flagged_file,
                     )
                 return flagged_file, True
-        print("[process_video] No frames were flagged")
         return None, False
     finally:
         for p in temp_frames:
