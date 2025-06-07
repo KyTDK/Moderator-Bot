@@ -22,3 +22,4 @@ cogs/__pycache__/scam_detection.cpython-310 (conflicted copy 2025-06-03 132323).
 cogs/__pycache__/settings.cpython-310.pyc
 modules/moderation/__pycache__/warn.cpython-310.pyc
 tests/__pycache__/test_time.cpython-310-pytest-8.4.0.pyc
+test/model.py
