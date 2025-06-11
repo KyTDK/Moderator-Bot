@@ -1,13 +1,19 @@
 import unicodedata
 from discord.ext import commands
 from discord import app_commands, Interaction
-from modules.utils.mysql import execute_query
+from modules.moderation import strike
+from modules.utils.action_manager import ActionListManager
+from modules.utils.mysql import execute_query, update_settings
 import io
 import re
 import discord
 from better_profanity import profanity
 from cleantext import clean
 from modules.utils import mysql
+from modules.utils.strike import validate_action_with_duration
+
+BANNED_ACTION_SETTING = "banned-words-action"
+manager = ActionListManager(BANNED_ACTION_SETTING)
 
 RE_REPEATS = re.compile(r"(.)\1{2,}")
 def normalize_text(text: str) -> str:
@@ -156,7 +162,7 @@ class BannedWordsCog(commands.Cog):
             for word in banned_words:
                 file_content += f"- {word}\n"
             file_buffer = io.StringIO(file_content)
-            file = discord.File(file_buffer, filename="banned_words.txt")
+            file = discord.File(file_buffer, filename = f"banned_words_{interaction.guild.id}.txt")
 
         await interaction.response.send_message(file=file, ephemeral=True)
 
@@ -209,10 +215,19 @@ class BannedWordsCog(commands.Cog):
         ):
             return
 
-        try:
-            await message.delete()
-        except (discord.Forbidden, discord.NotFound):
-            print(f"Cannot delete message {message.id}")
+        action_flag = await mysql.get_settings(guild_id, BANNED_ACTION_SETTING)
+        if action_flag:
+            try:
+                await strike.perform_disciplinary_action(
+                    user=message.author,
+                    bot=self.bot,
+                    action_string=action_flag,
+                    reason="Message contained banned word",
+                    source="banned word",
+                    message=message
+                )
+            except Exception:
+                pass
 
         try:
             await message.channel.send(
@@ -220,6 +235,64 @@ class BannedWordsCog(commands.Cog):
             )
         except discord.Forbidden:
             pass
+
+    @bannedwords_group.command(name="add_action", description="Add a moderation action to be triggered when a banned word is detected.")
+    @app_commands.describe(
+        action="Action: strike, kick, ban, timeout, delete",
+        duration="Only required for timeout (e.g. 10m, 1h, 3d)"
+    )
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(name="strike", value="strike"),
+            app_commands.Choice(name="kick", value="kick"),
+            app_commands.Choice(name="ban", value="ban"),
+            app_commands.Choice(name="timeout", value="timeout"),
+            app_commands.Choice(name="delete", value="delete")
+        ])
+    async def add_banned_action(
+        self,
+        interaction: Interaction,
+        action: str,
+        duration: str = None
+    ):
+        action_str = await validate_action_with_duration(
+            interaction=interaction,
+            action=action,
+            duration=duration,
+            valid_actions=["strike", "kick", "ban", "timeout", "delete"]
+        )
+        if action_str is None:
+            return
+
+        msg = await manager.add_action(interaction.guild.id, action_str)
+        await interaction.response.send_message(msg, ephemeral=True)
+
+    @bannedwords_group.command(name="remove_action", description="Remove a specific action from the list of punishments for banned words.")
+    @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(name="strike", value="strike"),
+            app_commands.Choice(name="kick", value="kick"),
+            app_commands.Choice(name="ban", value="ban"),
+            app_commands.Choice(name="timeout", value="timeout"),
+            app_commands.Choice(name="delete", value="delete")
+        ])
+    async def remove_banned_action(self, interaction: Interaction, action: str):
+        msg = await manager.remove_action(interaction.guild.id, action)
+        await interaction.response.send_message(msg, ephemeral=True)
+
+    @bannedwords_group.command(name="view_actions", description="Show all actions currently configured to trigger when banned words are used.")
+    async def view_banned_actions(self, interaction: Interaction):
+        actions = await manager.view_actions(interaction.guild.id)
+        if not actions:
+            await interaction.response.send_message("No actions are currently set for banned words.", ephemeral=True)
+            return
+
+        formatted = "\n".join(f"{i+1}. `{a}`" for i, a in enumerate(actions))
+        await interaction.response.send_message(
+            f"**Current banned words actions:**\n{formatted}",
+            ephemeral=True
+        )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BannedWordsCog(bot))

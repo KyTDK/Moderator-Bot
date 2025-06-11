@@ -72,6 +72,8 @@ class Settings(commands.Cog):
     async def help_settings(self, interaction: Interaction):
         help_message = "**Available Settings:**\n"
         for setting in SETTINGS_SCHEMA.values():
+            if getattr(setting, "hidden", False):
+                continue
             help_message += (
                 f"**{setting.name}**: {setting.description} (Type: {setting.type.__name__})\n"
             )

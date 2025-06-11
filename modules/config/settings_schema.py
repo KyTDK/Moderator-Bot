@@ -49,6 +49,14 @@ SETTINGS_SCHEMA = {
         hidden=True,
         choices=["strike", "kick", "ban", "timeout", "delete"]
     ),
+    "banned-words-action": Setting(
+        name="banned-words-action",
+        description="Action to take when a user posts a banned word.",
+        setting_type=list[str],
+        default=["delete"],
+        hidden=True,
+        choices=["strike", "kick", "ban", "timeout", "delete"]
+    ),
     "monitor-channel": Setting(
         name="monitor-channel",
         description="Channel to log all server activities, including message edits, deletions, and user join/leave events.",
