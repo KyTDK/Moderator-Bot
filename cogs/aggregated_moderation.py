@@ -47,7 +47,6 @@ class AggregatedModerationCog(commands.Cog):
         if (message.channel.id not in await mysql.get_settings(guild_id, "exclude-channels")):
             if await nsfw.is_nsfw(self.bot, message=message, nsfw_callback=nsfw.handle_nsfw_content, guild_id=guild_id):
                 try:
-                    await message.delete()
                     await message.channel.send(
                         f"{message.author.mention}, your message was detected to contain explicit content and was removed."
                     )

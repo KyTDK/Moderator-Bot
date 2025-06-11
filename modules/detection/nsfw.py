@@ -397,9 +397,6 @@ async def process_image(original_filename: str,
             _safe_delete(original_filename)
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  reason: str, image: discord.File, message: discord.Message):
-    if await mysql.get_settings(user.guild.id, "strike-nsfw") is not True:
-        return
-
     action_flag = await mysql.get_settings(guild_id, NSFW_ACTION_SETTING)
     if action_flag:
         try:
