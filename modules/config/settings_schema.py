@@ -45,7 +45,7 @@ SETTINGS_SCHEMA = {
         name="nsfw-detection-action",
         description="Action to take when a user posts NSFW content.",
         setting_type=list[str],
-        default=["delete"],
+        default=["delete", "strike"],
         hidden=True,
         choices=["strike", "kick", "ban", "timeout", "delete"]
     ),
