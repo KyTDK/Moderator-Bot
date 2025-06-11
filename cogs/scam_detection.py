@@ -336,23 +336,24 @@ class ScamDetectionCog(commands.Cog):
             f"Link checking **{action.value}d**.", ephemeral=True
         )
 
-    @scam_group.command(name="action", description="Set the scam punishment action.")
+    @scam_group.command(name="add_action", description="Add an action to the scam punishment list.")
     @app_commands.describe(
-        action="Action: strike, kick, ban, timeout, none",
+        action="Action: strike, kick, ban, timeout, delete, none",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
     )
     @app_commands.choices(
-    action=[
-        app_commands.Choice(name="strike", value="strike"),
-        app_commands.Choice(name="kick", value="kick"),
-        app_commands.Choice(name="ban", value="ban"),
-        app_commands.Choice(name="timeout", value="timeout"),
-        app_commands.Choice(name="none", value="none"),
-    ])
-    async def setting_action(
+        action=[
+            app_commands.Choice(name="strike", value="strike"),
+            app_commands.Choice(name="kick", value="kick"),
+            app_commands.Choice(name="ban", value="ban"),
+            app_commands.Choice(name="timeout", value="timeout"),
+            app_commands.Choice(name="delete", value="delete"),
+            app_commands.Choice(name="none", value="none"),
+        ])
+    async def scam_add_action(
         self,
         interaction: Interaction,
-        action: str = None,
+        action: str,
         duration: str = None
     ):
         gid = interaction.guild.id
@@ -361,15 +362,36 @@ class ScamDetectionCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=["strike", "kick", "ban", "timeout", "none"],
+            valid_actions=["strike", "kick", "ban", "timeout", "delete", "none"]
         )
         if action_str is None:
             return
 
-        await update_settings(gid, ACTION_SETTING, action_str)
-        await interaction.response.send_message(
-            f"Scam action set to `{action_str}`.", ephemeral=True
-        )
+        current = await get_settings(gid, ACTION_SETTING) or []
+        if not isinstance(current, list):
+            current = [current] if current else []
+
+        if action_str in current:
+            await interaction.response.send_message(f"`{action_str}` is already in the action list.", ephemeral=True)
+            return
+
+        current.append(action_str)
+        await update_settings(gid, ACTION_SETTING, current)
+        await interaction.response.send_message(f"Added `{action_str}` to scam actions.", ephemeral=True)
+
+    @scam_group.command(name="remove_action", description="Remove an action from the scam punishment list.")
+    @app_commands.describe(action="Exact action string to remove (e.g. timeout:1d, delete)")
+    async def scam_remove_action(self, interaction: Interaction, action: str):
+        gid = interaction.guild.id
+        current = await get_settings(gid, ACTION_SETTING) or []
+
+        if action not in current:
+            await interaction.response.send_message(f"`{action}` is not in the action list.", ephemeral=True)
+            return
+
+        current.remove(action)
+        await update_settings(gid, ACTION_SETTING, current)
+        await interaction.response.send_message(f"Removed `{action}` from scam actions.", ephemeral=True)
 
     @scam_group.command(name="view", description="View current scam settings.")
     async def settings_view(self, interaction: Interaction):
@@ -378,11 +400,18 @@ class ScamDetectionCog(commands.Cog):
         action_setting = await get_settings(gid, ACTION_SETTING)
         ai_scam_detection = await get_settings(gid, AI_DECTION_SETTING)
 
+        if not action_setting:
+            actions_formatted = "*No actions set.*"
+        else:
+            if not isinstance(action_setting, list):
+                action_setting = [action_setting]
+            actions_formatted = "\n".join(f"  - `{a}`" for a in action_setting)
+
         await interaction.response.send_message(
             f"**Scam Settings:**\n"
             f"- Delete scam messages: `{delete_setting}`\n"
             f"- AI scam detection: `{ai_scam_detection}`\n"
-            f"- Scam action: `{action_setting}`",
+            f"- Scam actions:\n{actions_formatted}",
             ephemeral=True
         )
 
@@ -503,6 +532,7 @@ class ScamDetectionCog(commands.Cog):
                     action_string=action_flag,
                     reason="Scam message detected",
                     source="scam",
+                    message=message,
                 )
             except Exception:
                 pass

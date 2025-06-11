@@ -140,6 +140,7 @@ async def process_video(
     member: discord.Member,
     guild_id: int,
     bot: commands.Bot,
+    message: discord.Message
 ) -> tuple[Optional[discord.File], bool]:
     
     temp_frames, _ = await asyncio.to_thread(
@@ -183,6 +184,7 @@ async def process_video(
                         bot,
                         f"Detected potential policy violation (Category: **{category.title()}**)",
                         flagged_file,
+                        message
                     )
                 return flagged_file, True
         return None, False
@@ -195,7 +197,8 @@ async def check_attachment(author,
                            temp_filename,
                            nsfw_callback,
                            bot,
-                           guild_id):
+                           guild_id,
+                           message):
     filename = os.path.basename(temp_filename)
     file_type = determine_file_type(temp_filename)
 
@@ -212,12 +215,13 @@ async def check_attachment(author,
                 guild_id,
                 f"Detected potential policy violation (Category: **{category.title()}**)",
                 discord.File(temp_filename, filename=filename),
+                message
             )
         return bool(category)
 
     if file_type == "Video":
         _file, flagged = await process_video(
-            temp_filename, nsfw_callback, author, guild_id, bot
+            temp_filename, nsfw_callback, author, guild_id, bot, message
         )
         return flagged
 
@@ -234,7 +238,7 @@ async def is_nsfw(bot: commands.Bot,
 
     if url:
         async with temp_download(url) as temp_filename:
-            return await check_attachment(member, temp_filename, nsfw_callback, bot, guild_id)
+            return await check_attachment(member, temp_filename, nsfw_callback, bot, guild_id, message)
 
     if message is None:
         print("Message is None")
@@ -246,7 +250,7 @@ async def is_nsfw(bot: commands.Bot,
             await attachment.save(tmp.name)
             temp_filename = tmp.name
         try:
-            return await check_attachment(message.author, temp_filename, nsfw_callback, bot, guild_id)
+            return await check_attachment(message.author, temp_filename, nsfw_callback, bot, guild_id, message)
         finally:
             _safe_delete(temp_filename)
 
@@ -262,7 +266,7 @@ async def is_nsfw(bot: commands.Bot,
         if domain == "tenor.com" or domain.endswith(".tenor.com"):
             continue  # ignore Tenor
         async with temp_download(gif_url, "gif") as temp_location:
-            return await check_attachment(message.author, temp_location, nsfw_callback, bot, guild_id)
+            return await check_attachment(message.author, temp_location, nsfw_callback, bot, guild_id, message)
         
     for sticker in message.stickers:
         sticker_url = sticker.url
@@ -291,7 +295,8 @@ async def is_nsfw(bot: commands.Bot,
                     gif_location, 
                     nsfw_callback,
                     bot, 
-                    guild_id
+                    guild_id,
+                    message
                 )
             finally:
                 if gif_location != temp_location:
@@ -391,7 +396,7 @@ async def process_image(original_filename: str,
         if clean_up and os.path.exists(original_filename):
             _safe_delete(original_filename)
 
-async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  reason: str, image: discord.File):
+async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  reason: str, image: discord.File, message: discord.Message):
     if await mysql.get_settings(user.guild.id, "strike-nsfw") is not True:
         return
 
@@ -404,6 +409,7 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  re
                 action_string=action_flag,
                 reason=reason,
                 source="nsfw",
+                message=message
             )
         except Exception:
             pass
