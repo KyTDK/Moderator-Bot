@@ -41,6 +41,14 @@ SETTINGS_SCHEMA = {
         description="Channel where NSFW violations are logged with a preview of the media.",
         setting_type=discord.TextChannel,
     ),
+    "nsfw-detection-action": Setting(
+        name="nsfw-detection-action",
+        description="Action to take when a user posts NSFW content.",
+        setting_type=list[str],
+        default=["delete"],
+        hidden=True,
+        choices=["strike", "kick", "ban", "timeout", "delete", "none"]
+    ),
     "monitor-channel": Setting(
         name="monitor-channel",
         description="Channel to log all server activities, including message edits, deletions, and user join/leave events.",
@@ -131,7 +139,7 @@ SETTINGS_SCHEMA = {
         name="nsfw-pfp-action",
         description="Action to take when a user sets an NSFW profile picture.",
         setting_type=str,
-        default="kick",
+        default=["kick"],
         choices=["strike", "strike:2d", "kick", "ban", "timeout:1d", "timeout:7d"],
     ),
     "nsfw-pfp-message": Setting(
@@ -171,10 +179,10 @@ SETTINGS_SCHEMA = {
     "scam-detection-action": Setting(
         name="scam-detection-action",
         description="Action to take when a scam message is detected.",
-        setting_type=str,
+        setting_type=list[str],
         hidden=True,
-        default="none",
-        choices=["strike", "strike:2d", "kick", "ban", "timeout:1d", "timeout:7d", "none"],
+        default=["delete"],
+        choices=["strike", "kick", "ban", "timeout", "delete", "none"],
     ),
     "ai-scam-detection": Setting(
         name="ai-scam-detection",

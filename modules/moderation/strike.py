@@ -1,5 +1,5 @@
-from typing import Optional
-from discord import Interaction, Member, Embed, Color
+from typing import Optional, Union
+from discord import Interaction, Member, Embed, Color, Message
 from discord.ext import commands
 from modules.utils.discord_utils import message_user
 from modules.utils.mysql import execute_query
@@ -27,53 +27,76 @@ def get_ban_threshold(strike_settings):
 async def perform_disciplinary_action(
     user: Member,
     bot: commands.Bot,
-    action_string: str,
+    action_string: Union[str, list[str]],
     reason: str = "No reason provided",
-    source: str = "generic"
+    source: str = "generic",
+    message: Optional[Message] = None
 ) -> Optional[str]:
-    """Executes a configured action string on a user."""
+    """Executes one or more configured action strings on a user."""
     now = datetime.now(timezone.utc)
+    results = []
 
-    try:
-        if action_string == "none":
-            return "No action taken."
+    actions = [action_string] if isinstance(action_string, str) else action_string
 
-        elif action_string == "strike":
-            await strike(user=user, bot=bot, reason=reason, expiry=duration_str)
-            return "Strike issued."
+    for action in actions:
+        try:
+            if action == "none":
+                results.append("No action taken.")
+                continue
 
-        elif action_string == "kick":
-            await user.kick(reason=reason)
-            return "User kicked."
+            if action == "delete":
+                if message:
+                    try:
+                        await message.delete()
+                        results.append("Message deleted.")
+                    except Exception as e:
+                        print(f"[Disciplinary Action] Failed to delete message: {e}")
+                        results.append("Failed to delete message.")
+                else:
+                    results.append("Delete requested, but no message was provided.")
+                continue
 
-        elif action_string == "ban":
-            await user.ban(reason=reason)
-            return "User banned."
+            if action == "strike":
+                await strike(user=user, bot=bot, reason=reason, expiry=None)
+                results.append("Strike issued.")
+                continue
 
-        elif action_string.startswith("timeout:"):
-            duration_str = action_string.split("timeout:", 1)[1]
-            delta = parse_duration(duration_str)
-            if not delta:
-                return f"Invalid timeout duration: '{duration_str}'"
-            until = now + delta
-            await user.timeout(until, reason=reason)
+            if action == "kick":
+                await user.kick(reason=reason)
+                results.append("User kicked.")
+                continue
 
-            # Record timeout
-            await execute_query(
-                """
-                INSERT INTO timeouts (user_id, guild_id, timeout_until, reason, source)
-                VALUES (%s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE timeout_until = VALUES(timeout_until), reason = VALUES(reason), source = VALUES(source)
-                """,
-                (user.id, user.guild.id, until, reason, source)
-            )
-            return f"User timed out until <t:{int(until.timestamp())}:R>."
+            if action == "ban":
+                await user.ban(reason=reason)
+                results.append("User banned.")
+                continue
 
-        return f"Unknown action: '{action_string}'"
+            if action.startswith("timeout:"):
+                duration_str = action.split("timeout:", 1)[1]
+                delta = parse_duration(duration_str)
+                if not delta:
+                    results.append(f"Invalid timeout duration: '{duration_str}'")
+                    continue
+                until = now + delta
+                await user.timeout(until, reason=reason)
 
-    except Exception as e:
-        print(f"[Disciplinary Action Error] {user}: {e}")
-        return f"Action failed: {action_string}"
+                await execute_query(
+                    """
+                    INSERT INTO timeouts (user_id, guild_id, timeout_until, reason, source)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE timeout_until = VALUES(timeout_until), reason = VALUES(reason), source = VALUES(source)
+                    """,
+                    (user.id, user.guild.id, until, reason, source)
+                )
+                results.append(f"User timed out until <t:{int(until.timestamp())}:R>.")
+                continue
+
+            results.append(f"Unknown action: '{action}'")
+        except Exception as e:
+            print(f"[Disciplinary Action Error] {user}: {e}")
+            results.append(f"Action failed: {action}")
+
+    return "\n".join(results) if results else None
 
 async def strike(
     user: Member,

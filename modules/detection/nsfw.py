@@ -12,6 +12,7 @@ import discord
 from lottie.exporters.gif import export_gif
 import lottie
 import base64
+from cogs.nsfw import NSFW_ACTION_SETTING
 from modules.utils import logging, mysql, api
 from modules.moderation import strike
 from urllib.parse import urlparse
@@ -208,6 +209,7 @@ async def check_attachment(author,
             await nsfw_callback(
                 author,
                 bot,
+                guild_id,
                 f"Detected potential policy violation (Category: **{category.title()}**)",
                 discord.File(temp_filename, filename=filename),
             )
@@ -389,13 +391,34 @@ async def process_image(original_filename: str,
         if clean_up and os.path.exists(original_filename):
             _safe_delete(original_filename)
 
-async def handle_nsfw_content(user: Member, bot: commands.Bot, reason: str, image: discord.File):
+async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  reason: str, image: discord.File):
     if await mysql.get_settings(user.guild.id, "strike-nsfw") is not True:
         return
 
-    embed = await strike.strike(user=user, bot=bot, reason=reason,
-                                interaction=None, log_to_channel=False)
+    action_flag = await mysql.get_settings(guild_id, NSFW_ACTION_SETTING)
+    if action_flag:
+        try:
+            await strike.perform_disciplinary_action(
+                user=user,
+                bot=bot,
+                action_string=action_flag,
+                reason=reason,
+                source="nsfw",
+            )
+        except Exception:
+            pass
+    
+    embed = discord.Embed(
+    title="NSFW Content Detected",
+    description=(
+        f"**User:** {user.mention} ({user.display_name})\n"
+        f"**Reason:** {reason}"
+    ),
+    color=discord.Color.red()
+    )
+    embed.set_thumbnail(url=user.display_avatar.url)
     embed.set_image(url=f"attachment://{image.filename}")
+    embed.set_footer(text=f"User ID: {user.id}")
 
     nsfw_channel_id = await mysql.get_settings(user.guild.id, "nsfw-channel")
     strike_channel_id = await mysql.get_settings(user.guild.id, "strike-channel")
