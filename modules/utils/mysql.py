@@ -245,9 +245,18 @@ async def get_settings(guild_id: int, settings_key: str | None = None):
         if encrypted and value:
             value = fernet.decrypt(value.encode()).decode()
 
-        # Coerce string "true"/"false" into actual booleans
+        # Convert "true"/"false" strings into bools
         if schema and schema.type is bool and isinstance(value, str):
             value = value.lower() == "true"
+
+        # Handle old string → new list migration for list[str] settings
+        if schema and schema.type == list[str]:
+            if isinstance(value, str):
+                value = [value]
+            elif not isinstance(value, list):
+                value = []
+            # Strip out "none" from migrated data
+            value = [v for v in value if v != "none"]
 
         return value
 
