@@ -47,7 +47,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=["delete"],
         hidden=True,
-        choices=["strike", "kick", "ban", "timeout", "delete", "none"]
+        choices=["strike", "kick", "ban", "timeout", "delete"]
     ),
     "monitor-channel": Setting(
         name="monitor-channel",
@@ -182,7 +182,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         hidden=True,
         default=["delete"],
-        choices=["strike", "kick", "ban", "timeout", "delete", "none"],
+        choices=["strike", "kick", "ban", "timeout", "delete"],
     ),
     "ai-scam-detection": Setting(
         name="ai-scam-detection",

@@ -21,7 +21,7 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(name="add_action", description="Add an action to the NSFW punishment list.")
     @app_commands.describe(
-        action="Action: strike, kick, ban, timeout, delete, none",
+        action="Action: strike, kick, ban, timeout, delete",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
     )
     @app_commands.choices(
@@ -30,8 +30,7 @@ class NSFWCog(commands.Cog):
             app_commands.Choice(name="kick", value="kick"),
             app_commands.Choice(name="ban", value="ban"),
             app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete"),
-            app_commands.Choice(name="none", value="none"),
+            app_commands.Choice(name="delete", value="delete")
         ])
     async def add_nsfw_action(
         self,
