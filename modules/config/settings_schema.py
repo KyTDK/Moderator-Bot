@@ -61,20 +61,6 @@ SETTINGS_SCHEMA = {
         default=False,
         choices=["true", "false"]
     ),
-    "delete-nsfw": Setting(
-        name="delete-nsfw",
-        description="Automatically delete messages containing NSFW content.",
-        setting_type=bool,
-        default=True,
-        choices=["true", "false"]
-    ),
-    "strike-nsfw": Setting(
-        name="strike-nsfw",
-        description="Strike users for sending NSFW content.",
-        setting_type=bool,
-        default=True,
-        choices=["true", "false"]
-    ),
     "restrict-striked-users": Setting(
         name="restrict-striked-users",
         description="Restrict striked users by scanning their messages for offensive content (TEXT ONLY).",
