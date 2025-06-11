@@ -73,6 +73,8 @@ SAFE_URLS = [
     "music.apple.com"
 ]
 
+INTERMEDIARY_DOMAINS = ["antiphishing.biz",]
+
 def update_cache():
     try:
         print("Downloading latest PhishTank data...")
@@ -83,6 +85,22 @@ def update_cache():
         print("PhishTank data updated.")
     except Exception as e:
         print(f"Error updating cache: {e}")
+
+async def unshorten_url(url: str) -> str:
+    import httpx
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, headers=headers, timeout=10.0, verify=False) as client:
+            resp = await client.get(url)
+            final_url = str(resp.url)
+            if any(domain in final_url for domain in INTERMEDIARY_DOMAINS):
+                print(f"[Redirect Skipped] Landed on intermediary: {final_url}")
+                return url
+            print(f"[URL Unshortened] {url} -> {final_url}")
+            return final_url
+    except Exception as e:
+        print(f"[unshorten_url] Failed to unshorten {url}: {e}")
+        return url
 
 def check_phishtank(url: str) -> bool:
     """
@@ -118,62 +136,70 @@ def check_url_google_safe_browsing(api_key, url):
     print(f"Checked URL: {url}, Response: {data}")
     return bool(data.get("matches"))
 
+async def _url_is_scam(url_lower: str, guild_id: int) -> bool:
+    """Run *all* DB / Safe-list / PhishTank / GSB checks for a single URL."""
+    # DB substring-match against scam_urls
+    match_row, _ = await execute_query(
+        """SELECT full_url FROM scam_urls
+           WHERE (guild_id=%s OR global_verified=TRUE)
+           AND LOCATE(full_url, %s) > 0""",
+        (guild_id, url_lower), fetch_one=True
+    )
+    if match_row:
+        print(f"[ScamMatch] Known URL pattern: {match_row[0]}")
+        return True
+
+    # skip completely safe domains
+    if any(safe in url_lower for safe in SAFE_URLS):
+        return False
+
+    # exact known URL
+    already_known, _ = await execute_query(
+        "SELECT 1 FROM scam_urls WHERE (guild_id=%s OR global_verified=TRUE) AND full_url=%s",
+        (guild_id, url_lower), fetch_one=True
+    )
+    if already_known:
+        return True
+
+    # PhishTank / Google Safe Browsing
+    if check_phishtank(url_lower) or check_url_google_safe_browsing(GOOGLE_API_KEY, url_lower):
+        await execute_query(
+            """INSERT INTO scam_urls (guild_id, full_url, added_by, global_verified)
+               VALUES (%s, %s, %s, TRUE)
+               ON DUPLICATE KEY UPDATE global_verified = TRUE""",
+            (guild_id, url_lower, 0)
+        )
+        return True
+    return False
+
 async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None, str | None]:
     content_l = message.lower()
     normalized_message = normalize_text(content_l)
 
-    check_links = await get_settings(guild_id, CHECK_LINKS_SETTING)
-    ai_detection_flag = await get_settings(guild_id, AI_DECTION_SETTING)
-
-    # Match against DB patterns
     patterns, _ = await execute_query(
         "SELECT pattern FROM scam_messages WHERE guild_id=%s OR global_verified=TRUE",
-        (guild_id,), fetch_all=True,
+        (guild_id,), fetch_all=True
     )
     matched_pattern = next((p[0] for p in patterns if p[0].lower() in normalized_message), None)
+    if matched_pattern:
+        return True, matched_pattern, None
 
-    # Match against known URLs
-    urls, _ = await execute_query(
-        "SELECT full_url FROM scam_urls WHERE guild_id=%s OR global_verified=TRUE",
-        (guild_id,), fetch_all=True,
-    )
-    matched_url = next((u[0] for u in urls if u[0].lower() in content_l), None)
-
-    # If we found a pattern or URL, return immediately
-    if matched_pattern or matched_url:
-        return True, matched_pattern, matched_url
-
-    # External scan
     found_urls = URL_RE.findall(message)
+    check_links   = await get_settings(guild_id, CHECK_LINKS_SETTING)
+    ai_detection  = await get_settings(guild_id, AI_DECTION_SETTING)
+
     if check_links:
         for url in found_urls:
-            url_lower = url.lower()
-
-            if any(safe_url in url_lower for safe_url in SAFE_URLS):
-                continue
-
-            already_known, _ = await execute_query(
-                "SELECT 1 FROM scam_urls WHERE (guild_id=%s OR global_verified=TRUE) AND full_url=%s",
-                (guild_id, url_lower),
-                fetch_one=True,
-            )
-            if already_known:
+            if await _url_is_scam(url.lower(), guild_id):
                 return True, None, url
 
-            # Use Google Safe Browsing
-            if check_phishtank(url) or check_url_google_safe_browsing(GOOGLE_API_KEY, url):
-                await execute_query(
-                    """INSERT INTO scam_urls (guild_id, full_url, added_by, global_verified)
-                       VALUES (%s, %s, %s, TRUE)
-                       ON DUPLICATE KEY UPDATE global_verified = TRUE""",
-                    (guild_id, url_lower, 0),
-                )
-                return True, None, url
+            expanded = await unshorten_url(url)
+            if expanded != url and await _url_is_scam(expanded.lower(), guild_id):
+                return True, None, expanded
 
-    # If AI detection is enabled
-    if ai_detection_flag and len(normalized_message.split()) >= 5:
+    if ai_detection and len(normalized_message.split()) >= 5:
         result = classifier(normalized_message)[0]
-        if result['label'] == 'LABEL_1' and result['score'] > 0.95: # High confidence spam as the model is highly sensitive
+        if result['label'] == 'LABEL_1' and result['score'] > 0.95:
             return True, message, None
 
     return False, None, None
