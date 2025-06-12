@@ -40,11 +40,14 @@ async def perform_disciplinary_action(
 
     for action in actions:
         try:
-            if action == "none":
+            base_action, _, duration_str = action.partition(":")
+            duration_str = duration_str.strip() if duration_str else None
+
+            if base_action == "none":
                 results.append("No action taken.")
                 continue
 
-            if action == "delete":
+            if base_action == "delete":
                 if message:
                     try:
                         await message.delete()
@@ -56,23 +59,25 @@ async def perform_disciplinary_action(
                     results.append("Delete requested, but no message was provided.")
                 continue
 
-            if action == "strike":
-                await strike(user=user, bot=bot, reason=reason, expiry=None)
-                results.append("Strike issued.")
+            if base_action == "strike":
+                await strike(user=user, bot=bot, reason=reason, expiry=duration_str)
+                results.append(f"Strike issued{' with expiry' if duration_str else ''}.")
                 continue
 
-            if action == "kick":
+            if base_action == "kick":
                 await user.kick(reason=reason)
                 results.append("User kicked.")
                 continue
 
-            if action == "ban":
+            if base_action == "ban":
                 await user.ban(reason=reason)
                 results.append("User banned.")
                 continue
 
-            if action.startswith("timeout:"):
-                duration_str = action.split("timeout:", 1)[1]
+            if base_action == "timeout":
+                if not duration_str:
+                    results.append("No timeout duration provided.")
+                    continue
                 delta = parse_duration(duration_str)
                 if not delta:
                     results.append(f"Invalid timeout duration: '{duration_str}'")
@@ -92,6 +97,7 @@ async def perform_disciplinary_action(
                 continue
 
             results.append(f"Unknown action: '{action}'")
+
         except Exception as e:
             print(f"[Disciplinary Action Error] {user}: {e}")
             results.append(f"Action failed: {action}")
