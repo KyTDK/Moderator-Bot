@@ -135,7 +135,24 @@ class BannedWordsCog(commands.Cog):
             (guild_id, word)
         )
         await interaction.response.send_message(f"The word '{word}' has been removed from the banned words list.", ephemeral=True)
-    
+    @remove_banned_word.autocomplete("word")
+    async def banned_word_autocomplete(
+        self,
+        interaction: Interaction,
+        current: str
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete banned words for the remove command."""
+        guild_id = interaction.guild.id
+        rows, _ = await execute_query(
+            "SELECT word FROM banned_words WHERE guild_id = %s",
+            (guild_id,),
+            fetch_all=True
+        )
+
+        all_words = [row[0] for row in rows]
+        filtered = [w for w in all_words if current.lower() in w.lower()]
+        return [app_commands.Choice(name=word, value=word) for word in filtered[:25]]
+
     # List banned words (in a text file)
     @bannedwords_group.command(
         name="list",
