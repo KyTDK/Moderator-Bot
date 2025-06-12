@@ -6,7 +6,7 @@ from discord import app_commands, Interaction
 from dotenv import load_dotenv
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
-import re
+from urlextract import URLExtract
 from modules.utils.strike import validate_action_with_duration
 from transformers import pipeline
 from cogs.banned_words import normalize_text
@@ -26,7 +26,7 @@ PHISHTANK_URL = "http://data.phishtank.com/data/online-valid.json"
 PHISHTANK_CACHE_FILE = "phishtank_cache.json"
 PHISHTANK_USER_AGENT = {"User-Agent": "ModeratorBot/1.0"}
 
-URL_RE = re.compile(r"https?://[^\s]+")
+url_extractor = URLExtract()
 
 classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
 
@@ -184,12 +184,17 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     if matched_pattern:
         return True, matched_pattern, None
 
-    found_urls = URL_RE.findall(message)
+    found_urls = url_extractor.find_urls(message)
+    normalized_urls = [
+        u if u.startswith(("http://", "https://")) else f"http://{u}"
+        for u in found_urls
+    ]
+
     check_links   = await get_settings(guild_id, CHECK_LINKS_SETTING)
     ai_detection  = await get_settings(guild_id, AI_DECTION_SETTING)
 
     if check_links:
-        for url in found_urls:
+        for url in normalized_urls:
             if await _url_is_scam(url.lower(), guild_id):
                 return True, None, url
 
@@ -209,7 +214,7 @@ class ScamDetectionCog(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.refresh_phishtank_cache.start()
+        self.scam_schedule.start()
 
     scam_group = app_commands.Group(
         name="scam",
@@ -544,16 +549,21 @@ class ScamDetectionCog(commands.Cog):
             pass
 
     @tasks.loop(hours=6)
-    async def refresh_phishtank_cache(self):
+    async def scam_schedule(self):
         try:
             print("[PhishTank] Auto-refresh started...")
             update_cache()
             print("[PhishTank] Cache refreshed successfully.")
+
+            print("[URLExtract] Updating TLD list...")
+            url_extractor.update()
+            print("[URLExtract] TLD list updated.")
+
         except Exception as e:
-            print(f"[PhishTank] Error during scheduled refresh: {e}")
+            print(f"[scam_schedule] Error during scheduled refresh: {e}")
 
     def cog_unload(self):
-        self.refresh_phishtank_cache.cancel()
+        self.scam_schedule.cancel()
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ScamDetectionCog(bot))
