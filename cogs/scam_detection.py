@@ -11,7 +11,7 @@ from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from transformers import pipeline
 from cogs.banned_words import normalize_text
-import requests
+import aiohttp
 from discord.ext import tasks
     
 load_dotenv()
@@ -76,13 +76,15 @@ SAFE_URLS = [
 
 INTERMEDIARY_DOMAINS = ["antiphishing.biz",]
 
-def update_cache():
+async def update_cache():
     try:
         print("Downloading latest PhishTank data...")
-        r = requests.get(PHISHTANK_URL, headers=PHISHTANK_USER_AGENT, timeout=15)
-        r.raise_for_status()
+        async with aiohttp.ClientSession(headers=PHISHTANK_USER_AGENT) as session:
+            async with session.get(PHISHTANK_URL, timeout=15) as r:
+                r.raise_for_status()
+                data = await r.json()
         with open(PHISHTANK_CACHE_FILE, "w", encoding="utf-8") as f:
-            json.dump(r.json(), f)
+            json.dump(data, f)
         print("PhishTank data updated.")
     except Exception as e:
         print(f"Error updating cache: {e}")
@@ -116,7 +118,7 @@ def check_phishtank(url: str) -> bool:
         print(f"Error reading cache: {e}")
         return False
     
-def check_url_google_safe_browsing(api_key, url):
+async def check_url_google_safe_browsing(api_key, url):
     # Check if the URL is in the list of safe URLs
     if any(safe_url in url for safe_url in SAFE_URLS):
         print(f"URL {url} is in the safe list, skipping Google Safe Browsing check.")
@@ -132,8 +134,9 @@ def check_url_google_safe_browsing(api_key, url):
             "threatEntries": [{"url": url}]
         }
     }
-    response = requests.post(endpoint, json=body)
-    data = response.json()
+    async with aiohttp.ClientSession() as session:
+        async with session.post(endpoint, json=body) as response:
+            data = await response.json()
     print(f"Checked URL: {url}, Response: {data}")
     return bool(data.get("matches"))
 
@@ -163,7 +166,7 @@ async def _url_is_scam(url_lower: str, guild_id: int) -> bool:
         return True
 
     # PhishTank / Google Safe Browsing
-    if check_phishtank(url_lower) or check_url_google_safe_browsing(GOOGLE_API_KEY, url_lower):
+    if check_phishtank(url_lower) or await check_url_google_safe_browsing(GOOGLE_API_KEY, url_lower):
         await execute_query(
             """INSERT INTO scam_urls (guild_id, full_url, added_by, global_verified)
                VALUES (%s, %s, %s, TRUE)
@@ -549,7 +552,7 @@ class ScamDetectionCog(commands.Cog):
     async def scam_schedule(self):
         try:
             print("[PhishTank] Auto-refresh started...")
-            update_cache()
+            await update_cache()
             print("[PhishTank] Cache refreshed successfully.")
 
             print("[URLExtract] Updating TLD list...")
