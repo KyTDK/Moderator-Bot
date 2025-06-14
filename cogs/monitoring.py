@@ -424,7 +424,7 @@ class MonitoringCog(commands.Cog):
                 description=f"An error occurred in `{ctx.command}`:\n```{error}```",
                 color=Color.red()
             )
-        await self.log_event(ctx.guild, embed=embed, mention_user=False)\
+        await self.log_event(ctx.guild, embed=embed, mention_user=False)
         
     monitor_group = app_commands.Group(
         name="monitor",

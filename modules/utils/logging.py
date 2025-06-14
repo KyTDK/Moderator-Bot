@@ -6,6 +6,9 @@ from modules.utils.discord_utils import safe_get_channel
 async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=None):
     try:
         channel = await safe_get_channel(bot, channel_id)
+        if channel is None:
+            print(f"[log_to_channel] Channel {channel_id} not found.")
+            return
         if file:
             await channel.send(embed=embed, files=[file])
         else:
