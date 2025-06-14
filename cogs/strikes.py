@@ -192,38 +192,24 @@ class StrikesCog(commands.Cog):
     @strike_group.command(name="actions", description="Configure strike actions.")
     @app_commands.describe(
         number_of_strikes="Number of strikes required to trigger the action.",
-        action="Action to perform",
-        duration="Duration for mute action (e.g., 1h, 30m, 30d). Leave empty for permanent or if not applicable.",
+        action="Action to perform or 'remove' to delete an existing one.",
+        duration="Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise.",
     )
-    @app_commands.choices(action=action_choices(exclude=["strike"]))
-    async def strike_action(self, 
-                            interaction: Interaction, 
-                            number_of_strikes: int, 
-                            action: str, 
-                            duration: str = None,
-                            role: discord.Role = None
-                            ):
-        """Configure strike actions."""
+    @app_commands.choices(action=action_choices() + [app_commands.Choice(name="Remove Action", value="remove")])
+    async def strike_action(
+        interaction: Interaction,
+        number_of_strikes: int,
+        action: str,
+        duration: str = None,
+        role: discord.Role = None
+    ):
+        """Configure or remove strike actions."""
         await interaction.response.defer(ephemeral=True)
 
-        # Validate action and duration        
-        action_str = await validate_action(
-            interaction=interaction,
-            action=action,
-            duration=duration,
-            role=role,
-            valid_actions=VALID_ACTION_VALUES,
-            ephemeral=True,
-        )
-        if action_str is None:
-            return
-
         strike_actions = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}
-
         number_of_strikes = str(number_of_strikes)
 
         if action == "remove":
-            # Remove the action
             if number_of_strikes in strike_actions:
                 removed_action = strike_actions.pop(number_of_strikes)
                 await mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
@@ -238,23 +224,32 @@ class StrikesCog(commands.Cog):
                 )
             return
 
-        # Update the dictionary, telling the user the new and old values
-        if number_of_strikes in strike_actions:
-            old_action = strike_actions[number_of_strikes]
-            strike_actions[number_of_strikes] = (action, duration)
+        # Normal validation and setting
+        action_str = await validate_action(
+            interaction=interaction,
+            action=action,
+            duration=duration,
+            role=role,
+            valid_actions=VALID_ACTION_VALUES,
+            ephemeral=True,
+        )
+        if action_str is None:
+            return
+
+        old_action = strike_actions.get(number_of_strikes)
+        strike_actions[number_of_strikes] = (action, duration)
+        await mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
+
+        if old_action:
             await interaction.followup.send(
-                f"Updated strike action for `{number_of_strikes}` strikes: `{old_action}` -> `{action}` {duration or ''}.",
+                f"Updated strike action for `{number_of_strikes}` strikes: `{old_action}` → `{action}` {duration or ''}.",
                 ephemeral=True,
             )
         else:
-            strike_actions[number_of_strikes] = (action, duration)
             await interaction.followup.send(
                 f"Added strike action for `{number_of_strikes}` strikes: `{action}` {duration or ''}.",
                 ephemeral=True,
             )
-
-        # Store the strike action in the database
-        await mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
 
     # Warn channel or optionally user
     @app_commands.command(
