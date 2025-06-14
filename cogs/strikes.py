@@ -188,7 +188,6 @@ class StrikesCog(commands.Cog):
 
         await interaction.followup.send(message, ephemeral=True)
 
-    # Command to configure strike actions, allowing user to define punishment for x amount of strikes, so it will be a list of actions they can define
     @strike_group.command(name="actions", description="Configure strike actions.")
     @app_commands.describe(
         number_of_strikes="Number of strikes required to trigger the action.",
@@ -197,6 +196,7 @@ class StrikesCog(commands.Cog):
     )
     @app_commands.choices(action=action_choices() + [app_commands.Choice(name="Remove Action", value="remove")])
     async def strike_action(
+        self,
         interaction: Interaction,
         number_of_strikes: int,
         action: str,
