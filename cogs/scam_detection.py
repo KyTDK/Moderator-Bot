@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
 from urlextract import URLExtract
-from modules.utils.strike import validate_action_with_duration
-from modules.utils.actions import action_choices, ACTIONS
+from modules.utils.strike import validate_action
+from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from transformers import pipeline
 from cogs.banned_words import normalize_text
 import requests
@@ -344,7 +344,7 @@ class ScamDetectionCog(commands.Cog):
 
     @scam_group.command(name="add_action", description="Add an action to the scam punishment list.")
     @app_commands.describe(
-        action="Action: strike, kick, ban, timeout, delete",
+        action="Action to perform",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
     )
     @app_commands.choices(action=action_choices())
@@ -352,15 +352,18 @@ class ScamDetectionCog(commands.Cog):
         self,
         interaction: Interaction,
         action: str,
-        duration: str = None
+        duration: str = None,
+        role: discord.Role = None
     ):
+        await interaction.response.defer(ephemeral=True)
+        
         gid = interaction.guild.id
-
-        action_str = await validate_action_with_duration(
+        action_str = await validate_action(
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=ACTIONS,
+            role=role,
+            valid_actions=VALID_ACTION_VALUES,
         )
         if action_str is None:
             return

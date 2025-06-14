@@ -3,8 +3,8 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 
 from modules.utils.action_manager import ActionListManager
-from modules.utils.strike import validate_action_with_duration
-from modules.utils.actions import action_choices, ACTIONS
+from modules.utils.strike import validate_action
+from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 
 NSFW_ACTION_SETTING = "nsfw-detection-action"
 manager = ActionListManager(NSFW_ACTION_SETTING)
@@ -22,7 +22,7 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(name="add_action", description="Add an action to the NSFW punishment list.")
     @app_commands.describe(
-        action="Action: strike, kick, ban, timeout, delete",
+        action="Action to perform",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
     )
     @app_commands.choices(action=action_choices())
@@ -30,15 +30,18 @@ class NSFWCog(commands.Cog):
         self,
         interaction: Interaction,
         action: str,
-        duration: str = None
+        duration: str = None,
+        role: discord.Role = None
     ):
+        await interaction.response.defer(ephemeral=True)
+        
         gid = interaction.guild.id
-
-        action_str = await validate_action_with_duration(
+        action_str = await validate_action(
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=ACTIONS,
+            role=role,
+            valid_actions=VALID_ACTION_VALUES,
         )
         if action_str is None:
             return

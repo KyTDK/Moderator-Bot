@@ -6,9 +6,10 @@ from modules.moderation import strike
 import discord
 import io
 from discord import File
-from modules.utils import mysql, time
+from modules.utils import mysql
+from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.discord_utils import safe_get_user
-from modules.utils.strike import validate_action_with_duration
+from modules.utils.strike import validate_action
 from modules.variables.TimeString import TimeString
 
 class StrikesCog(commands.Cog):
@@ -191,27 +192,27 @@ class StrikesCog(commands.Cog):
     @strike_group.command(name="actions", description="Configure strike actions.")
     @app_commands.describe(
         number_of_strikes="Number of strikes required to trigger the action.",
-        action="Action to take (ban, kick, timeout).",
+        action="Action to perform",
         duration="Duration for mute action (e.g., 1h, 30m, 30d). Leave empty for permanent or if not applicable.",
     )
-    @app_commands.choices(
-        action=[
-            app_commands.Choice(name="Permanent ban", value="ban"),
-            app_commands.Choice(name="Kick", value="kick"),
-            app_commands.Choice(name="Timeout", value="timeout"),
-            app_commands.Choice(name="Remove action", value="remove"),
-        ]
-    )
-    async def strike_action(self, interaction: Interaction, number_of_strikes: int, action: str, duration: str = None):
+    @app_commands.choices(action=action_choices(exclude=["strike"]))
+    async def strike_action(self, 
+                            interaction: Interaction, 
+                            number_of_strikes: int, 
+                            action: str, 
+                            duration: str = None,
+                            role: discord.Role = None
+                            ):
         """Configure strike actions."""
         await interaction.response.defer(ephemeral=True)
 
         # Validate action and duration        
-        action_str = await validate_action_with_duration(
+        action_str = await validate_action(
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=["ban", "kick", "timeout", "remove", "none"],
+            role=role,
+            valid_actions=VALID_ACTION_VALUES,
             ephemeral=True,
         )
         if action_str is None:

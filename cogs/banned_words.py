@@ -10,8 +10,8 @@ import discord
 from better_profanity import profanity
 from cleantext import clean
 from modules.utils import mysql
-from modules.utils.strike import validate_action_with_duration
-from modules.utils.actions import action_choices, ACTIONS
+from modules.utils.strike import validate_action
+from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 
 BANNED_ACTION_SETTING = "banned-words-action"
 manager = ActionListManager(BANNED_ACTION_SETTING)
@@ -256,7 +256,7 @@ class BannedWordsCog(commands.Cog):
 
     @bannedwords_group.command(name="add_action", description="Add a moderation action to be triggered when a banned word is detected.")
     @app_commands.describe(
-        action="Action: strike, kick, ban, timeout, delete",
+        action="Action to perform",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
     )
     @app_commands.choices(action=action_choices())
@@ -264,13 +264,17 @@ class BannedWordsCog(commands.Cog):
         self,
         interaction: Interaction,
         action: str,
-        duration: str = None
+        duration: str = None,
+        role: discord.Role = None
     ):
-        action_str = await validate_action_with_duration(
+        await interaction.response.defer(ephemeral=True)
+        
+        action_str = await validate_action(
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=ACTIONS,
+            role=role,
+            valid_actions=VALID_ACTION_VALUES,
         )
         if action_str is None:
             return
