@@ -4,6 +4,7 @@ from discord import app_commands, Interaction
 
 from modules.utils.action_manager import ActionListManager
 from modules.utils.strike import validate_action_with_duration
+from modules.utils.actions import action_choices, BASIC_ACTIONS
 
 NSFW_ACTION_SETTING = "nsfw-detection-action"
 manager = ActionListManager(NSFW_ACTION_SETTING)
@@ -24,16 +25,7 @@ class NSFWCog(commands.Cog):
         action="Action: strike, kick, ban, timeout, delete",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
     )
-    @app_commands.choices(
-        action=[
-            app_commands.Choice(name="strike", value="strike"),
-            app_commands.Choice(name="kick", value="kick"),
-            app_commands.Choice(name="ban", value="ban"),
-            app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete"),
-            app_commands.Choice(name="give_role", value="give_role"),
-            app_commands.Choice(name="take_role", value="take_role")
-        ])
+    @app_commands.choices(action=action_choices())
     async def add_nsfw_action(
         self,
         interaction: Interaction,
@@ -46,7 +38,7 @@ class NSFWCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=["strike", "kick", "ban", "timeout", "delete"]
+            valid_actions=BASIC_ACTIONS,
         )
         if action_str is None:
             return
@@ -56,16 +48,7 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(name="remove_action", description="Remove an action from the NSFW punishment list.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
-    @app_commands.choices(
-        action=[
-            app_commands.Choice(name="strike", value="strike"),
-            app_commands.Choice(name="kick", value="kick"),
-            app_commands.Choice(name="ban", value="ban"),
-            app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete"),
-            app_commands.Choice(name="give_role", value="give_role"),
-            app_commands.Choice(name="take_role", value="take_role")
-        ])
+    @app_commands.choices(action=action_choices())
     async def remove_nsfw_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
 
