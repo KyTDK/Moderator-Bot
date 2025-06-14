@@ -8,6 +8,7 @@ from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
 from urlextract import URLExtract
 from modules.utils.strike import validate_action_with_duration
+from modules.utils.actions import action_choices, ALL_ACTIONS
 from transformers import pipeline
 from cogs.banned_words import normalize_text
 import requests
@@ -346,16 +347,7 @@ class ScamDetectionCog(commands.Cog):
         action="Action: strike, kick, ban, timeout, delete",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
     )
-    @app_commands.choices(
-        action=[
-            app_commands.Choice(name="strike", value="strike"),
-            app_commands.Choice(name="kick", value="kick"),
-            app_commands.Choice(name="ban", value="ban"),
-            app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete"),
-            app_commands.Choice(name="give_role", value="give_role"),
-            app_commands.Choice(name="take_role", value="take_role")
-        ])
+    @app_commands.choices(action=action_choices())
     async def scam_add_action(
         self,
         interaction: Interaction,
@@ -368,7 +360,7 @@ class ScamDetectionCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=["strike", "kick", "ban", "timeout", "delete", "give_role", "take_role"]
+            valid_actions=ALL_ACTIONS,
         )
         if action_str is None:
             return

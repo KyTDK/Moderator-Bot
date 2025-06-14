@@ -11,6 +11,7 @@ from better_profanity import profanity
 from cleantext import clean
 from modules.utils import mysql
 from modules.utils.strike import validate_action_with_duration
+from modules.utils.actions import action_choices, BASIC_ACTIONS
 
 BANNED_ACTION_SETTING = "banned-words-action"
 manager = ActionListManager(BANNED_ACTION_SETTING)
@@ -258,16 +259,7 @@ class BannedWordsCog(commands.Cog):
         action="Action: strike, kick, ban, timeout, delete",
         duration="Only required for timeout (e.g. 10m, 1h, 3d)"
     )
-    @app_commands.choices(
-        action=[
-            app_commands.Choice(name="strike", value="strike"),
-            app_commands.Choice(name="kick", value="kick"),
-            app_commands.Choice(name="ban", value="ban"),
-            app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete"),
-            app_commands.Choice(name="give_role", value="give_role"),
-            app_commands.Choice(name="take_role", value="take_role")
-        ])
+    @app_commands.choices(action=action_choices())
     async def add_banned_action(
         self,
         interaction: Interaction,
@@ -278,7 +270,7 @@ class BannedWordsCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=["strike", "kick", "ban", "timeout", "delete"]
+            valid_actions=BASIC_ACTIONS,
         )
         if action_str is None:
             return
@@ -288,16 +280,7 @@ class BannedWordsCog(commands.Cog):
 
     @bannedwords_group.command(name="remove_action", description="Remove a specific action from the list of punishments for banned words.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
-    @app_commands.choices(
-        action=[
-            app_commands.Choice(name="strike", value="strike"),
-            app_commands.Choice(name="kick", value="kick"),
-            app_commands.Choice(name="ban", value="ban"),
-            app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete"),
-            app_commands.Choice(name="give_role", value="give_role"),
-            app_commands.Choice(name="take_role", value="take_role")
-        ])
+    @app_commands.choices(action=action_choices())
     async def remove_banned_action(self, interaction: Interaction, action: str):
         msg = await manager.remove_action(interaction.guild.id, action)
         await interaction.response.send_message(msg, ephemeral=True)
