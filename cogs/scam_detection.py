@@ -352,7 +352,9 @@ class ScamDetectionCog(commands.Cog):
             app_commands.Choice(name="kick", value="kick"),
             app_commands.Choice(name="ban", value="ban"),
             app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete")
+            app_commands.Choice(name="delete", value="delete"),
+            app_commands.Choice(name="give_role", value="give_role"),
+            app_commands.Choice(name="take_role", value="take_role")
         ])
     async def scam_add_action(
         self,
@@ -366,7 +368,7 @@ class ScamDetectionCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=["strike", "kick", "ban", "timeout", "delete"]
+            valid_actions=["strike", "kick", "ban", "timeout", "delete", "give_role", "take_role"]
         )
         if action_str is None:
             return

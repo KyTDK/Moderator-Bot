@@ -264,7 +264,9 @@ class BannedWordsCog(commands.Cog):
             app_commands.Choice(name="kick", value="kick"),
             app_commands.Choice(name="ban", value="ban"),
             app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete")
+            app_commands.Choice(name="delete", value="delete"),
+            app_commands.Choice(name="give_role", value="give_role"),
+            app_commands.Choice(name="take_role", value="take_role")
         ])
     async def add_banned_action(
         self,
@@ -292,7 +294,9 @@ class BannedWordsCog(commands.Cog):
             app_commands.Choice(name="kick", value="kick"),
             app_commands.Choice(name="ban", value="ban"),
             app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete")
+            app_commands.Choice(name="delete", value="delete"),
+            app_commands.Choice(name="give_role", value="give_role"),
+            app_commands.Choice(name="take_role", value="take_role")
         ])
     async def remove_banned_action(self, interaction: Interaction, action: str):
         msg = await manager.remove_action(interaction.guild.id, action)

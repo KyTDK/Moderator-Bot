@@ -8,6 +8,7 @@ from modules.utils import logging
 from modules.utils import mysql
 from modules.utils.time import parse_duration
 import discord
+from discord.utils import get
 
 def get_ban_threshold(strike_settings):
     """
@@ -40,8 +41,8 @@ async def perform_disciplinary_action(
 
     for action in actions:
         try:
-            base_action, _, duration_str = action.partition(":")
-            duration_str = duration_str.strip() if duration_str else None
+            base_action, _, param = action.partition(":")
+            param = param.strip() if param else None
 
             if base_action == "none":
                 results.append("No action taken.")
@@ -60,8 +61,8 @@ async def perform_disciplinary_action(
                 continue
 
             if base_action == "strike":
-                await strike(user=user, bot=bot, reason=reason, expiry=duration_str)
-                results.append(f"Strike issued{' with expiry' if duration_str else ''}.")
+                await strike(user=user, bot=bot, reason=reason, expiry=param)
+                results.append(f"Strike issued{' with expiry' if param else ''}.")
                 continue
 
             if base_action == "kick":
@@ -75,16 +76,15 @@ async def perform_disciplinary_action(
                 continue
 
             if base_action == "timeout":
-                if not duration_str:
+                if not param:
                     results.append("No timeout duration provided.")
                     continue
-                delta = parse_duration(duration_str)
+                delta = parse_duration(param)
                 if not delta:
-                    results.append(f"Invalid timeout duration: '{duration_str}'")
+                    results.append(f"Invalid timeout duration: '{param}'")
                     continue
                 until = now + delta
                 await user.timeout(until, reason=reason)
-
                 await execute_query(
                     """
                     INSERT INTO timeouts (user_id, guild_id, timeout_until, reason, source)
@@ -94,6 +94,24 @@ async def perform_disciplinary_action(
                     (user.id, user.guild.id, until, reason, source)
                 )
                 results.append(f"User timed out until <t:{int(until.timestamp())}:R>.")
+                continue
+
+            if base_action == "give_role":
+                role = get(user.guild.roles, id=int(param)) if param and param.isdigit() else get(user.guild.roles, name=param)
+                if role:
+                    await user.add_roles(role, reason=reason)
+                    results.append(f"Role '{role.name}' given.")
+                else:
+                    results.append(f"Role '{param}' not found.")
+                continue
+
+            if base_action == "take_role":
+                role = get(user.guild.roles, id=int(param)) if param and param.isdigit() else get(user.guild.roles, name=param)
+                if role:
+                    await user.remove_roles(role, reason=reason)
+                    results.append(f"Role '{role.name}' removed.")
+                else:
+                    results.append(f"Role '{param}' not found.")
                 continue
 
             results.append(f"Unknown action: '{action}'")

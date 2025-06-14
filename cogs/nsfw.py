@@ -30,7 +30,9 @@ class NSFWCog(commands.Cog):
             app_commands.Choice(name="kick", value="kick"),
             app_commands.Choice(name="ban", value="ban"),
             app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete")
+            app_commands.Choice(name="delete", value="delete"),
+            app_commands.Choice(name="give_role", value="give_role"),
+            app_commands.Choice(name="take_role", value="take_role")
         ])
     async def add_nsfw_action(
         self,
@@ -60,7 +62,9 @@ class NSFWCog(commands.Cog):
             app_commands.Choice(name="kick", value="kick"),
             app_commands.Choice(name="ban", value="ban"),
             app_commands.Choice(name="timeout", value="timeout"),
-            app_commands.Choice(name="delete", value="delete")
+            app_commands.Choice(name="delete", value="delete"),
+            app_commands.Choice(name="give_role", value="give_role"),
+            app_commands.Choice(name="take_role", value="take_role")
         ])
     async def remove_nsfw_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
