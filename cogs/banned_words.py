@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
-from modules.utils.mysql import execute_query, update_settings
+from modules.utils.mysql import execute_query
 import io
 import re
 import discord
@@ -11,7 +11,7 @@ from better_profanity import profanity
 from cleantext import clean
 from modules.utils import mysql
 from modules.utils.strike import validate_action_with_duration
-from modules.utils.actions import action_choices, BASIC_ACTIONS
+from modules.utils.actions import action_choices, ACTIONS
 
 BANNED_ACTION_SETTING = "banned-words-action"
 manager = ActionListManager(BANNED_ACTION_SETTING)
@@ -270,7 +270,7 @@ class BannedWordsCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=BASIC_ACTIONS,
+            valid_actions=ACTIONS,
         )
         if action_str is None:
             return

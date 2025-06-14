@@ -8,7 +8,7 @@ from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
 from urlextract import URLExtract
 from modules.utils.strike import validate_action_with_duration
-from modules.utils.actions import action_choices, ALL_ACTIONS
+from modules.utils.actions import action_choices, ACTIONS
 from transformers import pipeline
 from cogs.banned_words import normalize_text
 import requests
@@ -360,7 +360,7 @@ class ScamDetectionCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=ALL_ACTIONS,
+            valid_actions=ACTIONS,
         )
         if action_str is None:
             return

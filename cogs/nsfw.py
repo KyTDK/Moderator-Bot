@@ -4,7 +4,7 @@ from discord import app_commands, Interaction
 
 from modules.utils.action_manager import ActionListManager
 from modules.utils.strike import validate_action_with_duration
-from modules.utils.actions import action_choices, BASIC_ACTIONS
+from modules.utils.actions import action_choices, ACTIONS
 
 NSFW_ACTION_SETTING = "nsfw-detection-action"
 manager = ActionListManager(NSFW_ACTION_SETTING)
@@ -38,7 +38,7 @@ class NSFWCog(commands.Cog):
             interaction=interaction,
             action=action,
             duration=duration,
-            valid_actions=BASIC_ACTIONS,
+            valid_actions=ACTIONS,
         )
         if action_str is None:
             return
