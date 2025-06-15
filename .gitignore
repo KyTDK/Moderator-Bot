@@ -1,7 +1,4 @@
 /.env
-test.py
-test/model.py
-test/announce.py
-test/url.py
+test/
 __pycache__/
 *.pyc
