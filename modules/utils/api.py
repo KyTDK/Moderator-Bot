@@ -7,6 +7,8 @@ from cryptography.fernet import Fernet
 import os
 from dotenv import load_dotenv
 
+from modules.utils.discord_utils import safe_get_user
+
 load_dotenv()
 
 _working_keys = []
@@ -84,15 +86,39 @@ async def set_api_key_working(api_key):
     _, affected_rows = await mysql.execute_query(query, (api_key,))
     return affected_rows > 0
 
-async def set_api_key_not_working(api_key):
+async def set_api_key_not_working(api_key, bot=None):
     if not api_key:
         return
+
     async with _lock:
         _quarantine[api_key] = time.monotonic() + 60
         if api_key not in _non_working_keys:
             _non_working_keys.append(api_key)
+
+    # Mark key as non-working in DB
     query = "UPDATE api_pool SET working = FALSE WHERE api_key = %s"
     _, affected_rows = await mysql.execute_query(query, (api_key,))
+
+    if bot:
+        # Find the user who owns this API key
+        query = "SELECT user_id FROM api_pool WHERE api_key = %s"
+        result, _ = await mysql.execute_query(query, (api_key,), fetch_one=True)
+
+        if result:
+            user_id = result[0]
+            user = await safe_get_user(bot, user_id)
+            if user:
+                try:
+                    await user.send(
+                        "**⚠️ Your OpenAI API key failed a moderation check.**\n\n"
+                        "This usually means your account doesn't have active billing or is temporarily rate-limited.\n\n"
+                        "Please check your [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) "
+                        "to ensure your account has payment info and at least $5 in credits.\n\n"
+                        "Once that's resolved, your key will automatically start working again — no need to re-add it."
+                    )
+                except Exception:
+                    pass  # User has DMs off or blocked the bot
+
     return affected_rows > 0
 
 

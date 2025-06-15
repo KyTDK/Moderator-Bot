@@ -140,7 +140,7 @@ async def process_video(
     member: discord.Member,
     guild_id: int,
     bot: commands.Bot,
-    message: discord.Message
+    message: discord.Message,
 ) -> tuple[Optional[discord.File], bool]:
     
     temp_frames, _ = await asyncio.to_thread(
@@ -157,7 +157,10 @@ async def process_video(
     async def analyse(path: str):
         async with semaphore:
             try:
-                cat = await process_image(path, guild_id=guild_id, clean_up=False)
+                cat = await process_image(original_filename=path, 
+                                          guild_id=guild_id, 
+                                          clean_up=False, 
+                                          bot=bot)
                 return (path, cat) if cat else None
             except Exception as e:
                 print(f"[process_video] Analyse error {path}: {e}")
@@ -207,7 +210,10 @@ async def check_attachment(author,
         return False  # DM or system message
 
     if file_type == "Image":
-        category = await process_image(temp_filename, guild_id=guild_id, clean_up=False)
+        category = await process_image(original_filename=temp_filename, 
+                                       guild_id=guild_id, 
+                                       clean_up=False,
+                                       bot=bot)
         if category and nsfw_callback:
             await nsfw_callback(
                 author,
@@ -311,6 +317,7 @@ def _file_to_b64(path: str) -> str:
 async def moderator_api(text: str | None = None,
                         image_path: str | None = None,
                         guild_id: int | None = None,
+                        bot: commands.Bot | None = None,
                         max_attempts: int = 10) -> Optional[str]:
     inputs: list | str = []
     is_video = image_path is not None
@@ -349,11 +356,13 @@ async def moderator_api(text: str | None = None,
             )
         except openai.AuthenticationError:
             print("[moderator_api] Authentication failed. Marking key as not working.")
-            await api.set_api_key_not_working(encrypted_key)
+            await api.set_api_key_not_working(api_key=encrypted_key,
+                                              bot=bot)
             continue
         except openai.RateLimitError as e:
             print(f"[moderator_api] Rate limit error: {e}. Marking key as not working.")
-            await api.set_api_key_not_working(encrypted_key)
+            await api.set_api_key_not_working(api_key=encrypted_key,
+                                              bot=bot)
             continue
         except Exception as e:
             print(f"[moderator_api] Unexpected error from OpenAI API: {e}")
@@ -383,9 +392,12 @@ async def moderator_api(text: str | None = None,
 
 async def process_image(original_filename: str,
                         guild_id: int | None = None,
-                        clean_up: bool = True) -> Optional[str]:
+                        clean_up: bool = True,
+                        bot: commands.Bot | None = None) -> Optional[str]:
     try:
-        result = await moderator_api(image_path=original_filename, guild_id=guild_id)
+        result = await moderator_api(image_path=original_filename, 
+                                     guild_id=guild_id,
+                                     bot=bot)
         print(f"[process_image] Moderation result for {original_filename}: {result}")
         return result
     except Exception as e:

@@ -21,7 +21,9 @@ class AggregatedModerationCog(commands.Cog):
                 print(f"Cannot delete message (ID={msg.id}).")
 
     async def check_and_delete_if_offensive(self, message_content: str, messages_to_delete: list, guild_id: str) -> bool:
-        category = await nsfw.moderator_api(text=message_content, guild_id=guild_id)
+        category = await nsfw.moderator_api(text=message_content, 
+                                            guild_id=guild_id,
+                                            bot=self.bot)
         if category:
             await self.handle_deletion(messages_to_delete)
             return True
