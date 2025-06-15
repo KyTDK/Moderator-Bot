@@ -185,6 +185,7 @@ async def process_video(
                     await nsfw_callback(
                         member,
                         bot,
+                        guild_id,
                         f"Detected potential policy violation (Category: **{category.title()}**)",
                         flagged_file,
                         message
