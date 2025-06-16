@@ -118,7 +118,7 @@ SETTINGS_SCHEMA = {
     "nsfw-pfp-action": Setting(
         name="nsfw-pfp-action",
         description="Action to take when a user sets an NSFW profile picture.",
-        setting_type=str,
+        setting_type=list[str],
         default=["kick"],
         choices=["strike", "strike:2d", "kick", "ban", "timeout:1d", "timeout:7d"],
     ),
