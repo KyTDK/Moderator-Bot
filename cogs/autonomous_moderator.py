@@ -59,7 +59,7 @@ async def moderate_event(
     past_text = ""
     if history:
         past_text = "\n\nPrevious Violations:\n" + "\n".join(
-            f"- {i+1}. Rule: {r} | Reason: {t}" for i, (r, t) in enumerate(history, 1)
+            f"- {i}. Rule: {r} | Reason: {t}" for i, (r, t) in enumerate(history, 1)
         )
 
     client = openai.AsyncOpenAI(api_key=api_key)
