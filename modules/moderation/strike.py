@@ -216,7 +216,7 @@ async def strike(
     )
     embed.set_footer(text=f"Strike by {strike_by.display_name}", icon_url=strike_by.display_avatar.url)
 
-    if await mysql.get_settings(user.guild.id, "dm-on-strike") == True:
+    if await mysql.get_settings(user.guild.id, "dm-on-strike"):
         try:
             await message_user(user, "", embed=embed)
         except Exception as e:
