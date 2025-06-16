@@ -93,7 +93,7 @@ async def moderate_event(
                 },
                 {
                     "role": "user",
-                    "content": f"Event: {event_type}\nUser Action:\n{normalized_message}"
+                    "content": f"Evaluate the following message from a user:\n\n\"{normalized_message}\"\n\nEvent type: {event_type}"
                 }
             ],
             temperature=0.0,
