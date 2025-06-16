@@ -257,7 +257,8 @@ async def is_nsfw(bot: commands.Bot,
             await attachment.save(tmp.name)
             temp_filename = tmp.name
         try:
-            return await check_attachment(message.author, temp_filename, nsfw_callback, bot, guild_id, message)
+            if await check_attachment(message.author, temp_filename, nsfw_callback, bot, guild_id, message):
+                return True
         finally:
             _safe_delete(temp_filename)
 
@@ -273,7 +274,8 @@ async def is_nsfw(bot: commands.Bot,
         if domain == "tenor.com" or domain.endswith(".tenor.com"):
             continue  # ignore Tenor
         async with temp_download(gif_url, "gif") as temp_location:
-            return await check_attachment(message.author, temp_location, nsfw_callback, bot, guild_id, message)
+            if await check_attachment(message.author, temp_location, nsfw_callback, bot, guild_id, message):
+                return True
         
     for sticker in message.stickers:
         sticker_url = sticker.url
@@ -297,14 +299,15 @@ async def is_nsfw(bot: commands.Bot,
                 await asyncio.to_thread(apnggif, temp_location, gif_location)
 
             try:
-                return await check_attachment(
+                if await check_attachment(
                     message.author,
-                    gif_location, 
+                    gif_location,
                     nsfw_callback,
-                    bot, 
+                    bot,
                     guild_id,
                     message
-                )
+                ):
+                    return True
             finally:
                 if gif_location != temp_location:
                     _safe_delete(gif_location)
