@@ -66,11 +66,12 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
                         "- rule (string): name of the rule broken.\n"
                         "- reason (string): concise explanation based on the rule.\n"
                         "- actions (array of strings): any of ['delete', 'strike', 'kick', 'ban', 'timeout:<duration>']\n\n"
+                        "For timeouts, use duration formats like: 1s, 1m, 1h, 1d, 1w, 1mo, 1y.\n\n"
                         "Use actions proportionately:\n"
-                        "- delete → content removal only.\n"
-                        "- timeout → minor/moderate rule breaks.\n"
-                        "- strike → repeated or harmful behavior.\n"
-                        "- kick/ban → severe or repeated violations.\n"
+                        "- delete → minor issues needing only content removal\n"
+                        "- timeout → low to moderate rule breaks\n"
+                        "- strike → harmful or serious rule-breaking\n"
+                        "- kick/ban → extreme, hostile, or clearly disruptive behavior\n"
                     )
                 },
                 {
