@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from typing import Optional
+from collections import defaultdict, deque
 
 from modules.utils import mysql, logging
 from modules.moderation import strike
@@ -20,6 +21,8 @@ ALLOWED_ACTIONS = ALLOWED_SIMPLE | {"timeout"}
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
 
+violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=3))
+
 def valid_timeout(action: str) -> bool:
     return bool(TIME_RE.fullmatch(action))
 
@@ -30,13 +33,16 @@ def parse_ai_response(text: str) -> tuple[list[str], str, str, bool]:
         return [], "", "", False
     ok = bool(data.get("ok"))
     actions = [a.lower() for a in data.get("actions", []) if a] if not ok else []
-    rule = data.get("rule", "")
-    reason = data.get("reason", "")
-    return actions, rule, reason, ok
+    return actions, data.get("rule", ""), data.get("reason", ""), ok
 
-
-async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_type: str, content: str,
-                         message_obj: Optional[discord.Message] = None):
+async def moderate_event(
+    bot,
+    guild: discord.Guild,
+    user: discord.User,
+    event_type: str,
+    content: str,
+    message_obj: Optional[discord.Message] = None
+):
     if await mysql.get_settings(guild.id, "autonomous-mod") is not True:
         return
     api_key = await mysql.get_settings(guild.id, "api-key")
@@ -48,6 +54,14 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
     normalized_message = normalize_text(content)
     if not normalized_message:
         return
+
+    history = list(violation_cache[user.id])
+    past_text = ""
+    if history:
+        past_text = "\n\nPrevious Violations:\n" + "\n".join(
+            f"- {i+1}. Rule: {r} | Reason: {t}" for i, (r, t) in enumerate(history, 1)
+        )
+
     client = openai.AsyncOpenAI(api_key=api_key)
     try:
         completion = await client.chat.completions.create(
@@ -57,21 +71,24 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
                     "role": "system",
                     "content": (
                         "You are an AI moderator for a Discord server.\n"
-                        "ONLY judge messages based on the explicit server rules listed below. Do NOT make assumptions, inferences, or apply personal bias.\n"
-                        "Ignore tone, intent, slang, memes, LGBTQ+ terms, or internet culture UNLESS directly violating a listed rule.\n\n"
-                        f"Server rules:\n{rules}\n\n"
+                        "ONLY judge messages based on the explicit server rules listed below. "
+                        "Do NOT make assumptions, inferences, or apply personal bias.\n"
+                        "Ignore tone, intent, slang, memes, LGBTQ+ terms, or internet culture "
+                        "UNLESS directly violating a listed rule.\n\n"
+                        f"Server rules:\n{rules}\n"
+                        f"{past_text if history else 'This user has no prior violations.'}\n\n"
                         "Determine if any rule is clearly violated. If not, return ok=true.\n\n"
                         "Respond with JSON:\n"
                         "- ok (bool): true if no rule was broken.\n"
                         "- rule (string): name of the rule broken.\n"
                         "- reason (string): concise explanation based on the rule.\n"
-                        "- actions (array of strings): any of ['delete', 'strike', 'kick', 'ban', 'timeout:<duration>']\n\n"
-                        "For timeouts, use duration formats like: 1s, 1m, 1h, 1d, 1w, 1mo, 1y.\n\n"
+                        "- actions (array): any of ['delete', 'strike', 'kick', 'ban', 'timeout:<duration>']\n\n"
+                        "Durations: 1s 1m 1h 1d 1w 1mo 1y.\n\n"
                         "Use actions proportionately:\n"
-                        "- delete → minor issues needing only content removal\n"
+                        "- delete  → minor issues needing only content removal\n"
                         "- timeout → low to moderate rule breaks\n"
-                        "- strike → harmful or serious rule-breaking\n"
-                        "- kick/ban → extreme, hostile, or clearly disruptive behavior\n"
+                        "- strike  → harmful or serious rule-breaking\n"
+                        "- kick/ban→ extreme, hostile, or clearly disruptive behavior\n"
                     )
                 },
                 {
@@ -84,10 +101,14 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
         )
     except Exception:
         return
-    raw_response = completion.choices[0].message.content.strip()
-    actions_from_ai, rule_broken, reason_text, ok_flag = parse_ai_response(raw_response)
+
+    raw = completion.choices[0].message.content.strip()
+    actions_from_ai, rule_broken, reason_text, ok_flag = parse_ai_response(raw)
     if ok_flag or not actions_from_ai:
         return
+
+    if rule_broken and reason_text:
+        violation_cache[user.id].appendleft((rule_broken, reason_text))
 
     embed = discord.Embed(
         title="AI-Flagged Violation",
@@ -107,11 +128,10 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
         configured = actions_from_ai
 
     for act in configured:
-        act = act.lower()
         await strike.perform_disciplinary_action(
             user=user,
             bot=bot,
-            action_string=act,
+            action_string=act.lower(),
             reason=reason_text,
             source="autonomous_ai",
             message=message_obj
