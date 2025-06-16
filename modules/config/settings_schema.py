@@ -210,4 +210,17 @@ SETTINGS_SCHEMA = {
         hidden=True,
         choices=["true", "false"]
     ),
+    "aimod-model": Setting(
+        name="aimod-model",
+        description="Which OpenAI model to use for AI moderation.",
+        setting_type=str,
+        default="gpt-4.1",
+        choices=[
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+            "gpt-4o",           
+            "gpt-4o-mini",
+        ]
+    )
 }

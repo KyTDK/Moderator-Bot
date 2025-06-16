@@ -65,7 +65,7 @@ async def moderate_event(
     client = openai.AsyncOpenAI(api_key=api_key)
     try:
         completion = await client.chat.completions.create(
-            model="gpt-4o",
+            model=await mysql.get_settings(guild.id, "aimod-model") or "gpt-4o",
             messages=[
                 {
                     "role": "system",
