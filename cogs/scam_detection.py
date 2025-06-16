@@ -29,7 +29,14 @@ PHISHTANK_USER_AGENT = {"User-Agent": "ModeratorBot/1.0"}
 
 url_extractor = URLExtract()
 
-classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
+_classifier = None
+
+def get_classifier():
+    """Lazily load and cache the text classification pipeline."""
+    global _classifier
+    if _classifier is None:
+        _classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
+    return _classifier
 
 SAFE_URLS = [
     "discord.com",
@@ -207,6 +214,7 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
                 return True, None, expanded
 
     if ai_detection and len(normalized_message.split()) >= 5:
+        classifier = get_classifier()
         result = classifier(normalized_message)[0]
         if result['label'] == 'LABEL_1' and result['score'] > 0.95:
             return True, message, None
