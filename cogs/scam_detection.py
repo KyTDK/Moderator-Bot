@@ -19,7 +19,7 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 DELETE_SETTING = "delete-scam-messages"
 ACTION_SETTING = "scam-detection-action"
-AI_DECTION_SETTING = "ai-scam-detection"
+AI_DETECTION_SETTING = "ai-scam-detection"
 EXCLUDE_CHANNELS_SETTING = "exclude-scam-channels"
 CHECK_LINKS_SETTING = "check-links"
 
@@ -202,7 +202,7 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     ]
 
     check_links   = await get_settings(guild_id, CHECK_LINKS_SETTING)
-    ai_detection  = await get_settings(guild_id, AI_DECTION_SETTING)
+    ai_detection  = await get_settings(guild_id, AI_DETECTION_SETTING)
 
     if check_links:
         for url in normalized_urls:
@@ -319,12 +319,12 @@ class ScamDetectionCog(commands.Cog):
                                    action: app_commands.Choice[str]):
         gid = interaction.guild.id
         if action.value == "status":
-            flag = await get_settings(gid, AI_DECTION_SETTING)
+            flag = await get_settings(gid, AI_DETECTION_SETTING)
             await interaction.response.send_message(
                 f"AI scam detection is **{'enabled' if flag else 'disabled'}**.", ephemeral=True
             )
             return
-        await update_settings(gid, AI_DECTION_SETTING, action.value == "enable")
+        await update_settings(gid, AI_DETECTION_SETTING, action.value == "enable")
         await interaction.response.send_message(
             f"AI scam detection **{action.value}d**.", ephemeral=True
         )
@@ -410,7 +410,7 @@ class ScamDetectionCog(commands.Cog):
         gid = interaction.guild.id
         delete_setting = await get_settings(gid, DELETE_SETTING)
         action_setting = await get_settings(gid, ACTION_SETTING)
-        ai_scam_detection = await get_settings(gid, AI_DECTION_SETTING)
+        ai_scam_detection = await get_settings(gid, AI_DETECTION_SETTING)
 
         if not action_setting:
             actions_formatted = "*No actions set.*"
