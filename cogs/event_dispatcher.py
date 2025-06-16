@@ -11,6 +11,7 @@ class EventDispatcherCog(commands.Cog):
         await self.bot.get_cog("BannedWordsCog").handle_message(message)
         await self.bot.get_cog("ScamDetectionCog").handle_message(message)
         await self.bot.get_cog("MonitoringCog").handle_message(message)
+        await self.bot.get_cog("AutonomousModeratorCog").handle_message(message)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(EventDispatcherCog(bot))

@@ -275,15 +275,24 @@ async def get_settings(guild_id: int, settings_key: str | None = None):
 async def update_settings(guild_id: int, settings_key: str, settings_value):
     settings = await get_settings(guild_id)
 
-    # Update / remove ----------------------------------------------------
+    # Determine if encryption is needed for the current setting
+    encrypt_current = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
     if settings_value is None:
         changed = settings.pop(settings_key, None) is not None
     else:
-        encrypt = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
-        if encrypt:
+        if encrypt_current:
             settings_value = fernet.encrypt(settings_value.encode()).decode()
         settings[settings_key] = settings_value
         changed = True
+
+    for key, schema in SETTINGS_SCHEMA.items():
+        if key == settings_key:
+            continue
+        if schema.encrypted and isinstance(settings.get(key), str):
+            try:
+                fernet.decrypt(settings[key].encode())
+            except Exception:
+                settings[key] = fernet.encrypt(settings[key].encode()).decode()
 
     settings_json = json.dumps(settings)
     await execute_query(
@@ -295,7 +304,6 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
         (guild_id, settings_json),
     )
     return changed
-
 
 async def initialise_and_get_pool():
     """Convenience wrapper that callers can await during startup."""

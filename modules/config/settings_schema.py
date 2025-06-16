@@ -201,4 +201,27 @@ SETTINGS_SCHEMA = {
         default=[],
         hidden=True,
     ),
+    "rules": Setting(
+        name="rules",
+        description="The server rules used for autonomous moderation.",
+        setting_type=str,
+        default=None,
+        hidden=True,
+    ),
+    "aimod-detection-action": Setting(
+        name="aimod-detection-action",
+        description="Action to take when the autonomous moderator detects a violation. Use auto for the AI to make the decision.",
+        setting_type=list[str],
+        hidden=True,
+        default=["auto"],
+        choices=["strike", "kick", "ban", "timeout", "delete", "auto"],
+    ),
+    "autonomous-mod": Setting(
+        name="autonomous-mod",
+        description="Use AI to automatically moderate your entire server.",
+        setting_type=bool,
+        default=False,
+        hidden=True,
+        choices=["true", "false"]
+    ),
 }
