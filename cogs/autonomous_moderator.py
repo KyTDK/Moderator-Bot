@@ -108,18 +108,13 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
 
     for act in configured:
         act = act.lower()
-        if act == "delete" and message_obj:
-            try:
-                await message_obj.delete()
-            except Exception:
-                pass
-            continue
         await strike.perform_disciplinary_action(
             user=user,
             bot=bot,
             action_string=act,
-            reason="AI-flagged violation",
-            source="autonomous_ai"
+            reason=reason_text,
+            source="autonomous_ai",
+            message=message_obj
         )
 
 class AutonomousModeratorCog(commands.Cog):
