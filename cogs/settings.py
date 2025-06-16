@@ -99,7 +99,7 @@ class Settings(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"**Invalid setting name.",
                 ephemeral=True,
             )
