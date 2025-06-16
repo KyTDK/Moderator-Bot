@@ -62,20 +62,6 @@ SETTINGS_SCHEMA = {
         description="Channel to log all server activities, including message edits, deletions, and user join/leave events.",
         setting_type=discord.TextChannel,
     ),
-    "delete-offensive": Setting(
-        name="delete-offensive",
-        description="Automatically delete messages containing offensive content, such as harassment or hate speech.",
-        setting_type=bool,
-        default=False,
-        choices=["true", "false"]
-    ),
-    "restrict-striked-users": Setting(
-        name="restrict-striked-users",
-        description="Restrict striked users by scanning their messages for offensive content (TEXT ONLY).",
-        setting_type=bool,
-        default=False,
-        choices=["true", "false"]
-    ),
     "cycle-strike-actions": Setting(
         name="cycle-strike-actions",
         description="Cycle through strike actions when run out of actions to give user.",
