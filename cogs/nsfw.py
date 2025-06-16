@@ -47,7 +47,7 @@ class NSFWCog(commands.Cog):
             return
 
         message = await manager.add_action(gid, action_str)
-        await interaction.response.send_message(message, ephemeral=True)
+        await interaction.followup.send(message, ephemeral=True)
 
     @nsfw_group.command(name="remove_action", description="Remove an action from the NSFW punishment list.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")

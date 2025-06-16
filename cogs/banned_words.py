@@ -23,6 +23,18 @@ def normalize_text(text: str) -> str:
     # Remove user mentions and channel mentions
     text = re.sub(r"<[@#]!?[0-9]+>", "", text)
 
+    # Remove Discord custom emojis like <:name:id> or <a:name:id>
+    text = re.sub(r"<a?:\w+:\d+>", "", text)
+
+    # Remove URLs
+    text = re.sub(r"https?://\S+", "", text)
+
+    # Remove user mentions and channel mentions
+    text = re.sub(r"<[@#]!?[0-9]+>", "", text)
+
+    # Remove urls
+    text = re.sub(r"https?://\S+", "", text)
+
     # Flatten repeated characters to a maximum of two
     text = RE_REPEATS.sub(r"\1\1", text)
 
@@ -31,7 +43,7 @@ def normalize_text(text: str) -> str:
         lower=True,
         to_ascii=True,
         no_line_breaks=True,
-        no_urls=True,
+        no_urls=False,
         no_emails=True,
         no_phone_numbers=True,
         no_digits=False,
@@ -280,7 +292,7 @@ class BannedWordsCog(commands.Cog):
             return
 
         msg = await manager.add_action(interaction.guild.id, action_str)
-        await interaction.response.send_message(msg, ephemeral=True)
+        await interaction.followup.send(msg, ephemeral=True)
 
     @bannedwords_group.command(name="remove_action", description="Remove a specific action from the list of punishments for banned words.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")

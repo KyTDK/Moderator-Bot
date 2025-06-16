@@ -376,12 +376,12 @@ class ScamDetectionCog(commands.Cog):
             current = [current] if current else []
 
         if action_str in current:
-            await interaction.response.send_message(f"`{action_str}` is already in the action list.", ephemeral=True)
+            await interaction.followup.send(f"`{action_str}` is already in the action list.", ephemeral=True)
             return
 
         current.append(action_str)
         await update_settings(gid, ACTION_SETTING, current)
-        await interaction.response.send_message(f"Added `{action_str}` to scam actions.", ephemeral=True)
+        await interaction.followup.send(f"Added `{action_str}` to scam actions.", ephemeral=True)
 
     @scam_group.command(name="remove_action", description="Remove an action from the scam punishment list.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout:1d, delete)")

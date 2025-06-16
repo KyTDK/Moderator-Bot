@@ -8,11 +8,17 @@ from typing import Optional
 
 from modules.utils import mysql, logging
 from modules.moderation import strike
+from modules.utils.action_manager import ActionListManager
+from modules.utils.actions import VALID_ACTION_VALUES, action_choices
+from modules.utils.strike import validate_action
+from cogs.banned_words import normalize_text
 
 TIME_RE = re.compile(r"timeout:(\d+)([smhdw])$")
 ALLOWED_SIMPLE = {"strike", "kick", "ban", "delete", "auto"}
 ALLOWED_ACTIONS = ALLOWED_SIMPLE | {"timeout"}
 
+AIMOD_ACTION_SETTING = "aimod-detection-action"
+manager = ActionListManager(AIMOD_ACTION_SETTING)
 
 def valid_timeout(action: str) -> bool:
     return bool(TIME_RE.fullmatch(action))
@@ -28,55 +34,6 @@ def parse_ai_response(text: str) -> tuple[list[str], str, str, bool]:
     reason = data.get("reason", "")
     return actions, rule, reason, ok
 
-class AutonomousModeratorCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-ai_mod_group = app_commands.Group(name="ai_mod", description="Manage AI moderation features.")
-
-@ai_mod_group.command(name="rules_set", description="Set server rules")
-@app_commands.default_permissions(manage_guild=True)
-async def set_rules(interaction: Interaction, *, rules: str):
-    await mysql.update_settings(interaction.guild.id, "rules", rules)
-    await interaction.response.send_message("Rules updated.", ephemeral=True)
-
-@ai_mod_group.command(name="set_action", description="Set enforcement actions")
-@app_commands.default_permissions(manage_guild=True)
-async def set_action(interaction: Interaction, *, actions: str):
-    chosen = [a.strip().lower() for a in actions.split(",") if a.strip()]
-    invalid = [a for a in chosen if a not in ALLOWED_SIMPLE and not valid_timeout(a)]
-    if invalid:
-        await interaction.response.send_message("Invalid: " + ", ".join(invalid), ephemeral=True)
-        return
-    await mysql.update_settings(interaction.guild.id, "aimod-detection-action", chosen)
-    await interaction.response.send_message("Actions set: " + ", ".join(chosen), ephemeral=True)
-
-@ai_mod_group.command(name="toggle", description="Enable or disable AI moderation")
-@app_commands.default_permissions(manage_guild=True)
-async def toggle_autonomous(interaction: Interaction, enabled: bool):
-    key = await mysql.get_settings(interaction.guild.id, "api-key")
-    rules = await mysql.get_settings(interaction.guild.id, "rules")
-
-    if enabled:
-        if not key:
-            await interaction.response.send_message("Set an API key first with /settings set api-key.", ephemeral=True)
-            return
-        if not rules:
-            await interaction.response.send_message("Set moderation rules first with /ai_mod rules_set.", ephemeral=True)
-            return
-
-    await mysql.update_settings(interaction.guild.id, "autonomous-mod", enabled)
-    await interaction.response.send_message(
-        f"Autonomous moderation {'enabled' if enabled else 'disabled'}.",
-        ephemeral=True
-    )
-
-@ai_mod_group.command(name="status", description="Show current AI mod settings")
-async def status(interaction: Interaction):
-    gid = interaction.guild.id
-    enabled = await mysql.get_settings(gid, "autonomous-mod")
-    actions = await mysql.get_settings(gid, "aimod-detection-action") or ["auto"]
-    await interaction.response.send_message(f"Enabled: {enabled}\nActions: {', '.join(actions)}", ephemeral=True)
 
 async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_type: str, content: str,
                          message_obj: Optional[discord.Message] = None):
@@ -88,6 +45,11 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
     rules = await mysql.get_settings(guild.id, "rules")
     if not rules:
         return
+    normalized_message = normalize_text(content)
+    print(normalized_message)
+    if not normalized_message:
+        print("[AutonomousModerator] Skipping message")
+        return
     client = openai.AsyncOpenAI(api_key=api_key)
     try:
         completion = await client.chat.completions.create(
@@ -97,21 +59,25 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
                     "role": "system",
                     "content": (
                         "You are an AI moderator for a Discord server.\n"
-                        "Server rules:\n"
-                        f"{rules}\n\n"
-                        "Evaluate the user behaviour and decide if any rule is broken.\n"
-                        "Return JSON with keys: ok (bool), rule (string), reason (string), actions (array of strings).\n"
-                        "Allowed actions: strike, kick, ban, delete, timeout:<dur>.\n"
-                        "Only issue proportionate punishments. For no violation, return ok=true.\n"
-                        "Strike is a serious punishment. Use it only if the behavior is harmful or repeated.\n"
-                        "Timeouts (like timeout:5m or timeout:1h) should be used for most minor issues.\n"
-                        "Use 'delete' if the message should be removed but no punishment is needed.\n"
-                        "'Ban' is the most severe and should only be used for extreme or repeated violations.\n"
+                        "ONLY judge messages based on the explicit server rules listed below. Do NOT make assumptions, inferences, or apply personal bias.\n"
+                        "Ignore tone, intent, slang, memes, LGBTQ+ terms, or internet culture UNLESS directly violating a listed rule.\n\n"
+                        f"Server rules:\n{rules}\n\n"
+                        "Determine if any rule is clearly violated. If not, return ok=true.\n\n"
+                        "Respond with JSON:\n"
+                        "- ok (bool): true if no rule was broken.\n"
+                        "- rule (string): name of the rule broken.\n"
+                        "- reason (string): concise explanation based on the rule.\n"
+                        "- actions (array of strings): any of ['delete', 'strike', 'kick', 'ban', 'timeout:<duration>']\n\n"
+                        "Use actions proportionately:\n"
+                        "- delete → content removal only.\n"
+                        "- timeout → minor/moderate rule breaks.\n"
+                        "- strike → repeated or harmful behavior.\n"
+                        "- kick/ban → severe or repeated violations.\n"
                     )
                 },
                 {
                     "role": "user",
-                    "content": f"Event: {event_type}\nUser Action:\n{content}"
+                    "content": f"Event: {event_type}\nUser Action:\n{normalized_message}"
                 }
             ],
             temperature=0.0,
@@ -179,8 +145,104 @@ class AutonomousModeratorCog(commands.Cog):
         await moderate_event(self.bot, member.guild, member, "Member Join",
                              f"Username: {member.name}, Display: {member.display_name}")
 
-    async def cog_load(self):
-        self.bot.tree.add_command(ai_mod_group)
+    ai_mod_group = app_commands.Group(name="ai_mod", description="Manage AI moderation features.")
+
+    @ai_mod_group.command(name="rules_set", description="Set server rules")
+    @app_commands.default_permissions(manage_guild=True)
+    async def set_rules(this, interaction: Interaction, *, rules: str):
+        await mysql.update_settings(interaction.guild.id, "rules", rules)
+        await interaction.response.send_message("Rules updated.", ephemeral=True)
+
+    @ai_mod_group.command(name="rules_show", description="Show the currently configured moderation rules.")
+    async def show_rules(self, interaction: Interaction):
+        rules = await mysql.get_settings(interaction.guild.id, "rules")
+        if not rules:
+            await interaction.response.send_message("No moderation rules have been set.", ephemeral=True)
+            return
+
+        if len(rules) > 1900:
+            rules = rules[:1900] + "…"
+
+        await interaction.response.send_message(f"**Moderation Rules:**\n```{rules}```", ephemeral=True)
+
+    @ai_mod_group.command(name="add_action", description="Add enforcement actions")
+    @app_commands.default_permissions(manage_guild=True)
+    @app_commands.choices(action=action_choices(include=[("Auto", "auto")]))
+    async def add_action(self,
+            interaction: Interaction,
+            action: str,
+            duration: str = None,
+            role: discord.Role = None
+        ):
+        await interaction.response.defer(ephemeral=True)
+        
+        action_str = await validate_action(
+            interaction=interaction,
+            action=action,
+            duration=duration,
+            role=role,
+            valid_actions = VALID_ACTION_VALUES + ["auto"]
+        )
+        if action_str is None:
+            return
+
+        msg = await manager.add_action(interaction.guild.id, action_str)
+        await interaction.followup.send(msg, ephemeral=True)
+
+    @ai_mod_group.command(name="remove_action", description="Remove a specific action from the list of punishments.")
+    @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
+    @app_commands.choices(action=action_choices(include=["auto"]))
+    async def remove_action(self, interaction: Interaction, action: str):
+        msg = await manager.remove_action(interaction.guild.id, action)
+        await interaction.response.send_message(msg, ephemeral=True)
+
+    @ai_mod_group.command(name="toggle", description="Enable, disable, or view status of AI moderation")
+    @app_commands.describe(action="enable | disable | status")
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(name="enable",  value="enable"),
+            app_commands.Choice(name="disable", value="disable"),
+            app_commands.Choice(name="status",  value="status"),
+        ]
+    )
+    @app_commands.default_permissions(manage_guild=True)
+    async def toggle_autonomous(self, interaction: Interaction, action: app_commands.Choice[str]):
+        gid = interaction.guild.id
+
+        if action.value == "status":
+            enabled = await mysql.get_settings(gid, "autonomous-mod")
+            await interaction.response.send_message(
+                f"Autonomous moderation is **{'enabled' if enabled else 'disabled'}**.", ephemeral=True
+            )
+            return
+
+        if action.value == "enable":
+            key = await mysql.get_settings(gid, "api-key")
+            rules = await mysql.get_settings(gid, "rules")
+            if not key:
+                await interaction.response.send_message("Set an API key first with `/settings set api-key`.", ephemeral=True)
+                return
+            if not rules:
+                await interaction.response.send_message("Set moderation rules first with `/ai_mod rules_set`.", ephemeral=True)
+                return
+
+        await mysql.update_settings(gid, "autonomous-mod", action.value == "enable")
+        await interaction.response.send_message(
+            f"Autonomous moderation **{action.value}d**.", ephemeral=True
+        )
+
+    @ai_mod_group.command(name="view_actions", description="Show all actions currently configured to trigger when the AI detects a violation.")
+    async def view_actions(self, interaction: Interaction):
+        actions = await manager.view_actions(interaction.guild.id)
+        if not actions:
+            await interaction.response.send_message("No actions are currently set.", ephemeral=True)
+            return
+
+        formatted = "\n".join(f"{i+1}. `{a}`" for i, a in enumerate(actions))
+        await interaction.response.send_message(
+            f"**Current actions:**\n{formatted}",
+            ephemeral=True
+        )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutonomousModeratorCog(bot))

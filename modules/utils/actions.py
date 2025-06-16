@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Optional, Union
 from discord import app_commands
 
 ACTIONS = [
@@ -13,10 +13,26 @@ ACTIONS = [
 
 VALID_ACTION_VALUES = [a[1] for a in ACTIONS]
 
-def action_choices(exclude: Iterable[str] = ()) -> list[app_commands.Choice[str]]:
+def action_choices(
+    exclude: Iterable[str] = (),
+    include: Optional[Union[Iterable[str], Iterable[tuple[str, str]]]] = None
+) -> list[app_commands.Choice[str]]:
     exclude_set = set(exclude)
-    return [
-        app_commands.Choice(name=label, value=value)
-        for label, value in ACTIONS
-        if value not in exclude_set
-    ]
+
+    base = [(label, value) for label, value in ACTIONS if value not in exclude_set]
+
+    if include:
+        for item in include:
+            if isinstance(item, str):
+                base.append((item.capitalize(), item))
+            else:
+                base.append(item)
+
+    seen = set()
+    final = []
+    for label, value in base:
+        if value not in seen:
+            final.append(app_commands.Choice(name=label, value=value))
+            seen.add(value)
+
+    return final
