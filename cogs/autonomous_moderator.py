@@ -46,9 +46,7 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
     if not rules:
         return
     normalized_message = normalize_text(content)
-    print(normalized_message)
     if not normalized_message:
-        print("[AutonomousModerator] Skipping message")
         return
     client = openai.AsyncOpenAI(api_key=api_key)
     try:
@@ -88,7 +86,6 @@ async def moderate_event(bot, guild: discord.Guild, user: discord.User, event_ty
     raw_response = completion.choices[0].message.content.strip()
     actions_from_ai, rule_broken, reason_text, ok_flag = parse_ai_response(raw_response)
     if ok_flag or not actions_from_ai:
-        print(f"{ok_flag} and {actions_from_ai}")
         return
 
     embed = discord.Embed(
