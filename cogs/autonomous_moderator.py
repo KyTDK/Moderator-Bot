@@ -87,7 +87,7 @@ async def moderate_event(
                         "Use actions proportionately and escalate based on user history:\n"
                         "- delete: minor issues needing only content removal\n"
                         "- timeout: low to moderate rule breaks\n"
-                        "- strike: serious or harmful behavior, or repeat minor violations\n"
+                        "- strike: serious or harmful behavior, or repeat violations (strikes are permanent and may lead to a ban)\n"
                         "- kick: repeated serious rule-breaking or aggressive conduct\n"
                         "- ban: ongoing severe violations, or multiple prior offenses with no improvement\n"
                     )
