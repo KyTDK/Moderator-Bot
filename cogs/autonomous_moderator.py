@@ -75,7 +75,7 @@ async def moderate_event(
                 ]
             else:
                 # Only include previous messages if no reply target
-                async for msg in message_obj.channel.history(limit=6, before=message_obj, oldest_first=False):
+                async for msg in message_obj.channel.history(limit=10, before=message_obj, oldest_first=False):
                     if msg.author.bot or not msg.content.strip():
                         continue
                     context_lines.append(
