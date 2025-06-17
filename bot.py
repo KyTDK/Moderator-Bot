@@ -78,6 +78,8 @@ async def on_guild_join(guild):
 
 @bot.event
 async def setup_hook():
+    await mysql.initialise_and_get_pool()
+
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
             await bot.load_extension(f'cogs.{filename[:-3]}')
@@ -86,7 +88,6 @@ async def setup_hook():
             print("Unable to load pycache folder.")
     await bot.tree.sync()
     start_topgg_poster(bot)
-    await mysql.initialise_and_get_pool()
 
 if __name__ == "__main__":
     bot.run(TOKEN)
