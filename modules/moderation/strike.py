@@ -223,7 +223,7 @@ async def strike(
             if dur is None:
                 dur = timedelta(days=1)
             until = now + dur
-            action_desc_parts.append(f"Timeout until <t:{int(until.timestamp())}:R>")
+            action_desc_parts.append(f"Timeout (ends <t:{int(until.timestamp())}:R>)")
         elif base == "ban":
             action_desc_parts.append("Ban")
         elif base == "kick":
