@@ -116,13 +116,13 @@ async def perform_disciplinary_action(
 
             if base_action == "warn":
                 embed = Embed(
-                    title="⚠️ Warning",
+                    title="⚠️ You Have Been Warned",
                     description=(
-                        f"{user.mention}, you are being warned for:\n\n"
-                        f"**{reason}**\n\n"
-                        "Further violations may result in disciplinary action."
+                        f"{user.mention}, {param}\n\n"
+                        f"**Reason:** {reason}\n\n"
+                        "Please follow the server rules to avoid further action such as timeouts, strikes, or bans."
                     ),
-                    color=Color.orange(),
+                    color=Color.red(),
                     timestamp=now
                 )
                 embed.set_footer(text=f"Server: {user.guild.name}", icon_url=user.guild.icon.url if user.guild.icon else None)

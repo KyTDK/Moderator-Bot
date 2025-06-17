@@ -31,7 +31,8 @@ class NSFWCog(commands.Cog):
         interaction: Interaction,
         action: str,
         duration: str = None,
-        role: discord.Role = None
+        role: discord.Role = None,
+        reason: str = None,
     ):
         await interaction.response.defer(ephemeral=True)
         
@@ -42,6 +43,7 @@ class NSFWCog(commands.Cog):
             duration=duration,
             role=role,
             valid_actions=VALID_ACTION_VALUES,
+            param=reason,
         )
         if action_str is None:
             return

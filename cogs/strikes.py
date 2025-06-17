@@ -201,7 +201,8 @@ class StrikesCog(commands.Cog):
         number_of_strikes: int,
         action: str,
         duration: str = None,
-        role: discord.Role = None
+        role: discord.Role = None,
+        reason: str = None,
     ):
         """Configure or remove strike actions."""
         await interaction.response.defer(ephemeral=True)
@@ -232,6 +233,7 @@ class StrikesCog(commands.Cog):
             role=role,
             valid_actions=VALID_ACTION_VALUES,
             ephemeral=True,
+            param=reason,
         )
         if action_str is None:
             return

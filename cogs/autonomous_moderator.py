@@ -81,7 +81,7 @@ async def moderate_event(
                         "- ok (bool): true if no rule was broken\n"
                         "- rule (string): name of the rule broken\n"
                         "- reason (string): short explanation\n"
-                        "- actions (array): any of ['delete', 'strike', 'kick', 'ban', 'timeout:<duration>']\n\n"
+                        "- actions (array): any of ['delete', 'strike', 'kick', 'ban', 'timeout:<duration>', 'warn:<warning>']\n\n"
                         "Valid durations: 1s, 1m, 1h, 1d, 1w, 1mo, 1y\n\n"
                         "Use actions proportionately and escalate based on user history:\n"
                         "- warn: notify the user with a public warning message about their behavior.\n"
@@ -186,7 +186,8 @@ class AutonomousModeratorCog(commands.Cog):
             interaction: Interaction,
             action: str,
             duration: str = None,
-            role: discord.Role = None
+            role: discord.Role = None,
+            reason: str = None,
         ):
         await interaction.response.defer(ephemeral=True)
         
@@ -195,7 +196,8 @@ class AutonomousModeratorCog(commands.Cog):
             action=action,
             duration=duration,
             role=role,
-            valid_actions = VALID_ACTION_VALUES + ["auto"]
+            valid_actions = VALID_ACTION_VALUES + ["auto"],
+            param=reason,
         )
         if action_str is None:
             return
