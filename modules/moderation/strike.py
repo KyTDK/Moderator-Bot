@@ -29,7 +29,7 @@ async def perform_disciplinary_action(
     user: Member,
     bot: commands.Bot,
     action_string: Union[str, list[str]],
-    reason: str = "No reason provided",
+    reason: str = None,
     source: str = "generic",
     message: Optional[Message] = None
 ) -> Optional[str]:
@@ -117,10 +117,10 @@ async def perform_disciplinary_action(
             if base_action == "warn":
                 embed = Embed(
                     title="⚠️ You Have Been Warned",
-                    description=(
+                    description = (
                         f"{user.mention}, {param}\n\n"
-                        f"**Reason:** {reason}\n\n"
-                        "Please follow the server rules to avoid further action such as timeouts, strikes, or bans."
+                        + (f"**Reason:** {reason}\n\n" if reason else "")
+                        + "Please follow the server rules to avoid further action such as timeouts, strikes, or bans."
                     ),
                     color=Color.red(),
                     timestamp=now
@@ -163,6 +163,8 @@ async def strike(
     guild_id = user.guild.id
     if not expiry:
         expiry = await mysql.get_settings(guild_id, "strike-expiry")
+
+    reason = reason or "No reason provided"
 
     now = datetime.now(timezone.utc)
     expires_at = None

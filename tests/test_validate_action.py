@@ -77,7 +77,6 @@ def test_warn_success():
         validate_action(
             inter,
             action="warn",
-            duration="spamming",
             param="Stop",
             valid_actions=["warn"],
         )
@@ -98,4 +97,6 @@ def test_warn_missing_message():
         )
     )
     assert result is None
-    assert "You must provide a warning message" in inter.followup.messages[0]
+    msg = inter.followup.messages[0]
+    assert "You must provide a warning message" in msg
+    assert "`warn` does not support a duration" in msg
