@@ -112,8 +112,6 @@ async def moderate_event(
             "Evaluate this message alone for rule violations."
         )
 
-    print(user_prompt)
-
     # OpenAI API call
     client = openai.AsyncOpenAI(api_key=api_key)
     try:
