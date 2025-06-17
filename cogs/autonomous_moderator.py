@@ -207,18 +207,10 @@ class AutonomousModeratorCog(commands.Cog):
 
     @ai_mod_group.command(name="remove_action", description="Remove a specific action from the list of punishments.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
+    @app_commands.autocomplete(action=manager.autocomplete)
     async def remove_action(self, interaction: Interaction, action: str):
         msg = await manager.remove_action(interaction.guild.id, action)
         await interaction.response.send_message(msg, ephemeral=True)
-    async def remove_action_autocomplete(
-        interaction: Interaction,
-        current: str
-    ) -> list[app_commands.Choice[str]]:
-        actions = await manager.view_actions(interaction.guild.id)
-        return [
-            app_commands.Choice(name=action, value=action)
-            for action in actions if current.lower() in action.lower()
-        ][:25]
 
     @ai_mod_group.command(name="toggle", description="Enable, disable, or view status of AI moderation")
     @app_commands.describe(action="enable | disable | status")

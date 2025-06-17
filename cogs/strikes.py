@@ -12,6 +12,17 @@ from modules.utils.discord_utils import safe_get_user
 from modules.utils.strike import validate_action
 from modules.variables.TimeString import TimeString
 
+async def autocomplete_strike_action(interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
+    settings = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}
+    all_actions = set()
+    for action_list in settings.values():
+        all_actions.update(action_list)
+    return [
+        app_commands.Choice(name=action, value=action)
+        for action in sorted(all_actions)
+        if current.lower() in action.lower()
+    ][:25]
+
 class StrikesCog(commands.Cog):
     """A cog for moderation commands."""
 
@@ -238,6 +249,7 @@ class StrikesCog(commands.Cog):
         number_of_strikes="Number of strikes associated with the action.",
         action="Exact action string to remove.",
     )
+    @app_commands.autocomplete(action=autocomplete_strike_action)
     async def remove_strike_action(self, interaction: Interaction, number_of_strikes: int, action: str):
         await interaction.response.defer(ephemeral=True)
         strike_actions = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}

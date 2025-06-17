@@ -53,20 +53,12 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(name="remove_action", description="Remove an action from the NSFW punishment list.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
+    @app_commands.autocomplete(action=manager.autocomplete)
     async def remove_nsfw_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
 
         message = await manager.remove_action(gid, action)
         await interaction.response.send_message(message, ephemeral=True)
-    async def remove_action_autocomplete(
-        interaction: Interaction,
-        current: str
-    ) -> list[app_commands.Choice[str]]:
-        actions = await manager.view_actions(interaction.guild.id)
-        return [
-            app_commands.Choice(name=action, value=action)
-            for action in actions if current.lower() in action.lower()
-        ][:25]
 
     @nsfw_group.command(name="view_actions", description="View the current list of NSFW punishment actions.")
     async def view_nsfw_actions(self, interaction: Interaction):

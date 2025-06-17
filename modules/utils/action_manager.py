@@ -1,4 +1,5 @@
 from modules.utils.mysql import get_settings, update_settings
+from discord import app_commands, Interaction
 
 class ActionListManager:
     def __init__(self, setting_key: str):
@@ -40,3 +41,10 @@ class ActionListManager:
     async def view_actions(self, guild_id: int) -> list:
         actions = await get_settings(guild_id, self.setting_key) or []
         return actions if isinstance(actions, list) else [actions]
+
+    async def autocomplete(self, interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
+        actions = await self.view_actions(interaction.guild.id)
+        return [
+            app_commands.Choice(name=action, value=action)
+            for action in actions if current.lower() in action.lower()
+        ][:25]

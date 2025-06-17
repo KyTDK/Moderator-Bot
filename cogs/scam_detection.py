@@ -389,19 +389,11 @@ class ScamDetectionCog(commands.Cog):
 
     @scam_group.command(name="remove_action", description="Remove an action from the scam punishment list.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout:1d, delete)")
+    @app_commands.autocomplete(action=manager.autocomplete)
     async def scam_remove_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
         msg = await manager.remove_action(gid, action)
         await interaction.response.send_message(msg, ephemeral=True)
-    async def remove_action_autocomplete(
-        interaction: Interaction,
-        current: str
-    ) -> list[app_commands.Choice[str]]:
-        actions = await manager.view_actions(interaction.guild.id)
-        return [
-            app_commands.Choice(name=action, value=action)
-            for action in actions if current.lower() in action.lower()
-        ][:25]
 
     @scam_group.command(name="view", description="View current scam settings.")
     async def settings_view(self, interaction: Interaction):
