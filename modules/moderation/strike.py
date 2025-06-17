@@ -20,7 +20,15 @@ def get_ban_threshold(strike_settings):
     
     # Iterate over each strike threshold in ascending order
     for strike in available_strikes:
-        action, duration_str = strike_settings[strike]
+        entry = strike_settings[strike]
+        if isinstance(entry, tuple):
+            action = entry[0]
+        elif isinstance(entry, list):
+            if not entry:
+                continue
+            action = entry[0].split(":", 1)[0]
+        else:
+            action = str(entry).split(":", 1)[0]
         if action.lower() == "ban":
             return int(strike)
     return None
@@ -194,30 +202,47 @@ async def strike(
     strike_settings = await mysql.get_settings(guild_id, "strike-actions")
     cycle_settings = await mysql.get_settings(guild_id, "cycle-strike-actions")
     available_strikes = sorted(strike_settings.keys(), key=int)
-    action, duration_str = strike_settings.get(str(strike_count), (None, None))
+
+    actions = strike_settings.get(str(strike_count), [])
 
     # If no action is defined and cycling is enabled
-    if not action and cycle_settings:
-        available_strike_values = [strike_settings[k] for k in sorted(strike_settings.keys(), key=int)]
+    if not actions and cycle_settings:
+        available_strike_values = [strike_settings[k] for k in available_strikes]
         index = (strike_count - 1) % len(available_strike_values)
-        action, duration_str = available_strike_values[index]
+        actions = available_strike_values[index]
 
     strikes_for_ban = get_ban_threshold(strike_settings)
     strikes_till_ban = strikes_for_ban - strike_count if strikes_for_ban is not None else None
 
-    duration = parse_duration(duration_str)
-    if action is not None:
-        action = action.lower()
+    action_desc_parts = []
+    for act in actions:
+        base, _, param = act.partition(":")
+        base = base.lower()
+        if base == "timeout":
+            dur = parse_duration(param)
+            if dur is None:
+                dur = timedelta(days=1)
+            until = now + dur
+            action_desc_parts.append(f"Timeout until <t:{int(until.timestamp())}:R>")
+        elif base == "ban":
+            action_desc_parts.append("Ban")
+        elif base == "kick":
+            action_desc_parts.append("Kick")
+        elif base == "delete":
+            action_desc_parts.append("Delete Message")
+        elif base == "give_role":
+            action_desc_parts.append(f"Give Role {param}")
+        elif base == "take_role":
+            action_desc_parts.append(f"Remove Role {param}")
+        elif base == "warn":
+            action_desc_parts.append(f"Warn: {param}")
+        elif base == "strike":
+            action_desc_parts.append("Strike")
+        else:
+            action_desc_parts.append(base)
 
-    if action == "timeout":
-        if duration is None:
-            duration = timedelta(days=1)
-        until = now + duration
-        action_description = f"\n**Action Taken:** Timeout, will expire <t:{int(until.timestamp())}:R>"
-    elif action == "ban":
-        action_description = "\n**Action Taken:** Banned from the server"
-    elif action == "kick":
-        action_description = "\n**Action Taken:** Kicked from the server"
+    if action_desc_parts:
+        action_description = "\n**Actions Taken:**\n" + "\n".join(f"- {d}" for d in action_desc_parts)
     else:
         action_description = "\n**Action Taken:** No action applied"
 
@@ -250,11 +275,11 @@ async def strike(
                 await interaction.channel.send(user.mention, embed=embed)
             return embed
 
-    if action:
+    if actions:
         await perform_disciplinary_action(
             user=user,
             bot=bot,
-            action_string=f"{action}:{duration_str}" if action == "timeout" else action,
+            action_string=actions,
             reason=reason
         )
 

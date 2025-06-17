@@ -258,6 +258,19 @@ async def get_settings(guild_id: int, settings_key: str | None = None):
             # Strip out "none" from migrated data
             value = [v for v in value if v != "none"]
 
+        if settings_key == "strike-actions":
+            migrated = {}
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    if isinstance(v, list):
+                        migrated[k] = v
+                    elif isinstance(v, tuple):
+                        a, d = v
+                        migrated[k] = [f"{a}:{d}" if d else a]
+                    else:
+                        migrated[k] = [str(v)]
+                value = migrated
+
         return value
 
     # Handle full settings dict return
@@ -280,6 +293,17 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
     if settings_value is None:
         changed = settings.pop(settings_key, None) is not None
     else:
+        if settings_key == "strike-actions" and isinstance(settings_value, dict):
+            converted = {}
+            for k, v in settings_value.items():
+                if isinstance(v, list):
+                    converted[k] = v
+                elif isinstance(v, tuple):
+                    a, d = v
+                    converted[k] = [f"{a}:{d}" if d else a]
+                else:
+                    converted[k] = [str(v)]
+            settings_value = converted
         if encrypt_current:
             settings_value = fernet.encrypt(settings_value.encode()).decode()
         settings[settings_key] = settings_value
