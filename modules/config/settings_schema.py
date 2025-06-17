@@ -222,5 +222,12 @@ SETTINGS_SCHEMA = {
             "gpt-4o",           
             "gpt-4o-mini",
         ]
+    ),
+    "contextual-ai": Setting(
+        name="contextual-ai",
+        description="Allow the AI moderator to consider prior messages and replies for context.",
+        setting_type=bool,
+        default=False,
+        choices=["true", "false"]
     )
 }

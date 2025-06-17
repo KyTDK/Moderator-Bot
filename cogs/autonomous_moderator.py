@@ -43,64 +43,112 @@ async def moderate_event(
     content: str,
     message_obj: Optional[discord.Message] = None
 ):
-    if await mysql.get_settings(guild.id, "autonomous-mod") is not True:
-        return
+    # Check required settings
+    autonomous = await mysql.get_settings(guild.id, "autonomous-mod")
     api_key = await mysql.get_settings(guild.id, "api-key")
-    if not api_key:
-        return
     rules = await mysql.get_settings(guild.id, "rules")
-    if not rules:
+    if not (autonomous and api_key and rules):
         return
+
     normalized_message = normalize_text(content)
     if not normalized_message:
         return
 
-    history = list(violation_cache[user.id])
-    past_text = ""
-    if history:
-        past_text = "\n\nPrevious Violations:\n" + "\n".join(
+    # Context block
+    contextual_enabled = await mysql.get_settings(guild.id, "contextual-ai")
+    context_lines = []
+
+    if contextual_enabled and message_obj and message_obj.channel:
+        try:
+            # Add replied-to message
+            ref = message_obj.reference
+            replied = getattr(ref, "resolved", None) if ref else None
+            if replied is None and ref and ref.message_id:
+                try:
+                    replied = await message_obj.channel.fetch_message(ref.message_id)
+                except Exception:
+                    replied = None
+
+            if replied and not replied.author.bot and replied.content:
+                context_lines.append(
+                    f"[{replied.created_at.strftime('%H:%M')}] @{replied.author.display_name} (replied-to): {normalize_text(replied.content)}"
+                )
+
+            # Add up to 3 previous messages
+            async for msg in message_obj.channel.history(limit=6, before=message_obj, oldest_first=False):
+                if msg.author.bot or not msg.content.strip():
+                    continue
+                context_lines.append(
+                    f"[{msg.created_at.strftime('%H:%M')}] @{msg.author.display_name}: {normalize_text(msg.content)}"
+                )
+                if len(context_lines) >= 3:
+                    break
+
+            context_lines.reverse()
+        except Exception as e:
+            print(f"[moderate_event] Context build failed: {e}")
+
+    # Prepare violation history
+    history = violation_cache[user.id]
+    past_text = (
+        "\n\nPrevious Violations:\n" + "\n".join(
             f"- {i}. Rule: {r} | Reason: {t}" for i, (r, t) in enumerate(history, 1)
         )
+        if history else "This user has no prior violations."
+    )
 
+    # Build prompt dynamically
+    if context_lines:
+        context_text = "\n".join(context_lines)
+        user_prompt = (
+            f"Context:\n{context_text}\n\n"
+            f"User message:\n\"{normalized_message}\"\n\n"
+            f"Event type: {event_type}\n"
+            "Only evaluate the user's message. Use the context only if clearly needed."
+        )
+    else:
+        user_prompt = (
+            f"User message:\n\"{normalized_message}\"\n\n"
+            f"Event type: {event_type}\n"
+            "Evaluate this message alone for rule violations."
+        )
+
+    print(user_prompt)
+
+    # OpenAI API call
     client = openai.AsyncOpenAI(api_key=api_key)
     try:
+        model = await mysql.get_settings(guild.id, "aimod-model") or "gpt-4o"
         completion = await client.chat.completions.create(
-            model=await mysql.get_settings(guild.id, "aimod-model") or "gpt-4o",
+            model=model,
             messages=[
                 {
                     "role": "system",
                     "content": (
                         "You are an AI moderator for a Discord server.\n"
-                        "Only flag messages that clearly, directly, and unambiguously violate a rule.\n"
-                        "Ignore tone, sarcasm, rudeness, slang, memes, or opinions unless a rule is explicitly broken.\n"
-                        "Never guess intent or infer meaning — if a violation isn't obvious, return ok=true.\n\n"
-                        f"Server rules:\n{rules}\n"
-                        f"{past_text if history else 'This user has no prior violations.'}\n\n"
-                        "If no rule is clearly broken, return ok=true.\n\n"
+                        "Only flag messages that clearly and explicitly break a rule.\n"
+                        "Ignore sarcasm, slang, or memes unless a rule is directly broken.\n"
+                        "Don't infer intent. If unclear, return ok=true.\n\n"
+                        f"Server rules:\n{rules}\n{past_text}\n\n"
                         "Respond in strict JSON:\n"
                         "- ok (bool): true if no rule was broken\n"
                         "- rule (string): name of the rule broken\n"
                         "- reason (string): short explanation\n"
                         "- actions (array): any of ['delete', 'strike', 'kick', 'ban', 'timeout:<duration>', 'warn:<warning>']\n\n"
-                        "Valid durations: 1s, 1m, 1h, 1d, 1w, 1mo, 1y\n\n"
-                        "Use actions proportionately and escalate based on user history:\n"
-                        "- warn: notify the user with a public warning message about their behavior.\n"
-                        "- delete: minor issues needing only content removal\n"
-                        "- timeout: low to moderate rule breaks\n"
-                        "- strike: serious or harmful behavior, or repeat violations (strikes are permanent and may lead to a ban)\n"
-                        "- kick: repeated serious rule-breaking or aggressive conduct\n"
-                        "- ban: ongoing severe violations, or multiple prior offenses with no improvement\n"
+                        "Valid durations: 1s, 1m, 1h, 1d, 1w, 1mo, 1y\n"
+                        "Escalate actions based on severity and past history."
                     )
                 },
                 {
                     "role": "user",
-                    "content": f"Evaluate the following message from a user:\n\n\"{normalized_message}\"\n\nEvent type: {event_type}"
+                    "content": user_prompt
                 }
             ],
             temperature=0.0,
             response_format={"type": "json_object"}
         )
-    except Exception:
+    except Exception as e:
+        print(f"[moderate_event] AI call failed: {e}")
         return
 
     raw = completion.choices[0].message.content.strip()
@@ -108,9 +156,11 @@ async def moderate_event(
     if ok_flag or not actions_from_ai:
         return
 
+    # Record violation
     if rule_broken and reason_text:
         violation_cache[user.id].appendleft((rule_broken, reason_text))
 
+    # Log and take action
     embed = discord.Embed(
         title="AI-Flagged Violation",
         description=(
@@ -124,7 +174,7 @@ async def moderate_event(
     if monitor_channel:
         await logging.log_to_channel(embed, monitor_channel, bot)
 
-    configured = await mysql.get_settings(guild.id, "aimod-detection-action") or ["auto"]
+    configured = await mysql.get_settings(guild.id, AIMOD_ACTION_SETTING) or ["auto"]
     if "auto" in configured:
         configured = actions_from_ai
 
