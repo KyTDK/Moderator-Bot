@@ -6,6 +6,7 @@ from discord import app_commands, Interaction
 from dotenv import load_dotenv
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
+from modules.utils.action_manager import ActionListManager
 from urlextract import URLExtract
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
@@ -22,6 +23,8 @@ ACTION_SETTING = "scam-detection-action"
 AI_DETECTION_SETTING = "ai-scam-detection"
 EXCLUDE_CHANNELS_SETTING = "exclude-scam-channels"
 CHECK_LINKS_SETTING = "check-links"
+
+manager = ActionListManager(ACTION_SETTING)
 
 PHISHTANK_URL = "http://data.phishtank.com/data/online-valid.json"
 PHISHTANK_CACHE_FILE = "phishtank_cache.json"
@@ -381,44 +384,26 @@ class ScamDetectionCog(commands.Cog):
         if action_str is None:
             return
 
-        current = await get_settings(gid, ACTION_SETTING) or []
-        if not isinstance(current, list):
-            current = [current] if current else []
-
-        if action_str in current:
-            await interaction.followup.send(f"`{action_str}` is already in the action list.", ephemeral=True)
-            return
-
-        current.append(action_str)
-        await update_settings(gid, ACTION_SETTING, current)
-        await interaction.followup.send(f"Added `{action_str}` to scam actions.", ephemeral=True)
+        msg = await manager.add_action(gid, action_str)
+        await interaction.followup.send(msg, ephemeral=True)
 
     @scam_group.command(name="remove_action", description="Remove an action from the scam punishment list.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout:1d, delete)")
     async def scam_remove_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
-        current = await get_settings(gid, ACTION_SETTING) or []
-
-        if action not in current:
-            await interaction.response.send_message(f"`{action}` is not in the action list.", ephemeral=True)
-            return
-
-        current.remove(action)
-        await update_settings(gid, ACTION_SETTING, current)
-        await interaction.response.send_message(f"Removed `{action}` from scam actions.", ephemeral=True)
+        msg = await manager.remove_action(gid, action)
+        await interaction.response.send_message(msg, ephemeral=True)
 
     @scam_group.command(name="view", description="View current scam settings.")
     async def settings_view(self, interaction: Interaction):
         gid = interaction.guild.id
         delete_setting = await get_settings(gid, DELETE_SETTING)
-        action_setting = await get_settings(gid, ACTION_SETTING)
+        action_setting = await manager.view_actions(gid)
         ai_scam_detection = await get_settings(gid, AI_DETECTION_SETTING)
 
         if not action_setting:
             actions_formatted = "*No actions set.*"
         else:
-            if not isinstance(action_setting, list):
-                action_setting = [action_setting]
             actions_formatted = "\n".join(f"  - `{a}`" for a in action_setting)
 
         await interaction.response.send_message(
