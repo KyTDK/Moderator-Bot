@@ -100,3 +100,90 @@ def test_warn_missing_message():
     msg = inter.followup.messages[0]
     assert "You must provide a warning message" in msg
     assert "`warn` does not support a duration" in msg
+
+
+def test_timeout_optional_duration_none():
+    inter = DummyInteraction()
+    result = asyncio.run(
+        validate_action(
+            inter,
+            action="timeout",
+            duration=None,
+            valid_actions=["timeout"],
+            timeout_required=False,
+        )
+    )
+    assert result == "timeout:None"
+    assert inter.followup.messages == []
+
+
+def test_timeout_with_role_error():
+    inter = DummyInteraction()
+    role = SimpleNamespace(id=1)
+    result = asyncio.run(
+        validate_action(
+            inter,
+            action="timeout",
+            duration="10s",
+            role=role,
+            valid_actions=["timeout"],
+        )
+    )
+    assert result is None
+    assert "You cannot attach a role to a timeout action." in inter.followup.messages[0]
+
+
+def test_timeout_duration_disallowed():
+    inter = DummyInteraction()
+    result = asyncio.run(
+        validate_action(
+            inter,
+            action="timeout",
+            duration="10s",
+            valid_actions=["timeout"],
+            allow_duration=False,
+        )
+    )
+    assert result is None
+    assert "Duration is not allowed for this command." in inter.followup.messages[0]
+
+
+def test_ban_with_extras():
+    inter = DummyInteraction()
+    role = SimpleNamespace(id=123)
+    result = asyncio.run(
+        validate_action(
+            inter,
+            action="ban",
+            duration="10s",
+            role=role,
+            valid_actions=["ban"],
+        )
+    )
+    assert result is None
+    msg = inter.followup.messages[0]
+    assert "`ban` does not support a duration." in msg
+    assert "`ban` does not use a role." in msg
+
+
+def test_ban_success():
+    inter = DummyInteraction()
+    result = asyncio.run(validate_action(inter, action="ban", valid_actions=["ban"]))
+    assert result == "ban"
+    assert inter.followup.messages == []
+
+
+def test_warn_with_role_error():
+    inter = DummyInteraction()
+    role = SimpleNamespace(id=2)
+    result = asyncio.run(
+        validate_action(
+            inter,
+            action="warn",
+            param="Be nice",
+            role=role,
+            valid_actions=["warn"],
+        )
+    )
+    assert result is None
+    assert "You cannot attach a role to a warn action." in inter.followup.messages[0]
