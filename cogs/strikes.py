@@ -194,7 +194,7 @@ class StrikesCog(commands.Cog):
         action="Action to perform or 'remove' to delete an existing one.",
         duration="Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise.",
     )
-    @app_commands.choices(action=action_choices(exclude=("delete")) + [app_commands.Choice(name="Remove Action", value="remove")])
+    @app_commands.choices(action=action_choices(exclude=("delete", "strike")) + [app_commands.Choice(name="Remove Action", value="remove")])
     async def strike_action(
         self,
         interaction: Interaction,
