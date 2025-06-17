@@ -20,17 +20,19 @@ class ActionListManager:
     async def remove_action(self, guild_id: int, action: str) -> str:
         actions = await get_settings(guild_id, self.setting_key) or []
 
-        if action in actions:
-            # Exact match removal
+        # Exact match attempt
+        if ":" in action:
+            if action not in actions:
+                return f"Action `{action}` does not exist."
             updated = [a for a in actions if a != action]
             await update_settings(guild_id, self.setting_key, updated)
             return f"Removed specific action `{action}`."
-        
-        # Otherwise, try removing by base (e.g., all `warn:*`)
-        base = action.split(":")[0]
-        if not any(a.split(":")[0] == base for a in actions):
-            return f"`{action}` is not in the list."
 
+        # General match (e.g., all `warn`)
+        base = action
+        matched = [a for a in actions if a.split(":")[0] == base]
+        if not matched:
+            return f"No actions found for `{base}`."
         updated = [a for a in actions if a.split(":")[0] != base]
         await update_settings(guild_id, self.setting_key, updated)
         return f"Removed all `{base}` actions."
