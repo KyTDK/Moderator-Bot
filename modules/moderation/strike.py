@@ -231,9 +231,13 @@ async def strike(
         elif base == "delete":
             action_desc_parts.append("Delete Message")
         elif base == "give_role":
-            action_desc_parts.append(f"Give Role {param}")
+            role = user.guild.get_role(int(param)) if param and param.isdigit() else None
+            name = role.name if role else param
+            action_desc_parts.append(f"Give Role {name}")
         elif base == "take_role":
-            action_desc_parts.append(f"Remove Role {param}")
+            role = user.guild.get_role(int(param)) if param and param.isdigit() else None
+            name = role.name if role else param
+            action_desc_parts.append(f"Remove Role {name}")
         elif base == "warn":
             action_desc_parts.append(f"Warn: {param}")
         elif base == "strike":
