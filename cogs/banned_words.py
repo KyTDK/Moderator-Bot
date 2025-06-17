@@ -302,6 +302,15 @@ class BannedWordsCog(commands.Cog):
     async def remove_banned_action(self, interaction: Interaction, action: str):
         msg = await manager.remove_action(interaction.guild.id, action)
         await interaction.response.send_message(msg, ephemeral=True)
+    async def remove_action_autocomplete(
+        interaction: Interaction,
+        current: str
+    ) -> list[app_commands.Choice[str]]:
+        actions = await manager.view_actions(interaction.guild.id)
+        return [
+            app_commands.Choice(name=action, value=action)
+            for action in actions if current.lower() in action.lower()
+        ][:25]
 
     @bannedwords_group.command(name="view_actions", description="Show all actions currently configured to trigger when banned words are used.")
     async def view_banned_actions(self, interaction: Interaction):

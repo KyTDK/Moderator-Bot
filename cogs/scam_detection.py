@@ -393,6 +393,15 @@ class ScamDetectionCog(commands.Cog):
         gid = interaction.guild.id
         msg = await manager.remove_action(gid, action)
         await interaction.response.send_message(msg, ephemeral=True)
+    async def remove_action_autocomplete(
+        interaction: Interaction,
+        current: str
+    ) -> list[app_commands.Choice[str]]:
+        actions = await manager.view_actions(interaction.guild.id)
+        return [
+            app_commands.Choice(name=action, value=action)
+            for action in actions if current.lower() in action.lower()
+        ][:25]
 
     @scam_group.command(name="view", description="View current scam settings.")
     async def settings_view(self, interaction: Interaction):
