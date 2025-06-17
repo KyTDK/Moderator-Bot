@@ -239,7 +239,7 @@ async def strike(
         elif base == "strike":
             action_desc_parts.append("Strike")
         else:
-            action_desc_parts.append(base)
+            print(f"[warn] Unrecognized action: {base}")
 
     if action_desc_parts:
         action_description = "\n**Actions Taken:**\n" + "\n".join(f"- {d}" for d in action_desc_parts)
