@@ -114,6 +114,30 @@ async def perform_disciplinary_action(
                     results.append(f"Role '{param}' not found.")
                 continue
 
+            if base_action == "warn":
+                embed = Embed(
+                    title="⚠️ Warning",
+                    description=(
+                        f"{user.mention}, you are being warned for:\n\n"
+                        f"**{reason}**\n\n"
+                        "Further violations may result in disciplinary action."
+                    ),
+                    color=Color.orange(),
+                    timestamp=now
+                )
+                embed.set_footer(text=f"Server: {user.guild.name}", icon_url=user.guild.icon.url if user.guild.icon else None)
+
+                try:
+                    if message and message.channel.permissions_for(message.guild.me).send_messages:
+                        await message.channel.send(embed=embed)
+                        results.append("User warned via channel.")
+                    else:
+                        await user.send(embed=embed)
+                        results.append("User warned via DM (channel not available).")
+                except Exception:
+                    results.append("Warning failed (couldn't send message).")
+                continue
+
             results.append(f"Unknown action: '{action}'")
 
         except Exception as e:

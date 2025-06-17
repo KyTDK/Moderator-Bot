@@ -84,6 +84,7 @@ async def moderate_event(
                         "- actions (array): any of ['delete', 'strike', 'kick', 'ban', 'timeout:<duration>']\n\n"
                         "Valid durations: 1s, 1m, 1h, 1d, 1w, 1mo, 1y\n\n"
                         "Use actions proportionately and escalate based on user history:\n"
+                        "- warn: notify the user with a public warning message about their behavior.\n"
                         "- delete: minor issues needing only content removal\n"
                         "- timeout: low to moderate rule breaks\n"
                         "- strike: serious or harmful behavior, or repeat violations (strikes are permanent and may lead to a ban)\n"
