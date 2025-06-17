@@ -60,7 +60,6 @@ async def moderate_event(
 
     if contextual_enabled and message_obj and message_obj.channel:
         try:
-            # Add replied-to message
             ref = message_obj.reference
             replied = getattr(ref, "resolved", None) if ref else None
             if replied is None and ref and ref.message_id:
@@ -70,21 +69,21 @@ async def moderate_event(
                     replied = None
 
             if replied and not replied.author.bot and replied.content:
-                context_lines.append(
+                # Only include the replied-to message
+                context_lines = [
                     f"[{replied.created_at.strftime('%H:%M')}] @{replied.author.display_name} (replied-to): {normalize_text(replied.content)}"
-                )
-
-            # Add up to 3 previous messages
-            async for msg in message_obj.channel.history(limit=6, before=message_obj, oldest_first=False):
-                if msg.author.bot or not msg.content.strip():
-                    continue
-                context_lines.append(
-                    f"[{msg.created_at.strftime('%H:%M')}] @{msg.author.display_name}: {normalize_text(msg.content)}"
-                )
-                if len(context_lines) >= 3:
-                    break
-
-            context_lines.reverse()
+                ]
+            else:
+                # Only include previous messages if no reply target
+                async for msg in message_obj.channel.history(limit=6, before=message_obj, oldest_first=False):
+                    if msg.author.bot or not msg.content.strip():
+                        continue
+                    context_lines.append(
+                        f"[{msg.created_at.strftime('%H:%M')}] @{msg.author.display_name}: {normalize_text(msg.content)}"
+                    )
+                    if len(context_lines) >= 3:
+                        break
+                context_lines.reverse()
         except Exception as e:
             print(f"[moderate_event] Context build failed: {e}")
 
