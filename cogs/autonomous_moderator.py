@@ -81,7 +81,7 @@ async def moderate_event(
                     context_lines.append(
                         f"[{msg.created_at.strftime('%H:%M')}] @{msg.author.display_name}: {normalize_text(msg.content)}"
                     )
-                    if len(context_lines) >= 3:
+                    if len(context_lines) >= 5:
                         break
                 context_lines.reverse()
         except Exception as e:
