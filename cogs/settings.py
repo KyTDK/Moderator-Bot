@@ -297,10 +297,9 @@ class Settings(commands.Cog):
                 await interaction.followup.send(
                     f"`{name}` is currently set to {channel_mention}.", ephemeral=True
                 )
-            elif type == dict[int, tuple[str, str]]:
-                # Convert the dictionary to a string representation
+            elif type == dict[str, list[str]]:
                 strike_actions = ", ".join(
-                    [f"{k}: {v[0]} {v[1] or ''}" for k, v in current_value.items()]
+                    [f"{k}: {', '.join(v)}" for k, v in current_value.items()]
                 )
                 await interaction.followup.send(
                     f"`{name}` is currently set to `{strike_actions}`.", ephemeral=True
