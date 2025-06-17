@@ -80,6 +80,14 @@ async def on_guild_join(guild):
 async def setup_hook():
     await mysql.initialise_and_get_pool()
 
+    # Clean db
+    async def cleanup():
+        await bot.wait_until_ready()
+        guild_ids = [g.id for g in bot.guilds]
+        await mysql.cleanup_orphaned_guilds(guild_ids)
+
+    bot.loop.create_task(cleanup())
+
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
             await bot.load_extension(f'cogs.{filename[:-3]}')

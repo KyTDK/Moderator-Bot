@@ -332,3 +332,31 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
 async def initialise_and_get_pool():
     """Convenience wrapper that callers can await during startup."""
     return await init_pool()
+
+async def cleanup_orphaned_guilds(active_guild_ids):
+    """Remove database records for guilds the bot is no longer in."""
+    if not active_guild_ids:
+        return
+
+    placeholders = ",".join(["%s"] * len(active_guild_ids))
+    query = f"SELECT DISTINCT guild_id FROM settings WHERE guild_id NOT IN ({placeholders})"
+    rows, _ = await execute_query(query, tuple(active_guild_ids), fetch_all=True)
+    if not rows:
+        print("[cleanup] No orphaned guilds found.")
+        return
+
+    guild_ids = [r[0] for r in rows]
+    tables = [
+        "settings",
+        "banned_words",
+        "timeouts",
+        "scam_messages",
+        "scam_users",
+        "scam_urls",
+    ]
+    for gid in guild_ids:
+        print(f"[cleanup] Removing orphaned guild data for: {gid}")
+        for table in tables:
+            await execute_query(f"DELETE FROM {table} WHERE guild_id = %s", (gid,))
+            print(f"[cleanup] → Deleted from {table}")
+
