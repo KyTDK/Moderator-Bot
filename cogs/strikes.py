@@ -10,7 +10,11 @@ from modules.utils import mysql
 from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.discord_utils import safe_get_user
 from modules.utils.strike import validate_action
+from modules.utils.strike_action_manager import StrikeActionManager
 from modules.variables.TimeString import TimeString
+
+STRIKE_ACTION_SETTING = "strike-actions"
+strike_manager = StrikeActionManager(STRIKE_ACTION_SETTING)
 
 class StrikesCog(commands.Cog):
     """A cog for moderation commands."""
@@ -188,14 +192,14 @@ class StrikesCog(commands.Cog):
 
         await interaction.followup.send(message, ephemeral=True)
 
-    @strike_group.command(name="actions", description="Configure strike actions.")
+    @strike_group.command(name="add_action", description="Add a disciplinary action for a strike count.")
     @app_commands.describe(
         number_of_strikes="Number of strikes required to trigger the action.",
-        action="Action to perform or 'remove' to delete an existing one.",
+        action="Action to perform",
         duration="Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise.",
     )
-    @app_commands.choices(action=action_choices(exclude=("delete")) + [app_commands.Choice(name="Remove Action", value="remove")])
-    async def strike_action(
+    @app_commands.choices(action=action_choices(exclude=("delete",)))
+    async def add_strike_action(
         self,
         interaction: Interaction,
         number_of_strikes: int,
@@ -204,28 +208,8 @@ class StrikesCog(commands.Cog):
         role: discord.Role = None,
         reason: str = None,
     ):
-        """Configure or remove strike actions."""
         await interaction.response.defer(ephemeral=True)
 
-        strike_actions = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}
-        number_of_strikes = str(number_of_strikes)
-
-        if action == "remove":
-            if number_of_strikes in strike_actions:
-                removed_action = strike_actions.pop(number_of_strikes)
-                await mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
-                await interaction.followup.send(
-                    f"Removed strike action for `{number_of_strikes}` strikes: `{removed_action}`.",
-                    ephemeral=True,
-                )
-            else:
-                await interaction.followup.send(
-                    f"No strike action found for `{number_of_strikes}` strikes.",
-                    ephemeral=True,
-                )
-            return
-
-        # Normal validation and setting
         action_str = await validate_action(
             interaction=interaction,
             action=action,
@@ -238,20 +222,39 @@ class StrikesCog(commands.Cog):
         if action_str is None:
             return
 
-        old_action = strike_actions.get(number_of_strikes)
-        strike_actions[number_of_strikes] = (action, duration)
-        await mysql.update_settings(interaction.guild.id, "strike-actions", strike_actions)
+        message = await strike_manager.add_action(interaction.guild.id, number_of_strikes, action_str)
+        await interaction.followup.send(message, ephemeral=True)
 
-        if old_action:
-            await interaction.followup.send(
-                f"Updated strike action for `{number_of_strikes}` strikes: `{old_action}` → `{action}` {duration or ''}.",
-                ephemeral=True,
-            )
-        else:
-            await interaction.followup.send(
-                f"Added strike action for `{number_of_strikes}` strikes: `{action}` {duration or ''}.",
-                ephemeral=True,
-            )
+    @strike_group.command(name="remove_action", description="Remove an action from a strike count.")
+    @app_commands.describe(
+        number_of_strikes="Number of strikes the action is associated with.",
+        action="Action to remove",
+    )
+    @app_commands.choices(action=action_choices(exclude=("delete",)))
+    async def remove_strike_action(
+        self,
+        interaction: Interaction,
+        number_of_strikes: int,
+        action: str,
+    ):
+        await interaction.response.defer(ephemeral=True)
+
+        message = await strike_manager.remove_action(interaction.guild.id, number_of_strikes, action)
+        await interaction.followup.send(message, ephemeral=True)
+
+    @strike_group.command(name="view_actions", description="View configured strike actions.")
+    async def view_strike_actions(self, interaction: Interaction):
+        actions = await strike_manager.view_actions(interaction.guild.id)
+        if not actions:
+            await interaction.response.send_message("No strike actions are currently set.", ephemeral=True)
+            return
+
+        formatted = []
+        for strike, acts in sorted(actions.items(), key=lambda x: int(x[0])):
+            joined = ", ".join(acts)
+            formatted.append(f"{strike}: {joined}")
+
+        await interaction.response.send_message("\n".join(formatted), ephemeral=True)
 
     # Warn channel or optionally user
     @app_commands.command(

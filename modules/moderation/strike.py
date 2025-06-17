@@ -11,18 +11,15 @@ import discord
 from discord.utils import get
 
 def get_ban_threshold(strike_settings):
-    """
-    Given a settings dict mapping strike numbers to an action and duration,
-    returns the strike count when a "ban" is applied (e.g., 'Ban') or None if no ban is set.
-    """
-    # Get the available strike thresholds as integers
+    """Return the strike count that results in a ban, if any."""
+
     available_strikes = sorted(strike_settings.keys(), key=int)
-    
-    # Iterate over each strike threshold in ascending order
+
     for strike in available_strikes:
-        action, duration_str = strike_settings[strike]
-        if action.lower() == "ban":
-            return int(strike)
+        actions = strike_settings[strike]
+        for act in actions:
+            if act.split(":")[0].lower() == "ban":
+                return int(strike)
     return None
 
 async def perform_disciplinary_action(
@@ -191,33 +188,21 @@ async def strike(
         await interaction.followup.send("You cannot give the same player more than 100 strikes. Use `strikes clear <user>` to reset their strikes.")
         return None
 
-    strike_settings = await mysql.get_settings(guild_id, "strike-actions")
+    strike_settings = await mysql.get_settings(guild_id, "strike-actions") or {}
     cycle_settings = await mysql.get_settings(guild_id, "cycle-strike-actions")
     available_strikes = sorted(strike_settings.keys(), key=int)
-    action, duration_str = strike_settings.get(str(strike_count), (None, None))
+    actions = strike_settings.get(str(strike_count))
 
-    # If no action is defined and cycling is enabled
-    if not action and cycle_settings:
-        available_strike_values = [strike_settings[k] for k in sorted(strike_settings.keys(), key=int)]
-        index = (strike_count - 1) % len(available_strike_values)
-        action, duration_str = available_strike_values[index]
+    if not actions and cycle_settings and available_strikes:
+        available_values = [strike_settings[k] for k in available_strikes]
+        index = (strike_count - 1) % len(available_values)
+        actions = available_values[index]
 
     strikes_for_ban = get_ban_threshold(strike_settings)
     strikes_till_ban = strikes_for_ban - strike_count if strikes_for_ban is not None else None
 
-    duration = parse_duration(duration_str)
-    if action is not None:
-        action = action.lower()
-
-    if action == "timeout":
-        if duration is None:
-            duration = timedelta(days=1)
-        until = now + duration
-        action_description = f"\n**Action Taken:** Timeout, will expire <t:{int(until.timestamp())}:R>"
-    elif action == "ban":
-        action_description = "\n**Action Taken:** Banned from the server"
-    elif action == "kick":
-        action_description = "\n**Action Taken:** Kicked from the server"
+    if actions:
+        action_description = "\n**Actions Taken:** " + ", ".join(actions)
     else:
         action_description = "\n**Action Taken:** No action applied"
 
@@ -250,11 +235,11 @@ async def strike(
                 await interaction.channel.send(user.mention, embed=embed)
             return embed
 
-    if action:
+    if actions:
         await perform_disciplinary_action(
             user=user,
             bot=bot,
-            action_string=f"{action}:{duration_str}" if action == "timeout" else action,
+            action_string=actions,
             reason=reason
         )
 
