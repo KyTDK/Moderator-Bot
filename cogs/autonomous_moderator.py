@@ -124,6 +124,7 @@ async def moderate_event(
                     "content": (
                         "You are an AI moderator for a Discord server.\n"
                         "Only flag messages that clearly and explicitly break a rule.\n"
+                        "Only take action when a message directly and unambiguously violates a listed rule.\n"
                         "Ignore sarcasm, slang, or memes unless a rule is directly broken.\n"
                         "Don't infer intent. If unclear, return ok=true.\n\n"
                         f"Server rules:\n{rules}\n{past_text}\n\n"
