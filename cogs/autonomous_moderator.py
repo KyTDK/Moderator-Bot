@@ -35,6 +35,28 @@ def parse_ai_response(text: str) -> tuple[list[str], str, str, bool]:
     actions = [a.lower() for a in data.get("actions", []) if a] if not ok else []
     return actions, data.get("rule", ""), data.get("reason", ""), ok
 
+async def embed_and_store_rules(guild_id: int, api_key: str, message_vec: Optional[list[float]] = None, k: int = 3) -> list[str]:
+    raw = await mysql.get_settings(guild_id, "rules") or ""
+    rules = [line.strip() for line in raw.split("\n") if line.strip()]
+    if not rules:
+        return []
+
+    try:
+        client = openai.AsyncOpenAI(api_key=api_key)
+        result = await client.embeddings.create(
+            model="text-embedding-3-large",
+            input=rules
+        )
+        vectors = [item.embedding for item in result.data]
+        await mysql.store_rule_embeddings(guild_id, rules, vectors)
+
+        if message_vec:
+            return await mysql.get_top_k_rules(guild_id, message_vec, k=k)
+        return rules
+    except Exception as e:
+        print(f"[embed_and_store_rules] Failed to embed rules for {guild_id}: {e}")
+        return []
+
 async def moderate_event(
     bot,
     guild: discord.Guild,
@@ -43,18 +65,15 @@ async def moderate_event(
     content: str,
     message_obj: Optional[discord.Message] = None
 ):
-    # Check required settings
     autonomous = await mysql.get_settings(guild.id, "autonomous-mod")
     api_key = await mysql.get_settings(guild.id, "api-key")
-    rules = await mysql.get_settings(guild.id, "rules")
-    if not (autonomous and api_key and rules):
+    if not (autonomous and api_key):
         return
 
     normalized_message = normalize_text(content)
     if not normalized_message:
         return
 
-    # Context block
     contextual_enabled = await mysql.get_settings(guild.id, "contextual-ai")
     context_lines = []
 
@@ -67,14 +86,11 @@ async def moderate_event(
                     replied = await message_obj.channel.fetch_message(ref.message_id)
                 except Exception:
                     replied = None
-
             if replied and not replied.author.bot and replied.content:
-                # Only include the replied-to message
                 context_lines = [
                     f"[{replied.created_at.strftime('%H:%M')}] @{replied.author.display_name} (replied-to): {normalize_text(replied.content)}"
                 ]
             else:
-                # Only include previous messages if no reply target
                 async for msg in message_obj.channel.history(limit=10, before=message_obj, oldest_first=False):
                     if msg.author.bot or not msg.content.strip():
                         continue
@@ -84,19 +100,15 @@ async def moderate_event(
                     if len(context_lines) >= 5:
                         break
                 context_lines.reverse()
-        except Exception as e:
-            print(f"[moderate_event] Context build failed: {e}")
+        except Exception:
+            pass
 
-    # Prepare violation history
     history = violation_cache[user.id]
     past_text = (
-        "\n\nPrevious Violations:\n" + "\n".join(
-            f"- {i}. Rule: {r} | Reason: {t}" for i, (r, t) in enumerate(history, 1)
-        )
-        if history else "This user has no prior violations."
+        f"User has {len(history)} prior violations. Most recent: {history[0][0]} — {history[0][1]}"
+        if history else "No prior violations."
     )
 
-    # Build prompt dynamically
     if context_lines:
         context_text = "\n".join(context_lines)
         user_prompt = (
@@ -112,9 +124,21 @@ async def moderate_event(
             "Evaluate this message alone for rule violations."
         )
 
-    # OpenAI API call
     client = openai.AsyncOpenAI(api_key=api_key)
     try:
+        embedding = await client.embeddings.create(
+            model="text-embedding-3-small",
+            input=[normalized_message]
+        )
+        message_vec = embedding.data[0].embedding
+        top_rules = await mysql.get_top_k_rules(guild.id, message_vec, k=3)
+        if not top_rules:
+            print(f"[moderate_event] No embeddings found for {guild.id}, re-generating.")
+            top_rules = await embed_and_store_rules(guild.id, api_key, message_vec, k=3)
+            if not top_rules:
+                return
+
+        rules_text = "\n".join(top_rules) if top_rules else "No relevant rules found."
         model = await mysql.get_settings(guild.id, "aimod-model") or "gpt-4.1-mini"
         completion = await client.chat.completions.create(
             model=model,
@@ -127,7 +151,8 @@ async def moderate_event(
                         "Only take action when a message directly and unambiguously violates a listed rule.\n"
                         "Ignore sarcasm, slang, or memes unless a rule is directly broken.\n"
                         "Don't infer intent. If unclear, return ok=true.\n\n"
-                        f"Server rules:\n{rules}\n{past_text}\n\n"
+                        f"Relevant rules:\n{rules_text}\n\n"
+                        f"{past_text}\n\n"
                         "Respond in strict JSON:\n"
                         "- ok (bool): true if no rule was broken\n"
                         "- rule (string): name of the rule broken\n"
@@ -154,11 +179,9 @@ async def moderate_event(
     if ok_flag or not actions_from_ai:
         return
 
-    # Record violation
     if rule_broken and reason_text:
         violation_cache[user.id].appendleft((rule_broken, reason_text))
 
-    # Log and take action
     embed = discord.Embed(
         title="AI-Flagged Violation",
         description=(
@@ -211,9 +234,20 @@ class AutonomousModeratorCog(commands.Cog):
 
     @ai_mod_group.command(name="rules_set", description="Set server rules")
     @app_commands.default_permissions(manage_guild=True)
-    async def set_rules(this, interaction: Interaction, *, rules: str):
+    async def set_rules(self, interaction: Interaction, *, rules: str):
+        await interaction.response.defer(ephemeral=True)
         await mysql.update_settings(interaction.guild.id, "rules", rules)
-        await interaction.response.send_message("Rules updated.", ephemeral=True)
+
+        api_key = await mysql.get_settings(interaction.guild.id, "api-key")
+        if not api_key:
+            await interaction.followup.send("Rules updated, but no API key set to generate embeddings.", ephemeral=True)
+            return
+
+        embedded = await embed_and_store_rules(interaction.guild.id, api_key)
+        if embedded:
+            await interaction.followup.send("Rules updated and embeddings saved.", ephemeral=True)
+        else:
+            await interaction.followup.send("Rules updated, but failed to embed rules.", ephemeral=True)
 
     @ai_mod_group.command(name="rules_show", description="Show the currently configured moderation rules.")
     async def show_rules(self, interaction: Interaction):

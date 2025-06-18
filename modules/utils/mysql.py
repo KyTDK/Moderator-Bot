@@ -6,6 +6,7 @@ import copy
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from modules.config.settings_schema import SETTINGS_SCHEMA
+import numpy as np
 
 load_dotenv()
 
@@ -162,6 +163,17 @@ async def _ensure_database_exists():
                     global_verified BOOLEAN DEFAULT FALSE,
                     INDEX (guild_id),
                     INDEX (full_url(255))
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS rule_embeddings (
+                    guild_id BIGINT,
+                    rule_idx INT,
+                    embedding JSON,
+                    text TEXT,
+                    PRIMARY KEY (guild_id, rule_idx)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
@@ -360,3 +372,38 @@ async def cleanup_orphaned_guilds(active_guild_ids):
             await execute_query(f"DELETE FROM {table} WHERE guild_id = %s", (gid,))
             print(f"[cleanup] → Deleted from {table}")
 
+async def store_rule_embeddings(guild_id: int, rules: list[str], vectors: list[list[float]]):
+    """
+    Stores rule embeddings for a guild. Overwrites existing rules for that guild.
+    """
+    await execute_query("DELETE FROM rule_embeddings WHERE guild_id = %s", (guild_id,))
+
+    values = [(guild_id, i, json.dumps(vec), rules[i]) for i, vec in enumerate(vectors)]
+    args = sum(([v[0], v[1], v[2], v[3]] for v in values), [])  # flatten
+    placeholders = ",".join(["(%s,%s,%s,%s)"] * len(values))
+    query = f"INSERT INTO rule_embeddings (guild_id, rule_idx, embedding, text) VALUES {placeholders}"
+    await execute_query(query, args)
+
+async def get_top_k_rules(guild_id: int, message_vec: list[float], k: int = 3) -> list[str]:
+    """
+    Given an embedded message vector, returns the top-k most relevant rules (by cosine similarity).
+    """
+    rows, _ = await execute_query(
+        "SELECT text, embedding FROM rule_embeddings WHERE guild_id = %s",
+        (guild_id,),
+        fetch_all=True
+    )
+
+    message_vec = np.array(message_vec)
+    results = []
+
+    for text, emb_json in rows:
+        try:
+            rule_vec = np.array(json.loads(emb_json))
+            sim = np.dot(rule_vec, message_vec) / (np.linalg.norm(rule_vec) * np.linalg.norm(message_vec))
+            results.append((sim, text))
+        except Exception:
+            continue
+
+    top = sorted(results, reverse=True)[:k]
+    return [text for _, text in top]
