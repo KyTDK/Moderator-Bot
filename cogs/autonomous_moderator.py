@@ -77,7 +77,7 @@ async def moderate_event(
         # Check cache for similar "ok" messages
         for cached_text, cached_ok, cached_vec in message_cache[guild.id]:
             sim = cosine_sim(vec, cached_vec)
-            if sim > 0.8 and cached_ok:
+            if sim > 0.7 and cached_ok:
                 print(f"[cache skip] Similar message in cache with sim={sim:.4f}. Skipping moderation.")
                 return
         
