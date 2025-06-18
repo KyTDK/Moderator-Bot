@@ -14,8 +14,6 @@ from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.strike import validate_action
 from cogs.banned_words import normalize_text
 
-TIME_RE = re.compile(r"timeout:(\d+)([smhdw])$")
-
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
 
