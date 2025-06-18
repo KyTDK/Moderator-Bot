@@ -13,6 +13,12 @@ from modules.utils.action_manager import ActionListManager
 from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.strike import validate_action
 from cogs.banned_words import normalize_text
+from numpy import dot
+from numpy.linalg import norm
+import numpy as np
+
+def cosine_sim(a: list[float], b: list[float]) -> float:
+    return dot(a, b) / (norm(a) * norm(b))
 
 TIME_RE = re.compile(r"timeout:(\d+)([smhdw])$")
 
@@ -20,6 +26,7 @@ AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=3))
+message_cache: dict[int, list[tuple[str, bool, list[float]]]] = defaultdict(list)
 
 def parse_ai_response(text: str) -> tuple[list[str], str, str, bool]:
     try:
@@ -29,6 +36,19 @@ def parse_ai_response(text: str) -> tuple[list[str], str, str, bool]:
     ok = bool(data.get("ok"))
     actions = [a.lower() for a in data.get("actions", []) if a] if not ok else []
     return actions, data.get("rule", ""), data.get("reason", ""), ok
+
+async def embed_message(message: str, api_key: str) -> list[str]:
+    try:
+        client = openai.AsyncOpenAI(api_key=api_key)
+        result = await client.embeddings.create(
+            model="text-embedding-3-small",
+            input=message
+        )
+        vectors = [item.embedding for item in result.data]
+        return vectors
+    except Exception as e:
+        print(f"[embed_and_store_rules] Failed to embed message: {e}")
+        return []
 
 async def moderate_event(
     bot,
@@ -49,6 +69,18 @@ async def moderate_event(
     if not normalized_message:
         return
 
+    # Embedding
+    embedding_vector = await embed_message(normalized_message, api_key)
+    if embedding_vector:
+        vec = embedding_vector[0]
+        
+        # Check cache for similar "ok" messages
+        for cached_text, cached_ok, cached_vec in message_cache[guild.id]:
+            sim = cosine_sim(vec, cached_vec)
+            if sim > 0.8 and cached_ok:
+                print(f"[cache skip] Similar message in cache with sim={sim:.4f}. Skipping moderation.")
+                return
+        
     # Context block
     contextual_enabled = await mysql.get_settings(guild.id, "contextual-ai")
     context_lines = []
@@ -146,6 +178,10 @@ async def moderate_event(
 
     raw = completion.choices[0].message.content.strip()
     actions_from_ai, rule_broken, reason_text, ok_flag = parse_ai_response(raw)
+    
+    if embedding_vector:
+        message_cache[guild.id].append((normalized_message, ok_flag, embedding_vector[0]))
+
     if ok_flag or not actions_from_ai:
         return
 
