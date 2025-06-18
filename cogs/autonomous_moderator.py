@@ -15,7 +15,6 @@ from modules.utils.strike import validate_action
 from cogs.banned_words import normalize_text
 from numpy import dot
 from numpy.linalg import norm
-import numpy as np
 
 def cosine_sim(a: list[float], b: list[float]) -> float:
     return dot(a, b) / (norm(a) * norm(b))
