@@ -241,8 +241,8 @@ class AutonomousModeratorCog(commands.Cog):
     async def batch_runner(self):
         now = datetime.now(timezone.utc)
         for gid, msgs in list(self.message_batches.items()):
-            interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "4h"
-            delta = parse_duration(str(interval_str)) or timedelta(hours=4)
+            interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "10m"
+            delta = parse_duration(str(interval_str)) or timedelta(minutes=10)
             last = self.last_run.get(gid)
             if last and now - last < delta:
                 continue

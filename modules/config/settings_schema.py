@@ -227,7 +227,7 @@ SETTINGS_SCHEMA = {
         name="aimod-check-interval",
         description="How often to run the AI moderation batch process.",
         setting_type=TimeString,
-        default=TimeString("4h"),
+        default=TimeString("10m"),
     ),
     "contextual-ai": Setting(
         name="contextual-ai",
