@@ -26,7 +26,7 @@ AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=3))
-message_cache: dict[int, list[tuple[str, bool, list[float]]]] = defaultdict(list)
+message_cache: dict[int, deque[tuple[str, bool, list[float]]]] = defaultdict(lambda: deque(maxlen=500))
 
 def parse_ai_response(text: str) -> tuple[list[str], str, str, bool]:
     try:
