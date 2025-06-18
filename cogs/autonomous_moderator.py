@@ -15,16 +15,11 @@ from modules.utils.strike import validate_action
 from cogs.banned_words import normalize_text
 
 TIME_RE = re.compile(r"timeout:(\d+)([smhdw])$")
-ALLOWED_SIMPLE = {"strike", "kick", "ban", "delete", "auto"}
-ALLOWED_ACTIONS = ALLOWED_SIMPLE | {"timeout"}
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=3))
-
-def valid_timeout(action: str) -> bool:
-    return bool(TIME_RE.fullmatch(action))
 
 def parse_ai_response(text: str) -> tuple[list[str], str, str, bool]:
     try:
