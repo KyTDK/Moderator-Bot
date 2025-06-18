@@ -19,8 +19,6 @@ from numpy.linalg import norm
 def cosine_sim(a: list[float], b: list[float]) -> float:
     return dot(a, b) / (norm(a) * norm(b))
 
-TIME_RE = re.compile(r"timeout:(\d+)([smhdw])$")
-
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
 
