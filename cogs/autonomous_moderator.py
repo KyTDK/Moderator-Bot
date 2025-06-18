@@ -39,6 +39,7 @@ async def embed_and_store_rules(guild_id: int, api_key: str, message_vec: Option
     raw = await mysql.get_settings(guild_id, "rules") or ""
     rules = [line.strip() for line in raw.split("\n") if line.strip()]
     if not rules:
+        print(f"[embed_and_store_rules] No rules configured for {guild_id}.")
         return []
 
     try:
@@ -67,7 +68,8 @@ async def moderate_event(
 ):
     autonomous = await mysql.get_settings(guild.id, "autonomous-mod")
     api_key = await mysql.get_settings(guild.id, "api-key")
-    if not (autonomous and api_key):
+    rules = await mysql.get_settings(guild.id, "rules")
+    if not (autonomous and api_key and rules):
         return
 
     normalized_message = normalize_text(content)
