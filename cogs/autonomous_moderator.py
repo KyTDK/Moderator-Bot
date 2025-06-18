@@ -31,7 +31,11 @@ SYSTEM_MSG = (
     "- actions (array of strings, e.g. ['strike', 'timeout:1h', 'delete'])\n"
     "- message_ids (optional array of message IDs to delete)\n\n"
     "Only include 'delete' if specific message_ids are listed.\n"
-    "Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>."
+    "Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>.\n\n"
+    "You must only enforce the server rules listed in the prompt. Do not make assumptions, apply your own beliefs, or infer intent. Do not consider general norms, OpenAI policies, or what you think should be allowed.\n"
+    "Only flag messages that explicitly and unambiguously break one of the server's rules.\n"
+    "If a message does not directly violate a rule — even if it's strange, edgy, rude, or suggestive — it must not be flagged.\n"
+    "If you are unsure, err on the side of ok=true.\n"
 )
 
 def estimate_tokens(text: str) -> int:
