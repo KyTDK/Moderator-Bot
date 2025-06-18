@@ -1,215 +1,93 @@
-import re
 import json
 import openai
 import discord
 from datetime import datetime, timedelta, timezone
 from discord.ext import commands, tasks
 from discord import app_commands, Interaction
-from typing import Optional
 from collections import defaultdict, deque
 
-from modules.utils import mysql, logging
+from modules.utils import logging, mysql
 from modules.utils.time import parse_duration
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
 from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.strike import validate_action
+
 from cogs.banned_words import normalize_text
+
+from math import ceil
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
-
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=3))
 
-def parse_ai_response(text: str) -> tuple[list[str], str, str, bool]:
-    try:
-        data = json.loads(text)
-    except Exception:
-        return [], "", "", False
-    ok = bool(data.get("ok"))
-    actions = [a.lower() for a in data.get("actions", []) if a] if not ok else []
-    return actions, data.get("rule", ""), data.get("reason", ""), ok
+SYSTEM_MSG = (
+    "You are an AI that checks whether messages violate server rules.\n"
+    "Respond with a JSON object containing a `results` field.\n"
+    "`results` must be an array of violations. Each violation must include:\n"
+    "- user_id (string)\n"
+    "- rule (string)\n"
+    "- reason (string)\n"
+    "- actions (array of strings, e.g. ['strike', 'timeout:1h', 'delete'])\n"
+    "- message_ids (optional array of message IDs to delete)\n\n"
+    "Only include 'delete' if specific message_ids are listed.\n"
+    "Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>."
+)
 
-def parse_batch_response(text: str) -> list[dict[str, str]]:
-    """Parse the JSON response for batch moderation."""
+def estimate_tokens(text: str) -> int:
+    return ceil(len(text) / 4)
+
+MODEL_LIMITS = {
+    "gpt-4.1": 1000000,
+    "gpt-4.1-nano": 1000000,
+    "gpt-4.1-mini": 1000000,
+    "gpt-4o": 128000,
+    "gpt-3.5-turbo": 16000
+}
+
+def get_model_limit(model_name: str) -> int:
+    for key, limit in MODEL_LIMITS.items():
+        if key in model_name:
+            return limit
+    return 16000  # safe fallback
+
+def parse_batch_response(text: str) -> list[dict[str, object]]:
     try:
         data = json.loads(text)
+        data = data.get("results", data)
+        if isinstance(data, dict):
+            data = [data]
         if not isinstance(data, list):
             return []
+
         parsed = []
         for item in data:
             if not isinstance(item, dict):
                 continue
             try:
                 uid = int(item.get("user_id"))
-            except (TypeError, ValueError):
+                actions = item.get("actions") or item.get("action") or []
+                if isinstance(actions, str):
+                    actions = [actions]
+                parsed.append({
+                    "user_id": uid,
+                    "rule": str(item.get("rule", "")),
+                    "reason": str(item.get("reason", "")),
+                    "actions": [a.lower() for a in actions if isinstance(a, str)],
+                    "message_ids": item.get("message_ids", [])
+                })
+            except Exception:
                 continue
-            parsed.append({
-                "user_id": uid,
-                "rule": str(item.get("rule", "")),
-                "reason": str(item.get("reason", "")),
-                "action": str(item.get("action", "")),
-            })
         return parsed
-    except Exception:
-        return []
-
-async def moderate_event(
-    bot,
-    guild: discord.Guild,
-    user: discord.User,
-    event_type: str,
-    content: str,
-    message_obj: Optional[discord.Message] = None
-):
-    # Check required settings
-    autonomous = await mysql.get_settings(guild.id, "autonomous-mod")
-    api_key = await mysql.get_settings(guild.id, "api-key")
-    rules = await mysql.get_settings(guild.id, "rules")
-    if not (autonomous and api_key and rules):
-        return
-
-    normalized_message = normalize_text(content)
-    if not normalized_message:
-        return
-
-    # Context block
-    contextual_enabled = await mysql.get_settings(guild.id, "contextual-ai")
-    context_lines = []
-
-    if contextual_enabled and message_obj and message_obj.channel:
-        try:
-            ref = message_obj.reference
-            replied = getattr(ref, "resolved", None) if ref else None
-            if replied is None and ref and ref.message_id:
-                try:
-                    replied = await message_obj.channel.fetch_message(ref.message_id)
-                except Exception:
-                    replied = None
-
-            if replied and not replied.author.bot and replied.content:
-                # Only include the replied-to message
-                context_lines = [
-                    f"[{replied.created_at.strftime('%H:%M')}] @{replied.author.display_name} (replied-to): {normalize_text(replied.content)}"
-                ]
-            else:
-                # Only include previous messages if no reply target
-                async for msg in message_obj.channel.history(limit=10, before=message_obj, oldest_first=False):
-                    if msg.author.bot or not msg.content.strip():
-                        continue
-                    context_lines.append(
-                        f"[{msg.created_at.strftime('%H:%M')}] @{msg.author.display_name}: {normalize_text(msg.content)}"
-                    )
-                    if len(context_lines) >= 5:
-                        break
-                context_lines.reverse()
-        except Exception as e:
-            print(f"[moderate_event] Context build failed: {e}")
-
-    # Prepare violation history
-    history = violation_cache[user.id]
-    past_text = (
-        "\n\nPrevious Violations:\n" + "\n".join(
-            f"- {i}. Rule: {r} | Reason: {t}" for i, (r, t) in enumerate(history, 1)
-        )
-        if history else "This user has no prior violations."
-    )
-
-    # Build prompt dynamically
-    if context_lines:
-        context_text = "\n".join(context_lines)
-        user_prompt = (
-            f"Context:\n{context_text}\n\n"
-            f"User message:\n\"{normalized_message}\"\n\n"
-            f"Event type: {event_type}\n"
-            "Only evaluate the user's message. Use the context only if clearly needed."
-        )
-    else:
-        user_prompt = (
-            f"User message:\n\"{normalized_message}\"\n\n"
-            f"Event type: {event_type}\n"
-            "Evaluate this message alone for rule violations."
-        )
-
-    # OpenAI API call
-    client = openai.AsyncOpenAI(api_key=api_key)
-    try:
-        model = await mysql.get_settings(guild.id, "aimod-model") or "gpt-4.1-nano"
-        completion = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an AI that checks whether a message violates specific server rules.\n"
-                        "Only flag messages that clearly and unambiguously break a rule below. If unsure, return ok=true.\n"
-                        "Ignore sarcasm, slang, memes, or profanity unless it directly breaks a rule. Do not guess intent.\n"
-                        "Sexual or offensive language is allowed unless a rule explicitly prohibits it.\n"
-                        "Do not enforce general platform policies — only the listed rules matter.\n\n"
-                        f"Server rules:\n{rules}\n{past_text}\n\n"
-                        "Respond in strict JSON:\n"
-                        "- ok: true | false\n"
-                        "- rule: \"<broken-rule-name>\" (empty if ok)\n"
-                        "- reason: \"<brief explanation>\"\n"
-                        "- actions: [ 'delete' | 'strike' | 'kick' | 'ban' | 'timeout:<dur>' | 'warn:<text>' ]\n\n"
-                        "Valid durations: 1s 1m 1h 1d 1w 1mo 1y.\n"
-                        "Escalate actions based on repeat offenses using the history above."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
-            ],
-            temperature=0.0,
-            response_format={"type": "json_object"}
-        )
     except Exception as e:
-        print(f"[moderate_event] AI call failed: {e}")
-        return
-
-    raw = completion.choices[0].message.content.strip()
-    actions_from_ai, rule_broken, reason_text, ok_flag = parse_ai_response(raw)
-    if ok_flag or not actions_from_ai:
-        return
-
-    # Record violation
-    if rule_broken and reason_text:
-        violation_cache[user.id].appendleft((rule_broken, reason_text))
-
-    # Log and take action
-    embed = discord.Embed(
-        title="AI-Flagged Violation",
-        description=(
-            f"Event: {event_type}\nUser: {user.mention} ({user.name})\n"
-            f"Rule Broken: {rule_broken}\nReason: {reason_text}\n"
-            f"Actions: {', '.join(actions_from_ai)}"
-        ),
-        colour=discord.Colour.red()
-    )
-    monitor_channel = await mysql.get_settings(guild.id, "monitor-channel")
-    if monitor_channel:
-        await logging.log_to_channel(embed, monitor_channel, bot)
-
-    configured = await mysql.get_settings(guild.id, AIMOD_ACTION_SETTING) or ["auto"]
-    if "auto" in configured:
-        configured = actions_from_ai
-
-    for act in configured:
-        await strike.perform_disciplinary_action(
-            user=user,
-            bot=bot,
-            action_string=act.lower(),
-            reason=reason_text,
-            source="autonomous_ai",
-            message=message_obj
-        )
+        print(f"[parse_batch_response] Failed to parse JSON: {e}")
+        return []
 
 class AutonomousModeratorCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.message_batches: dict[int, list[tuple[str, str, discord.Message]]] = defaultdict(list)
-        self.last_run: dict[int, datetime] = defaultdict(lambda: datetime.utcnow())
+        self.last_run: dict[int, datetime] = defaultdict(lambda: datetime.now(timezone.utc))
         self.batch_runner.start()
 
     def cog_unload(self):
@@ -218,39 +96,52 @@ class AutonomousModeratorCog(commands.Cog):
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
-        self.message_batches[message.guild.id].append(("Message", message.content, message))
+        normalized_message = normalize_text(message.content)
+        if not normalized_message:
+            return
+        self.message_batches[message.guild.id].append(("Message", normalized_message, message))
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if after.author.bot or not after.guild or before.content == after.content:
             return
-        self.message_batches[after.guild.id].append(
-            (
-                "Edited Message",
-                f"Before: {before.content}\nAfter: {after.content}",
-                after,
-            )
-        )
+        self.message_batches[after.guild.id].append(("Edited Message", f"Before: {before.content}\nAfter: {after.content}", after))
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        await moderate_event(self.bot, member.guild, member, "Member Join",
-                             f"Username: {member.name}, Display: {member.display_name}")
+        self.message_batches[member.guild.id].append(("Member Join", f"Username: {member.name}, Display: {member.display_name}", member))
 
     @tasks.loop(minutes=1)
     async def batch_runner(self):
         now = datetime.now(timezone.utc)
         for gid, msgs in list(self.message_batches.items()):
+            # Check interval
             interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "10m"
-            delta = parse_duration(str(interval_str)) or timedelta(minutes=10)
-            last = self.last_run.get(gid)
-            if last and now - last < delta:
-                continue
+            delta = parse_duration(interval_str) or timedelta(minutes=10)
 
-            self.last_run[gid] = now
+            # Build Transcript
             batch = msgs[:]
-            self.message_batches[gid].clear()
+            transcript_lines = []
+            for event_type, content, msg in batch:
+                ts = msg.created_at.strftime("%Y-%m-%d %H:%M") if hasattr(msg, 'created_at') else datetime.now().strftime("%Y-%m-%d %H:%M")
+                user_id = msg.author.id if hasattr(msg, 'author') else msg.id
+                user_name = msg.author.display_name if hasattr(msg, 'author') else str(msg)
+                transcript_lines.append(
+                    f"[{ts}] {user_name} ({user_id}) - Message ID: {msg.id}:\n{content}"
+                )
+            transcript = "\n".join(transcript_lines)
 
+            # Get model limit and estimate tokens
+            model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-nano"
+            limit = get_model_limit(model)
+            estimated_tokens = estimate_tokens(SYSTEM_MSG) + estimate_tokens(transcript)
+
+            # Run early if transcript is too large
+            if now - self.last_run[gid] < delta and estimated_tokens < (limit * 0.9):
+                continue
+            self.last_run[gid] = now
+
+            self.message_batches[gid].clear()
             if not batch:
                 continue
 
@@ -258,48 +149,34 @@ class AutonomousModeratorCog(commands.Cog):
             if not guild:
                 continue
 
+            # Check required settings
+            autonomous = await mysql.get_settings(gid, "autonomous-mod")
             api_key = await mysql.get_settings(gid, "api-key")
             rules = await mysql.get_settings(gid, "rules")
-            if not (api_key and rules):
+            if not (autonomous and api_key and rules):
                 continue
 
-            transcript_lines = []
-            last_message_per_user = {}
-            for event_type, content, msg in batch:
-                ts = msg.created_at.strftime("%Y-%m-%d %H:%M")
-                transcript_lines.append(
-                    f"[{ts}] {msg.author.display_name} ({msg.author.id}): {content}"
-                )
-                last_message_per_user[msg.author.id] = msg
-
-            transcript = "\n".join(transcript_lines)
-
+            # Build violation history
+            user_ids = {msg.author.id for _, _, msg in batch if hasattr(msg, 'author')}
             history_blocks = []
-            for uid in last_message_per_user:
+            for uid in user_ids:
                 history = violation_cache[uid]
                 if history:
                     joined = "; ".join(f"{r} - {t}" for r, t in history)
                     history_blocks.append(f"{uid}: {joined}")
             history_text = "\n".join(history_blocks) if history_blocks else "None"
 
-            system_msg = (
-                "You are a Discord moderation assistant. "
-                "Review the transcript and identify messages that break the server rules. "
-                "Use the provided violation history to escalate punishments. "
-                "Return a JSON array of objects with fields: user_id, rule, reason, action. "
-                "Valid actions are: delete, strike, kick, ban, timeout:<duration>, warn:<text>."
-            )
+            # Prompt for AI
+            user_prompt = f"Rules:\n{rules}\n\nViolation history:\n{history_text}\n\nTranscript:\n{transcript}"
 
-            user_prompt = (
-                f"Rules:\n{rules}\n\nViolation history:\n{history_text}\n\nTranscript:\n{transcript}"
-            )
+            print(f"Prompt: {user_prompt}")
 
+            # AI call
             client = openai.AsyncOpenAI(api_key=api_key)
             try:
-                model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-nano"
                 completion = await client.chat.completions.create(
                     model=model,
-                    messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_prompt}],
+                    messages=[{"role": "system", "content": SYSTEM_MSG}, {"role": "user", "content": user_prompt}],
                     temperature=0.0,
                     response_format={"type": "json_object"}
                 )
@@ -308,32 +185,58 @@ class AutonomousModeratorCog(commands.Cog):
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
 
+            print(f"Raw: {raw}")
+
+            # Parse AI response
             violations = parse_batch_response(raw)
+            print(f"Violations: {violations}")
             for item in violations:
                 uid = item.get("user_id")
-                action = item.get("action", "").lower()
-                if not (uid and action):
+                actions = item.get("actions", [])
+                if not (uid and actions):
                     continue
-                member = guild.get_member(uid)
-                if member is None:
-                    try:
-                        member = await guild.fetch_member(uid)
-                    except Exception:
-                        continue
 
+                member = guild.get_member(uid) or await guild.fetch_member(uid)
                 reason = item.get("reason", "")
                 rule = item.get("rule", "")
-                msg_obj = last_message_per_user.get(uid)
+                message_ids = item.get("message_ids", [])
+
+                # Get message objects from message_ids
+                messages_to_delete = [
+                    msg for (_, _, msg) in batch if str(msg.id) in message_ids
+                ] if message_ids else []
+
+                # Resolve configured actions
+                configured = await mysql.get_settings(gid, AIMOD_ACTION_SETTING) or ["auto"]
+                if "auto" in configured:
+                    configured = actions
+
+                # Apply actions
                 await strike.perform_disciplinary_action(
                     bot=self.bot,
                     user=member,
-                    action_string=action,
+                    action_string=configured,
                     reason=reason,
                     source="batch_ai",
-                    message=msg_obj,
+                    message=messages_to_delete
                 )
+
+                # Cache and log
                 if rule and reason:
                     violation_cache[uid].appendleft((rule, reason))
+                    embed = discord.Embed(
+                        title="AI-Flagged Violation",
+                        description=(
+                            f"User: {member.mention} ({member.name})\n"
+                            f"Rule Broken: {rule}\n"
+                            f"Reason: {reason}\n"
+                            f"Actions: {', '.join(configured)}"
+                        ),
+                        colour=discord.Colour.red()
+                    )
+                    monitor_channel = await mysql.get_settings(gid, "monitor-channel")
+                    if monitor_channel:
+                        await logging.log_to_channel(embed, monitor_channel, self.bot)
 
     ai_mod_group = app_commands.Group(name="ai_mod", description="Manage AI moderation features.")
 
@@ -366,7 +269,7 @@ class AutonomousModeratorCog(commands.Cog):
             reason: str = None,
         ):
         await interaction.response.defer(ephemeral=True)
-        
+
         action_str = await validate_action(
             interaction=interaction,
             action=action,

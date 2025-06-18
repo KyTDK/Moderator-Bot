@@ -39,13 +39,14 @@ async def perform_disciplinary_action(
     action_string: Union[str, list[str]],
     reason: str = None,
     source: str = "generic",
-    message: Optional[Message] = None
+    message: Optional[Union[Message, list[Message]]] = None
 ) -> Optional[str]:
     """Executes one or more configured action strings on a user."""
     now = datetime.now(timezone.utc)
     results = []
 
     actions = [action_string] if isinstance(action_string, str) else action_string
+    messages = message if isinstance(message, list) else ([message] if message else [])
 
     for action in actions:
         try:
@@ -57,13 +58,15 @@ async def perform_disciplinary_action(
                 continue
 
             if base_action == "delete":
-                if message:
-                    try:
-                        await message.delete()
-                        results.append("Message deleted.")
-                    except Exception as e:
-                        print(f"[Disciplinary Action] Failed to delete message: {e}")
-                        results.append("Failed to delete message.")
+                if messages:
+                    success = 0
+                    for msg in messages:
+                        try:
+                            await msg.delete()
+                            success += 1
+                        except Exception as e:
+                            print(f"[Disciplinary Action] Failed to delete message: {e}")
+                    results.append(f"{success}/{len(messages)} message(s) deleted.")
                 else:
                     results.append("Delete requested, but no message was provided.")
                 continue
