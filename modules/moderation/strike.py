@@ -139,18 +139,17 @@ async def perform_disciplinary_action(
                 embed.set_footer(text=f"Server: {user.guild.name}", icon_url=user.guild.icon.url if user.guild.icon else None)
 
                 # Pick the first message if message is a list
-                msg = message[0] if isinstance(message, list) and message else message
+                msg = messages[0] if messages else None
 
                 try:
+                    await user.send(embed=embed)
+                    results.append("User warned via DM.")
+                except discord.Forbidden:
                     if msg and msg.channel.permissions_for(msg.guild.me).send_messages:
                         await msg.channel.send(content=user.mention, embed=embed)
-                        results.append("User warned via channel.")
+                        results.append("User warned via channel (DM failed).")
                     else:
-                        await user.send(embed=embed)
-                        results.append("User warned via DM.")
-                except Exception:
-                    print("Warning failed (couldn't send message).")
-                    results.append("Warning failed (couldn't send message).")
+                        results.append("Warning failed (couldn't send DM or channel message).")
                 continue
 
             results.append(f"Unknown action: '{action}'")
