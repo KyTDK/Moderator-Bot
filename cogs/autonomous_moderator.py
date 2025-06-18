@@ -2,7 +2,7 @@ import re
 import json
 import openai
 import discord
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from discord.ext import commands, tasks
 from discord import app_commands, Interaction
 from typing import Optional
@@ -239,7 +239,7 @@ class AutonomousModeratorCog(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def batch_runner(self):
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         for gid, msgs in list(self.message_batches.items()):
             interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "4h"
             delta = parse_duration(str(interval_str)) or timedelta(hours=4)
