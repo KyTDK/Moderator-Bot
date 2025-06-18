@@ -219,9 +219,15 @@ SETTINGS_SCHEMA = {
             "gpt-4.1",
             "gpt-4.1-mini",
             "gpt-4.1-nano",
-            "gpt-4o",           
+            "gpt-4o",
             "gpt-4o-mini",
         ]
+    ),
+    "aimod-check-interval": Setting(
+        name="aimod-check-interval",
+        description="How often to run the AI moderation batch process.",
+        setting_type=TimeString,
+        default=TimeString("4h"),
     ),
     "contextual-ai": Setting(
         name="contextual-ai",

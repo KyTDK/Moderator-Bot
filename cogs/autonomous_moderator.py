@@ -2,12 +2,14 @@ import re
 import json
 import openai
 import discord
-from discord.ext import commands
+from datetime import datetime, timedelta
+from discord.ext import commands, tasks
 from discord import app_commands, Interaction
 from typing import Optional
 from collections import defaultdict, deque
 
 from modules.utils import mysql, logging
+from modules.utils.time import parse_duration
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
 from modules.utils.actions import VALID_ACTION_VALUES, action_choices
@@ -182,23 +184,50 @@ async def moderate_event(
 class AutonomousModeratorCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.message_batches: dict[int, list[tuple[str, str, discord.Message]]] = defaultdict(list)
+        self.last_run: dict[int, datetime] = defaultdict(lambda: datetime.utcnow())
+        self.batch_runner.start()
+
+    def cog_unload(self):
+        self.batch_runner.cancel()
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
-        await moderate_event(self.bot, message.guild, message.author, "Message", message.content, message)
+        self.message_batches[message.guild.id].append(("Message", message.content, message))
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if after.author.bot or not after.guild or before.content == after.content:
             return
-        await moderate_event(self.bot, after.guild, after.author, "Edited Message",
-                             f"Before: {before.content}\nAfter: {after.content}", after)
+        self.message_batches[after.guild.id].append(
+            (
+                "Edited Message",
+                f"Before: {before.content}\nAfter: {after.content}",
+                after,
+            )
+        )
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         await moderate_event(self.bot, member.guild, member, "Member Join",
                              f"Username: {member.name}, Display: {member.display_name}")
+
+    @tasks.loop(minutes=1)
+    async def batch_runner(self):
+        now = datetime.utcnow()
+        for gid, msgs in list(self.message_batches.items()):
+            interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "4h"
+            delta = parse_duration(str(interval_str)) or timedelta(hours=4)
+            last = self.last_run.get(gid)
+            if last and now - last < delta:
+                continue
+
+            self.last_run[gid] = now
+            batch = msgs[:]
+            self.message_batches[gid].clear()
+            for event_type, content, msg in batch:
+                await moderate_event(self.bot, msg.guild, msg.author, event_type, content, msg)
 
     ai_mod_group = app_commands.Group(name="ai_mod", description="Manage AI moderation features.")
 
