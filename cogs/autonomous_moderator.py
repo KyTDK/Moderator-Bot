@@ -131,7 +131,7 @@ class AutonomousModeratorCog(commands.Cog):
                 user_id = msg.author.id if hasattr(msg, 'author') else msg.id
                 user_name = msg.author.display_name if hasattr(msg, 'author') else str(msg)
                 transcript_lines.append(
-                    f"[{ts}] {user_name} ({user_id}) - Message ID: {msg.id}:\n{content}"
+                    f"[{ts}] {user_name} ({user_id}) - Message ID: {msg.id}: {content}"
                 )
             transcript = "\n".join(transcript_lines)
 
