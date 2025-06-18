@@ -183,8 +183,6 @@ class AutonomousModeratorCog(commands.Cog):
             # Prompt for AI
             user_prompt = f"Rules:\n{rules}\n\nViolation history:\n{history_text}\n\nTranscript:\n{transcript}"
 
-            print(f"Prompt: {user_prompt}")
-
             # AI call
             client = openai.AsyncOpenAI(api_key=api_key)
             try:
@@ -199,11 +197,8 @@ class AutonomousModeratorCog(commands.Cog):
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
 
-            print(f"Raw: {raw}")
-
             # Parse AI response
             violations = parse_batch_response(raw)
-            print(f"Violations: {violations}")
             for item in violations:
                 uid = item.get("user_id")
                 actions = item.get("actions", [])
