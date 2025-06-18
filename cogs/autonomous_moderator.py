@@ -205,6 +205,10 @@ class AutonomousModeratorCog(commands.Cog):
                 rule = item.get("rule", "")
                 message_ids = item.get("message_ids", [])
 
+                # Ensure delete if message_ids are provided
+                if message_ids and "delete" not in actions:
+                    actions.append("delete")
+
                 # Get message objects from message_ids
                 messages_to_delete = [
                     msg for (_, _, msg) in batch if str(msg.id) in message_ids
