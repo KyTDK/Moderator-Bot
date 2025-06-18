@@ -45,7 +45,7 @@ async def embed_and_store_rules(guild_id: int, api_key: str, message_vec: Option
     try:
         client = openai.AsyncOpenAI(api_key=api_key)
         result = await client.embeddings.create(
-            model="text-embedding-3-large",
+            model="text-embedding-3-small",
             input=rules
         )
         vectors = [item.embedding for item in result.data]
