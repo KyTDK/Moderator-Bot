@@ -30,6 +30,30 @@ def parse_ai_response(text: str) -> tuple[list[str], str, str, bool]:
     actions = [a.lower() for a in data.get("actions", []) if a] if not ok else []
     return actions, data.get("rule", ""), data.get("reason", ""), ok
 
+def parse_batch_response(text: str) -> list[dict[str, str]]:
+    """Parse the JSON response for batch moderation."""
+    try:
+        data = json.loads(text)
+        if not isinstance(data, list):
+            return []
+        parsed = []
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            try:
+                uid = int(item.get("user_id"))
+            except (TypeError, ValueError):
+                continue
+            parsed.append({
+                "user_id": uid,
+                "rule": str(item.get("rule", "")),
+                "reason": str(item.get("reason", "")),
+                "action": str(item.get("action", "")),
+            })
+        return parsed
+    except Exception:
+        return []
+
 async def moderate_event(
     bot,
     guild: discord.Guild,
@@ -226,8 +250,90 @@ class AutonomousModeratorCog(commands.Cog):
             self.last_run[gid] = now
             batch = msgs[:]
             self.message_batches[gid].clear()
+
+            if not batch:
+                continue
+
+            guild = self.bot.get_guild(gid)
+            if not guild:
+                continue
+
+            api_key = await mysql.get_settings(gid, "api-key")
+            rules = await mysql.get_settings(gid, "rules")
+            if not (api_key and rules):
+                continue
+
+            transcript_lines = []
+            last_message_per_user = {}
             for event_type, content, msg in batch:
-                await moderate_event(self.bot, msg.guild, msg.author, event_type, content, msg)
+                ts = msg.created_at.strftime("%Y-%m-%d %H:%M")
+                transcript_lines.append(
+                    f"[{ts}] {msg.author.display_name} ({msg.author.id}): {content}"
+                )
+                last_message_per_user[msg.author.id] = msg
+
+            transcript = "\n".join(transcript_lines)
+
+            history_blocks = []
+            for uid in last_message_per_user:
+                history = violation_cache[uid]
+                if history:
+                    joined = "; ".join(f"{r} - {t}" for r, t in history)
+                    history_blocks.append(f"{uid}: {joined}")
+            history_text = "\n".join(history_blocks) if history_blocks else "None"
+
+            system_msg = (
+                "You are a Discord moderation assistant. "
+                "Review the transcript and identify messages that break the server rules. "
+                "Use the provided violation history to escalate punishments. "
+                "Return a JSON array of objects with fields: user_id, rule, reason, action. "
+                "Valid actions are: delete, strike, kick, ban, timeout:<duration>, warn:<text>."
+            )
+
+            user_prompt = (
+                f"Rules:\n{rules}\n\nViolation history:\n{history_text}\n\nTranscript:\n{transcript}"
+            )
+
+            client = openai.AsyncOpenAI(api_key=api_key)
+            try:
+                model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-nano"
+                completion = await client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_prompt}],
+                    temperature=0.0,
+                    response_format={"type": "json_object"}
+                )
+                raw = completion.choices[0].message.content.strip()
+            except Exception as e:
+                print(f"[batch_runner] AI call failed for guild {gid}: {e}")
+                continue
+
+            violations = parse_batch_response(raw)
+            for item in violations:
+                uid = item.get("user_id")
+                action = item.get("action", "").lower()
+                if not (uid and action):
+                    continue
+                member = guild.get_member(uid)
+                if member is None:
+                    try:
+                        member = await guild.fetch_member(uid)
+                    except Exception:
+                        continue
+
+                reason = item.get("reason", "")
+                rule = item.get("rule", "")
+                msg_obj = last_message_per_user.get(uid)
+                await strike.perform_disciplinary_action(
+                    bot=self.bot,
+                    user=member,
+                    action_string=action,
+                    reason=reason,
+                    source="batch_ai",
+                    message=msg_obj,
+                )
+                if rule and reason:
+                    violation_cache[uid].appendleft((rule, reason))
 
     ai_mod_group = app_commands.Group(name="ai_mod", description="Manage AI moderation features.")
 
