@@ -115,12 +115,7 @@ class AutonomousModeratorCog(commands.Cog):
         self.message_batches[message.guild.id].append(("Message", normalized_message, message))
 
         # Early run if bot is mentioned
-        force = False
-        if self.bot.user in message.mentions:
-            setting = await mysql.get_settings(message.guild.id, "early-batch-on-mention")
-            if setting:
-                force = True
-        if force:
+        if self.bot.user in message.mentions and await mysql.get_settings(message.guild.id, "early-batch-on-mention"):
             self.force_run.add(message.guild.id)
 
     @commands.Cog.listener()
