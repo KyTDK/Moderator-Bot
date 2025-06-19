@@ -243,4 +243,11 @@ SETTINGS_SCHEMA = {
         default=True,
         choices=["true", "false"]
     ),
+    "aimod-trigger-on-mention-only": Setting(
+        name="aimod-trigger-on-mention-only",
+        description="Only run AI moderation when the bot is directly pinged. Disables automatic interval checks.",
+        setting_type=bool,
+        default=False,
+        choices=["true", "false"]
+    ),
 }

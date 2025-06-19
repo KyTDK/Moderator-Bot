@@ -81,8 +81,8 @@ def parse_batch_response(text: str) -> list[dict[str, object]]:
                     actions = [actions]
                 parsed.append({
                     "user_id": uid,
-                    "rule": str(item.get("rule", "")),
-                    "reason": str(item.get("reason", "")),
+                    "rule": item.get("rule", ""),
+                    "reason": item.get("reason", ""),
                     "actions": [a.lower() for a in actions if isinstance(a, str)],
                     "message_ids": item.get("message_ids", [])
                 })
@@ -142,25 +142,39 @@ class AutonomousModeratorCog(commands.Cog):
             if not (autonomous and api_key and rules):
                 continue
 
+            trigger_on_mention_only = await mysql.get_settings(gid, "aimod-trigger-on-mention-only")
+
+            if trigger_on_mention_only and gid not in self.force_run:
+                continue  # Don't run unless triggered by a @mention
+
             # Check interval
             interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "1h"
             delta = parse_duration(interval_str) or timedelta(hours=1)
 
-            # Build Transcript
+            # Build transcript with truncation if needed
             batch = msgs[:]
             transcript_lines = []
+            model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-mini"
+            limit = get_model_limit(model)
+            max_tokens = int(limit * 0.9)
+
+            # Temporarily build all lines
             for event_type, content, msg in batch:
                 ts = msg.created_at.strftime("%Y-%m-%d %H:%M") if hasattr(msg, 'created_at') else datetime.now().strftime("%Y-%m-%d %H:%M")
                 user_id = msg.author.id if hasattr(msg, 'author') else msg.id
-                transcript_lines.append(
-                    f"[{ts}] {user_id} - Message ID: {msg.id}: {content}"
-                )
-            transcript = "\n".join(transcript_lines)
+                line = f"[{ts}] {user_id} - Message ID: {msg.id}: {content}"
+                transcript_lines.append(line)
 
-            # Get model limit and estimate tokens
-            model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-mini"
-            limit = get_model_limit(model)
+            transcript = "\n".join(transcript_lines)
             estimated_tokens = estimate_tokens(SYSTEM_MSG) + estimate_tokens(transcript)
+
+            # Truncate old messages if we're in mention-only mode and it's too big
+            if trigger_on_mention_only:
+                while estimated_tokens > max_tokens and transcript_lines:
+                    batch.pop(0)
+                    transcript_lines.pop(0)
+                    transcript = "\n".join(transcript_lines)
+                    estimated_tokens = estimate_tokens(SYSTEM_MSG) + estimate_tokens(transcript)
 
             # Run early if transcript is too large or force run
             if gid not in self.force_run and now - self.last_run[gid] < delta and estimated_tokens < (limit * 0.9):
