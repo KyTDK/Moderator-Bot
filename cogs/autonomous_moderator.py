@@ -108,15 +108,17 @@ class AutonomousModeratorCog(commands.Cog):
         if message.author.bot or not message.guild:
             return
 
+        # Early run if bot is mentioned
+        if any(user.id == self.bot.user.id for user in message.mentions):
+            if await mysql.get_settings(message.guild.id, "early-batch-on-mention"):
+                self.force_run.add(message.guild.id)
+
+        # Add message to cache
         normalized_message = normalize_text(message.content)
         if not normalized_message:
             return
 
         self.message_batches[message.guild.id].append(("Message", normalized_message, message))
-
-        # Early run if bot is mentioned
-        if self.bot.user in message.mentions and await mysql.get_settings(message.guild.id, "early-batch-on-mention"):
-            self.force_run.add(message.guild.id)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -128,10 +130,17 @@ class AutonomousModeratorCog(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         self.message_batches[member.guild.id].append(("Member Join", f"Username: {member.name}, Display: {member.display_name}", member))
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(seconds=30)
     async def batch_runner(self):
         now = datetime.now(timezone.utc)
         for gid, msgs in list(self.message_batches.items()):
+            # Check required settings
+            autonomous = await mysql.get_settings(gid, "autonomous-mod")
+            api_key = await mysql.get_settings(gid, "api-key")
+            rules = await mysql.get_settings(gid, "rules")
+            if not (autonomous and api_key and rules):
+                continue
+
             # Check interval
             interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "1h"
             delta = parse_duration(interval_str) or timedelta(hours=1)
@@ -164,13 +173,6 @@ class AutonomousModeratorCog(commands.Cog):
 
             guild = self.bot.get_guild(gid)
             if not guild:
-                continue
-
-            # Check required settings
-            autonomous = await mysql.get_settings(gid, "autonomous-mod")
-            api_key = await mysql.get_settings(gid, "api-key")
-            rules = await mysql.get_settings(gid, "rules")
-            if not (autonomous and api_key and rules):
                 continue
 
             # Prompt for AI
