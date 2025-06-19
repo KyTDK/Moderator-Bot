@@ -56,7 +56,7 @@ MODEL_LIMITS = {
     "gpt-4.1-nano": 1000000,
     "gpt-4.1-mini": 1000000,
     "gpt-4o": 128000,
-    "gpt-3.5-turbo": 16000
+    "gpt-4o-mini": 128000
 }
 
 def get_model_limit(model_name: str) -> int:
