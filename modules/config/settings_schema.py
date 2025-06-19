@@ -14,7 +14,7 @@ class Setting:
         hidden: bool = False,
         private: bool = False,
         validator: Optional[Callable] = None,
-        choices: Optional[list[str]] = None,  # New field
+        choices: Optional[list[str]] = None
     ):
         self.name = name
         self.description = description
