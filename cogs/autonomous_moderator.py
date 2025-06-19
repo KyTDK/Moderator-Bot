@@ -104,7 +104,7 @@ class AutonomousModeratorCog(commands.Cog):
         self.message_batches: dict[int, list[tuple[str, str, discord.Message]]] = defaultdict(list)
         self.last_run: dict[int, datetime] = defaultdict(lambda: datetime.now(timezone.utc))
         self.batch_runner.start()
-        self.force_run: set[int] = set()
+        self.mention_triggers: dict[int, discord.Message] = {}
 
     def cog_unload(self):
         self.batch_runner.cancel()
@@ -133,7 +133,7 @@ class AutonomousModeratorCog(commands.Cog):
         if any(user.id == self.bot.user.id for user in message.mentions):
             if await mysql.get_settings(message.guild.id, "early-batch-on-mention"):
                 await message.add_reaction("👀")
-                self.force_run.add(message.guild.id)
+                self.mention_triggers[message.guild.id] = message
 
         # Add message to cache
         normalized_message = normalize_text(message.content)
@@ -167,7 +167,7 @@ class AutonomousModeratorCog(commands.Cog):
 
             trigger_on_mention_only = await mysql.get_settings(gid, "aimod-trigger-on-mention-only")
 
-            if trigger_on_mention_only and gid not in self.force_run:
+            if trigger_on_mention_only and gid not in self.mention_triggers:
                 continue  # Don't run unless triggered by a @mention
 
             # Check interval
@@ -201,9 +201,9 @@ class AutonomousModeratorCog(commands.Cog):
                                                                          current_total_tokens=current_total_tokens)
 
             # Run early if transcript is too large or force run
-            if gid not in self.force_run and now - self.last_run[gid] < delta and estimated_tokens < max_tokens:
+            if gid not in self.mention_triggers and now - self.last_run[gid] < delta and estimated_tokens < max_tokens:
                 continue
-            self.force_run.discard(gid)
+            trigger_msg = self.mention_triggers.pop(gid, None)
             self.last_run[gid] = now
 
             self.message_batches[gid].clear()
@@ -283,6 +283,15 @@ class AutonomousModeratorCog(commands.Cog):
                     monitor_channel = await mysql.get_settings(gid, "monitor-channel")
                     if monitor_channel:
                         await logging.log_to_channel(embed, monitor_channel, self.bot)
+            # Send feedback if this batch was triggered by mention
+            if trigger_msg:
+                try:
+                    if violations:
+                        await trigger_msg.reply("Thanks for the report. Action was taken.")
+                    else:
+                        await trigger_msg.reply("Thanks for the report. No violations were found.")
+                except discord.HTTPException:
+                    pass
 
     ai_mod_group = app_commands.Group(name="ai_mod", description="Manage AI moderation features.")
 
