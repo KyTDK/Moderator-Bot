@@ -4,7 +4,7 @@ import discord
 from datetime import datetime, timedelta, timezone
 from discord.ext import commands, tasks
 from discord import app_commands, Interaction
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from modules.utils import logging, mysql
 from modules.utils.time import parse_duration
@@ -19,6 +19,7 @@ from math import ceil
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
+violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=3)) # user_id -> deque of (rule: str, action: str)
 
 SYSTEM_MSG = (
     "You are an AI that checks whether messages violate server rules.\n"
@@ -41,6 +42,7 @@ SYSTEM_MSG = (
     "Only enforce the server rules provided. Do not apply personal judgment, intent, or external policies (e.g., OpenAI guidelines).\n"
     "Do not flag messages that report, reference, or accuse others of breaking rules — only flag content where the speaker themselves is clearly breaking a rule.\n"
     "Do not act on sarcasm, vague statements, or suggestive content unless it clearly and unambiguously breaks a rule.\n"
+    "Do not use prior violations to justify punishing a message unless a message in the transcript directly continues a harmful pattern.\n"
     "Never speculate — if unsure, err on the side of ok=true.\n"
 )
 
@@ -112,10 +114,10 @@ class AutonomousModeratorCog(commands.Cog):
         user_id = getattr(getattr(msg, "author", None), "id", msg.id)
         return f"[{ts}] {user_id} - Message ID: {msg.id}: {content}"
 
-    def _build_transcript(self, batch: list[tuple[str, str, discord.Message]], max_tokens: int, mention_only: bool):
+    def _build_transcript(self, batch: list[tuple[str, str, discord.Message]], max_tokens: int, mention_only: bool, current_total_tokens: int):
         lines = [self._format_event(msg, text) for _, text, msg in batch]
         tokens = [estimate_tokens(line) for line in lines]
-        total = BASE_SYSTEM_TOKENS + sum(tokens)
+        total = current_total_tokens + sum(tokens)
         while mention_only and batch and total > max_tokens:
             total -= tokens.pop(0)
             batch.pop(0)
@@ -161,6 +163,8 @@ class AutonomousModeratorCog(commands.Cog):
             if not (autonomous and api_key and rules):
                 continue
 
+            rules = f"Rules:\n{rules}\n\n"
+
             trigger_on_mention_only = await mysql.get_settings(gid, "aimod-trigger-on-mention-only")
 
             if trigger_on_mention_only and gid not in self.force_run:
@@ -170,12 +174,29 @@ class AutonomousModeratorCog(commands.Cog):
             interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "1h"
             delta = parse_duration(interval_str) or timedelta(hours=1)
 
+            # Build violation history
+            user_ids = {msg.author.id for _, _, msg in batch if hasattr(msg, 'author')}
+            violation_blocks = []
+            for uid in user_ids:
+                history = violation_cache[uid]
+                if history:
+                    joined = "; ".join(f"{reason}: previously punished with {action}" for reason, action in history)
+                    violation_blocks.append(f"User {uid} has recent violations: {joined}")
+            violation_history = "\n".join(violation_blocks)
+            if not violation_history:
+                violation_history = "No recent violations on record."
+            violation_history = f"Violation history:\n{violation_history}\n\n"
+
             # Build transcript with truncation if needed
             batch = msgs[:]
             model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-mini"
             limit = get_model_limit(model)
             max_tokens = int(limit * 0.9)
-            transcript, estimated_tokens, batch = self._build_transcript(batch, max_tokens, trigger_on_mention_only)
+            current_total_tokens=BASE_SYSTEM_TOKENS+estimate_tokens(violation_history)+estimate_tokens(rules)
+            transcript, estimated_tokens, batch = self._build_transcript(batch, 
+                                                                         max_tokens, 
+                                                                         trigger_on_mention_only,
+                                                                         current_total_tokens=current_total_tokens)
 
             # Run early if transcript is too large or force run
             if gid not in self.force_run and now - self.last_run[gid] < delta and estimated_tokens < max_tokens:
@@ -192,7 +213,7 @@ class AutonomousModeratorCog(commands.Cog):
                 continue
 
             # Prompt for AI
-            user_prompt = f"Rules:\n{rules}\n\nTranscript:\n{transcript}"
+            user_prompt = f"{rules}{violation_history}Transcript:\n{transcript}"
 
             # AI call
             client = openai.AsyncOpenAI(api_key=api_key)
@@ -244,6 +265,7 @@ class AutonomousModeratorCog(commands.Cog):
 
                 # Log
                 if rule and reason:
+                    violation_cache[uid].append((rule, ", ".join(configured)))
                     embed = discord.Embed(
                         title="AI-Flagged Violation",
                         description=(
