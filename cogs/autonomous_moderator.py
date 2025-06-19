@@ -4,7 +4,7 @@ import discord
 from datetime import datetime, timedelta, timezone
 from discord.ext import commands, tasks
 from discord import app_commands, Interaction
-from collections import defaultdict, deque
+from collections import defaultdict
 
 from modules.utils import logging, mysql
 from modules.utils.time import parse_duration
