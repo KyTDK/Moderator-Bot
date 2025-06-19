@@ -235,5 +235,12 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         choices=["true", "false"]
-    )
+    ),
+    "early-batch-on-mention": Setting(
+        name="early-batch-on-mention",
+        description="Run AI moderation early when the bot is mentioned.",
+        setting_type=bool,
+        default=True,
+        choices=["true", "false"]
+    ),
 }

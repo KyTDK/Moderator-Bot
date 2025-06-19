@@ -99,6 +99,7 @@ class AutonomousModeratorCog(commands.Cog):
         self.message_batches: dict[int, list[tuple[str, str, discord.Message]]] = defaultdict(list)
         self.last_run: dict[int, datetime] = defaultdict(lambda: datetime.now(timezone.utc))
         self.batch_runner.start()
+        self.force_run: set[int] = set()
 
     def cog_unload(self):
         self.batch_runner.cancel()
@@ -106,10 +107,21 @@ class AutonomousModeratorCog(commands.Cog):
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
+
         normalized_message = normalize_text(message.content)
         if not normalized_message:
             return
+
         self.message_batches[message.guild.id].append(("Message", normalized_message, message))
+
+        # Early run if bot is mentioned
+        force = False
+        if self.bot.user in message.mentions:
+            setting = await mysql.get_settings(message.guild.id, "early-batch-on-mention")
+            if setting:
+                force = True
+        if force:
+            self.force_run.add(message.guild.id)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -145,9 +157,10 @@ class AutonomousModeratorCog(commands.Cog):
             limit = get_model_limit(model)
             estimated_tokens = estimate_tokens(SYSTEM_MSG) + estimate_tokens(transcript)
 
-            # Run early if transcript is too large
-            if now - self.last_run[gid] < delta and estimated_tokens < (limit * 0.9):
+            # Run early if transcript is too large or force run
+            if gid not in self.force_run and now - self.last_run[gid] < delta and estimated_tokens < (limit * 0.9):
                 continue
+            self.force_run.discard(gid)
             self.last_run[gid] = now
 
             self.message_batches[gid].clear()
