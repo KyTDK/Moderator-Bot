@@ -129,9 +129,17 @@ class AutonomousModeratorCog(commands.Cog):
         if message.author.bot or not message.guild:
             return
 
+        settings = await mysql.get_settings(message.guild.id, [
+            "autonomous-mod",
+            "aimod-trigger-on-mention-only",
+        ])
+
+        if not settings.get("autonomous-mod"):
+            return
+
         # Early run if bot is mentioned
         if any(user.id == self.bot.user.id for user in message.mentions):
-            if await mysql.get_settings(message.guild.id, "early-batch-on-mention"):
+            if settings.get("early-batch-on-mention"):
                 await message.add_reaction("👀")
                 self.mention_triggers[message.guild.id] = message
 
@@ -140,7 +148,8 @@ class AutonomousModeratorCog(commands.Cog):
         if not normalized_message:
             return
 
-        self.message_batches[message.guild.id].append(("Message", normalized_message, message))
+        if not settings.get("aimod-triiger-on-mention-only"):
+            self.message_batches[message.guild.id].append(("Message", normalized_message, message))
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -197,6 +206,7 @@ class AutonomousModeratorCog(commands.Cog):
             if not batch and trigger_msg:
                 try:
                     async for msg in trigger_msg.channel.history(limit=50, oldest_first=True):
+                        print("[AutonomousModerator] Fetching channel history")
                         normalized = normalize_text(msg.content)
                         if normalized:
                             batch.append(("Fetched Message", normalized, msg))
