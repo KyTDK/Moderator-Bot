@@ -200,8 +200,9 @@ class AutonomousModeratorCog(commands.Cog):
                     actions.append("delete")
 
                 # Get message objects from message_ids
+                message_ids = {int(mid) for mid in message_ids}
                 messages_to_delete = [
-                    msg for (_, _, msg) in batch if str(msg.id) in message_ids
+                    msg for (_, _, msg) in batch if msg.id in message_ids
                 ] if message_ids else []
 
                 # Resolve configured actions
