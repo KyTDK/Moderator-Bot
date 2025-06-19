@@ -168,22 +168,23 @@ class AutonomousModeratorCog(commands.Cog):
                 AIMOD_ACTION_SETTING
             ])
 
+            # Check essential settings
             autonomous = settings.get("autonomous-mod")
             api_key = settings.get("api-key")
             rules = settings.get("rules")
             if not (autonomous and api_key and rules):
                 continue
 
+            # Skip if trigger only on mention but there is no mention
             trigger_on_mention_only = settings.get("aimod-trigger-on-mention-only")
-
             if trigger_on_mention_only and gid not in self.mention_triggers:
-                continue  # Don't run unless triggered by a @mention
+                continue  
 
             # Check interval
             interval_str = settings.get("aimod-check-interval") or "1h"
             delta = parse_duration(interval_str) or timedelta(hours=1)
 
-            # Run is mention or time for run
+            # Skip only if there is no trigger mention and its not time to run
             if gid not in self.mention_triggers and now - self.last_run[gid] < delta:
                 continue
             
