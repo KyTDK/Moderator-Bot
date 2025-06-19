@@ -44,6 +44,8 @@ SYSTEM_MSG = (
     "Never speculate — if unsure, err on the side of ok=true.\n"
 )
 
+BASE_SYSTEM_TOKENS = ceil(len(SYSTEM_MSG) / 4)
+
 def estimate_tokens(text: str) -> int:
     return ceil(len(text) / 4)
 
@@ -63,35 +65,37 @@ def get_model_limit(model_name: str) -> int:
 
 def parse_batch_response(text: str) -> list[dict[str, object]]:
     try:
-        data = json.loads(text)
-        data = data.get("results", data)
-        if isinstance(data, dict):
-            data = [data]
-        if not isinstance(data, list):
-            return []
-
-        parsed = []
-        for item in data:
-            if not isinstance(item, dict):
-                continue
-            try:
-                uid = int(item.get("user_id"))
-                actions = item.get("actions") or item.get("action") or []
-                if isinstance(actions, str):
-                    actions = [actions]
-                parsed.append({
-                    "user_id": uid,
-                    "rule": item.get("rule", ""),
-                    "reason": item.get("reason", ""),
-                    "actions": [a.lower() for a in actions if isinstance(a, str)],
-                    "message_ids": item.get("message_ids", [])
-                })
-            except Exception:
-                continue
-        return parsed
+        data = json.loads(text).get("results", [])
     except Exception as e:
         print(f"[parse_batch_response] Failed to parse JSON: {e}")
         return []
+
+    if isinstance(data, dict):
+        data = [data]
+    if not isinstance(data, list):
+        return []
+
+    results = []
+    for item in data:
+        if not isinstance(item, dict):
+            continue
+        try:
+            uid = int(item.get("user_id"))
+        except Exception:
+            continue
+
+        actions = item.get("actions") or item.get("action") or []
+        if isinstance(actions, str):
+            actions = [actions]
+
+        results.append({
+            "user_id": uid,
+            "rule": item.get("rule", ""),
+            "reason": item.get("reason", ""),
+            "actions": [a.lower() for a in actions if isinstance(a, str)],
+            "message_ids": item.get("message_ids", []),
+        })
+    return results
 
 class AutonomousModeratorCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -103,6 +107,19 @@ class AutonomousModeratorCog(commands.Cog):
 
     def cog_unload(self):
         self.batch_runner.cancel()
+
+    def _format_event(self, msg: discord.Message, content: str) -> str:
+        ts = getattr(msg, "created_at", datetime.now()).strftime("%Y-%m-%d %H:%M")
+        user_id = getattr(getattr(msg, "author", None), "id", msg.id)
+        return f"[{ts}] {user_id} - Message ID: {msg.id}: {content}"
+
+    def _build_transcript(self, batch: list[tuple[str, str, discord.Message]], max_tokens: int, mention_only: bool):
+        lines = [self._format_event(msg, text) for _, text, msg in batch]
+        while mention_only and lines and BASE_SYSTEM_TOKENS + estimate_tokens("\n".join(lines)) > max_tokens:
+            batch.pop(0)
+            lines.pop(0)
+        transcript = "\n".join(lines)
+        return transcript, BASE_SYSTEM_TOKENS + estimate_tokens(transcript), batch
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
@@ -153,31 +170,13 @@ class AutonomousModeratorCog(commands.Cog):
 
             # Build transcript with truncation if needed
             batch = msgs[:]
-            transcript_lines = []
             model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-mini"
             limit = get_model_limit(model)
             max_tokens = int(limit * 0.9)
-
-            # Temporarily build all lines
-            for event_type, content, msg in batch:
-                ts = msg.created_at.strftime("%Y-%m-%d %H:%M") if hasattr(msg, 'created_at') else datetime.now().strftime("%Y-%m-%d %H:%M")
-                user_id = msg.author.id if hasattr(msg, 'author') else msg.id
-                line = f"[{ts}] {user_id} - Message ID: {msg.id}: {content}"
-                transcript_lines.append(line)
-
-            transcript = "\n".join(transcript_lines)
-            estimated_tokens = estimate_tokens(SYSTEM_MSG) + estimate_tokens(transcript)
-
-            # Truncate old messages if we're in mention-only mode and it's too big
-            if trigger_on_mention_only:
-                while estimated_tokens > max_tokens and transcript_lines:
-                    batch.pop(0)
-                    transcript_lines.pop(0)
-                    transcript = "\n".join(transcript_lines)
-                    estimated_tokens = estimate_tokens(SYSTEM_MSG) + estimate_tokens(transcript)
+            transcript, estimated_tokens, batch = self._build_transcript(batch, max_tokens, trigger_on_mention_only)
 
             # Run early if transcript is too large or force run
-            if gid not in self.force_run and now - self.last_run[gid] < delta and estimated_tokens < (limit * 0.9):
+            if gid not in self.force_run and now - self.last_run[gid] < delta and estimated_tokens < max_tokens:
                 continue
             self.force_run.discard(gid)
             self.last_run[gid] = now
@@ -218,17 +217,13 @@ class AutonomousModeratorCog(commands.Cog):
                 member = guild.get_member(uid) or await guild.fetch_member(uid)
                 reason = item.get("reason", "")
                 rule = item.get("rule", "")
-                message_ids = item.get("message_ids", [])
+                message_ids = {int(mid) for mid in item.get("message_ids", [])}
 
                 # Ensure delete if message_ids are provided
                 if message_ids and "delete" not in actions:
                     actions.append("delete")
 
-                # Get message objects from message_ids
-                message_ids = {int(mid) for mid in message_ids}
-                messages_to_delete = [
-                    msg for (_, _, msg) in batch if msg.id in message_ids
-                ] if message_ids else []
+                messages_to_delete = [msg for (_, _, msg) in batch if msg.id in message_ids] if message_ids else []
 
                 # Resolve configured actions
                 configured = await mysql.get_settings(gid, AIMOD_ACTION_SETTING) or ["auto"]
