@@ -174,6 +174,8 @@ class AutonomousModeratorCog(commands.Cog):
             interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "1h"
             delta = parse_duration(interval_str) or timedelta(hours=1)
 
+            batch = msgs[:]
+
             # Build violation history
             user_ids = {msg.author.id for _, _, msg in batch if hasattr(msg, 'author')}
             violation_blocks = []
@@ -188,7 +190,6 @@ class AutonomousModeratorCog(commands.Cog):
             violation_history = f"Violation history:\n{violation_history}\n\n"
 
             # Build transcript with truncation if needed
-            batch = msgs[:]
             model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-mini"
             limit = get_model_limit(model)
             max_tokens = int(limit * 0.9)
