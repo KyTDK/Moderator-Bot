@@ -182,8 +182,9 @@ class AutonomousModeratorCog(commands.Cog):
             for uid in user_ids:
                 history = violation_cache[uid]
                 if history:
-                    joined = "; ".join(f"{reason}: previously punished with {action}" for reason, action in history)
-                    violation_blocks.append(f"User {uid} has recent violations: {joined}")
+                    lines = [f"{i+1}. {reason} — previously punished with {action}" for i, (reason, action) in enumerate(history)]
+                    joined = "\n".join(lines)
+                    violation_blocks.append(f"User {uid} has {len(history)} recent violation(s):\n{joined}")
             violation_history = "\n".join(violation_blocks)
             if not violation_history:
                 violation_history = "No recent violations on record."
@@ -215,6 +216,8 @@ class AutonomousModeratorCog(commands.Cog):
 
             # Prompt for AI
             user_prompt = f"{rules}{violation_history}Transcript:\n{transcript}"
+
+            print(user_prompt)
 
             # AI call
             client = openai.AsyncOpenAI(api_key=api_key)
