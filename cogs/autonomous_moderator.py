@@ -148,7 +148,7 @@ class AutonomousModeratorCog(commands.Cog):
         if not normalized_message:
             return
 
-        if not settings.get("aimod-triiger-on-mention-only"):
+        if not settings.get("aimod-trigger-on-mention-only"):
             self.message_batches[message.guild.id].append(("Message", normalized_message, message))
 
     @commands.Cog.listener()
