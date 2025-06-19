@@ -111,6 +111,7 @@ class AutonomousModeratorCog(commands.Cog):
         # Early run if bot is mentioned
         if any(user.id == self.bot.user.id for user in message.mentions):
             if await mysql.get_settings(message.guild.id, "early-batch-on-mention"):
+                await message.add_reaction("👀")
                 self.force_run.add(message.guild.id)
 
         # Add message to cache
