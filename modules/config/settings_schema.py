@@ -59,6 +59,7 @@ SETTINGS_SCHEMA = {
     ),
     "monitor-channel": Setting(
         name="monitor-channel",
+        hidden=True,
         description="Channel to log all server activities, including message edits, deletions, and user join/leave events.",
         setting_type=discord.TextChannel,
     ),
