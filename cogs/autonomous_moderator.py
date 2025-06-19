@@ -146,7 +146,7 @@ class AutonomousModeratorCog(commands.Cog):
                 self.mention_triggers[message.guild.id] = message
 
         # Interval, cache all messages
-        if settings.get("aimod_mode") == "interval":
+        if settings.get("aimod-mode") == "interval":
             # Add message to cache
             normalized_message = normalize_text(message.content)
             if not normalized_message:
