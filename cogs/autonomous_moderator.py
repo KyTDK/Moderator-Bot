@@ -131,7 +131,6 @@ class AutonomousModeratorCog(commands.Cog):
 
         settings = await mysql.get_settings(message.guild.id, [
             "autonomous-mod",
-            "aimod-trigger-on-mention-only",
             "aimod-mode"
         ])
 
@@ -162,7 +161,10 @@ class AutonomousModeratorCog(commands.Cog):
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if after.author.bot or not after.guild or before.content == after.content:
             return
-        self.message_batches[after.guild.id].append(("Edited Message", f"Before: {before.content}\nAfter: {after.content}", after))
+        normalized_before = normalize_text(before.content)
+        normalized_after = normalize_text(after.content)
+        if normalized_before and normalized_after:
+            self.message_batches[after.guild.id].append(("Edited Message", f"Before: {normalized_before}\nAfter: {normalized_after}", after))
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -213,6 +215,8 @@ class AutonomousModeratorCog(commands.Cog):
 
             # If report mode, fetch messages from that channel
             if aimod_mode == "report":
+                if not trigger_msg:
+                    continue
                 try:
                     fetched = [msg async for msg in trigger_msg.channel.history(limit=50)]
                     fetched.sort(key=lambda m: m.created_at)  # Add this
