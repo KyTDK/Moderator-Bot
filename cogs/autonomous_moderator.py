@@ -141,7 +141,7 @@ class AutonomousModeratorCog(commands.Cog):
             transcript = "\n".join(transcript_lines)
 
             # Get model limit and estimate tokens
-            model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-nano"
+            model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-mini"
             limit = get_model_limit(model)
             estimated_tokens = estimate_tokens(SYSTEM_MSG) + estimate_tokens(transcript)
 
