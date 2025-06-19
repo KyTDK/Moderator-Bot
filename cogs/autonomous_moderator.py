@@ -157,24 +157,45 @@ class AutonomousModeratorCog(commands.Cog):
         now = datetime.now(timezone.utc)
         for gid, msgs in list(self.message_batches.items()):
             # Check required settings
-            autonomous = await mysql.get_settings(gid, "autonomous-mod")
-            api_key = await mysql.get_settings(gid, "api-key")
-            rules = await mysql.get_settings(gid, "rules")
+            settings = await mysql.get_settings(gid, [
+                "autonomous-mod",
+                "api-key",
+                "rules",
+                "aimod-trigger-on-mention-only",
+                "aimod-check-interval",
+                "aimod-model",
+                "monitor-channel",
+                AIMOD_ACTION_SETTING
+            ])
+
+            autonomous = settings.get("autonomous-mod")
+            api_key = settings.get("api-key")
+            rules = settings.get("rules")
             if not (autonomous and api_key and rules):
                 continue
 
-            rules = f"Rules:\n{rules}\n\n"
-
-            trigger_on_mention_only = await mysql.get_settings(gid, "aimod-trigger-on-mention-only")
+            trigger_on_mention_only = settings.get("aimod-trigger-on-mention-only")
 
             if trigger_on_mention_only and gid not in self.mention_triggers:
                 continue  # Don't run unless triggered by a @mention
 
             # Check interval
-            interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "1h"
+            interval_str = settings.get("aimod-check-interval") or "1h"
             delta = parse_duration(interval_str) or timedelta(hours=1)
 
             batch = msgs[:]
+            trigger_msg = self.mention_triggers.pop(gid, None)
+            rules = f"Rules:\n{rules}\n\n"
+
+            # If batch is empty and triggered by a mention, fetch messages from that channel
+            if not batch and trigger_msg:
+                try:
+                    async for msg in trigger_msg.channel.history(limit=50, oldest_first=True):
+                        normalized = normalize_text(msg.content)
+                        if normalized:
+                            batch.append(("Fetched Message", normalized, msg))
+                except discord.HTTPException as e:
+                    print(f"[AI] Failed to fetch history in guild {gid}: {e}")
 
             # Build violation history
             user_ids = {msg.author.id for _, _, msg in batch if hasattr(msg, 'author')}
@@ -191,7 +212,7 @@ class AutonomousModeratorCog(commands.Cog):
             violation_history = f"Violation history:\n{violation_history}\n\n"
 
             # Build transcript with truncation if needed
-            model = await mysql.get_settings(gid, "aimod-model") or "gpt-4.1-mini"
+            model = settings.get("aimod-model") or "gpt-4.1-mini"
             limit = get_model_limit(model)
             max_tokens = int(limit * 0.9)
             current_total_tokens=BASE_SYSTEM_TOKENS+estimate_tokens(violation_history)+estimate_tokens(rules)
@@ -203,7 +224,6 @@ class AutonomousModeratorCog(commands.Cog):
             # Run early if transcript is too large or force run
             if gid not in self.mention_triggers and now - self.last_run[gid] < delta and estimated_tokens < max_tokens:
                 continue
-            trigger_msg = self.mention_triggers.pop(gid, None)
             self.last_run[gid] = now
 
             self.message_batches[gid].clear()
@@ -251,7 +271,7 @@ class AutonomousModeratorCog(commands.Cog):
                 messages_to_delete = [msg for (_, _, msg) in batch if msg.id in message_ids] if message_ids else []
 
                 # Resolve configured actions
-                configured = await mysql.get_settings(gid, AIMOD_ACTION_SETTING) or ["auto"]
+                configured = settings.get(AIMOD_ACTION_SETTING) or ["auto"]
                 if "auto" in configured:
                     configured = actions
 
@@ -278,7 +298,7 @@ class AutonomousModeratorCog(commands.Cog):
                         ),
                         colour=discord.Colour.red()
                     )
-                    monitor_channel = await mysql.get_settings(gid, "monitor-channel")
+                    monitor_channel = settings.get("monitor-channel")
                     if monitor_channel:
                         await logging.log_to_channel(embed, monitor_channel, self.bot)
             # Send feedback if this batch was triggered by mention

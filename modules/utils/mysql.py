@@ -226,7 +226,7 @@ async def get_strikes(user_id: int, guild_id: int):
     )
     return strikes
 
-async def get_settings(guild_id: int, settings_key: str | None = None):
+async def get_settings(guild_id: int, settings_key: str | list[str] | None = None):
     settings_row, _ = await execute_query(
         "SELECT settings_json FROM settings WHERE guild_id = %s",
         (guild_id,),
@@ -234,62 +234,52 @@ async def get_settings(guild_id: int, settings_key: str | None = None):
     )
     raw = json.loads(settings_row[0]) if settings_row else {}
 
-    # Handle single-key fetch
+    # Handle single or multiple key fetch
+    if isinstance(settings_key, str):
+        settings_key = [settings_key]
     if settings_key is not None:
-        schema = SETTINGS_SCHEMA.get(settings_key)
-        default = schema.default if schema else None
-        encrypted = schema.encrypted if schema else False
-        value = raw.get(settings_key, copy.deepcopy(default))
+        result = {}
+        for key in settings_key:
+            schema = SETTINGS_SCHEMA.get(key)
+            default = schema.default if schema else None
+            encrypted = schema.encrypted if schema else False
+            value = raw.get(key, copy.deepcopy(default))
 
-        # Decrypt if needed
-        if encrypted and value:
-            value = fernet.decrypt(value.encode()).decode()
+            if encrypted and value:
+                value = fernet.decrypt(value.encode()).decode()
 
-        # Convert "true"/"false" strings into bools
-        if schema and schema.type is bool and isinstance(value, str):
-            value = value.lower() == "true"
+            if schema:
+                if schema.type is bool and isinstance(value, str):
+                    value = value.lower() == "true"
+                if schema.type == list[str]:
+                    if isinstance(value, str):
+                        value = [value]
+                    elif not isinstance(value, list):
+                        value = []
+                    value = [v for v in value if v != "none"]
+                if key == "strike-actions":
+                    migrated = {}
+                    if isinstance(value, dict):
+                        for k, v in value.items():
+                            if isinstance(v, list):
+                                migrated[k] = v
+                            elif isinstance(v, tuple):
+                                a, d = v
+                                migrated[k] = [f"{a}:{d}" if d else a]
+                            else:
+                                migrated[k] = [str(v)]
+                        value = migrated
 
-        # Handle old string → new list migration for list[str] settings
-        if schema and schema.type == list[str]:
-            if isinstance(value, str):
-                value = [value]
-            elif not isinstance(value, list):
-                value = []
-            # Strip out "none" from migrated data
-            value = [v for v in value if v != "none"]
-
-        if settings_key == "strike-actions":
-            migrated = {}
-            if isinstance(value, dict):
-                for k, v in value.items():
-                    if isinstance(v, list):
-                        migrated[k] = v
-                    elif isinstance(v, tuple):
-                        a, d = v
-                        migrated[k] = [f"{a}:{d}" if d else a]
-                    else:
-                        migrated[k] = [str(v)]
-                value = migrated
-
-        return value
-
-    # Handle full settings dict return
-    result = {}
-    for key, schema in SETTINGS_SCHEMA.items():
-        value = raw.get(key, copy.deepcopy(schema.default))
-        if schema.encrypted and value:
-            value = fernet.decrypt(value.encode()).decode()
-        if schema.type is bool and isinstance(value, str):
-            value = value.lower() == "true"
-        result[key] = value
-
-    return result
+            result[key] = value
+        return result
+    return raw
 
 async def update_settings(guild_id: int, settings_key: str, settings_value):
     settings = await get_settings(guild_id)
 
-    # Determine if encryption is needed for the current setting
-    encrypt_current = SETTINGS_SCHEMA.get(settings_key).encrypted if settings_key else False
+    schema = SETTINGS_SCHEMA.get(settings_key)
+    encrypt_current = schema.encrypted if schema else False
+
     if settings_value is None:
         changed = settings.pop(settings_key, None) is not None
     else:
@@ -304,19 +294,12 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
                 else:
                     converted[k] = [str(v)]
             settings_value = converted
+
         if encrypt_current:
             settings_value = fernet.encrypt(settings_value.encode()).decode()
+
         settings[settings_key] = settings_value
         changed = True
-
-    for key, schema in SETTINGS_SCHEMA.items():
-        if key == settings_key:
-            continue
-        if schema.encrypted and isinstance(settings.get(key), str):
-            try:
-                fernet.decrypt(settings[key].encode())
-            except Exception:
-                settings[key] = fernet.encrypt(settings[key].encode()).decode()
 
     settings_json = json.dumps(settings)
     await execute_query(

@@ -294,8 +294,7 @@ async def strike(
         )
 
     embed.title = f"{user.display_name} received a strike"
-    settings = await mysql.get_settings(user.guild.id)
-    STRIKES_CHANNEL_ID = settings.get("strike-channel") if settings else None
+    STRIKES_CHANNEL_ID = await mysql.get_settings(user.guild.id, "strike-channel")
     if STRIKES_CHANNEL_ID is not None and log_to_channel:
         await logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)
 
