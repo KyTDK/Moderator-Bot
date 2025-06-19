@@ -126,8 +126,8 @@ class AutonomousModeratorCog(commands.Cog):
         now = datetime.now(timezone.utc)
         for gid, msgs in list(self.message_batches.items()):
             # Check interval
-            interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "10m"
-            delta = parse_duration(interval_str) or timedelta(minutes=10)
+            interval_str = await mysql.get_settings(gid, "aimod-check-interval") or "1h"
+            delta = parse_duration(interval_str) or timedelta(hours=1)
 
             # Build Transcript
             batch = msgs[:]
