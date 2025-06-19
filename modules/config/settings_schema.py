@@ -237,18 +237,11 @@ SETTINGS_SCHEMA = {
         default=False,
         choices=["true", "false"]
     ),
-    "early-batch-on-mention": Setting(
-        name="early-batch-on-mention",
-        description="Run AI moderation early when the bot is mentioned.",
-        setting_type=bool,
-        default=True,
-        choices=["true", "false"]
-    ),
-    "aimod-trigger-on-mention-only": Setting(
-        name="aimod-trigger-on-mention-only",
-        description="Only run AI moderation when the bot is directly pinged. Disables automatic interval checks.",
-        setting_type=bool,
-        default=False,
-        choices=["true", "false"]
-    ),
+    "aimod-mode": Setting(
+        name="aimod-mode",
+        description="Choose how AI moderation is triggered: report mode (on mention) or interval mode (background scanning).",
+        setting_type=str,
+        default="report",
+        choices=["interval", "report"]
+    )
 }

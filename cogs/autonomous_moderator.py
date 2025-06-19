@@ -114,11 +114,11 @@ class AutonomousModeratorCog(commands.Cog):
         user_id = getattr(getattr(msg, "author", None), "id", msg.id)
         return f"[{ts}] {user_id} - Message ID: {msg.id}: {content}"
 
-    def _build_transcript(self, batch: list[tuple[str, str, discord.Message]], max_tokens: int, mention_only: bool, current_total_tokens: int):
+    def _build_transcript(self, batch: list[tuple[str, str, discord.Message]], max_tokens: int, current_total_tokens: int):
         lines = [self._format_event(msg, text) for _, text, msg in batch]
         tokens = [estimate_tokens(line) for line in lines]
         total = current_total_tokens + sum(tokens)
-        while mention_only and batch and total > max_tokens:
+        while batch and total > max_tokens:
             total -= tokens.pop(0)
             batch.pop(0)
             lines.pop(0)
@@ -132,6 +132,7 @@ class AutonomousModeratorCog(commands.Cog):
         settings = await mysql.get_settings(message.guild.id, [
             "autonomous-mod",
             "aimod-trigger-on-mention-only",
+            "aimod-mode"
         ])
 
         if not settings.get("autonomous-mod"):
@@ -139,17 +140,23 @@ class AutonomousModeratorCog(commands.Cog):
 
         # Early run if bot is mentioned
         if any(user.id == self.bot.user.id for user in message.mentions):
-            if settings.get("early-batch-on-mention"):
+            # Report mode, add trigger and acknowledge the mention
+            if settings.get("aimod-mode") == "report":
                 await message.add_reaction("👀")
                 self.mention_triggers[message.guild.id] = message
 
-        # Add message to cache
-        normalized_message = normalize_text(message.content)
-        if not normalized_message:
-            return
+        # Interval, cache all messages
+        if settings.get("aimod_mode") == "interval":
+            # Add message to cache
+            normalized_message = normalize_text(message.content)
+            if not normalized_message:
+                return
+            guild_batch = self.message_batches[message.guild.id]
+            guild_batch.append(("Message", normalized_message, message))
 
-        if not settings.get("aimod-trigger-on-mention-only"):
-            self.message_batches[message.guild.id].append(("Message", normalized_message, message))
+            # Cap max stored messages per guild
+            if len(guild_batch) > 1000:
+                guild_batch.pop(0)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -170,7 +177,7 @@ class AutonomousModeratorCog(commands.Cog):
                 "autonomous-mod",
                 "api-key",
                 "rules",
-                "aimod-trigger-on-mention-only",
+                "aimod-mode",
                 "aimod-check-interval",
                 "aimod-model",
                 "monitor-channel",
@@ -184,17 +191,17 @@ class AutonomousModeratorCog(commands.Cog):
             if not (autonomous and api_key and rules):
                 continue
 
-            # Skip if trigger only on mention but there is no mention
-            trigger_on_mention_only = settings.get("aimod-trigger-on-mention-only")
-            if trigger_on_mention_only and gid not in self.mention_triggers:
+            # Skip if report mode but no mention trigger
+            aimod_mode = settings.get("aimod-mode")
+            if aimod_mode == "report" and gid not in self.mention_triggers:
                 continue  
 
             # Check interval
             interval_str = settings.get("aimod-check-interval") or "1h"
             delta = parse_duration(interval_str) or timedelta(hours=1)
 
-            # Skip only if there is no trigger mention and its not time to run
-            if gid not in self.mention_triggers and now - self.last_run[gid] < delta:
+            # Skip if interval mode but not time to check
+            if aimod_mode == "interval" and now - self.last_run[gid] < delta:
                 continue
             
             # Get batch, trigger message, prepare rules
@@ -202,8 +209,8 @@ class AutonomousModeratorCog(commands.Cog):
             trigger_msg = self.mention_triggers.pop(gid, None)
             rules = f"Rules:\n{rules}\n\n"
 
-            # If batch is empty and triggered by a mention, fetch messages from that channel
-            if not batch and trigger_msg:
+            # If report mode and triggered by a mention, fetch messages from that channel
+            if trigger_msg and aimod_mode == "report":
                 try:
                     async for msg in trigger_msg.channel.history(limit=50, oldest_first=True):
                         print("[AutonomousModerator] Fetching channel history")
@@ -234,7 +241,6 @@ class AutonomousModeratorCog(commands.Cog):
             current_total_tokens=BASE_SYSTEM_TOKENS+estimate_tokens(violation_history)+estimate_tokens(rules)
             transcript, estimated_tokens, batch = self._build_transcript(batch, 
                                                                          max_tokens, 
-                                                                         trigger_on_mention_only,
                                                                          current_total_tokens=current_total_tokens)
 
             # Skip if too many tokens
