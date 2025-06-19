@@ -19,7 +19,6 @@ from math import ceil
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
-violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=3))
 
 SYSTEM_MSG = (
     "You are an AI that checks whether messages violate server rules.\n"
@@ -42,10 +41,8 @@ SYSTEM_MSG = (
     "Only enforce the server rules provided. Do not apply personal judgment, intent, or external policies (e.g., OpenAI guidelines).\n"
     "Do not flag messages that report, reference, or accuse others of breaking rules — only flag content where the speaker themselves is clearly breaking a rule.\n"
     "Do not act on sarcasm, vague statements, or suggestive content unless it clearly and unambiguously breaks a rule.\n"
-    "Do not use prior violations to justify punishing a message unless the current message directly continues a harmful pattern.\n"
     "Never speculate — if unsure, err on the side of ok=true.\n"
 )
-
 
 def estimate_tokens(text: str) -> int:
     return ceil(len(text) / 4)
@@ -168,18 +165,8 @@ class AutonomousModeratorCog(commands.Cog):
             if not (autonomous and api_key and rules):
                 continue
 
-            # Build violation history
-            user_ids = {msg.author.id for _, _, msg in batch if hasattr(msg, 'author')}
-            history_blocks = []
-            for uid in user_ids:
-                history = violation_cache[uid]
-                if history:
-                    joined = "; ".join(f"{r} - {t}" for r, t in history)
-                    history_blocks.append(f"{uid}: {joined}")
-            history_text = "\n".join(history_blocks) if history_blocks else "None"
-
             # Prompt for AI
-            user_prompt = f"Rules:\n{rules}\n\nViolation history:\n{history_text}\n\nTranscript:\n{transcript}"
+            user_prompt = f"Rules:\n{rules}\n\nTranscript:\n{transcript}"
 
             # AI call
             client = openai.AsyncOpenAI(api_key=api_key)
@@ -232,9 +219,8 @@ class AutonomousModeratorCog(commands.Cog):
                     message=messages_to_delete
                 )
 
-                # Cache and log
+                # Log
                 if rule and reason:
-                    violation_cache[uid].appendleft((rule, reason))
                     embed = discord.Embed(
                         title="AI-Flagged Violation",
                         description=(
