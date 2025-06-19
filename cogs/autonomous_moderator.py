@@ -171,7 +171,9 @@ class AutonomousModeratorCog(commands.Cog):
     @tasks.loop(seconds=30)
     async def batch_runner(self):
         now = datetime.now(timezone.utc)
-        for gid, msgs in list(self.message_batches.items()):
+        guild_ids = set(self.message_batches.keys()) | set(self.mention_triggers.keys())
+        for gid in guild_ids:
+            msgs = self.message_batches.get(gid, [])
             # Check required settings
             settings = await mysql.get_settings(gid, [
                 "autonomous-mod",
