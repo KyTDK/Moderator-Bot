@@ -227,7 +227,7 @@ class AutonomousModeratorCog(commands.Cog):
                                                                          current_total_tokens=current_total_tokens)
 
             # Skip if too many tokens
-            if estimated_tokens < max_tokens:
+            if estimated_tokens >= max_tokens:
                 continue
             self.last_run[gid] = now
 
