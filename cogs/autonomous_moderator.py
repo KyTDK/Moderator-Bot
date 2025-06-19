@@ -211,10 +211,10 @@ class AutonomousModeratorCog(commands.Cog):
             trigger_msg = self.mention_triggers.pop(gid, None)
             rules = f"Rules:\n{rules}\n\n"
 
-            # If report mode and triggered by a mention, fetch messages from that channel
-            if trigger_msg and aimod_mode == "report":
+            # If report mode, fetch messages from that channel
+            if aimod_mode == "report":
                 try:
-                    async for msg in trigger_msg.channel.history(limit=50, oldest_first=True):
+                    async for msg in trigger_msg.channel.history(limit=50):
                         print("[AutonomousModerator] Fetching channel history")
                         normalized = normalize_text(msg.content)
                         if normalized:
