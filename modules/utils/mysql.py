@@ -271,7 +271,7 @@ async def get_settings(guild_id: int, settings_key: str | list[str] | None = Non
                         value = migrated
 
             result[key] = value
-        return result
+        return result if len(result) > 1 else next(iter(result.values()))
     return raw
 
 async def update_settings(guild_id: int, settings_key: str, settings_value):
