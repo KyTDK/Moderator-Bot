@@ -38,24 +38,24 @@ class Settings(commands.Cog):
         if not schema or not schema.choices:
             return []
         return [
-            app_commands.Choice(name=choice[:25], value=choice[:100])
+            app_commands.Choice(name=choice[:100], value=choice[:100])
             for choice in schema.choices if current.lower() in choice.lower()
         ][:25]
 
     # List to hold choices for non-channel settings
     non_channel_choices_without_hidden = [
-        app_commands.Choice(name=setting.name[:25], value=setting_name[:100])
+        app_commands.Choice(name=setting.name[:100], value=setting_name[:100])
         for setting_name, setting in SETTINGS_SCHEMA.items()
         if setting.type != discord.TextChannel and setting.type != list[discord.TextChannel] and setting.hidden is False
     ]
     non_channel_choices_all = [
-        app_commands.Choice(name=setting_name[:25], value=setting_name[:100])
+        app_commands.Choice(name=setting_name[:100], value=setting_name[:100])
         for setting_name, setting in SETTINGS_SCHEMA.items()
         if setting.type != discord.TextChannel and setting.type != list[discord.TextChannel]
     ]
 
     channel_choices = [
-        app_commands.Choice(name=setting_name[:25], value=setting_name[:100])
+        app_commands.Choice(name=setting_name[:100], value=setting_name[:100])
         for setting_name, setting in SETTINGS_SCHEMA.items()
         if setting.type == discord.TextChannel or setting.type == list[discord.TextChannel]
     ]
