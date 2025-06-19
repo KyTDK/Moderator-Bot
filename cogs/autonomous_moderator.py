@@ -139,9 +139,8 @@ class AutonomousModeratorCog(commands.Cog):
             for event_type, content, msg in batch:
                 ts = msg.created_at.strftime("%Y-%m-%d %H:%M") if hasattr(msg, 'created_at') else datetime.now().strftime("%Y-%m-%d %H:%M")
                 user_id = msg.author.id if hasattr(msg, 'author') else msg.id
-                user_name = msg.author.display_name if hasattr(msg, 'author') else str(msg)
                 transcript_lines.append(
-                    f"[{ts}] {user_name} ({user_id}) - Message ID: {msg.id}: {content}"
+                    f"[{ts}] {user_id} - Message ID: {msg.id}: {content}"
                 )
             transcript = "\n".join(transcript_lines)
 
