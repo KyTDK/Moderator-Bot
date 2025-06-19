@@ -183,6 +183,11 @@ class AutonomousModeratorCog(commands.Cog):
             interval_str = settings.get("aimod-check-interval") or "1h"
             delta = parse_duration(interval_str) or timedelta(hours=1)
 
+            # Run is mention or time for run
+            if gid not in self.mention_triggers and now - self.last_run[gid] < delta:
+                continue
+            
+            # Get batch, trigger message, prepare rules
             batch = msgs[:]
             trigger_msg = self.mention_triggers.pop(gid, None)
             rules = f"Rules:\n{rules}\n\n"
@@ -221,8 +226,8 @@ class AutonomousModeratorCog(commands.Cog):
                                                                          trigger_on_mention_only,
                                                                          current_total_tokens=current_total_tokens)
 
-            # Run early if transcript is too large or force run
-            if gid not in self.mention_triggers and now - self.last_run[gid] < delta and estimated_tokens < max_tokens:
+            # Skip if too many tokens
+            if estimated_tokens < max_tokens:
                 continue
             self.last_run[gid] = now
 
