@@ -214,7 +214,9 @@ class AutonomousModeratorCog(commands.Cog):
             # If report mode, fetch messages from that channel
             if aimod_mode == "report":
                 try:
-                    async for msg in trigger_msg.channel.history(limit=50):
+                    fetched = [msg async for msg in trigger_msg.channel.history(limit=50)]
+                    fetched.sort(key=lambda m: m.created_at)  # Add this
+                    for msg in fetched:
                         print("[AutonomousModerator] Fetching channel history")
                         normalized = normalize_text(msg.content)
                         if normalized:
