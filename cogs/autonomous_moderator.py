@@ -58,10 +58,7 @@ MODEL_LIMITS = {
 }
 
 def get_model_limit(model_name: str) -> int:
-    for key, limit in MODEL_LIMITS.items():
-        if key in model_name:
-            return limit
-    return 16000  # safe fallback
+    return next((limit for key, limit in MODEL_LIMITS.items() if key in model_name), 16000)
 
 def parse_batch_response(text: str) -> list[dict[str, object]]:
     try:
@@ -81,20 +78,22 @@ def parse_batch_response(text: str) -> list[dict[str, object]]:
             continue
         try:
             uid = int(item.get("user_id"))
-        except Exception:
+        except (TypeError, ValueError):
             continue
 
         actions = item.get("actions") or item.get("action") or []
         if isinstance(actions, str):
             actions = [actions]
 
-        results.append({
-            "user_id": uid,
-            "rule": item.get("rule", ""),
-            "reason": item.get("reason", ""),
-            "actions": [a.lower() for a in actions if isinstance(a, str)],
-            "message_ids": item.get("message_ids", []),
-        })
+        results.append(
+            {
+                "user_id": uid,
+                "rule": item.get("rule", ""),
+                "reason": item.get("reason", ""),
+                "actions": [a.lower() for a in actions if isinstance(a, str)],
+                "message_ids": item.get("message_ids", []),
+            }
+        )
     return results
 
 class AutonomousModeratorCog(commands.Cog):
@@ -115,11 +114,14 @@ class AutonomousModeratorCog(commands.Cog):
 
     def _build_transcript(self, batch: list[tuple[str, str, discord.Message]], max_tokens: int, mention_only: bool):
         lines = [self._format_event(msg, text) for _, text, msg in batch]
-        while mention_only and lines and BASE_SYSTEM_TOKENS + estimate_tokens("\n".join(lines)) > max_tokens:
+        tokens = [estimate_tokens(line) for line in lines]
+        total = BASE_SYSTEM_TOKENS + sum(tokens)
+        while mention_only and batch and total > max_tokens:
+            total -= tokens.pop(0)
             batch.pop(0)
             lines.pop(0)
         transcript = "\n".join(lines)
-        return transcript, BASE_SYSTEM_TOKENS + estimate_tokens(transcript), batch
+        return transcript, total, batch
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
