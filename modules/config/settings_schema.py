@@ -243,5 +243,11 @@ SETTINGS_SCHEMA = {
         setting_type=str,
         default="report",
         choices=["interval", "report"]
+    ),
+    "no-forward-from-role": Setting(
+        name="no-forward-from-role",
+        description="Stop a specific role from forwarding messages.",
+        setting_type=list[discord.Role],
+        default=None
     )
 }
