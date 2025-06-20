@@ -253,7 +253,7 @@ async def is_nsfw(bot: commands.Bot,
     attachments = message.attachments if message.attachments else (snapshot.attachments if snapshot else [])
     embeds = message.embeds if message.embeds else (snapshot.embeds if snapshot else [])
     stickers = message.stickers if message.stickers else (snapshot.stickers if snapshot else [])
-    
+
     if message is None:
         print("Message is None")
         return False
@@ -270,19 +270,23 @@ async def is_nsfw(bot: commands.Bot,
             _safe_delete(temp_filename)
 
     for embed in embeds:
-        gif_url = (
-            embed.image.url if embed.image else
-            embed.video.url if embed.video else
-            embed.thumbnail.url if embed.thumbnail else None
-        )
-        if not gif_url:
-            continue
-        domain = urlparse(gif_url).netloc.lower()
-        if domain == "tenor.com" or domain.endswith(".tenor.com"):
-            continue  # ignore Tenor
-        async with temp_download(gif_url, "gif") as temp_location:
-            if await check_attachment(message.author, temp_location, nsfw_callback, bot, guild_id, message):
-                return True
+        possible_urls = []
+
+        if embed.image and embed.image.url:
+            possible_urls.append(embed.image.url)
+        if embed.video and embed.video.url:
+            possible_urls.append(embed.video.url)
+        if embed.thumbnail and embed.thumbnail.url:
+            possible_urls.append(embed.thumbnail.url)
+
+        for gif_url in possible_urls:
+            domain = urlparse(gif_url).netloc.lower()
+            if domain == "tenor.com" or domain.endswith(".tenor.com"):
+                continue  # ignore Tenor
+
+            async with temp_download(gif_url, "gif") as temp_location:
+                if await check_attachment(message.author, temp_location, nsfw_callback, bot, guild_id, message):
+                    return True
         
     for sticker in stickers:
         sticker_url = sticker.url
