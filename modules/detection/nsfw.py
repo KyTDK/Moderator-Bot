@@ -246,12 +246,19 @@ async def is_nsfw(bot: commands.Bot,
     if url:
         async with temp_download(url) as temp_filename:
             return await check_attachment(member, temp_filename, nsfw_callback, bot, guild_id, message)
+    
+    snapshots = getattr(message, "message_snapshots", None)
+    snapshot = snapshots[0] if snapshots else None
 
+    attachments = message.attachments if message.attachments else (snapshot.attachments if snapshot else [])
+    embeds = message.embeds if message.embeds else (snapshot.embeds if snapshot else [])
+    stickers = message.stickers if message.stickers else (snapshot.stickers if snapshot else [])
+    
     if message is None:
         print("Message is None")
         return False
 
-    for attachment in message.attachments:
+    for attachment in attachments:
         suffix = os.path.splitext(attachment.filename)[1] or ""
         with NamedTemporaryFile(delete=False, dir=TMP_DIR, suffix=suffix) as tmp:
             await attachment.save(tmp.name)
@@ -262,7 +269,7 @@ async def is_nsfw(bot: commands.Bot,
         finally:
             _safe_delete(temp_filename)
 
-    for embed in message.embeds:
+    for embed in embeds:
         gif_url = (
             embed.image.url if embed.image else
             embed.video.url if embed.video else
@@ -277,7 +284,7 @@ async def is_nsfw(bot: commands.Bot,
             if await check_attachment(message.author, temp_location, nsfw_callback, bot, guild_id, message):
                 return True
         
-    for sticker in message.stickers:
+    for sticker in stickers:
         sticker_url = sticker.url
         if not sticker_url:
             continue
