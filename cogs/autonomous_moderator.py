@@ -35,7 +35,7 @@ SYSTEM_MSG = (
     "Punishment meanings:\n"
     "- warn:<text>: Warn the user.\n"
     "- delete: Always include this for rule-breaking messages to remove them from chat.\n"
-    "- timeout:<duration>: Temporary mute user.\n"
+    "- timeout:<duration>: Temporarily mute the user.\n"
     "- kick: Remove user from server (temporary).\n"
     "- strike: Permanent record which comes with its own punishment.\n"
     "- ban: Permanent removal from the server.\n\n"
