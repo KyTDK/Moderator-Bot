@@ -191,7 +191,7 @@ class Settings(commands.Cog):
         await mysql.update_settings(interaction.guild.id, name, channel.id)
         await interaction.response.send_message(
             f"Updated `{name}` to channel `{channel.name}`.", ephemeral=True
-        )
+    )
 
     @settings_group.command(name="roles_set", description="Set a role for a setting.")
     @app_commands.choices(name=role_choices)
@@ -222,7 +222,7 @@ class Settings(commands.Cog):
             f"Updated `{name}` to role `{role.name}`.", ephemeral=True
         )
 
-    @settings_group.command(name="role_remove", description="Remove a role from a setting.")
+    @settings_group.command(name="roles_remove", description="Remove a role from a setting.")
     @app_commands.choices(name=role_choices)
     async def remove_role(self, interaction: Interaction, name: str, channel: discord.Role):
         await interaction.response.defer(ephemeral=True)
