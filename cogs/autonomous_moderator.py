@@ -22,7 +22,7 @@ manager = ActionListManager(AIMOD_ACTION_SETTING)
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=3)) # user_id -> deque of (rule: str, action: str)
 
 SYSTEM_MSG = (
-    "You are an AI that checks whether messages violate server rules.\n"
+    "You are an AI that checks whether messages violate the provided server rules.\n"
     "Respond with a JSON object containing a `results` field.\n"
     "`results` must be an array of violations. Each violation must include:\n"
     "- user_id (string)\n"
@@ -32,9 +32,9 @@ SYSTEM_MSG = (
     "- message_ids (optional array of message IDs to delete)\n\n"
     "If any message_ids are listed, always include 'delete' in the actions array.\n"
     "Only enforce the server rules provided. Do not apply personal judgment, intent, or external policies (e.g., OpenAI guidelines).\n"
-    "Do not flag messages that report, reference, or accuse others of breaking rules — only flag content where the speaker themselves is clearly breaking a rule.\n"
+    "Do not flag messages that report, reference, or accuse others of breaking rules — only flag content where the speaker themselves is clearly breaking a defined rule.\n"
     "Do not act on sarcasm, vague statements, or suggestive content unless it clearly and unambiguously breaks a rule.\n"
-    "Do not use prior violations to justify punishing a message unless a message in the transcript directly continues a harmful pattern.\n"
+    "Do not use prior violations to justify punishing a message unless a message in the transcript directly breaks a rule.\n"
     "Never speculate — if unsure, err on the side of ok=true.\n"
 )
 
