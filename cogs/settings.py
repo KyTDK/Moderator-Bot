@@ -321,7 +321,7 @@ class Settings(commands.Cog):
 
     @settings_group.command(name="get", description="Get the current value of a server setting.")
     @app_commands.choices(
-        name=(string_choices_all + channel_choices)[:25]
+        name=(string_choices_all + channel_choices + role_choices)[:25]
     )
     async def get_setting(self, interaction: Interaction, name: str):
         """Get the current value of a server setting."""
