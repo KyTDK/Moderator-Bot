@@ -43,27 +43,10 @@ class Settings(commands.Cog):
         ][:25]
 
     # List to hold choices for non-channel settings
-    string_choices_without_hidden = [
+    choices_without_hidden = [
         app_commands.Choice(name=setting.name[:100], value=setting_name[:100])
         for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type != discord.TextChannel and setting.type != discord.Role and setting.type != list[discord.TextChannel] and setting.type != list[discord.Role] and setting.hidden is False
-    ]
-    string_choices_all = [
-        app_commands.Choice(name=setting_name[:100], value=setting_name[:100])
-        for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type != discord.TextChannel and setting.type != discord.Role and setting.type != list[discord.TextChannel] and setting.type != list[discord.Role]
-    ]
-
-    channel_choices = [
-        app_commands.Choice(name=setting_name[:100], value=setting_name[:100])
-        for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type == discord.TextChannel or setting.type == list[discord.TextChannel]
-    ]
-
-    role_choices = [
-        app_commands.Choice(name=setting_name[:100], value=setting_name[:100])
-        for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.type == discord.Role or setting.type == list[discord.Role]
+        if setting.hidden is False
     ]
 
     settings_group = app_commands.Group(
@@ -100,59 +83,64 @@ class Settings(commands.Cog):
 
     @settings_group.command(name="set", description="Set a server setting.")
     @app_commands.autocomplete(value=value_autocomplete)
-    @app_commands.choices(name=string_choices_without_hidden)
-    async def set_setting(self, interaction: Interaction, name: str, value: str):
+    @app_commands.choices(name=choices_without_hidden)
+    async def set_setting(
+        self,
+        interaction: Interaction,
+        name: str,
+        value: str = None,
+        channel: Optional[discord.TextChannel] = None,
+        role: Optional[discord.Role] = None
+    ):
         await interaction.response.defer(ephemeral=True)
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
-            await interaction.followup.send(
-                f"**Invalid setting name.",
-                ephemeral=True,
-            )
+            await interaction.followup.send("**Invalid setting name.**", ephemeral=True)
             return
 
         expected = schema.type
         try:
-            if expected is int:
-                try:
-                    parsed = int(value)
-                except ValueError:
-                    raise ValueError(
-                        f"**`{name}` expects an integer.**\n"
-                        f"Usage: `/set_setting {name} 42` (whole number, no decimals)"
-                    )
-            elif expected is bool:
+            # Handle standard types
+            if expected == int:
+                parsed = int(value)
+            elif expected == bool:
                 low = value.lower()
                 if low in ("true", "1", "yes"):
                     parsed = True
                 elif low in ("false", "0", "no"):
                     parsed = False
                 else:
-                    raise ValueError(
-                        f"**`{name}` expects a boolean.**\n"
-                        f"Usage: `/set_setting {name} true` or `/set_setting {name} false`"
-                    )
-            elif expected is discord.TextChannel:
-                raise ValueError(
-                    f"**`{name}` expects a channel.**\n"
-                    f"Use `/set_channel {name} #channel-name` instead."
-                )
-            elif expected is TimeString:
+                    raise ValueError(f"**`{name}` expects a boolean.**")
+            elif expected == TimeString:
                 parsed = TimeString(value)
+            elif expected == discord.TextChannel:
+                if not channel:
+                    raise ValueError(f"**`{name}` expects a channel. Use the `channel` option.**")
+                parsed = channel.id
+            elif expected == discord.Role:
+                if not role:
+                    raise ValueError(f"**`{name}` expects a role. Use the `role` option.**")
+                parsed = role.id
+            elif expected == list[discord.TextChannel]:
+                if not channel:
+                    raise ValueError(f"**`{name}` expects a channel. Use the `channel` option.**")
+                current = await mysql.get_settings(interaction.guild.id, name) or []
+                if channel.id not in current:
+                    current.append(channel.id)
+                parsed = current
+            elif expected == list[discord.Role]:
+                if not role:
+                    raise ValueError(f"**`{name}` expects a role. Use the `role` option.**")
+                current = await mysql.get_settings(interaction.guild.id, name) or []
+                if role.id not in current:
+                    current.append(role.id)
+                parsed = current
             else:
-                # fallback to string
                 parsed = value
 
-            try:
-                await schema.validate(parsed)
-            except Exception as e:
-                await interaction.followup.send(content=str(e), ephemeral=True)
-                return
-
+            await schema.validate(parsed)
             await mysql.update_settings(interaction.guild.id, name, parsed)
-            await interaction.followup.send(
-                f"Updated `{name}` to `{parsed}`.", ephemeral=True
-            )
+            await interaction.followup.send(f"Updated `{name}` to `{parsed}`.", ephemeral=True)
 
         except ValueError as ve:
             await interaction.followup.send(str(ve), ephemeral=True)
@@ -160,125 +148,9 @@ class Settings(commands.Cog):
         except Exception as e:
             traceback.print_exc()
             await interaction.followup.send(
-                f"An unexpected error occurred: `{e}`",
-                ephemeral=True
+                f"An unexpected error occurred: `{e}`", ephemeral=True
             )
 
-    @settings_group.command(name="channel_set", description="Set a channel for a setting.")
-    @app_commands.choices(name=channel_choices)
-    async def set_channel(self, interaction: Interaction, name: str, channel: discord.TextChannel):
-        schema = SETTINGS_SCHEMA.get(name)
-        if not schema or (schema.type != discord.TextChannel and schema.type != list[discord.TextChannel]):
-            await interaction.response.send_message(
-                f"Invalid setting name or type.",
-                ephemeral=True,
-            )
-            return
-        if schema.type == list[discord.TextChannel]:
-            # If the setting is a list of channels, append the new channel
-            current_channels = await mysql.get_settings(interaction.guild.id, name) or []
-            if channel.id not in current_channels:
-                current_channels.append(channel.id)
-                await mysql.update_settings(interaction.guild.id, name, current_channels)
-                await interaction.response.send_message(
-                    f"Added `{channel.name}` to `{name}`.", ephemeral=True
-                )
-            else:
-                await interaction.response.send_message(
-                    f"`{channel.name}` is already in `{name}`.", ephemeral=True
-                )
-            return
-        await mysql.update_settings(interaction.guild.id, name, channel.id)
-        await interaction.response.send_message(
-            f"Updated `{name}` to channel `{channel.name}`.", ephemeral=True
-    )
-
-    @settings_group.command(name="roles_set", description="Set a role for a setting.")
-    @app_commands.choices(name=role_choices)
-    async def set_role(self, interaction: Interaction, name: str, role: discord.Role):
-        schema = SETTINGS_SCHEMA.get(name)
-        if not schema or (schema.type != discord.Role and schema.type != list[discord.Role]):
-            await interaction.response.send_message(
-                f"Invalid setting name or type.",
-                ephemeral=True,
-            )
-            return
-        if schema.type == list[discord.Role]:
-            # If the setting is a list of roles, append the new role
-            current_roles = await mysql.get_settings(interaction.guild.id, name) or []
-            if role.id not in current_roles:
-                current_roles.append(role.id)
-                await mysql.update_settings(interaction.guild.id, name, current_roles)
-                await interaction.response.send_message(
-                    f"Added `{role.name}` to `{name}`.", ephemeral=True
-                )
-            else:
-                await interaction.response.send_message(
-                    f"`{role.name}` is already in `{name}`.", ephemeral=True
-                )
-            return
-        await mysql.update_settings(interaction.guild.id, name, role.id)
-        await interaction.response.send_message(
-            f"Updated `{name}` to role `{role.name}`.", ephemeral=True
-        )
-
-    @settings_group.command(name="roles_remove", description="Remove a role from a setting.")
-    @app_commands.choices(name=role_choices)
-    async def remove_role(self, interaction: Interaction, name: str, channel: discord.Role):
-        await interaction.response.defer(ephemeral=True)
-
-        schema = SETTINGS_SCHEMA.get(name)
-        if not schema or schema.type not in (discord.Role, list[discord.Role]):
-            await interaction.followup.send("Invalid setting name or type.", ephemeral=True)
-            return
-
-        current = await mysql.get_settings(interaction.guild.id, name)
-
-        if schema.type == list[discord.Role]:
-            channels = current or []
-            if channel.id not in channels:
-                await interaction.followup.send(f"`{channel.name}` is not in `{name}`.", ephemeral=True)
-                return
-
-            channels.remove(channel.id)
-            await mysql.update_settings(interaction.guild.id, name, channels)
-            await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
-        else:
-            if current != channel.id:
-                await interaction.followup.send(f"`{channel.name}` is not set for `{name}`.", ephemeral=True)
-                return
-
-            await mysql.update_settings(interaction.guild.id, name, None)
-    
-    @settings_group.command(name="channel_remove", description="Remove a channel from a setting.")
-    @app_commands.choices(name=channel_choices)
-    async def remove_channel(self, interaction: Interaction, name: str, channel: discord.TextChannel):
-        await interaction.response.defer(ephemeral=True)
-
-        schema = SETTINGS_SCHEMA.get(name)
-        if not schema or schema.type not in (discord.TextChannel, list[discord.TextChannel]):
-            await interaction.followup.send("Invalid setting name or type.", ephemeral=True)
-            return
-
-        current = await mysql.get_settings(interaction.guild.id, name)
-
-        if schema.type == list[discord.TextChannel]:
-            channels = current or []
-            if channel.id not in channels:
-                await interaction.followup.send(f"`{channel.name}` is not in `{name}`.", ephemeral=True)
-                return
-
-            channels.remove(channel.id)
-            await mysql.update_settings(interaction.guild.id, name, channels)
-            await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
-        else:
-            if current != channel.id:
-                await interaction.followup.send(f"`{channel.name}` is not set for `{name}`.", ephemeral=True)
-                return
-
-            await mysql.update_settings(interaction.guild.id, name, None)
-            await interaction.followup.send(f"Removed `{channel.name}` from `{name}`.", ephemeral=True)
- 
     @app_commands.command(name="help", description="Get help on a specific command group.")
     @app_commands.describe(command="Optional: command group to get help with")
     @app_commands.default_permissions(moderate_members=True)
@@ -321,7 +193,7 @@ class Settings(commands.Cog):
 
     @settings_group.command(name="get", description="Get the current value of a server setting.")
     @app_commands.choices(
-        name=(string_choices_all + channel_choices + role_choices)[:25]
+        name=choices_without_hidden[:25]
     )
     async def get_setting(self, interaction: Interaction, name: str):
         """Get the current value of a server setting."""
@@ -337,7 +209,7 @@ class Settings(commands.Cog):
         # Retrieve the current value from the database
         current_value = await mysql.get_settings(interaction.guild.id, name)
         type = schema.type
-        if current_value is None:
+        if not current_value:
             await interaction.followup.send(
                 f"`{name}` is not set.", ephemeral=True
             )
