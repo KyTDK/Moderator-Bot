@@ -347,7 +347,10 @@ class AutonomousModeratorCog(commands.Cog):
                 except discord.HTTPException:
                     pass
 
-    ai_mod_group = app_commands.Group(name="ai_mod", description="Manage AI moderation features.")
+    ai_mod_group = app_commands.Group(name="ai_mod", 
+                                      description="Manage AI moderation features.",
+                                      default_permissions=discord.Permissions(manage_messages=True),
+                                      guild_only=True)
 
     @ai_mod_group.command(name="rules_set", description="Set server rules")
     @app_commands.default_permissions(manage_guild=True)
