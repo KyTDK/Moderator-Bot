@@ -19,7 +19,7 @@ from math import ceil
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
-violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=3)) # user_id -> deque of (rule: str, action: str)
+violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10)) # user_id -> deque of (rule: str, action: str)
 
 SYSTEM_MSG = (
     "You are an AI moderator.\n"
@@ -176,7 +176,7 @@ class AutonomousModeratorCog(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         self.message_batches[member.guild.id].append(("Member Join", f"Username: {member.name}, Display: {member.display_name}", member))
 
-    @tasks.loop(seconds=30)
+    @tasks.loop(seconds=5)
     async def batch_runner(self):
         now = datetime.now(timezone.utc)
         guild_ids = set(self.message_batches.keys()) | set(self.mention_triggers.keys())
