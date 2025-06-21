@@ -37,6 +37,7 @@ SYSTEM_MSG = (
     "- rule (string)\n"
     "- reason (string)\n"
     "- actions (array of punishments)\n"
+    "- policy_block (boolean), did the model flag this message ONLY because of OpenAI policy and not because of a clear violation of the provided server rules\n"
     "- message_ids (optional array of message IDs to delete)\n\n"
 
     "If any message_ids are listed, always include 'delete' in the actions array.\n"
@@ -99,6 +100,7 @@ def parse_batch_response(text: str) -> list[dict[str, object]]:
                 "rule": item.get("rule", ""),
                 "reason": item.get("reason", ""),
                 "actions": [a.lower() for a in actions if isinstance(a, str)],
+                "policy_block": bool(item.get("policy_block", False)),
                 "message_ids": item.get("message_ids", []),
             }
         )
@@ -290,6 +292,8 @@ class AutonomousModeratorCog(commands.Cog):
             # Parse AI response
             violations = parse_batch_response(raw)
             for item in violations:
+                if item.get("policy_block"):
+                    continue
                 uid = item.get("user_id")
                 actions = item.get("actions", [])
                 if not (uid and actions):
