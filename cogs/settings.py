@@ -244,5 +244,57 @@ class Settings(commands.Cog):
                     f"`{name}` is currently set to `{current_value}`.", ephemeral=True
                 )
 
+    @settings_group.command(name="remove", description="Remove a server setting or an item from a list-type setting.")
+    @app_commands.choices(name=choices_without_hidden[:25])
+    async def remove_setting(
+        self,
+        interaction: Interaction,
+        name: str,
+        channel: Optional[discord.TextChannel] = None,
+        role: Optional[discord.Role] = None
+    ):
+        await interaction.response.defer(ephemeral=True)
+        schema = SETTINGS_SCHEMA.get(name)
+        if not schema:
+            await interaction.followup.send("Invalid setting name.", ephemeral=True)
+            return
+
+        current = await mysql.get_settings(interaction.guild.id, name)
+        expected = schema.type
+
+        if not current:
+            await interaction.followup.send(f"`{name}` is not set.", ephemeral=True)
+            return
+
+        try:
+            if expected == list[discord.TextChannel]:
+                if not channel:
+                    raise ValueError("You must specify a channel to remove.")
+                if channel.id not in current:
+                    raise ValueError(f"{channel.mention} is not in `{name}`.")
+                current.remove(channel.id)
+                await mysql.update_settings(interaction.guild.id, name, current)
+                await interaction.followup.send(f"Removed {channel.mention} from `{name}`.", ephemeral=True)
+
+            elif expected == list[discord.Role]:
+                if not role:
+                    raise ValueError("You must specify a role to remove.")
+                if role.id not in current:
+                    raise ValueError(f"{role.mention} is not in `{name}`.")
+                current.remove(role.id)
+                await mysql.update_settings(interaction.guild.id, name, current)
+                await interaction.followup.send(f"Removed {role.mention} from `{name}`.", ephemeral=True)
+
+            else:
+                await mysql.update_settings(interaction.guild.id, name, None)
+                await interaction.followup.send(f"Removed setting `{name}`. Now using default.", ephemeral=True)
+
+        except ValueError as ve:
+            await interaction.followup.send(str(ve), ephemeral=True)
+
+        except Exception as e:
+            traceback.print_exc()
+            await interaction.followup.send(f"An unexpected error occurred: `{e}`", ephemeral=True)
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(Settings(bot))
