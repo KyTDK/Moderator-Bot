@@ -221,7 +221,7 @@ class AutonomousModeratorCog(commands.Cog):
                     fetched = [msg async for msg in trigger_msg.channel.history(limit=50)]
                     fetched.sort(key=lambda m: m.created_at)  # Add this
                     for msg in fetched:
-                        print("[AutonomousModerator] Fetching channel history")
+                        print(f"[AutonomousModerator] Fetching channel history for guild id {gid}")
                         normalized = normalize_text(msg.content)
                         if normalized:
                             batch.append(("Fetched Message", normalized, msg))
