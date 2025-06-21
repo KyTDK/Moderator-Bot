@@ -283,7 +283,6 @@ class AutonomousModeratorCog(commands.Cog):
                     response_format={"type": "json_object"}
                 )
                 raw = completion.choices[0].message.content.strip()
-                print(raw)
             except Exception as e:
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
