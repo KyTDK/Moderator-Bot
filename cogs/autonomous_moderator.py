@@ -41,6 +41,7 @@ SYSTEM_MSG = (
 
     "If any message_ids are listed, always include 'delete' in the actions array.\n"
     "Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>.\n\n"
+    "Use timeout:<duration> with a clear time unit. Durations must include a unit like s, m, h, d, w, or mo (e.g., 10m for 10 minutes)."
 
     "Punishment meanings:\n"
     "- warn:<text>: Warn the user.\n"
