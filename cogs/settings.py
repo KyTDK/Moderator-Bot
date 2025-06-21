@@ -244,7 +244,34 @@ class Settings(commands.Cog):
                     f"`{name}` is currently set to `{current_value}`.", ephemeral=True
                 )
 
+    async def remove_channel_autocomplete(interaction: Interaction, current: str):
+        name = interaction.namespace.name
+        setting = SETTINGS_SCHEMA.get(name)
+        if not setting or setting.type != list[discord.TextChannel]:
+            return []
+
+        channel_ids = await mysql.get_settings(interaction.guild.id, name) or []
+        channels = [interaction.guild.get_channel(cid) for cid in channel_ids]
+        return [
+            app_commands.Choice(name=channel.name, value=channel.id)
+            for channel in channels if channel and current.lower() in channel.name.lower()
+        ][:25]
+
+    async def remove_role_autocomplete(interaction: Interaction, current: str):
+        name = interaction.namespace.name
+        setting = SETTINGS_SCHEMA.get(name)
+        if not setting or setting.type != list[discord.Role]:
+            return []
+
+        role_ids = await mysql.get_settings(interaction.guild.id, name) or []
+        roles = [interaction.guild.get_role(rid) for rid in role_ids]
+        return [
+            app_commands.Choice(name=role.name, value=role.id)
+            for role in roles if role and current.lower() in role.name.lower()
+        ][:25]
+
     @settings_group.command(name="remove", description="Remove a server setting or an item from a list-type setting.")
+    @app_commands.autocomplete(channel=remove_channel_autocomplete, role=remove_role_autocomplete)
     @app_commands.choices(name=choices_without_hidden[:25])
     async def remove_setting(
         self,
