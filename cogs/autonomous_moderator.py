@@ -218,10 +218,10 @@ class AutonomousModeratorCog(commands.Cog):
                 if not trigger_msg:
                     continue
                 try:
+                    print(f"[AutonomousModerator] Fetching channel history for guild id {gid}")
                     fetched = [msg async for msg in trigger_msg.channel.history(limit=50)]
                     fetched.sort(key=lambda m: m.created_at)  # Add this
                     for msg in fetched:
-                        print(f"[AutonomousModerator] Fetching channel history for guild id {gid}")
                         normalized = normalize_text(msg.content)
                         if normalized:
                             batch.append(("Fetched Message", normalized, msg))
