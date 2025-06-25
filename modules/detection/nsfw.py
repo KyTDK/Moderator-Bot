@@ -396,9 +396,7 @@ async def moderator_api(text: str | None = None,
             if not is_flagged:
                 continue
             score = results.category_scores.__dict__.get(category, 0)
-            if is_video and category in moderator_api_category_exclusions:
-                continue
-            if not is_video and score < 0.6:
+            if score < 0.8:
                 continue
             return category
         return None

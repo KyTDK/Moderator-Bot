@@ -2,3 +2,5 @@
 test/
 __pycache__/
 *.pyc
+.phishtank_cache.json.~7822
+phishtank_cache.json
