@@ -170,6 +170,8 @@ async def _ensure_database_exists():
                 CREATE TABLE IF NOT EXISTS media_hashes (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     phash CHAR(16) NOT NULL,
+                    category VARCHAR(64) DEFAULT NULL,
+                    is_violation BOOLEAN NOT NULL DEFAULT FALSE,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE KEY (phash)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -353,13 +355,14 @@ async def cleanup_orphaned_guilds(active_guild_ids):
             await execute_query(f"DELETE FROM {table} WHERE guild_id = %s", (gid,))
             print(f"[cleanup] → Deleted from {table}")
 
-async def store_phash(phash: str, url: str | None = None):
+async def store_phash(phash: str, category: str | None = None):
     await execute_query(
         """
-        INSERT IGNORE INTO media_hashes (phash, source_url)
-        VALUES (%s, %s)
+        INSERT INTO media_hashes (phash, category, is_violation)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE category = VALUES(category), is_violation = VALUES(is_violation)
         """,
-        (phash, url)
+        (phash, category, category is not None)
     )
 
 async def phash_exists(phash: str) -> bool:
