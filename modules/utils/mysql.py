@@ -365,10 +365,10 @@ async def store_phash(phash: str, category: str | None = None):
         (phash, category, category is not None)
     )
 
-async def phash_exists(phash: str) -> bool:
+async def get_cached_violation(phash: str) -> str | None:
     result, _ = await execute_query(
-        "SELECT 1 FROM media_hashes WHERE phash = %s LIMIT 1",
+        "SELECT category FROM media_hashes WHERE phash = %s LIMIT 1",
         (phash,),
         fetch_one=True
     )
-    return result is not None
+    return result[0] if result else None

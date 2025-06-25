@@ -411,11 +411,11 @@ async def process_image(original_filename: str,
     try:
         phash = str(imagehash.phash(Image.open(original_filename)))
 
-        # Skip reprocessing if already scanned
-        if await mysql.phash_exists(phash):
-            print(f"[process_image] Skipping known file with phash={phash}")
-            return None
-
+        cached_category = await mysql.get_cached_violation(phash)
+        if cached_category is not None:
+            print(f"[process_image] Found cached category for {original_filename}: {cached_category}")
+            return cached_category
+        
         result = await moderator_api(
             image_path=original_filename,
             guild_id=guild_id,
