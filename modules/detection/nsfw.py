@@ -23,6 +23,7 @@ import numpy as np
 from contextlib import asynccontextmanager
 from tempfile import NamedTemporaryFile, gettempdir
 from PIL import Image, ImageSequence
+import imagehash
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
@@ -408,9 +409,22 @@ async def process_image(original_filename: str,
                         clean_up: bool = True,
                         bot: commands.Bot | None = None) -> Optional[str]:
     try:
+        # Generate perceptual hash (as 16-char hex string)
+        phash = str(imagehash.phash(Image.open(original_filename)))
+
+        # Skip reprocessing if already scanned
+        if await mysql.phash_exists(phash):
+            print(f"[process_image] Skipping known file with phash={phash}")
+            return None
+
+        # Run moderation check
         result = await moderator_api(image_path=original_filename, 
                                      guild_id=guild_id,
                                      bot=bot)
+
+        # Cache hash whether result is flagged or clean
+        await mysql.store_phash(phash)
+
         print(f"[process_image] Moderation result for {original_filename}: {result}")
         return result
     except Exception as e:

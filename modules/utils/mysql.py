@@ -165,6 +165,16 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS media_hashes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    phash CHAR(16) NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY (phash)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
             await conn.commit()
         finally:
             conn.close()
@@ -343,3 +353,19 @@ async def cleanup_orphaned_guilds(active_guild_ids):
             await execute_query(f"DELETE FROM {table} WHERE guild_id = %s", (gid,))
             print(f"[cleanup] → Deleted from {table}")
 
+async def store_phash(phash: str, url: str | None = None):
+    await execute_query(
+        """
+        INSERT IGNORE INTO media_hashes (phash, source_url)
+        VALUES (%s, %s)
+        """,
+        (phash, url)
+    )
+
+async def phash_exists(phash: str) -> bool:
+    result, _ = await execute_query(
+        "SELECT 1 FROM media_hashes WHERE phash = %s LIMIT 1",
+        (phash,),
+        fetch_one=True
+    )
+    return result is not None
