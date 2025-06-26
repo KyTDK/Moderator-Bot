@@ -8,7 +8,7 @@ from torchvision import transforms
 from transformers import CLIPProcessor, CLIPModel
 
 # Constants
-VECTOR_DIM = 512
+VECTOR_DIM = 768
 INDEX_PATH = "vector.index"
 METADATA_PATH = "metadata.json"
 
