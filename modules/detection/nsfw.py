@@ -1,3 +1,4 @@
+from asyncio import subprocess
 import os
 import traceback
 import asyncio
@@ -330,6 +331,16 @@ def _file_to_b64(path: str) -> str:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
+def _convert_to_png_ffmpeg(input_path: str, output_path: str):
+    try:
+        subprocess.run([
+            "ffmpeg", "-y", "-i", input_path, output_path
+        ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return output_path
+    except Exception as e:
+        print(f"[ffmpeg fallback] Failed to convert {input_path}: {e}")
+        return None
+
 async def moderator_api(text: str | None = None,
                         image_path: str | None = None,
                         guild_id: int | None = None,
@@ -411,11 +422,14 @@ async def process_image(original_filename: str,
                         
     try:
         png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
-        # Convert to PNG and reload as RGB as OpenAI expects RGB images
-        with Image.open(original_filename) as img:
-            img = img.convert("RGB")
-            img.save(png_converted_path, format="PNG")
 
+        # Use ffmpeg to convert to PNG
+        result = await asyncio.to_thread(_convert_to_png_ffmpeg, original_filename, png_converted_path)
+        if not result or not os.path.exists(png_converted_path):
+            print(f"[process_image] FFmpeg conversion failed: {original_filename}")
+            return None
+
+        # Load image using PIL
         image = Image.open(png_converted_path).convert("RGB")
         
         # Try similarity match first
