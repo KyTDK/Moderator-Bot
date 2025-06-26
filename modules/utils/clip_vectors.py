@@ -6,7 +6,7 @@ from transformers import CLIPProcessor, CLIPModel
 
 VECTOR_DIM   = 768
 NLIST        = 256
-MIN_TRAIN    = 1_000
+MIN_TRAIN    = 256
 THRESHOLD    = 0.85
 K_NEIGHBOURS = 20
 MIN_VOTES    = 2
