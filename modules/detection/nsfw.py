@@ -257,12 +257,20 @@ async def is_nsfw(bot: commands.Bot,
 
     # hydration fallback
     if not (attachments or embeds or stickers) and "http" in message.content:
-        await asyncio.sleep(1.0)  # give Discord a sec to hydrate it
-        try:
-            message = await message.channel.fetch_message(message.id)
-            print(f"[HYDRATE] Re-fetched message {message.id}, got {len(message.embeds)} embeds.")
-        except (discord.NotFound, discord.HTTPException) as e:
-            print(f"[HYDRATE] Failed to refetch message {message.id}: {e}")
+        for attempt in range(3):
+            await asyncio.sleep(1.0 + attempt) 
+            try:
+                message = await message.channel.fetch_message(message.id)
+                embeds = message.embeds
+                attachments = message.attachments
+                stickers = message.stickers
+                if embeds or attachments or stickers:
+                    print(f"[HYDRATE] Attempt {attempt+1}: got {len(embeds)} embeds.")
+                    break
+            except (discord.NotFound, discord.HTTPException) as e:
+                print(f"[HYDRATE] Failed to refetch message {message.id}: {e}")
+                return False
+        else:
             return False
 
     if message is None:
