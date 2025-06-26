@@ -13,7 +13,7 @@ from lottie.exporters.gif import export_gif
 import lottie
 import base64
 from cogs.nsfw import NSFW_ACTION_SETTING
-from modules.utils import logging, mysql, api
+from modules.utils import mod_logging, mysql, api
 from modules.moderation import strike
 from urllib.parse import urlparse
 from typing import Optional
@@ -502,6 +502,6 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  re
     strike_channel_id = await mysql.get_settings(user.guild.id, "strike-channel")
 
     if nsfw_channel_id:
-        await logging.log_to_channel(embed, nsfw_channel_id, bot, image)
+        await mod_logging.log_to_channel(embed, nsfw_channel_id, bot, image)
     elif strike_channel_id:
-        await logging.log_to_channel(embed, strike_channel_id, bot)
+        await mod_logging.log_to_channel(embed, strike_channel_id, bot)

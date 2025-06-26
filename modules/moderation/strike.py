@@ -4,7 +4,7 @@ from discord.ext import commands
 from modules.utils.discord_utils import message_user
 from modules.utils.mysql import execute_query
 from datetime import datetime, timedelta, timezone
-from modules.utils import logging
+from modules.utils import mod_logging
 from modules.utils import mysql
 from modules.utils.time import parse_duration
 import discord
@@ -296,6 +296,6 @@ async def strike(
     embed.title = f"{user.display_name} received a strike"
     STRIKES_CHANNEL_ID = await mysql.get_settings(user.guild.id, "strike-channel")
     if STRIKES_CHANNEL_ID is not None and log_to_channel:
-        await logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)
+        await mod_logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)
 
     return embed

@@ -6,7 +6,7 @@ from discord.ext import commands, tasks
 from discord import app_commands, Interaction
 from collections import defaultdict, deque
 
-from modules.utils import logging, mysql
+from modules.utils import mod_logging, mysql
 from modules.utils.time import parse_duration
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
@@ -336,7 +336,7 @@ class AutonomousModeratorCog(commands.Cog):
                     )
                     monitor_channel = settings.get("monitor-channel")
                     if monitor_channel:
-                        await logging.log_to_channel(embed, monitor_channel, self.bot)
+                        await mod_logging.log_to_channel(embed, monitor_channel, self.bot)
             # Send feedback if this batch was triggered by mention
             if trigger_msg:
                 try:
