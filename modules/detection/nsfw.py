@@ -24,7 +24,7 @@ from contextlib import asynccontextmanager
 from tempfile import NamedTemporaryFile, gettempdir
 from PIL import Image, ImageSequence
 from modules.utils import clip_vectors
-import pillow_avif_plugin
+import avif
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
