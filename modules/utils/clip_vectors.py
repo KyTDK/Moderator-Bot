@@ -68,6 +68,7 @@ def _maybe_train():
         return
     train_data = np.vstack(_pending)
     index.train(train_data)
+    index.make_direct_map()
     index.add(train_data)
     _pending.clear()
     os.remove(PENDING_VEC_PATH)
