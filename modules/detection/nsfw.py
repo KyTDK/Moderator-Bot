@@ -300,8 +300,8 @@ async def is_nsfw(bot: commands.Bot,
 
         for gif_url in possible_urls:
             domain = urlparse(gif_url).netloc.lower()
-            if domain == "tenor.com" or domain.endswith(".tenor.com"):
-                continue  # ignore Tenor
+            # if domain == "tenor.com" or domain.endswith(".tenor.com"):
+            #    continue  # ignore Tenor
 
             async with temp_download(gif_url, "gif") as temp_location:
                 if await check_attachment(message.author, temp_location, nsfw_callback, bot, guild_id, message):
