@@ -144,7 +144,7 @@ class AutonomousModeratorCog(commands.Cog):
             return
 
         # Early run if bot is mentioned
-        if message.reference is None and any(user.id == self.bot.user.id for user in message.mentions):
+        if f"<@{self.bot.user.id}>" in message.content:
             # Report mode, add trigger and acknowledge the mention
             if settings.get("aimod-mode") == "report":
                 await message.add_reaction("👀")
