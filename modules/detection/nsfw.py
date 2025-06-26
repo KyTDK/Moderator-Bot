@@ -448,10 +448,11 @@ async def process_image(original_filename: str,
         image = Image.open(png_converted_path).convert("RGB")
 
         # Try similarity match first
-        similar = clip_vectors.query_similar(image, threshold=0.85)
-        if similar:
-            print(f"[process_image] Similar to known image: {similar[0]}")
-            return similar[0].get("category")
+        if guild_id == 985715695532773420:
+            similar = clip_vectors.query_similar(image, threshold=0.85)
+            print(f"[process_image] Similarity match found: {similar}")
+            if similar:
+                return similar[0].get("category")
 
         # Otherwise call the mod API
         result = await moderator_api(image_path=png_converted_path,
@@ -472,6 +473,7 @@ async def process_image(original_filename: str,
             _safe_delete(png_converted_path)
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  reason: str, image: discord.File, message: discord.Message):
+
     action_flag = await mysql.get_settings(guild_id, NSFW_ACTION_SETTING)
     if action_flag:
         try:
