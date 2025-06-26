@@ -24,7 +24,7 @@ from contextlib import asynccontextmanager
 from tempfile import NamedTemporaryFile, gettempdir
 from PIL import Image, ImageSequence
 from modules.utils import clip_vectors
-import avif
+import pillow_avif
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
@@ -248,13 +248,22 @@ async def is_nsfw(bot: commands.Bot,
     if url:
         async with temp_download(url) as temp_filename:
             return await check_attachment(member, temp_filename, nsfw_callback, bot, guild_id, message)
-    
     snapshots = getattr(message, "message_snapshots", None)
     snapshot = snapshots[0] if snapshots else None
 
     attachments = message.attachments if message.attachments else (snapshot.attachments if snapshot else [])
     embeds = message.embeds if message.embeds else (snapshot.embeds if snapshot else [])
     stickers = message.stickers if message.stickers else (snapshot.stickers if snapshot else [])
+
+    # hydration fallback
+    if not (attachments or embeds or stickers):
+        await asyncio.sleep(1.0)  # give Discord a sec to hydrate it
+        try:
+            message = await message.channel.fetch_message(message.id)
+            print(f"[HYDRATE] Re-fetched message {message.id}, got {len(message.embeds)} embeds.")
+        except discord.NotFound:
+            print(f"[HYDRATE] Message {message.id} no longer exists.")
+            return
 
     if message is None:
         print("Message is None")
