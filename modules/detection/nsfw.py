@@ -408,8 +408,15 @@ async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True,
                         bot: commands.Bot | None = None) -> Optional[str]:
+                        
     try:
-        image = Image.open(original_filename).convert("RGB")
+        png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
+        # Convert to PNG and reload as RGB as OpenAI expects RGB images
+        with Image.open(original_filename) as img:
+            img = img.convert("RGB")
+            img.save(png_converted_path, format="PNG")
+
+        image = Image.open(png_converted_path).convert("RGB")
         
         # Try similarity match first
         similar = clip_vectors.query_similar(image, threshold=0.85)
@@ -418,7 +425,7 @@ async def process_image(original_filename: str,
             return similar[0].get("category")
 
         # Otherwise call the mod API
-        result = await moderator_api(image_path=original_filename,
+        result = await moderator_api(image_path=png_converted_path,
                                      guild_id=guild_id,
                                      bot=bot)
         # Store vector for future matches
@@ -431,8 +438,9 @@ async def process_image(original_filename: str,
         print(f"[process_image] Error processing image {original_filename}: {e}")
         return None
     finally:
-        if clean_up and os.path.exists(original_filename):
+        if clean_up and (os.path.exists(original_filename) or os.path.exists(png_converted_path)):
             _safe_delete(original_filename)
+            _safe_delete(png_converted_path)
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  reason: str, image: discord.File, message: discord.Message):
     action_flag = await mysql.get_settings(guild_id, NSFW_ACTION_SETTING)
