@@ -1,4 +1,3 @@
-import subprocess
 import os
 import traceback
 import asyncio
@@ -25,6 +24,7 @@ from contextlib import asynccontextmanager
 from tempfile import NamedTemporaryFile, gettempdir
 from PIL import Image, ImageSequence
 from modules.utils import clip_vectors
+import pillow_avif_plugin
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
@@ -331,16 +331,6 @@ def _file_to_b64(path: str) -> str:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-def _convert_to_png_ffmpeg(input_path: str, output_path: str):
-    try:
-        subprocess.run([
-            "ffmpeg", "-y", "-i", input_path, output_path
-        ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return output_path
-    except Exception as e:
-        print(f"[ffmpeg fallback] Failed to convert {input_path}: {e}")
-        return None
-
 async def moderator_api(text: str | None = None,
                         image_path: str | None = None,
                         guild_id: int | None = None,
@@ -415,6 +405,16 @@ async def moderator_api(text: str | None = None,
     print("[moderator_api] All API key attempts failed.")
     return None
 
+def _convert_to_png_safe(input_path: str, output_path: str) -> Optional[str]:
+    try:
+        with Image.open(input_path) as img:
+            img = img.convert("RGB")
+            img.save(output_path, format="PNG")
+        return output_path
+    except Exception as e:
+        print(f"[convert] Failed to convert {input_path} to PNG: {e}")
+        return None
+
 async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True,
@@ -422,16 +422,14 @@ async def process_image(original_filename: str,
                         
     try:
         png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
-
-        # Use ffmpeg to convert to PNG
-        result = await asyncio.to_thread(_convert_to_png_ffmpeg, original_filename, png_converted_path)
-        if not result or not os.path.exists(png_converted_path):
-            print(f"[process_image] FFmpeg conversion failed: {original_filename}")
+        # Convert to PNG and reload as RGB as OpenAI expects RGB images
+        result = await asyncio.to_thread(_convert_to_png_safe, original_filename, png_converted_path)
+        if not result:
+            print(f"[process_image] PNG conversion failed: {original_filename}")
             return None
 
-        # Load image using PIL
         image = Image.open(png_converted_path).convert("RGB")
-        
+
         # Try similarity match first
         similar = clip_vectors.query_similar(image, threshold=0.85)
         if similar:
