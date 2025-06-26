@@ -23,7 +23,7 @@ import numpy as np
 from contextlib import asynccontextmanager
 from tempfile import NamedTemporaryFile, gettempdir
 from PIL import Image, ImageSequence
-import imagehash
+from modules.utils import clip_vectors
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
@@ -409,21 +409,20 @@ async def process_image(original_filename: str,
                         clean_up: bool = True,
                         bot: commands.Bot | None = None) -> Optional[str]:
     try:
-        phash = str(imagehash.phash(Image.open(original_filename)))
-
-        cached_category = await mysql.get_cached_violation(phash)
-        if cached_category is not None:
-            print(f"[process_image] Found cached category for {original_filename}: {cached_category}")
-            return cached_category
+        image = Image.open(original_filename).convert("RGB")
         
-        result = await moderator_api(
-            image_path=original_filename,
-            guild_id=guild_id,
-            bot=bot
-        )
+        # Try similarity match first
+        similar = clip_vectors.query_similar(image, threshold=0.85)
+        if similar:
+            print(f"[process_image] Similar to known image: {similar[0]}")
+            return similar[0].get("category")
 
-        # Store phash with moderation result
-        await mysql.store_phash(phash, category=result)
+        # Otherwise call the mod API
+        result = await moderator_api(image_path=original_filename,
+                                     guild_id=guild_id,
+                                     bot=bot)
+        # Store vector for future matches
+        clip_vectors.add_vector(image, metadata={"category": result})
 
         print(f"[process_image] Moderation result for {original_filename}: {result}")
         return result

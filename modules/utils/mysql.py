@@ -165,18 +165,6 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
-            await cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS media_hashes (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    phash CHAR(16) NOT NULL,
-                    category VARCHAR(64) DEFAULT NULL,
-                    is_violation BOOLEAN NOT NULL DEFAULT FALSE,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE KEY (phash)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-                """
-            )
             await conn.commit()
         finally:
             conn.close()
@@ -354,21 +342,3 @@ async def cleanup_orphaned_guilds(active_guild_ids):
         for table in tables:
             await execute_query(f"DELETE FROM {table} WHERE guild_id = %s", (gid,))
             print(f"[cleanup] → Deleted from {table}")
-
-async def store_phash(phash: str, category: str | None = None):
-    await execute_query(
-        """
-        INSERT INTO media_hashes (phash, category, is_violation)
-        VALUES (%s, %s, %s)
-        ON DUPLICATE KEY UPDATE category = VALUES(category), is_violation = VALUES(is_violation)
-        """,
-        (phash, category, category is not None)
-    )
-
-async def get_cached_violation(phash: str) -> str | None:
-    result, _ = await execute_query(
-        "SELECT category FROM media_hashes WHERE phash = %s LIMIT 1",
-        (phash,),
-        fetch_one=True
-    )
-    return result[0] if result else None
