@@ -449,7 +449,7 @@ async def process_image(original_filename: str,
 
         # Try similarity match first
         if guild_id == 985715695532773420:
-            similar = clip_vectors.query_similar(image, threshold=0.70)
+            similar = clip_vectors.query_similar(image, threshold=0.85)
             print(f"[process_image] Similarity match found")
             if similar:
                 return similar[0].get("category")
