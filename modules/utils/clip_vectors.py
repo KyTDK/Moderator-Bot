@@ -106,9 +106,11 @@ def query_similar(img: Image.Image, threshold=THRESHOLD,
     D, I = index.search(vec, k)
     votes, hits = defaultdict(list), []
     for d, idx in zip(D[0], I[0]):
-        if d < threshold or idx >= len(stored_meta): continue
+        if d < threshold or idx >= len(stored_meta): 
+            continue
         meta = stored_meta[idx]; cat = meta.get("category")
-        if cat: votes[cat].append(d); hits.append({**meta, "score": float(d)})
+        hits.append({**meta, "score": float(d)})
+        votes[cat].append(d)
     if not votes: return []
     top_cat, scores = max(votes.items(), key=lambda x: len(x[1]))
     if len(scores) < min_votes: return []
