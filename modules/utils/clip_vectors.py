@@ -4,22 +4,22 @@ from collections import defaultdict
 from torchvision import transforms
 from transformers import CLIPProcessor, CLIPModel
 
-DIM        = 768
-NLIST      = 16 # Number of clusters for IVF index
-MIN_TRAIN  = max(32, NLIST * 40)
-THRESHOLD  = 0.85
-K          = 20
-MIN_VOTES  = 2
+DIM = 768
+NLIST = 32  # Number of clusters for IVF index
+MIN_TRAIN = max(32, NLIST * 40)
+THRESHOLD = 0.85
+K = 20
+MIN_VOTES = 2
 
-INDEX_PATH        = "vector.index" 
-METADATA_PATH     = "metadata.json"
-PEND_VEC_PATH     = "pending_vectors.pkl"
-ALL_VECS_PATH     = "all_vectors.npy"
-ALL_META_PATH     = "all_metadata.json"
+INDEX_PATH = "vector.index"
+METADATA_PATH = "metadata.json"
+PEND_VEC_PATH = "pending_vectors.pkl"
+ALL_VECS_PATH = "all_vectors.npy"
+ALL_META_PATH = "all_metadata.json"
 
-device  = "cuda" if torch.cuda.is_available() else "cpu"
-model   = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").to(device)
-proc    = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").to(device)
+proc = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
 gpu_res = faiss.StandardGpuResources()
 
 def _new_gpu_index() -> faiss.GpuIndexIVFFlat:
