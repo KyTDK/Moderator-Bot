@@ -5,7 +5,7 @@ from torchvision import transforms
 from transformers import CLIPProcessor, CLIPModel
 
 DIM        = 768
-NLIST      = 8
+NLIST      = 16 # Number of clusters for IVF index
 MIN_TRAIN  = max(32, NLIST * 40)
 THRESHOLD  = 0.85
 K          = 20
