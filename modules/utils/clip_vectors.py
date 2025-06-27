@@ -26,9 +26,11 @@ def _new_gpu_index() -> faiss.GpuIndexIVFFlat:
     cfg = faiss.GpuIndexIVFFlatConfig()
     cfg.device = 0
     cfg.indicesOptions = faiss.INDICES_64_BIT
-    return faiss.GpuIndexIVFFlat(
+    gpu_index = faiss.GpuIndexIVFFlat(
         gpu_res, DIM, NLIST, faiss.METRIC_INNER_PRODUCT, cfg
     )
+    gpu_index.nprobe = max(1, NLIST // 4)
+    return gpu_index
 
 all_meta = json.load(open(ALL_META_PATH)) if os.path.exists(ALL_META_PATH) else []
 stored_meta = json.load(open(METADATA_PATH)) if os.path.exists(METADATA_PATH) else []
