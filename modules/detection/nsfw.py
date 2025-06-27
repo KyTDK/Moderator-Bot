@@ -448,11 +448,10 @@ async def process_image(original_filename: str,
         image = Image.open(png_converted_path).convert("RGB")
 
         # Try similarity match first
-        if guild_id == 985715695532773420:
-            similar = clip_vectors.query_similar(image, threshold=0.85)
+        similar = clip_vectors.query_similar(image, threshold=0.85)
+        if similar:
             print(f"[process_image] Similarity match found")
-            if similar:
-                return similar[0].get("category")
+            return similar[0].get("category")
 
         # Otherwise call the mod API
         result = await moderator_api(image_path=png_converted_path,
