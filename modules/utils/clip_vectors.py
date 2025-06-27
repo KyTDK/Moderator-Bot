@@ -7,7 +7,7 @@ from transformers import CLIPProcessor, CLIPModel
 DIM = 768
 NLIST = 32  # Number of clusters for IVF index
 MIN_TRAIN = max(32, NLIST * 40)
-THRESHOLD = 0.85
+THRESHOLD = 0.70
 K = 20
 MIN_VOTES = 2
 
