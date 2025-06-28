@@ -129,7 +129,7 @@ def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], flo
             ok, frame = cap.read()
             if not ok:
                 continue
-            name = f"{uuid.uuid4().hex[:8]}_{idx}.jpg"
+            name = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.jpg")
             cv2.imwrite(name, frame)
             temp_frames.append(name)
         return temp_frames, duration
@@ -144,26 +144,31 @@ async def process_video(
     bot: commands.Bot,
     message: discord.Message,
 ) -> tuple[Optional[discord.File], bool]:
-    
+    """
+    Scan a video by sampling frames.  Returns (flagged_file, was_flagged).
+    `flagged_file` is the first offending frame wrapped in a discord.File,
+    or None if clean.  `was_flagged` is True/False accordingly.
+    """
+
     temp_frames, _ = await asyncio.to_thread(
         _extract_frames_threaded, original_filename, MAX_FRAMES_PER_VIDEO
     )
-
     if not temp_frames:
         _safe_delete(original_filename)
         return None, False
 
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
-    flagged_file: discord.File | None = None
 
     async def analyse(path: str):
         async with semaphore:
             try:
-                cat = await process_image(original_filename=path, 
-                                          guild_id=guild_id, 
-                                          clean_up=False, 
-                                          bot=bot)
-                return (path, cat) if cat else None
+                result = await process_image(
+                    original_filename=path,
+                    guild_id=guild_id,
+                    clean_up=False,
+                    bot=bot,
+                )
+                return (path, result) if result else None
             except Exception as e:
                 print(f"[process_video] Analyse error {path}: {e}")
                 return None
@@ -173,26 +178,41 @@ async def process_video(
     try:
         for done in asyncio.as_completed(tasks):
             res = await done
-            if res:
-                frame_path, category = res
-                print(f"[process_video] NSFW detected in frame: {frame_path} (category: {category})")
+            if not res:
+                continue
 
-                for t in tasks:
-                    t.cancel()
-                await asyncio.gather(*tasks, return_exceptions=True)
+            frame_path, scan = res
 
-                if nsfw_callback:
-                    flagged_file = discord.File(frame_path,
-                                                filename=os.path.basename(frame_path))
-                    await nsfw_callback(
-                        member,
-                        bot,
-                        guild_id,
-                        f"Detected potential policy violation (Category: **{category.title()}**)",
-                        flagged_file,
-                        message
-                    )
-                return flagged_file, True
+            # Normalise scan output (it can be dict or legacy str)
+            if isinstance(scan, dict):
+                if not scan.get("is_nsfw"):
+                    continue  # safe frame
+                cat_name = scan.get("category") or "unspecified"
+            else:  # legacy string/non-dict → treat any truthy value as category
+                cat_name = str(scan)
+
+            print(f"[process_video] NSFW detected in frame: {frame_path} (category: {cat_name})")
+
+            # cancel the remaining frame tasks
+            for t in tasks:
+                t.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+            # notify moderation callback
+            flagged_file: Optional[discord.File] = None
+            if nsfw_callback:
+                flagged_file = discord.File(frame_path, filename=os.path.basename(frame_path))
+                await nsfw_callback(
+                    member,
+                    bot,
+                    guild_id,
+                    f"Detected potential policy violation (Category: **{cat_name.title()}**)",
+                    flagged_file,
+                    message,
+                )
+            return flagged_file, True
+
+        # no frame flagged
         return None, False
     finally:
         for p in temp_frames:
@@ -213,20 +233,26 @@ async def check_attachment(author,
         return False  # DM or system message
 
     if file_type == "Image":
-        category = await process_image(original_filename=temp_filename, 
+        scan_result = await process_image(original_filename=temp_filename, 
                                        guild_id=guild_id, 
                                        clean_up=False,
                                        bot=bot)
-        if category and nsfw_callback:
+        
+        if scan_result is None or scan_result["is_nsfw"] is None:
+            print("[check_attachment] NSFW scan failed.")
+            return False
+        
+        if scan_result["is_nsfw"] and nsfw_callback:
+            cat_name = (scan_result.get("category") or "unspecified")
             await nsfw_callback(
                 author,
                 bot,
                 guild_id,
-                f"Detected potential policy violation (Category: **{category.title()}**)",
+                f"Detected potential policy violation (Category: **{cat_name.title()}**)",
                 discord.File(temp_filename, filename=filename),
-                message
+                message,
             )
-        return bool(category)
+        return scan_result["is_nsfw"]
 
     if file_type == "Video":
         _file, flagged = await process_video(
@@ -352,7 +378,13 @@ async def moderator_api(text: str | None = None,
                         image_path: str | None = None,
                         guild_id: int | None = None,
                         bot: commands.Bot | None = None,
-                        max_attempts: int = 10) -> Optional[str]:
+                        max_attempts: int = 50) -> dict:
+    result = {
+        "is_nsfw": None,
+        "category": None,
+        "reason": None
+    }
+
     inputs: list | str = []
     is_video = image_path is not None
 
@@ -362,12 +394,12 @@ async def moderator_api(text: str | None = None,
     if is_video:
         if not os.path.exists(image_path):
             print(f"[moderator_api] Image path does not exist: {image_path}")
-            return None
+            return result
         try:
             b64 = await asyncio.to_thread(_file_to_b64, image_path)
         except Exception as e:
             print(f"[moderator_api] Error reading/encoding image {image_path}: {e}")
-            return None
+            return result
         inputs.append({
             "type": "image_url",
             "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
@@ -375,7 +407,7 @@ async def moderator_api(text: str | None = None,
 
     if not inputs:
         print("[moderator_api] No inputs were provided")
-        return None
+        return result
 
     for attempt in range(max_attempts):
         client, encrypted_key = await api.get_api_client(guild_id)
@@ -390,23 +422,21 @@ async def moderator_api(text: str | None = None,
             )
         except openai.AuthenticationError:
             print("[moderator_api] Authentication failed. Marking key as not working.")
-            await api.set_api_key_not_working(api_key=encrypted_key,
-                                              bot=bot)
+            await api.set_api_key_not_working(api_key=encrypted_key, bot=bot)
             continue
         except openai.RateLimitError as e:
             print(f"[moderator_api] Rate limit error: {e}. Marking key as not working.")
-            await api.set_api_key_not_working(api_key=encrypted_key,
-                                              bot=bot)
+            await api.set_api_key_not_working(api_key=encrypted_key, bot=bot)
             continue
         except Exception as e:
-            print(f"[moderator_api] Unexpected error from OpenAI API: {e}")
+            print(f"[moderator_api] Unexpected error from OpenAI API: {e}. Marking key as not working.")
+            await api.set_api_key_not_working(api_key=encrypted_key, bot=bot)
             continue
 
         if not response or not response.results:
             print("[moderator_api] No moderation results returned.")
             continue
 
-        # Mark key healthy again if we got a good response
         if not await api.is_api_key_working(encrypted_key):
             await api.set_api_key_working(encrypted_key)
 
@@ -415,12 +445,17 @@ async def moderator_api(text: str | None = None,
             if not is_flagged:
                 continue
             score = results.category_scores.__dict__.get(category, 0)
-            if score < 0.8:
-                continue
-            return category
-        return None
+            if score >= 0.8:
+                result["is_nsfw"] = True
+                result["category"] = category
+                result["reason"] = f"Flagged as {category} with score {score:.2f}"
+                return result
+
+        result["is_nsfw"] = False
+        return result
+
     print("[moderator_api] All API key attempts failed.")
-    return None
+    return result
 
 def _convert_to_png_safe(input_path: str, output_path: str) -> Optional[str]:
     try:
@@ -435,7 +470,7 @@ def _convert_to_png_safe(input_path: str, output_path: str) -> Optional[str]:
 async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True,
-                        bot: commands.Bot | None = None) -> Optional[str]:
+                        bot: commands.Bot | None = None) -> dict | None:
                         
     try:
         png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
@@ -451,17 +486,22 @@ async def process_image(original_filename: str,
         similar = clip_vectors.query_similar(image, threshold=0.80)
         if similar:
             print(f"[process_image] Similarity match found")
-            return similar[0].get("category")
+            category = similar[0].get("category")
+            if category:
+                print(f"[process_image] Found similar image category: {category}")
+                return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
 
-        # Otherwise call the mod API
-        result = await moderator_api(image_path=png_converted_path,
-                                     guild_id=guild_id,
-                                     bot=bot)
-        # Store vector for future matches
-        clip_vectors.add_vector(image, metadata={"category": result})
+        response = await moderator_api(image_path=png_converted_path,
+                                    guild_id=guild_id,
+                                    bot=bot)
 
-        print(f"[process_image] Moderation result for {original_filename}: {result}")
-        return result
+        # Add vector if NSFW scan did not fail
+        if response["is_nsfw"] is not None:
+            clip_vectors.add_vector(image, metadata={"category": response["category"]})
+
+        print(f"[process_image] Moderation result for {original_filename}: {response}")
+        return response
+
     except Exception as e:
         print(traceback.format_exc())
         print(f"[process_image] Error processing image {original_filename}: {e}")
