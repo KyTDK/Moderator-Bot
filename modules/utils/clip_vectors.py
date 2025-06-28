@@ -94,15 +94,18 @@ def add_vector(img: Image.Image, metadata: dict):
 
     with _write_lock:
         v = np.load(ALL_VECS_PATH) if os.path.exists(ALL_VECS_PATH) else np.empty((0, DIM), 'float32')
-        np.save(ALL_VECS_PATH, np.vstack([v, vec]))
+        new_v = np.vstack([v, vec])
+        np.save(ALL_VECS_PATH, new_v)
 
         stored_meta.append(metadata)
+        _persist_meta()
+
+        assert new_v.shape[0] == len(stored_meta), "Archive out of sync"
 
         if index.is_trained:
             index.add(vec)
             _persist()
         else:
-            _persist_meta()
             _maybe_train()
 
 def query_similar(img: Image.Image,
