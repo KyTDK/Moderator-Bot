@@ -448,7 +448,7 @@ async def process_image(original_filename: str,
         image = Image.open(png_converted_path).convert("RGB")
 
         # Try similarity match first
-        similar = clip_vectors.query_similar(image, threshold=0.85)
+        similar = clip_vectors.query_similar(image, threshold=0.80)
         if similar:
             print(f"[process_image] Similarity match found")
             return similar[0].get("category")
