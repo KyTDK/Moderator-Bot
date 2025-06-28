@@ -451,8 +451,9 @@ async def moderator_api(text: str | None = None,
                 result["reason"] = f"Flagged as {category} with score {score:.2f}"
                 return result
 
+        result["is_nsfw"] = False
         return result
-
+    
     print("[moderator_api] All API key attempts failed.")
     return result
 
