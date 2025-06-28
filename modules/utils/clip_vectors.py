@@ -22,7 +22,7 @@ from threading import Lock
 from transformers import CLIPProcessor, CLIPModel
 
 DIM         = 768
-NLIST       = 32
+NLIST       = 64
 MIN_TRAIN   = max(32, NLIST * 40)
 THRESHOLD   = 0.70
 K           = 20
