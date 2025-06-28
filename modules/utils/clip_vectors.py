@@ -1,4 +1,4 @@
-import os, json, numpy as np, faiss, torch
+import os, json, numpy as np, faiss, torch, tempfile, shutil
 from PIL import Image
 from collections import defaultdict
 from transformers import CLIPProcessor, CLIPModel
@@ -62,9 +62,24 @@ if os.path.exists(ALL_VECS_PATH):
     if vc != len(stored_meta):
         raise RuntimeError(f"Startup mismatch: {vc} vectors vs {len(stored_meta)} meta rows.")
 
+def atomic_save_npy(path: str, array: np.ndarray):
+    with tempfile.NamedTemporaryFile(delete=False, dir=os.path.dirname(path)) as tmp:
+        np.save(tmp, array)
+        tmp.flush()
+        os.fsync(tmp.fileno())
+    shutil.move(tmp.name, path)
+
+def atomic_save_json(path: str, obj):
+    tmp_path = path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp_path, path)
+
 def _persist_meta():
-    json.dump(stored_meta, open(METADATA_PATH,  "w"), indent=2)
-    json.dump(stored_meta, open(ALL_META_PATH, "w"), indent=2)
+    atomic_save_json(METADATA_PATH,  stored_meta)
+    atomic_save_json(ALL_META_PATH, stored_meta)
 
 def _persist():
     assert index.ntotal == len(stored_meta), (
@@ -95,12 +110,13 @@ def add_vector(img: Image.Image, metadata: dict):
     with _write_lock:
         v = np.load(ALL_VECS_PATH) if os.path.exists(ALL_VECS_PATH) else np.empty((0, DIM), 'float32')
         new_v = np.vstack([v, vec])
-        np.save(ALL_VECS_PATH, new_v)
+        atomic_save_npy(ALL_VECS_PATH, new_v)
 
         stored_meta.append(metadata)
         _persist_meta()
 
-        assert new_v.shape[0] == len(stored_meta), "Archive out of sync"
+        if new_v.shape[0] != len(stored_meta):
+            raise RuntimeError(f"Archive out of sync: {new_v.shape[0]} vectors vs {len(stored_meta)} metadata rows")
 
         if index.is_trained:
             index.add(vec)
