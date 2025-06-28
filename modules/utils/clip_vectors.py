@@ -25,20 +25,16 @@ def _new_gpu_index() -> faiss.GpuIndexIVFFlat:
     cfg = faiss.GpuIndexIVFFlatConfig()
     cfg.device = 0
     cfg.indicesOptions = faiss.INDICES_64_BIT
-    gpu_index = faiss.GpuIndexIVFFlat(
-        gpu_res, DIM, NLIST, faiss.METRIC_INNER_PRODUCT, cfg
-    )
-    gpu_index.nprobe = max(1, NLIST // 4)
-    return gpu_index
+    g = faiss.GpuIndexIVFFlat(gpu_res, DIM, NLIST, faiss.METRIC_INNER_PRODUCT, cfg)
+    g.nprobe = max(1, NLIST // 4)
+    return g
 
 if os.path.exists(ALL_META_PATH):
-    all_meta = json.load(open(ALL_META_PATH))
+    stored_meta = json.load(open(ALL_META_PATH))
 elif os.path.exists(METADATA_PATH):
-    all_meta = json.load(open(METADATA_PATH))
+    stored_meta = json.load(open(METADATA_PATH))
 else:
-    all_meta = []
-
-stored_meta = all_meta
+    stored_meta = []
 
 index = _new_gpu_index()
 
@@ -53,59 +49,67 @@ if os.path.exists(INDEX_PATH) and not os.path.exists(ALL_VECS_PATH):
     cpu  = faiss.read_index(INDEX_PATH)
     vecs = np.vstack([cpu.reconstruct(i) for i in range(cpu.ntotal)]).astype("float32")
     np.save(ALL_VECS_PATH, vecs)
-    _train_and_add(vecs)                         # legacy vectors loaded
+    _train_and_add(vecs)
 elif os.path.exists(ALL_VECS_PATH):
     vecs = np.load(ALL_VECS_PATH).astype("float32")
     if len(vecs) >= MIN_TRAIN:
         _train_and_add(vecs)
 
 if os.path.exists(ALL_VECS_PATH):
-    vec_count = np.load(ALL_VECS_PATH).shape[0]
-    if vec_count != len(stored_meta):
-        raise RuntimeError(
-            f"Startup mismatch: {vec_count} vectors vs {len(stored_meta)} metadata rows."
-        )
+    vc = np.load(ALL_VECS_PATH).shape[0]
+    if vc != len(stored_meta):
+        raise RuntimeError(f"Startup mismatch: {vc} vectors vs {len(stored_meta)} meta rows.")
 
-_pending = pickle.load(open(PEND_VEC_PATH, "rb")) if os.path.exists(PEND_VEC_PATH) else []
+def _persist_meta():
+    """Write metadata JSON only (used while index still training)."""
+    json.dump(stored_meta, open(METADATA_PATH,  "w"), indent=2)
+    json.dump(stored_meta, open(ALL_META_PATH, "w"), indent=2)
 
 def _persist():
+    """Write CPU copy + metadata (index must be in sync)."""
     assert index.ntotal == len(stored_meta), (
         f"Persist mismatch: {index.ntotal} vectors vs {len(stored_meta)} metadata rows."
     )
     faiss.write_index(faiss.index_gpu_to_cpu(index), INDEX_PATH)
-    json.dump(stored_meta, open(METADATA_PATH,  "w"), indent=2)
-    json.dump(stored_meta, open(ALL_META_PATH, "w"), indent=2)
+    _persist_meta()
 
-def _archive(vec: np.ndarray, meta: dict):
-    v = np.load(ALL_VECS_PATH) if os.path.exists(ALL_VECS_PATH) else np.empty((0, DIM), 'float32')
-    np.save(ALL_VECS_PATH, np.vstack([v, vec]))
-    stored_meta.append(meta)
+_pending = pickle.load(open(PEND_VEC_PATH, "rb")) if os.path.exists(PEND_VEC_PATH) else []
+
+def _save_pending(): pickle.dump(_pending, open(PEND_VEC_PATH, "wb"))
+
+def _maybe_train():
+    """If enough pending vectors, train index and flush them."""
+    if index.is_trained or len(_pending) < MIN_TRAIN:
+        _save_pending()
+        return
+    vecs = np.vstack(_pending).astype("float32")
+    _train_and_add(vecs)
+    _pending.clear()
+    os.remove(PEND_VEC_PATH)
     _persist()
 
 def embed(img: Image.Image) -> np.ndarray:
     t = proc(images=img, return_tensors="pt").to(device)
     with torch.no_grad():
-        vec = model.get_image_features(**t).cpu().numpy().astype("float32")
-    faiss.normalize_L2(vec)
-    return vec
-
-def _save_pending(): pickle.dump(_pending, open(PEND_VEC_PATH, "wb"))
-
-def _maybe_train():
-    global _pending
-    if index.is_trained or len(_pending) < MIN_TRAIN:
-        _save_pending(); return
-    vecs = np.vstack(_pending).astype("float32")
-    _train_and_add(vecs)
-    _pending.clear(); os.remove(PEND_VEC_PATH); _persist()
+        v = model.get_image_features(**t).cpu().numpy().astype("float32")
+    faiss.normalize_L2(v)
+    return v
 
 def add_vector(img: Image.Image, metadata: dict):
     vec = embed(img)
-    _archive(vec, metadata)
+
+    v = np.load(ALL_VECS_PATH) if os.path.exists(ALL_VECS_PATH) else np.empty((0, DIM), 'float32')
+    np.save(ALL_VECS_PATH, np.vstack([v, vec]))
+
+    stored_meta.append(metadata)
+
     if index.is_trained:
         index.add(vec)
+        _persist()
     else:
         _pending.append(vec)
+        _save_pending()
+        _persist_meta()
         _maybe_train()
 
 def query_similar(img: Image.Image,
