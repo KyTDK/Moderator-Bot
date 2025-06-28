@@ -2,6 +2,9 @@ import os, json, numpy as np, faiss, torch
 from PIL import Image
 from collections import defaultdict
 from transformers import CLIPProcessor, CLIPModel
+from threading import Lock
+
+_write_lock = Lock()
 
 DIM         = 768
 NLIST       = 4
@@ -89,17 +92,18 @@ def embed(img: Image.Image) -> np.ndarray:
 def add_vector(img: Image.Image, metadata: dict):
     vec = embed(img)
 
-    v = np.load(ALL_VECS_PATH) if os.path.exists(ALL_VECS_PATH) else np.empty((0, DIM), 'float32')
-    np.save(ALL_VECS_PATH, np.vstack([v, vec]))
+    with _write_lock:
+        v = np.load(ALL_VECS_PATH) if os.path.exists(ALL_VECS_PATH) else np.empty((0, DIM), 'float32')
+        np.save(ALL_VECS_PATH, np.vstack([v, vec]))
 
-    stored_meta.append(metadata)
+        stored_meta.append(metadata)
 
-    if index.is_trained:
-        index.add(vec)
-        _persist()
-    else:
-        _persist_meta()
-        _maybe_train()
+        if index.is_trained:
+            index.add(vec)
+            _persist()
+        else:
+            _persist_meta()
+            _maybe_train()
 
 def query_similar(img: Image.Image,
                   threshold: float = THRESHOLD,
