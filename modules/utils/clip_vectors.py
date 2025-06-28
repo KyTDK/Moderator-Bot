@@ -1,4 +1,4 @@
-import os, json, pickle, numpy as np, faiss, torch
+import os, json, numpy as np, faiss, torch
 from PIL import Image
 from collections import defaultdict
 from transformers import CLIPProcessor, CLIPModel
@@ -12,7 +12,6 @@ MIN_VOTES   = 2
 
 INDEX_PATH      = "vector.index"
 METADATA_PATH   = "metadata.json"
-PEND_VEC_PATH   = "pending_vectors.pkl"
 ALL_VECS_PATH   = "all_vectors.npy"
 ALL_META_PATH   = "all_metadata.json"
 
@@ -61,31 +60,23 @@ if os.path.exists(ALL_VECS_PATH):
         raise RuntimeError(f"Startup mismatch: {vc} vectors vs {len(stored_meta)} meta rows.")
 
 def _persist_meta():
-    """Write metadata JSON only (used while index still training)."""
     json.dump(stored_meta, open(METADATA_PATH,  "w"), indent=2)
     json.dump(stored_meta, open(ALL_META_PATH, "w"), indent=2)
 
 def _persist():
-    """Write CPU copy + metadata (index must be in sync)."""
     assert index.ntotal == len(stored_meta), (
         f"Persist mismatch: {index.ntotal} vectors vs {len(stored_meta)} metadata rows."
     )
     faiss.write_index(faiss.index_gpu_to_cpu(index), INDEX_PATH)
     _persist_meta()
 
-_pending = pickle.load(open(PEND_VEC_PATH, "rb")) if os.path.exists(PEND_VEC_PATH) else []
-
-def _save_pending(): pickle.dump(_pending, open(PEND_VEC_PATH, "wb"))
-
 def _maybe_train():
-    """If enough pending vectors, train index and flush them."""
-    if index.is_trained or len(_pending) < MIN_TRAIN:
-        _save_pending()
+    if index.is_trained:
         return
-    vecs = np.vstack(_pending).astype("float32")
+    vecs = np.load(ALL_VECS_PATH).astype("float32")
+    if len(vecs) < MIN_TRAIN:
+        return
     _train_and_add(vecs)
-    _pending.clear()
-    os.remove(PEND_VEC_PATH)
     _persist()
 
 def embed(img: Image.Image) -> np.ndarray:
@@ -107,8 +98,6 @@ def add_vector(img: Image.Image, metadata: dict):
         index.add(vec)
         _persist()
     else:
-        _pending.append(vec)
-        _save_pending()
         _persist_meta()
         _maybe_train()
 
