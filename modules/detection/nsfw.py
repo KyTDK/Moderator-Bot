@@ -450,6 +450,8 @@ async def moderator_api(text: str | None = None,
                 result["category"] = category
                 result["reason"] = f"Flagged as {category} with score {score:.2f}"
                 return result
+            else:
+                print(f"[moderator_api] Category {category} flagged with low score {score:.2f}, ignoring.")
 
         result["is_nsfw"] = False
         return result
