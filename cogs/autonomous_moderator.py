@@ -115,13 +115,23 @@ class AutonomousModeratorCog(commands.Cog):
     def cog_unload(self):
         self.batch_runner.cancel()
 
-    def _format_event(self, msg: discord.Message, content: str) -> str:
-        ts = getattr(msg, "created_at", datetime.now()).strftime("%Y-%m-%d %H:%M")
-        user_id = getattr(getattr(msg, "author", None), "id", msg.id)
-        return f"[{ts}] {user_id} - Message ID: {msg.id}: {content}"
+    def _format_event(self, msg: discord.Message, content: str, tag: str) -> str:
+        ts = msg.created_at.strftime("%Y-%m-%d %H:%M")
+        return (
+            f"[{ts}] {tag.upper()} "
+            f"user_id={msg.author.id} "
+            f"message_id={msg.id}: {content}"
+        )
 
-    def _build_transcript(self, batch: list[tuple[str, str, discord.Message]], max_tokens: int, current_total_tokens: int):
-        lines = [self._format_event(msg, text) for _, text, msg in batch]
+    def _build_transcript(
+            self,
+            batch: list[tuple[str, str, discord.Message]],
+            max_tokens: int,
+            current_total_tokens: int
+        ):
+        lines = [self._format_event(msg, text, tag)
+                for tag, text, msg in batch]
+
         tokens = [estimate_tokens(line) for line in lines]
         total = current_total_tokens + sum(tokens)
         while batch and total > max_tokens:
@@ -147,6 +157,11 @@ class AutonomousModeratorCog(commands.Cog):
         if f"<@{self.bot.user.id}>" in message.content:
             # Report mode, add trigger and acknowledge the mention
             if settings.get("aimod-mode") == "report":
+                normalized = normalize_text(message.content)
+                if normalized:
+                    self.message_batches[message.guild.id].append(
+                        ("Report", normalized, message)
+                    )
                 await message.add_reaction("👀")
                 self.mention_triggers[message.guild.id] = message
 
@@ -226,11 +241,13 @@ class AutonomousModeratorCog(commands.Cog):
                 try:
                     print(f"[AutonomousModerator] Fetching channel history for guild id {gid}")
                     fetched = [msg async for msg in trigger_msg.channel.history(limit=50)]
-                    fetched.sort(key=lambda m: m.created_at)  # Add this
+                    fetched.sort(key=lambda m: m.created_at)
                     for msg in fetched:
                         normalized = normalize_text(msg.content)
                         if normalized:
-                            batch.append(("Fetched Message", normalized, msg))
+                            if msg.reference:
+                                normalized = f'QUOTED: {normalized}'
+                            batch.append(("Message", normalized, msg))
                 except discord.HTTPException as e:
                     print(f"[AI] Failed to fetch history in guild {gid}: {e}")
 
