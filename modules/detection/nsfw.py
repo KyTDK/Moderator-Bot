@@ -460,7 +460,7 @@ async def moderator_api(text: str | None = None,
 def _convert_to_png_safe(input_path: str, output_path: str) -> Optional[str]:
     try:
         with Image.open(input_path) as img:
-            img = img.convert("RGB")
+            img = img.convert("RGBA")
             img.save(output_path, format="PNG")
         return output_path
     except Exception as e:
