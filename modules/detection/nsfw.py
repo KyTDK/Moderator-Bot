@@ -445,7 +445,7 @@ async def moderator_api(text: str | None = None,
             if not is_flagged:
                 continue
             score = results.category_scores.__dict__.get(category, 0)
-            if score >= 0.7:
+            if score >= 0.5:
                 result["is_nsfw"] = True
                 result["category"] = category
                 result["reason"] = f"Flagged as {category} with score {score:.2f}"
