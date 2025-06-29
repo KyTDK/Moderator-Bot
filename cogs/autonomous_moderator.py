@@ -187,10 +187,6 @@ class AutonomousModeratorCog(commands.Cog):
         if normalized_before and normalized_after:
             self.message_batches[after.guild.id].append(("Edited Message", f"Before: {normalized_before}\nAfter: {normalized_after}", after))
 
-    @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
-        self.message_batches[member.guild.id].append(("Member Join", f"Username: {member.name}, Display: {member.display_name}", member))
-
     @tasks.loop(seconds=5)
     async def batch_runner(self):
         now = datetime.now(timezone.utc)
