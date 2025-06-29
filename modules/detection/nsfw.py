@@ -485,11 +485,13 @@ async def process_image(original_filename: str,
         # Try similarity match first
         similar = clip_vectors.query_similar(image, threshold=0.80)
         if similar:
-            print(f"[process_image] Similarity match found")
             category = similar[0].get("category")
             if category:
                 print(f"[process_image] Found similar image category: {category}")
                 return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
+            else:
+                print("[process_image] Similar NON-NSFW image found")
+                return {"is_nsfw": False, "category": None, "reason": "Similarity match"}
 
         response = await moderator_api(image_path=png_converted_path,
                                     guild_id=guild_id,
