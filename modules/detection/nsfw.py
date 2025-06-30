@@ -451,7 +451,6 @@ async def moderator_api(text: str | None = None,
             if score < 0.7:
                 print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
                 continue
-            # Add vector if detected, exclude categories not allowed in this guild later to not mess up the vector database
             if image:
                 print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
                 clip_vectors.add_vector(image, metadata={"category": normalized_category})
@@ -466,6 +465,10 @@ async def moderator_api(text: str | None = None,
             return result
 
         result["is_nsfw"] = False
+        if image:
+            # None represents SFW
+            clip_vectors.add_vector(image, metadata={"category": None})
+            print("[moderator_api] No NSFW categories detected, image is safe.")
         return result
     
     print("[moderator_api] All API key attempts failed.")
