@@ -523,9 +523,9 @@ async def process_image(original_filename: str,
         print(f"[process_image] Error processing image {original_filename}: {e}")
         return None
     finally:
-        if clean_up and (os.path.exists(original_filename) or os.path.exists(png_converted_path)):
+        _safe_delete(png_converted_path)
+        if clean_up:
             _safe_delete(original_filename)
-            _safe_delete(png_converted_path)
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  reason: str, image: discord.File, message: discord.Message):
 
@@ -562,3 +562,9 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id:int,  re
         await mod_logging.log_to_channel(embed, nsfw_channel_id, bot, image)
     elif strike_channel_id:
         await mod_logging.log_to_channel(embed, strike_channel_id, bot)
+    
+    try:
+        image.close()
+        _safe_delete(image.fp.name)
+    except Exception as e:
+        print(f"[cleanup] couldn't delete evidence file: {e}")
