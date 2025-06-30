@@ -519,7 +519,7 @@ async def process_image(original_filename: str,
                                     bot=bot)
 
         # Add vector if NSFW scan did not fail
-        if response["is_nsfw"] is not None:
+        if response["category"]:
             clip_vectors.add_vector(image, metadata={"category": response["category"]})
 
         print(f"[process_image] Moderation result for {original_filename}: {response}")
