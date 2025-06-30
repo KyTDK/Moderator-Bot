@@ -34,11 +34,12 @@ MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
 
 @asynccontextmanager
 async def temp_download(url: str, ext: str | None = None):
-    """Download *url* into our tmp dir and yield the path, cleaning up automatically."""
-    # Normalize extension – always starts with a dot
+    # Normalize extension
     if ext and not ext.startswith('.'):
         ext = '.' + ext
     ext = ext or os.path.splitext(urlparse(url).path)[1] or ".bin"
+
+    os.makedirs(TMP_DIR, exist_ok=True)
 
     path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{ext}")
     print(f"[temp_download] Starting download: {url}")
