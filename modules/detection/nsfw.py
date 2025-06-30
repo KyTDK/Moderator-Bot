@@ -441,22 +441,23 @@ async def moderator_api(text: str | None = None,
         results = response.results[0]
         allowed_categories = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
         for category, is_flagged in results.categories.__dict__.items():
+            normalized_category = category.replace("/", "_").replace("-", "_")
             score = results.category_scores.__dict__.get(category, 0)
             if not is_flagged:
                 continue
             if score < 0.7:
-                print(f"[moderator_api] Category '{category}' flagged with low score {score:.2f}. Ignoring.")
+                print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
                 continue
             # Add vector if detected, exclude categories not allowed in this guild later to not mess up the vector database
             if image:
-                print(f"[moderator_api] Adding vector for category '{category}' with score {score:.2f}")
-                clip_vectors.add_vector(image, metadata={"category": category})
-            if allowed_categories and category not in allowed_categories:
-                print(f"[moderator_api] Category '{category}' is not allowed in this guild.")
+                print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
+                clip_vectors.add_vector(image, metadata={"category": normalized_category})
+            if allowed_categories and normalized_category not in [cat.replace("/", "_").replace("-", "_") for cat in allowed_categories]:
+                print(f"[moderator_api] Category '{normalized_category}' is not allowed in this guild.")
                 continue
             result["is_nsfw"] = True
-            result["category"] = category
-            result["reason"] = f"Flagged as {category} with score {score:.2f}"
+            result["category"] = normalized_category
+            result["reason"] = f"Flagged as {normalized_category} with score {score:.2f}"
             return result
 
         result["is_nsfw"] = False
