@@ -49,6 +49,20 @@ SETTINGS_SCHEMA = {
         hidden=True,
         choices=["strike", "kick", "ban", "timeout", "delete"]
     ),
+    "nsfw-detection-categories": Setting(
+        name="nsfw-detection-categories",
+        description="Categories considered NSFW for detection.",
+        setting_type=list[str],
+        default=[
+            "violence/graphic",
+            "violence",
+            "sexual",
+            "self-harm/instructions",
+            "self-harm/intent",
+            "self-harm",
+        ],
+        hidden=True,
+    ),
     "banned-words-action": Setting(
         name="banned-words-action",
         description="Action to take when a user posts a banned word.",
