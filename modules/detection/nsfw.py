@@ -31,7 +31,6 @@ os.makedirs(TMP_DIR, exist_ok=True)
 
 LOCAL_NSFW_THRESHOLD = 0.30
 
-moderator_api_category_exclusions = {"violence", "self_harm", "harassment"}
 MAX_FRAMES_PER_VIDEO = 10          # hard cap so we never spawn hundreds of tasks
 MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
 
