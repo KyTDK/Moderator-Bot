@@ -378,7 +378,7 @@ async def moderator_api(text: str | None = None,
                         image_path: str | None = None,
                         guild_id: int | None = None,
                         bot: commands.Bot | None = None,
-                        max_attempts: int = 50) -> dict:
+                        max_attempts: int = 3) -> dict:
     result = {
         "is_nsfw": None,
         "category": None,
