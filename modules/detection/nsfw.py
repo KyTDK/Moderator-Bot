@@ -241,7 +241,10 @@ async def check_attachment(author,
             print("[check_attachment] NSFW scan failed.")
             return False
         
-        if scan_result["is_nsfw"] and nsfw_callback:
+        allowed = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
+        if scan_result["is_nsfw"] and nsfw_callback and (
+            not allowed or scan_result["category"] in allowed
+        ):
             cat_name = (scan_result.get("category") or "unspecified")
             await nsfw_callback(
                 author,
@@ -440,11 +443,8 @@ async def moderator_api(text: str | None = None,
             await api.set_api_key_working(encrypted_key)
 
         results = response.results[0]
-        allowed_categories = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
         for category, is_flagged in results.categories.__dict__.items():
             if not is_flagged:
-                continue
-            if allowed_categories and category not in allowed_categories:
                 continue
             score = results.category_scores.__dict__.get(category, 0)
             if score >= 0.7:
@@ -519,7 +519,7 @@ async def process_image(original_filename: str,
                                     bot=bot)
 
         # Add vector if NSFW scan did not fail
-        if response["category"]:
+        if response["is_nsfw"] is not None:
             clip_vectors.add_vector(image, metadata={"category": response["category"]})
 
         print(f"[process_image] Moderation result for {original_filename}: {response}")
