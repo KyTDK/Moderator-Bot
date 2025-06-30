@@ -79,6 +79,16 @@ class NSFWCog(commands.Cog):
         )
 
     @nsfw_group.command(name="add_category", description="Add a category to NSFW detection.")
+    @app_commands.choices(
+        category=[
+            app_commands.Choice(name="Violence Graphic", value="violence_graphic"),
+            app_commands.Choice(name="Violence", value="violence"),
+            app_commands.Choice(name="Sexual", value="sexual"),
+            app_commands.Choice(name="Self Harm Instructions", value="self_harm_instructions"),
+            app_commands.Choice(name="Self Harm Intent", value="self_harm_intent"),
+            app_commands.Choice(name="Self Harm", value="self_harm"),
+        ]
+    )
     async def add_category(self, interaction: Interaction, category: str):
         gid = interaction.guild.id
         message = await category_manager.add(gid, category)
