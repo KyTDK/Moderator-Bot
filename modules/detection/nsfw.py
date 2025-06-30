@@ -486,16 +486,33 @@ async def process_image(original_filename: str,
 
         image = Image.open(png_converted_path).convert("RGB")
 
-        # Try similarity match first
+        # Try similarity match first, respecting allowed categories
         similar = clip_vectors.query_similar(image, threshold=0.80)
         if similar:
             category = similar[0].get("category")
+            allowed = []
+            if guild_id is not None:
+                allowed = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
+
             if category:
-                print(f"[process_image] Found similar image category: {category}")
-                return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
+                if not allowed or category in allowed:
+                    print(f"[process_image] Found similar image category: {category}")
+                    return {
+                        "is_nsfw": True,
+                        "category": category,
+                        "reason": "Similarity match",
+                    }
+                else:
+                    print(
+                        f"[process_image] Similar category {category} ignored due to settings"
+                    )
             else:
                 print("[process_image] Similar NON-NSFW image found")
-                return {"is_nsfw": False, "category": None, "reason": "Similarity match"}
+                return {
+                    "is_nsfw": False,
+                    "category": None,
+                    "reason": "Similarity match",
+                }
 
         response = await moderator_api(image_path=png_converted_path,
                                     guild_id=guild_id,
