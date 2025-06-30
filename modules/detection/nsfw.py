@@ -455,6 +455,8 @@ async def moderator_api(text: str | None = None,
             if image:
                 print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
                 clip_vectors.add_vector(image, metadata={"category": normalized_category})
+            else:
+                print(f"[moderator_api] Image is None, not adding vector for category '{normalized_category}'")
             if allowed_categories and not _is_allowed_category(category, allowed_categories):
                 print(f"[moderator_api] Category '{normalized_category}' is not allowed in this guild.")
                 continue
