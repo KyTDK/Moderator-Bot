@@ -29,8 +29,6 @@ import pillow_avif
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
-LOCAL_NSFW_THRESHOLD = 0.30
-
 MAX_FRAMES_PER_VIDEO = 10          # hard cap so we never spawn hundreds of tasks
 MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
 
@@ -241,10 +239,7 @@ async def check_attachment(author,
             print("[check_attachment] NSFW scan failed.")
             return False
         
-        allowed = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
-        if scan_result["is_nsfw"] and nsfw_callback and (
-            not allowed or scan_result["category"] in allowed
-        ):
+        if scan_result["is_nsfw"] and nsfw_callback:
             cat_name = (scan_result.get("category") or "unspecified")
             await nsfw_callback(
                 author,
@@ -378,6 +373,7 @@ def _file_to_b64(path: str) -> str:
 
 async def moderator_api(text: str | None = None,
                         image_path: str | None = None,
+                        image: Image.Image | None = None,
                         guild_id: int | None = None,
                         bot: commands.Bot | None = None,
                         max_attempts: int = 3) -> dict:
@@ -443,17 +439,24 @@ async def moderator_api(text: str | None = None,
             await api.set_api_key_working(encrypted_key)
 
         results = response.results[0]
+        allowed_categories = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
         for category, is_flagged in results.categories.__dict__.items():
+            score = results.category_scores.__dict__.get(category, 0)
             if not is_flagged:
                 continue
-            score = results.category_scores.__dict__.get(category, 0)
-            if score >= 0.7:
-                result["is_nsfw"] = True
-                result["category"] = category
-                result["reason"] = f"Flagged as {category} with score {score:.2f}"
-                return result
-            else:
-                print(f"[moderator_api] Category {category} flagged with low score {score:.2f}, ignoring.")
+            if score < 0.7:
+                print(f"[moderator_api] Category '{category}' flagged with low score {score:.2f}. Ignoring.")
+                continue
+            # Add vector if detected, exclude categories not allowed in this guild later to not mess up the vector database
+            if image:
+                clip_vectors.add_vector(image, metadata={"category": category})
+            if allowed_categories and category not in allowed_categories:
+                print(f"[moderator_api] Category '{category}' is not allowed in this guild.")
+                continue
+            result["is_nsfw"] = True
+            result["category"] = category
+            result["reason"] = f"Flagged as {category} with score {score:.2f}"
+            return result
 
         result["is_nsfw"] = False
         return result
@@ -486,41 +489,21 @@ async def process_image(original_filename: str,
 
         image = Image.open(png_converted_path).convert("RGB")
 
-        # Try similarity match first, respecting allowed categories
+        # Try similarity match first
         similar = clip_vectors.query_similar(image, threshold=0.80)
         if similar:
             category = similar[0].get("category")
-            allowed = []
-            if guild_id is not None:
-                allowed = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
-
             if category:
-                if not allowed or category in allowed:
-                    print(f"[process_image] Found similar image category: {category}")
-                    return {
-                        "is_nsfw": True,
-                        "category": category,
-                        "reason": "Similarity match",
-                    }
-                else:
-                    print(
-                        f"[process_image] Similar category {category} ignored due to settings"
-                    )
+                print(f"[process_image] Found similar image category: {category}")
+                return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
             else:
                 print("[process_image] Similar NON-NSFW image found")
-                return {
-                    "is_nsfw": False,
-                    "category": None,
-                    "reason": "Similarity match",
-                }
+                return {"is_nsfw": False, "category": None, "reason": "Similarity match"}
 
         response = await moderator_api(image_path=png_converted_path,
                                     guild_id=guild_id,
-                                    bot=bot)
-
-        # Add vector if NSFW scan did not fail
-        if response["is_nsfw"] is not None:
-            clip_vectors.add_vector(image, metadata={"category": response["category"]})
+                                    bot=bot,
+                                    image=image)
 
         print(f"[process_image] Moderation result for {original_filename}: {response}")
         return response
