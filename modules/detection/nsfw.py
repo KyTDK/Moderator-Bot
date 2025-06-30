@@ -34,9 +34,12 @@ MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
 
 @asynccontextmanager
 async def temp_download(url: str, ext: str | None = None):
-    # Normalize extension
-    if ext and not ext.startswith('.'):
-        ext = '.' + ext
+    # Ensure tmp dir survives reboots or tmp-cleaners
+    os.makedirs(TMP_DIR, exist_ok=True)
+
+    # normalise extension
+    if ext and not ext.startswith("."):
+        ext = "." + ext
     ext = ext or os.path.splitext(urlparse(url).path)[1] or ".bin"
 
     path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{ext}")
@@ -46,45 +49,12 @@ async def temp_download(url: str, ext: str | None = None):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             resp.raise_for_status()
-            expected_length = resp.headers.get("Content-Length")
-            if expected_length:
-                print(f"[temp_download] Expected content length: {expected_length} bytes")
-
             total_written = 0
             async with aiofiles.open(path, "wb") as f:
                 async for chunk in resp.content.iter_chunked(1 << 14):
                     await f.write(chunk)
                     total_written += len(chunk)
-
-            print(f"[temp_download] Actual bytes written: {total_written}")
-
-    try:
-        yield path
-    finally:
-        try:
-            os.remove(path)
-            print(f"[temp_download] Cleaned up: {path}")
-        except FileNotFoundError:
-            print(f"[temp_download] File already deleted: {path}")
-
-    path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{ext}")
-    print(f"[temp_download] Starting download: {url}")
-    print(f"[temp_download] Saving to: {path}")
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            resp.raise_for_status()
-            expected_length = resp.headers.get("Content-Length")
-            if expected_length:
-                print(f"[temp_download] Expected content length: {expected_length} bytes")
-
-            total_written = 0
-            async with aiofiles.open(path, "wb") as f:
-                async for chunk in resp.content.iter_chunked(1 << 14):
-                    await f.write(chunk)
-                    total_written += len(chunk)
-
-            print(f"[temp_download] Actual bytes written: {total_written}")
+            print(f"[temp_download] Bytes written: {total_written}")
 
     try:
         yield path
