@@ -12,7 +12,7 @@ import discord
 from lottie.exporters.gif import export_gif
 import lottie
 import base64
-from cogs.nsfw import NSFW_ACTION_SETTING
+from cogs.nsfw import NSFW_ACTION_SETTING, NSFW_CATEGORY_SETTING
 from modules.utils import mod_logging, mysql, api
 from modules.moderation import strike
 from urllib.parse import urlparse
@@ -441,8 +441,11 @@ async def moderator_api(text: str | None = None,
             await api.set_api_key_working(encrypted_key)
 
         results = response.results[0]
+        allowed_categories = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
         for category, is_flagged in results.categories.__dict__.items():
             if not is_flagged:
+                continue
+            if allowed_categories and category not in allowed_categories:
                 continue
             score = results.category_scores.__dict__.get(category, 0)
             if score >= 0.7:

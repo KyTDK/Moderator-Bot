@@ -3,11 +3,14 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 
 from modules.utils.action_manager import ActionListManager
+from modules.utils.list_manager import ListManager
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 
 NSFW_ACTION_SETTING = "nsfw-detection-action"
 manager = ActionListManager(NSFW_ACTION_SETTING)
+NSFW_CATEGORY_SETTING = "nsfw-detection-categories"
+category_manager = ListManager(NSFW_CATEGORY_SETTING)
 
 class NSFWCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -72,6 +75,32 @@ class NSFWCog(commands.Cog):
         formatted = "\n".join(f"{i+1}. `{a}`" for i, a in enumerate(actions))
         await interaction.response.send_message(
             f"**Current NSFW actions:**\n{formatted}",
+            ephemeral=True
+        )
+
+    @nsfw_group.command(name="add_category", description="Add a category to NSFW detection.")
+    async def add_category(self, interaction: Interaction, category: str):
+        gid = interaction.guild.id
+        message = await category_manager.add(gid, category)
+        await interaction.response.send_message(message, ephemeral=True)
+
+    @nsfw_group.command(name="remove_category", description="Remove a category from NSFW detection.")
+    @app_commands.autocomplete(category=category_manager.autocomplete)
+    async def remove_category(self, interaction: Interaction, category: str):
+        gid = interaction.guild.id
+        message = await category_manager.remove(gid, category)
+        await interaction.response.send_message(message, ephemeral=True)
+
+    @nsfw_group.command(name="view_categories", description="View NSFW detection categories.")
+    async def view_categories(self, interaction: Interaction):
+        gid = interaction.guild.id
+        categories = await category_manager.view(gid)
+        if not categories:
+            await interaction.response.send_message("No categories are currently set.", ephemeral=True)
+            return
+        formatted = "\n".join(f"{i+1}. `{c}`" for i, c in enumerate(categories))
+        await interaction.response.send_message(
+            f"**Current NSFW categories:**\n{formatted}",
             ephemeral=True
         )
 
