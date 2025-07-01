@@ -15,7 +15,7 @@ CREATE TABLE vectors (
 • FAISS uses `add_with_ids()` so DB ids == index ids
 """
 
-import os, json, sqlite3, numpy as np, faiss, torch
+import json, sqlite3, numpy as np, faiss, torch
 from PIL import Image
 from collections import defaultdict
 from threading import Lock
