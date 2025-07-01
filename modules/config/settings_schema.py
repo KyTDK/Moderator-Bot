@@ -55,7 +55,6 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=[
             "violence_graphic",
-            "violence",
             "sexual",
             "self_harm_instructions",
             "self_harm_intent",
