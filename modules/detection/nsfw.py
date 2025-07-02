@@ -511,7 +511,7 @@ async def process_image(original_filename: str,
                     print(f"[process_image] Similar match '{category}' is excluded in this guild.")
                     return {"is_nsfw": False, "category": category, "reason": "Excluded similarity match"}
             else:
-                print("[process_image] Similar NON-NSFW image found")
+                print("[process_image] Similar SFW image found")
                 return {"is_nsfw": False, "category": None, "reason": "Similarity match"}
 
         response = await moderator_api(image_path=png_converted_path,
