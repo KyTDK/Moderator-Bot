@@ -502,14 +502,15 @@ async def process_image(original_filename: str,
         image = Image.open(png_converted_path).convert("RGB")
 
         # Try similarity match first
-        allowed_categories = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
-        threshold = 0.60 if guild_id == 1362771194906149135 else 0.80
-        similarity_response = clip_vectors.query_similar(image, threshold=threshold)
+        settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
+        allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
+        threshold = settings.get("threshold", 0.7)
+        similarity_response = clip_vectors.query_similar(image, threshold=0.60 if guild_id == 1362771194906149135 else 0.80)
         if similarity_response:
             for item in similarity_response:
                 category = item.get("category")
                 score = item.get("score", 0)
-                if category:
+                if category and score >= threshold:
                     if _is_allowed_category(category, allowed_categories):
                         print(f"[process_image] Found similar image category: {category} with score {score:.2f}")
                         return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
