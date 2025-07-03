@@ -454,7 +454,7 @@ async def moderator_api(text: str | None = None,
                 continue
             # Add vector for flagged category
             print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
-            clip_vectors.add_vector(image, metadata={"category": normalized_category})
+            clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
             # Check if category is allowed in this guild
             if allowed_categories and not _is_allowed_category(category, allowed_categories):
                 print(f"[moderator_api] Category '{normalized_category}' is not allowed in this guild.")
@@ -467,7 +467,7 @@ async def moderator_api(text: str | None = None,
         result["is_nsfw"] = False
         # None represents SFW
         print("[moderator_api] Adding vector for SFW image.")
-        clip_vectors.add_vector(image, metadata={"category": None})
+        clip_vectors.add_vector(image, metadata={"category": None, "score": 0.0})
         return result
     
     print("[moderator_api] All API key attempts failed.")
@@ -500,19 +500,22 @@ async def process_image(original_filename: str,
 
         # Try similarity match first
         allowed_categories = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
-        similar = clip_vectors.query_similar(image, threshold=0.80)
-        if similar:
-            category = similar[0].get("category")
-            if category:
-                if _is_allowed_category(category, allowed_categories):
-                    print(f"[process_image] Found similar image category: {category}")
-                    return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
+        threshold = 0.60 if guild_id == 1362771194906149135 else 0.80
+        similarity_response = clip_vectors.query_similar(image, threshold=threshold)
+        if similarity_response:
+            for item in similarity_response:
+                category = item.get("category")
+                score = item.get("score", 0)
+                if category:
+                    if _is_allowed_category(category, allowed_categories):
+                        print(f"[process_image] Found similar image category: {category} with score {score:.2f}")
+                        return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
+                    else:
+                        print(f"[process_image] Similar match '{category}' is excluded in this guild.")
+                        return {"is_nsfw": False, "category": category, "reason": "Excluded similarity match"}
                 else:
-                    print(f"[process_image] Similar match '{category}' is excluded in this guild.")
-                    return {"is_nsfw": False, "category": category, "reason": "Excluded similarity match"}
-            else:
-                print("[process_image] Similar SFW image found")
-                return {"is_nsfw": False, "category": None, "reason": "Similarity match"}
+                    print(f"[process_image] Similar SFW image found with score {score:.2f}")
+                    return {"is_nsfw": False, "category": None, "reason": "Similarity match"}
 
         response = await moderator_api(image_path=png_converted_path,
                                     guild_id=guild_id,
