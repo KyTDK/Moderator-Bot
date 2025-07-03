@@ -442,7 +442,9 @@ async def moderator_api(text: str | None = None,
             await api.set_api_key_working(encrypted_key)
 
         results = response.results[0]
-        allowed_categories = await mysql.get_settings(guild_id, NSFW_CATEGORY_SETTING) or []
+        settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
+        allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
+        threshold = settings.get("threshold", 0.7)
         for category, is_flagged in results.categories.__dict__.items():
             normalized_category = category.replace("/", "_").replace("-", "_")
             score = results.category_scores.__dict__.get(category, 0)
@@ -453,7 +455,7 @@ async def moderator_api(text: str | None = None,
             print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
             clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
             # Ignore low confidence scores - Global settings
-            if score < 0.7:
+            if score < threshold:
                 print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
                 continue
             # Check if category is allowed in this guild
