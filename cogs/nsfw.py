@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 
+from modules.utils import mysql
 from modules.utils.action_manager import ActionListManager
 from modules.utils.list_manager import ListManager
 from modules.utils.strike import validate_action
@@ -111,6 +112,39 @@ class NSFWCog(commands.Cog):
         formatted = "\n".join(f"{i+1}. `{c}`" for i, c in enumerate(categories))
         await interaction.response.send_message(
             f"**Current NSFW categories:**\n{formatted}",
+            ephemeral=True
+        )
+
+    @nsfw_group.command(name="set_threshold", description="Set the threshold for NSFW detection confidence.")
+    @app_commands.describe(threshold="Confidence threshold (0.0 to 1.0)")
+    async def set_threshold(self, interaction: Interaction, threshold: float):
+        if not (0.0 <= threshold <= 1.0):
+            await interaction.response.send_message(
+                "Threshold must be between 0.0 and 1.0.",
+                ephemeral=True
+            )
+            return
+
+        gid = interaction.guild.id
+        await mysql.update_settings(gid, "threshold", threshold)
+        await interaction.response.send_message(
+            f"NSFW detection threshold set to {threshold:.2f}.",
+            ephemeral=True
+        )
+
+    @nsfw_group.command(name="view_threshold", description="View the current NSFW detection threshold.")
+    async def view_threshold(self, interaction: Interaction):
+        gid = interaction.guild.id
+        threshold = await mysql.get_settings(gid, "threshold")
+        if threshold is None:
+            await interaction.response.send_message(
+                "NSFW detection threshold is not set.",
+                ephemeral=True
+            )
+            return
+
+        await interaction.response.send_message(
+            f"Current NSFW detection threshold: {threshold:.2f}",
             ephemeral=True
         )
 

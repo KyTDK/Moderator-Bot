@@ -67,8 +67,7 @@ SETTINGS_SCHEMA = {
         description="Threshold for NSFW detection confidence. Lower values are more sensitive.",
         setting_type=float,
         default=0.7,
-        hidden=True,
-        validator=lambda x: x >= 0.0 and x <= 1.0,
+        hidden=True
     ),
     "banned-words-action": Setting(
         name="banned-words-action",
