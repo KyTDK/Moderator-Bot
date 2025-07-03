@@ -146,7 +146,7 @@ def query_similar(img: Image.Image,
             continue
         category, meta_json = row
         meta = json.loads(meta_json)
-        hits.append({**meta, "score": float(d)})
+        hits.append({**meta, "similarity": float(d)})
         votes[category].append(d)
 
     if not votes:
