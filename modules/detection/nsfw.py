@@ -449,12 +449,13 @@ async def moderator_api(text: str | None = None,
             # Filter out categories that are not flagged
             if not is_flagged:
                 continue
-            if score < 0.7:
-                print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
-                continue
             # Add vector for flagged category
             print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
             clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
+            # Ignore low confidence scores - Global settings
+            if score < 0.7:
+                print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
+                continue
             # Check if category is allowed in this guild
             if allowed_categories and not _is_allowed_category(category, allowed_categories):
                 print(f"[moderator_api] Category '{normalized_category}' is not allowed in this guild.")
