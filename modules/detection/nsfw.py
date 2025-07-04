@@ -130,9 +130,6 @@ def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], flo
                         cv2.imwrite(out, frame)
                         temp_frames.append(out)
                 return temp_frames, 0.0
-        else:
-            print(f"[extract_frames_threaded] Unsupported file type for imreadanimation: {ext}")
-            return [], 0.0
     except Exception as e:
         print(f"[extract_frames_threaded] imreadanimation failed on {filename}: {e}")
 
