@@ -76,6 +76,8 @@ class MonitoringCog(commands.Cog):
                     for new_invite in new_invites:
                         if (
                             old_invite.code == new_invite.code
+                            and old_invite.uses is not None
+                            and new_invite.uses is not None
                             and old_invite.uses < new_invite.uses
                         ):
                             used_invite = new_invite
