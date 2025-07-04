@@ -28,8 +28,6 @@ class AggregatedModerationCog(commands.Cog):
                     )
                 except (discord.Forbidden, discord.NotFound):
                     print("Cannot delete message or message no longer exists.")
-        else:
-            print(f"Skipping check for {message.author}'s message.")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
