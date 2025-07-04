@@ -157,16 +157,13 @@ def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], flo
 
 async def process_video(
     original_filename: str,
-    nsfw_callback,
-    member: discord.Member,
     guild_id: int,
     bot: commands.Bot,
-    message: discord.Message,
-) -> tuple[Optional[discord.File], bool]:
+) -> tuple[Optional[discord.File], dict | None]:
     """
-    Scan a video by sampling frames.  Returns (flagged_file, was_flagged).
+    Scan a video by sampling frames.  Returns (flagged_file, scan_result).
     `flagged_file` is the first offending frame wrapped in a discord.File,
-    or None if clean.  `was_flagged` is True/False accordingly.
+    or None if clean.  `scan_result` is the result of the scan.
     """
 
     temp_frames, _ = await asyncio.to_thread(
@@ -174,7 +171,7 @@ async def process_video(
     )
     if not temp_frames:
         _safe_delete(original_filename)
-        return None, False
+        return None, None
 
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
 
@@ -193,7 +190,6 @@ async def process_video(
                 return None
 
     tasks = [asyncio.create_task(analyse(p)) for p in temp_frames]
-
     try:
         for done in asyncio.as_completed(tasks):
             res = await done
@@ -217,22 +213,12 @@ async def process_video(
                 t.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
 
-            # notify moderation callback
+            # create flagged file
             flagged_file: Optional[discord.File] = None
-            if nsfw_callback:
-                flagged_file = discord.File(frame_path, filename=os.path.basename(frame_path))
-                await nsfw_callback(
-                    member,
-                    bot,
-                    guild_id,
-                    f"Detected potential policy violation (Category: **{cat_name.title()}**)",
-                    flagged_file,
-                    message,
-                )
-            return flagged_file, True
+            return flagged_file, scan
 
         # no frame flagged
-        return None, False
+        return None, None
     finally:
         for p in temp_frames:
             _safe_delete(p)
@@ -243,42 +229,44 @@ async def check_attachment(author,
                            nsfw_callback,
                            bot,
                            guild_id,
-                           message):
+                           message,
+                           perform_actions=True) -> bool:
     filename = os.path.basename(temp_filename)
     file_type = determine_file_type(temp_filename)
 
     if guild_id is None:
         print("[check_attachment] Guild_id is None")
         return False  # DM or system message
-
+    file, scan_result = None, None
     if file_type == "Image":
         scan_result = await process_image(original_filename=temp_filename, 
                                        guild_id=guild_id, 
                                        clean_up=False,
                                        bot=bot)
-        
-        if scan_result is None or scan_result["is_nsfw"] is None:
-            print("[check_attachment] NSFW scan failed.")
-            return False
-        
-        if scan_result["is_nsfw"] and nsfw_callback:
+        file = discord.File(temp_filename, filename=filename)
+    elif file_type == "Video":
+        file, scan_result = await process_video(
+            original_filename=temp_filename,
+            guild_id=guild_id,
+            bot=bot
+        )
+    # Handle violations
+    if nsfw_callback and file and scan_result and perform_actions:
+        if scan_result.get("is_nsfw"):
             cat_name = (scan_result.get("category") or "unspecified")
             await nsfw_callback(
                 author,
                 bot,
                 guild_id,
                 f"Detected potential policy violation (Category: **{cat_name.title()}**)",
-                discord.File(temp_filename, filename=filename),
-                message,
+                file,
+                message
             )
-        return scan_result["is_nsfw"]
-
-    if file_type == "Video":
-        _file, flagged = await process_video(
-            temp_filename, nsfw_callback, author, guild_id, bot, message
-        )
-        return flagged
-
+            return True
+        else:
+            print(f"[check_attachment] No NSFW content detected in {filename}.")
+            return False
+        
     print(f"[check_attachment] Unsupported media type: {file_type}")
     return False
 
@@ -345,11 +333,19 @@ async def is_nsfw(bot: commands.Bot,
 
         for gif_url in possible_urls:
             domain = urlparse(gif_url).netloc.lower()
-            if domain == "tenor.com" or domain.endswith(".tenor.com"):
-                continue  # ignore Tenor
+            is_tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
+            perform_actions = True
+            if is_tenor and not await mysql.get_settings(guild_id, "check-tenor-gifs"):
+                perform_actions = False
 
             async with temp_download(gif_url, "gif") as temp_location:
-                if await check_attachment(message.author, temp_location, nsfw_callback, bot, guild_id, message):
+                if await check_attachment(author=message.author, 
+                                          temp_location=temp_location, 
+                                          nsfw_callback=nsfw_callback, 
+                                          bot=bot, 
+                                          guild_id=guild_id, 
+                                          message=message,
+                                          perform_actions=perform_actions):
                     return True
         
     for sticker in stickers:

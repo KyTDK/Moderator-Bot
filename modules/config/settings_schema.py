@@ -161,6 +161,13 @@ SETTINGS_SCHEMA = {
         default=False,
         choices=["true", "false"]
     ),
+    "check-tenor-gifs": Setting(
+        name="check-tenor-gifs",
+        description="Apply punishments when NSFW content is detected in Tenor GIFs.",
+        setting_type=bool,
+        default=False,
+        choices=["true", "false"]
+    ),
     "use-default-banned-words": Setting(
         name="use-default-banned-words",
         description="Use the built-in profanity list for this server.",
