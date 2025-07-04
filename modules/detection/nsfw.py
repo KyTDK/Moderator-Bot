@@ -116,18 +116,23 @@ def determine_file_type(file_path: str) -> str:
 def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], float]:
     temp_frames: list[str] = []
 
+    ext = os.path.splitext(filename)[1].lower()
     try:
-        ok, animation = cv2.imreadanimation(filename)
-        frame_count = len(animation.frames)
-        if ok and frame_count > 0:
-            idxs = np.linspace(0, frame_count - 1, min(wanted, frame_count), dtype=int)
-            for idx in idxs:
-                frame = animation.frames[int(idx)]
-                if frame is not None:
-                    out = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.png")
-                    cv2.imwrite(out, frame)
-                    temp_frames.append(out)
-            return temp_frames, 0.0
+        if ext in {'.gif', '.webp', '.apng', '.avif'}:
+            ok, animation = cv2.imreadanimation(filename)
+            frame_count = len(animation.frames)
+            if ok and frame_count > 0:
+                idxs = np.linspace(0, frame_count - 1, min(wanted, frame_count), dtype=int)
+                for idx in idxs:
+                    frame = animation.frames[int(idx)]
+                    if frame is not None:
+                        out = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.png")
+                        cv2.imwrite(out, frame)
+                        temp_frames.append(out)
+                return temp_frames, 0.0
+        else:
+            print(f"[extract_frames_threaded] Unsupported file type for imreadanimation: {ext}")
+            return [], 0.0
     except Exception as e:
         print(f"[extract_frames_threaded] imreadanimation failed on {filename}: {e}")
 
