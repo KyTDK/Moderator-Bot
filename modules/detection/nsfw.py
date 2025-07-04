@@ -122,7 +122,7 @@ def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], flo
         if ok and frame_count > 0:
             idxs = np.linspace(0, frame_count - 1, min(wanted, frame_count), dtype=int)
             for idx in idxs:
-                frame = animation.getFrame(int(idx))
+                frame = animation.frames[int(idx)]
                 if frame is not None:
                     out = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.png")
                     cv2.imwrite(out, frame)
