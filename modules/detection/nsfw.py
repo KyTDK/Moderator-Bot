@@ -250,6 +250,10 @@ async def check_attachment(author,
             guild_id=guild_id,
             bot=bot
         )
+    else:
+        print(f"[check_attachment] Unsupported file type: {file_type} for {filename}")
+        return False
+    
     # Handle violations
     if not perform_actions:
         print(f"[check_attachment] Skipping actions for {filename} due to perform_actions=False")
@@ -269,9 +273,6 @@ async def check_attachment(author,
         else:
             print(f"[check_attachment] No NSFW content detected in {filename}.")
             return False
-        
-    print(f"[check_attachment] Unsupported media type: {file_type}")
-    return False
 
 async def is_nsfw(bot: commands.Bot,
                   message: discord.Message | None = None,
