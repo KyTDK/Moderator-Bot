@@ -339,9 +339,9 @@ async def is_nsfw(bot: commands.Bot,
             if is_tenor and not await mysql.get_settings(guild_id, "check-tenor-gifs"):
                 perform_actions = False
 
-            async with temp_download(gif_url, "gif") as temp_location:
+            async with temp_download(gif_url, "gif") as temp_filename:
                 if await check_attachment(author=message.author, 
-                                          temp_location=temp_location, 
+                                          temp_filename=temp_filename, 
                                           nsfw_callback=nsfw_callback, 
                                           bot=bot, 
                                           guild_id=guild_id, 
