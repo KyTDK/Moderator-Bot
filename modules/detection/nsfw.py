@@ -114,7 +114,6 @@ def determine_file_type(file_path: str) -> str:
     return kind.mime
 
 def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], float]:
-    """Blocking OpenCV extraction, run in a thread."""
     cap = cv2.VideoCapture(filename)
     temp_frames: list[str] = []
     try:
@@ -133,6 +132,9 @@ def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], flo
             cv2.imwrite(name, frame)
             temp_frames.append(name)
         return temp_frames, duration
+    except Exception as e:
+        print(f"[extract_frames_threaded] Exception occurred while processing {filename}: {e}")
+        return [], 0
     finally:
         cap.release()
 
