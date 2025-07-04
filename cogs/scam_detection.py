@@ -81,7 +81,12 @@ SAFE_URLS = [
     "spotify.com",
     "open.spotify.com",
     "huggingface.co",
-    "music.apple.com"
+    "music.apple.com",
+    "soundcloud.com",
+    "i.redd.it",
+    "imgur.com",
+    "flickr.com",
+    "pastebin.com",
 ]
 
 INTERMEDIARY_DOMAINS = ["antiphishing.biz",]
