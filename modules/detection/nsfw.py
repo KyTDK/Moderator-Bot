@@ -136,20 +136,36 @@ def _extract_frames_threaded(filename: str, wanted: int) -> list[str]:
     # Fallback: treat as video
     cap = cv2.VideoCapture(filename)
     try:
-        fps = cap.get(cv2.CAP_PROP_FPS) or 1
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-        if total <= 0:
+        if total <= 0 or wanted <= 0:
             return []
-        idxs = np.linspace(0, total - 1, min(wanted, total), dtype=int)
-        for idx in idxs:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
+
+        idxs = set(np.linspace(0, total - 1, min(wanted, total), dtype=int))
+        if not idxs:
+            return []
+
+        max_idx = max(idxs)
+
+        current_frame = 0
+        while cap.isOpened() and current_frame <= max_idx:
             ok, frame = cap.read()
             if not ok:
-                continue
-            name = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.jpg")
-            cv2.imwrite(name, frame)
-            temp_frames.append(name)
+                break
+
+            if current_frame in idxs:
+                out_name = os.path.join(
+                    TMP_DIR, f"{uuid.uuid4().hex[:8]}_{current_frame}.jpg"
+                )
+                cv2.imwrite(out_name, frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                temp_frames.append(out_name)
+
+                if len(temp_frames) == len(idxs):
+                    break
+
+            current_frame += 1
+
         return temp_frames
+
     except Exception as e:
         print(f"[extract_frames_threaded] VideoCapture failed on {filename}: {e}")
         return []
