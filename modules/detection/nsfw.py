@@ -550,7 +550,10 @@ async def process_image(original_filename: str,
                 category = item.get("category")
                 similarity = item.get("similarity", 0) # Similarity score from vector search
                 score = item.get("score", 0) # OpenAI API determined score
-                if category and score >= threshold:
+                if category:
+                    if score < threshold:
+                        print(f"[process_image] Category '{category}' flagged with low score {score:.2f}. Ignoring.")
+                        continue
                     if _is_allowed_category(category, allowed_categories):
                         print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
                         return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
