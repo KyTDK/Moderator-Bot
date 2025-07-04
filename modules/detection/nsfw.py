@@ -327,11 +327,10 @@ async def is_nsfw(bot: commands.Bot,
 
     for embed in embeds:
         possible_urls = []
-
-        if embed.image and embed.image.url:
-            possible_urls.append(embed.image.url)
         if embed.video and embed.video.url:
             possible_urls.append(embed.video.url)
+        if embed.image and embed.image.url:
+            possible_urls.append(embed.image.url)
         if embed.thumbnail and embed.thumbnail.url:
             possible_urls.append(embed.thumbnail.url)
 
@@ -343,7 +342,7 @@ async def is_nsfw(bot: commands.Bot,
             if is_tenor and not await mysql.get_settings(guild_id, "check-tenor-gifs"):
                 perform_actions = False
 
-            async with temp_download(gif_url, "gif") as temp_filename:
+            async with temp_download(gif_url) as temp_filename:
                 if await check_attachment(author=message.author, 
                                           temp_filename=temp_filename, 
                                           nsfw_callback=nsfw_callback, 
