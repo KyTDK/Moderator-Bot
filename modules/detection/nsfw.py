@@ -251,7 +251,10 @@ async def check_attachment(author,
             bot=bot
         )
     # Handle violations
-    if nsfw_callback and file and scan_result and perform_actions:
+    if not perform_actions:
+        print(f"[check_attachment] Skipping actions for {filename} due to perform_actions=False")
+        return False
+    if nsfw_callback and file and scan_result:
         if scan_result.get("is_nsfw"):
             cat_name = (scan_result.get("category") or "unspecified")
             await nsfw_callback(
