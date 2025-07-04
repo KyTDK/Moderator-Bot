@@ -87,6 +87,7 @@ SAFE_URLS = [
     "imgur.com",
     "flickr.com",
     "pastebin.com",
+    "genshindle.com"
 ]
 
 INTERMEDIARY_DOMAINS = ["antiphishing.biz",]
