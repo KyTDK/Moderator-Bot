@@ -1,7 +1,6 @@
 import os
 import traceback
 import asyncio
-import cv2
 import filetype
 import uuid
 import aiohttp
@@ -26,13 +25,14 @@ from PIL import Image, ImageSequence
 from modules.utils import clip_vectors
 import pillow_avif
 
+os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
+import cv2
+
 # Silence as imreadanimation runs all files, including not supported formats, this doesn't break anything, but we do this to ensure all possible animations are processed
 if hasattr(cv2, "utils") and hasattr(cv2.utils, "logging"):
     cv2.utils.logging.setLogLevel(cv2.utils.logging.LOG_LEVEL_ERROR)
 else:
-    # Older wheels – redirect C stderr for the whole process
-    import os, sys
-    os.environ["OPENCV_LOG_LEVEL"]="SILENT"  # works on many builds
+    os.environ["OPENCV_LOG_LEVEL"]="ERROR"
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
