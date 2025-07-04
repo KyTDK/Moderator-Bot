@@ -82,8 +82,7 @@ def determine_file_type(file_path: str) -> str:
     kind = filetype.guess(file_path)
     ext = file_path.lower().split('.')[-1]
 
-    # Special-case check for .webp and .gif animation
-    if ext in {'webp', 'gif'}:
+    if ext in {'webp', 'gif', 'avif'}:
         try:
             media = Image.open(file_path)
             index = 0
@@ -113,25 +112,26 @@ def determine_file_type(file_path: str) -> str:
 
     return kind.mime
 
-def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], float]:
+def _extract_frames_threaded(filename: str, wanted: int) -> list[str]:
     temp_frames: list[str] = []
 
     ext = os.path.splitext(filename)[1].lower()
-    try:
-        if ext in {'.gif', '.webp', '.apng', '.avif'}:
-            ok, animation = cv2.imreadanimation(filename)
-            frame_count = len(animation.frames)
-            if ok and frame_count > 0:
-                idxs = np.linspace(0, frame_count - 1, min(wanted, frame_count), dtype=int)
+    if ext in {".webp", ".apng", ".avif"}:
+        try:
+            with Image.open(filename) as img:
+                n = getattr(img, "n_frames", 1)
+                if n <= 1:
+                    return []
+                idxs = np.linspace(0, n - 1, min(wanted, n), dtype=int)
                 for idx in idxs:
-                    frame = animation.frames[int(idx)]
-                    if frame is not None:
-                        out = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.png")
-                        cv2.imwrite(out, frame)
-                        temp_frames.append(out)
-                return temp_frames, 0.0
-    except Exception as e:
-        print(f"[extract_frames_threaded] imreadanimation failed on {filename}: {e}")
+                    img.seek(int(idx))
+                    frame = img.convert("RGBA")
+                    out = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.png")
+                    frame.save(out, format="PNG")
+                    temp_frames.append(out)
+                return temp_frames
+        except Exception as e:
+            print(f"[extract_frames_threaded] Pillow failed on {filename}: {e}")
 
     # Fallback: treat as video
     cap = cv2.VideoCapture(filename)
@@ -139,8 +139,7 @@ def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], flo
         fps = cap.get(cv2.CAP_PROP_FPS) or 1
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
         if total <= 0:
-            return [], 0
-        duration = total / fps
+            return []
         idxs = np.linspace(0, total - 1, min(wanted, total), dtype=int)
         for idx in idxs:
             cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
@@ -150,10 +149,10 @@ def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], flo
             name = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.jpg")
             cv2.imwrite(name, frame)
             temp_frames.append(name)
-        return temp_frames, duration
+        return temp_frames
     except Exception as e:
         print(f"[extract_frames_threaded] VideoCapture failed on {filename}: {e}")
-        return [], 0
+        return []
     finally:
         cap.release()
 
@@ -168,7 +167,7 @@ async def process_video(
     or None if clean.  `scan_result` is the result of the scan.
     """
 
-    temp_frames, _ = await asyncio.to_thread(
+    temp_frames = await asyncio.to_thread(
         _extract_frames_threaded, original_filename, MAX_FRAMES_PER_VIDEO
     )
     if not temp_frames:
