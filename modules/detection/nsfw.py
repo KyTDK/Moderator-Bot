@@ -79,37 +79,29 @@ def _is_allowed_category(category: str, allowed_categories: list[str]) -> bool:
     return normalized in normalized_allowed
 
 def determine_file_type(file_path: str) -> str:
-    kind = filetype.guess(file_path)
     ext = file_path.lower().split('.')[-1]
 
-    # Special-case check for .webp and .gif animation
-    if ext in {'webp', 'gif'}:
+    if ext == "webp":
+        return "Image"
+
+    if ext == "gif":
         try:
-            media = Image.open(file_path)
-            index = 0
-            for frame in ImageSequence.Iterator(media):
-                index += 1
-            if index > 1:
-                return 'Video'
-            else:
-                return 'Image'
+            with Image.open(file_path) as img:
+                frame_count = sum(1 for _ in ImageSequence.Iterator(img))
+            return "Video" if frame_count > 1 else "Image"
         except Exception as e:
             print(f"[determine_file_type] Failed to open {file_path}: {e}")
-            return 'Unknown'
+            return "Unknown"
+
+    kind = filetype.guess(file_path)
 
     if kind is None:
-        if ext == 'lottie':
-            return 'Video'
-        return 'Unknown'
+        return "Video" if ext == "lottie" else "Unknown"
 
-    if kind.mime.startswith('image'):
-        return 'Image'
-
-    if kind.mime.startswith('video'):
-        return 'Video'
-
-    if ext == 'lottie':
-        return 'Video'
+    if kind.mime.startswith("image"):
+        return "Image"
+    if kind.mime.startswith("video"):
+        return "Video"
 
     return kind.mime
 
