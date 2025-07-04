@@ -114,8 +114,25 @@ def determine_file_type(file_path: str) -> str:
     return kind.mime
 
 def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], float]:
-    cap = cv2.VideoCapture(filename)
     temp_frames: list[str] = []
+
+    try:
+        ok, animation = cv2.imreadanimation(filename)
+        frame_count = len(animation.frames)
+        if ok and frame_count > 0:
+            idxs = np.linspace(0, frame_count - 1, min(wanted, frame_count), dtype=int)
+            for idx in idxs:
+                frame = animation.getFrame(int(idx))
+                if frame is not None:
+                    out = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.png")
+                    cv2.imwrite(out, frame)
+                    temp_frames.append(out)
+            return temp_frames, 0.0
+    except Exception as e:
+        print(f"[extract_frames_threaded] imreadanimation failed on {filename}: {e}")
+
+    # Fallback: treat as video
+    cap = cv2.VideoCapture(filename)
     try:
         fps = cap.get(cv2.CAP_PROP_FPS) or 1
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
@@ -133,7 +150,7 @@ def _extract_frames_threaded(filename: str, wanted: int) -> tuple[list[str], flo
             temp_frames.append(name)
         return temp_frames, duration
     except Exception as e:
-        print(f"[extract_frames_threaded] Exception occurred while processing {filename}: {e}")
+        print(f"[extract_frames_threaded] VideoCapture failed on {filename}: {e}")
         return [], 0
     finally:
         cap.release()
