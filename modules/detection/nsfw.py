@@ -214,7 +214,7 @@ async def process_video(
             await asyncio.gather(*tasks, return_exceptions=True)
 
             # create flagged file
-            flagged_file: Optional[discord.File] = None
+            flagged_file = discord.File(frame_path, filename=os.path.basename(frame_path))
             return flagged_file, scan
 
         # no frame flagged
@@ -334,6 +334,7 @@ async def is_nsfw(bot: commands.Bot,
         for gif_url in possible_urls:
             domain = urlparse(gif_url).netloc.lower()
             is_tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
+            # Perform actions only if check-tenor-gifs is enabled
             perform_actions = True
             if is_tenor and not await mysql.get_settings(guild_id, "check-tenor-gifs"):
                 perform_actions = False
