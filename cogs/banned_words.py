@@ -266,6 +266,13 @@ class BannedWordsCog(commands.Cog):
         except discord.Forbidden:
             pass
 
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        if before.content == after.content:
+            return
+        await self.handle_message(after)
+
+
     @bannedwords_group.command(name="add_action", description="Add a moderation action to be triggered when a banned word is detected.")
     @app_commands.describe(
         action="Action to perform",
