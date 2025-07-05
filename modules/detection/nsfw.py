@@ -57,7 +57,6 @@ async def temp_download(url: str, ext: str | None = None):
     finally:
         try:
             os.remove(path)
-            print(f"[temp_download] Cleaned up: {path}")
         except FileNotFoundError:
             pass
 
@@ -313,7 +312,6 @@ async def is_nsfw(bot: commands.Bot,
                 attachments = message.attachments
                 stickers = message.stickers
                 if embeds or attachments or stickers:
-                    print(f"[HYDRATE] Attempt {attempt+1}: got {len(embeds)} embeds.")
                     break
             except (discord.NotFound, discord.HTTPException) as e:
                 print(f"[HYDRATE] Failed to refetch message {message.id}: {e}")
