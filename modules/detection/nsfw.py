@@ -463,6 +463,7 @@ async def moderator_api(text: str | None = None,
             continue
 
         if not response or not response.results:
+            print("[moderator_api] No moderation results returned.")
             continue
 
         if not await api.is_api_key_working(encrypted_key):
@@ -481,9 +482,11 @@ async def moderator_api(text: str | None = None,
                 continue
             flagged_any = True
             # Add vector for flagged category
+            print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
             clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
             # Ignore low confidence scores - Global settings
             if score < threshold:
+                print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
                 continue
             # Check if category is allowed in this guild
             if allowed_categories and not _is_allowed_category(category, allowed_categories):
@@ -539,18 +542,22 @@ async def process_image(original_filename: str,
                 score = item.get("score", 0) # OpenAI API determined score
                 if category:
                     if score < threshold:
+                        print(f"[process_image] Category '{category}' flagged with low score {score:.2f}. Ignoring.")
                         continue
                     if _is_allowed_category(category, allowed_categories):
+                        print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
                         return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
                     else:
                         return {"is_nsfw": False, "category": category, "reason": "Excluded similarity match"}
                 else:
+                    print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
                     return {"is_nsfw": False, "category": None, "reason": "Similarity match"}
 
         response = await moderator_api(image_path=png_converted_path,
                                     guild_id=guild_id,
                                     bot=bot,
                                     image=image)
+        print(f"[process_image] Moderation result for {original_filename}: {response}")
         return response
 
     except Exception as e:
