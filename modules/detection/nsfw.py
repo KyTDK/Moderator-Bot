@@ -59,14 +59,14 @@ async def temp_download(url: str, ext: str | None = None):
             os.remove(path)
             print(f"[temp_download] Cleaned up: {path}")
         except FileNotFoundError:
-            print(f"[temp_download] File already deleted: {path}")
+            pass
 
 def _safe_delete(path: str):
     try:
         if os.path.exists(path):
             os.remove(path)
     except Exception as e:
-        print(f"[safe_delete] Failed to delete {path}: {e}")
+        pass
 
 def _is_allowed_category(category: str, allowed_categories: list[str]) -> bool:
     """Normalizes and checks if category is allowed based on guild settings."""
@@ -483,15 +483,12 @@ async def moderator_api(text: str | None = None,
                 continue
             flagged_any = True
             # Add vector for flagged category
-            print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
             clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
             # Ignore low confidence scores - Global settings
             if score < threshold:
-                print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
                 continue
             # Check if category is allowed in this guild
             if allowed_categories and not _is_allowed_category(category, allowed_categories):
-                print(f"[moderator_api] Category '{normalized_category}' is not allowed in this guild.")
                 continue
             result["is_nsfw"] = True
             result["category"] = normalized_category
@@ -501,7 +498,6 @@ async def moderator_api(text: str | None = None,
         result["is_nsfw"] = False
         # None represents SFW
         if not flagged_any:
-            print("[moderator_api] Adding vector for SFW image.")
             clip_vectors.add_vector(image, metadata={"category": None, "score": 0.0})
         return result
     
