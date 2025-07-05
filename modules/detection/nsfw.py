@@ -543,8 +543,8 @@ async def process_image(original_filename: str,
         # Try similarity match first
         settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
         allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
-        threshold = settings.get("threshold", 0.7)
-        similarity_response = clip_vectors.query_similar(image, threshold=0.75)
+        threshold = settings.get("threshold", 0.70)
+        similarity_response = clip_vectors.query_similar(image, threshold=0.70)
         if similarity_response:
             for item in similarity_response:
                 category = item.get("category")
