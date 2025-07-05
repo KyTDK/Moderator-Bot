@@ -269,7 +269,6 @@ async def check_attachment(author,
     
     # Handle violations
     if not perform_actions:
-        print(f"[check_attachment] Skipping actions for {filename} due to perform_actions=False")
         return False
     if nsfw_callback and file and scan_result:
         if scan_result.get("is_nsfw"):
@@ -284,7 +283,6 @@ async def check_attachment(author,
             )
             return True
         else:
-            print(f"[check_attachment] No NSFW content detected in {filename}.")
             return False
 
 async def is_nsfw(bot: commands.Bot,
@@ -547,16 +545,12 @@ async def process_image(original_filename: str,
                 score = item.get("score", 0) # OpenAI API determined score
                 if category:
                     if score < threshold:
-                        print(f"[process_image] Category '{category}' flagged with low score {score:.2f}. Ignoring.")
                         continue
                     if _is_allowed_category(category, allowed_categories):
-                        print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
                         return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
                     else:
-                        print(f"[process_image] Similar match '{category}' is excluded in this guild.")
                         return {"is_nsfw": False, "category": category, "reason": "Excluded similarity match"}
                 else:
-                    print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
                     return {"is_nsfw": False, "category": None, "reason": "Similarity match"}
 
         response = await moderator_api(image_path=png_converted_path,
