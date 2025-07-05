@@ -113,9 +113,7 @@ async def unshorten_url(url: str) -> str:
             resp = await client.get(url)
             final_url = str(resp.url)
             if any(domain in final_url for domain in INTERMEDIARY_DOMAINS):
-                print(f"[Redirect Skipped] Landed on intermediary: {final_url}")
                 return url
-            print(f"[URL Unshortened] {url} -> {final_url}")
             return final_url
     except Exception as e:
         print(f"[unshorten_url] Failed to unshorten {url}: {e}")
@@ -137,7 +135,6 @@ def check_phishtank(url: str) -> bool:
 async def check_url_google_safe_browsing(api_key, url):
     # Check if the URL is in the list of safe URLs
     if any(safe_url in url for safe_url in SAFE_URLS):
-        print(f"URL {url} is in the safe list, skipping Google Safe Browsing check.")
         return False
 
     endpoint = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={api_key}"
@@ -153,7 +150,6 @@ async def check_url_google_safe_browsing(api_key, url):
     async with aiohttp.ClientSession() as session:
         async with session.post(endpoint, json=body) as response:
             data = await response.json()
-    print(f"Checked URL: {url}, Response: {data}")
     return bool(data.get("matches"))
 
 async def _url_is_scam(url_lower: str, guild_id: int) -> bool:
@@ -166,7 +162,6 @@ async def _url_is_scam(url_lower: str, guild_id: int) -> bool:
         (guild_id, url_lower), fetch_one=True
     )
     if match_row:
-        print(f"[ScamMatch] Known URL pattern: {match_row[0]}")
         return True
 
     # skip completely safe domains

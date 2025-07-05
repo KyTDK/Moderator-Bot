@@ -43,8 +43,6 @@ async def temp_download(url: str, ext: str | None = None):
     ext = ext or os.path.splitext(urlparse(url).path)[1] or ".bin"
 
     path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{ext}")
-    print(f"[temp_download] Starting download: {url}")
-    print(f"[temp_download] Saving to: {path}")
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
@@ -54,8 +52,6 @@ async def temp_download(url: str, ext: str | None = None):
                 async for chunk in resp.content.iter_chunked(1 << 14):
                     await f.write(chunk)
                     total_written += len(chunk)
-            print(f"[temp_download] Bytes written: {total_written}")
-
     try:
         yield path
     finally:
@@ -471,7 +467,6 @@ async def moderator_api(text: str | None = None,
             continue
 
         if not response or not response.results:
-            print("[moderator_api] No moderation results returned.")
             continue
 
         if not await api.is_api_key_working(encrypted_key):
@@ -568,8 +563,6 @@ async def process_image(original_filename: str,
                                     guild_id=guild_id,
                                     bot=bot,
                                     image=image)
-
-        print(f"[process_image] Moderation result for {original_filename}: {response}")
         return response
 
     except Exception as e:
