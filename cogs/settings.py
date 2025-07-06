@@ -100,11 +100,27 @@ class Settings(commands.Cog):
 
         expected = schema.type
         try:
-            # Handle standard types
+            # Validate required parameters for expected type
+            if expected == bool and value is None:
+                raise ValueError(f"**`{name}` expects a boolean. Use the `value` option.**")
+            if expected == int and value is None:
+                raise ValueError(f"**`{name}` expects an integer. Use the `value` option.**")
+            if expected == TimeString and value is None:
+                raise ValueError(f"**`{name}` expects a duration (e.g. 30m, 1d).**")
+            if expected == discord.TextChannel and channel is None:
+                raise ValueError(f"**`{name}` expects a channel. Use the `channel` option.**")
+            if expected == discord.Role and role is None:
+                raise ValueError(f"**`{name}` expects a role. Use the `role` option.**")
+            if expected == list[discord.TextChannel] and channel is None:
+                raise ValueError(f"**`{name}` expects a channel to add. Use the `channel` option.**")
+            if expected == list[discord.Role] and role is None:
+                raise ValueError(f"**`{name}` expects a role to add. Use the `role` option.**")
+
+            # Type conversion
             if expected == int:
                 parsed = int(value)
             elif expected == bool:
-                low = value.lower()
+                low = str(value).lower()
                 if low in ("true", "1", "yes"):
                     parsed = True
                 elif low in ("false", "0", "no"):
@@ -114,23 +130,15 @@ class Settings(commands.Cog):
             elif expected == TimeString:
                 parsed = TimeString(value)
             elif expected == discord.TextChannel:
-                if not channel:
-                    raise ValueError(f"**`{name}` expects a channel. Use the `channel` option.**")
                 parsed = channel.id
             elif expected == discord.Role:
-                if not role:
-                    raise ValueError(f"**`{name}` expects a role. Use the `role` option.**")
                 parsed = role.id
             elif expected == list[discord.TextChannel]:
-                if not channel:
-                    raise ValueError(f"**`{name}` expects a channel. Use the `channel` option.**")
                 current = await mysql.get_settings(interaction.guild.id, name) or []
                 if channel.id not in current:
                     current.append(channel.id)
                 parsed = current
             elif expected == list[discord.Role]:
-                if not role:
-                    raise ValueError(f"**`{name}` expects a role. Use the `role` option.**")
                 current = await mysql.get_settings(interaction.guild.id, name) or []
                 if role.id not in current:
                     current.append(role.id)
