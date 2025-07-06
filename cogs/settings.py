@@ -217,7 +217,7 @@ class Settings(commands.Cog):
         # Retrieve the current value from the database
         current_value = await mysql.get_settings(interaction.guild.id, name)
         type = schema.type
-        if not current_value:
+        if current_value is None:
             await interaction.followup.send(
                 f"`{name}` is not set.", ephemeral=True
             )
