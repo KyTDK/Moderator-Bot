@@ -346,19 +346,17 @@ async def is_nsfw(bot: commands.Bot,
         for gif_url in possible_urls:
             domain = urlparse(gif_url).netloc.lower()
             is_tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
-            # Perform actions only if check-tenor-gifs is enabled
-            perform_actions = True
+            # Don't scan if its tenor and check-tenor-gifs is False
             if is_tenor and not await mysql.get_settings(guild_id, "check-tenor-gifs"):
-                perform_actions = False
-
+                continue
             async with temp_download(gif_url) as temp_filename:
                 if await check_attachment(author=message.author, 
                                           temp_filename=temp_filename, 
                                           nsfw_callback=nsfw_callback, 
                                           bot=bot, 
                                           guild_id=guild_id, 
-                                          message=message,
-                                          perform_actions=perform_actions):
+                                          message=message
+                                          ):
                     return True
         
     for sticker in stickers:
