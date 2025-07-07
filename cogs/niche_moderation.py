@@ -9,13 +9,13 @@ class NicheModerationCog(commands.Cog):
     async def handle_message(self, message: discord.Message):
         if not message.guild or message.author.bot:
             return
-        
-        guild_id = message.guild.id
-        role_id = await mysql.get_settings(guild_id, "no-forward-from-role")
 
-        if role_id in [r.id for r in message.author.roles]:
-            if getattr(message, "message_snapshots", []):
-                await message.delete()
+        role_ids = {
+            int(rid) for rid in await mysql.get_settings(message.guild.id, "no-forward-from-role") or []
+        }
+
+        if any(role.id in role_ids for role in message.author.roles) and getattr(message, "message_snapshots", []):
+            await message.delete()
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(NicheModerationCog(bot))
