@@ -9,7 +9,7 @@ ACTIONS = [
     ("Delete Message", "delete"),
     ("Give Role", "give_role"),
     ("Remove Role", "take_role"),
-    ("Warn User", "warn")
+    ("Warn User", "warn"),
     ("Broadcast Message", "broadcast")
 ]
 
