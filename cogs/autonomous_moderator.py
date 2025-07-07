@@ -343,8 +343,6 @@ class AutonomousModeratorCog(commands.Cog):
             # Prompt for AI
             user_prompt = f"{rules}{violation_history}Transcript:\n{transcript}"
 
-            print(user_prompt)
-
             # AI call
             client = openai.AsyncOpenAI(api_key=api_key)
             try:
