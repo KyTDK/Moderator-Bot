@@ -38,11 +38,10 @@ SYSTEM_MSG = (
     "- message_ids (optional array of message IDs to delete)\n\n"
 
     "If any message_ids are listed, always include 'delete' in the actions array.\n"
-    "Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>, broadcast:<text>.\n\n"
+    "Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>.\n\n"
     "Use timeout:<duration> with a clear time unit. Durations must include a unit like s, m, h, d, w, or mo (e.g., 10m for 10 minutes)."
 
     "Punishment meanings:\n"
-    "- broadcast:<text>: Post a neutral, channel-wide notice (no user mentions).\n"
     "- warn:<text>: Warn the user.\n"
     "- delete: Always include this for rule-breaking messages to remove them from chat.\n"
     "- timeout:<duration>: Temporarily mute the user.\n"
