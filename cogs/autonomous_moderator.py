@@ -13,8 +13,6 @@ from modules.utils.action_manager import ActionListManager
 from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.strike import validate_action
 
-from cogs.banned_words import normalize_text
-
 from math import ceil
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
@@ -28,7 +26,7 @@ SYSTEM_MSG = (
     "- No personal judgment or outside policies. Only enforce what is explicitly stated under 'Rules:'.\n"
     "- No overreach. Ignore sarcasm, vague innuendo, or mere references. Only act on clear, explicit rule violations.\n"
     "- Do not punish reporters. Never flag messages that quote, reference, or accuse others — only punish the speaker.\n"
-    "- Do not use prior violations unless the current message directly continues the same harmful pattern.\n"
+    "- Only use prior violations to identify persistent rule-breaking. They may support your reasoning, but do not justify punishment on their own. The current message must clearly break a rule.\n"
     "- If you are unsure, default to ok=true.\n\n"
 
     "Respond with a JSON object containing a `results` field.\n"
@@ -53,6 +51,24 @@ SYSTEM_MSG = (
 )
 
 BASE_SYSTEM_TOKENS = ceil(len(SYSTEM_MSG) / 4)
+
+import re
+IMAGE_EXT  = re.compile(r"\.(?:png|jpe?g|webp|bmp|tiff?)$", re.I)
+GIF_EXT    = re.compile(r"\.(?:gif|apng)$", re.I)
+TENOR_RE   = re.compile(r"(?:tenor\.com|giphy\.com)", re.I)
+VIDEO_EXT   = re.compile(r"\.(?:mp4|m4v|webm|mov|avi|mkv|gifv)$", re.I)
+
+def collapse_media(url: str) -> str:
+    """Return a short placeholder if the URL points to an image/GIF."""
+    if TENOR_RE.search(url):
+        return "[gif]"
+    if GIF_EXT.search(url):
+        return "[gif]"
+    if IMAGE_EXT.search(url):
+        return "[image]"
+    if VIDEO_EXT.search(url):
+        return "[video]"
+    return url
 
 def estimate_tokens(text: str) -> int:
     return ceil(len(text) / 4)
@@ -116,11 +132,21 @@ class AutonomousModeratorCog(commands.Cog):
         self.batch_runner.cancel()
 
     def _format_event(self, msg: discord.Message, content: str, tag: str) -> str:
+        tokens = []
+        for word in content.split():
+            if word.startswith("http"):
+                tokens.append(collapse_media(word))
+            else:
+                tokens.append(word)
+        content = " ".join(tokens)
+
         ts = msg.created_at.strftime("%Y-%m-%d %H:%M")
         return (
-            f"[{ts}] {tag.upper()} "
-            f"user_id={msg.author.id} "
-            f"message_id={msg.id}: {content}"
+            f"[{ts}] {tag.upper()}\n"
+            f"user = {msg.author.display_name} (id = {msg.author.id})\n"
+            f"message_id = {msg.id}\n"
+            f"content = {content}\n"
+            "---"
         )
 
     def _build_transcript(
@@ -156,23 +182,15 @@ class AutonomousModeratorCog(commands.Cog):
         # Early run if bot is mentioned
         if f"<@{self.bot.user.id}>" in message.content:
             # Report mode, add trigger and acknowledge the mention
-            if settings.get("aimod-mode") == "report":
-                normalized = normalize_text(message.content)
-                if normalized:
-                    self.message_batches[message.guild.id].append(
-                        ("Report", normalized, message)
-                    )
+            if settings.get("aimod-mode") == "report":                
                 await message.add_reaction("👀")
                 self.mention_triggers[message.guild.id] = message
 
         # Interval, cache all messages
         if settings.get("aimod-mode") == "interval":
             # Add message to cache
-            normalized_message = normalize_text(message.content)
-            if not normalized_message:
-                return
             guild_batch = self.message_batches[message.guild.id]
-            guild_batch.append(("Message", normalized_message, message))
+            guild_batch.append(("Message", message.content, message))
 
             # Cap max stored messages per guild
             if len(guild_batch) > 1000:
@@ -182,10 +200,7 @@ class AutonomousModeratorCog(commands.Cog):
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if after.author.bot or not after.guild or before.content == after.content:
             return
-        normalized_before = normalize_text(before.content)
-        normalized_after = normalize_text(after.content)
-        if normalized_before and normalized_after:
-            self.message_batches[after.guild.id].append(("Edited Message", f"Before: {normalized_before}\nAfter: {normalized_after}", after))
+        self.message_batches[after.guild.id].append(("Edited Message", f"(edited)\n> Before: {before.content}\n> After:  {after.content}"))
 
     @tasks.loop(seconds=5)
     async def batch_runner(self):
@@ -238,11 +253,11 @@ class AutonomousModeratorCog(commands.Cog):
                     fetched = [msg async for msg in trigger_msg.channel.history(limit=50)]
                     fetched.sort(key=lambda m: m.created_at)
                     for msg in fetched:
-                        normalized = normalize_text(msg.content)
-                        if normalized:
+                        content = msg.content
+                        if content:
                             if msg.reference:
-                                normalized = f'QUOTED: {normalized}'
-                            batch.append(("Message", normalized, msg))
+                                content = f"(response to message_id={msg.reference.message_id}) {content}"
+                            batch.append(("Message", content, msg))
                 except discord.HTTPException as e:
                     print(f"[AI] Failed to fetch history in guild {gid}: {e}")
 
