@@ -7,6 +7,7 @@ from discord import app_commands, Interaction
 from collections import defaultdict, deque
 
 from modules.utils import mod_logging, mysql
+from modules.utils.discord_utils import safe_get_member
 from modules.utils.time import parse_duration
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
@@ -14,6 +15,7 @@ from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.strike import validate_action
 
 from math import ceil
+import re
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 manager = ActionListManager(AIMOD_ACTION_SETTING)
@@ -51,8 +53,8 @@ SYSTEM_MSG = (
 )
 
 BASE_SYSTEM_TOKENS = ceil(len(SYSTEM_MSG) / 4)
+NEW_MEMBER_THRESHOLD = timedelta(hours=48)
 
-import re
 IMAGE_EXT  = re.compile(r"\.(?:png|jpe?g|webp|bmp|tiff?)$", re.I)
 GIF_EXT    = re.compile(r"\.(?:gif|apng)$", re.I)
 TENOR_RE   = re.compile(r"(?:tenor\.com|giphy\.com)", re.I)
@@ -131,41 +133,79 @@ class AutonomousModeratorCog(commands.Cog):
     def cog_unload(self):
         self.batch_runner.cancel()
 
-    def _format_event(self, msg: discord.Message, content: str, tag: str) -> str:
-        tokens = []
-        for word in content.split():
-            if word.startswith("http"):
-                tokens.append(collapse_media(word))
-            else:
-                tokens.append(word)
+
+    async def _format_event(
+        self,
+        msg: discord.Message,
+        content: str,
+        tag: str,
+        delta: timedelta | None
+    ) -> str:
+        author = await safe_get_member(self.bot, msg.guild, msg.author.id)
+        tokens  = [collapse_media(w) if w.startswith("http") else w
+                for w in content.split()]
         content = " ".join(tokens)
 
-        ts = msg.created_at.strftime("%Y-%m-%d %H:%M")
+        if delta is None:
+            time_since = "First message in batch."
+        else:
+            mins, secs = divmod(int(delta.total_seconds()), 60)
+            time_since = f"{mins} min {secs}s after previous." if mins \
+                        else f"{secs}s after previous."
+
+        joined_at = getattr(author, "joined_at", None)
+        new_member = ""
+        if joined_at:
+            age = msg.created_at - joined_at
+            if age < NEW_MEMBER_THRESHOLD:
+                m_mins, m_secs = divmod(int(age.total_seconds()), 60)
+                m_hours, m_mins = divmod(m_mins, 60)
+                parts = [f"{m_hours}h" if m_hours else "",
+                        f"{m_mins}m" if m_mins else "",
+                        f"{m_secs}s" if not m_hours and not m_mins else ""]
+                pretty_age = " ".join(p for p in parts if p)
+                new_member = f"\nNOTE: joined server {pretty_age} ago."
+
         return (
-            f"[{ts}] {tag.upper()}\n"
-            f"user = {msg.author.display_name} (id = {msg.author.id})\n"
+            f"[{time_since}]{new_member}\n"
+            f"{tag.upper()}\n"
+            f"user = {author.display_name} (id = {author.id})\n"
             f"message_id = {msg.id}\n"
             f"content = {content}\n"
             "---"
         )
 
-    def _build_transcript(
-            self,
-            batch: list[tuple[str, str, discord.Message]],
-            max_tokens: int,
-            current_total_tokens: int
-        ):
-        lines = [self._format_event(msg, text, tag)
-                for tag, text, msg in batch]
+    async def _build_transcript(
+        self,
+        batch: list[tuple[str, str, discord.Message]],
+        max_tokens: int,
+        current_total_tokens: int
+    ):
+        lines   : list[str] = []
+        tokens  : list[int] = []
+        trimmed_batch = batch[:]
+        prev_time: datetime | None = None
 
-        tokens = [estimate_tokens(line) for line in lines]
-        total = current_total_tokens + sum(tokens)
-        while batch and total > max_tokens:
-            total -= tokens.pop(0)
-            batch.pop(0)
+        for tag, text, msg in trimmed_batch:
+            timestamp = msg.created_at.replace(tzinfo=timezone.utc)
+            delta = timestamp - prev_time if prev_time else None
+            prev_time = timestamp
+
+            line = await self._format_event(msg, text, tag, delta)
+            tok  = estimate_tokens(line)
+
+            lines.append(line)
+            tokens.append(tok)
+
+        total_tokens = current_total_tokens + sum(tokens)
+
+        while trimmed_batch and total_tokens > max_tokens:
+            total_tokens -= tokens.pop(0)
+            trimmed_batch.pop(0)
             lines.pop(0)
+
         transcript = "\n".join(lines)
-        return transcript, total, batch
+        return transcript, total_tokens, trimmed_batch
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
@@ -283,7 +323,7 @@ class AutonomousModeratorCog(commands.Cog):
             limit = get_model_limit(model)
             max_tokens = int(limit * 0.9)
             current_total_tokens=BASE_SYSTEM_TOKENS+estimate_tokens(violation_history)+estimate_tokens(rules)
-            transcript, estimated_tokens, batch = self._build_transcript(batch, 
+            transcript, estimated_tokens, batch = await self._build_transcript(batch, 
                                                                          max_tokens, 
                                                                          current_total_tokens=current_total_tokens)
 
@@ -302,6 +342,8 @@ class AutonomousModeratorCog(commands.Cog):
 
             # Prompt for AI
             user_prompt = f"{rules}{violation_history}Transcript:\n{transcript}"
+
+            print(user_prompt)
 
             # AI call
             client = openai.AsyncOpenAI(api_key=api_key)
