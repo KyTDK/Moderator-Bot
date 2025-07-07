@@ -42,13 +42,13 @@ SYSTEM_MSG = (
     "Use timeout:<duration> with a clear time unit. Durations must include a unit like s, m, h, d, w, or mo (e.g., 10m for 10 minutes)."
 
     "Punishment meanings:\n"
-    "- broadcast:<text>: Post a neutral, channel-wide notice (no user mentions)."
+    "- broadcast:<text>: Post a neutral, channel-wide notice (no user mentions).\n"
     "- warn:<text>: Warn the user.\n"
     "- delete: Always include this for rule-breaking messages to remove them from chat.\n"
     "- timeout:<duration>: Temporarily mute the user.\n"
     "- kick: Remove user from server (temporary).\n"
     "- strike: Permanent record which comes with its own punishment.\n"
-    "- ban: Permanent removal from the server.\n"
+    "- ban: Permanent removal from the server."
 )
 
 BASE_SYSTEM_TOKENS = ceil(len(SYSTEM_MSG) / 4)
