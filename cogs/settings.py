@@ -200,57 +200,64 @@ class Settings(commands.Cog):
         ][:25]
 
     @settings_group.command(name="get", description="Get the current value of a server setting.")
-    @app_commands.choices(
-        name=choices_without_hidden[:25]
-    )
+    @app_commands.choices(name=choices_without_hidden[:25])
     async def get_setting(self, interaction: Interaction, name: str):
         """Get the current value of a server setting."""
         await interaction.response.defer(ephemeral=True)
+
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
+            await interaction.followup.send("Invalid setting name.", ephemeral=True)
+            return
+
+        current_value = await mysql.get_settings(interaction.guild.id, name)
+        expected_type = schema.type
+
+        if current_value is None:
             await interaction.followup.send(
-                f"Invalid setting name.",
-                ephemeral=True,
+                f"`{name}` is not set. Default: `{schema.default}`", ephemeral=True
             )
             return
 
-        # Retrieve the current value from the database
-        current_value = await mysql.get_settings(interaction.guild.id, name)
-        type = schema.type
-        if current_value is None:
+        if schema.private:
             await interaction.followup.send(
-                f"`{name}` is not set.", ephemeral=True
+                "For privacy reasons, this setting is hidden.", ephemeral=True
             )
+            return
+
+        if expected_type == list[discord.TextChannel]:
+            mentions = []
+            for cid in current_value:
+                chan = interaction.guild.get_channel(cid)
+                mentions.append(chan.mention if chan else f"`#{cid}`")
+            value_str = ", ".join(mentions)
+
+        elif expected_type == list[discord.Role]:
+            mentions = []
+            for rid in current_value:
+                role = interaction.guild.get_role(rid)
+                mentions.append(role.mention if role else f"`@{rid}`")
+            value_str = ", ".join(mentions)
+
+        elif expected_type == discord.TextChannel:
+            chan = interaction.guild.get_channel(current_value)
+            value_str = chan.mention if chan else f"`#{current_value}`"
+
+        elif expected_type == discord.Role:
+            role = interaction.guild.get_role(current_value)
+            value_str = role.mention if role else f"`@{current_value}`"
+
+        elif expected_type == dict[str, list[str]]:
+            lines = [f"**{k}** → `{', '.join(v)}`" for k, v in current_value.items()]
+            value_str = "\n".join(lines)
+
         else:
-            if schema.private:
-                await interaction.followup.send(
-                    "For privacy reasons, this setting is hidden."
-                )
-                return
-            # If the setting is a list of channels, convert to channel mentions
-            if type == list[discord.TextChannel]:
-                # Convert channel IDs to mentions
-                channel_mentions = [f"<#{channel_id}>" for channel_id in current_value]
-                await interaction.followup.send(
-                    f"`{name}` is currently set to {', '.join(channel_mentions)}.", ephemeral=True
-                )
-            elif type == discord.TextChannel:
-                # Convert channel ID to mention
-                channel_mention = f"<#{current_value}>"
-                await interaction.followup.send(
-                    f"`{name}` is currently set to {channel_mention}.", ephemeral=True
-                )
-            elif type == dict[str, list[str]]:
-                strike_actions = ", ".join(
-                    [f"{k}: {', '.join(v)}" for k, v in current_value.items()]
-                )
-                await interaction.followup.send(
-                    f"`{name}` is currently set to `{strike_actions}`.", ephemeral=True
-                )
-            else:
-                await interaction.followup.send(
-                    f"`{name}` is currently set to `{current_value}`.", ephemeral=True
-                )
+            value_str = str(current_value)
+
+        await interaction.followup.send(
+            f"**`{name}` is currently set to:**\n{value_str}",
+            ephemeral=True
+        )
 
     @settings_group.command(name="remove", description="Remove a server setting or an item from a list-type setting.")
     @app_commands.choices(name=choices_without_hidden[:25])
