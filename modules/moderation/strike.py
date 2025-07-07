@@ -152,6 +152,29 @@ async def perform_disciplinary_action(
                         results.append("Warning failed (couldn't send DM or channel message).")
                 continue
 
+            if base_action == "broadcast":
+                if not param:
+                    results.append("No broadcast message provided.")
+                    continue
+
+                # Find best broadcast target
+                target_channel = None
+                if messages:
+                    target_channel = messages[0].channel
+                elif hasattr(user.guild, "system_channel"):
+                    target_channel = user.guild.system_channel
+
+                if target_channel and target_channel.permissions_for(user.guild.me).send_messages:
+                    try:
+                        await target_channel.send(param)
+                        results.append("Broadcast message sent.")
+                    except Exception as e:
+                        print(f"[Broadcast] Failed to send message: {e}")
+                        results.append("Broadcast failed.")
+                else:
+                    results.append("No valid channel found for broadcast.")
+                continue
+
             results.append(f"Unknown action: '{action}'")
 
         except Exception as e:

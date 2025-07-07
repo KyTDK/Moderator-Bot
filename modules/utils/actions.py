@@ -10,6 +10,7 @@ ACTIONS = [
     ("Give Role", "give_role"),
     ("Remove Role", "take_role"),
     ("Warn User", "warn")
+    ("Broadcast Message", "broadcast")
 ]
 
 VALID_ACTION_VALUES = [a[1] for a in ACTIONS]
