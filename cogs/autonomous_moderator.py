@@ -142,6 +142,8 @@ class AutonomousModeratorCog(commands.Cog):
         delta: timedelta | None
     ) -> str:
         author = await safe_get_member(self.bot, msg.guild, msg.author.id)
+        if not author:
+            return None
         tokens  = [collapse_media(w) if w.startswith("http") else w
                 for w in content.split()]
         content = " ".join(tokens)
@@ -192,10 +194,11 @@ class AutonomousModeratorCog(commands.Cog):
             prev_time = timestamp
 
             line = await self._format_event(msg, text, tag, delta)
-            tok  = estimate_tokens(line)
+            if line:
+                tok  = estimate_tokens(line)
 
-            lines.append(line)
-            tokens.append(tok)
+                lines.append(line)
+                tokens.append(tok)
 
         total_tokens = current_total_tokens + sum(tokens)
 
