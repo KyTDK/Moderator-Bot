@@ -37,7 +37,7 @@ SYSTEM_MSG = (
     "- rule (string)\n"
     "- reason (string)\n"
     "- actions (array of punishments)\n"
-    "- message_ids (optional array of message IDs to delete)\n\n"
+    "- message_ids (array of message IDs that violated the rule). You must include the ID(s) of the specific message(s) that broke the rule.\n\n"
 
     "If any message_ids are listed, always include 'delete' in the actions array.\n"
     "Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>.\n\n"
