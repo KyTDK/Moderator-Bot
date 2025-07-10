@@ -105,7 +105,7 @@ async def update_cache():
     except Exception as e:
         print(f"Error updating cache: {e}")
 
-async def unshorten_url(url: str) -> str:
+async def unshorten_url(url: str, guild_id: int) -> str:
     import httpx
     headers = {"User-Agent": "Mozilla/5.0"}
     try:
@@ -116,7 +116,7 @@ async def unshorten_url(url: str) -> str:
                 return url
             return final_url
     except Exception as e:
-        print(f"[unshorten_url] Failed to unshorten {url}: {e}")
+        print(f"[unshorten_url] Failed to unshorten {url} for guild id {guild_id}: {e}")
         return url
 
 def check_phishtank(url: str) -> bool:
@@ -213,7 +213,7 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
             if await _url_is_scam(url.lower(), guild_id):
                 return True, None, url
 
-            expanded = await unshorten_url(url)
+            expanded = await unshorten_url(url, guild_id)
             if expanded != url and await _url_is_scam(expanded.lower(), guild_id):
                 return True, None, expanded
 
