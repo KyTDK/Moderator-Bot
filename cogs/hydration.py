@@ -1,0 +1,1 @@
+from cogs.hydration.cog import setup

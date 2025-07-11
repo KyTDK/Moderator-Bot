@@ -73,7 +73,7 @@ async def safe_get_user(bot: discord.Client, user_id: int) -> Optional[discord.U
         print(f"[safe_get_user] fetch_user({user_id}) failed: {e}")
         return None
     
-async def safe_get_member(bot: discord.Client, guild: discord.Guild, user_id: int) -> Optional[discord.Member]:
+async def safe_get_member(guild: discord.Guild, user_id: int) -> Optional[discord.Member]:
     """
     Safely get a Member from cache or fetch.
     Returns None if the user is not in the guild or can't be fetched.

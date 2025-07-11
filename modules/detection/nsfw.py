@@ -2,6 +2,7 @@ import os
 import traceback
 import asyncio
 import cv2
+from cogs.hydration import wait_for_hydration
 import filetype
 import uuid
 import aiohttp
@@ -304,19 +305,12 @@ async def is_nsfw(bot: commands.Bot,
 
     # hydration fallback
     if not (attachments or embeds or stickers) and "http" in message.content:
-        for attempt in range(3):
-            await asyncio.sleep(1.0 + attempt) 
-            try:
-                message = await message.channel.fetch_message(message.id)
-                embeds = message.embeds
-                attachments = message.attachments
-                stickers = message.stickers
-                if embeds or attachments or stickers:
-                    break
-            except (discord.NotFound, discord.HTTPException) as e:
-                print(f"[HYDRATE] Failed to refetch message {message.id}: {e}")
-                return False
-        else:
+        message = await wait_for_hydration(message)
+        attachments = message.attachments
+        embeds = message.embeds
+        stickers = message.stickers
+
+        if not (attachments or embeds or stickers):
             return False
 
     if message is None:

@@ -141,7 +141,7 @@ class AutonomousModeratorCog(commands.Cog):
         tag: str,
         delta: timedelta | None
     ) -> str:
-        author = await safe_get_member(self.bot, msg.guild, msg.author.id)
+        author = await safe_get_member(msg.guild, msg.author.id)
         if not author:
             return None
         tokens  = [collapse_media(w) if w.startswith("http") else w
