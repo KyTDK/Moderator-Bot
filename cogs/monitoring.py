@@ -322,6 +322,20 @@ class MonitoringCog(commands.Cog):
                         )
                     except Exception as e:
                         print(f"[Embed parse fail] {e}")
+
+            if message.stickers:
+                try:
+                    links = []
+                    for sticker in message.stickers:
+                        links.append(f"• [{sticker.name}]({sticker.url})")
+
+                    embed.add_field(
+                        name=f"Stickers ({len(links)})",
+                        value="\n".join(links)[:1024],
+                        inline=False
+                    )
+                except Exception as e:
+                    print(f"[Sticker image parse fail] {e}")
         else:
             embed = Embed(
                 title="Message Deleted",
