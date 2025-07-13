@@ -249,6 +249,9 @@ class MonitoringCog(commands.Cog):
         channel = self.bot.get_channel(payload.channel_id)
         if not channel:
             return
+        
+        if not isinstance(channel, discord.TextChannel):
+            return
 
         message = payload.cached_message or self.message_cache.pop(payload.message_id, None)
 
