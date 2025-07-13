@@ -10,17 +10,14 @@ from modules.utils.action_manager import ActionListManager
 from urlextract import URLExtract
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
-from transformers import pipeline
 from cogs.banned_words import normalize_text
 import aiohttp
 from discord.ext import tasks
     
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-
 DELETE_SETTING = "delete-scam-messages"
 ACTION_SETTING = "scam-detection-action"
-AI_DETECTION_SETTING = "ai-scam-detection"
 EXCLUDE_CHANNELS_SETTING = "exclude-scam-channels"
 CHECK_LINKS_SETTING = "check-links"
 
@@ -31,15 +28,6 @@ PHISHTANK_CACHE_FILE = "phishtank_cache.json"
 PHISHTANK_USER_AGENT = {"User-Agent": "ModeratorBot/1.0"}
 
 url_extractor = URLExtract()
-
-_classifier = None
-
-def get_classifier():
-    """Lazily load and cache the text classification pipeline."""
-    global _classifier
-    if _classifier is None:
-        _classifier = pipeline("text-classification", model="mshenoda/roberta-spam")
-    return _classifier
 
 SAFE_URLS = [
     "discord.com",
@@ -206,7 +194,6 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     ]
 
     check_links   = await get_settings(guild_id, CHECK_LINKS_SETTING)
-    ai_detection  = await get_settings(guild_id, AI_DETECTION_SETTING)
 
     if check_links:
         for url in normalized_urls:
@@ -216,12 +203,6 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
             expanded = await unshorten_url(url, guild_id)
             if expanded != url and await _url_is_scam(expanded.lower(), guild_id):
                 return True, None, expanded
-
-    if ai_detection and len(normalized_message.split()) >= 5:
-        classifier = get_classifier()
-        result = classifier(normalized_message)[0]
-        if result['label'] == 'LABEL_1' and result['score'] > 0.95:
-            return True, message, None
 
     return False, None, None
 
@@ -310,29 +291,6 @@ class ScamDetectionCog(commands.Cog):
             f"Auto-delete **{action.value}d**.", ephemeral=True
         )
 
-    @scam_group.command(name="ai_detection", description="Toggle or view AI scam detection.")
-    @app_commands.describe(action="enable | disable | status")
-    @app_commands.choices(
-        action=[
-            app_commands.Choice(name="enable",  value="enable"),
-            app_commands.Choice(name="disable", value="disable"),
-            app_commands.Choice(name="status",  value="status"),
-        ]
-    )
-    async def setting_ai_detection(self, interaction: Interaction,
-                                   action: app_commands.Choice[str]):
-        gid = interaction.guild.id
-        if action.value == "status":
-            flag = await get_settings(gid, AI_DETECTION_SETTING)
-            await interaction.response.send_message(
-                f"AI scam detection is **{'enabled' if flag else 'disabled'}**.", ephemeral=True
-            )
-            return
-        await update_settings(gid, AI_DETECTION_SETTING, action.value == "enable")
-        await interaction.response.send_message(
-            f"AI scam detection **{action.value}d**.", ephemeral=True
-        )
-
     @scam_group.command(name="check_links", description="Toggle or view link checking.")
     @app_commands.describe(action="enable | disable | status")
     @app_commands.choices(
@@ -401,7 +359,6 @@ class ScamDetectionCog(commands.Cog):
         gid = interaction.guild.id
         delete_setting = await get_settings(gid, DELETE_SETTING)
         action_setting = await manager.view_actions(gid)
-        ai_scam_detection = await get_settings(gid, AI_DETECTION_SETTING)
 
         if not action_setting:
             actions_formatted = "*No actions set.*"
@@ -411,7 +368,6 @@ class ScamDetectionCog(commands.Cog):
         await interaction.response.send_message(
             f"**Scam Settings:**\n"
             f"- Delete scam messages: `{delete_setting}`\n"
-            f"- AI scam detection: `{ai_scam_detection}`\n"
             f"- Scam actions:\n{actions_formatted}",
             ephemeral=True
         )

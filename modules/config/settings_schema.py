@@ -189,14 +189,6 @@ SETTINGS_SCHEMA = {
         default=["delete"],
         choices=["strike", "kick", "ban", "timeout", "delete"],
     ),
-    "ai-scam-detection": Setting(
-        name="ai-scam-detection",
-        description="Use AI to detect scam messages.",
-        setting_type=bool,
-        default=False,
-        hidden=True,
-        choices=["true", "false"]
-    ),
     "check-links": Setting(
         name="check-links",
         description="Check links in messages for malware, phishing, scamming etc.",
