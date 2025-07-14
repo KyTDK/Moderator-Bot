@@ -246,13 +246,6 @@ SETTINGS_SCHEMA = {
         setting_type=TimeString,
         default=TimeString("1h"),
     ),
-    "contextual-ai": Setting(
-        name="contextual-ai",
-        description="Allow the AI moderator to consider prior messages and replies for context.",
-        setting_type=bool,
-        default=False,
-        choices=["true", "false"]
-    ),
     "aimod-mode": Setting(
         name="aimod-mode",
         description="Choose how AI moderation is triggered: report mode (on mention) or interval mode (background scanning).",
