@@ -389,7 +389,7 @@ async def is_nsfw(bot: commands.Bot,
                 if gif_location != temp_location:
                     _safe_delete(gif_location)
 
-    custom_emoji_tags = re.findall(r'<a?:\w+:\d+>', message.content)
+    custom_emoji_tags = list(set(re.findall(r'<a?:\w+:\d+>', message.content)))
     for tag in custom_emoji_tags:
         match = re.match(r'<a?:(\w+):(\d+)>', tag)
         if not match:
