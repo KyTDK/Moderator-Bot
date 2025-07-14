@@ -46,18 +46,10 @@ class AggregatedModerationCog(commands.Cog):
             return
 
         emoji = payload.emoji
-
-        # Only process custom emojis
         if not emoji.is_custom_emoji():
             return
 
-        emoji_id = emoji.id
-        emoji_obj = self.bot.get_emoji(emoji_id)
-        if not emoji_obj:
-            print(f"[on_raw_reaction_add] Could not resolve emoji ID {emoji_id}")
-            return
-
-        emoji_url = str(emoji_obj.url)
+        emoji_url = str(emoji.url)
         member = await safe_get_member(guild, payload.user_id)
         if not member:
             print(f"[on_raw_reaction_add] Could not resolve member ID {payload.user_id}")
@@ -75,7 +67,7 @@ class AggregatedModerationCog(commands.Cog):
             try:
                 channel = guild.get_channel(payload.channel_id) or await guild.fetch_channel(payload.channel_id)
                 message = await channel.fetch_message(payload.message_id)
-                await message.remove_reaction(emoji_obj, member)
+                await message.remove_reaction(emoji, member)
             except Exception as e:
                 print(f"[on_raw_reaction_add] Failed to remove reaction: {e}")
 
