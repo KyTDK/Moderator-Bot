@@ -26,6 +26,7 @@ from tempfile import NamedTemporaryFile, gettempdir
 from PIL import Image, ImageSequence
 from modules.utils import clip_vectors
 import pillow_avif
+import re
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
@@ -387,6 +388,23 @@ async def is_nsfw(bot: commands.Bot,
             finally:
                 if gif_location != temp_location:
                     _safe_delete(gif_location)
+
+    custom_emoji_tags = re.findall(r'<a?:\w+:\d+>', message.content)
+    for tag in custom_emoji_tags:
+        match = re.match(r'<a?:(\w+):(\d+)>', tag)
+        if not match:
+            continue
+        name, eid = match.groups()
+        emoji_obj = bot.get_emoji(int(eid))
+        if not emoji_obj:
+            continue
+        emoji_url = str(emoji_obj.url)
+        try:
+            async with temp_download(emoji_url) as emoji_path:
+                if await check_attachment(message.author, emoji_path, nsfw_callback, bot, guild_id, message):
+                    return True
+        except Exception as e:
+            print(f"[emoji-scan] Failed to scan custom emoji {emoji_obj}: {e}")
 
     return False
 

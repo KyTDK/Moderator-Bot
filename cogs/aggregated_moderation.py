@@ -3,6 +3,7 @@ from discord.ext import commands
 from modules.utils import mysql
 from modules.detection import nsfw
 from modules.moderation import strike
+from modules.utils.discord_utils import safe_get_member
 
 class AggregatedModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -28,6 +29,55 @@ class AggregatedModerationCog(commands.Cog):
                     )
                 except (discord.Forbidden, discord.NotFound):
                     print("Cannot delete message or message no longer exists.")
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        if payload.guild_id is None or payload.user_id is None:
+            return
+        
+        if payload.member is not None and payload.member.bot:
+            return
+
+        guild = self.bot.get_guild(payload.guild_id)
+        if not guild:
+            return
+
+        if payload.channel_id in await mysql.get_settings(guild.id, "exclude-channels"):
+            return
+
+        emoji = payload.emoji
+
+        # Only process custom emojis
+        if not emoji.is_custom_emoji():
+            return
+
+        emoji_id = emoji.id
+        emoji_obj = self.bot.get_emoji(emoji_id)
+        if not emoji_obj:
+            print(f"[on_raw_reaction_add] Could not resolve emoji ID {emoji_id}")
+            return
+
+        emoji_url = str(emoji_obj.url)
+        member = await safe_get_member(guild, payload.user_id)
+        if not member:
+            print(f"[on_raw_reaction_add] Could not resolve member ID {payload.user_id}")
+            return
+
+        was_flagged = await nsfw.is_nsfw(
+            bot=self.bot,
+            url=emoji_url,
+            member=member,
+            guild_id=guild.id,
+            nsfw_callback=nsfw.handle_nsfw_content,
+        )
+
+        if was_flagged:
+            try:
+                channel = guild.get_channel(payload.channel_id) or await guild.fetch_channel(payload.channel_id)
+                message = await channel.fetch_message(payload.message_id)
+                await message.remove_reaction(emoji_obj, member)
+            except Exception as e:
+                print(f"[on_raw_reaction_add] Failed to remove reaction: {e}")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
