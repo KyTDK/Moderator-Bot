@@ -336,6 +336,7 @@ async def cleanup_orphaned_guilds(active_guild_ids):
         "scam_messages",
         "scam_users",
         "scam_urls",
+        "strikes"
     ]
     for gid in guild_ids:
         print(f"[cleanup] Removing orphaned guild data for: {gid}")
