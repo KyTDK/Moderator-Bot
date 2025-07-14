@@ -13,6 +13,7 @@ from modules.utils import mysql
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 
+MAX_BANNED_WORDS = 500
 BANNED_ACTION_SETTING = "banned-words-action"
 manager = ActionListManager(BANNED_ACTION_SETTING)
 
@@ -114,6 +115,20 @@ class BannedWordsCog(commands.Cog):
         )
         if existing_word:
             await interaction.response.send_message(f"The word '{word}' is already banned.", ephemeral=True)
+            return
+        
+        # Check how many banned words exist
+        count_result, _ = await execute_query(
+            "SELECT COUNT(*) FROM banned_words WHERE guild_id = %s",
+            (guild_id,),
+            fetch_one=True
+        )
+        if count_result and count_result[0] >= MAX_BANNED_WORDS:
+            await interaction.response.send_message(
+                f"You've reached the limit of {MAX_BANNED_WORDS} banned words for this server.\n"
+                f"Use `/bannedwords remove` or `/bannedwords clear` to make space.",
+                ephemeral=True
+            )
             return
 
         # Insert the new banned word into the database
