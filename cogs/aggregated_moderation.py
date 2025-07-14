@@ -34,7 +34,10 @@ class AggregatedModerationCog(commands.Cog):
     @commands.Cog.listener()
     async def on_reaction_add(self,
                               reaction: discord.Reaction,
-                              user:     discord.User | discord.Member):
+                              user: discord.User | discord.Member):
+        # Only scan custom emojis
+        if not isinstance(reaction.emoji, (discord.Emoji, discord.PartialEmoji)):
+            return
         if user.bot or not reaction.emoji.is_custom_emoji():
             return
 
