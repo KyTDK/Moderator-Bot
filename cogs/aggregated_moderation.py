@@ -38,8 +38,6 @@ class AggregatedModerationCog(commands.Cog):
         # Only scan custom emojis
         if not isinstance(reaction.emoji, (discord.Emoji, discord.PartialEmoji)):
             return
-        if user.bot or not reaction.emoji.is_custom_emoji():
-            return
 
         # Most likely scanned it already, skip
         if reaction.count > 1:
@@ -56,6 +54,10 @@ class AggregatedModerationCog(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         if payload.member and payload.member.bot:
+            return
+
+        # Skip non-custom emoji
+        if not payload.emoji.is_custom_emoji():
             return
 
         # If cached, was scanned in on_reaction_add, skip
@@ -96,9 +98,6 @@ class AggregatedModerationCog(commands.Cog):
         emoji: discord.Emoji | discord.PartialEmoji,
         member: discord.Member | discord.User | None
     ) -> None:
-        if not guild or not emoji.is_custom_emoji():
-            return
-
         flagged = await nsfw.is_nsfw(
             bot = self.bot,
             url = str(emoji.url),
