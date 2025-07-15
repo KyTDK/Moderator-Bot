@@ -14,7 +14,10 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
-bot = commands.Bot(command_prefix='/', intents=intents, help_command=None)
+bot = commands.Bot(command_prefix='/', 
+                   intents=intents,
+                   chunk_guilds_at_startup=False, 
+                   help_command=None)
 
 @bot.event
 async def on_ready():
