@@ -15,7 +15,11 @@ CREATE TABLE vectors (
 • FAISS uses `add_with_ids()` so DB ids == index ids
 """
 
-import json, sqlite3, numpy as np, faiss, torch
+import json
+import sqlite3
+import numpy as np
+import faiss
+import torch
 from PIL import Image
 from collections import defaultdict
 from threading import Lock
@@ -132,10 +136,10 @@ def query_similar(img: Image.Image,
         return []
 
     vec = embed(img)
-    D, I = index.search(vec, k)
+    distances, indices = index.search(vec, k)
 
     hits, votes = [], defaultdict(list)
-    for d, idx in zip(D[0], I[0]):
+    for d, idx in zip(distances[0], indices[0]):
         if d < threshold or idx < 0:
             continue
         row = db.execute(

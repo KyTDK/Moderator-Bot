@@ -25,7 +25,7 @@ from contextlib import asynccontextmanager
 from tempfile import NamedTemporaryFile, gettempdir
 from PIL import Image, ImageSequence
 from modules.utils import clip_vectors
-import pillow_avif
+import pillow_avif # registers AVIF support
 import re
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
@@ -66,7 +66,7 @@ def _safe_delete(path: str):
     try:
         if os.path.exists(path):
             os.remove(path)
-    except Exception as e:
+    except Exception:
         pass
 
 def _is_allowed_category(category: str, allowed_categories: list[str]) -> bool:

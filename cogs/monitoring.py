@@ -3,7 +3,6 @@ from discord import Embed, Color, Interaction
 import discord
 from discord.ext import commands
 from modules.utils import mysql
-from discord.app_commands.errors import MissingPermissions
 from discord.utils import format_dt, utcnow
 from discord import app_commands
 

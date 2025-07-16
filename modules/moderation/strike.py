@@ -316,7 +316,7 @@ async def strike(
     if await mysql.get_settings(user.guild.id, "dm-on-strike"):
         try:
             await message_user(user, "", embed=embed)
-        except Exception as e:
+        except Exception:
             if interaction:
                 await interaction.channel.send(user.mention, embed=embed)
             return embed

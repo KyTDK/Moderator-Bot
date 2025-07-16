@@ -89,9 +89,9 @@ class StrikesCog(commands.Cog):
             return
 
         entries = []
-        for strike in strikes:
+        for strike_entry in strikes:
             # Unpack the strike details
-            strike_id, reason, striked_by_id, timestamp, expires_at = strike
+            strike_id, reason, striked_by_id, timestamp, expires_at = strike_entry
 
             # Ensure UTC to work properly with discord UNIX embed
             timestamp = timestamp.replace(tzinfo=timezone.utc)

@@ -101,25 +101,25 @@ class Settings(commands.Cog):
         expected = schema.type
         try:
             # Validate required parameters for expected type
-            if expected == bool and value is None:
+            if expected is bool and value is None:
                 raise ValueError(f"**`{name}` expects a boolean. Use the `value` option.**")
-            if expected == int and value is None:
+            if expected is int and value is None:
                 raise ValueError(f"**`{name}` expects an integer. Use the `value` option.**")
-            if expected == TimeString and value is None:
+            if expected is TimeString and value is None:
                 raise ValueError(f"**`{name}` expects a duration (e.g. 30m, 1d).**")
-            if expected == discord.TextChannel and channel is None:
+            if expected is discord.TextChannel and channel is None:
                 raise ValueError(f"**`{name}` expects a channel. Use the `channel` option.**")
-            if expected == discord.Role and role is None:
+            if expected is discord.Role and role is None:
                 raise ValueError(f"**`{name}` expects a role. Use the `role` option.**")
-            if expected == list[discord.TextChannel] and channel is None:
+            if expected is list[discord.TextChannel] and channel is None:
                 raise ValueError(f"**`{name}` expects a channel to add. Use the `channel` option.**")
-            if expected == list[discord.Role] and role is None:
+            if expected is list[discord.Role] and role is None:
                 raise ValueError(f"**`{name}` expects a role to add. Use the `role` option.**")
 
             # Type conversion
-            if expected == int:
+            if expected is int:
                 parsed = int(value)
-            elif expected == bool:
+            elif expected is bool:
                 low = str(value).lower()
                 if low in ("true", "1", "yes"):
                     parsed = True
@@ -127,18 +127,18 @@ class Settings(commands.Cog):
                     parsed = False
                 else:
                     raise ValueError(f"**`{name}` expects a boolean.**")
-            elif expected == TimeString:
+            elif expected is TimeString:
                 parsed = TimeString(value)
-            elif expected == discord.TextChannel:
+            elif expected is discord.TextChannel:
                 parsed = channel.id
-            elif expected == discord.Role:
+            elif expected is discord.Role:
                 parsed = role.id
-            elif expected == list[discord.TextChannel]:
+            elif expected is list[discord.TextChannel]:
                 current = await mysql.get_settings(interaction.guild.id, name) or []
                 if channel.id not in current:
                     current.append(channel.id)
                 parsed = current
-            elif expected == list[discord.Role]:
+            elif expected is list[discord.Role]:
                 current = await mysql.get_settings(interaction.guild.id, name) or []
                 if role.id not in current:
                     current.append(role.id)
@@ -282,7 +282,7 @@ class Settings(commands.Cog):
             return
 
         try:
-            if expected == list[discord.TextChannel]:
+            if expected is list[discord.TextChannel]:
                 if not channel:
                     raise ValueError("You must specify a channel to remove.")
                 if channel.id not in current:
@@ -291,7 +291,7 @@ class Settings(commands.Cog):
                 await mysql.update_settings(interaction.guild.id, name, current)
                 await interaction.followup.send(f"Removed {channel.mention} from `{name}`.", ephemeral=True)
 
-            elif expected == list[discord.Role]:
+            elif expected is list[discord.Role]:
                 if not role:
                     raise ValueError("You must specify a role to remove.")
                 if role.id not in current:
