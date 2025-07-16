@@ -41,6 +41,21 @@ SETTINGS_SCHEMA = {
         description="Channel where NSFW violations are logged with a preview of the media.",
         setting_type=discord.TextChannel,
     ),
+    "monitor-events": Setting(
+        name="monitor-events",
+        description="Enable/disable logging for each type of monitored event.",
+        setting_type=dict[str, bool],
+        default={
+            "join": True,
+            "leave": True,
+            "ban": True,
+            "kick": True,
+            "unban": True,
+            "timeout": True,
+            "message_delete": True,
+            "message_edit": True,
+            },
+    ),
     "nsfw-detection-action": Setting(
         name="nsfw-detection-action",
         description="Action to take when a user posts NSFW content.",
@@ -248,10 +263,23 @@ SETTINGS_SCHEMA = {
     ),
     "aimod-mode": Setting(
         name="aimod-mode",
-        description="Choose how AI moderation is triggered: report mode (on mention) or interval mode (background scanning).",
+        description="Choose how AI moderation is triggered: `report` mode (only on mention), `interval` mode (automatic background scanning), or `adaptive` mode (dynamically switches based on server activity, events, or configuration).",
         setting_type=str,
         default="report",
-        choices=["interval", "report"]
+        choices=["interval", "report", "adaptive"]
+    ),
+    "aimod-adaptive-events": Setting(
+        name="aimod-adaptive-events",
+        description=(
+            "Configure which events trigger switching AI moderation modes. "
+        ),
+        setting_type=dict[str, list[str]], #[event, list of actions] 
+        default={
+            "mass_join": ["enable_interval", "disable_report"],
+            "mass_leave": ["enable_interval", "disable_report"],
+            "guild_inactive": ["enable_report", "disable_interval"]
+        },
+        hidden=True
     ),
     "no-forward-from-role": Setting(
         name="no-forward-from-role",

@@ -59,13 +59,26 @@ async def perform_disciplinary_action(
 
             if base_action == "delete":
                 if messages:
+                    first = messages[0]
+                    if all(msg.channel.id == first.channel.id for msg in messages):
+                        ids_to_delete = {m.id for m in messages}
+                        try:
+                            deleted = await first.channel.purge(
+                                check=lambda m: m.id in ids_to_delete,
+                                bulk=True
+                            )
+                            results.append(f"{len(deleted)}/{len(messages)} messages bulk deleted.")
+                            continue
+                        except discord.HTTPException as e:
+                            print(f"[Bulk Delete] Failed: {e}")
+
                     success = 0
                     for msg in messages:
                         try:
                             await msg.delete()
                             success += 1
                         except Exception as e:
-                            print(f"[Disciplinary Action] Failed to delete message: {e}")
+                            print(f"[Delete] Failed for {msg.id}: {e}")
                     results.append(f"{success}/{len(messages)} message(s) deleted.")
                 else:
                     results.append("Delete requested, but no message was provided.")

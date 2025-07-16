@@ -17,6 +17,10 @@ class MonitoringCog(commands.Cog):
         id = await mysql.get_settings(guild_id, "monitor-channel")
         return int(id) if id else None
 
+    async def is_event_enabled(self, guild_id: int, event_name: str) -> bool:
+        settings = await mysql.get_settings(guild_id, "monitor-events") or {}
+        return settings.get(event_name, True)
+
     async def log_event(
         self,
         guild: discord.Guild,
@@ -59,6 +63,9 @@ class MonitoringCog(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         guild = member.guild
         gid = guild.id
+
+        if not await self.is_event_enabled(gid, "join"):
+            return
 
         inviter_reason = None
         used_invite = None
@@ -133,7 +140,11 @@ class MonitoringCog(commands.Cog):
         if before.timed_out_until == after.timed_out_until:
             return 
 
-        guild      = after.guild
+        guild = after.guild
+
+        if not await self.is_event_enabled(guild.id, "timeout"):
+            return
+
         timed_out  = after.timed_out_until is not None
         title      = "Member Timed-Out" if timed_out else "Timeout Removed"
         colour     = discord.Color.dark_orange() if timed_out else discord.Color.green()
@@ -205,6 +216,13 @@ class MonitoringCog(commands.Cog):
             except Exception as e:
                 print(f"[Kick Log] Audit log lookup failed: {e}")
 
+            if kicked: 
+                if not await self.is_event_enabled(guild.id, "kick"):
+                    return
+            else:
+                if not await self.is_event_enabled(guild.id, "leave"):
+                    return
+
             embed = Embed(
                 title="Member Kicked" if kicked else "Member Left",
                 description=f"{member.mention} ({member.name}) has {'been kicked' if kicked else 'left'} the server.",
@@ -240,11 +258,15 @@ class MonitoringCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
+        
         channel = self.bot.get_channel(payload.channel_id)
         if not channel:
             return
         
         if not isinstance(channel, discord.TextChannel):
+            return
+
+        if not await self.is_event_enabled(channel.guild.id, "message_delete"):
             return
 
         message = payload.cached_message or self.message_cache.pop(payload.message_id, None)
@@ -347,6 +369,8 @@ class MonitoringCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.User):
+        if not await self.is_event_enabled(guild.id, "ban"):
+            return
         try:
             embed = discord.Embed(
                 title="Member Banned",
@@ -378,6 +402,8 @@ class MonitoringCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
+        if not await self.is_event_enabled(guild.id, "unban"):
+            return
         try:
             embed = discord.Embed(
                 title="Member Unbanned",
@@ -410,7 +436,8 @@ class MonitoringCog(commands.Cog):
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if before.author.bot or before.content == after.content:
             return
-
+        if not await self.is_event_enabled(before.guild.id, "message_edit"):
+            return
         embed = Embed(
             title="Message Edited",
             description=f"**Author:** {before.author.mention} ({before.author.name})\n"
@@ -421,23 +448,6 @@ class MonitoringCog(commands.Cog):
         embed.add_field(name="After", value=after.content or "[No Content]", inline=False)
         embed.set_footer(text=f"User ID: {before.author.id}")
         await self.log_event(before.guild, embed=embed, mention_user=False)
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, error: Exception):
-        if isinstance(error, MissingPermissions):
-            user = ctx.author
-            embed = Embed(
-                title="Permission Error",
-                description=f"{user.mention} ({user.name}) attempted to run `{ctx.command}` without required permissions.",
-                color=Color.red()
-            )
-        else:
-            embed = Embed(
-                title="Command Error",
-                description=f"An error occurred in `{ctx.command}`:\n```{error}```",
-                color=Color.red()
-            )
-        await self.log_event(ctx.guild, embed=embed, mention_user=False)
         
     monitor_group = app_commands.Group(
         name="monitor",
@@ -470,5 +480,30 @@ class MonitoringCog(commands.Cog):
         else:
             await interaction.response.send_message("No monitor channel is currently set.", ephemeral=True)
             
+    @monitor_group.command(name="toggle_event", description="Enable or disable a specific monitoring event.")
+    @app_commands.describe(event="The event to toggle", enabled="Enable or disable logging for this event")
+    @app_commands.choices(event=[
+        app_commands.Choice(name="User Join", value="join"),
+        app_commands.Choice(name="User Leave", value="leave"),
+        app_commands.Choice(name="Ban", value="ban"),
+        app_commands.Choice(name="Unban", value="unban"),
+        app_commands.Choice(name="Timeout", value="timeout"),
+        app_commands.Choice(name="Message Deleted", value="message_delete"),
+        app_commands.Choice(name="Message Edited", value="message_edit"),
+    ])
+    async def toggle_event(self, interaction: Interaction, event: app_commands.Choice[str], enabled: bool):
+        settings = await mysql.get_settings(interaction.guild.id, "monitor-events") or {}
+        settings[event.value] = enabled
+        await mysql.update_settings(interaction.guild.id, "monitor-events", settings)
+        await interaction.response.send_message(
+            f"Logging for `{event.name}` has been {'enabled' if enabled else 'disabled'}.", ephemeral=True
+        )
+
+    @monitor_group.command(name="list_events", description="List current monitor event settings.")
+    async def list_events(self, interaction: Interaction):
+        settings = await mysql.get_settings(interaction.guild.id, "monitor-events") or {}
+        lines = [f"- `{k}`: {'✅' if v else '❌'}" for k, v in settings.items()]
+        await interaction.response.send_message("**Monitor Events:**\n" + "\n".join(lines), ephemeral=True)
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(MonitoringCog(bot))
