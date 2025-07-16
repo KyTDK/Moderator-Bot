@@ -7,11 +7,8 @@ from modules.utils.mysql import get_settings, update_settings
 
 MASS_JOIN_WINDOW = timedelta(minutes=1)
 MASS_LEAVE_WINDOW = timedelta(minutes=1)
-CHANNEL_SPIKE_WINDOW = timedelta(seconds=30)
-CHANNEL_SPIKE_THRESHOLD = 10
 SERVER_SPIKE_WINDOW = timedelta(seconds=30)
 SERVER_SPIKE_THRESHOLD = 30
-GUILD_INACTIVE_WINDOW = timedelta(minutes=30)
 
 class AdaptiveModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -116,36 +113,38 @@ class AdaptiveModerationCog(commands.Cog):
             else:
                 self.leaves[gid] = recent_leaves
 
-            # Inactive Server
-            last_time = self.last_message_time.get(gid)
-            if last_time and now - last_time > GUILD_INACTIVE_WINDOW:
-                if "guild_inactive" in settings:
-                    await apply_adaptive_actions(guild, settings["guild_inactive"])
-
-            # Channel Spikes
-            for (g_id, c_id), timestamps in list(self.channel_activity.items()):
-                if g_id != gid:
-                    continue
-                recent = [t for t in timestamps if now - t <= CHANNEL_SPIKE_WINDOW]
-                if len(recent) >= CHANNEL_SPIKE_THRESHOLD:
-                    key = f"channel_spike:{c_id}"
-                    if key in settings:
-                        await apply_adaptive_actions(guild, settings[key])
-                    self.channel_activity[(g_id, c_id)] = []
-
-            # Server Spike
-            server_recent_msgs = 0
+            # Server Spike (relative comparison)
+            recent_count = 0
+            previous_count = 0
             for (g_id, _), timestamps in self.channel_activity.items():
                 if g_id != gid:
                     continue
-                server_recent_msgs += sum(1 for t in timestamps if now - t <= SERVER_SPIKE_WINDOW)
+                for t in timestamps:
+                    delta = now - t
+                    if delta <= SERVER_SPIKE_WINDOW:
+                        recent_count += 1
+                    elif SERVER_SPIKE_WINDOW < delta <= SERVER_SPIKE_WINDOW * 1.3:
+                        previous_count += 1
 
-            if server_recent_msgs >= SERVER_SPIKE_THRESHOLD:
-                if "server_spike" in settings:
-                    await apply_adaptive_actions(guild, settings["server_spike"])
-                    for key in list(self.channel_activity.keys()):
-                        if key[0] == gid:
-                            self.channel_activity[key] = []
+            print(f"[DEBUG] Guild {gid}: recent={recent_count}, previous={previous_count}")
+
+            # Compute scaling multiplier threshold
+            if previous_count > 0:
+                required_multiplier = max(1.2, min(3.0, 3.0 / (previous_count ** 0.3)))
+                print(f"[DEBUG] Guild {gid}: multiplier required = {required_multiplier:.2f}")
+                
+                if recent_count >= previous_count * required_multiplier:
+                    print(f"[DEBUG] Guild {gid}: server_spike triggered by scaled multiplier")
+                    if "server_spike" in settings:
+                        await apply_adaptive_actions(guild, settings["server_spike"])
+                        for key in list(self.channel_activity.keys()):
+                            if key[0] == gid:
+                                self.channel_activity[key] = []
+
+                elif recent_count < previous_count / required_multiplier:
+                    print(f"[DEBUG] Guild {gid}: server_inactive triggered by scaled dropoff")
+                    if "guild_inactive" in settings:
+                        await apply_adaptive_actions(guild, settings["guild_inactive"])
 
             # Time-based
             current_utc = now.time()

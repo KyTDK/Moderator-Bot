@@ -18,7 +18,6 @@ ADAPTIVE_EVENTS = [
     ("Role Offline", "role_offline"),
     ("Mass Join", "mass_join"),
     ("Mass Leave", "mass_leave"),
-    ("Channel Spike", "channel_spike"),
     ("Server Inactivity", "guild_inactive"),
     ("Role Online %", "role_online_percent"),
     ("Time Range", "time_range"),
@@ -208,12 +207,6 @@ class AutonomousCommandsCog(commands.Cog):
                     return
                 event_key = f"{event.value}:{role.id}:{threshold}"
 
-            elif event.value == "channel_spike":
-                if not channel:
-                    await interaction.response.send_message("This event type requires a channel.", ephemeral=True)
-                    return
-                event_key = f"channel_spike:{channel.id}"
-
             elif event.value == "time_range":
                 if not time_range:
                     await interaction.response.send_message("This event type requires a time range (e.g., 08:00-20:00).", ephemeral=True)
@@ -272,13 +265,7 @@ class AutonomousCommandsCog(commands.Cog):
             for action, details in action_map.items():
                 mentions = []
                 for val in details:
-                    if event == "channel_spike":
-                        try:
-                            ch = interaction.guild.get_channel(int(val))
-                            mentions.append(ch.mention if ch else f"`channel_id={val}`")
-                        except ValueError:
-                            mentions.append(f"[invalid channel: {val}]")
-                    elif event in {"role_online", "role_offline"}:
+                    if event in {"role_online", "role_offline"}:
                         try:
                             role = interaction.guild.get_role(int(val))
                             mentions.append(role.mention if role else f"`role_id={val}`")
