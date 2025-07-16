@@ -277,7 +277,8 @@ SETTINGS_SCHEMA = {
         default={
             "mass_join": ["enable_interval", "disable_report"],
             "mass_leave": ["enable_interval", "disable_report"],
-            "guild_inactive": ["enable_report", "disable_interval"]
+            "guild_inactive": ["enable_report", "disable_interval"],
+            "server_spike": ["enable_interval", "disable_report"],
         },
         hidden=True
     ),
