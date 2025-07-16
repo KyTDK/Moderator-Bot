@@ -249,54 +249,48 @@ class AutonomousCommandsCog(commands.Cog):
             await interaction.response.send_message("No adaptive events set.", ephemeral=True)
             return
 
-        grouped: dict[tuple[str, str], list[str]] = defaultdict(list)
+        grouped: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
         for key, actions in settings.items():
             if ":" in key:
                 prefix, detail = key.split(":", 1)
             else:
                 prefix, detail = key, ""
             for action in actions:
-                grouped[(prefix, action)].append(detail)
+                grouped[prefix][action].append(detail)
 
         lines = []
-        for (event, action), details in grouped.items():
-            mentions = []
-            for val in details:
-                if event == "channel_spike":
-                    try:
-                        ch = interaction.guild.get_channel(int(val))
-                        mentions.append(ch.mention if ch else f"channel_id={val}")
-                    except ValueError:
-                        mentions.append(f"[invalid channel: {val}]")
-
-                elif event in {"role_online", "role_offline"}:
-                    try:
-                        role = interaction.guild.get_role(int(val))
-                        mentions.append(role.mention if role else f"role_id={val}")
-                    except ValueError:
-                        mentions.append(f"[invalid role: {val}]")
-
-                elif event == "role_online_percent":
-                    try:
-                        role_id, threshold = val.split(":")
-                        role = interaction.guild.get_role(int(role_id))
-                        display = role.mention if role else f"role_id={role_id}"
-                        mentions.append(f"{display} ≥ {threshold}")
-                    except Exception:
-                        mentions.append(f"[invalid: {val}]")
-
-                elif event == "time_range":
-                    mentions.append(val)
-
-                else:
-                    mentions.append(val)
-
+        for event, action_map in grouped.items():
             event_label = VALID_ADAPTIVE_EVENTS.get(event, event)
-            joined = ", ".join(mentions).strip()
-            if joined:
-                lines.append(f"**{event_label} ({joined})**: `{action}`")
-            else:
-                lines.append(f"**{event_label}**: `{action}`")
+            lines.append(f"**{event_label}**")
+            for action, details in action_map.items():
+                mentions = []
+                for val in details:
+                    if event == "channel_spike":
+                        try:
+                            ch = interaction.guild.get_channel(int(val))
+                            mentions.append(ch.mention if ch else f"`channel_id={val}`")
+                        except ValueError:
+                            mentions.append(f"[invalid channel: {val}]")
+                    elif event in {"role_online", "role_offline"}:
+                        try:
+                            role = interaction.guild.get_role(int(val))
+                            mentions.append(role.mention if role else f"`role_id={val}`")
+                        except ValueError:
+                            mentions.append(f"[invalid role: {val}]")
+                    elif event == "role_online_percent":
+                        try:
+                            role_id, threshold = val.split(":")
+                            role = interaction.guild.get_role(int(role_id))
+                            display = role.mention if role else f"`role_id={role_id}`"
+                            mentions.append(f"{display} ≥ `{threshold}`")
+                        except Exception:
+                            mentions.append(f"[invalid: {val}]")
+                    elif event == "time_range":
+                        mentions.append(f"`{val}`")
+                    elif val:
+                        mentions.append(f"`{val}`")
+                joined = f" → {', '.join(mentions)}" if mentions else ""
+                lines.append(f"• `{action}`{joined}")
 
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
