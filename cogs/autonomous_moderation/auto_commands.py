@@ -47,6 +47,9 @@ class AutonomousCommandsCog(commands.Cog):
     @ai_mod_group.command(name="rules_set", description="Set server rules")
     @app_commands.default_permissions(manage_guild=True)
     async def set_rules(this, interaction: Interaction, *, rules: str):
+        if not await mysql.get_settings(interaction.guild.id, "api-key"):
+            await interaction.response.send_message("Set an API key first with `/settings set api-key`.", ephemeral=True)
+            return
         await mysql.update_settings(interaction.guild.id, "rules", rules)
         await interaction.response.send_message("Rules updated.", ephemeral=True)
 
@@ -73,6 +76,10 @@ class AutonomousCommandsCog(commands.Cog):
             reason: str = None,
         ):
         await interaction.response.defer(ephemeral=True)
+
+        if not await mysql.get_settings(interaction.guild.id, "api-key"):
+            await interaction.response.send_message("Set an API key first with `/settings set api-key`.", ephemeral=True)
+            return
 
         action_str = await validate_action(
             interaction=interaction,
