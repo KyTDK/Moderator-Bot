@@ -78,7 +78,7 @@ class AutonomousCommandsCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         if not await mysql.get_settings(interaction.guild.id, "api-key"):
-            await interaction.response.send_message("Set an API key first with `/settings set api-key`.", ephemeral=True)
+            await interaction.followup.send("Set an API key first with `/settings set api-key`.", ephemeral=True)
             return
 
         action_str = await validate_action(
