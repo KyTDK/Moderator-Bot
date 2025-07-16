@@ -99,18 +99,22 @@ class AdaptiveModerationCog(commands.Cog):
             settings = await get_settings(gid, "aimod-adaptive-events") or {}
 
             # Mass Join
-            joins = [t for t in self.joins[gid] if now - t <= MASS_JOIN_WINDOW]
-            if len(joins) >= 5:
+            recent_joins = [t for t in self.joins[gid] if now - t <= MASS_JOIN_WINDOW]
+            if len(recent_joins) >= 5:
                 if "mass_join" in settings:
                     await apply_adaptive_actions(guild, settings["mass_join"])
                 self.joins[gid] = []
+            else:
+                self.joins[gid] = recent_joins
 
             # Mass Leave
-            leaves = [t for t in self.leaves[gid] if now - t <= MASS_LEAVE_WINDOW]
-            if len(leaves) >= 5:
+            recent_leaves = [t for t in self.leaves[gid] if now - t <= MASS_LEAVE_WINDOW]
+            if len(recent_leaves) >= 5:
                 if "mass_leave" in settings:
                     await apply_adaptive_actions(guild, settings["mass_leave"])
                 self.leaves[gid] = []
+            else:
+                self.leaves[gid] = recent_leaves
 
             # Inactive Server
             last_time = self.last_message_time.get(gid)
@@ -158,24 +162,20 @@ class AdaptiveModerationCog(commands.Cog):
                         continue
 
 async def apply_adaptive_actions(guild: discord.Guild, actions: list[str]):
-    current_mode = await get_settings(guild.id, "aimod-active-mode") or "report"
+    mode = await get_settings(guild.id, "aimod-active-mode") or "report"
+    target_mode = mode
+
+    interval_triggers = {"enable_interval", "disable_report"}
+    report_triggers = {"enable_report", "disable_interval"}
 
     for action in actions:
-        if action == "enable_interval" and current_mode != "interval":
-            await update_settings(guild.id, "aimod-active-mode", "interval")
-            current_mode = "interval"
+        if action in interval_triggers:
+            target_mode = "interval"
+        elif action in report_triggers:
+            target_mode = "report"
 
-        elif action == "disable_interval" and current_mode == "interval":
-            await update_settings(guild.id, "aimod-active-mode", "report")
-            current_mode = "report"
-
-        elif action == "enable_report" and current_mode != "report":
-            await update_settings(guild.id, "aimod-active-mode", "report")
-            current_mode = "report"
-
-        elif action == "disable_report" and current_mode == "report":
-            await update_settings(guild.id, "aimod-active-mode", "interval")
-            current_mode = "interval"
+    if target_mode != mode:
+        await update_settings(guild.id, "aimod-active-mode", target_mode)
 
 async def setup_adaptive(bot: commands.Bot):
     await bot.add_cog(AdaptiveModerationCog(bot))

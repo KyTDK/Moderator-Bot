@@ -243,6 +243,7 @@ class AutonomousCommandsCog(commands.Cog):
     async def view_adaptive_events(self, interaction: Interaction):
         if not await ensure_adaptive_mode(interaction):
             return
+
         settings = await EVENT_MANAGER.view_events(interaction.guild.id)
         if not settings:
             await interaction.response.send_message("No adaptive events set.", ephemeral=True)
@@ -291,7 +292,11 @@ class AutonomousCommandsCog(commands.Cog):
                     mentions.append(val)
 
             event_label = VALID_ADAPTIVE_EVENTS.get(event, event)
-            lines.append(f"**{event_label} ({', '.join(mentions)})**: {action}")
+            joined = ", ".join(mentions).strip()
+            if joined:
+                lines.append(f"**{event_label} ({joined})**: `{action}`")
+            else:
+                lines.append(f"**{event_label}**: `{action}`")
 
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
