@@ -159,6 +159,9 @@ class AutonomousCommandsCog(commands.Cog):
     )
     @app_commands.default_permissions(manage_guild=True)
     async def set_mode(self, interaction: Interaction, mode: app_commands.Choice[str]):
+        if not await mysql.get_settings(interaction.guild.id, "api-key"):
+            await interaction.response.send_message("Set an API key first with `/settings set api-key`.", ephemeral=True)
+            return
         await mysql.update_settings(interaction.guild.id, "aimod-mode", mode.value)
         await interaction.response.send_message(
             f"AI moderation mode has been set to **{mode.value}**.", ephemeral=True
