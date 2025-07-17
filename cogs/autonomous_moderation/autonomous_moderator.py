@@ -23,7 +23,7 @@ SYSTEM_MSG = (
     "Core constraints:\n"
     "- No personal judgment or outside policies. Only enforce what is explicitly stated under 'Rules:'.\n"
     "- No overreach. Ignore sarcasm, vague innuendo, or mere references. Only act on clear, explicit rule violations.\n"
-    "- Do not punish reporters. Never flag messages that quote, reference, or accuse others — only punish the speaker.\n"
+    "- Do not punish users who describe or report others' behavior. Only enforce rules when the speaker clearly admits to or commits a violation themselves.\n"
     "- Only use prior violations to identify persistent rule-breaking. They may support your reasoning, but do not justify punishment on their own. The current message must clearly break a rule.\n"
     "- If you are unsure, default to ok=true.\n\n"
 
@@ -173,9 +173,9 @@ class AutonomousModeratorCog(commands.Cog):
         return (
             f"[{time_since}]{new_member}\n"
             f"{tag.upper()}\n"
-            f"user = {author.display_name} (id = {author.id})\n"
-            f"message_id = {msg.id}\n"
-            f"content = {content}\n"
+            f"AUTHOR: {author.display_name} (id = {author.id})\n"
+            f"MESSAGE ID: {msg.id}\n"
+            f"MESSAGE: {content}\n"
             "---"
         )
 
