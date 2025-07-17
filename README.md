@@ -6,234 +6,189 @@ Free AI-powered moderation for Discord. Detects nudity, gore, scams, and other v
 
 ## 📌 Features Overview
 
-- **NSFW Filtering**  
+* **Anti-NSFW**
   Detects explicit or harmful content in uploaded media (images, GIFs, Lottie, APNG), Tenor GIFs, and user avatars. Categories include nudity, sexual content, graphic violence, gore, and self-harm-related material.
 
-- **Strikes**  
+* **Strikes**
   Escalating punishment system with custom durations, action cycling, and optional DM notifications. Fully configurable.
 
-- **AI Moderation**  
-  Uses OpenAI models to moderate messages based on rules. Supports autonomous mode, batch scanning, and context-aware enforcement.  
+* **AI Moderation**
+  Uses OpenAI models to moderate messages based on rules. Supports autonomous mode, batch scanning, and context-aware enforcement.
   **Default: AI moderation runs in `report` mode when users @mention the bot.**
 
-- **Scam Detection**  
+* **Scam Detection**
   Detects scam/phishing messages using patterns, Google Safe Browsing, PhishTank, and link unshortening.
 
-- **Banned Words**  
+* **Banned Words**
   Blocks slurs or custom words. Supports layered punishment and integrates with strikes.
 
-- **Logging**  
+* **Logging**
   Tracks joins, leaves, bans, deletions, edits, timeouts, and invite usage.
 
-- **Custom Settings**  
+* **Custom Settings**
   Slash-command-driven configuration for rules, thresholds, exclusions, models, and more.
 
-- **Private API Pool**  
+* **Private API Pool**
   Users can contribute OpenAI keys (encrypted) to increase moderation capacity.
 
 ---
 
 ## 🔺 Strike System
 
-Auto-escalation example:
+Automatically issues escalating punishments based on a user’s strike count:
 
-- 1st Strike → 1d timeout  
-- 2nd Strike → 7d timeout  
-- 3rd Strike → Ban
+* 1st Strike → 1d timeout
+* 2nd Strike → 7d timeout
+* 3rd Strike → Ban
 
-🧠 Customizable with:
+### ⚙️ Commands:
 
-- `/strikes add_action`  
-- `/settings strike-expiry`  
-- `cycle-strike-actions`  
-- `dm-on-strike`  
-- Logs to: `strike-channel`
+* `/strikes strike` – Manually give a strike to a user
+* `/strikes get` – View a user's current strikes
+* `/strikes clear` – Remove all active strikes from a user
+* `/strikes remove` – Remove a specific strike by ID
+* `/strikes add_action` – Add an action for a strike level
+* `/strikes remove_action` – Remove a strike action
+* `/strikes view_actions` – View configured strike actions
+* `/intimidate` – Issue a serious warning (DM or channel)
 
 ---
 
-## 🤖 AI Moderation (Batch & Autonomous)
+## 🤖 AI Moderation
 
-OpenAI-powered moderation based on rules.
+Uses OpenAI to detect violations in user messages.
 
-- Triggered by `@mention` (default) or time interval
-- Autonomous moderation: `autonomous-mod`
-- Context-aware: `contextual-ai`
-- Custom rules: `/ai_mod rules_set`
-- Custom actions: `aimod-detection-action`
+### 🔧 Configuration:
 
-### Settings:
-- `rules`: Rule definitions
-- `aimod-model`: OpenAI model (e.g., `gpt-4o`)
-- `autonomous-mod`: Enable AI auto-mod
+* `/ai_mod rules_set` – Define custom server rules
+* `/ai_mod set_mode` – Choose between `report` or `interval` scanning
+* `/ai_mod toggle` – Enable/disable autonomous moderation
+* `/ai_mod add_adaptive_event` – Add adaptive triggers
+* `/ai_mod remove_adaptive_event` – Remove adaptive triggers
 
-### Commands:
-- `/ai_mod toggle`
-- `/ai_mod add_action`
-- `/ai_mod view_actions`
+### ⚙️ Actions:
+
+* `/ai_mod add_action` – Define what happens on violations
+* `/ai_mod remove_action` – Remove an AI action
+* `/ai_mod view_actions` – Show all AI-triggered actions
+* `/ai_mod clear_adaptive_events` – Clear all adaptive triggers
+* `/ai_mod view_adaptive_events` – List active adaptive triggers
 
 ---
 
 ## 🖼 NSFW Filtering
 
-Detects NSFW in:
+Detects nudity, graphic violence, and explicit content in:
 
-- Uploaded media (images, GIFs, stickers)
-- Tenor GIFs (`check-tenor-gifs`)
-- Profile pictures (`check-pfp`)
-- Lottie/APNG animations
+* Uploaded media (images, GIFs, stickers, emojis, videos)
+* Tenor GIFs
+* Profile pictures
+* Lottie / APNG animations
 
-### Categories:
-- `nsfw-detection-categories` (e.g., `sexual`, `violence_graphic`)
-- `threshold`: Confidence threshold
+### 🔧 Configuration:
 
-### Actions:
-- `nsfw-detection-action`
-- `nsfw-pfp-action`
-- `nsfw-pfp-message`
-- `unmute-on-safe-pfp`
+* `/nsfw set_threshold` – Set detection confidence
+* `/nsfw add_category` – Add custom categories to detect
+* `/nsfw add_action` – Action to take when NSFW is detected
+* `/nsfw remove_action` – Remove NSFW actions
 
-### Commands:
-- `/nsfw add_action`
-- `/nsfw add_category`
-- `/nsfw view_actions`
-- `/nsfw set_threshold`
-- `/nsfw view_threshold`
+### 📜 Inspection:
+
+* `/nsfw view_actions` – View active actions
+* `/nsfw view_threshold` – Check the current threshold
 
 ---
 
 ## ❌ Scam & Link Protection
 
-Scam prevention with:
+Detects and removes scam/phishing messages using:
 
-- Pattern/URL matching
-- Google Safe Browsing & PhishTank
-- Link unshortening
+* Pattern and URL matching
+* Google Safe Browsing & PhishTank integration
+* Smart link unshortening with scam checks
 
-### Actions:
-- `scam-detection-action`
-- `delete-scam-messages`
+### 🔧 Configuration:
 
-### Toggles:
-- `check-links`
-- `exclude-scam-channels`
+* `/scam add_message` – Add scam message patterns
+* `/scam add_url` – Add scam URL substrings
+* `/scam delete` – Toggle auto-deletion of flagged messages
+* `/scam check_links` – Enable or disable link safety checks
+* `/scam ai_detection` – Enable or disable AI-based scam detection
+* `/scam exclude_channel_add` – Exclude a channel from scam detection
+* `/scam exclude_channel_remove` – Remove a channel from the exclusion list
+* `/scam view` – Show current scam detection settings
 
-### Commands:
-- `/scam settings`
-- `/scam view`
-- `/scam list_patterns`
-- `/scam list_urls`
+### ⚙️ Actions:
+
+* `/scam add_action` – Add moderation actions (e.g., `timeout`, `ban`)
+* `/scam remove_action` – Remove configured actions
+* `/scam settings` – Manage detection settings
+
+### 📜 Logs & Lists:
+
+* `/scam list_patterns` – View custom scam message patterns
+* `/scam list_urls` – View added scam URLs
+* `/scam exclude_channel_list` – View excluded channels
 
 ---
 
 ## 💬 Banned Words System
 
-- Built-in slur list or custom words
-- Action: `banned-words-action`
-- Logging: `monitor-channel`
+Blocks slurs and custom word lists.
 
-### Commands:
-- `/bannedwords add`
-- `/bannedwords remove`
-- `/bannedwords add_action`
-- `/bannedwords view_actions`
-- `/bannedwords clear`
+### 🔧 Configuration:
+
+* `/bannedwords add` – Add a custom banned word
+* `/bannedwords remove` – Remove a word from the list
+* `/bannedwords defaults` – Enable default slur list
+* `/bannedwords clear` – Clear all custom banned words
+* `/bannedwords add_action` – Set action when banned words are triggered
+* `/bannedwords remove_action` – Remove a word action
+
+### 📜 Inspection:
+
+* `/bannedwords view_actions` – View all punishment actions
 
 ---
 
 ## 📊 Monitoring & Logging
 
-Logs:
+Tracks and logs key server events:
 
-- Joins, leaves, edits, deletions, bans, kicks, timeouts
-- Tracks deleted messages (even uncached)
-- Invite tracking
+* Joins, leaves, bans, kicks
+* Edits, deletions, timeouts
+* Message deletions and audit logs
+* Invite usage tracking
 
-Output: `monitor-channel`  
-Command: `/monitor set`
+### 🔧 Configuration:
+
+* `/monitor set` – Set log output channel
+* `/monitor remove` – Disable monitoring
+* `/monitor show` – View current log channel
 
 ---
 
 ## ⚙️ Settings Snapshot
 
-| Name                        | Type               | Description                         |
-| --------------------------- | ------------------ | ----------------------------------- |
-| `strike-channel`            | TextChannel        | Logs strikes                        |
-| `nsfw-channel`              | TextChannel        | Logs NSFW previews                  |
-| `monitor-channel`           | TextChannel        | Logs general events                 |
-| `aimod-channel`             | TextChannel        | Logs AI violation results           |
-| `api-key`                   | str (encrypted)    | OpenAI key for AI/NSFW moderation   |
-| `strike-expiry`             | TimeString         | Duration before strikes expire      |
-| `cycle-strike-actions`      | bool               | Loop fallback strike actions        |
-| `dm-on-strike`              | bool               | DM users when they receive a strike |
-| `strike-actions`            | dict               | Action mapping per strike level     |
-| `check-pfp`                 | bool               | Scan avatars for NSFW               |
-| `nsfw-detection-categories` | list\[str]         | Which NSFW categories to detect     |
-| `threshold`                 | float              | Detection sensitivity               |
-| `nsfw-pfp-action`           | list\[str]         | Action on NSFW avatars              |
-| `nsfw-pfp-message`          | str                | Message on NSFW avatar detection    |
-| `unmute-on-safe-pfp`        | bool               | Auto-unmute on safe avatar change   |
-| `check-tenor-gifs`          | bool               | Scan Tenor GIFs for NSFW            |
-| `use-default-banned-words`  | bool               | Use built-in slur list              |
-| `banned-words-action`       | list\[str]         | Action on banned words              |
-| `exclude-channels`          | list\[TextChannel] | Channels excluded from checks       |
-| `delete-scam-messages`      | bool               | Auto-delete scam messages           |
-| `scam-detection-action`     | list\[str]         | Actions for scam messages           |
-| `check-links`               | bool               | Enable URL safety checks            |
-| `exclude-scam-channels`     | list\[TextChannel] | Skip scam checks in these channels  |
-| `rules`                     | str                | Server rules used by AI moderation  |
-| `aimod-detection-action`    | list\[str]         | Action when AI flags content        |
-| `autonomous-mod`            | bool               | Enable autonomous AI moderation     |
-| `aimod-model`               | str                | Model used for AI mod               |
-| `aimod-check-interval`      | TimeString         | How often to run AI moderation      |
-| `contextual-ai`             | bool               | Enable context-aware moderation     |
-| `aimod-mode`                | str                | `report` or `interval` mode         |
-| `no-forward-from-role`      | list\[Role]        | Roles that can't forward messages   |
+| Name                    | Type               | Description                         |
+| ----------------------- | ------------------ | ----------------------------------- |
+| `api-key`               | str (encrypted)    | OpenAI key for AI/NSFW moderation   |
+| `strike-expiry`         | TimeString         | Duration before strikes expire      |
+| `cycle-strike-actions`  | bool               | Loop fallback strike actions        |
+| `dm-on-strike`          | bool               | DM users when they receive a strike |
+| `check-pfp`             | bool               | Scan avatars for NSFW               |
+| `nsfw-pfp-action`       | list\[str]         | Action on NSFW avatars              |
+| `nsfw-pfp-message`      | str                | Message on NSFW avatar detection    |
+| `unmute-on-safe-pfp`    | bool               | Auto-unmute on safe avatar change   |
+| `check-tenor-gifs`      | bool               | Scan Tenor GIFs for NSFW            |
+| `banned-words-action`   | list\[str]         | Action on banned words              |
+| `exclude-channels`      | list\[TextChannel] | Channels excluded from checks       |
+| `delete-scam-messages`  | bool               | Auto-delete scam messages           |
+| `scam-detection-action` | list\[str]         | Actions for scam messages           |
+| `check-links`           | bool               | Enable URL safety checks            |
+| `exclude-scam-channels` | list\[TextChannel] | Skip scam checks in these channels  |
+| `aimod-model`           | str                | Model used for AI mod               |
+| `aimod-check-interval`  | TimeString         | How often to run AI moderation      |
+| `no-forward-from-role`  | list\[Role]        | Roles that can't forward messages   |
 
 ---
-
-## 💬 Command Index
-
-### General
-- `/help`
-- `/settings`
-- `/api_pool`
-- `/monitor`
-- `/channels`
-
-### Strikes
-- `/strikes get`
-- `/strikes remove`
-- `/strikes clear`
-- `/strikes add_action`
-- `/strikes remove_action`
-- `/strikes view_actions`
-
-### NSFW
-- `/nsfw add_action`
-- `/nsfw remove_action`
-- `/nsfw add_category`
-- `/nsfw view_actions`
-- `/nsfw set_threshold`
-- `/nsfw view_threshold`
-
-### AI Mod
-- `/ai_mod toggle`
-- `/ai_mod rules_set`
-- `/ai_mod view_actions`
-- `/ai_mod add_action`
-- `/ai_mod remove_action`
-
-### Banned Words
-- `/bannedwords add`
-- `/bannedwords remove`
-- `/bannedwords defaults`
-- `/bannedwords add_action`
-- `/bannedwords view_actions`
-
-### Scam
-- `/scam settings`
-- `/scam check_links`
-- `/scam add_message`
-- `/scam add_url`
-- `/scam list_patterns`
-- `/scam list_urls`
