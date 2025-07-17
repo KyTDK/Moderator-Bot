@@ -254,15 +254,19 @@ class AutonomousModeratorCog(commands.Cog):
         for gid in guild_ids:
             msgs = self.message_batches.get(gid, [])
             # Check required settings
-            settings = await mysql.get_settings(gid, [
-                "autonomous-mod",
-                "api-key",
-                "rules",
-                "aimod-check-interval",
-                "aimod-model",
-                "monitor-channel",
-                AIMOD_ACTION_SETTING
-            ])
+            settings = await mysql.get_settings(
+                gid,
+                [
+                    "autonomous-mod",
+                    "api-key",
+                    "rules",
+                    "aimod-check-interval",
+                    "aimod-model",
+                    "monitor-channel",
+                    "aimod-channel",
+                    AIMOD_ACTION_SETTING,
+                ],
+            )
 
             # Check essential settings
             autonomous = settings.get("autonomous-mod")
@@ -405,9 +409,9 @@ class AutonomousModeratorCog(commands.Cog):
                         ),
                         colour=discord.Colour.red()
                     )
-                    monitor_channel = settings.get("monitor-channel")
-                    if monitor_channel:
-                        await mod_logging.log_to_channel(embed, monitor_channel, self.bot)
+                    log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
+                    if log_channel:
+                        await mod_logging.log_to_channel(embed, log_channel, self.bot)
             # Send feedback if this batch was triggered by mention
             if trigger_msg:
                 try:

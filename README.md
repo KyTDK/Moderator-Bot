@@ -160,6 +160,7 @@ Command: `/monitor set`
 | `strike-channel`            | TextChannel        | Logs strikes                        |
 | `nsfw-channel`              | TextChannel        | Logs NSFW previews                  |
 | `monitor-channel`           | TextChannel        | Logs general events                 |
+| `aimod-channel`             | TextChannel        | Logs AI violation results           |
 | `api-key`                   | str (encrypted)    | OpenAI key for AI/NSFW moderation   |
 | `strike-expiry`             | TimeString         | Duration before strikes expire      |
 | `cycle-strike-actions`      | bool               | Loop fallback strike actions        |
@@ -197,6 +198,7 @@ Command: `/monitor set`
 - `/settings`
 - `/api_pool`
 - `/monitor`
+- `/channels`
 
 ### Strikes
 - `/strikes get`

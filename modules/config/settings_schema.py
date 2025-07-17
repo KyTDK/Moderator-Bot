@@ -95,6 +95,11 @@ SETTINGS_SCHEMA = {
         description="Channel to log all server activities, including message edits, deletions, and user join/leave events.",
         setting_type=discord.TextChannel,
     ),
+    "aimod-channel": Setting(
+        name="aimod-channel",
+        description="Channel where AI violation logs are posted.",
+        setting_type=discord.TextChannel,
+    ),
     "cycle-strike-actions": Setting(
         name="cycle-strike-actions",
         description="Cycle through strike actions when run out of actions to give user.",
