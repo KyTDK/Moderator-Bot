@@ -124,18 +124,15 @@ class AdaptiveModerationCog(commands.Cog):
             # Compute scaling multiplier threshold
             if previous_count > 0:
                 required_multiplier = max(1.2, min(3.0, 3.0 / (previous_count ** 0.3)))
-                print(f"[DEBUG] Guild {gid}: multiplier required = {required_multiplier:.2f}")
                 
                 # Server spike
                 if recent_count >= previous_count * required_multiplier:
-                    print(f"[DEBUG] Guild {gid}: server_spike triggered by scaled multiplier")
                     if "server_spike" in settings:
                         await apply_adaptive_actions(guild, settings["server_spike"])
                     self.guild_activity[gid] = []
 
                 # Server inactivity
                 elif recent_count < previous_count / required_multiplier:
-                    print(f"[DEBUG] Guild {gid}: server_inactive triggered by scaled dropoff")
                     if "guild_inactive" in settings:
                         await apply_adaptive_actions(guild, settings["guild_inactive"])
                     self.guild_activity[gid] = []
