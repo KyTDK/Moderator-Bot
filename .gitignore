@@ -4,3 +4,7 @@ __pycache__/
 *.pyc
 .phishtank_cache.json.~7822
 phishtank_cache.json
+clip_vectors.sqlite
+clip_vectors.sqlite-shm
+clip_vectors.sqlite-wal
+vector.index
