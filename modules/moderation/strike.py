@@ -109,14 +109,16 @@ async def perform_disciplinary_action(
                     continue
                 until = now + delta
                 await user.timeout(until, reason=reason)
-                await execute_query(
-                    """
-                    INSERT INTO timeouts (user_id, guild_id, timeout_until, reason, source)
-                    VALUES (%s, %s, %s, %s, %s)
-                    ON DUPLICATE KEY UPDATE timeout_until = VALUES(timeout_until), reason = VALUES(reason), source = VALUES(source)
-                    """,
-                    (user.id, user.guild.id, until, reason, source)
-                )
+                # Only log pfp timeouts to allow for unmute-on-safe-pfp.
+                if source == "pfp":
+                    await execute_query(
+                        """
+                        INSERT INTO timeouts (user_id, guild_id, timeout_until, reason, source)
+                        VALUES (%s, %s, %s, %s, %s)
+                        ON DUPLICATE KEY UPDATE timeout_until = VALUES(timeout_until), reason = VALUES(reason), source = VALUES(source)
+                        """,
+                        (user.id, user.guild.id, until, reason, source)
+                    )
                 results.append(f"User timed out until <t:{int(until.timestamp())}:R>.")
                 continue
 
