@@ -500,9 +500,10 @@ class MonitoringCog(commands.Cog):
 
     @monitor_group.command(name="list_events", description="List current monitor event settings.")
     async def list_events(self, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True)
         settings = await mysql.get_settings(interaction.guild.id, "monitor-events") or {}
         lines = [f"- `{k}`: {'✅' if v else '❌'}" for k, v in settings.items()]
-        await interaction.response.send_message("**Monitor Events:**\n" + "\n".join(lines), ephemeral=True)
+        await interaction.followup.send("**Monitor Events:**\n" + "\n".join(lines), ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MonitoringCog(bot))
