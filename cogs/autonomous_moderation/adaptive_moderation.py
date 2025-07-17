@@ -65,7 +65,7 @@ class AdaptiveModerationCog(commands.Cog):
             ]
 
             if event_type == "role_online":
-                if all(m.status != discord.Status.offline for m in relevant_members):
+                if any(m.status != discord.Status.offline for m in relevant_members):
                     await apply_adaptive_actions(after.guild, actions)
             elif event_type == "role_offline":
                 if all(m.status == discord.Status.offline for m in relevant_members):
