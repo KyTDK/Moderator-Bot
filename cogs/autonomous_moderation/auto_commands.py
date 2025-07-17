@@ -101,27 +101,47 @@ class AutonomousCommandsCog(commands.Cog):
         msg = await ACTION_MANAGER.remove_action(interaction.guild.id, action)
         await interaction.response.send_message(msg, ephemeral=True)
 
-    @ai_mod_group.command(name="toggle", description="Enable, disable, or view status of AI moderation")
-    @app_commands.describe(action="enable | disable | status")
+    @ai_mod_group.command(name="toggle", description="Enable/disable moderation, view status, or set mode.")
+    @app_commands.describe(
+        enable="Turn autonomous moderation on or off.",
+        mode="Optional: set report / interval / adaptive mode."
+    )
     @app_commands.choices(
-        action=[
-            app_commands.Choice(name="enable",  value="enable"),
-            app_commands.Choice(name="disable", value="disable"),
-            app_commands.Choice(name="status",  value="status"),
+        enable=[
+            app_commands.Choice(name="Enable", value="enable"),
+            app_commands.Choice(name="Disable", value="disable"),
+            app_commands.Choice(name="Status", value="status")
+        ],
+        mode=[
+            app_commands.Choice(name="Report Mode", value="report"),
+            app_commands.Choice(name="Interval Mode", value="interval"),
+            app_commands.Choice(name="Adaptive Mode", value="adaptive")
         ]
     )
     @app_commands.default_permissions(manage_guild=True)
-    async def toggle_autonomous(self, interaction: Interaction, action: app_commands.Choice[str]):
+    async def toggle(
+        self,
+        interaction: Interaction,
+        enable: app_commands.Choice[str],
+        mode: app_commands.Choice[str] = None
+    ):
         gid = interaction.guild.id
 
-        if action.value == "status":
+        if enable.value == "status":
             enabled = await mysql.get_settings(gid, "autonomous-mod")
-            await interaction.response.send_message(
-                f"Autonomous moderation is **{'enabled' if enabled else 'disabled'}**.", ephemeral=True
-            )
+            current_mode = await mysql.get_settings(gid, "aimod-mode") or "report"
+            msg = f"Autonomous moderation is **{'enabled' if enabled else 'disabled'}**.\n"
+            msg += f"Current mode is **{current_mode}**."
+
+            if current_mode == "adaptive":
+                active = await mysql.get_settings(gid, "aimod-active-mode") or "report"
+                msg += f"\nActive sub-mode: **{active}**"
+
+            await interaction.response.send_message(msg, ephemeral=True)
             return
 
-        if action.value == "enable":
+        # Validate API key and rules if enabling
+        if enable.value == "enable":
             key = await mysql.get_settings(gid, "api-key")
             rules = await mysql.get_settings(gid, "rules")
             if not key:
@@ -130,11 +150,18 @@ class AutonomousCommandsCog(commands.Cog):
             if not rules:
                 await interaction.response.send_message("Set moderation rules first with `/ai_mod rules_set`.", ephemeral=True)
                 return
+            await mysql.update_settings(gid, "autonomous-mod", True)
+            status_msg = "Autonomous moderation has been **enabled**."
+        else:
+            await mysql.update_settings(gid, "autonomous-mod", False)
+            status_msg = "Autonomous moderation has been **disabled**."
 
-        await mysql.update_settings(gid, "autonomous-mod", action.value == "enable")
-        await interaction.response.send_message(
-            f"Autonomous moderation **{action.value}d**.", ephemeral=True
-        )
+        # If a mode was also provided, update that
+        if mode:
+            await mysql.update_settings(gid, "aimod-mode", mode.value)
+            status_msg += f"\nMode has been set to **{mode.value}**."
+
+        await interaction.response.send_message(status_msg, ephemeral=True)
 
     @ai_mod_group.command(name="view_actions", description="Show all actions currently configured to trigger when the AI detects a violation.")
     async def view_actions(self, interaction: Interaction):
@@ -147,24 +174,6 @@ class AutonomousCommandsCog(commands.Cog):
         await interaction.response.send_message(
             f"**Current actions:**\n{formatted}",
             ephemeral=True
-        )
-
-    @ai_mod_group.command(name="set_mode", description="Manually set the AI moderation mode (report, interval, or adaptive).")
-    @app_commands.choices(
-        mode=[
-            app_commands.Choice(name="Report Mode", value="report"),
-            app_commands.Choice(name="Interval Mode", value="interval"),
-            app_commands.Choice(name="Adaptive Mode", value="adaptive")
-        ]
-    )
-    @app_commands.default_permissions(manage_guild=True)
-    async def set_mode(self, interaction: Interaction, mode: app_commands.Choice[str]):
-        if not await mysql.get_settings(interaction.guild.id, "api-key"):
-            await interaction.response.send_message("Set an API key first with `/settings set api-key`.", ephemeral=True)
-            return
-        await mysql.update_settings(interaction.guild.id, "aimod-mode", mode.value)
-        await interaction.response.send_message(
-            f"AI moderation mode has been set to **{mode.value}**.", ephemeral=True
         )
 
     @ai_mod_group.command(name="add_adaptive_event", description="Link a trigger event to one or more moderation mode actions.")
