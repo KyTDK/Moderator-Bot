@@ -4,14 +4,11 @@ import asyncio
 from types import SimpleNamespace
 from pathlib import Path
 
-# Provide a minimal stub for the discord module so modules.utils.strike can be
-# imported without having the real dependency installed.
 sys.modules.setdefault(
     "discord",
     SimpleNamespace(Role=object, Interaction=object),
 )
 
-# Ensure the project root is on the import path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from modules.utils.strike import validate_action
