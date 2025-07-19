@@ -495,7 +495,7 @@ async def moderator_api(text: str | None = None,
             # Add vector for flagged category
             print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
             clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
-            # Ignore low confidence scores - Global settings
+            # Ignore low confidence scores based on guild preferences
             if score < threshold:
                 print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
                 continue
