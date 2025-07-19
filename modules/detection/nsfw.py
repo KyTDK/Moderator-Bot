@@ -500,7 +500,7 @@ async def moderator_api(text: str | None = None,
             # Check if category is allowed in this guild
             if allowed_categories and not _is_allowed_category(category, allowed_categories):
                 continue
-
+            # Add to flagged categories
             flagged_categories.append((normalized_category, score))
         if flagged_categories:
             top_category, top_score = max(flagged_categories, key=lambda x: x[1])
