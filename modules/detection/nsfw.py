@@ -509,7 +509,8 @@ async def moderator_api(text: str | None = None,
             result["is_nsfw"] = True
             result["category"] = top_category
             result["reason"] = f"Flagged as {top_category} with score {top_score:.2f}"
-        elif not flagged_any:
+        # Use flagged_any since flagged_categories is guild specific and not universal
+        if not flagged_any:
             result["is_nsfw"] = False
             # None represents SFW
             clip_vectors.add_vector(image, metadata={"category": None, "score": 0.0})
