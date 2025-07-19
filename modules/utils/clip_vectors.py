@@ -26,11 +26,9 @@ from threading import Lock
 from transformers import CLIPProcessor, CLIPModel
 
 DIM         = 768
-NLIST       = 128
+NLIST       = 2
 MIN_TRAIN   = max(32, NLIST * 40)
-THRESHOLD   = 0.70
 K           = 20
-MIN_VOTES   = 2
 
 DB_PATH     = "clip_vectors.sqlite"
 INDEX_PATH  = "vector.index"
@@ -129,9 +127,9 @@ def _maybe_train():
     _persist_index()
 
 def query_similar(img: Image.Image,
-                  threshold: float = THRESHOLD,
+                  threshold: float = 0.80,
                   k: int = K,
-                  min_votes: int = MIN_VOTES) -> list[dict]:
+                  min_votes: int = 1) -> list[dict]:
     if not index.is_trained:
         return []
 

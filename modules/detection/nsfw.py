@@ -483,14 +483,13 @@ async def moderator_api(text: str | None = None,
         settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
         allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
         threshold = settings.get("threshold", 0.7)
-        flagged_any = False
+        flagged_categories = []
         for category, is_flagged in results.categories.__dict__.items():
             normalized_category = category.replace("/", "_").replace("-", "_")
             score = results.category_scores.__dict__.get(category, 0)
             # Filter out categories that are not flagged
             if not is_flagged:
                 continue
-            flagged_any = True
             # Add vector for flagged category
             print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
             clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
@@ -501,17 +500,18 @@ async def moderator_api(text: str | None = None,
             # Check if category is allowed in this guild
             if allowed_categories and not _is_allowed_category(category, allowed_categories):
                 continue
-            result["is_nsfw"] = True
-            result["category"] = normalized_category
-            result["reason"] = f"Flagged as {normalized_category} with score {score:.2f}"
-            return result
 
-        result["is_nsfw"] = False
-        # None represents SFW
-        if not flagged_any:
+            flagged_categories.append((normalized_category, score))
+        if flagged_categories:
+            top_category, top_score = max(flagged_categories, key=lambda x: x[1])
+            result["is_nsfw"] = True
+            result["category"] = top_category
+            result["reason"] = f"Flagged as {top_category} with score {top_score:.2f}"
+        else:
+            result["is_nsfw"] = False
+            # None represents SFW
             clip_vectors.add_vector(image, metadata={"category": None, "score": 0.0})
         return result
-    
     print("[moderator_api] All API key attempts failed.")
     return result
 
@@ -550,18 +550,20 @@ async def process_image(original_filename: str,
                 category = item.get("category")
                 similarity = item.get("similarity", 0) # Similarity score from vector search
                 score = item.get("score", 0) # OpenAI API determined score
-                if category:
-                    if score < threshold:
-                        print(f"[process_image] Category '{category}' flagged with low score {score:.2f}. Ignoring.")
-                        continue
-                    if _is_allowed_category(category, allowed_categories):
-                        print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
-                        return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
-                    else:
-                        return {"is_nsfw": False, "category": category, "reason": "Excluded similarity match"}
-                else:
+
+                if not category:
                     print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
-                    return {"is_nsfw": False, "category": None, "reason": "Similarity match"}
+                    continue
+
+                if score < threshold:
+                    print(f"[process_image] Category '{category}' flagged with low score {score:.2f}. Ignoring.")
+                    continue
+
+                if _is_allowed_category(category, allowed_categories):
+                    print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
+                    return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
+                
+            return {"is_nsfw": False, "reason": "No NSFW similarity match"}
 
         response = await moderator_api(image_path=png_converted_path,
                                     guild_id=guild_id,
