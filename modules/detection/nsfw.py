@@ -566,8 +566,8 @@ async def process_image(original_filename: str,
                     print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
                     return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
                 
-                # No NSFW detcted
-                return {"is_nsfw": False, "reason": "No NSFW similarity match"}
+            # No NSFW detcted
+            return {"is_nsfw": False, "reason": "No NSFW similarity match"}
 
         response = await moderator_api(image_path=png_converted_path,
                                     guild_id=guild_id,
