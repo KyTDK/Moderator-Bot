@@ -153,7 +153,7 @@ def query_similar(img: Image.Image,
 
     if not votes:
         return []
-    top_cat, scores = max(votes.items(), key=lambda x: len(x[1]))
-    if len(scores) < min_votes:
-        return []
-    return [h for h in hits if h["category"] == top_cat]
+        
+    valid_categories = {cat for cat, scores in votes.items() if len(scores) >= min_votes}
+
+    return [h for h in hits if h["category"] in valid_categories]
