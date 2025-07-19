@@ -484,12 +484,14 @@ async def moderator_api(text: str | None = None,
         allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
         threshold = settings.get("threshold", 0.7)
         flagged_categories = []
+        flagged_any = False
         for category, is_flagged in results.categories.__dict__.items():
             normalized_category = category.replace("/", "_").replace("-", "_")
             score = results.category_scores.__dict__.get(category, 0)
             # Filter out categories that are not flagged
             if not is_flagged:
                 continue
+            flagged_any = True
             # Add vector for flagged category
             print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
             clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
@@ -507,7 +509,7 @@ async def moderator_api(text: str | None = None,
             result["is_nsfw"] = True
             result["category"] = top_category
             result["reason"] = f"Flagged as {top_category} with score {top_score:.2f}"
-        else:
+        elif not flagged_any:
             result["is_nsfw"] = False
             # None represents SFW
             clip_vectors.add_vector(image, metadata={"category": None, "score": 0.0})
