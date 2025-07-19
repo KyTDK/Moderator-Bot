@@ -549,6 +549,7 @@ async def process_image(original_filename: str,
         threshold = settings.get("threshold", 0.70)
         similarity_response = clip_vectors.query_similar(image, threshold=0.80)
         if similarity_response:
+            flagged_any = False
             for item in similarity_response:
                 category = item.get("category")
                 similarity = item.get("similarity", 0) # Similarity score from vector search
@@ -559,14 +560,15 @@ async def process_image(original_filename: str,
                     continue
 
                 if score < threshold:
+                    flagged_any = True
                     print(f"[process_image] Category '{category}' flagged with low score {score:.2f}. Ignoring.")
                     continue
 
                 if _is_allowed_category(category, allowed_categories):
                     print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
                     return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
-                
-            return {"is_nsfw": False, "reason": "No NSFW similarity match"}
+            if not flagged_any:  
+                return {"is_nsfw": False, "reason": "No NSFW similarity match"}
 
         response = await moderator_api(image_path=png_converted_path,
                                     guild_id=guild_id,
