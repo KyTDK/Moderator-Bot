@@ -24,11 +24,11 @@ from PIL import Image
 from collections import defaultdict
 from threading import Lock
 from transformers import CLIPProcessor, CLIPModel
+from typing import List, Dict
 
 DIM         = 768
 NLIST       = 16
 MIN_TRAIN   = max(32, NLIST * 40)
-K           = 20
 
 DB_PATH     = "clip_vectors.sqlite"
 INDEX_PATH  = "vector.index"
@@ -128,32 +128,39 @@ def _maybe_train():
 
 def query_similar(img: Image.Image,
                   threshold: float = 0.80,
-                  k: int = K,
-                  min_votes: int = 1) -> list[dict]:
+                  k: int = 20,
+                  min_votes: int = 1) -> List[Dict]:
     if not index.is_trained:
         return []
 
     vec = embed(img)
     distances, indices = index.search(vec, k)
 
-    hits, votes = [], defaultdict(list)
-    for d, idx in zip(distances[0], indices[0]):
-        if d < threshold or idx < 0:
+    votes: dict[str, list[float]] = defaultdict(list)
+    top_hit: dict[str, Dict] = {}
+
+    for sim, idx in zip(distances[0], indices[0]):
+        if idx < 0 or sim < threshold:
             continue
+
         row = db.execute(
             "SELECT category, meta FROM vectors WHERE id=?",
             (int(idx),)
         ).fetchone()
         if not row:
             continue
+
         category, meta_json = row
-        meta = json.loads(meta_json)
-        hits.append({**meta, "similarity": float(d)})
-        votes[category].append(d)
+        hit = {**json.loads(meta_json), "similarity": float(sim)}
 
-    if not votes:
-        return []
-        
-    valid_categories = {cat for cat, scores in votes.items() if len(scores) >= min_votes}
+        votes[category].append(sim)
 
-    return [h for h in hits if h["category"] in valid_categories]
+        if category not in top_hit or sim > top_hit[category]["similarity"]:
+            top_hit[category] = hit
+
+    valid_categories = {cat for cat, sims in votes.items() 
+                        if len(sims) >= min_votes}
+
+    result = [top_hit[cat] for cat in valid_categories]
+    result.sort(key=lambda h: h["similarity"], reverse=True)
+    return result
