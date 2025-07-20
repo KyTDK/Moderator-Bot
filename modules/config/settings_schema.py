@@ -35,11 +35,13 @@ SETTINGS_SCHEMA = {
         name="strike-channel",
         description="Channel where strikes are logged.",
         setting_type=discord.TextChannel,
+        hidden=True
     ),
     "nsfw-channel": Setting(
         name="nsfw-channel",
         description="Channel where NSFW violations are logged with a preview of the media.",
         setting_type=discord.TextChannel,
+        hidden=True
     ),
     "monitor-events": Setting(
         name="monitor-events",
@@ -55,6 +57,7 @@ SETTINGS_SCHEMA = {
             "message_delete": True,
             "message_edit": True,
             },
+        hidden=True
     ),
     "nsfw-detection-action": Setting(
         name="nsfw-detection-action",
@@ -99,6 +102,7 @@ SETTINGS_SCHEMA = {
         name="aimod-channel",
         description="Channel where AI violation logs are posted.",
         setting_type=discord.TextChannel,
+        hidden=True
     ),
     "cycle-strike-actions": Setting(
         name="cycle-strike-actions",
@@ -271,7 +275,8 @@ SETTINGS_SCHEMA = {
         description="Choose how AI moderation is triggered: `report` mode (only on mention), `interval` mode (automatic background scanning), or `adaptive` mode (dynamically switches based on server activity, events, or configuration).",
         setting_type=str,
         default="report",
-        choices=["interval", "report", "adaptive"]
+        choices=["interval", "report", "adaptive"],
+        hidden=True
     ),
     "aimod-adaptive-events": Setting(
         name="aimod-adaptive-events",
