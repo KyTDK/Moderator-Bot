@@ -31,8 +31,8 @@ import re
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
-MAX_FRAMES_PER_VIDEO = 10          # hard cap so we never spawn hundreds of tasks
-MAX_CONCURRENT_FRAMES = 4          # limits OpenAI calls running at once
+MAX_FRAMES_PER_VIDEO = 20
+MAX_CONCURRENT_FRAMES = 4
 
 @asynccontextmanager
 async def temp_download(url: str, ext: str | None = None):
