@@ -1,4 +1,4 @@
-from discord.ext import commands
+from discord.ext import commands, tasks
 import discord
 import os
 from dotenv import load_dotenv
@@ -19,6 +19,16 @@ bot = commands.Bot(command_prefix='/',
                    intents=intents,
                    chunk_guilds_at_startup=False, 
                    help_command=None)
+
+# Cleanup schedule
+@tasks.loop(hours=6)
+async def cleanup_task():
+    await bot.wait_until_ready()
+    guild_ids = [g.id for g in bot.guilds]
+    print(f"[CLEANUP] Running cleanup for {len(guild_ids)} guilds...")
+
+    await mysql.cleanup_orphaned_guilds(guild_ids)
+    await mysql.cleanup_expired_strikes()
 
 @bot.event
 async def on_ready():
@@ -83,15 +93,11 @@ async def on_guild_join(guild):
 @bot.event
 async def setup_hook():
     await mysql.initialise_and_get_pool()
-
-    # Clean db
-    async def cleanup():
-        await bot.wait_until_ready()
-        guild_ids = [g.id for g in bot.guilds]
-        await mysql.cleanup_orphaned_guilds(guild_ids)
-
-    bot.loop.create_task(cleanup())
-
+    
+    # Start cleanup
+    cleanup_task.start()
+    
+    # Start cogs
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
             await bot.load_extension(f'cogs.{filename[:-3]}')

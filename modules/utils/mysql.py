@@ -355,3 +355,20 @@ async def cleanup_orphaned_guilds(active_guild_ids):
         print("[cleanup] Cleanup performed, but nothing to delete.")
     else:
         print(f"[cleanup] Completed. Total rows deleted: {total_deleted}")
+
+async def cleanup_expired_strikes():
+    """
+    Delete expired strikes from the database (where expires_at < now).
+    """
+    _, affected = await execute_query(
+        """
+        DELETE FROM strikes
+        WHERE expires_at IS NOT NULL
+          AND expires_at <= UTC_TIMESTAMP()
+        """
+    )
+    if affected > 0:
+        print(f"[strikes cleanup] Deleted {affected} expired strikes.")
+    else:
+        print("[strikes cleanup] No expired strikes to delete.")
+    return affected
