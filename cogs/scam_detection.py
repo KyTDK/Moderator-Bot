@@ -1,6 +1,5 @@
 import json
 import os
-import re
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
@@ -14,7 +13,8 @@ from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from cogs.banned_words import normalize_text
 import aiohttp
 from discord.ext import tasks
-    
+import re
+
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 DELETE_SETTING = "delete-scam-messages"
@@ -81,22 +81,16 @@ SAFE_URLS = [
 
 INTERMEDIARY_DOMAINS = ["antiphishing.biz",]
 
-def all_urls(text: str, extractor=None):
-    # Get all starting with http(s):// using regex as links my provided like this
-    # hellohttps://google.com
-    regex_urls = set(re.findall(r'(https?://[^\s]+)', text))
-    # Extract with urlextract as regex doesn't extract links like this
-    # google.com
-    urlextract_urls = set()
-    if extractor is not None:
-        urlextract_urls = set(extractor.find_urls(text))
-        # Normalize
-        urlextract_urls = set(
-            u if u.startswith(('http://', 'https://')) else f'http://{u}'
-            for u in urlextract_urls
-        )
-    # Merge
-    return list(regex_urls | urlextract_urls)
+def clean_and_normalize_urls(found_urls):
+    cleaned = []
+    for u in found_urls:
+        if not u.startswith(("http://", "https://")):
+            u = f"http://{u}"
+        m = re.search(r'https?://', u)
+        if m:
+            u = u[m.start():]
+        cleaned.append(u)
+    return cleaned
 
 async def update_cache():
     try:
@@ -204,13 +198,14 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     matched_pattern = next((p[0] for p in patterns if p[0].lower() in normalized_message), None)
     if matched_pattern:
         return True, matched_pattern, None
-    
-    found_urls = all_urls(message, extractor=url_extractor)
+
+    found_urls = url_extractor.find_urls(message)
+    normalized_urls = clean_and_normalize_urls(found_urls)
 
     check_links   = await get_settings(guild_id, CHECK_LINKS_SETTING)
 
     if check_links:
-        for url in found_urls:
+        for url in normalized_urls:
             if await _url_is_scam(url.lower(), guild_id):
                 return True, None, url
 
