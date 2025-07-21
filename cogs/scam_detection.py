@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
@@ -79,6 +80,23 @@ SAFE_URLS = [
 ]
 
 INTERMEDIARY_DOMAINS = ["antiphishing.biz",]
+
+def all_urls(text: str, extractor=None):
+    # Get all starting with http(s):// using regex as links my provided like this
+    # hellohttps://google.com
+    regex_urls = set(re.findall(r'(https?://[^\s]+)', text))
+    # Extract with urlextract as regex doesn't extract links like this
+    # google.com
+    urlextract_urls = set()
+    if extractor is not None:
+        urlextract_urls = set(extractor.find_urls(text))
+        # Normalize
+        urlextract_urls = set(
+            u if u.startswith(('http://', 'https://')) else f'http://{u}'
+            for u in urlextract_urls
+        )
+    # Merge
+    return list(regex_urls | urlextract_urls)
 
 async def update_cache():
     try:
@@ -186,17 +204,13 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     matched_pattern = next((p[0] for p in patterns if p[0].lower() in normalized_message), None)
     if matched_pattern:
         return True, matched_pattern, None
-
-    found_urls = url_extractor.find_urls(message)
-    normalized_urls = [
-        u if u.startswith(("http://", "https://")) else f"http://{u}"
-        for u in found_urls
-    ]
+    
+    found_urls = all_urls(message, extractor=url_extractor)
 
     check_links   = await get_settings(guild_id, CHECK_LINKS_SETTING)
 
     if check_links:
-        for url in normalized_urls:
+        for url in found_urls:
             if await _url_is_scam(url.lower(), guild_id):
                 return True, None, url
 
