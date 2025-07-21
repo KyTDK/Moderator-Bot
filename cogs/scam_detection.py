@@ -86,9 +86,10 @@ def clean_and_normalize_urls(found_urls):
     for u in found_urls:
         if not u.startswith(("http://", "https://")):
             u = f"http://{u}"
-        m = re.search(r'https?://', u)
-        if m:
-            u = u[m.start():]
+        matches = list(re.finditer(r'https?://', u))
+        if matches:
+            last = matches[-1].start()
+            u = u[last:]
         cleaned.append(u)
     return cleaned
 
