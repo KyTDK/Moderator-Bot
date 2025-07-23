@@ -8,6 +8,7 @@ import uuid
 import aiohttp
 import aiofiles
 from discord import Member
+from discord.errors import NotFound
 from discord.ext import commands
 import discord
 from lottie.exporters.gif import export_gif
@@ -321,7 +322,11 @@ async def is_nsfw(bot: commands.Bot,
     for attachment in attachments:
         suffix = os.path.splitext(attachment.filename)[1] or ""
         with NamedTemporaryFile(delete=False, dir=TMP_DIR, suffix=suffix) as tmp:
-            await attachment.save(tmp.name)
+            try:
+                await attachment.save(tmp.name)
+            except NotFound:
+                print(f"[NSFW] Attachment not found: {attachment.url}")
+                continue
             temp_filename = tmp.name
         try:
             if await check_attachment(message.author, temp_filename, nsfw_callback, bot, guild_id, message):
