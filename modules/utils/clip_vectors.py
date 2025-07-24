@@ -27,7 +27,7 @@ from transformers import CLIPProcessor, CLIPModel
 from typing import List, Dict
 
 DIM         = 768
-NLIST       = 64
+NLIST       = 128
 MIN_TRAIN   = max(32, NLIST * 40)
 
 DB_PATH     = "clip_vectors.sqlite"
