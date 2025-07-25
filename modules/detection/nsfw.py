@@ -7,7 +7,7 @@ import filetype
 import uuid
 import aiohttp
 import aiofiles
-from discord import Member
+from discord import Color, Embed, Member
 from discord.errors import NotFound
 from discord.ext import commands
 import discord
@@ -575,19 +575,27 @@ async def process_image(original_filename: str,
                                                    image=image)
                     api_category = response.get("category")
                     api_score = response.get("score", 0)
-                    print(f"[process_image] API response for {original_filename}: {response} | Vector category: {category}, similarity: {similarity:.2f}, score: {score:.2f}")
                     # Check if vector search category matches OpenAI API category
                     if api_category != category:
-                        print(f"[process_image] Category mismatch: vector '{category}' vs API '{api_category}'. Using API category.")
                         # Log to dev channel
                         if guild_id and bot and LOG_CHANNEL_ID:
                             log_channel = await safe_get_channel(bot, LOG_CHANNEL_ID)
                             if log_channel:
-                                await log_channel.send(
-                                    f"Category mismatch for {original_filename}: "
-                                    f"vector '{category}' vs API '{api_category}', "
-                                    f"similarity={similarity:.2f}, vector score={score:.2f}, API score={api_score:.2f}"
+                                embed = Embed(
+                                    title="🔍 Category Mismatch Detected",
+                                    description=f"**File:** `{original_filename}`",
+                                    color=Color.orange()
                                 )
+                                embed.add_field(name="Vector Category", value=category or "None", inline=True)
+                                embed.add_field(name="API Category", value=api_category or "None", inline=True)
+                                embed.add_field(name="Similarity", value=f"{similarity:.2f}", inline=True)
+                                embed.add_field(name="Vector Score", value=f"{score:.2f}", inline=True)
+                                embed.add_field(name="API Score", value=f"{api_score:.2f}", inline=True)
+
+                                if guild_id:
+                                    embed.set_footer(text=f"Guild ID: {guild_id}")
+
+                                await log_channel.send(embed=embed)
                         category = api_category
                         score = api_score
 
