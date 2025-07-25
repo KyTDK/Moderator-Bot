@@ -42,7 +42,7 @@ os.makedirs(TMP_DIR, exist_ok=True)
 MAX_FRAMES_PER_VIDEO = 20
 MAX_CONCURRENT_FRAMES = 4
 MISMATCH_DETECTION = False  # Enable mismatch detection between vector search and OpenAI API
-ADD_SFW_VECTOR = False  # Add SFW vectors to the index
+ADD_SFW_VECTOR = True  # Add SFW vectors to the index
 
 @asynccontextmanager
 async def temp_download(url: str, ext: str | None = None):
