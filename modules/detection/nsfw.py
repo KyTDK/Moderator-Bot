@@ -565,14 +565,14 @@ async def process_image(original_filename: str,
         settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
         allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
         threshold = settings.get("threshold", 0.70)
-        similarity_response = clip_vectors.query_similar(image, threshold=0.80)
+        similarity_response = clip_vectors.query_similar(image, threshold=0.60)
         if similarity_response:
             for item in similarity_response:
                 category = item.get("category")
                 similarity = item.get("similarity", 0) # Similarity score from vector search
                 score = item.get("score", 0) # OpenAI API determined score
                 response = None
-                if similarity < 0.90:
+                if similarity < 0.80:
                     response = await moderator_api(image_path=png_converted_path,
                                                    guild_id=guild_id,
                                                    bot=bot,
