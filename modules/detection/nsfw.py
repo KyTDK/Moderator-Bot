@@ -549,7 +549,8 @@ async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True,
                         bot: commands.Bot | None = None) -> dict | None:
-                        
+    global CATEGORY_MATCHES, CATEGORY_MISMATCHES  
+    
     try:
         png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
         # Convert to PNG and reload as RGB as OpenAI expects RGB images
