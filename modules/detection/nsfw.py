@@ -529,6 +529,7 @@ async def moderator_api(text: str | None = None,
         if not flagged_any and ADD_SFW_VECTOR:
             result["is_nsfw"] = False
             # None represents SFW
+            print("[moderator_api] No NSFW categories flagged, adding SFW vector.")
             clip_vectors.add_vector(image, metadata={"category": None, "score": 0.0})
         return result
     print("[moderator_api] All API key attempts failed.")
