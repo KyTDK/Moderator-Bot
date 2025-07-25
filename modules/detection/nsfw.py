@@ -611,7 +611,7 @@ async def process_image(original_filename: str,
 
                 if not category:
                     print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
-                    continue
+                    return {"is_nsfw": False, "reason": "Similarity match"}
 
                 if score < threshold:
                     print(f"[process_image] Category '{category}' flagged with low score of {score:.2f} and similarity {similarity:.2f}. Ignoring.")
