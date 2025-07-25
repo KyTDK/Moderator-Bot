@@ -433,6 +433,7 @@ async def moderator_api(text: str | None = None,
     result = {
         "is_nsfw": None,
         "category": None,
+        "score": 0.0,
         "reason": None
     }
 
@@ -520,6 +521,7 @@ async def moderator_api(text: str | None = None,
             top_category, top_score = max(flagged_categories, key=lambda x: x[1])
             result["is_nsfw"] = True
             result["category"] = top_category
+            result["score"] = top_score
             result["reason"] = f"Flagged as {top_category} with score {top_score:.2f}"
         # Use flagged_any since flagged_categories is guild specific and not universal
         if not flagged_any:
@@ -573,19 +575,21 @@ async def process_image(original_filename: str,
                                                    image=image)
                     api_category = response.get("category")
                     api_score = response.get("score", 0)
+                    print(f"[process_image] API response for {original_filename}: {response} | Vector category: {category}, similarity: {similarity:.2f}, score: {score:.2f}")
                     # Check if vector search category matches OpenAI API category
-                    if api_category and category and api_category != category:
+                    if api_category != category:
                         print(f"[process_image] Category mismatch: vector '{category}' vs API '{api_category}'. Using API category.")
-                        category = api_category
-                        score = api_score
                         # Log to dev channel
                         if guild_id and bot and LOG_CHANNEL_ID:
                             log_channel = await safe_get_channel(bot, LOG_CHANNEL_ID)
                             if log_channel:
                                 await log_channel.send(
                                     f"Category mismatch for {original_filename}: "
-                                    f"vector '{category}' vs API '{api_category}'."
+                                    f"vector '{category}' vs API '{api_category}', "
+                                    f"similarity={similarity:.2f}, vector score={score:.2f}, API score={api_score:.2f}"
                                 )
+                        category = api_category
+                        score = api_score
 
                 if not category:
                     print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
