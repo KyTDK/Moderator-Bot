@@ -567,7 +567,7 @@ async def process_image(original_filename: str,
                 category = item.get("category")
                 similarity = item.get("similarity", 0) # Similarity score from vector search
                 score = item.get("score", 0) # OpenAI API determined score
-
+                response = None
                 if similarity < 0.80:
                     response = await moderator_api(image_path=png_converted_path,
                                                    guild_id=guild_id,
@@ -610,6 +610,10 @@ async def process_image(original_filename: str,
                 if _is_allowed_category(category, allowed_categories):
                     print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
                     return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
+                
+                if response:
+                    print(f"[process_image] OpenAI API response for {original_filename}: {response}")
+                    return response
                 
             # No NSFW detcted
             return {"is_nsfw": False, "reason": "No NSFW similarity match"}
