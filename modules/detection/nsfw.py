@@ -542,6 +542,9 @@ def _convert_to_png_safe(input_path: str, output_path: str) -> Optional[str]:
         print(f"[convert] Failed to convert {input_path} to PNG: {e}")
         return None
 
+CATEGORY_MATCHES = 0
+CATEGORY_MISMATCHES = 0
+
 async def process_image(original_filename: str,
                         guild_id: int | None = None,
                         clean_up: bool = True,
@@ -577,10 +580,13 @@ async def process_image(original_filename: str,
                     api_score = response.get("score", 0)
                     # Check if vector search category matches OpenAI API category
                     if api_category != category:
+                        CATEGORY_MISMATCHES += 1
                         # Log to dev channel
                         if guild_id and bot and LOG_CHANNEL_ID:
                             log_channel = await safe_get_channel(bot, LOG_CHANNEL_ID)
                             if log_channel:
+                                total_checks = CATEGORY_MATCHES + CATEGORY_MISMATCHES
+                                accuracy_percentage = (CATEGORY_MATCHES / total_checks * 100) if total_checks > 0 else 100
                                 embed = Embed(
                                     title="🔍 Category Mismatch Detected",
                                     description=f"**File:** `{original_filename}`",
@@ -591,6 +597,7 @@ async def process_image(original_filename: str,
                                 embed.add_field(name="Similarity", value=f"{similarity:.2f}", inline=True)
                                 embed.add_field(name="Vector Score", value=f"{score:.2f}", inline=True)
                                 embed.add_field(name="API Score", value=f"{api_score:.2f}", inline=True)
+                                embed.add_field(name="Accuracy", value=f"{accuracy_percentage:.1f}% ({CATEGORY_MATCHES}/{total_checks})", inline=True)
 
                                 if guild_id:
                                     embed.set_footer(text=f"Guild ID: {guild_id}")
@@ -598,6 +605,8 @@ async def process_image(original_filename: str,
                                 await log_channel.send(embed=embed)
                         category = api_category
                         score = api_score
+                    else:
+                        CATEGORY_MATCHES += 1
 
                 if not category:
                     print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
