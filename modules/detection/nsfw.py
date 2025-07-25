@@ -42,6 +42,7 @@ os.makedirs(TMP_DIR, exist_ok=True)
 MAX_FRAMES_PER_VIDEO = 20
 MAX_CONCURRENT_FRAMES = 4
 MISMATCH_DETECTION = False  # Enable mismatch detection between vector search and OpenAI API
+ADD_SFW_VECTOR = False  # Add SFW vectors to the index
 
 @asynccontextmanager
 async def temp_download(url: str, ext: str | None = None):
@@ -525,7 +526,7 @@ async def moderator_api(text: str | None = None,
             result["score"] = top_score
             result["reason"] = f"Flagged as {top_category} with score {top_score:.2f}"
         # Use flagged_any since flagged_categories is guild specific and not universal
-        if not flagged_any:
+        if not flagged_any and ADD_SFW_VECTOR:
             result["is_nsfw"] = False
             # None represents SFW
             clip_vectors.add_vector(image, metadata={"category": None, "score": 0.0})
