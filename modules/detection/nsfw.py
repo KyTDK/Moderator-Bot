@@ -28,6 +28,13 @@ from PIL import Image, ImageSequence
 from modules.utils import clip_vectors
 import pillow_avif # registers AVIF support
 import re
+from dotenv import load_dotenv
+
+from modules.utils.discord_utils import safe_get_channel
+
+load_dotenv()
+GUILD_ID = int(os.getenv("GUILD_ID", 0))
+LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", 0))
 
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
@@ -552,19 +559,40 @@ async def process_image(original_filename: str,
         settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
         allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
         threshold = settings.get("threshold", 0.70)
-        similarity_response = clip_vectors.query_similar(image, threshold=0.80)
+        similarity_response = clip_vectors.query_similar(image, threshold=0.60)
         if similarity_response:
             for item in similarity_response:
                 category = item.get("category")
                 similarity = item.get("similarity", 0) # Similarity score from vector search
                 score = item.get("score", 0) # OpenAI API determined score
 
+                if similarity < 0.80:
+                    response = await moderator_api(image_path=png_converted_path,
+                                                   guild_id=guild_id,
+                                                   bot=bot,
+                                                   image=image)
+                    api_category = response.get("category")
+                    api_score = response.get("score", 0)
+                    # Check if vector search category matches OpenAI API category
+                    if api_category and category and api_category != category:
+                        print(f"[process_image] Category mismatch: vector '{category}' vs API '{api_category}'. Using API category.")
+                        category = api_category
+                        score = api_score
+                        # Log to dev channel
+                        if guild_id and bot and LOG_CHANNEL_ID:
+                            log_channel = await safe_get_channel(bot, LOG_CHANNEL_ID)
+                            if log_channel:
+                                await log_channel.send(
+                                    f"Category mismatch for {original_filename}: "
+                                    f"vector '{category}' vs API '{api_category}'."
+                                )
+
                 if not category:
                     print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
                     continue
 
                 if score < threshold:
-                    print(f"[process_image] Category '{category}' flagged with low score {score:.2f}. Ignoring.")
+                    print(f"[process_image] Category '{category}' flagged with low score of {score:.2f} and similarity {similarity:.2f}. Ignoring.")
                     continue
 
                 if _is_allowed_category(category, allowed_categories):
