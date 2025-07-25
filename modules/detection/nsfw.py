@@ -571,7 +571,7 @@ async def process_image(original_filename: str,
                 similarity = item.get("similarity", 0) # Similarity score from vector search
                 score = item.get("score", 0) # OpenAI API determined score
                 response = None
-                if similarity < 0.80:
+                if similarity < 0.90:
                     response = await moderator_api(image_path=png_converted_path,
                                                    guild_id=guild_id,
                                                    bot=bot,
