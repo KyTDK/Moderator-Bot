@@ -484,7 +484,6 @@ async def moderator_api(text: str | None = None,
             continue
         except Exception as e:
             print(f"[moderator_api] Unexpected error from OpenAI API: {e}. Marking key as not working.")
-            await api.set_api_key_not_working(api_key=encrypted_key, bot=bot)
             continue
 
         if not response or not response.results:
