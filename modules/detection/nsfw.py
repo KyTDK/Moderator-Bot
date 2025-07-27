@@ -39,6 +39,7 @@ LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", 0))
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
+CLIP_THRESHOLD = 0.90  # Threshold for similarity search
 MAX_FRAMES_PER_VIDEO = 20
 MAX_CONCURRENT_FRAMES = 4
 MISMATCH_DETECTION = False  # Enable mismatch detection between vector search and OpenAI API
@@ -567,7 +568,7 @@ async def process_image(original_filename: str,
         settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
         allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
         threshold = settings.get("threshold", 0.70)
-        similarity_response = clip_vectors.query_similar(image, threshold=0.80)
+        similarity_response = clip_vectors.query_similar(image, threshold=CLIP_THRESHOLD)
         if similarity_response:
             for item in similarity_response:
                 category = item.get("category")
