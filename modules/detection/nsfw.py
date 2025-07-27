@@ -39,7 +39,7 @@ LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", 0))
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
-CLIP_THRESHOLD = 0.90  # Threshold for similarity search
+CLIP_THRESHOLD = 0.80  # Threshold for similarity search
 MAX_FRAMES_PER_VIDEO = 20
 MAX_CONCURRENT_FRAMES = 4
 MISMATCH_DETECTION = False  # Enable mismatch detection between vector search and OpenAI API
