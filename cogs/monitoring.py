@@ -10,7 +10,6 @@ class MonitoringCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.invite_cache: dict[int, dict[str, int]] = {} # guild_id: {invite_code: uses}
-        self.message_cache = {}
 
     async def get_monitor_channel(self, guild_id: int) -> Optional[int]:
         id = await mysql.get_settings(guild_id, "monitor-channel")
@@ -247,14 +246,6 @@ class MonitoringCog(commands.Cog):
         except Exception as e:
             print(f"[Leave Log] Failed to log member removal: {e}")
 
-    async def handle_message(self, message: discord.Message):
-        if not message.author.bot:
-            self.message_cache[message.id] = message
-
-            if len(self.message_cache) > 10000:
-                oldest = next(iter(self.message_cache))
-                self.message_cache.pop(oldest)
-
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
         
@@ -268,7 +259,7 @@ class MonitoringCog(commands.Cog):
         if not await self.is_event_enabled(channel.guild.id, "message_delete"):
             return
 
-        message = payload.cached_message or self.message_cache.pop(payload.message_id, None)
+        message = payload.cached_message
 
         user = message.author if message else None
 
