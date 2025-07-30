@@ -22,8 +22,9 @@ class DebugCog(commands.Cog):
 
     @app_commands.command(name="stats", description="Get memory and performance stats")
     @app_commands.guilds(discord.Object(id=GUILD_ID))
+    @app_commands.describe(show_all="Include allocations from all libraries (not just project)")
     @app_commands.checks.has_permissions(administrator=True)
-    async def stats(self, interaction: discord.Interaction):
+    async def stats(self, interaction: discord.Interaction, show_all: bool = True):
         await interaction.response.defer(ephemeral=True)
 
         # Get current and peak memory usage
@@ -50,15 +51,27 @@ class DebugCog(commands.Cog):
 
         project_root = os.getcwd()
         top_allocations = []
-        for i, stat in enumerate(top_stats[:10]):
+        for stat in top_stats:
             frame = stat.traceback[0]
             filename = frame.filename
+
+            # Skip files outside the project if show_all is False
+            if not show_all and not filename.startswith(project_root):
+                continue
+
             if filename.startswith(project_root):
                 filename = os.path.relpath(filename, project_root)
+
             formatted = f"{filename}:{frame.lineno}"
             avg_size = stat.size // stat.count if stat.count else 0
-            line = f"{i+1}. {formatted} - size={stat.size / 1024:.1f} KiB, count={stat.count}, avg={avg_size} B"
+            line = f"{len(top_allocations)+1}. {formatted} - size={stat.size / 1024:.1f} KiB, count={stat.count}, avg={avg_size} B"
             top_allocations.append(line)
+
+            if len(top_allocations) >= 10:  # Limit to top 10
+                break
+        
+        if not top_allocations:
+            top_allocations.append("No project-related allocations found.")
 
         chunks = []
         current_chunk = ""
