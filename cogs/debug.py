@@ -24,6 +24,7 @@ class DebugCog(commands.Cog):
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def stats(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
+
         # Get current and peak memory usage
         current, peak = tracemalloc.get_traced_memory()
         current_mb = current / 1024 / 1024
@@ -46,16 +47,18 @@ class DebugCog(commands.Cog):
         snapshot = tracemalloc.take_snapshot()
         top_stats = snapshot.statistics("lineno")
 
-        top_allocations = []
-        for i, stat in enumerate(top_stats[:10]):
-            line = f"{i+1}. {stat}"
-            if len(line) > 90:
-                line = line[:87] + "..."
-            top_allocations.append(line)
+        top_allocations = [f"{i+1}. {stat}" for i, stat in enumerate(top_stats[:10])]
 
-        top_text = "\n".join(top_allocations)
-        if len(top_text) > 1014: 
-            top_text = top_text[:1011] + "..."
+        chunks = []
+        current_chunk = ""
+        for line in top_allocations:
+            if len(current_chunk) + len(line) + 1 > 900:
+                chunks.append(current_chunk)
+                current_chunk = line
+            else:
+                current_chunk += ("\n" if current_chunk else "") + line
+        if current_chunk:
+            chunks.append(current_chunk)
 
         # Build embed
         embed = discord.Embed(
@@ -90,18 +93,6 @@ class DebugCog(commands.Cog):
             ),
             inline=False
         )
-
-        top_text = "\n".join(top_allocations)
-        chunks = []
-        current_chunk = ""
-        for line in top_allocations:
-            if len(current_chunk) + len(line) + 1 > 900:
-                chunks.append(current_chunk)
-                current_chunk = line
-            else:
-                current_chunk += ("\n" if current_chunk else "") + line
-        if current_chunk:
-            chunks.append(current_chunk)
 
         for i, chunk in enumerate(chunks, 1):
             embed.add_field(
