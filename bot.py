@@ -93,6 +93,7 @@ async def on_guild_join(guild):
 
 @bot.event
 async def setup_hook():
+    # Initialize the MySQL connection pool
     await mysql.initialise_and_get_pool()
     
     # Start cleanup
@@ -105,7 +106,8 @@ async def setup_hook():
             print(f"Loaded Cog: {filename[:-3]}")
         else:
             print("Unable to load pycache folder.")
-    await bot.tree.sync()
+
+    # Start Top.gg poster
     start_topgg_poster(bot)
 
 if __name__ == "__main__":
