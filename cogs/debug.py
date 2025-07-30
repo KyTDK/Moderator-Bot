@@ -92,11 +92,23 @@ class DebugCog(commands.Cog):
         )
 
         top_text = "\n".join(top_allocations)
-        embed.add_field(
-            name="Top 10 Memory Allocations",
-            value=f"```{top_text}```",
-            inline=False
-        )
+        chunks = []
+        current_chunk = ""
+        for line in top_allocations:
+            if len(current_chunk) + len(line) + 1 > 900:
+                chunks.append(current_chunk)
+                current_chunk = line
+            else:
+                current_chunk += ("\n" if current_chunk else "") + line
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        for i, chunk in enumerate(chunks, 1):
+            embed.add_field(
+                name=f"Top Memory Allocations {i}",
+                value=f"```{chunk}```",
+                inline=False
+            )
 
         embed.set_footer(text=f"Host: {platform.node()} | Python {platform.python_version()}")
 
