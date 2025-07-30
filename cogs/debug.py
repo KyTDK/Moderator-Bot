@@ -51,8 +51,10 @@ class DebugCog(commands.Cog):
         top_allocations = []
         for i, stat in enumerate(top_stats[:10]):
             frame = stat.traceback[0]
-            formatted = frame.format(current_line=True, short_filename=True)
-            line = f"{i+1}. {formatted} - size={stat.size / 1024:.1f} KiB, count={stat.count}, avg={stat.size // stat.count if stat.count else 0} B"
+            filename = os.path.basename(frame.filename)
+            formatted = f"{filename}:{frame.lineno}"
+            avg_size = stat.size // stat.count if stat.count else 0
+            line = f"{i+1}. {formatted} - size={stat.size / 1024:.1f} KiB, count={stat.count}, avg={avg_size} B"
             top_allocations.append(line)
 
         chunks = []
