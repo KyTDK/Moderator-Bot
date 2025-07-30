@@ -48,10 +48,13 @@ class DebugCog(commands.Cog):
         snapshot = tracemalloc.take_snapshot()
         top_stats = snapshot.statistics("lineno")
 
+        project_root = os.getcwd()
         top_allocations = []
         for i, stat in enumerate(top_stats[:10]):
             frame = stat.traceback[0]
-            filename = os.path.relpath(frame.filename)
+            filename = frame.filename
+            if filename.startswith(project_root):
+                filename = os.path.relpath(filename, project_root)
             formatted = f"{filename}:{frame.lineno}"
             avg_size = stat.size // stat.count if stat.count else 0
             line = f"{i+1}. {formatted} - size={stat.size / 1024:.1f} KiB, count={stat.count}, avg={avg_size} B"
