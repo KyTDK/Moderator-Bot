@@ -370,7 +370,7 @@ class AutonomousModeratorCog(commands.Cog):
                 if not (uid and actions):
                     continue
 
-                member = guild.get_member(uid) or await guild.fetch_member(uid)
+                member = await safe_get_member(guild, uid)
                 reason = item.get("reason", "")
                 rule = item.get("rule", "")
                 message_ids = {int(mid) for mid in item.get("message_ids", [])}

@@ -128,13 +128,9 @@ class AggregatedModerationCog(commands.Cog):
             if not await mysql.get_settings(guild.id, "check-pfp"):
                 continue 
 
-            member = guild.get_member(after.id)
+            member = await safe_get_member(guild, after.id)
             if member is None:
-                try:
-                    member = await guild.fetch_member(after.id)
-                except discord.NotFound:
-                    continue
-
+                continue
             await self._handle_member_avatar(guild, member)
 
     async def _handle_member_avatar(self, guild: discord.Guild, member: discord.Member, is_join: bool = False):
