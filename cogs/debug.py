@@ -22,6 +22,7 @@ class DebugCog(commands.Cog):
 
     @app_commands.command(name="stats", description="Get memory and performance stats")
     @app_commands.guilds(discord.Object(id=GUILD_ID))
+    @app_commands.checks.has_permissions(administrator=True)
     async def stats(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
 
