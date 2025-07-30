@@ -48,7 +48,12 @@ class DebugCog(commands.Cog):
         snapshot = tracemalloc.take_snapshot()
         top_stats = snapshot.statistics("lineno")
 
-        top_allocations = [f"{i+1}. {stat}" for i, stat in enumerate(top_stats[:10])]
+        top_allocations = []
+        for i, stat in enumerate(top_stats[:10]):
+            frame = stat.traceback[0]
+            formatted = frame.format(current_line=True, short_filename=True)
+            line = f"{i+1}. {formatted} - size={stat.size / 1024:.1f} KiB, count={stat.count}, avg={stat.size // stat.count if stat.count else 0} B"
+            top_allocations.append(line)
 
         chunks = []
         current_chunk = ""
