@@ -15,7 +15,11 @@ class AdaptiveModerationCog(commands.Cog):
         self.bot = bot
         self.joins: defaultdict[int, list[datetime]] = defaultdict(list)
         self.leaves: defaultdict[int, list[datetime]] = defaultdict(list)
-        self.guild_activity: defaultdict[int, list[datetime]] = defaultdict(list)  # guild_id → list[message timestamps]
+        self.guild_activity: dict[int, dict[str, int | datetime]] = defaultdict(lambda: {
+            "recent": 0,
+            "previous": 0,
+            "last_update": datetime.now(timezone.utc)
+        })
         self.monitor_loop.start()
 
     def cog_unload(self):
@@ -23,18 +27,35 @@ class AdaptiveModerationCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
+        settings = await get_settings(member.guild.id, "aimod-adaptive-events") or {}
+        if "mass_join" not in settings:
+            return
         self.joins[member.guild.id].append(datetime.now(timezone.utc))
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
+        settings = await get_settings(member.guild.id, "aimod-adaptive-events") or {}
+        if "mass_leave" not in settings:
+            return
         self.leaves[member.guild.id].append(datetime.now(timezone.utc))
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if not message.guild or message.author.bot:
             return
+        settings = await get_settings(message.guild.id, "aimod-adaptive-events") or {}
+        if "server_spike" not in settings and "guild_inactive" not in settings:
+            return
         now = datetime.now(timezone.utc)
-        self.guild_activity[message.guild.id].append(now)
+        record = self.guild_activity[message.guild.id]
+
+        if now - record["last_update"] >= SERVER_SPIKE_WINDOW:
+            # Shift window
+            record["previous"] = record["recent"]
+            record["recent"] = 0
+            record["last_update"] = now
+
+        record["recent"] += 1
 
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
@@ -110,32 +131,34 @@ class AdaptiveModerationCog(commands.Cog):
                 self.leaves[gid] = []
             else:
                 self.leaves[gid] = recent_leaves
+                
+            # Server Activity
+            record = self.guild_activity.get(gid)
+            if not record:
+                continue
 
-            # Calculate message activity
-            recent_start = now - SERVER_SPIKE_WINDOW
-            previous_start = now - 2 * SERVER_SPIKE_WINDOW
+            recent_count = record["recent"]
+            previous_count = record["previous"]
 
-            timestamps = self.guild_activity.get(gid, [])
-            timestamps = [t for t in timestamps if t >= previous_start]
-            self.guild_activity[gid] = timestamps
-            recent_count = sum(1 for t in timestamps if recent_start <= t <= now)
-            previous_count = sum(1 for t in timestamps if previous_start <= t < recent_start)
-
-            # Compute scaling multiplier threshold
             if previous_count > 0:
                 required_multiplier = max(1.2, min(3.0, 3.0 / (previous_count ** 0.3)))
-                
+
                 # Server spike
                 if recent_count >= previous_count * required_multiplier:
                     if "server_spike" in settings:
                         await apply_adaptive_actions(guild, settings["server_spike"])
-                    self.guild_activity[gid] = []
+                    record["recent"] = 0
+                    record["previous"] = 0
 
                 # Server inactivity
                 elif recent_count < previous_count / required_multiplier:
                     if "guild_inactive" in settings:
                         await apply_adaptive_actions(guild, settings["guild_inactive"])
-                    self.guild_activity[gid] = []
+                    record["recent"] = 0
+                    record["previous"] = 0
+                
+            if record["recent"] == 0 and record["previous"] == 0:
+                del self.guild_activity[gid]
 
             # Time-based
             current_utc = now.time()
