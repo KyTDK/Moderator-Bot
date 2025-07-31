@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from modules.cache import cache_message, get_cached_message
+from modules.cache import DEFAULT_CACHED_MESSAGE, cache_message, get_cached_message
 
 class EventDispatcherCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -25,12 +25,18 @@ class EventDispatcherCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
+        # Get cache
         cached_before = get_cached_message(payload.guild_id, payload.message_id)
         if not cached_before:
-            return
+            cached_before = DEFAULT_CACHED_MESSAGE.copy()
+            cached_before.update({
+                "guild_id": payload.guild_id,
+                "channel_id": payload.channel_id,
+                "message_id": payload.message_id,
+            })
         
+        # Check if the message was edited or if it's from a bot
         after = payload.message
-
         if cached_before["content"] == after.content or after.author.bot:
             return
 
@@ -38,6 +44,25 @@ class EventDispatcherCog(commands.Cog):
         await self.bot.get_cog("BannedWordsCog").handle_message_edit(cached_before, after)
         await self.bot.get_cog("MonitoringCog").handle_message_edit(cached_before, after)
         await self.bot.get_cog("AutonomousModeratorCog").handle_message_edit(cached_before, after)
+
+    @commands.Cog.listener()
+    async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
+        channel = self.bot.get_channel(payload.channel_id)
+        if not channel or not isinstance(channel, discord.TextChannel):
+            return
+
+        # Get cached message or fallback with defaults
+        cached_message = get_cached_message(payload.guild_id, payload.message_id)
+        if not cached_message:
+            cached_message = DEFAULT_CACHED_MESSAGE.copy()
+            cached_message.update({
+                "guild_id": payload.guild_id,
+                "channel_id": payload.channel_id,
+                "message_id": payload.message_id,
+            })
+
+        # Handle message deletion
+        await self.bot.get_cog("MonitoringCog").handle_message_delete(cached_message)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(EventDispatcherCog(bot))

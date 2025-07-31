@@ -247,20 +247,13 @@ class MonitoringCog(commands.Cog):
         except Exception as e:
             print(f"[Leave Log] Failed to log member removal: {e}")
 
-    @commands.Cog.listener()
-    async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
-        
-        channel = self.bot.get_channel(payload.channel_id)
-        if not channel:
-            return
-        
-        if not isinstance(channel, discord.TextChannel):
+    async def handle_message_delete(self, cached_message: dict):
+        # Check if the event is enabled for this guild
+        cached_guild_id = cached_message.get("guild_id")
+        if not await self.is_event_enabled(cached_guild_id, "message_delete"):
             return
 
-        if not await self.is_event_enabled(channel.guild.id, "message_delete"):
-            return
-
-        cached_message = get_cached_message(channel.guild.id, payload.message_id) or {}
+        # Get cached message details
         cached_message_content = cached_message.get("content")
         cached_user_id = cached_message.get("author_id")
         cached_user_mention = cached_message.get("author_mention")
@@ -268,6 +261,7 @@ class MonitoringCog(commands.Cog):
         cached_embeds = cached_message.get("embeds", [])
         cached_attachments = cached_message.get("attachments", [])
         cached_stickers = cached_message.get("stickers", [])
+        channel = self.bot.get_channel(cached_message["channel_id"])
 
         deleter: str | None = None
         try:
