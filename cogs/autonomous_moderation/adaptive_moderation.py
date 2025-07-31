@@ -39,8 +39,7 @@ class AdaptiveModerationCog(commands.Cog):
             return
         self.leaves[member.guild.id].append(datetime.now(timezone.utc))
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def handle_message(self, message: discord.Message):
         if not message.guild or message.author.bot:
             return
         settings = await get_settings(message.guild.id, "aimod-adaptive-events") or {}

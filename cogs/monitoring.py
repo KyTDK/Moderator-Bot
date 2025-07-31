@@ -2,6 +2,7 @@ from typing import Optional
 from discord import Embed, Color, Interaction
 import discord
 from discord.ext import commands
+from modules.cache import get_cached_message
 from modules.utils import mysql
 from discord.utils import format_dt, utcnow
 from discord import app_commands
@@ -259,12 +260,14 @@ class MonitoringCog(commands.Cog):
         if not await self.is_event_enabled(channel.guild.id, "message_delete"):
             return
 
-        message = payload.cached_message
-
-        user = message.author if message else None
-
-        if user and user.bot:
-            return
+        cached_message = get_cached_message(channel.guild.id, payload.message_id) or {}
+        cached_message_content = cached_message.get("content")
+        cached_user_id = cached_message.get("author_id")
+        cached_user_mention = cached_message.get("author_mention")
+        cached_user_name = cached_message.get("author_name")
+        cached_embeds = cached_message.get("embeds", [])
+        cached_attachments = cached_message.get("attachments", [])
+        cached_stickers = cached_message.get("stickers", [])
 
         deleter: str | None = None
         try:
@@ -274,7 +277,7 @@ class MonitoringCog(commands.Cog):
             ):
                 if (
                     entry.extra.channel.id == channel.id and
-                    entry.target.id == (user.id if user else None) and
+                    entry.target.id == cached_user_id and
                     (utcnow() - entry.created_at).total_seconds() < 20
                 ):
                     deleter = f"{entry.user.mention} ({entry.user.name})"
@@ -284,30 +287,33 @@ class MonitoringCog(commands.Cog):
         except Exception as e:
             print(f"[Audit-log lookup] {e}")
 
-        if message:
+        if cached_message:
             embed = Embed(
                 title="Message Deleted",
                 description=(
-                    f"**Author:** {user.mention} ({user.name})\n"
+                    f"**Author:** {cached_user_mention} ({cached_user_name})\n"
                     f"**Channel:** {channel.mention}\n"
                     + (f"**Deleted by:** {deleter}\n" if deleter else "")
-                    + f"**Content:**\n{message.content or '[No Text Content]'}"
+                    + f"**Content:**\n{cached_message_content or '[No Text Content]'}"
                 ),
                 color=Color.orange()
             )
-            embed.set_footer(text=f"User ID: {user.id}")
+            embed.set_footer(text=f"User ID: {cached_user_id}")
 
-            if message.attachments:
-                links = [f"• [{a.filename}]({a.url})" for a in message.attachments]
+            # Add cached attachments
+            if cached_attachments:
+                links = [f"• [{a['filename']}]({a['url']})" for a in cached_attachments]
                 embed.add_field(
                     name=f"Attachments ({len(links)})",
                     value="\n".join(links)[:1024],
                     inline=False
                 )
 
-            if message.embeds:
-                for i, rich_embed in enumerate(message.embeds):
+            # Add cached embeds
+            if cached_embeds:
+                for i, embed_dict in enumerate(cached_embeds):
                     try:
+                        rich_embed = Embed.from_dict(embed_dict)
                         parts = []
                         if rich_embed.title:
                             parts.append(f"**{rich_embed.title}**")
@@ -332,11 +338,12 @@ class MonitoringCog(commands.Cog):
                     except Exception as e:
                         print(f"[Embed parse fail] {e}")
 
-            if message.stickers:
+            # Add cached stickers
+            if cached_stickers:
                 try:
                     links = []
-                    for sticker in message.stickers:
-                        links.append(f"• [{sticker.name}]({sticker.url})")
+                    for sticker in cached_stickers:
+                        links.append(f"• [{sticker['name']}]({sticker['url']})")
 
                     embed.add_field(
                         name=f"Stickers ({len(links)})",
@@ -422,23 +429,25 @@ class MonitoringCog(commands.Cog):
         except Exception as e:
             print(f"[Unban Log] Failed to log unban for {user}: {e}")
 
-    @commands.Cog.listener()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        if before.author.bot or before.content == after.content:
+    async def handle_message_edit(self, cached_before: dict, after: discord.Message):
+        if not await self.is_event_enabled(after.guild.id, "message_edit"):
             return
-        if not await self.is_event_enabled(before.guild.id, "message_edit"):
-            return
+
         embed = Embed(
             title="Message Edited",
-            description=f"**Author:** {before.author.mention} ({before.author.name})\n"
-                        f"**Channel:** {before.channel.mention}\n",
+            description=(
+                f"**Author:** {cached_before['author_mention']} ({cached_before['author_name']})\n"
+                f"**Channel:** {after.channel.mention}\n"
+            ),
             color=Color.gold()
         )
-        embed.add_field(name="Before", value=before.content or "[No Content]", inline=False)
+
+        embed.add_field(name="Before", value=cached_before.get("content") or "[No Content]", inline=False)
         embed.add_field(name="After", value=after.content or "[No Content]", inline=False)
-        embed.set_footer(text=f"User ID: {before.author.id}")
-        await self.log_event(before.guild, embed=embed, mention_user=False)
-        
+        embed.set_footer(text=f"User ID: {after.author.id}")
+
+        await self.log_event(after.guild, embed=embed, mention_user=False)
+
     monitor_group = app_commands.Group(
         name="monitor",
         description="Monitoring configuration",

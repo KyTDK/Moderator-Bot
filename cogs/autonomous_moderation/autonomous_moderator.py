@@ -238,13 +238,12 @@ class AutonomousModeratorCog(commands.Cog):
             if len(guild_batch) > 1000:
                 guild_batch.pop(0)
 
-    @commands.Cog.listener()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        if after.author.bot or not after.guild or before.content == after.content:
-            return
-        self.message_batches[after.guild.id].append((
-            "Edited Message", f"(edited)\n> Before: {before.content}\n> After:  {after.content}", after
-        ))
+    async def handle_message_edit(self, cached_before: dict, after: discord.Message):
+        cached_before_content = cached_before.get("content", None)
+        if cached_before_content is not None:
+            self.message_batches[after.guild.id].append((
+                "Edited Message", f"(edited)\n> Before: {cached_before_content}\n> After:  {after.content}", after
+            ))
 
 
     @tasks.loop(seconds=5)
