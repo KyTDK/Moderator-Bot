@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix='/',
                    chunk_guilds_at_startup=False, 
                    member_cache_flags=discord.MemberCacheFlags.none(),
                    help_command=None,
-                   max_messages=0)
+                   max_messages=None)
 
 # Cleanup schedule
 @tasks.loop(hours=6)
