@@ -1,13 +1,15 @@
 import discord
 from discord.ext import commands
 from modules.utils import mysql
-from modules.detection import nsfw
 from modules.moderation import strike
 from modules.utils.discord_utils import safe_get_channel, safe_get_member
+from modules.nsfw_scanner import NSFWScanner
+from modules.nsfw_scanner import handle_nsfw_content
 
 class AggregatedModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.scanner = NSFWScanner(bot)
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot:
@@ -19,9 +21,9 @@ class AggregatedModerationCog(commands.Cog):
         guild_id = message.guild.id
 
         if (message.channel.id not in await mysql.get_settings(guild_id, "exclude-channels")):
-            if await nsfw.is_nsfw(bot=self.bot, 
+            if await self.scanner.is_nsfw( 
                                   message=message, 
-                                  nsfw_callback=nsfw.handle_nsfw_content, 
+                                  nsfw_callback=handle_nsfw_content,
                                   guild_id=guild_id):
                 try:
                     await message.channel.send(
@@ -98,12 +100,11 @@ class AggregatedModerationCog(commands.Cog):
         emoji: discord.Emoji | discord.PartialEmoji,
         member: discord.Member | discord.User | None
     ) -> None:
-        flagged = await nsfw.is_nsfw(
-            bot = self.bot,
+        flagged = await self.scanner.is_nsfw(
             url = str(emoji.url),
             member = member,
             guild_id = guild.id,
-            nsfw_callback = nsfw.handle_nsfw_content,
+            nsfw_callback = handle_nsfw_content,
         )
         if not flagged:
             return
@@ -141,8 +142,7 @@ class AggregatedModerationCog(commands.Cog):
         if not avatar_url:
             return
 
-        is_nsfw = await nsfw.is_nsfw(
-            self.bot,
+        is_nsfw = await self.scanner.is_nsfw(
             url=avatar_url,
             member=member,
             guild_id=guild.id,
@@ -183,6 +183,11 @@ class AggregatedModerationCog(commands.Cog):
                     if e.code != 50035:
                         print(f"[PFP] Failed to untimeout {member.display_name}: {e}")
 
+    async def cog_load(self):
+        await self.scanner.start()
+
+    async def cog_unload(self):
+        await self.scanner.stop()
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AggregatedModerationCog(bot))
