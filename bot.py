@@ -15,7 +15,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 intents.message_content = True
-bot = commands.Bot(command_prefix='/', 
+bot = commands.Bot(command_prefix='!', 
                    intents=intents,
                    chunk_guilds_at_startup=False, 
                    member_cache_flags=discord.MemberCacheFlags.none(),
