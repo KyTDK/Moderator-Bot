@@ -281,14 +281,14 @@ class MonitoringCog(commands.Cog):
         except Exception as e:
             print(f"[Audit-log lookup] {e}")
 
-        if cached_message:
+        if cached_message and cached_message_content:
             embed = Embed(
                 title="Message Deleted",
                 description=(
                     f"**Author:** {cached_user_mention} ({cached_user_name})\n"
                     f"**Channel:** {channel.mention}\n"
                     + (f"**Deleted by:** {deleter}\n" if deleter else "")
-                    + f"**Content:**\n{cached_message_content or '[No Text Content]'}"
+                    + f"**Content:**\n{cached_message_content}"
                 ),
                 color=Color.orange()
             )
