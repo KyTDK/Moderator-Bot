@@ -121,6 +121,8 @@ class NSFWScanner:
                 except Exception as e:
                     print(f"[process_video] Analyse error {path}: {e}")
                     return None
+                finally:
+                    _safe_delete(path)
 
         tasks = [asyncio.create_task(analyse(p)) for p in temp_frames]
         try:
@@ -162,95 +164,90 @@ class NSFWScanner:
                             guild_id: int | None = None,
                             clean_up: bool = True,
                             ) -> dict | None:    
+        png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
+        result = await asyncio.to_thread(_convert_to_png_safe, original_filename, png_converted_path)
+        if not result:
+            print(f"[process_image] PNG conversion failed: {original_filename}")
+            return None
+        
         try:
-            png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
-            # Convert to PNG and reload as RGB as OpenAI expects RGB images
-            result = await asyncio.to_thread(_convert_to_png_safe, original_filename, png_converted_path)
-            if not result:
-                print(f"[process_image] PNG conversion failed: {original_filename}")
-                return None
+            with Image.open(png_converted_path) as image:
+                # Try similarity match first
+                settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
+                allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
+                threshold = settings.get("threshold", 0.70)
+                similarity_response = clip_vectors.query_similar(image, threshold=CLIP_THRESHOLD)
+                if similarity_response:
+                    for item in similarity_response:
+                        category = item.get("category")
+                        similarity = item.get("similarity", 0) # Similarity score from vector search
+                        score = item.get("score", 0) # OpenAI API determined score
+                        response = None
+                        if similarity < 0.90 and MISMATCH_DETECTION:
+                            response = await self.moderator_api(image_path=png_converted_path,
+                                                        guild_id=guild_id,
+                                                        image=image)
+                            api_category = response.get("category")
+                            api_score = response.get("score", 0)
+                            # Check if vector search category matches OpenAI API category
+                            if api_category != category:
+                                self.category_mismatches += 1
+                                # Log to dev channel
+                                if guild_id and self.bot and LOG_CHANNEL_ID:
+                                    log_channel = await safe_get_channel(self.bot, LOG_CHANNEL_ID)
+                                    if log_channel:
+                                        total_checks = self.category_matches + self.category_mismatches
+                                        accuracy_percentage = (self.category_matches / total_checks * 100) if total_checks > 0 else 100
+                                        embed = Embed(
+                                            title="🔍 Category Mismatch Detected",
+                                            description=f"**File:** `{original_filename}`",
+                                            color=Color.orange()
+                                        )
+                                        embed.add_field(name="Vector Category", value=category or "None", inline=True)
+                                        embed.add_field(name="API Category", value=api_category or "None", inline=True)
+                                        embed.add_field(name="Similarity", value=f"{similarity:.2f}", inline=True)
+                                        embed.add_field(name="Vector Score", value=f"{score:.2f}", inline=True)
+                                        embed.add_field(name="API Score", value=f"{api_score:.2f}", inline=True)
+                                        embed.add_field(name="Accuracy", value=f"{accuracy_percentage:.1f}% ({self.category_matches}/{total_checks})", inline=True)
 
-            image = Image.open(png_converted_path).convert("RGB")
+                                        if guild_id:
+                                            embed.set_footer(text=f"Guild ID: {guild_id}")
 
-            # Try similarity match first
-            settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
-            allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
-            threshold = settings.get("threshold", 0.70)
-            similarity_response = clip_vectors.query_similar(image, threshold=CLIP_THRESHOLD)
-            if similarity_response:
-                for item in similarity_response:
-                    category = item.get("category")
-                    similarity = item.get("similarity", 0) # Similarity score from vector search
-                    score = item.get("score", 0) # OpenAI API determined score
-                    response = None
-                    if similarity < 0.90 and MISMATCH_DETECTION:
-                        response = await self.moderator_api(image_path=png_converted_path,
-                                                    guild_id=guild_id,
-                                                    image=image)
-                        api_category = response.get("category")
-                        api_score = response.get("score", 0)
-                        # Check if vector search category matches OpenAI API category
-                        if api_category != category:
-                            self.category_mismatches += 1
-                            # Log to dev channel
-                            if guild_id and self.bot and LOG_CHANNEL_ID:
-                                log_channel = await safe_get_channel(self.bot, LOG_CHANNEL_ID)
-                                if log_channel:
-                                    total_checks = self.category_matches + self.category_mismatches
-                                    accuracy_percentage = (self.category_matches / total_checks * 100) if total_checks > 0 else 100
-                                    embed = Embed(
-                                        title="🔍 Category Mismatch Detected",
-                                        description=f"**File:** `{original_filename}`",
-                                        color=Color.orange()
-                                    )
-                                    embed.add_field(name="Vector Category", value=category or "None", inline=True)
-                                    embed.add_field(name="API Category", value=api_category or "None", inline=True)
-                                    embed.add_field(name="Similarity", value=f"{similarity:.2f}", inline=True)
-                                    embed.add_field(name="Vector Score", value=f"{score:.2f}", inline=True)
-                                    embed.add_field(name="API Score", value=f"{api_score:.2f}", inline=True)
-                                    embed.add_field(name="Accuracy", value=f"{accuracy_percentage:.1f}% ({self.category_matches}/{total_checks})", inline=True)
+                                        await log_channel.send(embed=embed)
+                                category = api_category
+                                score = api_score
+                            else:
+                                self.category_matches += 1
 
-                                    if guild_id:
-                                        embed.set_footer(text=f"Guild ID: {guild_id}")
+                        if not category:
+                            print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
+                            return {"is_nsfw": False, "reason": "Similarity match"}
 
-                                    await log_channel.send(embed=embed)
-                            category = api_category
-                            score = api_score
-                        else:
-                            self.category_matches += 1
+                        if score < threshold:
+                            print(f"[process_image] Category '{category}' flagged with low score of {score:.2f} and similarity {similarity:.2f}. Ignoring.")
+                            continue
 
-                    if not category:
-                        print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
-                        return {"is_nsfw": False, "reason": "Similarity match"}
+                        if _is_allowed_category(category, allowed_categories):
+                            print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
+                            return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
+                        
+                        if response:
+                            print(f"[process_image] OpenAI API response for {original_filename}: {response}")
+                            return response
+                        
+                    # No NSFW detcted
+                    return {"is_nsfw": False, "reason": "No NSFW similarity match"}
 
-                    if score < threshold:
-                        print(f"[process_image] Category '{category}' flagged with low score of {score:.2f} and similarity {similarity:.2f}. Ignoring.")
-                        continue
-
-                    if _is_allowed_category(category, allowed_categories):
-                        print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
-                        return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
-                    
-                    if response:
-                        print(f"[process_image] OpenAI API response for {original_filename}: {response}")
-                        return response
-                    
-                # No NSFW detcted
-                return {"is_nsfw": False, "reason": "No NSFW similarity match"}
-
-            response = await self.moderator_api(image_path=png_converted_path,
-                                        guild_id=guild_id,
-                                        image=image)
-            print(f"[process_image] Moderation result for {original_filename}: {response}")
-            return response
-
+                response = await self.moderator_api(image_path=png_converted_path,
+                                            guild_id=guild_id,
+                                            image=image)
+                print(f"[process_image] Moderation result for {original_filename}: {response}")
+                return response
         except Exception as e:
             print(traceback.format_exc())
             print(f"[process_image] Error processing image {original_filename}: {e}")
             return None
         finally:
-            if image:
-                image.close()
             _safe_delete(png_converted_path)
             if clean_up:
                 _safe_delete(original_filename)
