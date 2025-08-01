@@ -249,6 +249,8 @@ class NSFWScanner:
             print(f"[process_image] Error processing image {original_filename}: {e}")
             return None
         finally:
+            if image:
+                image.close()
             _safe_delete(png_converted_path)
             if clean_up:
                 _safe_delete(original_filename)
