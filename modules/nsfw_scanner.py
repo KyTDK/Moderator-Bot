@@ -11,8 +11,6 @@ from discord import Color, Embed, Member
 from discord.errors import NotFound
 from discord.ext import commands
 import discord
-from lottie.exporters.gif import export_gif
-import lottie
 import base64
 from cogs.nsfw import NSFW_ACTION_SETTING, NSFW_CATEGORY_SETTING
 from modules.utils import mod_logging, mysql, api
@@ -378,14 +376,7 @@ class NSFWScanner:
             async with self.temp_download(sticker_url, ext=extension) as temp_location:
                 gif_location = temp_location
 
-                if extension == "lottie":
-                    gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
-                    print(f"[sticker] Starting Lottie export: {temp_location} → {gif_location}")
-                    animation = await asyncio.to_thread(lottie.parsers.tgs.parse_tgs, temp_location)
-                    await asyncio.to_thread(export_gif, animation, gif_location, skip_frames=4)
-                    print(f"[sticker] Finished Lottie export: {gif_location}")
-
-                elif extension == "apng":
+                if extension == "apng":
                     gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
                     await asyncio.to_thread(apnggif, temp_location, gif_location)
 
@@ -561,17 +552,12 @@ def determine_file_type(file_path: str) -> str:
             return 'Unknown'
 
     if kind is None:
-        if ext == 'lottie':
-            return 'Video'
         return 'Unknown'
 
     if kind.mime.startswith('image'):
         return 'Image'
 
     if kind.mime.startswith('video'):
-        return 'Video'
-
-    if ext == 'lottie':
         return 'Video'
 
     return kind.mime
