@@ -42,6 +42,24 @@ class ChannelConfigCog(commands.Cog):
                 ephemeral=True,
             )
             return
+        
+        # Check if bot has required permissions in the channel
+        required_perms = [
+            "view_channel", 
+            "send_messages", 
+            "embed_links", 
+            "attach_files"
+        ]
+        perms = channel.permissions_for(interaction.guild.me)
+
+        missing = [p for p in required_perms if not getattr(perms, p)]
+        if missing:
+            await interaction.response.send_message(
+                f"I am missing the following permissions in {channel.mention}: "
+                + ", ".join(m.replace('_', ' ').title() for m in missing),
+                ephemeral=True,
+            )
+            return
 
         await mysql.update_settings(interaction.guild.id, key, channel.id)
         await interaction.response.send_message(
