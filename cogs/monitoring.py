@@ -2,7 +2,7 @@ from typing import Optional
 from discord import Embed, Color, Interaction
 import discord
 from discord.ext import commands
-from modules.cache import get_cached_message
+from modules.cache import CachedMessage
 from modules.utils import mysql
 from discord.utils import format_dt, utcnow
 from discord import app_commands
@@ -247,21 +247,21 @@ class MonitoringCog(commands.Cog):
         except Exception as e:
             print(f"[Leave Log] Failed to log member removal: {e}")
 
-    async def handle_message_delete(self, cached_message: dict):
+    async def handle_message_delete(self, cached_message: CachedMessage):
         # Check if the event is enabled for this guild
-        cached_guild_id = cached_message.get("guild_id")
+        cached_guild_id = cached_message.guild_id
         if not await self.is_event_enabled(cached_guild_id, "message_delete"):
             return
 
         # Get cached message details
-        cached_message_content = cached_message.get("content")
-        cached_user_id = cached_message.get("author_id")
-        cached_user_mention = cached_message.get("author_mention")
-        cached_user_name = cached_message.get("author_name")
-        cached_embeds = cached_message.get("embeds", [])
-        cached_attachments = cached_message.get("attachments", [])
-        cached_stickers = cached_message.get("stickers", [])
-        channel = self.bot.get_channel(cached_message["channel_id"])
+        cached_message_content = cached_message.content
+        cached_user_id = cached_message.author_id
+        cached_user_mention = cached_message.author_mention
+        cached_user_name = cached_message.author_name
+        cached_embeds = cached_message.embeds
+        cached_attachments = cached_message.attachments
+        cached_stickers = cached_message.stickers 
+        channel = self.bot.get_channel(cached_message.channel_id)
 
         deleter: str | None = None
         try:
@@ -296,7 +296,7 @@ class MonitoringCog(commands.Cog):
 
             # Add cached attachments
             if cached_attachments:
-                links = [f"• [{a['filename']}]({a['url']})" for a in cached_attachments]
+                links = [f"• [{a.filename}]({a.url})" for a in cached_attachments]
                 embed.add_field(
                     name=f"Attachments ({len(links)})",
                     value="\n".join(links)[:1024],
@@ -305,9 +305,8 @@ class MonitoringCog(commands.Cog):
 
             # Add cached embeds
             if cached_embeds:
-                for i, embed_dict in enumerate(cached_embeds):
+                for i, rich_embed in enumerate(cached_embeds):
                     try:
-                        rich_embed = Embed.from_dict(embed_dict)
                         parts = []
                         if rich_embed.title:
                             parts.append(f"**{rich_embed.title}**")
@@ -423,20 +422,20 @@ class MonitoringCog(commands.Cog):
         except Exception as e:
             print(f"[Unban Log] Failed to log unban for {user}: {e}")
 
-    async def handle_message_edit(self, cached_before: dict, after: discord.Message):
+    async def handle_message_edit(self, cached_before: CachedMessage, after: discord.Message):
         if not await self.is_event_enabled(after.guild.id, "message_edit"):
             return
 
         embed = Embed(
             title="Message Edited",
             description=(
-                f"**Author:** {cached_before['author_mention']} ({cached_before['author_name']})\n"
+                f"**Author:** {cached_before.author_mention} ({cached_before.author_name})\n"
                 f"**Channel:** {after.channel.mention}\n"
             ),
             color=Color.gold()
         )
 
-        embed.add_field(name="Before", value=cached_before.get("content") or "[No Content]", inline=False)
+        embed.add_field(name="Before", value=cached_before.content or "[No Content]", inline=False)
         embed.add_field(name="After", value=after.content or "[No Content]", inline=False)
         embed.set_footer(text=f"User ID: {after.author.id}")
 

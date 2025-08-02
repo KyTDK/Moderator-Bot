@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from modules.utils import mysql
 from modules.moderation import strike
-from modules.utils.discord_utils import safe_get_channel, safe_get_member
+from modules.utils.discord_utils import safe_get_channel, safe_get_member, safe_get_message
 from modules.nsfw_scanner import NSFWScanner, handle_nsfw_content
 from modules.worker_queue import WorkerQueue
 
@@ -68,7 +68,7 @@ class AggregatedModerationCog(commands.Cog):
 
         try:
             channel = await safe_get_channel(self.bot, payload.channel_id)
-            message = await channel.fetch_message(payload.message_id)
+            message = await safe_get_message(channel, payload.message_id)
         except discord.NotFound:
             return
         except discord.HTTPException as e:

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from discord.ext import commands, tasks
 from collections import defaultdict, deque
 
+from modules.cache import CachedMessage
 from modules.utils import mod_logging, mysql
 from modules.utils.discord_utils import safe_get_member
 from modules.utils.time import parse_duration
@@ -238,8 +239,8 @@ class AutonomousModeratorCog(commands.Cog):
             if len(guild_batch) > 1000:
                 guild_batch.pop(0)
 
-    async def handle_message_edit(self, cached_before: dict, after: discord.Message):
-        cached_before_content = cached_before.get("content", None)
+    async def handle_message_edit(self, cached_before: CachedMessage, after: discord.Message):
+        cached_before_content = cached_before.content
         if cached_before_content is not None:
             self.message_batches[after.guild.id].append((
                 "Edited Message", f"(edited)\n> Before: {cached_before_content}\n> After:  {after.content}", after

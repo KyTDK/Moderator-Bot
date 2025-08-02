@@ -2,6 +2,7 @@ import discord
 from discord import Interaction, app_commands
 from discord.ext import commands
 from typing import Optional
+from modules import cache
 
 def has_roles(*role_names: str):
     async def predicate(interaction: Interaction) -> bool:
@@ -88,4 +89,22 @@ async def safe_get_member(guild: discord.Guild, user_id: int) -> Optional[discor
         return None
     except discord.HTTPException as e:
         print(f"[safe_get_member] fetch_member({user_id}) failed: {e}")
+        return None
+    
+async def safe_get_message(channel: discord.TextChannel, message_id: int) -> Optional[discord.Message]:
+    """
+    Safely get a Message from cache or fetch.
+    Returns None if the message is not found or can't be fetched.
+    """
+    message = cache.get_cached_message(channel.guild.id, message_id)
+    if message is not None:
+        return message
+    try:
+        message = await channel.fetch_message(message_id)
+        cache.cache_message(message)  # Cache the message for future use
+        return message
+    except (discord.NotFound, discord.Forbidden):
+        return None
+    except discord.HTTPException as e:
+        print(f"[safe_get_message] fetch_message({message_id}) failed: {e}")
         return None
