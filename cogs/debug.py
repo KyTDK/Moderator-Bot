@@ -10,6 +10,7 @@ import time
 
 load_dotenv()
 GUILD_ID = int(os.getenv('GUILD_ID', 0))
+ALLOWED_USER_IDS = [int(id) for id in os.getenv('ALLOWED_USER_IDS', '').split(',') if id.isdigit()]
 
 # Start tracemalloc to track memory
 tracemalloc.start()
@@ -26,6 +27,14 @@ class DebugCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def stats(self, interaction: discord.Interaction, show_all: bool = True):
         await interaction.response.defer(ephemeral=True)
+
+        # Check if bot is in list of allowed user IDs
+        if interaction.user.id not in ALLOWED_USER_IDS:
+            await interaction.followup.send(
+                "You do not have permission to use this command.",
+                ephemeral=True
+            )
+            return
 
         # Get current and peak memory usage
         current, peak = tracemalloc.get_traced_memory()
