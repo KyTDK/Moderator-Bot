@@ -316,7 +316,7 @@ async def strike(
     
     embed.add_field(
         name="Issued By",
-        value=f"{strike_by.mention} (`{strike_by}`)",
+        value=f"{strike_by.mention} ({strike_by})",
         inline=False
     )
     embed.set_footer(
