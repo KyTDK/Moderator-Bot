@@ -121,8 +121,6 @@ class NSFWScanner:
                 except Exception as e:
                     print(f"[process_video] Analyse error {path}: {e}")
                     return None
-                finally:
-                    _safe_delete(path)
 
         tasks = [asyncio.create_task(analyse(p)) for p in temp_frames]
         try:
