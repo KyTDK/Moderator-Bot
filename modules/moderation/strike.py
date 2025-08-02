@@ -313,7 +313,16 @@ async def strike(
         color=Color.red(),
         timestamp=now
     )
-    embed.set_footer(text=f"Strike by {strike_by.display_name}", icon_url=strike_by.display_avatar.url)
+    
+    embed.add_field(
+        name="Issued By",
+        value=f"{strike_by.mention} (`{strike_by}`)",
+        inline=False
+    )
+    embed.set_footer(
+    text=f"Server: {user.guild.name}",
+    icon_url=user.guild.icon.url if user.guild.icon else None
+    ) 
 
     if await mysql.get_settings(user.guild.id, "dm-on-strike"):
         try:
