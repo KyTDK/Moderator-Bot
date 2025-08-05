@@ -7,6 +7,8 @@ from modules.utils import mysql
 from discord.utils import format_dt, utcnow
 from discord import app_commands
 
+from modules.utils.discord_utils import safe_get_member
+
 class MonitoringCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -196,16 +198,18 @@ class MonitoringCog(commands.Cog):
         await self.log_event(guild, embed=embed)
 
     @commands.Cog.listener()
-    async def on_member_remove(self, member: discord.Member):
+    async def on_raw_member_remove(self, payload: discord.RawMemberRemoveEvent):
         try:
-            guild = member.guild
+            guild = self.bot.get_guild(payload.guild_id)
+            user_id = payload.user.id
+            user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
             kicked = False
             kicker = None
             reason = None
 
             try:
                 async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
-                    if entry.target.id == member.id and (utcnow() - entry.created_at).total_seconds() < 20:
+                    if entry.target.id == user.id and (utcnow() - entry.created_at).total_seconds() < 20:
                         kicked = True
                         kicker = entry.user
                         reason = entry.reason
@@ -224,24 +228,19 @@ class MonitoringCog(commands.Cog):
 
             embed = Embed(
                 title="Member Kicked" if kicked else "Member Left",
-                description=f"{member.mention} ({member.name}) has {'been kicked' if kicked else 'left'} the server.",
+                description=f"{user.mention} ({user.name}) has {'been kicked' if kicked else 'left'} the server.",
                 color=Color.red() if not kicked else Color.orange()
             )
 
-            avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
+            avatar_url = user.avatar.url if user.avatar else user.default_avatar.url
             embed.set_thumbnail(url=avatar_url)
-
-            if member.joined_at:
-                duration = utcnow() - member.joined_at
-                days = duration.days
-                embed.add_field(name="Time in Server", value=f"{days} day(s)", inline=True)
 
             if kicked and kicker:
                 embed.add_field(name="Kicked By", value=f"{kicker.mention} ({kicker.name})", inline=False)
                 if reason:
                     embed.add_field(name="Reason", value=reason, inline=False)
 
-            embed.set_footer(text="Bot account" if member.bot else "User account")
+            embed.set_footer(text="Bot account" if user.bot else "User account")
             await self.log_event(guild, embed=embed)
 
         except Exception as e:
