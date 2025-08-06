@@ -462,7 +462,7 @@ class NSFWScanner:
             client, encrypted_key = await api.get_api_client(guild_id)
             if not client:
                 print("[moderator_api] No available API key.")
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(2)
                 continue
             try:
                 response = await client.moderations.create(
@@ -478,7 +478,7 @@ class NSFWScanner:
                 await api.set_api_key_not_working(api_key=encrypted_key, bot=self.bot)
                 continue
             except Exception as e:
-                print(f"[moderator_api] Unexpected error from OpenAI API: {e}. Marking key as not working.")
+                print(f"[moderator_api] Unexpected error from OpenAI API: {e}.")
                 continue
 
             if not response or not response.results:
