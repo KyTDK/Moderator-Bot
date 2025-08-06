@@ -10,7 +10,19 @@ class AggregatedModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.scanner = NSFWScanner(bot)
-        self.worker_queue = WorkerQueue(max_workers=3)
+        self.free_queue = WorkerQueue(max_workers=1)
+        self.accelerated_queue = WorkerQueue(max_workers=3)
+
+    async def add_to_queue(self, coro, guild_id: int):
+        """
+        Add a task to the appropriate queue.
+        accelerated=True means higher priority
+        """
+        accelerated = await mysql.is_accelerated(guild_id=guild_id)
+        if accelerated:
+            await self.accelerated_queue.add_task(coro)
+        else:
+            await self.free_queue.add_task(coro)
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or message.guild is None:
@@ -46,9 +58,7 @@ class AggregatedModerationCog(commands.Cog):
 
                 except (discord.Forbidden, discord.NotFound):
                     print("[NSFW] Could not notify user about message removal.")
-
-        is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
-        await self.worker_queue.add_task(scan_task(), accelerated=is_accelerated)
+        await self.add_to_queue(scan_task(), guild_id=guild_id)
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User | discord.Member):
@@ -127,8 +137,7 @@ class AggregatedModerationCog(commands.Cog):
                 except discord.HTTPException as e:
                     print(f"[emoji] failed to remove reaction: {e}")
 
-        is_accelerated = await mysql.is_accelerated(guild_id=guild.id)
-        await self.worker_queue.add_task(scan_task(), accelerated=is_accelerated)
+        await self.add_to_queue(scan_task(), guild_id=guild.id)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -196,17 +205,17 @@ class AggregatedModerationCog(commands.Cog):
                         if e.code != 50035:
                             print(f"[PFP] Failed to untimeout {member.display_name}: {e}")
 
-        is_accelerated = await mysql.is_accelerated(guild_id=guild.id)
-        await self.worker_queue.add_task(scan_task(), accelerated=is_accelerated)
+        await self.add_to_queue(scan_task(), guild_id=guild.id)
 
     async def cog_load(self):
         await self.scanner.start()
-        await self.worker_queue.start()
+        await self.free_queue.start()
+        await self.accelerated_queue.start()
 
     async def cog_unload(self):
-        await self.worker_queue.stop()
         await self.scanner.stop()
-
+        await self.free_queue.stop()
+        await self.accelerated_queue.stop()
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AggregatedModerationCog(bot))

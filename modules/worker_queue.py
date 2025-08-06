@@ -1,11 +1,9 @@
 import asyncio
-import itertools
 
 class WorkerQueue:
     def __init__(self, max_workers: int = 3):
-        self.queue = asyncio.PriorityQueue()
+        self.queue = asyncio.Queue()
         self.max_workers = max_workers
-        self.counter = itertools.count()
         self.workers = []
         self.running = False
 
@@ -17,20 +15,15 @@ class WorkerQueue:
     async def stop(self):
         self.running = False
         for _ in range(self.max_workers):
-            await self.queue.put((99, next(self.counter), None))
+            await self.queue.put(None)  # Sentinel to stop
         await asyncio.gather(*self.workers, return_exceptions=True)
 
-    async def add_task(self, coro, accelerated: bool = False):
-        """
-        Add a task to the queue.
-        accelerated=True → higher priority
-        """
-        priority = 0 if accelerated else 1
-        await self.queue.put((priority, next(self.counter), coro))
+    async def add_task(self, coro):
+        await self.queue.put(coro)
 
     async def worker_loop(self):
         while True:
-            priority, _, task = await self.queue.get()
+            task = await self.queue.get()
             if task is None:
                 break
             try:
