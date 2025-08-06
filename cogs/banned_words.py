@@ -9,7 +9,7 @@ import re
 import discord
 from better_profanity import profanity
 from cleantext import clean
-from modules.utils import mysql
+from modules.utils import mod_logging, mysql
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 
@@ -275,9 +275,18 @@ class BannedWordsCog(commands.Cog):
                 pass
 
         try:
-            await message.channel.send(
-                f"{message.author.mention}, your message contained a banned word and was removed."
+            embed = discord.Embed(
+                title="Banned Word Detected",
+                description=f"{message.author.mention}, your message was removed because it contained a banned word.",
+                color=discord.Color.red()
             )
+            embed.set_thumbnail(url=message.author.display_avatar.url)
+            await mod_logging.log_to_channel(
+                embed=embed,
+                channel_id=message.channel.id,
+                bot=self.bot
+            )
+            await message.delete()
         except discord.Forbidden:
             pass
 

@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from modules.utils import mysql
+from modules.utils import mod_logging, mysql
 from modules.moderation import strike
 from modules.utils.discord_utils import safe_get_channel, safe_get_member, safe_get_message
 from modules.nsfw_scanner import NSFWScanner, handle_nsfw_content
@@ -29,9 +29,21 @@ class AggregatedModerationCog(commands.Cog):
             )
             if flagged:
                 try:
-                    await message.channel.send(
-                        f"{message.author.mention}, your message was detected to contain explicit content and was removed."
+                    embed = discord.Embed(
+                        title="NSFW Content Detected",
+                        description=(
+                            f"{message.author.mention}, your message was removed because it contained "
+                            "explicit or inappropriate content."
+                        ),
+                        color=discord.Color.red()
                     )
+                    embed.set_thumbnail(url=message.author.display_avatar.url)
+                    await mod_logging.log_to_channel(
+                        embed=embed,
+                        channel_id=message.channel.id,
+                        bot=self.bot
+                    )
+
                 except (discord.Forbidden, discord.NotFound):
                     print("[NSFW] Could not notify user about message removal.")
 
