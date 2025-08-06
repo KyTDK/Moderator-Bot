@@ -111,5 +111,8 @@ async def setup_hook():
     # Start Top.gg poster
     start_topgg_poster(bot)
 
+    # Sync command tree
+    await bot.tree.sync(guild=None)
+
 if __name__ == "__main__":
     bot.run(TOKEN)

@@ -184,8 +184,8 @@ class Settings(commands.Cog):
             help_message += (
                 "\n**Support Server:** <https://discord.gg/invite/33VcwjfEXC>\n"
                 "**Donate:** <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>\n"
-                "**Terms of Service:** <https://neomechanical.com/terms-of-service>\n"
-                "**Privacy Policy:** <https://neomechanical.com/privacy-policy>"
+                "**Terms of Service:** <https://modbot.neomechanical.com/terms-of-service>\n"
+                "**Privacy Policy:** <https://modbot.neomechanical.com/privacy-policy>"
             )
 
         chunks = paginate(help_message)

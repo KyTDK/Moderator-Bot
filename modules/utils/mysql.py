@@ -165,6 +165,21 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS premium_guilds (
+                    guild_id BIGINT NOT NULL,
+                    buyer_id BIGINT NOT NULL,
+                    subscription_id VARCHAR(64) NOT NULL,
+                    status ENUM('pending', 'active', 'cancelled', 'expired') DEFAULT 'pending',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    activated_at DATETIME NULL DEFAULT NULL,
+                    next_billing DATETIME NULL DEFAULT NULL,
+                    PRIMARY KEY (guild_id),
+                    UNIQUE KEY subscription_id_unique (subscription_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
             await conn.commit()
         finally:
             conn.close()
@@ -372,3 +387,34 @@ async def cleanup_expired_strikes():
     else:
         print("[strikes cleanup] No expired strikes to delete.")
     return affected
+
+async def is_accelerated(user_id: int = None, guild_id: int = None) -> bool:
+    if guild_id and user_id:
+        query = """
+            SELECT 1 FROM premium_guilds
+            WHERE guild_id = %s AND buyer_id = %s AND status = 'active'
+            LIMIT 1
+        """
+        params = (guild_id, user_id)
+
+    elif guild_id:
+        query = """
+            SELECT 1 FROM premium_guilds
+            WHERE guild_id = %s AND status = 'active'
+            LIMIT 1
+        """
+        params = (guild_id,)
+
+    elif user_id:
+        query = """
+            SELECT 1 FROM premium_guilds
+            WHERE buyer_id = %s AND status = 'active'
+            LIMIT 1
+        """
+        params = (user_id,)
+
+    else:
+        return False
+
+    result, _ = await execute_query(query, params, fetch_one=True)
+    return result is not None
