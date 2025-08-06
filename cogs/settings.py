@@ -181,6 +181,13 @@ class Settings(commands.Cog):
             for group in top_level:
                 help_message += f"`/{group.name}`: {group.description or 'No description'} — Try `/help {group.name}` for subcommands\n"
 
+            # Accelerate command
+            is_accelerated = await mysql.is_accelerated(guild_id=interaction.guild.id)
+            if not is_accelerated:
+                help_message += (
+                    "\n**Upgrade to Accelerated for faster NSFW & scam detection → `/accelerated`**"
+                )
+
             help_message += (
                 "\n**Support Server:** <https://discord.gg/invite/33VcwjfEXC>\n"
                 "**Donate:** <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>\n"
