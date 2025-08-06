@@ -21,6 +21,24 @@ class WorkerQueue:
     async def add_task(self, coro):
         await self.queue.put(coro)
 
+    async def resize_workers(self, new_max: int):
+        if new_max == self.max_workers:
+            return
+
+        # If increasing
+        if new_max > self.max_workers:
+            for _ in range(new_max - self.max_workers):
+                if self.running:
+                    self.workers.append(asyncio.create_task(self.worker_loop()))
+
+        # If decreasing
+        elif new_max < self.max_workers:
+            for _ in range(self.max_workers - new_max):
+                await self.queue.put(None)  # Signal a worker to exit
+
+        self.workers = [w for w in self.workers if not w.done()]
+        self.max_workers = new_max
+
     async def worker_loop(self):
         while True:
             task = await self.queue.get()
