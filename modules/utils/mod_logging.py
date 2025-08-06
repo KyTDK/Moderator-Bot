@@ -13,8 +13,7 @@ async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=
             if not is_accelerated:
                 embed.set_footer(
                     text=(
-                        f"Guild ID: {channel.guild.id} • Upgrade to Accelerated for faster "
-                        "NSFW & scam detection → /accelerated"
+                        "Upgrade to Accelerated for faster NSFW & scam detection → /accelerated"
                     )
                 )
 

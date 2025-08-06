@@ -41,8 +41,7 @@ class MonitoringCog(commands.Cog):
                         if not is_accelerated:
                             embed.set_footer(
                                 text=(
-                                    f"Guild ID: {guild.id} • Upgrade to Accelerated for faster "
-                                    "NSFW & scam detection → /accelerated"
+                                    f"Upgrade to Accelerated for faster NSFW & scam detection → /accelerated"
                                 )
                             )
                         else:
