@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from dotenv import load_dotenv
+from modules.utils import mod_logging
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
@@ -505,8 +506,16 @@ class ScamDetectionCog(commands.Cog):
                 pass
 
         try:
-            await message.channel.send(
-                f"{message.author.mention}, your message was flagged as scam and has been removed."
+            embed = discord.Embed(
+                title="Scam Message Detected",
+                description=f"{message.author.mention}, your message was flagged as scam.",
+                color=discord.Color.red()
+            )
+            embed.set_thumbnail(url=message.author.display_avatar.url)
+            await mod_logging.log_to_channel(
+                embed=embed,
+                channel_id=message.channel.id,
+                bot=self.bot
             )
         except Exception:
             pass
