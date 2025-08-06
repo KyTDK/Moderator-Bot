@@ -102,11 +102,10 @@ class NSFWScanner:
         # Determine frames to scan
         frames_to_scan = MAX_FRAMES_PER_VIDEO
         if await mysql.is_accelerated(guild_id=guild_id):
-            frames_to_scan *= 2  # Double frames for accelerated users
-            print(f"[NSFW] Accelerated scanning: {frames_to_scan} frames")
+            frames_to_scan = ACCELERATED_MAX_FRAMES_PER_VIDEO
 
         temp_frames = await asyncio.to_thread(
-            _extract_frames_threaded, original_filename, MAX_FRAMES_PER_VIDEO
+            _extract_frames_threaded, original_filename, frames_to_scan
         )
         if not temp_frames:
             _safe_delete(original_filename)
