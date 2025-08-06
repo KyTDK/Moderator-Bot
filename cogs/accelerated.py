@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
-from discord import Interaction, app_commands
+from discord import Color, Embed, Interaction, app_commands, ButtonStyle
 from modules.utils import mysql
 import aiohttp
+from discord.ui import View, Button
 
 class AcceleratedCog(commands.Cog):
     """Commands for Moderator Bot Accelerated (Premium)."""
@@ -41,36 +42,51 @@ class AcceleratedCog(commands.Cog):
 
         await interaction.response.defer(ephemeral=True, thinking=True)
 
-        # Check if the user already has a subscription
+        # Check if already subscribed
         is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
         if is_accelerated:
-            print(f"[Accelerated] User {user_id} in guild {guild_id} already has an active subscription.")
+            print(f"[Accelerated] User {user_id} in guild {guild_id} already subscribed.")
             return await interaction.followup.send(
-                "You already have an active Accelerated subscription.",
+                "✅ Your guild already has an active **Accelerated** subscription!",
                 ephemeral=True
             )
 
+        # Request subscription link from backend
         async with aiohttp.ClientSession() as session:
             async with session.get(backend_url) as resp:
                 if resp.status != 200:
                     print(f"[ERROR] Failed to generate subscription link for user {user_id} in guild {guild_id}")
                     return await interaction.followup.send(
-                        "Failed to generate subscription link. Please try again later.",
+                        "⚠️ Could not generate a subscription link. Please try again later.",
                         ephemeral=True
                     )
                 data = await resp.json()
 
         approve_url = data.get("url")
         if not approve_url:
-            print(f"[ERROR] Failed to get approve URL for user {user_id} in guild {guild_id}")
             return await interaction.followup.send(
-                "Something went wrong generating your subscription link.",
+                "⚠️ Something went wrong generating your subscription link.",
                 ephemeral=True
             )
 
-        await interaction.followup.send(
-            f"Click here to subscribe:\n{approve_url}"
-            )
+        # Fancy Embed
+        embed = Embed(
+            title="🚀 Upgrade to Moderator Bot Accelerated!",
+            description=(
+                "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\n"
+                "💎 **1-Month Free Trial for New Subscribers!**\n"
+                "After your free month, continue for just **$5/month** to keep your server safer, faster."
+            ),
+            color=Color.green()
+        )
+        embed.set_footer(text="Moderator Bot • Accelerated Plan")
+        embed.set_thumbnail(url=self.bot.user.display_avatar.url)
+
+        # Subscription button
+        view = View()
+        view.add_item(Button(label="🔗 Subscribe Now", url=approve_url, style=ButtonStyle.link))
+
+        await interaction.followup.send(embed=embed, view=view, ephemeral=True)
 
     @accelerated_group.command(name="perks")
     async def perks(self, interaction: Interaction):
