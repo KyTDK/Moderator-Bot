@@ -35,7 +35,7 @@ class AggregatedModerationCog(commands.Cog):
                 except (discord.Forbidden, discord.NotFound):
                     print("[NSFW] Could not notify user about message removal.")
 
-        is_accelerated = await mysql.is_accelerated(guild_id)
+        is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
         await self.worker_queue.add_task(scan_task(), accelerated=is_accelerated)
 
     @commands.Cog.listener()
@@ -115,7 +115,7 @@ class AggregatedModerationCog(commands.Cog):
                 except discord.HTTPException as e:
                     print(f"[emoji] failed to remove reaction: {e}")
 
-        is_accelerated = await mysql.is_accelerated(guild.id)
+        is_accelerated = await mysql.is_accelerated(guild_id=guild.id)
         await self.worker_queue.add_task(scan_task(), accelerated=is_accelerated)
 
     @commands.Cog.listener()
@@ -184,7 +184,7 @@ class AggregatedModerationCog(commands.Cog):
                         if e.code != 50035:
                             print(f"[PFP] Failed to untimeout {member.display_name}: {e}")
 
-        is_accelerated = await mysql.is_accelerated(guild.id)
+        is_accelerated = await mysql.is_accelerated(guild_id=guild.id)
         await self.worker_queue.add_task(scan_task(), accelerated=is_accelerated)
 
     async def cog_load(self):

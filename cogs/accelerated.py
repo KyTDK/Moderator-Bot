@@ -19,21 +19,16 @@ class AcceleratedCog(commands.Cog):
     async def status(self, interaction: Interaction):
         """Check if you currently have an Accelerated subscription."""
         guild_id = interaction.guild.id
-        result, _ = await mysql.execute_query(
-            "SELECT status FROM premium_guilds WHERE guild_id = %s",
-            (guild_id,),
-            fetch_one=True
-        )
+        is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
 
-        if not result:
+        if not is_accelerated:
             await interaction.response.send_message(
                 "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan.",
                 ephemeral=True
             )
         else:
-            status = result[0]
             await interaction.response.send_message(
-                f" Your Accelerated subscription status: **{status.capitalize()}**",
+                "This server has an active Accelerated subscription.",
                 ephemeral=True
             )
 
@@ -46,9 +41,10 @@ class AcceleratedCog(commands.Cog):
 
         await interaction.response.defer(ephemeral=True, thinking=True)
 
-        # Chck if the user already has a subscription
-        is_accelerated = await mysql.is_accelerated(guild_id)
+        # Check if the user already has a subscription
+        is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
         if is_accelerated:
+            print(f"[Accelerated] User {user_id} in guild {guild_id} already has an active subscription.")
             return await interaction.followup.send(
                 "You already have an active Accelerated subscription.",
                 ephemeral=True
@@ -83,7 +79,7 @@ class AcceleratedCog(commands.Cog):
             title="Accelerated Perks",
             description=(
                 "Upgrade your experience with Moderator Bot Accelerated:\n"
-                "• Faster AI moderation response\n"
+                "• Scan more frames per video for deeper NSFW detection\n"
                 "• Priority NSFW & Scam detection\n"
                 "• Early access to new features\n"
                 "• Supports the bot's development"

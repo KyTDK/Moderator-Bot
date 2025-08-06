@@ -389,32 +389,32 @@ async def cleanup_expired_strikes():
     return affected
 
 async def is_accelerated(user_id: int = None, guild_id: int = None) -> bool:
-    if guild_id and user_id:
-        query = """
-            SELECT 1 FROM premium_guilds
-            WHERE guild_id = %s AND buyer_id = %s AND status = 'active'
-            LIMIT 1
-        """
-        params = (guild_id, user_id)
+    """
+    Return True if the user or guild has an active premium subscription
+    that hasn't expired based on next_billing.
+    """
+    conditions = []
+    params = []
 
-    elif guild_id:
-        query = """
-            SELECT 1 FROM premium_guilds
-            WHERE guild_id = %s AND status = 'active'
-            LIMIT 1
-        """
-        params = (guild_id,)
+    if guild_id:
+        conditions.append("guild_id = %s")
+        params.append(guild_id)
+    if user_id:
+        conditions.append("buyer_id = %s")
+        params.append(user_id)
 
-    elif user_id:
-        query = """
-            SELECT 1 FROM premium_guilds
-            WHERE buyer_id = %s AND status = 'active'
-            LIMIT 1
-        """
-        params = (user_id,)
-
-    else:
+    if not conditions:
         return False
 
-    result, _ = await execute_query(query, params, fetch_one=True)
+    where_clause = " AND ".join(conditions)
+
+    query = f"""
+        SELECT 1 FROM premium_guilds
+        WHERE {where_clause}
+        AND status = 'active'
+        AND (next_billing IS NULL OR next_billing > UTC_TIMESTAMP())
+        LIMIT 1
+    """
+
+    result, _ = await execute_query(query, tuple(params), fetch_one=True)
     return result is not None

@@ -98,6 +98,12 @@ class NSFWScanner:
         or None if clean.  `scan_result` is the result of the scan.
         """
 
+        # Determine frames to scan
+        frames_to_scan = MAX_FRAMES_PER_VIDEO
+        if await mysql.is_accelerated(guild_id=guild_id):
+            frames_to_scan *= 2  # Double frames for accelerated users
+            print(f"[NSFW] Accelerated scanning: {frames_to_scan} frames")
+
         temp_frames = await asyncio.to_thread(
             _extract_frames_threaded, original_filename, MAX_FRAMES_PER_VIDEO
         )
@@ -105,7 +111,10 @@ class NSFWScanner:
             _safe_delete(original_filename)
             return None, None
 
+        # Process frames concurrently, increase concurrency for accelerated users
         semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
+        if await mysql.is_accelerated(guild_id=guild_id):
+            semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES * 2)
 
         async def analyse(path: str):
             async with semaphore:
