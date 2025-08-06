@@ -11,7 +11,7 @@ class AggregatedModerationCog(commands.Cog):
         self.bot = bot
         self.scanner = NSFWScanner(bot)
         self.free_queue = WorkerQueue(max_workers=1)
-        self.accelerated_queue = WorkerQueue(max_workers=3)
+        self.accelerated_queue = WorkerQueue(max_workers=5)
 
     async def add_to_queue(self, coro, guild_id: int):
         """
