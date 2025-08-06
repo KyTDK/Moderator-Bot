@@ -35,6 +35,20 @@ class MonitoringCog(commands.Cog):
             if channel:
                 try:
                     allowed = discord.AllowedMentions.all() if mention_user else discord.AllowedMentions.none()
+                    # Set footer embed for non-accelerated users
+                    is_accelerated = await mysql.is_accelerated(guild_id=guild.id)
+                    if embed: 
+                        if not is_accelerated:
+                            embed.set_footer(
+                                text=(
+                                    f"Guild ID: {guild.id} • Upgrade to Accelerated for faster "
+                                    "NSFW & scam detection → /accelerated"
+                                )
+                            )
+                        else:
+                            embed.set_footer(text=f"Guild ID: {guild.id}")
+
+
                     await channel.send(
                         content=message if message else None,
                         embed=embed,
