@@ -180,6 +180,17 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS guilds (
+                    guild_id BIGINT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    owner_id BIGINT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY (guild_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
             await conn.commit()
         finally:
             conn.close()
@@ -418,3 +429,25 @@ async def is_accelerated(user_id: int = None, guild_id: int = None) -> bool:
 
     result, _ = await execute_query(query, tuple(params), fetch_one=True)
     return result is not None
+
+async def add_guild(guild_id: int, name: str, owner_id: int):
+    """
+    Add a new guild to the database.
+    """
+    await execute_query(
+        """
+        INSERT INTO guilds (guild_id, name, owner_id)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE name = VALUES(name), owner_id = VALUES(owner_id)
+        """,
+        (guild_id, name, owner_id),
+    )
+
+async def remove_guild(guild_id: int):
+    """
+    Remove a guild from the database.
+    """
+    await execute_query(
+        "DELETE FROM guilds WHERE guild_id = %s",
+        (guild_id,),
+    )

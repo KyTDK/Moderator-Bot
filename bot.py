@@ -36,6 +36,15 @@ async def cleanup_task():
 async def on_ready():
     print(f"Bot connected as {bot.user} in {len(bot.guilds)} guilds")
 
+    # Sync guilds with the database
+    for guild in bot.guilds:
+        try:
+            await mysql.add_guild(guild.id, guild.name, guild.owner_id)
+        except Exception as e:
+            print(f"[ERROR] Failed to sync guild {guild.id}: {e}")
+    print(f"Synced {len(bot.guilds)} guilds with the database.")
+    
+
 @bot.event
 async def on_resumed():
     print(">> Gateway session resumed.")
@@ -49,7 +58,9 @@ async def on_connect():
     print(">> Connected to gateway.")
 
 @bot.event
-async def on_guild_join(guild):
+async def on_guild_join(guild: discord.Guild):
+    # Update DB
+    await mysql.add_guild(guild.id, guild.name, guild.owner_id)
     welcome_message = (
         "👋 **Thanks for adding Moderator Bot!**\n\n"
         "We're excited to be part of your server! 🎉 Moderator Bot works out of the box — no setup is required to start moderating effectively.\n\n"
@@ -91,6 +102,11 @@ async def on_guild_join(guild):
                 break
             except discord.Forbidden:
                 continue
+
+@bot.event
+async def on_guild_remove(guild: discord.Guild):
+    # Remove guild from DB
+    await mysql.remove_guild(guild.id)
 
 @bot.event
 async def setup_hook():
