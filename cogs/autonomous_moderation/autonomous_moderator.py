@@ -309,7 +309,7 @@ class AutonomousModeratorCog(commands.Cog):
                 continue
 
             batch = msgs[:]
-            trigger_msg = self.mention_triggers.get(gid)
+            trigger_msg = self.mention_triggers.pop(gid, None)
             rules = f"Rules:\n{rules}\n\n"
 
             if active_mode == "report":
