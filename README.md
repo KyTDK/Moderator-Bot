@@ -109,11 +109,8 @@ Detects and removes scam/phishing messages using:
 
 ### 🔧 Configuration:
 
-* `/scam add_message` – Add scam message patterns
-* `/scam add_url` – Add scam URL substrings
 * `/scam delete` – Toggle auto-deletion of flagged messages
 * `/scam check_links` – Enable or disable link safety checks
-* `/scam ai_detection` – Enable or disable AI-based scam detection
 * `/scam exclude_channel_add` – Exclude a channel from scam detection
 * `/scam exclude_channel_remove` – Remove a channel from the exclusion list
 * `/scam view` – Show current scam detection settings
@@ -126,8 +123,6 @@ Detects and removes scam/phishing messages using:
 
 ### 📜 Logs & Lists:
 
-* `/scam list_patterns` – View custom scam message patterns
-* `/scam list_urls` – View added scam URLs
 * `/scam exclude_channel_list` – View excluded channels
 
 ---
