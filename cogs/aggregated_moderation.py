@@ -38,6 +38,10 @@ class AggregatedModerationCog(commands.Cog):
             return
 
         guild_id = message.guild.id
+
+        if not await mysql.get_settings(guild_id, "nsfw-enabled"):
+            return
+        
         excluded_channels = await mysql.get_settings(guild_id, "exclude-channels")
         if message.channel.id in excluded_channels:
             return
@@ -70,7 +74,13 @@ class AggregatedModerationCog(commands.Cog):
         await self.add_to_queue(scan_task(), guild_id=guild_id)
 
     @commands.Cog.listener()
-    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User | discord.Member):
+    async def on_reaction_add(self, reaction, user):
+        guild = reaction.message.guild
+        if guild is None:
+            return
+        if not await mysql.get_settings(guild.id, "nsfw-enabled"):
+            return
+        
         if not isinstance(reaction.emoji, (discord.Emoji, discord.PartialEmoji)):
             return
         if reaction.count > 1:
@@ -108,6 +118,11 @@ class AggregatedModerationCog(commands.Cog):
             return
 
         guild = self.bot.get_guild(payload.guild_id)
+        if guild is None:
+            return
+        if not await mysql.get_settings(guild.id, "nsfw-enabled"):
+            return
+        
         member = await safe_get_member(guild, payload.user_id)
         emoji = payload.emoji
 
@@ -166,6 +181,8 @@ class AggregatedModerationCog(commands.Cog):
                 await self._queue_avatar_scan(guild, member)
 
     async def _queue_avatar_scan(self, guild: discord.Guild, member: discord.Member, is_join: bool = False):
+        if not await mysql.get_settings(guild.id, "nsfw-enabled"):
+            return
         if not await mysql.get_settings(guild.id, "check-pfp"):
             return
 

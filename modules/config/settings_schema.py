@@ -43,6 +43,13 @@ SETTINGS_SCHEMA = {
         setting_type=discord.TextChannel,
         hidden=True
     ),
+    "nsfw-enabled": Setting(
+        name="nsfw-enabled",
+        description="Enable NSFW scanning for messages, reactions, and avatars (other toggles still apply).",
+        setting_type=bool,
+        default=True,
+        choices=["true", "false"]
+    ),
     "monitor-events": Setting(
         name="monitor-events",
         description="Enable/disable logging for each type of monitored event.",
