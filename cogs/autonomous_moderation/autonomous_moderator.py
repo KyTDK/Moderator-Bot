@@ -354,7 +354,7 @@ class AutonomousModeratorCog(commands.Cog):
                 completion = await client.chat.completions.create(
                     model=model,
                     messages=[{"role": "system", "content": SYSTEM_MSG}, {"role": "user", "content": user_prompt}],
-                    temperature=0.0,
+                    temperature=1.0 if model.startswith("gpt-5") else 0.0,
                     response_format={"type": "json_object"}
                 )
                 raw = completion.choices[0].message.content.strip()
