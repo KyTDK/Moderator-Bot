@@ -5,6 +5,7 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from dotenv import load_dotenv
 from modules.utils import mod_logging
+from modules.utils.discord_utils import accelerated_only
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
@@ -290,6 +291,9 @@ class ScamDetectionCog(commands.Cog):
     async def setting_check_links(self, interaction: Interaction,
                                   action: app_commands.Choice[str]):
         """Toggle or view link checking setting."""
+        if await accelerated_only(interaction):
+            return
+        
         gid = interaction.guild.id
         if action.value == "status":
             flag = await get_settings(gid, CHECK_LINKS_SETTING)

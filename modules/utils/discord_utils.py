@@ -122,3 +122,4 @@ async def accelerated_only(interaction: Interaction):
         )
         return False
     return True
+    

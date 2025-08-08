@@ -234,7 +234,7 @@ SETTINGS_SCHEMA = {
         name="check-links",
         description="Check links in messages for malware, phishing, scamming etc.",
         setting_type=bool,
-        default=True,
+        default=False,
         hidden=True,
         choices=["true", "false"]
     ),
