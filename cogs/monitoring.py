@@ -7,8 +7,6 @@ from modules.utils import mysql
 from discord.utils import format_dt, utcnow
 from discord import app_commands
 
-from modules.utils.discord_utils import safe_get_member
-
 class MonitoringCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot

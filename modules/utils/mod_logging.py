@@ -8,22 +8,31 @@ async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=
     try:
         channel = await safe_get_channel(bot, channel_id)
 
-        is_accelerated = await mysql.is_accelerated(guild_id=channel.guild.id)
-        if embed: 
-            if not is_accelerated:
-                embed.set_footer(
-                    text=(
-                        "Upgrade to Accelerated for faster NSFW & scam detection → /accelerated"
-                    )
-                )
-
         if channel is None:
             print(f"[log_to_channel] Channel {channel_id} not found.")
             return
+
+        # Ensure guild ID is an int
+        guild_id = channel.guild.id
+        if isinstance(guild_id, str):
+            try:
+                guild_id = int(guild_id)
+            except ValueError:
+                print(f"[log_to_channel] Invalid guild ID format: {guild_id}")
+                return
+
+        is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
+
+        if embed and not is_accelerated:
+            embed.set_footer(
+                text="Upgrade to Accelerated for faster NSFW & scam detection → /accelerated"
+            )
+
         if file:
             await channel.send(embed=embed, files=[file])
         else:
             await channel.send(embed=embed)
+
     except Forbidden:
         print(f"[log_to_channel] Missing permission to send messages in channel {channel_id}.")
     except HTTPException as e:

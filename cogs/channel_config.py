@@ -82,18 +82,37 @@ class ChannelConfigCog(commands.Cog):
 
     @channels_group.command(name="show", description="Show current log channel settings.")
     async def show_channels(self, interaction: Interaction):
+        # Ensure guild ID is an int
+        guild_id = interaction.guild.id
+        if isinstance(guild_id, str):
+            try:
+                guild_id = int(guild_id)
+            except ValueError:
+                await interaction.response.send_message(
+                    "Error: Invalid guild ID format.", ephemeral=True
+                )
+                return
+
         settings = await mysql.get_settings(
-            interaction.guild.id,
+            guild_id,
             list(LOG_CHANNEL_TYPES.values())
         ) or {}
 
         def fmt(name, key):
             cid = settings.get(key)
+            if isinstance(cid, str):
+                try:
+                    cid = int(cid)
+                except ValueError:
+                    cid = None
             ch = interaction.guild.get_channel(cid) if cid else None
             return f"{name}: {ch.mention if ch else 'Not set'}"
 
         lines = [fmt(name, key) for name, key in LOG_CHANNEL_TYPES.items()]
-        await interaction.response.send_message("**Log Channels:**\n" + "\n".join(lines), ephemeral=True)
+        await interaction.response.send_message(
+            "**Log Channels:**\n" + "\n".join(lines),
+            ephemeral=True
+        )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ChannelConfigCog(bot))
