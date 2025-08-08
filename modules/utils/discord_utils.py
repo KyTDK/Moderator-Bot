@@ -3,6 +3,7 @@ from discord import Interaction, app_commands
 from discord.ext import commands
 from typing import Optional
 from modules import cache
+from modules.utils import mysql
 
 def has_roles(*role_names: str):
     async def predicate(interaction: Interaction) -> bool:
@@ -108,3 +109,16 @@ async def safe_get_message(channel: discord.TextChannel, message_id: int) -> Opt
     except discord.HTTPException as e:
         print(f"[safe_get_message] fetch_message({message_id}) failed: {e}")
         return None
+    
+async def accelerated_only(interaction: Interaction):
+    """
+    Check if the command is being used in a server with an Accelerated subscription.
+    If not, respond with an error message.
+    """
+    if not await mysql.is_accelerated(guild_id=interaction.guild.id):
+        await interaction.response.send_message(
+            "This command is only available for Accelerated (Premium) servers. Use `/accelerated subscribe` to enable it.",
+            ephemeral=True
+        )
+        return False
+    return True

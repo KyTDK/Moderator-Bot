@@ -4,6 +4,7 @@ from discord import app_commands, Interaction
 
 from modules.utils import mysql
 from modules.utils.action_manager import ActionListManager
+from modules.utils.discord_utils import accelerated_only
 from modules.utils.list_manager import ListManager
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
@@ -91,6 +92,11 @@ class NSFWCog(commands.Cog):
         ]
     )
     async def add_category(self, interaction: Interaction, category: str):
+        # Accelerated only
+        accelerated = await accelerated_only(interaction)
+        if not accelerated:
+            return
+        # Continue with adding category
         gid = interaction.guild.id
         message = await category_manager.add(gid, category)
         await interaction.response.send_message(message, ephemeral=True)
@@ -98,6 +104,11 @@ class NSFWCog(commands.Cog):
     @nsfw_group.command(name="remove_category", description="Remove a category from NSFW detection.")
     @app_commands.autocomplete(category=category_manager.autocomplete)
     async def remove_category(self, interaction: Interaction, category: str):
+        # Accelerated only
+        accelerated = await accelerated_only(interaction)
+        if not accelerated:
+            return
+        # Continue with adding category
         gid = interaction.guild.id
         message = await category_manager.remove(gid, category)
         await interaction.response.send_message(message, ephemeral=True)
