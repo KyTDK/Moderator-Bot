@@ -4,7 +4,7 @@ from discord import app_commands, Interaction
 
 from modules.utils import mysql
 from modules.utils.action_manager import ActionListManager
-from modules.utils.discord_utils import accelerated_only
+from modules.utils.discord_utils import require_accelerated
 from modules.utils.list_manager import ListManager
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
@@ -93,8 +93,7 @@ class NSFWCog(commands.Cog):
     )
     async def add_category(self, interaction: Interaction, category: str):
         # Accelerated only
-        accelerated = await accelerated_only(interaction)
-        if not accelerated:
+        if not await require_accelerated(interaction):
             return
         # Continue with adding category
         gid = interaction.guild.id
@@ -105,8 +104,7 @@ class NSFWCog(commands.Cog):
     @app_commands.autocomplete(category=category_manager.autocomplete)
     async def remove_category(self, interaction: Interaction, category: str):
         # Accelerated only
-        accelerated = await accelerated_only(interaction)
-        if not accelerated:
+        if not await require_accelerated(interaction):
             return
         # Continue with adding category
         gid = interaction.guild.id

@@ -110,7 +110,7 @@ async def safe_get_message(channel: discord.TextChannel, message_id: int) -> Opt
         print(f"[safe_get_message] fetch_message({message_id}) failed: {e}")
         return None
     
-async def accelerated_only(interaction: Interaction):
+async def require_accelerated(interaction: Interaction):
     """
     Check if the command is being used in a server with an Accelerated subscription.
     If not, respond with an error message.
