@@ -30,6 +30,12 @@ class Setting:
         if self.validator:
             await self.validator(value)
 
+async def require_accelerated(value: Any, *, guild_id: int | None = None, user_id: int | None = None, **_: Any) -> None:
+    from modules.utils.mysql import is_accelerated
+    ok = await is_accelerated(user_id=user_id, guild_id=guild_id)
+    if not ok:
+        raise ValueError("Requires Accelerated. Use `/accelerated subscribe`.")
+
 SETTINGS_SCHEMA = {
     "strike-channel": Setting(
         name="strike-channel",
@@ -162,7 +168,8 @@ SETTINGS_SCHEMA = {
         description="Check the profile picture of the user for NSFW content.",
         setting_type=bool,
         default=False, # False by default to avoid unnecessary API calls
-        choices=["true", "false"]
+        choices=["true", "false"],
+        validator=require_accelerated
     ),
     "nsfw-pfp-action": Setting(
         name="nsfw-pfp-action",
@@ -170,6 +177,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=["kick"],
         choices=["strike", "strike:2d", "kick", "ban", "timeout:1d", "timeout:7d"],
+        validator=require_accelerated
     ),
     "nsfw-pfp-message": Setting(
         name="nsfw-pfp-message",
@@ -180,14 +188,16 @@ SETTINGS_SCHEMA = {
             "Your profile picture was detected to contain explicit content",
             "Your profile picture is not appropriate for this server.",
             "Your profile picture has been flagged as NSFW.",
-        ]
+        ],
+        validator=require_accelerated
     ),
     "unmute-on-safe-pfp": Setting(
         name="unmute-on-safe-pfp",
         description="Remove timeout of a user once they have changed their profile picture to something appropriate.",
         setting_type=bool,
         default=False,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        validator=require_accelerated
     ),
     "check-tenor-gifs": Setting(
         name="check-tenor-gifs",
@@ -272,7 +282,7 @@ SETTINGS_SCHEMA = {
             "gpt-4.1-nano",
             "gpt-4o",
             "gpt-4o-mini",
-        ]
+        ],
     ),
     "aimod-check-interval": Setting(
         name="aimod-check-interval",
