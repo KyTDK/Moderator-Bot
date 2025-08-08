@@ -239,7 +239,7 @@ SETTINGS_SCHEMA = {
         name="rules",
         description="The server rules used for autonomous moderation.",
         setting_type=str,
-        default=None,
+        default="1. Be respectful — no harassment or hate speech.\n2. No NSFW or obscene content.\n3. No spam or excessive self-promotion.\n4. Follow Discord's Terms of Service.",
         hidden=True,
     ),
     "aimod-detection-action": Setting(

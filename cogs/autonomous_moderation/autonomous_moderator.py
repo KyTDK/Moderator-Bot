@@ -14,6 +14,15 @@ from modules.moderation import strike
 from math import ceil
 import re
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+AUTOMOD_OPENAI_KEY = os.getenv('AUTOMOD_OPENAI_KEY')
+SCAN_LIMIT_PER_WINDOW = 200
+SCAN_WINDOW = timedelta(hours=1)
+accelerated_scan_usage: dict[int, deque[datetime]] = defaultdict(deque)
+
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10)) # user_id -> deque of (rule: str, action: str)
@@ -136,6 +145,22 @@ class AutonomousModeratorCog(commands.Cog):
     def cog_unload(self):
         self.batch_runner.cancel()
 
+    @staticmethod
+    def _allow_accelerated_scan(gid: int) -> bool:
+        """Return True if this guild may perform another scan within the window."""
+        now = datetime.now(timezone.utc)
+        q = accelerated_scan_usage[gid]
+
+        # Drop timestamps outside the window
+        while q and (now - q[0]) > SCAN_WINDOW:
+            q.popleft()
+
+        if len(q) >= SCAN_LIMIT_PER_WINDOW:
+            return False
+
+        # Consume a slot
+        q.append(now)
+        return True
 
     async def _format_event(
         self,
@@ -253,7 +278,7 @@ class AutonomousModeratorCog(commands.Cog):
         guild_ids = set(self.message_batches.keys()) | set(self.mention_triggers.keys())
         for gid in guild_ids:
             msgs = self.message_batches.get(gid, [])
-            # Check required settings
+
             settings = await mysql.get_settings(
                 gid,
                 [
@@ -268,32 +293,25 @@ class AutonomousModeratorCog(commands.Cog):
                 ],
             )
 
-            # Check essential settings
             autonomous = settings.get("autonomous-mod")
-            api_key = settings.get("api-key")
+            api_key = settings.get("api-key") or AUTOMOD_OPENAI_KEY
             rules = settings.get("rules")
             if not (autonomous and api_key and rules):
                 continue
 
-            # Skip if report mode but no mention trigger
             active_mode = await get_active_mode(gid)
             if active_mode == "report" and gid not in self.mention_triggers:
-                continue  
+                continue
 
-            # Check interval
             interval_str = settings.get("aimod-check-interval") or "1h"
             delta = parse_duration(interval_str) or timedelta(hours=1)
-
-            # Skip if interval mode but not time to check
             if active_mode == "interval" and now - self.last_run[gid] < delta:
                 continue
-            
-            # Get batch, trigger message, prepare rules
+
             batch = msgs[:]
-            trigger_msg = self.mention_triggers.pop(gid, None)
+            trigger_msg = self.mention_triggers.get(gid)
             rules = f"Rules:\n{rules}\n\n"
 
-            # If report mode, fetch messages from that channel
             if active_mode == "report":
                 if not trigger_msg:
                     continue
@@ -347,6 +365,24 @@ class AutonomousModeratorCog(commands.Cog):
 
             # Prompt for AI
             user_prompt = f"{rules}{violation_history}Transcript:\n{transcript}"
+
+            # Only rate limit Accelerated users
+            using_byo_key = bool(settings.get("api-key"))
+            if not using_byo_key:
+                accelerated = await mysql.is_accelerated(guild_id=gid)
+                if accelerated and not self._allow_accelerated_scan(gid):
+                    peek_trigger = self.mention_triggers.get(gid)
+                    if peek_trigger:
+                        try:
+                            await peek_trigger.reply(
+                                "Hit the moderation scan limit for this server. Try again shortly.",
+                                mention_author=False,
+                            )
+                        except discord.HTTPException:
+                            pass
+                    continue
+            self.last_run[gid] = now
+            self.message_batches[gid].clear()
 
             # AI call
             client = openai.AsyncOpenAI(api_key=api_key)

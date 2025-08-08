@@ -95,6 +95,7 @@ class AcceleratedCog(commands.Cog):
             title="Accelerated Perks",
             description=(
                 "Upgrade your experience with Moderator Bot Accelerated:\n"
+                "• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n"
                 "• Scan more frames per video for deeper NSFW detection\n"
                 "• Priority NSFW & Scam detection\n"
                 "• Early access to new features\n"
