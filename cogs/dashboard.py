@@ -7,7 +7,7 @@ class DashboardCog(commands.Cog):
 
     @app_commands.command(name="dashboard", description="Open the dashboard for this server.")
     @app_commands.guild_only()
-    @app_commands.default_permissions(administraor=True)
+    @app_commands.default_permissions(administrator=True)
     async def dashboard(self, interaction: Interaction):
         """Open the dashboard for this server."""
         guild_id = interaction.guild.id
