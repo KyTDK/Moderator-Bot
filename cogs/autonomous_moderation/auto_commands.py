@@ -34,10 +34,30 @@ ACTIONS = [
 AIMOD_EVENT_SETTING = "aimod-adaptive-events"
 EVENT_MANAGER = EventListManager(AIMOD_EVENT_SETTING)
 
+async def can_run(interaction: Interaction) -> bool:
+    guild_id = interaction.guild.id
+    accelerated = await mysql.is_accelerated(guild_id=guild_id)
+    api_key = await mysql.get_settings(guild_id, "api-key")
+
+    if api_key:
+        return True
+
+    if not accelerated:
+        msg = (
+            "This server doesn't have an Accelerated subscription. "
+            "Use `/accelerated subscribe` to start your premium plan."
+        )
+        if interaction.response.is_done():
+            await interaction.followup.send(msg, ephemeral=True)
+        else:
+            await interaction.response.send_message(msg, ephemeral=True)
+        return False
+
+    return True
+
 class AutonomousCommandsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
     ai_mod_group = app_commands.Group(name="ai_mod", 
                                       description="Manage AI moderation features.",
                                       default_permissions=discord.Permissions(manage_messages=True),
@@ -46,14 +66,15 @@ class AutonomousCommandsCog(commands.Cog):
     @ai_mod_group.command(name="rules_set", description="Set server rules")
     @app_commands.default_permissions(manage_guild=True)
     async def set_rules(this, interaction: Interaction, *, rules: str):
-        if not await mysql.get_settings(interaction.guild.id, "api-key"):
-            await interaction.response.send_message("Set an API key first with `/settings set api-key`.", ephemeral=True)
+        if not await can_run(interaction):
             return
         await mysql.update_settings(interaction.guild.id, "rules", rules)
         await interaction.response.send_message("Rules updated.", ephemeral=True)
 
     @ai_mod_group.command(name="rules_show", description="Show the currently configured moderation rules.")
     async def show_rules(self, interaction: Interaction):
+        if not await can_run(interaction):
+            return
         rules = await mysql.get_settings(interaction.guild.id, "rules")
         if not rules:
             await interaction.response.send_message("No moderation rules have been set.", ephemeral=True)
@@ -75,9 +96,7 @@ class AutonomousCommandsCog(commands.Cog):
             reason: str = None,
         ):
         await interaction.response.defer(ephemeral=True)
-
-        if not await mysql.get_settings(interaction.guild.id, "api-key"):
-            await interaction.followup.send("Set an API key first with `/settings set api-key`.", ephemeral=True)
+        if not await can_run(interaction):
             return
 
         action_str = await validate_action(
@@ -98,6 +117,8 @@ class AutonomousCommandsCog(commands.Cog):
     @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
     @app_commands.autocomplete(action=ACTION_MANAGER.autocomplete)
     async def remove_action(self, interaction: Interaction, action: str):
+        if not await can_run(interaction):
+            return
         msg = await ACTION_MANAGER.remove_action(interaction.guild.id, action)
         await interaction.response.send_message(msg, ephemeral=True)
 
@@ -125,6 +146,8 @@ class AutonomousCommandsCog(commands.Cog):
         enable: app_commands.Choice[str],
         mode: app_commands.Choice[str] = None
     ):
+        if not await can_run(interaction):
+            return
         gid = interaction.guild.id
 
         if enable.value == "status":
@@ -165,6 +188,8 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(name="view_actions", description="Show all actions currently configured to trigger when the AI detects a violation.")
     async def view_actions(self, interaction: Interaction):
+        if not await can_run(interaction):
+            return
         actions = await ACTION_MANAGER.view_actions(interaction.guild.id)
         if not actions:
             await interaction.response.send_message("No actions are currently set.", ephemeral=True)
@@ -197,6 +222,8 @@ class AutonomousCommandsCog(commands.Cog):
         time_range: str = None,
         threshold: float = None
     ):
+        if not await can_run(interaction):
+            return
         if not await ensure_adaptive_mode(interaction):
             return
 
@@ -239,6 +266,8 @@ class AutonomousCommandsCog(commands.Cog):
     @app_commands.autocomplete(event_key=EVENT_MANAGER.autocomplete_event)
     @app_commands.choices(action=[app_commands.Choice(name=label, value=value) for label, value in ACTIONS])
     async def remove_adaptive_event(self, interaction: Interaction, event_key: str, action: app_commands.Choice[str]):
+        if not await can_run(interaction):
+            return
         if not await ensure_adaptive_mode(interaction):
             return
         msg = await EVENT_MANAGER.remove_event_action(interaction.guild.id, event_key, action.value)
@@ -246,6 +275,8 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(name="clear_adaptive_events", description="Clear all adaptive event triggers.")
     async def clear_adaptive_events(self, interaction: Interaction):
+        if not await can_run(interaction):
+            return
         if not await ensure_adaptive_mode(interaction):
             return
         await mysql.update_settings(interaction.guild.id, AIMOD_EVENT_SETTING, {})
@@ -253,6 +284,8 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(name="view_adaptive_events", description="Show current adaptive moderation triggers.")
     async def view_adaptive_events(self, interaction: Interaction):
+        if not await can_run(interaction):
+            return
         if not await ensure_adaptive_mode(interaction):
             return
 
