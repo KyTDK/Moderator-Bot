@@ -18,7 +18,6 @@ import re
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-DELETE_SETTING = "delete-scam-messages"
 ACTION_SETTING = "scam-detection-action"
 EXCLUDE_CHANNELS_SETTING = "exclude-scam-channels"
 CHECK_LINKS_SETTING = "check-links"
@@ -279,29 +278,6 @@ class ScamDetectionCog(commands.Cog):
             f"Excluded channels: {channel_mentions}", ephemeral=True
         )
 
-    @scam_group.command(name="delete", description="Toggle or view auto-delete.")
-    @app_commands.describe(action="enable | disable | status")
-    @app_commands.choices(
-        action=[
-            app_commands.Choice(name="enable",  value="enable"),
-            app_commands.Choice(name="disable", value="disable"),
-            app_commands.Choice(name="status",  value="status"),
-        ]
-    )
-    async def setting_delete(self, interaction: Interaction,
-                             action: app_commands.Choice[str]):
-        gid = interaction.guild.id
-        if action.value == "status":
-            flag = await get_settings(gid, DELETE_SETTING)
-            await interaction.response.send_message(
-                f"Auto-delete is **{'enabled' if flag else 'disabled'}**.", ephemeral=True
-            )
-            return
-        await update_settings(gid, DELETE_SETTING, action.value == "enable")
-        await interaction.response.send_message(
-            f"Auto-delete **{action.value}d**.", ephemeral=True
-        )
-
     @scam_group.command(name="check_links", description="Toggle or view link checking.")
     @app_commands.describe(action="enable | disable | status")
     @app_commands.choices(
@@ -368,7 +344,6 @@ class ScamDetectionCog(commands.Cog):
     @scam_group.command(name="view", description="View current scam settings.")
     async def settings_view(self, interaction: Interaction):
         gid = interaction.guild.id
-        delete_setting = await get_settings(gid, DELETE_SETTING)
         action_setting = await manager.view_actions(gid)
 
         if not action_setting:
@@ -378,7 +353,6 @@ class ScamDetectionCog(commands.Cog):
 
         await interaction.response.send_message(
             f"**Scam Settings:**\n"
-            f"- Delete scam messages: `{delete_setting}`\n"
             f"- Scam actions:\n{actions_formatted}",
             ephemeral=True
         )
@@ -391,7 +365,6 @@ class ScamDetectionCog(commands.Cog):
         content_l = message.content.lower()
 
         # load settings
-        delete_flag = await get_settings(gid, DELETE_SETTING)
         action_flag = await get_settings(gid, ACTION_SETTING)
         exclude_channels = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
 
@@ -413,12 +386,6 @@ class ScamDetectionCog(commands.Cog):
             ON DUPLICATE KEY UPDATE first_detected=first_detected""",
             (message.author.id, gid, message.id, matched_pattern, matched_url),
         )
-
-        if delete_flag:
-            try:
-                await message.delete()
-            except Exception:
-                pass
 
         if action_flag:
             try:

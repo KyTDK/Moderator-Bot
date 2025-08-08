@@ -109,7 +109,6 @@ Detects and removes scam/phishing messages using:
 
 ### 🔧 Configuration:
 
-* `/scam delete` – Toggle auto-deletion of flagged messages
 * `/scam check_links` – Enable or disable link safety checks
 * `/scam exclude_channel_add` – Exclude a channel from scam detection
 * `/scam exclude_channel_remove` – Remove a channel from the exclusion list
@@ -178,7 +177,6 @@ Tracks and logs key server events:
 | `check-tenor-gifs`      | bool               | Scan Tenor GIFs for NSFW            |
 | `banned-words-action`   | list\[str]         | Action on banned words              |
 | `exclude-channels`      | list\[TextChannel] | Channels excluded from checks       |
-| `delete-scam-messages`  | bool               | Auto-delete scam messages           |
 | `scam-detection-action` | list\[str]         | Actions for scam messages           |
 | `check-links`           | bool               | Enable URL safety checks            |
 | `exclude-scam-channels` | list\[TextChannel] | Skip scam checks in these channels  |
