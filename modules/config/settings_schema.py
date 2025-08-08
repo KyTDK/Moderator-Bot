@@ -255,7 +255,7 @@ SETTINGS_SCHEMA = {
         name="aimod-model",
         description="Which OpenAI model to use for AI moderation.",
         setting_type=str,
-        default="gpt-4.1-mini",
+        default="gpt-5-mini",
         choices=[
             "gpt-5",
             "gpt-5-mini",
