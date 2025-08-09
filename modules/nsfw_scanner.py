@@ -495,7 +495,10 @@ class NSFWScanner:
             results = response.results[0]
             settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
             allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
-            threshold = settings.get("threshold", 0.7)
+            try:
+                threshold = float(settings.get("threshold", 0.7))
+            except (TypeError, ValueError):
+                threshold = 0.7
             flagged_categories = []
             flagged_any = False
             for category, is_flagged in results.categories.__dict__.items():
