@@ -286,10 +286,6 @@ class BannedWordsCog(commands.Cog):
                 channel_id=message.channel.id,
                 bot=self.bot
             )
-            try:
-                await message.delete()
-            except discord.NotFound:
-                print(f"[BannedWords] Message {message.id} already deleted.")
         except discord.Forbidden:
             pass
 
