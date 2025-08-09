@@ -5,7 +5,10 @@ def parse_duration(duration_str):
     if duration_str is None:
         return None
 
-    duration_str = duration_str.strip()
+    try:
+        duration_str = str(duration_str).strip()
+    except Exception:
+        return None
 
     pattern = r"(\d+)\s*(s|sec|second|seconds|m|min|minute|minutes|h|hr|hour|hours|d|day|days|w|week|weeks|mo|month|months|y|year|years)"
     match = re.fullmatch(pattern, duration_str, flags=re.IGNORECASE)
