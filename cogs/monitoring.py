@@ -52,7 +52,7 @@ class MonitoringCog(commands.Cog):
                         allowed_mentions=allowed
                     )
                 except discord.Forbidden:
-                    print(f"Missing access to send messages in channel ID {channel.id}")
+                    print(f"Missing access to send messages in channel ID {channel.id} for guild {guild.id}")
 
     @commands.Cog.listener()
     async def on_ready(self):
