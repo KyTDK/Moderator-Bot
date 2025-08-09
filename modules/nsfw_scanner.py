@@ -40,7 +40,8 @@ os.makedirs(TMP_DIR, exist_ok=True)
 CLIP_THRESHOLD = 0.80  # Threshold for similarity search
 MAX_FRAMES_PER_VIDEO = 5
 ACCELERATED_MAX_FRAMES_PER_VIDEO = 100
-MAX_CONCURRENT_FRAMES = 4
+MAX_CONCURRENT_FRAMES = 2
+ACCELERATED_MAX_CONCURRENT_FRAMES = 10
 MISMATCH_DETECTION = False  # Enable mismatch detection between vector search and OpenAI API
 ADD_SFW_VECTOR = True  # Add SFW vectors to the index
 
@@ -114,7 +115,7 @@ class NSFWScanner:
         # Process frames concurrently, increase concurrency for accelerated users
         semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
         if await mysql.is_accelerated(guild_id=guild_id):
-            semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES * 2)
+            semaphore = asyncio.Semaphore(ACCELERATED_MAX_CONCURRENT_FRAMES)
 
         async def analyse(path: str):
             async with semaphore:
