@@ -16,6 +16,7 @@ from cogs.banned_words import normalize_text
 import aiohttp
 from discord.ext import tasks
 import re
+from modules.worker_queue import WorkerQueue
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -223,6 +224,8 @@ class ScamDetectionCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.scam_schedule.start()
+        self.free_queue = WorkerQueue(max_workers=1)
+        self.accelerated_queue = WorkerQueue(max_workers=3)
 
     scam_group = app_commands.Group(
         name="scam",
@@ -361,6 +364,15 @@ class ScamDetectionCog(commands.Cog):
             ephemeral=True
         )
 
+    async def add_to_queue(self, coro, guild_id: int):
+        """
+        Add a task to the appropriate queue.
+        accelerated=True means higher priority
+        """
+        accelerated = await get_settings(guild_id, "scam-accelerated")
+        queue = self.accelerated_queue if accelerated else self.free_queue
+        await queue.add_task(coro)
+
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
@@ -375,49 +387,50 @@ class ScamDetectionCog(commands.Cog):
         # Check if the channel is excluded
         if message.channel.id in exclude_channels:
             return
+        async def scan_task():
+            # Run the scam detection
+            is_scam, matched_pattern, matched_url = await is_scam_message(content_l, gid)
 
-        # Run the scam detection
-        is_scam, matched_pattern, matched_url = await is_scam_message(content_l, gid)
+            if not is_scam:
+                return
+            
+            # Log the user and message
+            await execute_query(
+                """INSERT INTO scam_users
+                    (user_id,guild_id,matched_message_id,matched_pattern,matched_url)
+                VALUES (%s,%s,%s,%s,%s)
+                ON DUPLICATE KEY UPDATE first_detected=first_detected""",
+                (message.author.id, gid, message.id, matched_pattern, matched_url),
+            )
 
-        if not is_scam:
-            return
-        
-        # Log the user and message
-        await execute_query(
-            """INSERT INTO scam_users
-                (user_id,guild_id,matched_message_id,matched_pattern,matched_url)
-            VALUES (%s,%s,%s,%s,%s)
-            ON DUPLICATE KEY UPDATE first_detected=first_detected""",
-            (message.author.id, gid, message.id, matched_pattern, matched_url),
-        )
+            if action_flag:
+                try:
+                    await strike.perform_disciplinary_action(
+                        user=message.author,
+                        bot=self.bot,
+                        action_string=action_flag,
+                        reason="Scam message detected",
+                        source="scam",
+                        message=message,
+                    )
+                except Exception:
+                    pass
 
-        if action_flag:
             try:
-                await strike.perform_disciplinary_action(
-                    user=message.author,
-                    bot=self.bot,
-                    action_string=action_flag,
-                    reason="Scam message detected",
-                    source="scam",
-                    message=message,
+                embed = discord.Embed(
+                    title="Scam Message Detected",
+                    description=f"{message.author.mention}, your message was flagged as scam.",
+                    color=discord.Color.red()
+                )
+                embed.set_thumbnail(url=message.author.display_avatar.url)
+                await mod_logging.log_to_channel(
+                    embed=embed,
+                    channel_id=message.channel.id,
+                    bot=self.bot
                 )
             except Exception:
                 pass
-
-        try:
-            embed = discord.Embed(
-                title="Scam Message Detected",
-                description=f"{message.author.mention}, your message was flagged as scam.",
-                color=discord.Color.red()
-            )
-            embed.set_thumbnail(url=message.author.display_avatar.url)
-            await mod_logging.log_to_channel(
-                embed=embed,
-                channel_id=message.channel.id,
-                bot=self.bot
-            )
-        except Exception:
-            pass
+        await self.add_to_queue(scan_task(), guild_id=gid)
 
     @tasks.loop(hours=6)
     async def scam_schedule(self):
@@ -433,8 +446,15 @@ class ScamDetectionCog(commands.Cog):
         except Exception as e:
             print(f"[scam_schedule] Error during scheduled refresh: {e}")
 
-    def cog_unload(self):
+    async def cog_load(self):
+        await self.scanner.start()
+        await self.free_queue.start()
+        await self.accelerated_queue.start()
+
+    async def cog_unload(self):
         self.scam_schedule.cancel()
+        await self.free_queue.stop()
+        await self.accelerated_queue.stop()
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ScamDetectionCog(bot))
