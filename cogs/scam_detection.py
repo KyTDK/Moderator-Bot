@@ -447,7 +447,6 @@ class ScamDetectionCog(commands.Cog):
             print(f"[scam_schedule] Error during scheduled refresh: {e}")
 
     async def cog_load(self):
-        await self.scanner.start()
         await self.free_queue.start()
         await self.accelerated_queue.start()
 
