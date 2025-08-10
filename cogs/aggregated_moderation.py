@@ -26,12 +26,10 @@ class AggregatedModerationCog(commands.Cog):
         # Adjust queue size based on backlog
         backlog = queue.queue.qsize()
         if not accelerated:
-            if backlog > 30 and queue.max_workers < 2:
+            if backlog > 26 and queue.max_workers < 2:
                 await queue.resize_workers(2)
-                print(f"[FreeQueue] Scaled up to 2 workers (backlog={backlog})")
-            elif backlog <= 5 and queue.max_workers > 1:
+            elif backlog <= 13 and queue.max_workers > 1:
                 await queue.resize_workers(1)
-                print(f"[FreeQueue] Scaled down to 1 worker (backlog={backlog})")
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or message.guild is None:
