@@ -13,7 +13,7 @@ load_dotenv()
 FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
 fernet = Fernet(FERNET_KEY)
 
-
+# nosec B303  # API key hashing, not password hashing
 def compute_api_key_hash(api_key: str) -> str:
     return hashlib.sha256(api_key.encode()).hexdigest()
 
