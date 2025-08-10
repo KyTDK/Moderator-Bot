@@ -159,46 +159,105 @@ class Settings(commands.Cog):
                 f"An unexpected error occurred: `{e}`", ephemeral=True
             )
 
+    def _chunk_lines(self, lines: list[str], limit: int = 1000) -> list[str]:
+        chunks, buf = [], ""
+        for line in lines:
+            if len(buf) + len(line) + 1 > limit:
+                chunks.append(buf)
+                buf = line
+            else:
+                buf = f"{buf}\n{line}" if buf else line
+        if buf:
+            chunks.append(buf)
+        return chunks
+
     @app_commands.command(name="help", description="Get help on a specific command group.")
     @app_commands.describe(command="Optional: command group to get help with")
     @app_commands.default_permissions(moderate_members=True)
     async def help(self, interaction: Interaction, command: Optional[str] = None):
         await interaction.response.defer(ephemeral=True)
 
+        dash_url = f"https://modbot.neomechanical.com/dashboard/{interaction.guild.id}"
+        color = discord.Color.blurple()
+
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="Open Dashboard", url=dash_url, emoji="🛠️"))
+
+        avatar = interaction.client.user.display_avatar.url if interaction.client.user else None
+
         if command:
-            group = next((cmd for cmd in self.bot.tree.walk_commands() if cmd.name == command and isinstance(cmd, app_commands.Group)), None)
+            group = next(
+                (cmd for cmd in self.bot.tree.walk_commands()
+                if cmd.name == command and isinstance(cmd, app_commands.Group)),
+                None
+            )
             if not group:
-                await interaction.followup.send(f"No help found for `{command}`.", ephemeral=True)
+                await interaction.followup.send(f"❌ No help found for `{command}`.", ephemeral=True)
                 return
 
-            help_message = f"**/{group.name}** - {group.description or 'No description'}\n\n"
-            for sub in group.commands:
-                help_message += f"`/{sub.qualified_name}`: {sub.description or 'No description'}\n"
+            embed = discord.Embed(
+                title=f"/{group.name}",
+                description=(group.description or "No description.") +
+                            f"\n\n🛠️ **Dashboard:** [Open Dashboard]({dash_url})\nUse `/help {group.name}` to view this again.",
+                color=color,
+            )
+            if avatar:
+                embed.set_thumbnail(url=avatar)
 
-        else:
-            help_message = "**Available Command Groups:**\n\n"
-            top_level = [cmd for cmd in self.bot.tree.walk_commands() if isinstance(cmd, app_commands.Group)]
-            for group in top_level:
-                help_message += f"`/{group.name}`: {group.description or 'No description'} — Try `/help {group.name}` for subcommands\n"
+            lines = [f"• `/{sub.qualified_name}` — {sub.description or 'No description'}"
+                    for sub in group.commands] or ["(No subcommands)"]
 
-            # Accelerate command
-            is_accelerated = await mysql.is_accelerated(guild_id=interaction.guild.id)
-            if not is_accelerated:
-                help_message += (
-                    "\n**Upgrade to Accelerated for faster NSFW & scam detection → `/accelerated`**"
-                )
+            for i, chunk in enumerate(self._chunk_lines(lines), start=1):
+                name = "Subcommands" if len(lines) <= 12 else f"Subcommands (page {i})"
+                embed.add_field(name=name, value=chunk, inline=False)
 
-            help_message += (
-                "\n**Support Server:** <https://discord.gg/invite/33VcwjfEXC>\n"
-                "**Donate:** <https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC>\n"
-                "**Terms of Service:** <https://modbot.neomechanical.com/terms-of-service>\n"
-                "**Privacy Policy:** <https://modbot.neomechanical.com/privacy-policy>"
+            await interaction.followup.send(embed=embed, ephemeral=True, view=view)
+            return
+
+        embed = discord.Embed(
+            title="Moderator Bot — Help",
+            description=(
+                 f"🛠️ **Dashboard:** [Open Dashboard]({dash_url})\n"
+                "Configure everything faster in the web dashboard.\n"
+                "Or run **`/help <group>`** for detailed subcommands."
+            ),
+            color=color,
+        )
+        if avatar:
+            embed.set_thumbnail(url=avatar)
+
+        groups = [cmd for cmd in self.bot.tree.walk_commands() if isinstance(cmd, app_commands.Group)]
+        groups.sort(key=lambda c: c.name.lower())
+
+        lines = [
+            f"• `/{g.name}` — {g.description or 'No description'}  _Try:_ `/help {g.name}`"
+            for g in groups
+        ] or ["(No command groups found.)"]
+
+        for i, chunk in enumerate(self._chunk_lines(lines), start=1):
+            name = "Available Command Groups" if i == 1 else f"Available Command Groups (page {i})"
+            embed.add_field(name=name, value=chunk, inline=False)
+
+        is_accelerated = await mysql.is_accelerated(guild_id=interaction.guild.id)
+        if not is_accelerated:
+            embed.add_field(
+                name="Speed Up Detection",
+                value="⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
+                inline=False,
             )
 
-        chunks = paginate(help_message)
-        await interaction.followup.send(chunks[0], ephemeral=True)
-        for chunk in chunks[1:]:
-            await interaction.followup.send(chunk, ephemeral=True)
+        embed.add_field(
+            name="Links",
+            value=(
+                "[Support](https://discord.gg/invite/33VcwjfEXC) • "
+                "[Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • "
+                "[ToS](https://modbot.neomechanical.com/terms-of-service) • "
+                "[Privacy](https://modbot.neomechanical.com/privacy-policy)"
+            ),
+            inline=False,
+        )
+
+        await interaction.followup.send(embed=embed, ephemeral=True, view=view)
 
     @help.autocomplete("command")
     async def help_autocomplete(self, interaction: Interaction, current: str):
