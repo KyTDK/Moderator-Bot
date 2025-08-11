@@ -40,6 +40,20 @@ class AggregatedModerationCog(commands.Cog):
         if not await mysql.get_settings(guild_id, "nsfw-enabled"):
             return
         
+        # Skip age restricted
+        scan_age_restricted = await mysql.get_settings(guild_id, "scan-age-restricted")
+
+        chan = message.channel
+        parent = getattr(chan, "parent", None)
+        is_age_restricted = (
+            (hasattr(chan, "is_nsfw") and chan.is_nsfw())
+            or (parent is not None and hasattr(parent, "is_nsfw") and parent.is_nsfw())
+        )
+
+        if is_age_restricted and not scan_age_restricted:
+            return
+        
+        # Exclude age restricted
         excluded_channels = await mysql.get_settings(guild_id, "exclude-channels")
         if message.channel.id in excluded_channels:
             return

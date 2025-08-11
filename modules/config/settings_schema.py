@@ -191,6 +191,13 @@ SETTINGS_SCHEMA = {
         ],
         validator=require_accelerated
     ),
+    "scan-age-restricted": Setting(
+        name="scan-age-restricted",
+        description="Scan age-restricted (NSFW) channels. When off, NSFW channels are skipped.",
+        setting_type=bool,
+        default=False,
+        choices=["true", "false"]
+    ),
     "unmute-on-safe-pfp": Setting(
         name="unmute-on-safe-pfp",
         description="Remove timeout of a user once they have changed their profile picture to something appropriate.",
