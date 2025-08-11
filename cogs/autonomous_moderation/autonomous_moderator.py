@@ -341,8 +341,29 @@ class AutonomousModeratorCog(commands.Cog):
                 violation_history = "No recent violations on record."
             violation_history = f"Violation history:\n{violation_history}\n\n"
 
+            # Decide model and handle rate limits
+            model = (settings.get("aimod-model") or "gpt-5.1-mini") if api_key else None
+            if not api_key:
+                # Non–API-key path: only proceed for Accelerated guilds
+                if not await mysql.is_accelerated(guild_id=gid):
+                    return
+                model = "gpt-5.1-mini"
+                # Rate-limit Accelerated users
+                if not self._allow_accelerated_scan(gid):
+                    if (peek_trigger := self.mention_triggers.get(gid)):
+                        try:
+                            await peek_trigger.reply(
+                                "Hit the moderation scan limit for this server. Try again shortly.",
+                                mention_author=False,
+                            )
+                        except discord.HTTPException:
+                            pass
+                    continue
+                # Passed rate limit: record & reset batch
+                self.last_run[gid] = now
+                self.message_batches[gid].clear()
+
             # Build transcript with truncation if needed
-            model = settings.get("aimod-model") or "gpt-4.1-mini"
             limit = get_model_limit(model)
             max_tokens = int(limit * 0.9)
             current_total_tokens=BASE_SYSTEM_TOKENS+estimate_tokens(violation_history)+estimate_tokens(rules)
@@ -365,24 +386,6 @@ class AutonomousModeratorCog(commands.Cog):
 
             # Prompt for AI
             user_prompt = f"{rules}{violation_history}Transcript:\n{transcript}"
-
-            # Only rate limit Accelerated users
-            using_byo_key = bool(settings.get("api-key"))
-            if not using_byo_key:
-                accelerated = await mysql.is_accelerated(guild_id=gid)
-                if accelerated and not self._allow_accelerated_scan(gid):
-                    peek_trigger = self.mention_triggers.get(gid)
-                    if peek_trigger:
-                        try:
-                            await peek_trigger.reply(
-                                "Hit the moderation scan limit for this server. Try again shortly.",
-                                mention_author=False,
-                            )
-                        except discord.HTTPException:
-                            pass
-                    continue
-            self.last_run[gid] = now
-            self.message_batches[gid].clear()
 
             # AI call
             client = openai.AsyncOpenAI(api_key=api_key)
