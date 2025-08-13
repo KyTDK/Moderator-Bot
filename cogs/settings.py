@@ -100,6 +100,9 @@ class Settings(commands.Cog):
 
         expected = schema.type
         try:
+            # Check if accelerated only
+            if schema.accelerated and not await mysql.is_accelerated(guild_id=interaction.guild.id):
+                raise ValueError(f"This setting requires an active Accelerated subscription. Use `/accelerated`")
             # Validate required parameters for expected type
             if expected is bool and value is None:
                 raise ValueError(f"**`{name}` expects a boolean. Use the `value` option.**")

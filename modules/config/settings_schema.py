@@ -13,6 +13,7 @@ class Setting:
         encrypted: bool = False,
         hidden: bool = False,
         private: bool = False,
+        accelerated: bool = False,
         validator: Optional[Callable] = None,
         choices: Optional[list[str]] = None
     ):
@@ -23,18 +24,13 @@ class Setting:
         self.encrypted = encrypted
         self.hidden = hidden
         self.private = private
+        self.accelerated = accelerated
         self.validator = validator
         self.choices = choices
 
     async def validate(self, value: Any):
         if self.validator:
             await self.validator(value)
-
-async def require_accelerated(value: Any, *, guild_id: int | None = None, user_id: int | None = None, **_: Any) -> None:
-    from modules.utils.mysql import is_accelerated
-    ok = await is_accelerated(user_id=user_id, guild_id=guild_id)
-    if not ok:
-        raise ValueError("Requires Accelerated. Use `/accelerated subscribe`.")
 
 SETTINGS_SCHEMA = {
     "strike-channel": Setting(
@@ -88,6 +84,7 @@ SETTINGS_SCHEMA = {
             "violence_graphic",
             "sexual"
         ],
+        accelerated=True,
         hidden=True,
     ),
     "threshold": Setting(
@@ -169,7 +166,7 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False, # False by default to avoid unnecessary API calls
         choices=["true", "false"],
-        validator=require_accelerated
+        accelerated=True,
     ),
     "nsfw-pfp-action": Setting(
         name="nsfw-pfp-action",
@@ -177,7 +174,6 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=["kick"],
         choices=["strike", "strike:2d", "kick", "ban", "timeout:1d", "timeout:7d"],
-        validator=require_accelerated
     ),
     "nsfw-pfp-message": Setting(
         name="nsfw-pfp-message",
@@ -189,14 +185,7 @@ SETTINGS_SCHEMA = {
             "Your profile picture is not appropriate for this server.",
             "Your profile picture has been flagged as NSFW.",
         ],
-        validator=require_accelerated
-    ),
-    "scan-age-restricted": Setting(
-        name="scan-age-restricted",
-        description="Scan age-restricted (NSFW) channels. When off, NSFW channels are skipped.",
-        setting_type=bool,
-        default=False,
-        choices=["true", "false"]
+        accelerated=True
     ),
     "unmute-on-safe-pfp": Setting(
         name="unmute-on-safe-pfp",
@@ -204,7 +193,14 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         choices=["true", "false"],
-        validator=require_accelerated
+        accelerated=True
+    ),
+    "scan-age-restricted": Setting(
+        name="scan-age-restricted",
+        description="Scan age-restricted (NSFW) channels. When off, NSFW channels are skipped.",
+        setting_type=bool,
+        default=False,
+        choices=["true", "false"]
     ),
     "check-tenor-gifs": Setting(
         name="check-tenor-gifs",
@@ -258,6 +254,7 @@ SETTINGS_SCHEMA = {
         setting_type=str,
         default="1. Be respectful — no harassment or hate speech.\n2. No NSFW or obscene content.\n3. No spam or excessive self-promotion.\n4. Follow Discord's Terms of Service.",
         hidden=True,
+        # accelerated=True, # is_accelerated with exception of api key is set
     ),
     "aimod-detection-action": Setting(
         name="aimod-detection-action",
@@ -265,6 +262,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         hidden=True,
         default=["auto"],
+        # accelerated=True, # is_accelerated with exception of api key is set
         choices=["strike", "kick", "ban", "timeout", "delete", "auto"],
     ),
     "autonomous-mod": Setting(
@@ -273,6 +271,7 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         hidden=True,
+        # accelerated=True, # is_accelerated with exception of api key is set
         choices=["true", "false"]
     ),
     "aimod-model": Setting(
@@ -280,6 +279,7 @@ SETTINGS_SCHEMA = {
         description="Which OpenAI model to use for AI moderation.",
         setting_type=str,
         default="gpt-5-mini",
+        # accelerated=True, # is_accelerated with exception of api key is set
         choices=[
             "gpt-5",
             "gpt-5-mini",
@@ -295,6 +295,7 @@ SETTINGS_SCHEMA = {
         name="aimod-check-interval",
         description="How often to run the AI moderation batch process.",
         setting_type=TimeString,
+        # accelerated=True, # is_accelerated with exception of api key is set
         default=TimeString("1h"),
     ),
     "aimod-mode": Setting(
@@ -302,6 +303,7 @@ SETTINGS_SCHEMA = {
         description="Choose how AI moderation is triggered: `report` mode (only on mention), `interval` mode (automatic background scanning), or `adaptive` mode (dynamically switches based on server activity, events, or configuration).",
         setting_type=str,
         default="report",
+        # accelerated=True, # is_accelerated with exception of api key is set
         choices=["interval", "report", "adaptive"],
         hidden=True
     ),
@@ -310,7 +312,8 @@ SETTINGS_SCHEMA = {
         description=(
             "Configure which events trigger switching AI moderation modes. "
         ),
-        setting_type=dict[str, list[str]], #[event, list of actions] 
+        setting_type=dict[str, list[str]], #[event, list of actions]
+        # accelerated=True, # is_accelerated with exception of api key is set
         default={
             "mass_join": ["enable_interval", "disable_report"],
             "mass_leave": ["enable_interval", "disable_report"],

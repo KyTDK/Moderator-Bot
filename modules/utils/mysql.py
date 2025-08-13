@@ -260,45 +260,69 @@ async def get_settings(guild_id: int, settings_key: str | list[str] | None = Non
     )
     raw = json.loads(settings_row[0]) if settings_row else {}
 
-    # Handle single or multiple key fetch
+    # Normalize requested keys
     if isinstance(settings_key, str):
-        settings_key = [settings_key]
-    if settings_key is not None:
-        result = {}
-        for key in settings_key:
-            schema = SETTINGS_SCHEMA.get(key)
-            default = schema.default if schema else None
-            encrypted = schema.encrypted if schema else False
-            value = raw.get(key, copy.deepcopy(default))
+        requested = [settings_key]
+    elif isinstance(settings_key, list):
+        requested = settings_key
+    else:
+        # No key provided: process all schema keys + any unknown keys found in raw
+        requested = list(set(SETTINGS_SCHEMA.keys()) | set(raw.keys()))
 
-            if encrypted and value:
-                value = fernet.decrypt(value.encode()).decode()
+    # Only check acceleration if any requested key is accelerated-only
+    needs_accel = any(getattr(SETTINGS_SCHEMA.get(k), "accelerated", False) for k in requested)
+    accelerated_enabled = await is_accelerated(guild_id=guild_id) if needs_accel else None
 
-            if schema:
-                if schema.type is bool and isinstance(value, str):
-                    value = value.lower() == "true"
-                if schema.type == list[str]:
-                    if isinstance(value, str):
-                        value = [value]
-                    elif not isinstance(value, list):
-                        value = []
-                    value = [v for v in value if v != "none"]
-                if key == "strike-actions":
-                    migrated = {}
-                    if isinstance(value, dict):
-                        for k, v in value.items():
-                            if isinstance(v, list):
-                                migrated[k] = v
-                            elif isinstance(v, tuple):
-                                a, d = v
-                                migrated[k] = [f"{a}:{d}" if d else a]
-                            else:
-                                migrated[k] = [str(v)]
-                        value = migrated
+    def process_key(key: str):
+        schema = SETTINGS_SCHEMA.get(key)
+        default = copy.deepcopy(getattr(schema, "default", None))
+        encrypted = bool(getattr(schema, "encrypted", False))
+        accelerated_only = bool(getattr(schema, "accelerated", False))
 
-            result[key] = value
-        return result if len(result) > 1 else next(iter(result.values()))
-    return raw
+        value = raw.get(key, copy.deepcopy(default))
+
+        # Override with default for accelerated-only settings if guild isn't accelerated
+        if accelerated_only and (accelerated_enabled is False):
+            value = copy.deepcopy(default)
+
+        # Decrypt stored values when applicable
+        if encrypted and value:
+            value = fernet.decrypt(value.encode()).decode()
+
+        # Type coercions / migrations
+        if schema:
+            if schema.type is bool and isinstance(value, str):
+                value = value.lower() == "true"
+
+            if schema.type == list[str]:
+                if isinstance(value, str):
+                    value = [value]
+                elif not isinstance(value, list):
+                    value = []
+                value = [v for v in value if v != "none"]
+
+            if key == "strike-actions":
+                migrated = {}
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        if isinstance(v, list):
+                            migrated[k] = v
+                        elif isinstance(v, tuple):
+                            a, d = v
+                            migrated[k] = [f"{a}:{d}" if d else a]
+                        else:
+                            migrated[k] = [str(v)]
+                    value = migrated
+
+        return value
+
+    result = {k: process_key(k) for k in requested}
+
+    # If a single key was requested, return just that value
+    if settings_key is not None and len(requested) == 1:
+        return result[requested[0]]
+
+    return result
 
 async def update_settings(guild_id: int, settings_key: str, settings_value):
     settings = await get_settings(guild_id)
