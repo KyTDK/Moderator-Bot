@@ -350,6 +350,7 @@ class NSFWScanner:
                 try:
                     await attachment.save(tmp.name)
                 except NotFound:
+                    safe_delete(tmp.name)
                     print(f"[NSFW] Attachment not found: {attachment.url}")
                     continue
                 temp_filename = tmp.name
