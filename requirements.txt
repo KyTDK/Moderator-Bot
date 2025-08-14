@@ -14,6 +14,6 @@ urlextract==1.9.0
 clean-text==0.6.0
 apnggif==0.1.4
 numpy==1.26.4
-torch==2.7.1+cu118
-torchaudio==2.7.1+cu118
-torchvision==0.22.1+cu118
+torch
+torchvision
+--extra-index-url https://download.pytorch.org/whl/cu126
