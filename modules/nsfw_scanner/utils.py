@@ -11,14 +11,14 @@ from PIL import Image
 from .constants import TMP_DIR
 
 
-def _safe_delete(path: str) -> None:
+def safe_delete(path: str) -> None:
     try:
         os.remove(path)
     except FileNotFoundError:
         pass
 
 
-def _is_allowed_category(category: str, allowed_categories) -> bool:
+def is_allowed_category(category: str, allowed_categories) -> bool:
     normalized = category.replace("/", "_").replace("-", "_").lower()
     allowed = [c.lower() for c in allowed_categories]
     return normalized in allowed
@@ -35,7 +35,7 @@ def determine_file_type(filename: str) -> str:
     return kind.mime
 
 
-def _extract_frames_threaded(filename: str, wanted: int) -> list[str]:
+def extract_frames_threaded(filename: str, wanted: int) -> list[str]:
     temp_frames: list[str] = []
 
     ext = os.path.splitext(filename)[1].lower()
@@ -92,12 +92,12 @@ def _extract_frames_threaded(filename: str, wanted: int) -> list[str]:
         cap.release()
 
 
-def _file_to_b64(path: str) -> str:
+def file_to_b64(path: str) -> str:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
 
-def _convert_to_png_safe(input_path: str, output_path: str) -> Optional[str]:
+def convert_to_png_safe(input_path: str, output_path: str) -> Optional[str]:
     try:
         with Image.open(input_path) as img:
             img = img.convert("RGBA")

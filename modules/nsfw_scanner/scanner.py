@@ -38,12 +38,12 @@ from .constants import (
     LOG_CHANNEL_ID,
 )
 from .utils import (
-    _safe_delete,
-    _is_allowed_category,
+    safe_delete,
+    is_allowed_category,
     determine_file_type,
-    _extract_frames_threaded,
-    _file_to_b64,
-    _convert_to_png_safe,
+    extract_frames_threaded,
+    file_to_b64,
+    convert_to_png_safe,
 )
 
 
@@ -105,10 +105,10 @@ class NSFWScanner:
             frames_to_scan = ACCELERATED_MAX_FRAMES_PER_VIDEO
 
         temp_frames = await asyncio.to_thread(
-            _extract_frames_threaded, original_filename, frames_to_scan
+            extract_frames_threaded, original_filename, frames_to_scan
         )
         if not temp_frames:
-            _safe_delete(original_filename)
+            safe_delete(original_filename)
             return None, None
 
         # Process frames concurrently, increase concurrency for accelerated users
@@ -161,8 +161,8 @@ class NSFWScanner:
             return None, None
         finally:
             for p in temp_frames:
-                _safe_delete(p)
-            _safe_delete(original_filename)
+                safe_delete(p)
+            safe_delete(original_filename)
 
     async def process_image(
         self,
@@ -171,7 +171,7 @@ class NSFWScanner:
         clean_up: bool = True,
     ) -> dict | None:
         png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
-        result = await asyncio.to_thread(_convert_to_png_safe, original_filename, png_converted_path)
+        result = await asyncio.to_thread(convert_to_png_safe, original_filename, png_converted_path)
         if not result:
             print(f"[process_image] PNG conversion failed: {original_filename}")
             return None
@@ -236,7 +236,7 @@ class NSFWScanner:
                             print(f"[process_image] Category '{category}' flagged with low score of {score:.2f} and similarity {similarity:.2f}. Ignoring.")
                             continue
 
-                        if _is_allowed_category(category, allowed_categories):
+                        if is_allowed_category(category, allowed_categories):
                             print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
                             return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
 
@@ -257,9 +257,9 @@ class NSFWScanner:
             print(f"[process_image] Error processing image {original_filename}: {e}")
             return None
         finally:
-            _safe_delete(png_converted_path)
+            safe_delete(png_converted_path)
             if clean_up:
-                _safe_delete(original_filename)
+                safe_delete(original_filename)
 
     async def check_attachment(
         self,
@@ -357,7 +357,7 @@ class NSFWScanner:
                 if await self.check_attachment(message.author, temp_filename, nsfw_callback, guild_id, message):
                     return True
             finally:
-                _safe_delete(temp_filename)
+                safe_delete(temp_filename)
 
         for embed in embeds:
             possible_urls = []
@@ -409,7 +409,7 @@ class NSFWScanner:
                         return True
                 finally:
                     if gif_location != temp_location:
-                        _safe_delete(gif_location)
+                        safe_delete(gif_location)
 
         custom_emoji_tags = list(set(re.findall(r'<a?:\w+:\d+>', message.content)))
         for tag in custom_emoji_tags:
@@ -456,7 +456,7 @@ class NSFWScanner:
                 print(f"[moderator_api] Image path does not exist: {image_path}")
                 return result
             try:
-                b64 = await asyncio.to_thread(_file_to_b64, image_path)
+                b64 = await asyncio.to_thread(file_to_b64, image_path)
             except Exception as e:
                 print(f"[moderator_api] Error reading/encoding image {image_path}: {e}")
                 return result
@@ -525,7 +525,7 @@ class NSFWScanner:
                     print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
                     continue
                 # Check if category is allowed in this guild
-                if allowed_categories and not _is_allowed_category(category, allowed_categories):
+                if allowed_categories and not is_allowed_category(category, allowed_categories):
                     continue
                 # Add to flagged categories
                 flagged_categories.append((normalized_category, score))

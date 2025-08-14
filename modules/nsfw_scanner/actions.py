@@ -6,7 +6,7 @@ from cogs.nsfw import NSFW_ACTION_SETTING
 from modules.moderation import strike
 from modules.utils import mod_logging, mysql
 
-from .utils import _safe_delete
+from .utils import safe_delete
 
 
 async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id: int, reason: str, image: discord.File, message: discord.Message):
@@ -46,6 +46,6 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id: int, re
 
     try:
         image.close()
-        _safe_delete(image.fp.name)
+        safe_delete(image.fp.name)
     except Exception as e:
         print(f"[cleanup] couldn't delete evidence file: {e}")
