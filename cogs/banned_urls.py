@@ -174,7 +174,6 @@ class BannedURLsCog(commands.Cog):
                 title="Banned URL Detected",
                 description=(
                     f"{message.author.mention}, your message was removed because it contained a banned URL.\n"
-                    f"**URL:** {matched_url}"
                 ),
                 color=discord.Color.red(),
             )
