@@ -18,3 +18,4 @@ torchvision
 --extra-index-url https://download.pytorch.org/whl/cu126
 transformers==4.48.3
 pymilvus==2.5.14
+Unidecode==1.4.0
