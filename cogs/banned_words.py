@@ -281,10 +281,17 @@ class BannedWordsCog(commands.Cog):
             return  # No banned words to check against
 
         normalised = normalize_text(message.content.lower())
-        collapsed = normalised.replace(" ", "")
+        collapsed  = normalised.replace(" ", "")
+
+        custom_words = [w.lower() for w in custom]
+        has_custom_substring = any(
+            (w in normalised) or (w in collapsed)
+            for w in custom_words
+        )
 
         if not (
-            profanity.contains_profanity(normalised)
+            has_custom_substring
+            or profanity.contains_profanity(normalised)
             or profanity.contains_profanity(collapsed)
         ):
             return
