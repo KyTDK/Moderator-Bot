@@ -346,7 +346,7 @@ class MonitoringCog(commands.Cog):
                 try:
                     links = []
                     for sticker in cached_stickers:
-                        links.append(f"• [{sticker['name']}]({sticker['url']})")
+                        links.append(f"• [{sticker.name}]({sticker.url})")
 
                     embed.add_field(
                         name=f"Stickers ({len(links)})",
