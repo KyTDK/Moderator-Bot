@@ -9,3 +9,4 @@ diskcache==5.6.3
 milvus-lite==2.5.1
 pillow==11.2.1
 pillow-avif-plugin==1.5.2
+openai==1.16.2
