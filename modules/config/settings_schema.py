@@ -121,9 +121,9 @@ SETTINGS_SCHEMA = {
         default=True,
         choices=["true", "false"]
     ),
-    "exclude-channels": Setting(
-        name="exclude-channels",
-        description="Channels to exclude from detection.",
+    "exclude-bannedwords-channels": Setting(
+        name="exclude-bannedwords-channels",
+        description="Channels to exclude from banned words detection.",
         setting_type=list[discord.TextChannel],
         default=[],
     ),
@@ -216,6 +216,12 @@ SETTINGS_SCHEMA = {
         default=False,
         hidden=True,
         choices=["true", "false"]
+    ),
+    "exclude-channels": Setting(
+        name="exclude-channels",
+        description="Channels to exclude from detection.",
+        setting_type=list[discord.TextChannel],
+        default=[],
     ),
     "delete-scam-messages": Setting(
         name="delete-scam-messages",
