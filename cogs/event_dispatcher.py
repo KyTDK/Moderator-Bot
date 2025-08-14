@@ -80,5 +80,13 @@ class EventDispatcherCog(commands.Cog):
         # Handle message deletion
         await self.bot.get_cog("MonitoringCog").handle_message_delete(cached_message)
 
+    async def cog_load(self):
+        await self.free_queue.start()
+        await self.accelerated_queue.start()
+
+    async def cog_unload(self):
+        await self.free_queue.stop()
+        await self.accelerated_queue.stop()
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(EventDispatcherCog(bot))
