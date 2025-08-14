@@ -261,8 +261,7 @@ class BannedWordsCog(commands.Cog):
         guild_id = message.guild.id
 
         # Exclude channels
-        excluded_channels = await mysql.get_settings(guild_id, "exclude-bannedwords-channels")
-        if message.channel.id in excluded_channels:
+        if message.channel.id in [int(c) for c in (await mysql.get_settings(guild_id, "exclude-bannedwords-channels") or [])]:
             return
 
         use_defaults = await mysql.get_settings(guild_id, "use-default-banned-words")

@@ -54,8 +54,7 @@ class AggregatedModerationCog(commands.Cog):
             return
         
         # Exclude age restricted
-        excluded_channels = await mysql.get_settings(guild_id, "exclude-channels")
-        if message.channel.id in excluded_channels:
+        if message.channel.id in [int(c) for c in (await mysql.get_settings(guild_id, "exclude-channels") or [])]:
             return
 
         async def scan_task():
