@@ -147,6 +147,7 @@ class Settings(commands.Cog):
                     current.append(role.id)
                 parsed = current
             else:
+                print("Setting parsed as value as type isn't known")
                 parsed = value
 
             await schema.validate(parsed)
