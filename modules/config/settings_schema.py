@@ -333,5 +333,24 @@ SETTINGS_SCHEMA = {
         description="Stop a specific role from forwarding messages.",
         setting_type=list[discord.Role],
         default=[]
-    )
+    ),
+    "banned-urls": Setting(
+        name="blocked-urls",
+        description="Exact URLs or domains to block.",
+        setting_type=list[str],
+        default=[],
+    ),
+    "url-detection-action": Setting(
+        name="url-detection-action",
+        description="Action to take when a blocked URL is detected.",
+        setting_type=list[str],
+        default=["delete"],
+        choices=["delete", "strike", "kick", "ban", "timeout"],
+    ),
+    "exclude-url-channels": Setting(
+        name="exclude-url-channels",
+        description="Channels to exclude from banned URLs.",
+        setting_type=list[discord.TextChannel],
+        default=[],
+    ),
 }

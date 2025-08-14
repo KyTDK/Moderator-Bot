@@ -99,6 +99,15 @@ async def _ensure_database_exists():
             )
             await cur.execute(
                 """
+                CREATE TABLE IF NOT EXISTS banned_urls (
+                    guild_id BIGINT,
+                    url VARCHAR(255),
+                    PRIMARY KEY (guild_id, url)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
                 CREATE TABLE IF NOT EXISTS api_pool (
                     user_id BIGINT NOT NULL,
                     guild_id BIGINT NOT NULL,

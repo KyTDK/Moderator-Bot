@@ -8,13 +8,12 @@ from modules.utils import mod_logging
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
-from urlextract import URLExtract
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from cogs.banned_words import normalize_text
 import aiohttp
 from discord.ext import tasks
-import re
+from modules.utils.url_utils import extract_urls, unshorten_url, update_tld_list
 from modules.worker_queue import WorkerQueue
 
 load_dotenv()
@@ -28,8 +27,6 @@ manager = ActionListManager(ACTION_SETTING)
 PHISHTANK_URL = "http://data.phishtank.com/data/online-valid.json"
 PHISHTANK_CACHE_FILE = "phishtank_cache.json"
 PHISHTANK_USER_AGENT = {"User-Agent": "ModeratorBot/1.0"}
-
-url_extractor = URLExtract()
 
 SAFE_URLS = [
     "discord.com",
@@ -80,20 +77,6 @@ SAFE_URLS = [
     "genshindle.com"
 ]
 
-INTERMEDIARY_DOMAINS = ["antiphishing.biz",]
-
-def clean_and_normalize_urls(found_urls):
-    cleaned = []
-    for u in found_urls:
-        if not u.startswith(("http://", "https://")):
-            u = f"http://{u}"
-        matches = list(re.finditer(r'https?://', u))
-        if matches:
-            last = matches[-1].start()
-            u = u[last:]
-        cleaned.append(u)
-    return cleaned
-
 async def update_cache():
     try:
         print("Downloading latest PhishTank data...")
@@ -106,20 +89,6 @@ async def update_cache():
         print("PhishTank data updated.")
     except Exception as e:
         print(f"Error updating cache: {e}")
-
-async def unshorten_url(url: str, guild_id: int) -> str:
-    import httpx
-    headers = {"User-Agent": "Mozilla/5.0"}
-    try:
-        async with httpx.AsyncClient(follow_redirects=True, headers=headers, timeout=10.0, verify=False) as client:
-            resp = await client.get(url)
-            final_url = str(resp.url)
-            if any(domain in final_url for domain in INTERMEDIARY_DOMAINS):
-                return url
-            return final_url
-    except Exception as e:
-        print(f"[unshorten_url] Failed to unshorten {url} for guild id {guild_id}: {e}")
-        return url
 
 def check_phishtank(url: str) -> bool:
     """
@@ -201,8 +170,9 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     if matched_pattern:
         return True, matched_pattern, None
 
-    found_urls = url_extractor.find_urls(message)
-    normalized_urls = clean_and_normalize_urls(found_urls)
+
+    normalized_urls = extract_urls(message, 
+                                   normalize=True)
 
     check_links   = await get_settings(guild_id, CHECK_LINKS_SETTING)
 
@@ -436,7 +406,7 @@ class ScamDetectionCog(commands.Cog):
             print("[PhishTank] Cache refreshed successfully.")
 
             print("[URLExtract] Updating TLD list...")
-            url_extractor.update()
+            update_tld_list()
             print("[URLExtract] TLD list updated.")
 
         except Exception as e:

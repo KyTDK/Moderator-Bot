@@ -22,6 +22,7 @@ class EventDispatcherCog(commands.Cog):
         await self.bot.get_cog("AutonomousModeratorCog").handle_message(message)
         await self.bot.get_cog("NicheModerationCog").handle_message(message)
         await self.bot.get_cog("AdaptiveModerationCog").handle_message(message)
+        await self.bot.get_cog("BannedURLsCog").handle_message(message)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
