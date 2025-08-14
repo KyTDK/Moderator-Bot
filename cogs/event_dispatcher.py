@@ -3,29 +3,44 @@ import discord
 from discord.ext import commands
 
 from modules.cache import DEFAULT_CACHED_MESSAGE, CachedMessage, cache_message, get_cached_message
+from modules.utils import mysql
+from modules.worker_queue import WorkerQueue
 
 class EventDispatcherCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.free_queue = WorkerQueue(max_workers=2)
+        self.accelerated_queue = WorkerQueue(max_workers=5)
+
+    async def add_to_queue(self, coro, guild_id: int):
+        accelerated = await mysql.is_accelerated(guild_id=guild_id)
+
+        queue = self.accelerated_queue if accelerated else self.free_queue
+        await queue.add_task(coro)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
-
+        guild_id = message.guild.id
+        
         # Cache messages
         cache_message(message)
 
-        # Run all handlers at once
-        await asyncio.gather(
-            self.bot.get_cog("AggregatedModerationCog").handle_message(message),
-            self.bot.get_cog("BannedWordsCog").handle_message(message),
-            self.bot.get_cog("ScamDetectionCog").handle_message(message),
-            self.bot.get_cog("AutonomousModeratorCog").handle_message(message),
-            self.bot.get_cog("NicheModerationCog").handle_message(message),
-            self.bot.get_cog("AdaptiveModerationCog").handle_message(message),
-            self.bot.get_cog("BannedURLsCog").handle_message(message),
-        )
+        await self.add_to_queue(self.bot.get_cog("AggregatedModerationCog").handle_message(message), 
+                                guild_id)
+        await self.add_to_queue(self.bot.get_cog("BannedWordsCog").handle_message(message), 
+                                guild_id)
+        await self.add_to_queue(self.bot.get_cog("ScamDetectionCog").handle_message(message), 
+                                guild_id)
+        await self.add_to_queue(self.bot.get_cog("AutonomousModeratorCog").handle_message(message), 
+                                guild_id)
+        await self.add_to_queue(self.bot.get_cog("NicheModerationCog").handle_message(message), 
+                                guild_id)
+        await self.add_to_queue(self.bot.get_cog("AdaptiveModerationCog").handle_message(message), 
+                                guild_id)
+        await self.add_to_queue(self.bot.get_cog("BannedURLsCog").handle_message(message), 
+                                guild_id)    
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
