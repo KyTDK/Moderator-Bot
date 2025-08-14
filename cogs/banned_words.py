@@ -17,6 +17,28 @@ MAX_BANNED_WORDS = 500
 BANNED_ACTION_SETTING = "banned-words-action"
 manager = ActionListManager(BANNED_ACTION_SETTING)
 
+LEET_MAP = {
+    "!": "i",
+    "1": "i",
+    "|": "l",
+    "3": "e",
+    "4": "a",
+    "@": "a",
+    "0": "o",
+    "5": "s",
+    "$": "s",
+    "7": "t",
+    "+": "t",
+    "8": "b",
+    "9": "g",
+    "2": "z",
+}
+
+LEET_RE = re.compile("|".join(re.escape(k) for k in sorted(LEET_MAP, key=len, reverse=True)))
+
+def apply_leet(text: str) -> str:
+    return LEET_RE.sub(lambda m: LEET_MAP[m.group(0)], text)
+
 RE_REPEATS = re.compile(r"(.)\1{2,}")
 def normalize_text(text: str) -> str:
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
@@ -38,6 +60,9 @@ def normalize_text(text: str) -> str:
 
     # Flatten repeated characters to a maximum of two
     text = RE_REPEATS.sub(r"\1\1", text)
+
+    # apply additional leet as better profanity is lacking
+    text = apply_leet(text)
 
     text = clean(
         text,
