@@ -354,7 +354,7 @@ class Settings(commands.Cog):
             return
 
         try:
-            if expected is list[discord.TextChannel]:
+            if expected == list[discord.TextChannel]:
                 if not channel:
                     raise ValueError("You must specify a channel to remove.")
                 if channel.id not in current:
@@ -363,7 +363,7 @@ class Settings(commands.Cog):
                 await mysql.update_settings(interaction.guild.id, name, current)
                 await interaction.followup.send(f"Removed {channel.mention} from `{name}`.", ephemeral=True)
 
-            elif expected is list[discord.Role]:
+            elif expected == list[discord.Role]:
                 if not role:
                     raise ValueError("You must specify a role to remove.")
                 if role.id not in current:
