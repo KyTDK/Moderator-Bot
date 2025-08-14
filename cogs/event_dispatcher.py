@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.ext import commands
 
@@ -11,18 +12,20 @@ class EventDispatcherCog(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
-        
+
         # Cache messages
         cache_message(message)
 
-        # Handle message 
-        await self.bot.get_cog("AggregatedModerationCog").handle_message(message)
-        await self.bot.get_cog("BannedWordsCog").handle_message(message)
-        await self.bot.get_cog("ScamDetectionCog").handle_message(message)
-        await self.bot.get_cog("AutonomousModeratorCog").handle_message(message)
-        await self.bot.get_cog("NicheModerationCog").handle_message(message)
-        await self.bot.get_cog("AdaptiveModerationCog").handle_message(message)
-        await self.bot.get_cog("BannedURLsCog").handle_message(message)
+        # Run all handlers at once
+        await asyncio.gather(
+            self.bot.get_cog("AggregatedModerationCog").handle_message(message),
+            self.bot.get_cog("BannedWordsCog").handle_message(message),
+            self.bot.get_cog("ScamDetectionCog").handle_message(message),
+            self.bot.get_cog("AutonomousModeratorCog").handle_message(message),
+            self.bot.get_cog("NicheModerationCog").handle_message(message),
+            self.bot.get_cog("AdaptiveModerationCog").handle_message(message),
+            self.bot.get_cog("BannedURLsCog").handle_message(message),
+    )
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
