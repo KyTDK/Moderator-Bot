@@ -403,12 +403,12 @@ class AutonomousModeratorCog(commands.Cog):
                 if model.startswith("gpt-5"):
                     kwargs["reasoning"] = {"effort": "minimal"}
 
-                completion = await client.chat.completions.create(**kwargs)
+                completion = await client.responses.create(**kwargs)
                 raw = completion.choices[0].message.content.strip()
             except Exception as e:
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
-            
+
             # Parse AI response
             violations = parse_batch_response(raw)
             for item in violations:
