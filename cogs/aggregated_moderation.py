@@ -10,7 +10,7 @@ class AggregatedModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.scanner = NSFWScanner(bot)
-        self.free_queue = WorkerQueue(max_workers=1)
+        self.free_queue = WorkerQueue(max_workers=2)
         self.accelerated_queue = WorkerQueue(max_workers=5)
 
     async def add_to_queue(self, coro, guild_id: int):
@@ -22,14 +22,6 @@ class AggregatedModerationCog(commands.Cog):
 
         queue = self.accelerated_queue if accelerated else self.free_queue
         await queue.add_task(coro)
-
-        # Adjust queue size based on backlog
-        backlog = queue.queue.qsize()
-        if not accelerated:
-            if backlog > 5 and queue.max_workers < 2:
-                await queue.resize_workers(2)
-            elif backlog <= 2 and queue.max_workers > 1:
-                await queue.resize_workers(1)
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or message.guild is None:
