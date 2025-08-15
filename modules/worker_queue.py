@@ -58,7 +58,7 @@ class WorkerQueue:
             for _ in range(to_stop):
                 await self.queue.put(_SENTINEL)
             self.max_workers = new_max
-            # prine
+            # prune
             self.workers = [w for w in self.workers if not w.done()]
 
     async def worker_loop(self):
