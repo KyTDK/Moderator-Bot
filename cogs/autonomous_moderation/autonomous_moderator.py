@@ -10,6 +10,7 @@ from modules.utils import mod_logging, mysql
 from modules.utils.discord_utils import safe_get_member
 from modules.utils.time import parse_duration
 from modules.moderation import strike
+from pydantic import BaseModel
 
 from math import ceil
 import re
@@ -126,7 +127,7 @@ def parse_batch_response(text: str) -> list[dict[str, object]]:
         )
     return results
 
-class ModerationReport(openai.BaseModel):
+class ModerationReport(BaseModel):
     user_id: str
     rule: str
     reason: str
