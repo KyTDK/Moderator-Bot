@@ -283,7 +283,7 @@ class NSFWScanner:
                 guild_id=guild_id,
                 clean_up=False,
             )
-            file = discord.File(temp_filename, filename=filename)
+            file = None
         elif file_type == "Video":
             file, scan_result = await self.process_video(
                 original_filename=temp_filename,
@@ -296,9 +296,11 @@ class NSFWScanner:
         # Handle violations
         if not perform_actions:
             return False
-        if nsfw_callback and file and scan_result:
-            if scan_result.get("is_nsfw"):
-                cat_name = (scan_result.get("category") or "unspecified")
+        if nsfw_callback and scan_result and scan_result.get("is_nsfw"):
+            cat_name = (scan_result.get("category") or "unspecified")
+            if file is None:
+                file = discord.File(temp_filename, filename=filename)
+            try:
                 await nsfw_callback(
                     author,
                     self.bot,
@@ -307,9 +309,16 @@ class NSFWScanner:
                     file,
                     message,
                 )
-                return True
-            else:
-                return False
+            finally:
+                try:
+                    file.close()
+                except Exception:
+                    try:
+                        file.fp.close()
+                    except Exception:
+                        pass
+            return True
+        return False
 
     async def is_nsfw(
         self,
