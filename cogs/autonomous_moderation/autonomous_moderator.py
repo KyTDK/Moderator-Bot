@@ -91,12 +91,15 @@ async def get_active_mode(guild_id: int) -> str:
 def get_model_limit(model_name: str) -> int:
     return next((limit for key, limit in MODEL_LIMITS.items() if key in model_name), 16000)
 
-class ModerationReport(BaseModel):
+class ViolationEvent(BaseModel):
     user_id: str
     rule: str
     reason: str
     actions: list[str]
     message_ids: list[str]
+
+class ModerationReport(BaseModel):
+    violations: list[ViolationEvent]
 
 class AutonomousModeratorCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -358,43 +361,48 @@ class AutonomousModeratorCog(commands.Cog):
                     "model": model,
                     "instructions": SYSTEM_MSG,
                     "input": user_prompt,
-                    "temperature": 1.0 if model.startswith("gpt-5") else 0.0,
-                    "text_format": ModerationReport,
+                    "text_format": ModerationReport, 
                 }
-
                 if model.startswith("gpt-5"):
                     kwargs["reasoning"] = {"effort": "minimal"}
 
                 completion = await client.responses.parse(**kwargs)
-                violations = completion.output_parsed
+                report: ModerationReport | None = completion.output_parsed
             except Exception as e:
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
 
-            # Parse AI response
-            for item in violations:
-                uid = item.get("user_id")
-                actions = item.get("actions", [])
-                if not (uid and actions):
+            if not report or not report.violations:
+                if trigger_msg:
+                    try:
+                        await trigger_msg.reply("Thanks for the report. No violations were found.")
+                    except discord.HTTPException:
+                        pass
+                continue
+
+            for v in report.violations:
+                uid_str = v.user_id
+                actions = list(v.actions or [])
+                rule = v.rule or ""
+                reason = v.reason or ""
+                msg_ids = {int(m) for m in (v.message_ids or []) if str(m).isdigit()}
+
+                if not uid_str or not actions:
                     continue
 
-                member = await safe_get_member(guild, uid)
-                reason = item.get("reason", "")
-                rule = item.get("rule", "")
-                message_ids = {int(mid) for mid in item.get("message_ids", [])}
+                member = await safe_get_member(guild, int(uid_str))
 
-                # Ensure delete if message_ids are provided
-                if message_ids and "delete" not in actions:
+                # Ensure delete if message_ids present
+                if msg_ids and "delete" not in actions:
                     actions.append("delete")
 
-                messages_to_delete = [msg for (_, _, msg) in batch if msg.id in message_ids] if message_ids else []
+                messages_to_delete = [m for (_, _, m) in batch if m.id in msg_ids] if msg_ids else []
 
                 # Resolve configured actions
                 configured = settings.get(AIMOD_ACTION_SETTING) or ["auto"]
                 if "auto" in configured:
                     configured = actions
 
-                # Apply actions
                 await strike.perform_disciplinary_action(
                     bot=self.bot,
                     user=member,
@@ -404,29 +412,24 @@ class AutonomousModeratorCog(commands.Cog):
                     message=messages_to_delete
                 )
 
-                # Log
-                if rule and reason:
-                    violation_cache[uid].append((rule, ", ".join(configured)))
-                    embed = discord.Embed(
-                        title="AI-Flagged Violation",
-                        description=(
-                            f"User: {member.mention} ({member.name})\n"
-                            f"Rule Broken: {rule}\n"
-                            f"Reason: {reason}\n"
-                            f"Actions: {', '.join(configured)}"
-                        ),
-                        colour=discord.Colour.red()
-                    )
-                    log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
-                    if log_channel:
-                        await mod_logging.log_to_channel(embed, log_channel, self.bot)
-            # Send feedback if this batch was triggered by mention
+                violation_cache[int(uid_str)].append((rule, ", ".join(configured)))
+                embed = discord.Embed(
+                    title="AI-Flagged Violation",
+                    description=(
+                        f"User: {member.mention if member else uid_str}\n"
+                        f"Rule Broken: {rule}\n"
+                        f"Reason: {reason}\n"
+                        f"Actions: {', '.join(configured)}"
+                    ),
+                    colour=discord.Colour.red()
+                )
+                log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
+                if log_channel:
+                    await mod_logging.log_to_channel(embed, log_channel, self.bot)
+
             if trigger_msg:
                 try:
-                    if violations:
-                        await trigger_msg.reply("Thanks for the report. Action was taken.")
-                    else:
-                        await trigger_msg.reply("Thanks for the report. No violations were found.")
+                    await trigger_msg.reply("Thanks for the report. Action was taken.")
                 except discord.HTTPException:
                     pass
 
