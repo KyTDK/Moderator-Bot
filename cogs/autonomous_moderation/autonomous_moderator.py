@@ -390,17 +390,25 @@ class AutonomousModeratorCog(commands.Cog):
             # AI call
             client = openai.AsyncOpenAI(api_key=api_key)
             try:
-                completion = await client.chat.completions.create(
-                    model=model,
-                    messages=[{"role": "system", "content": SYSTEM_MSG}, {"role": "user", "content": user_prompt}],
-                    temperature=1.0 if model.startswith("gpt-5") else 0.0,
-                    response_format={"type": "json_object"}
-                )
+                kwargs = {
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_MSG},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 1.0 if model.startswith("gpt-5") else 0.0,
+                    "response_format": {"type": "json_object"},
+                }
+
+                if model.startswith("gpt-5"):
+                    kwargs["reasoning"] = {"effort": "minimal"}
+
+                completion = await client.chat.completions.create(**kwargs)
                 raw = completion.choices[0].message.content.strip()
             except Exception as e:
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
-
+            
             # Parse AI response
             violations = parse_batch_response(raw)
             for item in violations:
