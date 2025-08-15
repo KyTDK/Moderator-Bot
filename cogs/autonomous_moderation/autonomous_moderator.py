@@ -91,42 +91,6 @@ async def get_active_mode(guild_id: int) -> str:
 def get_model_limit(model_name: str) -> int:
     return next((limit for key, limit in MODEL_LIMITS.items() if key in model_name), 16000)
 
-def parse_batch_response(text: str) -> list[dict[str, object]]:
-    try:
-        data = json.loads(text).get("results", [])
-    except Exception as e:
-        print(f"[parse_batch_response] Failed to parse JSON: {e}")
-        return []
-
-    if isinstance(data, dict):
-        data = [data]
-    if not isinstance(data, list):
-        return []
-
-    results = []
-    for item in data:
-        if not isinstance(item, dict):
-            continue
-        try:
-            uid = int(item.get("user_id"))
-        except (TypeError, ValueError):
-            continue
-
-        actions = item.get("actions") or item.get("action") or []
-        if isinstance(actions, str):
-            actions = [actions]
-
-        results.append(
-            {
-                "user_id": uid,
-                "rule": item.get("rule", ""),
-                "reason": item.get("reason", ""),
-                "actions": [a.lower() for a in actions if isinstance(a, str)],
-                "message_ids": item.get("message_ids", []),
-            }
-        )
-    return results
-
 class ModerationReport(BaseModel):
     user_id: str
     rule: str
@@ -402,13 +366,12 @@ class AutonomousModeratorCog(commands.Cog):
                     kwargs["reasoning"] = {"effort": "minimal"}
 
                 completion = await client.responses.parse(**kwargs)
-                raw = completion.output_parsed
+                violations = completion.output_parsed
             except Exception as e:
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
 
             # Parse AI response
-            violations = parse_batch_response(raw)
             for item in violations:
                 uid = item.get("user_id")
                 actions = item.get("actions", [])
