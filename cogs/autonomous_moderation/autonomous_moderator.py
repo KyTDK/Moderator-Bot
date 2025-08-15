@@ -37,14 +37,6 @@ SYSTEM_MSG = (
     "- Only use prior violations to identify persistent rule-breaking. They may support your reasoning, but do not justify punishment on their own. The current message must clearly break a rule.\n"
     "- If you are unsure, default to ok=true.\n\n"
 
-    "Respond with a JSON object containing a `results` field.\n"
-    "`results` must be an array of violations. Each violation must include:\n"
-    "- user_id (string)\n"
-    "- rule (string)\n"
-    "- reason (string)\n"
-    "- actions (array of punishments)\n"
-    "- message_ids (array of message IDs that violated the rule). You must include the ID(s) of the specific message(s) that broke the rule.\n\n"
-
     "If any message_ids are listed, always include 'delete' in the actions array.\n"
     "Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>.\n\n"
     "Use timeout:<duration> with a clear time unit. Durations must include a unit like s, m, h, d, w, or mo (e.g., 10m for 10 minutes)."
@@ -133,6 +125,13 @@ def parse_batch_response(text: str) -> list[dict[str, object]]:
             }
         )
     return results
+
+class ModerationReport(openai.BaseModel):
+    user_id: str
+    rule: str
+    reason: str
+    actions: list[str]
+    message_ids: list[str]
 
 class AutonomousModeratorCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -392,19 +391,17 @@ class AutonomousModeratorCog(commands.Cog):
             try:
                 kwargs = {
                     "model": model,
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_MSG},
-                        {"role": "user", "content": user_prompt}
-                    ],
+                    "instructions": SYSTEM_MSG,
+                    "input": user_prompt,
                     "temperature": 1.0 if model.startswith("gpt-5") else 0.0,
-                    "response_format": {"type": "json_object"},
+                    "text_format": ModerationReport,
                 }
 
                 if model.startswith("gpt-5"):
                     kwargs["reasoning"] = {"effort": "minimal"}
 
-                completion = await client.responses.create(**kwargs)
-                raw = completion.choices[0].message.content.strip()
+                completion = await client.responses.parse(**kwargs)
+                raw = completion.output_parsed
             except Exception as e:
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
