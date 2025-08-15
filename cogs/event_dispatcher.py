@@ -22,25 +22,24 @@ class EventDispatcherCog(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
-        guild_id = message.guild.id
-        
-        # Cache messages
-        cache_message(message)
 
-        await self.add_to_queue(self.bot.get_cog("AggregatedModerationCog").handle_message(message), 
-                                guild_id)
-        await self.add_to_queue(self.bot.get_cog("BannedWordsCog").handle_message(message), 
-                                guild_id)
-        await self.add_to_queue(self.bot.get_cog("ScamDetectionCog").handle_message(message), 
-                                guild_id)
-        await self.add_to_queue(self.bot.get_cog("AutonomousModeratorCog").handle_message(message), 
-                                guild_id)
-        await self.add_to_queue(self.bot.get_cog("NicheModerationCog").handle_message(message), 
-                                guild_id)
-        await self.add_to_queue(self.bot.get_cog("AdaptiveModerationCog").handle_message(message), 
-                                guild_id)
-        await self.add_to_queue(self.bot.get_cog("BannedURLsCog").handle_message(message), 
-                                guild_id)    
+        cache_message(message)
+        guild_id = message.guild.id
+
+        cog_names = [
+            "AggregatedModerationCog",
+            "BannedWordsCog",
+            "ScamDetectionCog",
+            "AutonomousModeratorCog",
+            "NicheModerationCog",
+            "AdaptiveModerationCog",
+            "BannedURLsCog",
+        ]
+
+        for name in cog_names:
+            cog = self.bot.get_cog(name)
+            if cog and hasattr(cog, "handle_message"):
+                await self.add_to_queue(cog.handle_message(message), guild_id)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
