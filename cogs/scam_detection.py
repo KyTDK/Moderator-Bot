@@ -181,7 +181,7 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
             if await _url_is_scam(url.lower(), guild_id):
                 return True, None, url
 
-            expanded = await unshorten_url(url, guild_id)
+            expanded = await unshorten_url(url)
             if expanded != url and await _url_is_scam(expanded.lower(), guild_id):
                 return True, None, expanded
 
