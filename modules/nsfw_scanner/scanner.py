@@ -119,12 +119,15 @@ class NSFWScanner:
         async def analyse(path: str):
             async with semaphore:
                 try:
-                    result = await self.process_image(
+                    scan = await self.process_image(
                         original_filename=path,
                         guild_id=guild_id,
                         clean_up=False,
                     )
-                    return (path, result) if result else None
+                    # Return only definite hits; ignore low-score/safe frames
+                    if isinstance(scan, dict) and scan.get("is_nsfw") is True:
+                        return (path, scan)
+                    return None
                 except Exception as e:
                     print(f"[process_video] Analyse error {path}: {e}")
                     return None
