@@ -10,30 +10,50 @@ from PIL import Image
 
 from .constants import TMP_DIR
 
-
 def safe_delete(path: str) -> None:
     try:
         os.remove(path)
     except FileNotFoundError:
         pass
 
-
 def is_allowed_category(category: str, allowed_categories) -> bool:
     normalized = category.replace("/", "_").replace("-", "_").lower()
     allowed = [c.lower() for c in allowed_categories]
     return normalized in allowed
 
+ANIMATED_EXTS = {".gif", ".webp", ".apng", ".avif"}
+IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".heic"}
+VIDEO_EXTS = {".mp4", ".mov", ".m4v", ".avi", ".mkv", ".webm"}
 
 def determine_file_type(filename: str) -> str:
+    ext = os.path.splitext(filename)[1].lower()
     kind = filetype.guess(filename)
-    if not kind:
-        return "Unknown"
-    if kind.mime.startswith("image"):
-        return "Image"
-    if kind.mime.startswith("video"):
-        return "Video"
-    return kind.mime
 
+    if not kind:
+        if ext in ANIMATED_EXTS:
+            return "Video"
+        if ext in VIDEO_EXTS:
+            return "Video"
+        if ext in IMAGE_EXTS:
+            return "Image"
+        return "Unknown"
+
+    mime = kind.mime
+
+    if mime.startswith("video"):
+        return "Video"
+
+    if mime.startswith("image"):
+        if ext in ANIMATED_EXTS:
+            try:
+                with Image.open(filename) as im:
+                    if getattr(im, "is_animated", False) or getattr(im, "n_frames", 1) > 1:
+                        return "Video"
+            except Exception:
+                return "Video"
+        return "Image"
+
+    return mime
 
 def extract_frames_threaded(filename: str, wanted: int) -> list[str]:
     temp_frames: list[str] = []
@@ -94,7 +114,6 @@ def extract_frames_threaded(filename: str, wanted: int) -> list[str]:
 def file_to_b64(path: str) -> str:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
-
 
 def convert_to_png_safe(input_path: str, output_path: str) -> Optional[str]:
     try:
