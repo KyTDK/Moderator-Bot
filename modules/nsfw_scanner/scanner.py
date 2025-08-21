@@ -107,6 +107,7 @@ class NSFWScanner:
         temp_frames = await asyncio.to_thread(
             extract_frames_threaded, original_filename, frames_to_scan
         )
+        print(f"[process_video] extracted {len(temp_frames)} frames (target={frames_to_scan})")
         if not temp_frames:
             safe_delete(original_filename)
             return None, None

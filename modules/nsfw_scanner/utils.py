@@ -91,7 +91,6 @@ def extract_frames_threaded(filename: str, wanted: int) -> list[str]:
     finally:
         cap.release()
 
-
 def file_to_b64(path: str) -> str:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
