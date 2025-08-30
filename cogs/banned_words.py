@@ -1,4 +1,3 @@
-import unicodedata
 from discord.ext import commands
 from discord import app_commands, Interaction
 from modules.moderation import strike
@@ -8,78 +7,14 @@ import io
 import re
 import discord
 from better_profanity import profanity
-from cleantext import clean
 from modules.utils import mod_logging, mysql
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
+from modules.utils.text import normalize_text
 
 MAX_BANNED_WORDS = 500
 BANNED_ACTION_SETTING = "banned-words-action"
 manager = ActionListManager(BANNED_ACTION_SETTING)
-
-LEET_MAP = {
-    "!": "i",
-    "1": "i",
-    "|": "l",
-    "3": "e",
-    "4": "a",
-    "@": "a",
-    "0": "o",
-    "5": "s",
-    "$": "s",
-    "7": "t",
-    "+": "t",
-    "8": "b",
-    "9": "g",
-    "2": "z",
-}
-
-LEET_RE = re.compile("|".join(re.escape(k) for k in sorted(LEET_MAP, key=len, reverse=True)))
-
-def apply_leet(text: str) -> str:
-    return LEET_RE.sub(lambda m: LEET_MAP[m.group(0)], text)
-
-RE_REPEATS = re.compile(r"(.)\1{2,}")
-def normalize_text(text: str) -> str:
-    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-
-    # Remove user mentions and channel mentions
-    text = re.sub(r"<[@#]!?[0-9]+>", "", text)
-
-    # Remove Discord custom emojis like <:name:id> or <a:name:id>
-    text = re.sub(r"<a?:\w+:\d+>", "", text)
-
-    # Remove URLs
-    text = re.sub(r"https?://\S+", "", text)
-
-    # Remove user mentions and channel mentions
-    text = re.sub(r"<[@#]!?[0-9]+>", "", text)
-
-    # Remove urls
-    text = re.sub(r"https?://\S+", "", text)
-
-    # Flatten repeated characters to a maximum of two
-    text = RE_REPEATS.sub(r"\1\1", text)
-
-    # apply additional leet as better profanity is lacking
-    text = apply_leet(text)
-
-    text = clean(
-        text,
-        lower=True,
-        to_ascii=True,
-        no_line_breaks=True,
-        no_urls=False,
-        no_emails=True,
-        no_phone_numbers=True,
-        no_digits=False,
-        no_currency_symbols=True,
-        no_punct=True,
-        lang="en"
-    )
-
-    text = re.sub(r'\s+', ' ', text).strip() 
-    return text
 
 class BannedWordsCog(commands.Cog):
 
@@ -280,7 +215,14 @@ class BannedWordsCog(commands.Cog):
         else:
             return  # No banned words to check against
 
-        normalised = normalize_text(message.content.lower())
+        normalised = normalize_text(
+            message.content.lower(),
+            remove_urls=True,
+            remove_mentions=False,
+            remove_custom_emojis=False,
+            to_ascii=False,            # keep Unicode emojis
+            remove_punct=True,
+        )
         collapsed  = normalised.replace(" ", "")
 
         custom_words = [w.lower() for w in custom]

@@ -10,7 +10,7 @@ from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
-from cogs.banned_words import normalize_text
+from modules.utils.text import normalize_text
 import aiohttp
 from discord.ext import tasks
 from modules.utils.url_utils import extract_urls, unshorten_url, update_tld_list
