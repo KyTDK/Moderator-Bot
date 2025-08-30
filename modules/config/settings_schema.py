@@ -87,6 +87,14 @@ SETTINGS_SCHEMA = {
         accelerated=True,
         hidden=True,
     ),
+    "nsfw-high-accuracy": Setting(
+        name="nsfw-high-accuracy",
+        description="Enable high-accuracy NSFW scans for more reliable detection. Accelerated only.",
+        setting_type=bool,
+        default=False,
+        accelerated=True,
+        choices=["true", "false"]
+    ),
     "threshold": Setting(
         name="threshold",
         description="Threshold for NSFW detection confidence. Lower values are more sensitive.",

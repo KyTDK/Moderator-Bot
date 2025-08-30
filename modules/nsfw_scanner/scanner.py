@@ -183,13 +183,18 @@ class NSFWScanner:
         try:
             with Image.open(png_converted_path) as image:
                 # Try similarity match first
-                settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
+                settings = await mysql.get_settings(
+                    guild_id,
+                    [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
+                )
                 allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
                 try:
                     threshold = float(settings.get("threshold", 0.70))
                 except (ValueError, TypeError):
                     threshold = 0.70
-                similarity_response = clip_vectors.query_similar(image, threshold=CLIP_THRESHOLD)
+                high_accuracy = bool(settings.get("nsfw-high-accuracy", False))
+                vector_threshold = 0.90 if high_accuracy else CLIP_THRESHOLD
+                similarity_response = clip_vectors.query_similar(image, threshold=vector_threshold)
                 if similarity_response:
                     for item in similarity_response:
                         category = item.get("category")

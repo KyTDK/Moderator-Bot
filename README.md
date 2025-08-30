@@ -175,6 +175,7 @@ Tracks and logs key server events:
 | `nsfw-pfp-message`      | str                | Message on NSFW avatar detection    |
 | `unmute-on-safe-pfp`    | bool               | Auto-unmute on safe avatar change   |
 | `check-tenor-gifs`      | bool               | Scan Tenor GIFs for NSFW            |
+| `nsfw-high-accuracy`    | bool (Accelerated) | High-accuracy NSFW scans            |
 | `banned-words-action`   | list\[str]         | Action on banned words              |
 | `exclude-channels`      | list\[TextChannel] | Channels excluded from checks       |
 | `scam-detection-action` | list\[str]         | Actions for scam messages           |
