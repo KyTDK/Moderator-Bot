@@ -56,13 +56,15 @@ _CONFUSABLES_TRANSLATION: Dict[int, str] = {
     ord("Х"): "X", ord("У"): "Y", ord("І"): "I", ord("Ј"): "J", ord("Ѕ"): "S",
     ord("а"): "a", ord("е"): "e", ord("о"): "o", ord("р"): "p", ord("с"): "c",
     ord("т"): "t", ord("х"): "x", ord("у"): "y", ord("і"): "i", ord("ј"): "j",
-    ord("ѕ"): "s",
+    ord("ѕ"): "s", ord("к"): "k", ord("в"): "b", ord("н"): "h", ord("м"): "m",
+    ord("ӏ"): "l", ord("Ӏ"): "I",
     # Greek → Latin (only clear visual matches)
     ord("Α"): "A", ord("Β"): "B", ord("Ε"): "E", ord("Ζ"): "Z", ord("Η"): "H",
     ord("Ι"): "I", ord("Κ"): "K", ord("Μ"): "M", ord("Ν"): "N", ord("Ο"): "O",
     ord("Ρ"): "P", ord("Τ"): "T", ord("Υ"): "Y", ord("Χ"): "X", ord("Ϲ"): "C",
     ord("α"): "a", ord("ο"): "o", ord("ρ"): "p", ord("ν"): "v", ord("τ"): "t",
     ord("ι"): "i", ord("κ"): "k", ord("χ"): "x", ord("υ"): "y", ord("ϲ"): "c",
+    ord("ζ"): "z", ord("η"): "n", ord("μ"): "u",
     # Latin lookalikes
     ord("ſ"): "s",  # long s
 }
@@ -72,7 +74,16 @@ def _fold_confusables(s: str) -> str:
     # First, normalize compatibility forms (fullwidth, math alphanumerics) to plain letters
     s = unicodedata.normalize("NFKC", s)
     # Then apply targeted cross-script folding
-    return s.translate(_CONFUSABLES_TRANSLATION)
+    s = s.translate(_CONFUSABLES_TRANSLATION)
+    # Map Regional Indicator Symbols (🇦-🇿) to ASCII A-Z
+    out = []
+    for ch in s:
+        code = ord(ch)
+        if 0x1F1E6 <= code <= 0x1F1FF:
+            out.append(chr(ord('A') + (code - 0x1F1E6)))
+        else:
+            out.append(ch)
+    return ''.join(out)
 
 
 def normalize_text(

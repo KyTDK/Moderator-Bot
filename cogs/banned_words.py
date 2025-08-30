@@ -12,6 +12,19 @@ from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from modules.utils.text import normalize_text
 
+# Build a bypass-resistant regex for a banned word
+def _make_bypass_safe_regex(word: str) -> re.Pattern:
+    # Allow repeated letters and arbitrary separators between letters
+    # Example: 'kys' -> k+[^\w]*y+[^\w]*s+
+    parts = []
+    for i, ch in enumerate(word):
+        esc = re.escape(ch)
+        parts.append(f"{esc}+")
+        if i != len(word) - 1:
+            parts.append(r"[^\w]*")
+    pattern = "".join(parts)
+    return re.compile(pattern, re.IGNORECASE)
+
 MAX_BANNED_WORDS = 500
 BANNED_ACTION_SETTING = "banned-words-action"
 manager = ActionListManager(BANNED_ACTION_SETTING)
@@ -230,9 +243,17 @@ class BannedWordsCog(commands.Cog):
             (w in normalised) or (w in collapsed)
             for w in custom_words
         )
+        # Fuzzy match: allow repeated letters and separators (e.g., zero-width, punctuation, spaces)
+        has_custom_fuzzy = False
+        if not has_custom_substring and custom_words:
+            for w in custom_words:
+                rx = _make_bypass_safe_regex(w)
+                if rx.search(normalised) or rx.search(collapsed):
+                    has_custom_fuzzy = True
+                    break
 
         if not (
-            has_custom_substring
+            has_custom_substring or has_custom_fuzzy
             or profanity.contains_profanity(normalised)
             or profanity.contains_profanity(collapsed)
         ):
