@@ -38,7 +38,7 @@ class AcceleratedCog(commands.Cog):
         """Generate your unique PayPal subscription link."""
         user_id = interaction.user.id
         guild_id = interaction.guild.id
-        backend_url = f"https://modbot.neomechanical.com/subscribe?gid={guild_id}"
+        url = f"https://modbot.neomechanical.com/subscribe?gid={guild_id}"
 
         await interaction.response.defer(ephemeral=True, thinking=True)
 
@@ -48,24 +48,6 @@ class AcceleratedCog(commands.Cog):
             print(f"[Accelerated] User {user_id} in guild {guild_id} already subscribed.")
             return await interaction.followup.send(
                 "✅ Your guild already has an active **Accelerated** subscription!",
-                ephemeral=True
-            )
-
-        # Request subscription link from backend
-        async with aiohttp.ClientSession() as session:
-            async with session.get(backend_url) as resp:
-                if resp.status != 200:
-                    print(f"[ERROR] Failed to generate subscription link for user {user_id} in guild {guild_id}")
-                    return await interaction.followup.send(
-                        "⚠️ Could not generate a subscription link. Please try again later.",
-                        ephemeral=True
-                    )
-                data = await resp.json()
-
-        approve_url = data.get("url")
-        if not approve_url:
-            return await interaction.followup.send(
-                "⚠️ Something went wrong generating your subscription link.",
                 ephemeral=True
             )
 
@@ -84,7 +66,7 @@ class AcceleratedCog(commands.Cog):
 
         # Subscription button
         view = View()
-        view.add_item(Button(label="🔗 Subscribe Now", url=approve_url, style=ButtonStyle.link))
+        view.add_item(Button(label="🔗 Subscribe Now", url=url, style=ButtonStyle.link))
 
         await interaction.followup.send(embed=embed, view=view, ephemeral=True)
 
