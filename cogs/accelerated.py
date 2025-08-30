@@ -25,13 +25,29 @@ class AcceleratedCog(commands.Cog):
         if not is_accelerated:
             await interaction.response.send_message(
                 "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan.",
-                ephemeral=True
+                ephemeral=True,
             )
-        else:
+            return
+
+        # Accelerated is currently granted; see if it is cancelled-but-active-until <date>
+        details = await mysql.get_premium_status(guild_id=guild_id)
+        if details and details.get("status") == "cancelled" and details.get("next_billing"):
+            end_dt = details["next_billing"]
+            # Format as YYYY-MM-DD HH:MM UTC
+            try:
+                end_fmt = end_dt.strftime("%Y-%m-%d %H:%M UTC")
+            except Exception:
+                end_fmt = str(end_dt)
             await interaction.response.send_message(
-                "This server has an active Accelerated subscription.",
-                ephemeral=True
+                f"This server's Accelerated subscription is cancelled, but remains active until {end_fmt}.",
+                ephemeral=True,
             )
+            return
+
+        await interaction.response.send_message(
+            "This server has an active Accelerated subscription.",
+            ephemeral=True,
+        )
 
     @accelerated_group.command(name="subscribe")
     async def subscribe(self, interaction: Interaction):
