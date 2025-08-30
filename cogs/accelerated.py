@@ -38,7 +38,7 @@ class AcceleratedCog(commands.Cog):
         """Generate your unique PayPal subscription link."""
         user_id = interaction.user.id
         guild_id = interaction.guild.id
-        backend_url = f"https://modbot.neomechanical.com/api/create-subscription?gid={guild_id}&uid={user_id}"
+        backend_url = f"https://modbot.neomechanical.com/subscribe?gid={guild_id}"
 
         await interaction.response.defer(ephemeral=True, thinking=True)
 
