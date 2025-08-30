@@ -47,6 +47,7 @@ class StrikesCog(commands.Cog):
         expiry="Optional expiry duration (e.g., 30d, 2w)."
     )
     @app_commands.default_permissions(moderate_members=True)
+    @app_commands.guild_only()
     async def strike(
         self,
         interaction: Interaction,
@@ -74,6 +75,7 @@ class StrikesCog(commands.Cog):
         name="get",
         description="Get strikes of a specific user."
     )
+    @app_commands.guild_only()
     async def get_strikes(self, interaction: Interaction, user: Member):
         """Retrieve strikes for a specified user."""
         await interaction.response.defer(ephemeral=True)
@@ -151,6 +153,7 @@ class StrikesCog(commands.Cog):
         user="The user who received the strike"
     )
     @app_commands.default_permissions(moderate_members=True)
+    @app_commands.guild_only()
     async def remove_strike(self, interaction: Interaction, strike_id: int, user: Member):
         """Remove a strike by its unique ID and target user."""
         await interaction.response.defer(ephemeral=True)
@@ -176,6 +179,11 @@ class StrikesCog(commands.Cog):
         name="clear",
         description="Clear all strikes of a specific user."
     )
+    @app_commands.describe(
+        user="The user whose strikes will be cleared.",
+    )
+    @app_commands.default_permissions(moderate_members=True)
+    @app_commands.guild_only()
     async def clear_strikes(self, interaction: Interaction, user: Member):
         """Clear all strikes for a specified user."""
         await interaction.response.defer(ephemeral=True)
@@ -297,6 +305,7 @@ class StrikesCog(commands.Cog):
         channel="If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
     )
     @app_commands.default_permissions(moderate_members=True)
+    @app_commands.guild_only()
     async def intimidate(self, interaction: Interaction, user: Member = None, channel: bool = False):
         """Intimidate the user."""
         # Create an embed with an intimidating message
