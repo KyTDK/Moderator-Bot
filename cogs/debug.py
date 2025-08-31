@@ -153,7 +153,7 @@ class DebugCog(commands.Cog):
                     f"workers={data['active_workers']}/{data['max_workers']} "
                     f"baseline={data['baseline_workers']} burst={data['autoscale_max']} "
                     f"hi={data['backlog_high']} lo={data['backlog_low']} "
-                    f"run={data['running']}"
+                    f"pending={data.get('pending_stops', 0)} run={data['running']}"
                 )
 
             for cog_name in ("AggregatedModerationCog", "EventDispatcherCog", "ScamDetectionCog"):
