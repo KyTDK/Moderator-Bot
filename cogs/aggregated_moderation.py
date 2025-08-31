@@ -11,13 +11,35 @@ load_dotenv()
 
 FREE_MAX_WORKERS = int(os.getenv("FREE_MAX_WORKERS", 2))
 ACCELERATED_MAX_WORKERS = int(os.getenv("ACCELERATED_MAX_WORKERS", 5))
+FREE_MAX_WORKERS_BURST = int(os.getenv("FREE_MAX_WORKERS_BURST", FREE_MAX_WORKERS))
+ACCELERATED_MAX_WORKERS_BURST = int(os.getenv("ACCELERATED_MAX_WORKERS_BURST", ACCELERATED_MAX_WORKERS))
+WORKER_BACKLOG_HIGH = int(os.getenv("WORKER_BACKLOG_HIGH", 30))
+WORKER_BACKLOG_LOW = int(os.getenv("WORKER_BACKLOG_LOW", 5))
+WORKER_AUTOSCALE_CHECK_INTERVAL = float(os.getenv("WORKER_AUTOSCALE_CHECK_INTERVAL", 2))
+WORKER_AUTOSCALE_SCALE_DOWN_GRACE = float(os.getenv("WORKER_AUTOSCALE_SCALE_DOWN_GRACE", 15))
 
 class AggregatedModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.scanner = NSFWScanner(bot)
-        self.free_queue = WorkerQueue(max_workers=FREE_MAX_WORKERS)
-        self.accelerated_queue = WorkerQueue(max_workers=ACCELERATED_MAX_WORKERS)
+        self.free_queue = WorkerQueue(
+            max_workers=FREE_MAX_WORKERS,
+            autoscale_max=FREE_MAX_WORKERS_BURST,
+            backlog_high_watermark=WORKER_BACKLOG_HIGH,
+            backlog_low_watermark=WORKER_BACKLOG_LOW,
+            autoscale_check_interval=WORKER_AUTOSCALE_CHECK_INTERVAL,
+            scale_down_grace=WORKER_AUTOSCALE_SCALE_DOWN_GRACE,
+            name="free",
+        )
+        self.accelerated_queue = WorkerQueue(
+            max_workers=ACCELERATED_MAX_WORKERS,
+            autoscale_max=ACCELERATED_MAX_WORKERS_BURST,
+            backlog_high_watermark=WORKER_BACKLOG_HIGH,
+            backlog_low_watermark=WORKER_BACKLOG_LOW,
+            autoscale_check_interval=WORKER_AUTOSCALE_CHECK_INTERVAL,
+            scale_down_grace=WORKER_AUTOSCALE_SCALE_DOWN_GRACE,
+            name="accelerated",
+        )
 
     async def add_to_queue(self, coro, guild_id: int):
         """
