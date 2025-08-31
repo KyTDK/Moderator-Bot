@@ -148,3 +148,19 @@ class WorkerQueue:
                 print(f"[WorkerQueue] Task failed: {e}")
             finally:
                 self.queue.task_done()
+
+    def metrics(self) -> dict:
+        """Return a snapshot of queue and autoscaler metrics."""
+        return {
+            "name": self._name,
+            "running": self.running,
+            "backlog": self.queue.qsize(),
+            "active_workers": len(self.workers),
+            "max_workers": self.max_workers,
+            "baseline_workers": self._baseline_workers,
+            "autoscale_max": self._autoscale_max,
+            "backlog_high": self._backlog_high,
+            "backlog_low": self._backlog_low,
+            "check_interval": self._check_interval,
+            "scale_down_grace": self._scale_down_grace,
+        }

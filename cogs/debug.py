@@ -136,6 +136,44 @@ class DebugCog(commands.Cog):
 
         embed.set_footer(text=f"Host: {platform.node()} | Python {platform.python_version()}")
 
+        # Worker queue backlogs and autoscale info
+        try:
+            queue_lines: list[str] = []
+            def fmt_line(cog_name: str, queue_name: str, q) -> str:
+                m = getattr(q, "metrics", None)
+                data = m() if callable(m) else None
+                if not data:
+                    # Fallback minimal info
+                    backlog = getattr(getattr(q, "queue", None), "qsize", lambda: "?")()
+                    workers = len(getattr(q, "workers", []))
+                    maxw = getattr(q, "max_workers", "?")
+                    return f"[{cog_name}:{queue_name}] backlog={backlog} workers={workers}/{maxw}"
+                return (
+                    f"[{cog_name}:{queue_name}] backlog={data['backlog']} "
+                    f"workers={data['active_workers']}/{data['max_workers']} "
+                    f"baseline={data['baseline_workers']} burst={data['autoscale_max']} "
+                    f"hi={data['backlog_high']} lo={data['backlog_low']} "
+                    f"run={data['running']}"
+                )
+
+            for cog_name in ("AggregatedModerationCog", "EventDispatcherCog", "ScamDetectionCog"):
+                cog = self.bot.get_cog(cog_name)
+                if not cog:
+                    continue
+                for qname in ("free_queue", "accelerated_queue"):
+                    q = getattr(cog, qname, None)
+                    if q is not None:
+                        queue_lines.append(fmt_line(cog_name, qname.replace("_queue", ""), q))
+
+            if queue_lines:
+                embed.add_field(
+                    name="Worker Queues",
+                    value=f"```\n" + "\n".join(queue_lines) + "\n```",
+                    inline=False,
+                )
+        except Exception as e:
+            embed.add_field(name="Worker Queues", value=f"(error collecting metrics: {e})", inline=False)
+
         await interaction.followup.send(embed=embed, ephemeral=True)
 
 async def setup(bot: commands.Bot):
