@@ -5,13 +5,19 @@ from modules.moderation import strike
 from modules.utils.discord_utils import safe_get_channel, safe_get_member, safe_get_message
 from modules.nsfw_scanner import NSFWScanner, handle_nsfw_content
 from modules.worker_queue import WorkerQueue
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+FREE_MAX_WORKERS = int(os.getenv("FREE_MAX_WORKERS", 2))
+ACCELERATED_MAX_WORKERS = int(os.getenv("ACCELERATED_MAX_WORKERS", 5))
 
 class AggregatedModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.scanner = NSFWScanner(bot)
-        self.free_queue = WorkerQueue(max_workers=2)
-        self.accelerated_queue = WorkerQueue(max_workers=5)
+        self.free_queue = WorkerQueue(max_workers=FREE_MAX_WORKERS)
+        self.accelerated_queue = WorkerQueue(max_workers=ACCELERATED_MAX_WORKERS)
 
     async def add_to_queue(self, coro, guild_id: int):
         """
