@@ -5,6 +5,8 @@ from modules.moderation import strike
 from modules.utils.discord_utils import safe_get_channel, safe_get_member, safe_get_message
 from modules.nsfw_scanner import NSFWScanner, handle_nsfw_content
 from modules.worker_queue import WorkerQueue
+from datetime import timedelta
+from discord.utils import utcnow
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -41,12 +43,29 @@ class AggregatedModerationCog(commands.Cog):
             name="accelerated",
         )
 
+    def _is_new_guild(self, guild_id: int) -> bool:
+        """Return True if the bot joined this guild within the last 30 minutes."""
+        try:
+            guild = self.bot.get_guild(guild_id)
+            if not guild or not self.bot.user:
+                return False
+            me = guild.me or guild.get_member(self.bot.user.id)
+            if not me or not me.joined_at:
+                return False
+            return (utcnow() - me.joined_at) <= timedelta(minutes=30)
+        except Exception:
+            # On any lookup error, do not elevate priority
+            return False
+
     async def add_to_queue(self, coro, guild_id: int):
         """
         Add a task to the appropriate queue.
         accelerated=True means higher priority
         """
         accelerated = await mysql.is_accelerated(guild_id=guild_id)
+        # Treat newly added guilds as accelerated for the first 30 minutes
+        if not accelerated and self._is_new_guild(guild_id):
+            accelerated = True
 
         queue = self.accelerated_queue if accelerated else self.free_queue
         await queue.add_task(coro)
