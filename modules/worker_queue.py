@@ -35,6 +35,11 @@ class WorkerQueue:
         self.running = False
         self._lock = asyncio.Lock()
         self._autoscaler_task: Optional[asyncio.Task] = None
+        self._pending_stops: int = 0  # queued stop signals not yet consumed
+
+    def _active_workers(self) -> int:
+        """Count non-finished worker tasks."""
+        return sum(1 for w in self.workers if not w.done())
 
     async def start(self):
         async with self._lock:
@@ -71,6 +76,7 @@ class WorkerQueue:
                     self.queue.task_done()
                 except asyncio.QueueEmpty:
                     break
+            self._pending_stops = 0
 
     async def add_task(self, coro):
         if not asyncio.iscoroutine(coro):
@@ -86,15 +92,21 @@ class WorkerQueue:
             if new_max > self.max_workers:
                 self.max_workers = new_max
                 if self.running:
-                    need = new_max - len(self.workers)
+                    # Start only as many as needed based on active count
+                    active = self._active_workers()
+                    need = new_max - active
                     for _ in range(max(0, need)):
                         self.workers.append(asyncio.create_task(self.worker_loop()))
                 return
 
             # scale down
-            to_stop = max(0, len(self.workers) - new_max)
+            active = self._active_workers()
+            deficit = max(0, active - new_max)
+            # Only queue additional stop tokens to reach the target
+            to_stop = max(0, deficit - self._pending_stops)
             for _ in range(to_stop):
                 await self.queue.put(_SENTINEL)
+            self._pending_stops += to_stop
             self.max_workers = new_max
             # prune
             self.workers = [w for w in self.workers if not w.done()]
@@ -112,9 +124,12 @@ class WorkerQueue:
                 await asyncio.sleep(self._check_interval)
                 # Snapshot current backlog
                 q = self.queue.qsize()
+                # Periodically prune finished workers to keep counts accurate
+                self.workers = [w for w in self.workers if not w.done()]
+                active = self._active_workers()
 
                 # Upscale when backlog is significant
-                if q >= self._backlog_high and len(self.workers) < self._autoscale_max:
+                if q >= self._backlog_high and active < self._autoscale_max:
                     # Jump to burst max to clear the backlog
                     await self.resize_workers(self._autoscale_max)
                     low_since = None
@@ -122,7 +137,8 @@ class WorkerQueue:
                     continue
 
                 # Consider downscaling if low backlog and currently above baseline
-                if q <= self._backlog_low and len(self.workers) > self._baseline_workers:
+                over_baseline = max(0, active - self._baseline_workers - self._pending_stops)
+                if q <= self._backlog_low and over_baseline > 0:
                     now = loop.time()
                     if low_since is None:
                         low_since = now
@@ -141,6 +157,10 @@ class WorkerQueue:
             task = await self.queue.get()
             if task is _SENTINEL:
                 self.queue.task_done()
+                # Mark one pending stop signal consumed
+                async with self._lock:
+                    if self._pending_stops > 0:
+                        self._pending_stops -= 1
                 break
             try:
                 await task
@@ -155,10 +175,11 @@ class WorkerQueue:
             "name": self._name,
             "running": self.running,
             "backlog": self.queue.qsize(),
-            "active_workers": len(self.workers),
+            "active_workers": self._active_workers(),
             "max_workers": self.max_workers,
             "baseline_workers": self._baseline_workers,
             "autoscale_max": self._autoscale_max,
+            "pending_stops": self._pending_stops,
             "backlog_high": self._backlog_high,
             "backlog_low": self._backlog_low,
             "check_interval": self._check_interval,
