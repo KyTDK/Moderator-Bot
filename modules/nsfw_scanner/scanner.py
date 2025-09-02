@@ -15,14 +15,12 @@ import openai
 from apnggif import apnggif
 from cogs.hydration import wait_for_hydration
 from cogs.nsfw import NSFW_CATEGORY_SETTING
-from discord import Color, Embed
 from discord.errors import NotFound
 from discord.ext import commands
 from PIL import Image
 
 from modules.utils import mod_logging, mysql, api
 from modules.utils import clip_vectors
-from modules.utils.discord_utils import safe_get_channel
 import pillow_avif  # registers AVIF support
 
 from .constants import (
@@ -32,10 +30,7 @@ from .constants import (
     ACCELERATED_MAX_FRAMES_PER_VIDEO,
     MAX_CONCURRENT_FRAMES,
     ACCELERATED_MAX_CONCURRENT_FRAMES,
-    MISMATCH_DETECTION,
     ADD_SFW_VECTOR,
-    GUILD_ID,
-    LOG_CHANNEL_ID,
 )
 from .utils import (
     safe_delete,
@@ -52,8 +47,6 @@ class NSFWScanner:
         self.bot = bot
         self.session = None
         self.tmp_dir = TMP_DIR
-        self.category_matches = 0
-        self.category_mismatches = 0
 
     async def start(self):
         self.session = aiohttp.ClientSession()
@@ -201,41 +194,6 @@ class NSFWScanner:
                         similarity = item.get("similarity", 0)  # Similarity score from vector search
                         score = item.get("score", 0)  # OpenAI API determined score
                         response = None
-                        if similarity < 0.90 and MISMATCH_DETECTION:
-                            response = await self.moderator_api(image_path=png_converted_path,
-                                                               guild_id=guild_id,
-                                                               image=image)
-                            api_category = response.get("category")
-                            api_score = response.get("score", 0)
-                            # Check if vector search category matches OpenAI API category
-                            if api_category != category:
-                                self.category_mismatches += 1
-                                # Log to dev channel
-                                if guild_id and self.bot and LOG_CHANNEL_ID:
-                                    log_channel = await safe_get_channel(self.bot, LOG_CHANNEL_ID)
-                                    if log_channel:
-                                        total_checks = self.category_matches + self.category_mismatches
-                                        accuracy_percentage = (self.category_matches / total_checks * 100) if total_checks > 0 else 100
-                                        embed = Embed(
-                                            title="🔍 Category Mismatch Detected",
-                                            description=f"**File:** `{original_filename}`",
-                                            color=Color.orange()
-                                        )
-                                        embed.add_field(name="Vector Category", value=category or "None", inline=True)
-                                        embed.add_field(name="API Category", value=api_category or "None", inline=True)
-                                        embed.add_field(name="Similarity", value=f"{similarity:.2f}", inline=True)
-                                        embed.add_field(name="Vector Score", value=f"{score:.2f}", inline=True)
-                                        embed.add_field(name="API Score", value=f"{api_score:.2f}", inline=True)
-                                        embed.add_field(name="Accuracy", value=f"{accuracy_percentage:.1f}% ({self.category_matches}/{total_checks})", inline=True)
-
-                                        if guild_id:
-                                            embed.set_footer(text=f"Guild ID: {guild_id}")
-
-                                        await log_channel.send(embed=embed)
-                                category = api_category
-                                score = api_score
-                            else:
-                                self.category_matches += 1
 
                         if not category:
                             print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
