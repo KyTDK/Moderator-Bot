@@ -227,7 +227,7 @@ class BannedWordsCog(commands.Cog):
             to_ascii=False,            # keep Unicode emojis
             remove_punct=True,
         )
-        collapsed  = normalised.replace(" ", "")
+        collapsed  = re.sub(r"[\W_]+", "", normalised)
 
         custom_words = [w.lower() for w in custom]
         has_custom_substring = any(
