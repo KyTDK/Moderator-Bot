@@ -234,15 +234,13 @@ class BannedWordsCog(commands.Cog):
             remove_mentions=False,
             remove_custom_emojis=False,
             to_ascii=False,            # keep Unicode emojis
-            remove_punct=True,
+            remove_punct=False,        # keep punctuation; regex handles separators
         )
-        collapsed  = normalised.replace(" ", "")
+        # Build a punctuation/underscore stripped version for direct substring checks
+        collapsed = re.sub(r"[\W_]+", "", normalised)
 
         custom_words = [w.lower() for w in custom]
-        has_custom_substring = any(
-            (w in normalised) or (w in collapsed)
-            for w in custom_words
-        )
+        has_custom_substring = any((w in normalised) or (w in collapsed) for w in custom_words)
         # Fuzzy match: allow repeated letters and separators (e.g., zero-width, punctuation, spaces)
         has_custom_fuzzy = False
         if not has_custom_substring and custom_words:
