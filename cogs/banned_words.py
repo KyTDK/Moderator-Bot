@@ -7,27 +7,17 @@ import io
 import re
 import discord
 from better_profanity import profanity
+from cleantext import clean
 from modules.utils import mod_logging, mysql
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from modules.utils.text import normalize_text
 
-# Build a bypass-resistant regex for a banned word
-def _make_bypass_safe_regex(word: str) -> re.Pattern:
-    # Allow repeated letters and arbitrary separators between letters
-    # Example: 'kys' -> k+[\W_]*y+[\W_]*s+
-    parts = []
-    for i, ch in enumerate(word):
-        esc = re.escape(ch)
-        parts.append(f"{esc}+")
-        if i != len(word) - 1:
-            parts.append(r"[\W_]*")
-    pattern = "".join(parts)
-    return re.compile(pattern, re.IGNORECASE)
-
 MAX_BANNED_WORDS = 500
 BANNED_ACTION_SETTING = "banned-words-action"
 manager = ActionListManager(BANNED_ACTION_SETTING)
+
+RE_REPEATS = re.compile(r"(.)\1{2,}")
 
 class BannedWordsCog(commands.Cog):
 
@@ -228,30 +218,25 @@ class BannedWordsCog(commands.Cog):
         else:
             return  # No banned words to check against
 
+        # Preserve URLs, mentions, and emojis when normalizing for banned-words checks
         normalised = normalize_text(
             message.content.lower(),
-            remove_urls=True,
+            remove_urls=False,
             remove_mentions=False,
             remove_custom_emojis=False,
             to_ascii=False,            # keep Unicode emojis
-            remove_punct=False,        # keep punctuation; regex handles separators
+            remove_punct=True,
         )
-        # Build a punctuation/underscore stripped version for direct substring checks
-        collapsed = re.sub(r"[\W_]+", "", normalised)
+        collapsed  = normalised.replace(" ", "")
 
         custom_words = [w.lower() for w in custom]
-        has_custom_substring = any((w in normalised) or (w in collapsed) for w in custom_words)
-        # Fuzzy match: allow repeated letters and separators (e.g., zero-width, punctuation, spaces)
-        has_custom_fuzzy = False
-        if not has_custom_substring and custom_words:
-            for w in custom_words:
-                rx = _make_bypass_safe_regex(w)
-                if rx.search(normalised) or rx.search(collapsed):
-                    has_custom_fuzzy = True
-                    break
+        has_custom_substring = any(
+            (w in normalised) or (w in collapsed)
+            for w in custom_words
+        )
 
         if not (
-            has_custom_substring or has_custom_fuzzy
+            has_custom_substring
             or profanity.contains_profanity(normalised)
             or profanity.contains_profanity(collapsed)
         ):
