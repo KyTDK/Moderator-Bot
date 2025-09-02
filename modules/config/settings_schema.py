@@ -39,6 +39,13 @@ SETTINGS_SCHEMA = {
         setting_type=discord.TextChannel,
         hidden=True
     ),
+    "nsfw-verbose": Setting(
+        name="nsfw-verbose",
+        description="Post a detailed scan report embed in the same channel as the scanned media.",
+        setting_type=bool,
+        default=False,
+        choices=["true", "false"]
+    ),
     "nsfw-channel": Setting(
         name="nsfw-channel",
         description="Channel where NSFW violations are logged with a preview of the media.",

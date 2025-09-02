@@ -104,7 +104,13 @@ class NSFWScanner:
         print(f"[process_video] extracted {len(temp_frames)} frames (target={frames_to_scan})")
         if not temp_frames:
             safe_delete(original_filename)
-            return None, None
+            # Return a clean result for verbosity if no frames could be extracted
+            return None, {
+                "is_nsfw": False,
+                "reason": "No frames extracted",
+                "video_frames_scanned": 0,
+                "video_frames_target": frames_to_scan,
+            }
 
         # Process frames concurrently, increase concurrency for accelerated users
         semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
@@ -121,6 +127,11 @@ class NSFWScanner:
                     )
                     # Return only definite hits; ignore low-score/safe frames
                     if isinstance(scan, dict) and scan.get("is_nsfw") is True:
+                        # Attach video context metadata
+                        scan.setdefault("video_frames_scanned", None)
+                        scan.setdefault("video_frames_target", None)
+                        scan["video_frames_scanned"] = len(temp_frames)
+                        scan["video_frames_target"] = frames_to_scan
                         return (path, scan)
                     return None
                 except Exception as e:
@@ -156,7 +167,12 @@ class NSFWScanner:
                 return flagged_file, scan
 
             # no frame flagged
-            return None, None
+            return None, {
+                "is_nsfw": False,
+                "reason": "No NSFW frames detected",
+                "video_frames_scanned": len(temp_frames),
+                "video_frames_target": frames_to_scan,
+            }
         finally:
             for p in temp_frames:
                 safe_delete(p)
@@ -202,19 +218,40 @@ class NSFWScanner:
                             print(f"[process_image] Similar SFW image found with similarity {similarity:.2f}.")
                             if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
                                 break # continue to API check
-                            return {"is_nsfw": False, "reason": "Similarity match"}
+                            return {
+                                "is_nsfw": False,
+                                "reason": "Similarity match",
+                                "max_similarity": max_similarity,
+                                "high_accuracy": high_accuracy,
+                                "clip_threshold": CLIP_THRESHOLD,
+                                "similarity": similarity,
+                            }
 
                         if is_allowed_category(category, allowed_categories):
                             print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f}.")
                             # High-accuracy mode: require very high similarity to skip API
                             if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
                                 break # continue to API check
-                            return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
+                            return {
+                                "is_nsfw": True,
+                                "category": category,
+                                "reason": "Similarity match",
+                                "max_similarity": max_similarity,
+                                "high_accuracy": high_accuracy,
+                                "clip_threshold": CLIP_THRESHOLD,
+                                "similarity": similarity,
+                            }
 
                     # If we reached here, either no actionable NSFW similarity or high-accuracy wants API confirmation
                     if not high_accuracy:
                         # No NSFW detected by similarity alone
-                        return {"is_nsfw": False, "reason": "No NSFW similarity match"}
+                        return {
+                            "is_nsfw": False,
+                            "reason": "No NSFW similarity match",
+                            "max_similarity": max_similarity,
+                            "high_accuracy": high_accuracy,
+                            "clip_threshold": CLIP_THRESHOLD,
+                        }
 
                 # No similarity results above CLIP_THRESHOLD, or high-accuracy requested API confirmation
                 response = await self.moderator_api(
@@ -224,6 +261,11 @@ class NSFWScanner:
                     skip_vector_add=had_similarity,
                 )
                 print(f"[process_image] Moderation result for {original_filename}: {response}")
+                # Attach similarity/meta context
+                if isinstance(response, dict):
+                    response.setdefault("max_similarity", max_similarity)
+                    response.setdefault("high_accuracy", high_accuracy)
+                    response.setdefault("clip_threshold", CLIP_THRESHOLD)
                 return response
         except Exception as e:
             print(traceback.format_exc())
@@ -265,6 +307,53 @@ class NSFWScanner:
         else:
             print(f"[check_attachment] Unsupported file type: {file_type} for {filename}")
             return False
+
+        # Verbose reporting in-channel when enabled (and a message context exists)
+        try:
+            if message is not None and await mysql.get_settings(guild_id, "nsfw-verbose"):
+                decision = (
+                    "NSFW" if (scan_result and scan_result.get("is_nsfw")) else ("Safe" if scan_result is not None else "Unknown")
+                )
+                embed = discord.Embed(
+                    title="NSFW Scan Report",
+                    description=(
+                        f"User: {author.mention}\n"
+                        f"File: `{filename}`\n"
+                        f"Type: `{file_type}`\n"
+                        f"Decision: **{decision}**"
+                    ),
+                    color=(discord.Color.orange() if decision == "Safe" else (discord.Color.red() if decision == "NSFW" else discord.Color.dark_grey())),
+                )
+                # Details
+                if scan_result:
+                    if scan_result.get("reason"):
+                        embed.add_field(name="Reason", value=str(scan_result.get("reason"))[:1024], inline=False)
+                    if scan_result.get("category"):
+                        embed.add_field(name="Category", value=str(scan_result.get("category")), inline=True)
+                    if scan_result.get("score") is not None:
+                        embed.add_field(name="Score", value=f"{float(scan_result.get('score') or 0):.3f}", inline=True)
+                    if scan_result.get("max_similarity") is not None:
+                        embed.add_field(name="Max Similarity", value=f"{float(scan_result.get('max_similarity') or 0):.3f}", inline=True)
+                    if scan_result.get("similarity") is not None:
+                        embed.add_field(name="Matched Similarity", value=f"{float(scan_result.get('similarity') or 0):.3f}", inline=True)
+                    if scan_result.get("high_accuracy") is not None:
+                        embed.add_field(name="High Accuracy", value=str(bool(scan_result.get("high_accuracy"))).lower(), inline=True)
+                    if scan_result.get("clip_threshold") is not None:
+                        embed.add_field(name="CLIP Threshold", value=f"{float(scan_result.get('clip_threshold') or 0):.3f}", inline=True)
+                    if scan_result.get("threshold") is not None:
+                        try:
+                            embed.add_field(name="Moderation Threshold", value=f"{float(scan_result.get('threshold') or 0):.3f}", inline=True)
+                        except Exception:
+                            pass
+                    if scan_result.get("video_frames_scanned") is not None:
+                        scanned = scan_result.get("video_frames_scanned")
+                        target = scan_result.get("video_frames_target")
+                        embed.add_field(name="Video Frames", value=f"{scanned}/{target}", inline=True)
+
+                embed.set_thumbnail(url=author.display_avatar.url)
+                await mod_logging.log_to_channel(embed=embed, channel_id=message.channel.id, bot=self.bot)
+        except Exception as e:
+            print(f"[verbose] Failed to send verbose embed: {e}")
 
         # Handle violations
         if not perform_actions:
@@ -528,8 +617,9 @@ class NSFWScanner:
                     "category": best_category,
                     "score": best_score,
                     "reason": "OpenAI moderation",
+                    "threshold": threshold,
                 }
 
-            return {"is_nsfw": False, "reason": "OpenAI moderation"}
+            return {"is_nsfw": False, "reason": "OpenAI moderation", "threshold": threshold}
 
         return result
