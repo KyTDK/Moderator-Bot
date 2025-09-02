@@ -26,6 +26,7 @@ import pillow_avif  # registers AVIF support
 from .constants import (
     TMP_DIR,
     CLIP_THRESHOLD,
+    HIGH_ACCURACY_SIMILARITY,
     MAX_FRAMES_PER_VIDEO,
     ACCELERATED_MAX_FRAMES_PER_VIDEO,
     MAX_CONCURRENT_FRAMES,
@@ -181,42 +182,47 @@ class NSFWScanner:
                     [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
                 )
                 allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
-                try:
-                    threshold = float(settings.get("threshold", 0.70))
-                except (ValueError, TypeError):
-                    threshold = 0.70
                 high_accuracy = bool(settings.get("nsfw-high-accuracy", False))
-                vector_threshold = 0.90 if high_accuracy else CLIP_THRESHOLD
-                similarity_response = clip_vectors.query_similar(image, threshold=vector_threshold)
+                similarity_response = clip_vectors.query_similar(image, threshold=CLIP_THRESHOLD)
+
+                # Track if we had any similarity above CLIP threshold
+                had_similarity = bool(similarity_response)
+                max_similarity = 0.0
                 if similarity_response:
                     for item in similarity_response:
+                        sim = float(item.get("similarity", 0) or 0)
+                        if sim > max_similarity:
+                            max_similarity = sim
+
+                    for item in similarity_response:
                         category = item.get("category")
-                        similarity = item.get("similarity", 0)  # Similarity score from vector search
-                        score = item.get("score", 0)  # OpenAI API determined score
-                        response = None
+                        similarity = float(item.get("similarity", 0) or 0)
 
                         if not category:
-                            print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} and score {score:.2f}.")
+                            print(f"[process_image] Similar SFW image found with similarity {similarity:.2f}.")
+                            if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
+                                break # continue to API check
                             return {"is_nsfw": False, "reason": "Similarity match"}
 
-                        if score < threshold:
-                            print(f"[process_image] Category '{category}' flagged with low score of {score:.2f} and similarity {similarity:.2f}. Ignoring.")
-                            continue
-
                         if is_allowed_category(category, allowed_categories):
-                            print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} and score {score:.2f}.")
+                            print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f}.")
+                            # High-accuracy mode: require very high similarity to skip API
+                            if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
+                                break # continue to API check
                             return {"is_nsfw": True, "category": category, "reason": "Similarity match"}
 
-                        if response:
-                            print(f"[process_image] OpenAI API response for {original_filename}: {response}")
-                            return response
+                    # If we reached here, either no actionable NSFW similarity or high-accuracy wants API confirmation
+                    if not high_accuracy:
+                        # No NSFW detected by similarity alone
+                        return {"is_nsfw": False, "reason": "No NSFW similarity match"}
 
-                    # No NSFW detcted
-                    return {"is_nsfw": False, "reason": "No NSFW similarity match"}
-
-                response = await self.moderator_api(image_path=png_converted_path,
-                                                    guild_id=guild_id,
-                                                    image=image)
+                # No similarity results above CLIP_THRESHOLD, or high-accuracy requested API confirmation
+                response = await self.moderator_api(
+                    image_path=png_converted_path,
+                    guild_id=guild_id,
+                    image=image,
+                    skip_vector_add=had_similarity,
+                )
                 print(f"[process_image] Moderation result for {original_filename}: {response}")
                 return response
         except Exception as e:
@@ -414,6 +420,7 @@ class NSFWScanner:
         image: Image.Image | None = None,
         guild_id: int | None = None,
         max_attempts: int = 3,
+        skip_vector_add: bool = False,
     ) -> dict:
         result = {
             "is_nsfw": None,
@@ -494,9 +501,10 @@ class NSFWScanner:
                 if not is_flagged:
                     continue
                 flagged_any = True
-                # Add vector for flagged category
-                print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
-                clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
+                # Add vector for flagged category unless similarity already matched
+                if not skip_vector_add:
+                    print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
+                    clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
                 # Ignore low confidence scores based on guild preferences
                 if score < threshold:
                     print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
@@ -507,7 +515,7 @@ class NSFWScanner:
                 # Add to flagged categories
                 flagged_categories.append((normalized_category, score))
 
-            if not flagged_categories and ADD_SFW_VECTOR and not flagged_any:
+            if not flagged_categories and ADD_SFW_VECTOR and not flagged_any and not skip_vector_add:
                 print("[moderator_api] Adding SFW vector to index")
                 clip_vectors.add_vector(image, metadata={"category": None, "score": 0})
 

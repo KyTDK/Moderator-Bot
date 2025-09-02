@@ -12,6 +12,7 @@ TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
 CLIP_THRESHOLD = 0.80  # Threshold for similarity search
+HIGH_ACCURACY_SIMILARITY = 0.90  # Min similarity to skip API when high-accuracy is enabled
 MAX_FRAMES_PER_VIDEO = 5
 ACCELERATED_MAX_FRAMES_PER_VIDEO = 100
 MAX_CONCURRENT_FRAMES = 2
