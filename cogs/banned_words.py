@@ -15,13 +15,13 @@ from modules.utils.text import normalize_text
 # Build a bypass-resistant regex for a banned word
 def _make_bypass_safe_regex(word: str) -> re.Pattern:
     # Allow repeated letters and arbitrary separators between letters
-    # Example: 'kys' -> k+[^\w]*y+[^\w]*s+
+    # Example: 'kys' -> k+[\W_]*y+[\W_]*s+
     parts = []
     for i, ch in enumerate(word):
         esc = re.escape(ch)
         parts.append(f"{esc}+")
         if i != len(word) - 1:
-            parts.append(r"[^\w]*")
+            parts.append(r"[\W_]*")
     pattern = "".join(parts)
     return re.compile(pattern, re.IGNORECASE)
 
