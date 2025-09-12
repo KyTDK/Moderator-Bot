@@ -74,7 +74,7 @@ def collapse_media(url: str) -> str:
 def estimate_tokens(text: str) -> int:
     return ceil(len(text) / 4)
 
-MODEL_LIMITS = {
+MODEL_CONTEXT_WINDOWS = {
     "gpt-4.1": 1000000,
     "gpt-4.1-nano": 1000000,
     "gpt-4.1-mini": 1000000,
@@ -89,7 +89,7 @@ async def get_active_mode(guild_id: int) -> str:
     return mode
 
 def get_model_limit(model_name: str) -> int:
-    return next((limit for key, limit in MODEL_LIMITS.items() if key in model_name), 16000)
+    return next((limit for key, limit in MODEL_CONTEXT_WINDOWS.items() if key in model_name), 16000)
 
 class ViolationEvent(BaseModel):
     user_id: str
@@ -314,7 +314,7 @@ class AutonomousModeratorCog(commands.Cog):
                 # Non–API-key path: only proceed for Accelerated guilds
                 if not await mysql.is_accelerated(guild_id=gid):
                     return
-                model = "gpt-5.1-mini"
+                model = "gpt-5-nano"
                 # Rate-limit Accelerated users
                 if not self._allow_accelerated_scan(gid):
                     if (peek_trigger := self.mention_triggers.get(gid)):

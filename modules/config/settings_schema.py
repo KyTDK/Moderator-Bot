@@ -299,7 +299,7 @@ SETTINGS_SCHEMA = {
         name="aimod-model",
         description="Which OpenAI model to use for AI moderation.",
         setting_type=str,
-        default="gpt-5-mini",
+        default="gpt-5-nano",
         # accelerated=True, # is_accelerated with exception of api key is set
         choices=[
             "gpt-5",
