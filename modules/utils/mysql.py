@@ -448,6 +448,13 @@ async def get_aimod_usage(guild_id: int):
 async def add_aimod_usage(guild_id: int, tokens: int, cost_usd: float):
     """Increment usage counters for the current cycle for this guild."""
     cycle_end = await _get_current_cycle_end(guild_id)
+    # Ensure cost precision matches DECIMAL(12,6) to avoid MySQL truncation warnings
+    try:
+        cost_usd = round(float(cost_usd), 6)
+        if cost_usd < 0:
+            cost_usd = 0.0
+    except Exception:
+        cost_usd = 0.0
     await execute_query(
         """
         INSERT INTO aimod_usage (guild_id, cycle_end, tokens_used, cost_usd)
@@ -456,7 +463,7 @@ async def add_aimod_usage(guild_id: int, tokens: int, cost_usd: float):
             tokens_used = tokens_used + VALUES(tokens_used),
             cost_usd    = cost_usd    + VALUES(cost_usd)
         """,
-        (guild_id, cycle_end.replace(tzinfo=None), int(tokens), float(cost_usd)),
+        (guild_id, cycle_end.replace(tzinfo=None), int(tokens), cost_usd),
     )
     # Return updated snapshot
     return await get_aimod_usage(guild_id)

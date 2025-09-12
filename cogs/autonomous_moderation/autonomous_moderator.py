@@ -326,7 +326,7 @@ class AutonomousModeratorCog(commands.Cog):
 
             # Budget check before calling AI
             usage = await mysql.get_aimod_usage(gid)
-            request_cost = estimated_tokens * PRICE_PER_TOKEN
+            request_cost = round(estimated_tokens * PRICE_PER_TOKEN, 6)
             if (usage.get("cost_usd", 0.0) + request_cost) > usage.get("limit_usd", BUDGET_USD):
                 # Notify reporter if applicable
                 if trigger_msg:
