@@ -3,6 +3,7 @@ import aiomysql
 import os
 import json
 import copy
+from datetime import datetime, timezone, timedelta
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from modules.config.settings_schema import SETTINGS_SCHEMA
@@ -115,6 +116,19 @@ async def _ensure_database_exists():
                     api_key_hash VARCHAR(64) NOT NULL,
                     working BOOLEAN NOT NULL DEFAULT TRUE,
                     PRIMARY KEY (user_id, api_key_hash)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS aimod_usage (
+                    guild_id BIGINT NOT NULL,
+                    cycle_end DATETIME NOT NULL,
+                    tokens_used BIGINT NOT NULL DEFAULT 0,
+                    cost_usd DECIMAL(12,6) NOT NULL DEFAULT 0,
+                    limit_usd DECIMAL(12,2) NOT NULL DEFAULT 2.00,
+                    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (guild_id, cycle_end)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
@@ -375,6 +389,78 @@ async def initialise_and_get_pool():
     """Convenience wrapper that callers can await during startup."""
     return await init_pool()
 
+# --------------------------
+# AI moderation budget/usage
+# --------------------------
+
+async def _get_current_cycle_end(guild_id: int) -> datetime:
+    now = datetime.now(timezone.utc)
+    status = await get_premium_status(guild_id)
+    nb = status.get("next_billing") if status else None
+
+    if isinstance(nb, str):
+        try:
+            nb = datetime.strptime(nb, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        except ValueError:
+            nb = None
+    elif isinstance(nb, datetime):
+        nb = nb if nb.tzinfo else nb.replace(tzinfo=timezone.utc)
+    else:
+        nb = None
+
+    if nb and nb > now:
+        return nb
+
+    year, month = now.year, now.month
+    if month == 12:
+        year, month = year + 1, 1
+    else:
+        month += 1
+    return datetime(year, month, 1, tzinfo=timezone.utc)
+
+async def get_aimod_usage(guild_id: int):
+    """
+    Get or initialize the current billing cycle usage for AI moderation.
+    Returns a dict with tokens_used, cost_usd, limit_usd, cycle_end.
+    """
+    cycle_end = await _get_current_cycle_end(guild_id)
+    row, _ = await execute_query(
+        """
+        SELECT tokens_used, cost_usd, limit_usd
+        FROM aimod_usage
+        WHERE guild_id = %s AND cycle_end = %s
+        LIMIT 1
+        """,
+        (guild_id, cycle_end.replace(tzinfo=None)),
+        fetch_one=True,
+    )
+    if not row:
+        await execute_query(
+            """
+            INSERT INTO aimod_usage (guild_id, cycle_end, tokens_used, cost_usd, limit_usd)
+            VALUES (%s, %s, 0, 0, 2.00)
+            """,
+            (guild_id, cycle_end.replace(tzinfo=None)),
+        )
+        return {"tokens_used": 0, "cost_usd": 0.0, "limit_usd": 2.0, "cycle_end": cycle_end}
+    return {"tokens_used": int(row[0] or 0), "cost_usd": float(row[1] or 0), "limit_usd": float(row[2] or 2.0), "cycle_end": cycle_end}
+
+async def add_aimod_usage(guild_id: int, tokens: int, cost_usd: float):
+    """Increment usage counters for the current cycle for this guild."""
+    cycle_end = await _get_current_cycle_end(guild_id)
+    await execute_query(
+        """
+        INSERT INTO aimod_usage (guild_id, cycle_end, tokens_used, cost_usd)
+        VALUES (%s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            tokens_used = tokens_used + VALUES(tokens_used),
+            cost_usd    = cost_usd    + VALUES(cost_usd)
+        """,
+        (guild_id, cycle_end.replace(tzinfo=None), int(tokens), float(cost_usd)),
+    )
+    # Return updated snapshot
+    return await get_aimod_usage(guild_id)
+
 async def cleanup_orphaned_guilds(active_guild_ids):
     """Remove database records for guilds the bot is no longer in."""
     if not active_guild_ids:
@@ -398,7 +484,8 @@ async def cleanup_orphaned_guilds(active_guild_ids):
         "scam_users",
         "scam_urls",
         "strikes",
-        "api_pool"
+        "api_pool",
+        "aimod_usage"
     ]
 
     total_deleted = 0

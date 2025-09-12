@@ -20,6 +20,11 @@ import os
 
 load_dotenv()
 AUTOMOD_OPENAI_KEY = os.getenv('AUTOMOD_OPENAI_KEY')
+AIMOD_MODEL = os.getenv('AIMOD_MODEL', 'gpt-5-nano')
+# Pricing and budget: $0.45 per 1M tokens, $2 budget per cycle
+PRICE_PER_MTOK = 0.45
+PRICE_PER_TOKEN = PRICE_PER_MTOK / 1_000_000
+BUDGET_USD = 2.0
 SCAN_LIMIT_PER_WINDOW = 200
 SCAN_WINDOW = timedelta(hours=1)
 accelerated_scan_usage: dict[int, deque[datetime]] = defaultdict(deque)
@@ -250,10 +255,8 @@ class AutonomousModeratorCog(commands.Cog):
                 gid,
                 [
                     "autonomous-mod",
-                    "api-key",
                     "rules",
                     "aimod-check-interval",
-                    "aimod-model",
                     "monitor-channel",
                     "aimod-channel",
                     AIMOD_ACTION_SETTING,
@@ -261,7 +264,7 @@ class AutonomousModeratorCog(commands.Cog):
             )
 
             autonomous = settings.get("autonomous-mod")
-            api_key = settings.get("api-key") or AUTOMOD_OPENAI_KEY
+            api_key = AUTOMOD_OPENAI_KEY
             rules = settings.get("rules")
             if not (autonomous and api_key and rules):
                 continue
@@ -308,30 +311,8 @@ class AutonomousModeratorCog(commands.Cog):
                 violation_history = "No recent violations on record."
             violation_history = f"Violation history:\n{violation_history}\n\n"
 
-            # Decide model and handle rate limits
-            model = (settings.get("aimod-model") or "gpt-5.1-mini") if api_key else None
-            if not api_key:
-                # Non–API-key path: only proceed for Accelerated guilds
-                if not await mysql.is_accelerated(guild_id=gid):
-                    return
-                model = "gpt-5-nano"
-                # Rate-limit Accelerated users
-                if not self._allow_accelerated_scan(gid):
-                    if (peek_trigger := self.mention_triggers.get(gid)):
-                        try:
-                            await peek_trigger.reply(
-                                "Hit the moderation scan limit for this server. Try again shortly.",
-                                mention_author=False,
-                            )
-                        except discord.HTTPException:
-                            pass
-                    continue
-                # Passed rate limit: record & reset batch
-                self.last_run[gid] = now
-                self.message_batches[gid].clear()
-
             # Build transcript with truncation if needed
-            limit = get_model_limit(model)
+            limit = get_model_limit(AIMOD_MODEL)
             max_tokens = int(limit * 0.9)
             current_total_tokens=BASE_SYSTEM_TOKENS+estimate_tokens(violation_history)+estimate_tokens(rules)
             transcript, estimated_tokens, batch = await self._build_transcript(batch, 
@@ -341,11 +322,30 @@ class AutonomousModeratorCog(commands.Cog):
             # Skip if too many tokens
             if estimated_tokens >= max_tokens:
                 continue
-            self.last_run[gid] = now
-
-            self.message_batches[gid].clear()
             if not batch:
                 continue
+
+            # Budget check before calling AI
+            usage = await mysql.get_aimod_usage(gid)
+            request_cost = estimated_tokens * PRICE_PER_TOKEN
+            if (usage.get("cost_usd", 0.0) + request_cost) > usage.get("limit_usd", BUDGET_USD):
+                # Notify reporter if applicable
+                if trigger_msg:
+                    try:
+                        cycle_end = usage.get("cycle_end")
+                        reset_str = cycle_end.strftime('%Y-%m-%d %H:%M UTC') if cycle_end else "the next cycle"
+                        await trigger_msg.reply(
+                            f"AI moderation budget reached for this billing cycle. Resets at {reset_str}.",
+                            mention_author=False,
+                        )
+                    except discord.HTTPException:
+                        pass
+                # Keep batches so we can try again next cycle
+                continue
+
+            self.last_run[gid] = now
+            # Clear batch only when proceeding with a scan
+            self.message_batches[gid].clear()
 
             guild = self.bot.get_guild(gid)
             if not guild:
@@ -358,12 +358,12 @@ class AutonomousModeratorCog(commands.Cog):
             client = openai.AsyncOpenAI(api_key=api_key)
             try:
                 kwargs = {
-                    "model": model,
+                    "model": AIMOD_MODEL,
                     "instructions": SYSTEM_MSG,
                     "input": user_prompt,
                     "text_format": ModerationReport, 
                 }
-                if model.startswith("gpt-5"):
+                if AIMOD_MODEL.startswith("gpt-5"):
                     kwargs["reasoning"] = {"effort": "minimal"}
 
                 completion = await client.responses.parse(**kwargs)
@@ -371,6 +371,12 @@ class AutonomousModeratorCog(commands.Cog):
             except Exception as e:
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
+
+            # Record usage after a successful API call
+            try:
+                await mysql.add_aimod_usage(gid, estimated_tokens, request_cost)
+            except Exception as e:
+                print(f"[aimod_usage] Failed to record usage for guild {gid}: {e}")
 
             if not report or not report.violations:
                 if trigger_msg:

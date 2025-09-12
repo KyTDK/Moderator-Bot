@@ -37,10 +37,6 @@ EVENT_MANAGER = EventListManager(AIMOD_EVENT_SETTING)
 async def can_run(interaction: Interaction) -> bool:
     guild_id = interaction.guild.id
     accelerated = await mysql.is_accelerated(guild_id=guild_id)
-    api_key = await mysql.get_settings(guild_id, "api-key")
-
-    if api_key:
-        return True
 
     if not accelerated:
         msg = (
@@ -163,13 +159,9 @@ class AutonomousCommandsCog(commands.Cog):
             await interaction.response.send_message(msg, ephemeral=True)
             return
 
-        # Validate API key and rules if enabling
+        # Validate rules if enabling
         if enable.value == "enable":
-            key = await mysql.get_settings(gid, "api-key")
             rules = await mysql.get_settings(gid, "rules")
-            if not key:
-                await interaction.response.send_message("Set an API key first with `/settings set api-key`.", ephemeral=True)
-                return
             if not rules:
                 await interaction.response.send_message("Set moderation rules first with `/ai_mod rules_set`.", ephemeral=True)
                 return

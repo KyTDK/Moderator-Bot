@@ -69,16 +69,16 @@ async def get_next_shared_api_key():
     return None
 
 async def get_api_client(guild_id):
-    api_key = await mysql.get_settings(guild_id, "api-key")
-    encrypted_key = None
+    """Return an OpenAI client from the shared API pool only.
 
-    if not api_key:
-        encrypted_key = await get_next_shared_api_key()
-        if encrypted_key is None:
-            return None, None
-        api_key = fernet.decrypt(encrypted_key.encode()).decode()
-
-    client = _get_client(api_key)  
+    Per-guild API keys are not used. If no working pooled key is available,
+    returns (None, None).
+    """
+    encrypted_key = await get_next_shared_api_key()
+    if encrypted_key is None:
+        return None, None
+    api_key = fernet.decrypt(encrypted_key.encode()).decode()
+    client = _get_client(api_key)
     return client, encrypted_key
 
 async def set_api_key_working(api_key):

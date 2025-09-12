@@ -1,4 +1,3 @@
-from modules.utils import api
 from typing import Any, Callable, Optional
 import discord
 from modules.variables.TimeString import TimeString
@@ -141,15 +140,6 @@ SETTINGS_SCHEMA = {
         description="Channels to exclude from banned words detection.",
         setting_type=list[discord.TextChannel],
         default=[],
-    ),
-    "api-key": Setting(
-        name="api-key",
-        description="OPENAI API key for NSFW detection.",
-        setting_type=str,
-        default=None,
-        private=True,
-        validator=api.check_openai_api_key,
-        encrypted=True,
     ),
     "strike-actions": Setting(
         name="strike-actions",
@@ -294,23 +284,6 @@ SETTINGS_SCHEMA = {
         hidden=True,
         # accelerated=True, # is_accelerated with exception of api key is set
         choices=["true", "false"]
-    ),
-    "aimod-model": Setting(
-        name="aimod-model",
-        description="Which OpenAI model to use for AI moderation.",
-        setting_type=str,
-        default="gpt-5-nano",
-        # accelerated=True, # is_accelerated with exception of api key is set
-        choices=[
-            "gpt-5",
-            "gpt-5-mini",
-            "gpt-5-nano",
-            "gpt-4.1",
-            "gpt-4.1-mini",
-            "gpt-4.1-nano",
-            "gpt-4o",
-            "gpt-4o-mini",
-        ],
     ),
     "aimod-check-interval": Setting(
         name="aimod-check-interval",

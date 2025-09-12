@@ -26,10 +26,10 @@ Free AI-powered moderation for Discord. Detects nudity, gore, scams, and other v
   Tracks joins, leaves, bans, deletions, edits, timeouts, and invite usage.
 
 * **Custom Settings**
-  Slash-command-driven configuration for rules, thresholds, exclusions, models, and more.
+  Slash-command-driven configuration for rules, thresholds, exclusions, and more.
 
 * **Private API Pool**
-  Users can contribute OpenAI keys (encrypted) to increase moderation capacity.
+  Users can contribute OpenAI keys (encrypted) to a shared pool to increase moderation capacity. Guild-level keys are not used.
 
 ---
 
@@ -57,6 +57,8 @@ Automatically issues escalating punishments based on a user’s strike count:
 ## 🤖 AI Moderation
 
 Uses OpenAI to detect violations in user messages.
+
+Budget: AI moderation is capped at $2 per billing cycle. Pricing is $0.45 per 1M tokens; once the cycle budget is reached, autonomous moderation pauses until the next cycle.
 
 ### 🔧 Configuration:
 
@@ -166,7 +168,6 @@ Tracks and logs key server events:
 
 | Name                    | Type               | Description                         |
 | ----------------------- | ------------------ | ----------------------------------- |
-| `api-key`               | str (encrypted)    | OpenAI key for AI/NSFW moderation   |
 | `strike-expiry`         | TimeString         | Duration before strikes expire      |
 | `cycle-strike-actions`  | bool               | Loop fallback strike actions        |
 | `dm-on-strike`          | bool               | DM users when they receive a strike |
@@ -181,7 +182,6 @@ Tracks and logs key server events:
 | `scam-detection-action` | list\[str]         | Actions for scam messages           |
 | `check-links`           | bool               | Enable URL safety checks            |
 | `exclude-scam-channels` | list\[TextChannel] | Skip scam checks in these channels  |
-| `aimod-model`           | str                | Model used for AI mod               |
 | `aimod-check-interval`  | TimeString         | How often to run AI moderation      |
 | `no-forward-from-role`  | list\[Role]        | Roles that can't forward messages   |
 
