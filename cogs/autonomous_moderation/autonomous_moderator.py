@@ -1,4 +1,3 @@
-import json
 import openai
 import discord
 from datetime import datetime, timedelta, timezone
@@ -97,7 +96,7 @@ def get_model_limit(model_name: str) -> int:
     return next((limit for key, limit in MODEL_CONTEXT_WINDOWS.items() if key in model_name), 16000)
 
 class ViolationEvent(BaseModel):
-    user_id: str
+    user_id: int
     rule: str
     reason: str
     actions: list[str]
