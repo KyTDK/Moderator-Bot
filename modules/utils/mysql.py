@@ -122,13 +122,12 @@ async def _ensure_database_exists():
             await cur.execute(
                 """
                 CREATE TABLE IF NOT EXISTS aimod_usage (
-                    guild_id BIGINT NOT NULL,
+                    guild_id BIGINT NOT NULL PRIMARY KEY,
                     cycle_end DATETIME NOT NULL,
                     tokens_used BIGINT NOT NULL DEFAULT 0,
                     cost_usd DECIMAL(12,6) NOT NULL DEFAULT 0,
                     limit_usd DECIMAL(12,2) NOT NULL DEFAULT 2.00,
-                    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    PRIMARY KEY (guild_id, cycle_end)
+                    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
@@ -421,33 +420,75 @@ async def _get_current_cycle_end(guild_id: int) -> datetime:
 async def get_aimod_usage(guild_id: int):
     """
     Get or initialize the current billing cycle usage for AI moderation.
+    Single row per guild_id; on cycle rollover, counters reset and cycle_end updates.
     Returns a dict with tokens_used, cost_usd, limit_usd, cycle_end.
     """
-    cycle_end = await _get_current_cycle_end(guild_id)
+    target_end = await _get_current_cycle_end(guild_id)
+    # Fetch the single row for this guild, prefer most recent if multiple exist
     row, _ = await execute_query(
         """
-        SELECT tokens_used, cost_usd, limit_usd
+        SELECT tokens_used, cost_usd, limit_usd, cycle_end
         FROM aimod_usage
-        WHERE guild_id = %s AND cycle_end = %s
+        WHERE guild_id = %s
+        ORDER BY cycle_end DESC
         LIMIT 1
         """,
-        (guild_id, cycle_end.replace(tzinfo=None)),
+        (guild_id,),
         fetch_one=True,
     )
+
     if not row:
+        # Initialize with target_end
         await execute_query(
             """
             INSERT INTO aimod_usage (guild_id, cycle_end, tokens_used, cost_usd, limit_usd)
             VALUES (%s, %s, 0, 0, 2.00)
             """,
-            (guild_id, cycle_end.replace(tzinfo=None)),
+            (guild_id, target_end.replace(tzinfo=None)),
         )
-        return {"tokens_used": 0, "cost_usd": 0.0, "limit_usd": 2.0, "cycle_end": cycle_end}
-    return {"tokens_used": int(row[0] or 0), "cost_usd": float(row[1] or 0), "limit_usd": float(row[2] or 2.0), "cycle_end": cycle_end}
+        return {"tokens_used": 0, "cost_usd": 0.0, "limit_usd": 2.0, "cycle_end": target_end}
+
+    tokens_used, cost_usd, limit_usd, stored_end = row
+    if isinstance(stored_end, datetime) and stored_end.tzinfo is None:
+        stored_end = stored_end.replace(tzinfo=timezone.utc)
+
+    # If we’ve rolled into a new billing cycle, reset counters and update end
+    if target_end > stored_end:
+        await execute_query(
+            """
+            UPDATE aimod_usage
+            SET tokens_used = 0,
+                cost_usd = 0,
+                cycle_end = %s
+            WHERE guild_id = %s
+            """,
+            (target_end.replace(tzinfo=None), guild_id),
+        )
+        # Clean up any legacy duplicates
+        await execute_query(
+            "DELETE FROM aimod_usage WHERE guild_id = %s AND cycle_end <> %s",
+            (guild_id, target_end.replace(tzinfo=None)),
+        )
+        return {"tokens_used": 0, "cost_usd": 0.0, "limit_usd": float(limit_usd or 2.0), "cycle_end": target_end}
+
+    # Keep existing row; also dedupe any older duplicates
+    await execute_query(
+        "DELETE FROM aimod_usage WHERE guild_id = %s AND cycle_end <> %s",
+        (guild_id, stored_end.replace(tzinfo=None)),
+    )
+    return {
+        "tokens_used": int(tokens_used or 0),
+        "cost_usd": float(cost_usd or 0),
+        "limit_usd": float(limit_usd or 2.0),
+        "cycle_end": stored_end,
+    }
 
 async def add_aimod_usage(guild_id: int, tokens: int, cost_usd: float):
-    """Increment usage counters for the current cycle for this guild."""
-    cycle_end = await _get_current_cycle_end(guild_id)
+    """Increment usage counters for the current cycle for this guild.
+
+    Single-row model: update by guild_id. If no row exists, initialize first.
+    """
+    snapshot = await get_aimod_usage(guild_id)
     # Ensure cost precision matches DECIMAL(12,6) to avoid MySQL truncation warnings
     try:
         cost_usd = round(float(cost_usd), 6)
@@ -455,16 +496,25 @@ async def add_aimod_usage(guild_id: int, tokens: int, cost_usd: float):
             cost_usd = 0.0
     except Exception:
         cost_usd = 0.0
-    await execute_query(
+    # Try update first
+    _, affected = await execute_query(
         """
-        INSERT INTO aimod_usage (guild_id, cycle_end, tokens_used, cost_usd)
-        VALUES (%s, %s, %s, %s)
-        ON DUPLICATE KEY UPDATE
-            tokens_used = tokens_used + VALUES(tokens_used),
-            cost_usd    = cost_usd    + VALUES(cost_usd)
+        UPDATE aimod_usage
+        SET tokens_used = tokens_used + %s,
+            cost_usd = cost_usd + %s
+        WHERE guild_id = %s
         """,
-        (guild_id, cycle_end.replace(tzinfo=None), int(tokens), cost_usd),
+        (int(tokens), cost_usd, guild_id),
     )
+    if affected == 0:
+        # Initialize row and retry
+        await execute_query(
+            """
+            INSERT INTO aimod_usage (guild_id, cycle_end, tokens_used, cost_usd, limit_usd)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (guild_id, snapshot["cycle_end"].replace(tzinfo=None), int(tokens), cost_usd, 2.00),
+        )
     # Return updated snapshot
     return await get_aimod_usage(guild_id)
 
