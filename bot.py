@@ -39,7 +39,8 @@ intents.presences = True
 intents.message_content = True
 intents.voice_states = True
 
-member_cache_flags = discord.MemberCacheFlags.from_intents(intents)
+member_cache_flags = discord.MemberCacheFlags.none()
+member_cache_flags.voice = True
 
 bot = commands.Bot(command_prefix=lambda b, m: [],
                    intents=intents,
