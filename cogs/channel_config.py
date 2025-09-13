@@ -7,7 +7,8 @@ LOG_CHANNEL_TYPES = {
     "Strike": "strike-channel",
     "NSFW": "nsfw-channel",
     "AI": "aimod-channel",
-    "Monitor": "monitor-channel"
+    "Monitor": "monitor-channel",
+    "VC Transcript": "vcmod-transcript-channel",
 }
 
 class ChannelConfigCog(commands.Cog):

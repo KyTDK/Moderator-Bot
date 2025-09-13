@@ -433,4 +433,10 @@ SETTINGS_SCHEMA = {
         accelerated=True,
         choices=["true", "false"]
     ),
+    "vcmod-transcript-channel": Setting(
+        name="vcmod-transcript-channel",
+        description="Channel where VC transcripts are posted.",
+        setting_type=discord.TextChannel,
+        hidden=True,
+    ),
 }

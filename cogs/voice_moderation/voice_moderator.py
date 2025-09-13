@@ -76,6 +76,7 @@ class VoiceModeratorCog(commands.Cog):
                 "aimod-debug",
                 "aimod-channel",
                 "monitor-channel",
+                "vcmod-transcript-channel",
             ],
         )
 
@@ -144,6 +145,7 @@ class VoiceModeratorCog(commands.Cog):
         action_setting = settings.get("vcmod-detection-action") or ["auto"]
         aimod_debug = settings.get("aimod-debug") or False
         log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
+        transcript_channel_id = settings.get("vcmod-transcript-channel")
 
         listen_delta = parse_duration(listen_str) or timedelta(minutes=2)
         idle_delta = parse_duration(idle_str) or timedelta(seconds=30)
@@ -162,6 +164,7 @@ class VoiceModeratorCog(commands.Cog):
                 action_setting=action_setting,
                 aimod_debug=aimod_debug,
                 log_channel=log_channel,
+                transcript_channel_id=transcript_channel_id,
             )
 
         st.busy_task = self.bot.loop.create_task(_run())
@@ -188,6 +191,7 @@ class VoiceModeratorCog(commands.Cog):
         action_setting: list[str],
         aimod_debug: bool,
         log_channel: Optional[int],
+        transcript_channel_id: Optional[int],
     ):
         # Use the voice IO helper to handle connection, recording, and transcription
         st = self._get_state(guild.id)
@@ -211,6 +215,21 @@ class VoiceModeratorCog(commands.Cog):
             lines.append(f"AUTHOR: {name} (id = {uid})\nUTTERANCE: {text}\n---")
 
         transcript = "\n".join(lines)
+        # Optionally post transcript embed to configured channel
+        if transcript_channel_id:
+            try:
+                desc_limit = 4000  # safe margin under 4096
+                tdesc = transcript if len(transcript) <= desc_limit else (transcript[: desc_limit - 3] + "...")
+                embed = discord.Embed(
+                    title="VC Transcript",
+                    description=tdesc,
+                    colour=discord.Colour.blurple(),
+                )
+                embed.add_field(name="Channel", value=channel.mention, inline=True)
+                embed.add_field(name="Utterances", value=str(len(utterances)), inline=True)
+                await mod_logging.log_to_channel(embed, transcript_channel_id, self.bot)
+            except Exception as e:
+                print(f"[VCMod] failed to post transcript: {e}")
         # Violation history for context (shared helper)
         user_ids = {uid for uid, _ in utterances}
         vhist_blob = am_helpers.build_violation_history_for_users(user_ids, violation_cache)
