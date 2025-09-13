@@ -186,6 +186,28 @@ class _CollectingSink(voice_recv.AudioSink):
     def get_user_pcm(self) -> Dict[int, bytes]:
         return {uid: b.getvalue() for uid, b in self._buffers.items() if b.getbuffer().nbytes}
 
+    # Sink event listeners (sync functions, dispatched from thread)
+    @voice_recv.AudioSink.listener()
+    def on_voice_member_speaking_state(self, member, ssrc, state):  # type: ignore[override]
+        try:
+            print(f"[VC IO] speaking_state member={getattr(member,'id',member)} ssrc={ssrc} state={state}")
+        except Exception:
+            pass
+
+    @voice_recv.AudioSink.listener()
+    def on_voice_member_speaking_start(self, member):  # type: ignore[override]
+        try:
+            print(f"[VC IO] speaking_start member={getattr(member,'id',member)}")
+        except Exception:
+            pass
+
+    @voice_recv.AudioSink.listener()
+    def on_voice_member_speaking_stop(self, member):  # type: ignore[override]
+        try:
+            print(f"[VC IO] speaking_stop member={getattr(member,'id',member)}")
+        except Exception:
+            pass
+
 
 async def collect_utterances(
     *,
@@ -274,6 +296,17 @@ async def collect_utterances(
     try:
         total_bytes = sum(len(b) for b in audio_map.values())
         print(f"[VC IO] captured users={len(audio_map)} total_bytes={total_bytes}")
+        # Show speaking states snapshot for members present
+        try:
+            members = [m for m in getattr(channel, 'members', []) if not getattr(m, 'bot', False)]
+            for m in members:
+                try:
+                    state = getattr(voice, 'get_speaking', lambda _m: None)(m)
+                    print(f"[VC IO] get_speaking member={m.id} -> {state}")
+                except Exception:
+                    pass
+        except Exception:
+            pass
     except Exception:
         pass
 
