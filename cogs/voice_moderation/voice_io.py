@@ -7,6 +7,8 @@ from typing import Optional, Tuple, List, Dict
 import discord
 
 from discord.ext import voice_recv
+import sys
+import os
 
 
 def _ensure_opus_loaded() -> None:
@@ -15,13 +17,49 @@ def _ensure_opus_loaded() -> None:
     discord.py typically loads opus automatically if present, but some
     environments require an explicit load. This mirrors the example usage.
     """
+    if discord.opus.is_loaded():
+        return
+    # 1) Try default loader first
     try:
-        if not discord.opus.is_loaded():
-            # Best-effort load of system opus
-            discord.opus._load_default()  # type: ignore[attr-defined]
+        discord.opus._load_default()  # type: ignore[attr-defined]
     except Exception:
-        # If loading fails, voice receive may still work depending on build
         pass
+    if discord.opus.is_loaded():
+        return
+
+    # 2) Try environment-provided library path
+    env_path = os.getenv("OPUS_LIBRARY_PATH") or os.getenv("OPUS_DLL_PATH")
+    if env_path:
+        try:
+            discord.opus.load_opus(env_path)
+        except Exception:
+            pass
+    if discord.opus.is_loaded():
+        return
+
+    # 3) Try common library names based on platform
+    candidates = []
+    if sys.platform.startswith("linux"):
+        candidates = ["libopus.so.0", "libopus.so"]
+    elif sys.platform == "darwin":
+        candidates = ["libopus.0.dylib", "libopus.dylib"]
+    elif sys.platform.startswith("win"):
+        candidates = ["opus.dll", "libopus-0.dll", "libopus.dll"]
+
+    for name in candidates:
+        try:
+            discord.opus.load_opus(name)
+            if discord.opus.is_loaded():
+                return
+        except Exception:
+            continue
+
+    # 4) Final warning if still not loaded
+    if not discord.opus.is_loaded():
+        print(
+            "[VC IO] Opus library not loaded. Install system opus and/or set OPUS_LIBRARY_PATH. "
+            f"Platform={sys.platform}"
+        )
 
 
 try:
