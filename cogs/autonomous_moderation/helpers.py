@@ -225,31 +225,6 @@ def build_violation_history(
     violation_history = "\n".join(violation_blocks) if violation_blocks else "No recent violations on record."
     return f"Violation history:\n{violation_history}\n\n"
 
-def build_violation_history_for_users(
-    user_ids: set[int] | list[int],
-    violation_cache: dict[int, list[Tuple[str, str]]],
-) -> str:
-    """Build a violation history block for a set of user IDs.
-
-    Mirrors build_violation_history but without needing a message batch.
-    """
-    violation_blocks: list[str] = []
-    for uid in user_ids:
-        history = violation_cache[uid]
-        if history:
-            lines = [
-                f"{i+1}. {reason} → previously punished with {action}"
-                for i, (reason, action) in enumerate(history)
-            ]
-            joined = "\n".join(lines)
-            violation_blocks.append(
-                f"User {uid} has {len(history)} recent violation(s):\n{joined}"
-            )
-    violation_history = (
-        "\n".join(violation_blocks) if violation_blocks else "No recent violations on record."
-    )
-    return f"Violation history:\n{violation_history}\n\n"
-
 def aggregate_violations(
     violations: Iterable,
     batch: list[tuple[str, str, discord.Message]],
