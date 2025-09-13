@@ -207,12 +207,21 @@ class VoiceModeratorCog(commands.Cog):
         if not utterances:
             return
 
-        # Build transcript text
+        # Build transcript text (include member mention when available)
         lines: list[str] = []
         for uid, text in utterances:
-            member = await safe_get_member(guild, uid)
-            name = member.display_name if member else str(uid)
-            lines.append(f"AUTHOR: {name} (id = {uid})\nUTTERANCE: {text}\n---")
+            # Treat uid==0 as unmapped speaker; avoid showing id 0
+            if uid and uid > 0:
+                member = await safe_get_member(guild, uid)
+                if member is not None:
+                    name = member.display_name
+                    mention = member.mention
+                    author_str = f"{mention} ({name}, id = {uid})"
+                else:
+                    author_str = f"<@{uid}> (id = {uid})"
+            else:
+                author_str = "Unknown speaker"
+            lines.append(f"AUTHOR: {author_str}\nUTTERANCE: {text}\n---")
 
         transcript = "\n".join(lines)
         # Optionally post transcript embed to configured channel

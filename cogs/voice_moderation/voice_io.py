@@ -4,26 +4,30 @@ import wave
 from datetime import timedelta
 from typing import Optional, Tuple, List, Dict
 from array import array
-
-import discord
-
-from discord.ext import voice_recv
-from modules.utils import mysql
-from modules.ai.costs import WHISPER_PRICE_PER_MINUTE_USD
 import sys
 import os
 import logging
 
+import discord
+from discord.ext import voice_recv
+from modules.utils import mysql
+from modules.ai.costs import WHISPER_PRICE_PER_MINUTE_USD
+
+try:
+    from openai import AsyncOpenAI
+except Exception:
+    AsyncOpenAI = None  # type: ignore
+
+
+# Reduce noisy warnings from decoder flushes at the end of cycles
+logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
+
 
 def _ensure_opus_loaded() -> None:
-    """Ensure opus is loaded for voice receive/PCM decode.
-
-    discord.py typically loads opus automatically if present, but some
-    environments require an explicit load. This mirrors the example usage.
-    """
+    """Ensure opus is loaded for voice receive/PCM decode."""
     if discord.opus.is_loaded():
         return
-    # 1) Try default loader first
+    # 1) Default loader
     try:
         discord.opus._load_default()  # type: ignore[attr-defined]
     except Exception:
@@ -31,7 +35,7 @@ def _ensure_opus_loaded() -> None:
     if discord.opus.is_loaded():
         return
 
-    # 2) Try environment-provided library path
+    # 2) Env-specified path
     env_path = os.getenv("OPUS_LIBRARY_PATH") or os.getenv("OPUS_DLL_PATH")
     if env_path:
         try:
@@ -41,7 +45,7 @@ def _ensure_opus_loaded() -> None:
     if discord.opus.is_loaded():
         return
 
-    # 3) Try common library names based on platform
+    # 3) Common library names
     candidates = []
     if sys.platform.startswith("linux"):
         candidates = ["libopus.so.0", "libopus.so"]
@@ -58,7 +62,6 @@ def _ensure_opus_loaded() -> None:
         except Exception:
             continue
 
-    # 4) Final warning if still not loaded
     if not discord.opus.is_loaded():
         print(
             "[VC IO] Opus library not loaded. Install system opus and/or set OPUS_LIBRARY_PATH. "
@@ -66,132 +69,79 @@ def _ensure_opus_loaded() -> None:
         )
 
 
-try:
-    from openai import AsyncOpenAI
-except Exception:  # pragma: no cover - import fallback
-    AsyncOpenAI = None  # type: ignore
-
-
-# Reduce noisy warnings from opus decoder packet flushes (harmless at end of cycle)
-logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
-
-
-async def _ensure_connected(
-    *,
-    guild: discord.Guild,
-    channel: discord.VoiceChannel,
-    voice: Optional[discord.VoiceClient],
-) -> Optional[voice_recv.VoiceRecvClient]:
-    """Ensure the bot is connected to `channel` using VoiceRecvClient.
-
-    If already connected in the same guild, reuses and moves when possible. If the existing
-    client is not a VoiceRecvClient, disconnects and reconnects with the correct class.
-    """
-    try:
-        current = guild.voice_client or voice
-        # If currently connected
-        if current and current.is_connected():
-            # Same channel?
-            try:
-                current_ch = getattr(current, "channel", None)
-                if current_ch and getattr(current_ch, "id", None) == channel.id:
-                    if isinstance(current, voice_recv.VoiceRecvClient):
-                        return current
-                    # Wrong client type; reconnect with VoiceRecvClient
-                    try:
-                        await current.disconnect(force=True)
-                    except Exception:
-                        pass
-                    return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
-            except Exception:
-                pass
-
-            # Different channel; try moving first
-            try:
-                await current.move_to(channel)
-                if isinstance(current, voice_recv.VoiceRecvClient):
-                    return current
-                # After move, still wrong type; reconnect
-                try:
-                    await current.disconnect(force=True)
-                except Exception:
-                    pass
-                return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
-            except Exception as move_err:
-                # Could be in reconnecting state or incompatible; do a clean reconnect
-                try:
-                    await current.disconnect(force=True)
-                except Exception:
-                    pass
-                try:
-                    return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
-                except Exception as conn_err:
-                    # If "Already connected" raced, return the guild's client
-                    if "Already connected" in str(conn_err):
-                        gc = guild.voice_client
-                        if isinstance(gc, voice_recv.VoiceRecvClient):
-                            return gc
-                    raise
-
-        # Not connected: connect fresh
-        return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
-    except Exception as e:
-        print(f"[VC IO] failed to connect/move in guild {guild.id}, channel {channel.id}: {e}")
-        return None
-
-
 class _CollectingSink(voice_recv.AudioSink):
-    """Collects PCM audio per user into in-memory buffers.
+    """
+    Collects decoded PCM per user into in-memory buffers.
 
-    This sink requests decoded PCM (not opus) and aggregates bytes per user id.
+    - Requests PCM (s16le, 48kHz, 2ch) from voice_recv.
+    - Attributes audio to user via SSRC→Member mapping.
+    - If mapping is briefly missing, falls back to get_speaking().
+    - Drops unattributed packets (counts them) instead of merging into a dummy user.
     """
 
     def __init__(self) -> None:
         super().__init__()
         self._buffers: Dict[int, io.BytesIO] = {}
         self._counts: Dict[int, int] = {}
+        self._no_user_packets: int = 0
+        self.voice_client: Optional[voice_recv.VoiceRecvClient] = None  # set by caller before listen()
 
     def wants_opus(self) -> bool:
-        return False  # request PCM
+        return False  # request PCM from the router
 
     def write(self, user, data: voice_recv.VoiceData):
-        # Some setups deliver packets before SSRC→Member mapping is ready; user can be None.
-        # In that case, bucket under uid=0 so we still capture audio for transcription.
-        uid = 0
-        try:
-            if user is not None:
-                uid = int(getattr(user, "id", user))
-        except Exception:
-            uid = 0
         pcm = getattr(data, "pcm", None)
         if not pcm:
             return
+
+        uid: Optional[int] = None
+        # Primary path
+        if user is not None:
+            try:
+                uid = int(getattr(user, "id", user))
+            except Exception:
+                uid = None
+
+        # Fallback path: briefly probe speaking flags to attribute
+        if uid is None and self.voice_client and hasattr(self.voice_client, "get_speaking"):
+            try:
+                ch = getattr(self.voice_client, "channel", None)
+                members = [m for m in (getattr(ch, "members", None) or []) if not getattr(m, "bot", False)]
+                speaking_now = [m for m in members if self.voice_client.get_speaking(m)]
+                if len(speaking_now) == 1:
+                    uid = int(speaking_now[0].id)
+                elif len(speaking_now) > 1:
+                    # deterministic tie-breaker
+                    speaking_now.sort(key=lambda m: int(m.id))
+                    uid = int(speaking_now[0].id)
+            except Exception:
+                pass
+
+        if uid is None:
+            self._no_user_packets += 1
+            return  # drop unattributed; don’t corrupt buffers
+
         buf = self._buffers.get(uid)
         if buf is None:
             buf = io.BytesIO()
             self._buffers[uid] = buf
-        # Ensure bytes
+
         if isinstance(pcm, (bytes, bytearray, memoryview)):
             buf.write(bytes(pcm))
         elif isinstance(pcm, array):
             buf.write(pcm.tobytes())
-        # Occasional debug: how many packets per user
-        try:
-            c = self._counts.get(uid, 0) + 1
-            if c % 100 == 0:
-                print(f"[VC IO] sink wrote {c} packets for user {uid}")
-            self._counts[uid] = c
-        except Exception:
-            pass
+
+        c = self._counts.get(uid, 0) + 1
+        if c % 100 == 0:
+            print(f"[VC IO] sink wrote {c} packets for user {uid}")
+        self._counts[uid] = c
 
     def cleanup(self):
-        # Nothing special; buffers remain accessible
         pass
 
     def get_user_pcm(self) -> Dict[int, bytes]:
         return {uid: b.getvalue() for uid, b in self._buffers.items() if b.getbuffer().nbytes}
 
-    # Sink event listeners (sync functions, dispatched from thread)
     @voice_recv.AudioSink.listener()
     def on_voice_member_speaking_state(self, member, ssrc, state):  # type: ignore[override]
         try:
@@ -214,6 +164,53 @@ class _CollectingSink(voice_recv.AudioSink):
             pass
 
 
+async def _ensure_connected(
+    *,
+    guild: discord.Guild,
+    channel: discord.VoiceChannel,
+    voice: Optional[discord.VoiceClient],
+) -> Optional[voice_recv.VoiceRecvClient]:
+    """Ensure we’re connected to `channel` with VoiceRecvClient (self_deaf=False)."""
+    try:
+        current = guild.voice_client or voice
+        if current and current.is_connected():
+            try:
+                current_ch = getattr(current, "channel", None)
+                if current_ch and getattr(current_ch, "id", None) == channel.id:
+                    if isinstance(current, voice_recv.VoiceRecvClient):
+                        return current
+                    try:
+                        await current.disconnect(force=True)
+                    except Exception:
+                        pass
+                    return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
+            except Exception:
+                pass
+
+            # Move, or reconnect if needed
+            try:
+                await current.move_to(channel)
+                if isinstance(current, voice_recv.VoiceRecvClient):
+                    return current
+                try:
+                    await current.disconnect(force=True)
+                except Exception:
+                    pass
+                return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
+            except Exception:
+                try:
+                    await current.disconnect(force=True)
+                except Exception:
+                    pass
+                return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
+
+        # Fresh connect
+        return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
+    except Exception as e:
+        print(f"[VC IO] failed to connect/move in guild {guild.id}, channel {channel.id}: {e}")
+        return None
+
+
 async def collect_utterances(
     *,
     guild: discord.Guild,
@@ -224,46 +221,45 @@ async def collect_utterances(
     idle_delta: timedelta,
     api_key: Optional[str],
 ) -> Tuple[Optional[discord.VoiceClient], List[tuple[int, str]]]:
-    """Join/move to a voice channel, optionally record, and transcribe utterances.
-
-    Returns (voice_client, utterances). When no utterances are produced (including saver mode),
-    the function may have already awaited for appropriate dwell time.
     """
-    # Ensure opus is available before connecting
+    Join/move to a voice channel, optionally record, and transcribe utterances.
+
+    Returns (voice_client, utterances). If saver mode or no audio: waits idle_delta and returns [].
+    """
+    # Prereqs
     _ensure_opus_loaded()
-    # Connect/move
-    voice = await _ensure_connected(guild=guild, channel=channel, voice=voice)
-    if not voice:
+
+    vc = await _ensure_connected(guild=guild, channel=channel, voice=voice)
+    if not vc:
         await asyncio.sleep(5)
         return None, []
 
-    # Ensure we have a VoiceRecvClient with listen capability
-    if not hasattr(voice, "listen") or not hasattr(voice, "stop_listening"):
-        print(f"[VC IO] Voice client missing listen/stop_listening; type={type(voice)}")
+    if not hasattr(vc, "listen") or not hasattr(vc, "stop_listening"):
+        print(f"[VC IO] Voice client missing listen/stop_listening; type={type(vc)}")
         await asyncio.sleep(idle_delta.total_seconds())
-        return voice, []
+        return vc, []
 
-    # Saver mode: presence only
     if not do_listen:
         await asyncio.sleep(idle_delta.total_seconds())
-        return voice, []
+        return vc, []
 
-    # Basic prerequisites
     if AsyncOpenAI is None:
         print("[VC IO] openai client not available; skipping listen")
         await asyncio.sleep(idle_delta.total_seconds())
-        return voice, []
+        return vc, []
     if not api_key:
         print("[VC IO] AUTOMOD_OPENAI_KEY missing; skipping listen")
         await asyncio.sleep(idle_delta.total_seconds())
-        return voice, []
+        return vc, []
     if not discord.opus.is_loaded():
         print("[VC IO] Opus still not loaded; skipping listen (see OPUS installation notes)")
         await asyncio.sleep(idle_delta.total_seconds())
-        return voice, []
+        return vc, []
 
-    # Start listening with custom sink
-    active_sink = _CollectingSink()
+    # Start listening
+    sink = _CollectingSink()
+    sink.voice_client = vc  # allow speaking-state fallback
+
     listen_done = asyncio.Event()
 
     def _after(exc: Optional[Exception] = None):
@@ -273,40 +269,38 @@ async def collect_utterances(
             pass
 
     try:
-        # Start receiving
-        voice.listen(active_sink, after=_after)
+        vc.listen(sink, after=_after)
         try:
-            print(f"[VC IO] listening started: is_listening={getattr(voice,'is_listening',lambda:False)()} in guild {guild.id} ch {channel.id}")
+            is_listening = getattr(vc, "is_listening", lambda: False)()
+            print(f"[VC IO] listening started: is_listening={is_listening} in guild {guild.id} ch {channel.id}")
         except Exception:
             pass
     except Exception as e:
         print(f"[VC IO] listen() failed: {e}")
         await asyncio.sleep(idle_delta.total_seconds())
-        return voice, []
+        return vc, []
 
-    # Wait for duration then stop
+    # Wait, then stop
     await asyncio.sleep(listen_delta.total_seconds())
     try:
-        voice.stop_listening()
+        vc.stop_listening()
     except Exception:
         pass
-
     try:
         await asyncio.wait_for(listen_done.wait(), timeout=5)
     except asyncio.TimeoutError:
         pass
 
-    # Collect per-user audio bytes (PCM)
-    audio_map: Dict[int, bytes] = active_sink.get_user_pcm()
+    # Gather PCM by user
+    audio_map: Dict[int, bytes] = sink.get_user_pcm()
     try:
         total_bytes = sum(len(b) for b in audio_map.values())
-        print(f"[VC IO] captured users={len(audio_map)} total_bytes={total_bytes}")
-        # Show speaking states snapshot for members present
+        print(f"[VC IO] captured users={len(audio_map)} total_bytes={total_bytes} dropped_no_user={sink._no_user_packets}")
         try:
             members = [m for m in getattr(channel, 'members', []) if not getattr(m, 'bot', False)]
             for m in members:
                 try:
-                    state = getattr(voice, 'get_speaking', lambda _m: None)(m)
+                    state = getattr(vc, 'get_speaking', lambda _m: None)(m)
                     print(f"[VC IO] get_speaking member={m.id} -> {state}")
                 except Exception:
                     pass
@@ -315,18 +309,16 @@ async def collect_utterances(
     except Exception:
         pass
 
-    # If nothing recorded, dwell and return
     if not audio_map:
         await asyncio.sleep(idle_delta.total_seconds())
-        return voice, []
+        return vc, []
 
-    # Estimate Whisper cost from total PCM duration
+    # Estimate Whisper cost
     BYTES_PER_SECOND = 48000 * 2 * 2  # sample_rate * channels * bytes_per_sample
     BYTES_PER_MINUTE = BYTES_PER_SECOND * 60
     total_minutes = sum(len(b) for b in audio_map.values()) / float(BYTES_PER_MINUTE)
     whisper_cost_usd = round(total_minutes * WHISPER_PRICE_PER_MINUTE_USD, 6)
 
-    # Budget check for Whisper cost before calling API
     try:
         usage = await mysql.get_vcmod_usage(guild.id)
         current_cost = float(usage.get("cost_usd", 0.0))
@@ -334,15 +326,15 @@ async def collect_utterances(
         if current_cost + whisper_cost_usd > limit:
             print(f"[VC IO] Budget reached; skipping (cost now {current_cost:.6f} + est {whisper_cost_usd:.6f} > limit {limit:.2f})")
             await asyncio.sleep(idle_delta.total_seconds())
-            return voice, []
+            return vc, []
     except Exception as e:
         print(f"[VC IO] budget check failed, proceeding cautiously: {e}")
 
-    # Transcribe with Whisper API
+    # Transcribe
     client = AsyncOpenAI(api_key=api_key)
-    utterances: list[tuple[int, str]] = []  # (user_id, text)
-    # Convert raw PCM (s16le, 48kHz, 2ch) to WAV in-memory before sending to Whisper
-    def pcm_to_wav_bytes(pcm_bytes: bytes, *, channels: int = 2, sample_width: int = 2, sample_rate: int = 48000) -> bytes:
+    utterances: List[Tuple[int, str]] = []
+
+    def _pcm_to_wav_bytes(pcm_bytes: bytes, *, channels: int = 2, sample_width: int = 2, sample_rate: int = 48000) -> bytes:
         out = io.BytesIO()
         with wave.open(out, 'wb') as wf:
             wf.setnchannels(channels)
@@ -354,28 +346,26 @@ async def collect_utterances(
 
     for uid, pcm_bytes in audio_map.items():
         try:
-            # Some environments may return array('h'); normalize to bytes
             if isinstance(pcm_bytes, array):
                 pcm_bytes = pcm_bytes.tobytes()
-            wav_bytes = pcm_to_wav_bytes(pcm_bytes)
+            wav_bytes = _pcm_to_wav_bytes(pcm_bytes)
             fobj = io.BytesIO(wav_bytes)
             fobj.name = "audio.wav"
             tr = await client.audio.transcriptions.create(model="whisper-1", file=fobj)
-            text = getattr(tr, "text", None) or ""
-            if text.strip():
-                utterances.append((uid, text.strip()))
+            text = (getattr(tr, "text", None) or "").strip()
+            if text:
+                utterances.append((uid, text))
         except Exception as e:
             print(f"[VC IO] transcription failed for {uid}: {e}")
 
-    # Record Whisper usage cost (even if zero utterances)
+    # Record cost even if no utterances (you used minutes)
     try:
         await mysql.add_vcmod_usage(guild.id, 0, whisper_cost_usd)
     except Exception as e:
         print(f"[VC IO] failed to record whisper cost: {e}")
 
-    # If nothing to analyze, idle dwell similar to previous behavior
     if not utterances:
         await asyncio.sleep(idle_delta.total_seconds())
-        return voice, []
+        return vc, []
 
-    return voice, utterances
+    return vc, utterances
