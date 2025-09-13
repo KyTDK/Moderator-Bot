@@ -360,6 +360,17 @@ class NSFWScanner:
             return False
         if nsfw_callback and scan_result and scan_result.get("is_nsfw"):
             cat_name = (scan_result.get("category") or "unspecified")
+            # Build a simple confidence string if available (score from moderation or similarity fallback)
+            confidence_str = ""
+            try:
+                if scan_result.get("score") is not None:
+                    confidence_str = f", Confidence: {float(scan_result.get('score')):.2f}"
+                elif scan_result.get("similarity") is not None:
+                    confidence_str = f", Confidence: {float(scan_result.get('similarity')):.2f}"
+            except Exception:
+                # If formatting fails, skip confidence
+                confidence_str = ""
+
             if file is None:
                 file = discord.File(temp_filename, filename=filename)
             try:
@@ -367,7 +378,7 @@ class NSFWScanner:
                     author,
                     self.bot,
                     guild_id,
-                    f"Detected potential policy violation (Category: **{cat_name.title()}**)",
+                    f"Detected potential policy violation (Category: **{cat_name.title()}**{confidence_str})",
                     file,
                     message,
                 )
