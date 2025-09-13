@@ -3,6 +3,7 @@ import io
 import wave
 from datetime import timedelta
 from typing import Optional, Tuple, List, Dict
+from array import array
 
 import discord
 
@@ -119,6 +120,7 @@ class _CollectingSink(voice_recv.AudioSink):
     def __init__(self) -> None:
         super().__init__()
         self._buffers: Dict[int, io.BytesIO] = {}
+        self._counts: Dict[int, int] = {}
 
     def wants_opus(self) -> bool:
         return False  # request PCM
@@ -137,6 +139,16 @@ class _CollectingSink(voice_recv.AudioSink):
         # Ensure bytes
         if isinstance(pcm, (bytes, bytearray, memoryview)):
             buf.write(bytes(pcm))
+        elif isinstance(pcm, array):
+            buf.write(pcm.tobytes())
+        # Occasional debug: how many packets per user
+        try:
+            c = self._counts.get(uid, 0) + 1
+            if c % 100 == 0:
+                print(f"[VC IO] sink wrote {c} packets for user {uid}")
+            self._counts[uid] = c
+        except Exception:
+            pass
 
     def cleanup(self):
         # Nothing special; buffers remain accessible
@@ -199,7 +211,12 @@ async def collect_utterances(
             pass
 
     try:
+        # Start receiving
         voice.listen(active_sink, after=_after)
+        try:
+            print(f"[VC IO] listening started: is_listening={getattr(voice,'is_listening',lambda:False)()} in guild {guild.id} ch {channel.id}")
+        except Exception:
+            pass
     except Exception as e:
         print(f"[VC IO] listen() failed: {e}")
         await asyncio.sleep(idle_delta.total_seconds())
@@ -219,6 +236,11 @@ async def collect_utterances(
 
     # Collect per-user audio bytes (PCM)
     audio_map: Dict[int, bytes] = active_sink.get_user_pcm()
+    try:
+        total_bytes = sum(len(b) for b in audio_map.values())
+        print(f"[VC IO] captured users={len(audio_map)} total_bytes={total_bytes}")
+    except Exception:
+        pass
 
     # If nothing recorded, dwell and return
     if not audio_map:
@@ -237,7 +259,7 @@ async def collect_utterances(
         current_cost = float(usage.get("cost_usd", 0.0))
         limit = float(usage.get("limit_usd", 2.0))
         if current_cost + whisper_cost_usd > limit:
-            print("[VC IO] Budget reached; skipping transcription this cycle.")
+            print(f"[VC IO] Budget reached; skipping (cost now {current_cost:.6f} + est {whisper_cost_usd:.6f} > limit {limit:.2f})")
             await asyncio.sleep(idle_delta.total_seconds())
             return voice, []
     except Exception as e:
@@ -259,6 +281,9 @@ async def collect_utterances(
 
     for uid, pcm_bytes in audio_map.items():
         try:
+            # Some environments may return array('h'); normalize to bytes
+            if isinstance(pcm_bytes, array):
+                pcm_bytes = pcm_bytes.tobytes()
             wav_bytes = pcm_to_wav_bytes(pcm_bytes)
             fobj = io.BytesIO(wav_bytes)
             fobj.name = "audio.wav"
