@@ -143,6 +143,7 @@ class VoiceModeratorCog(commands.Cog):
         aimod_debug = settings.get("aimod-debug") or False
         log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
         transcript_channel_id = settings.get("vcmod-transcript-channel")
+        transcript_only = settings.get("vcmod-transcript-only") or False
 
         listen_delta = parse_duration(listen_str) or timedelta(minutes=2)
         idle_delta = parse_duration(idle_str) or timedelta(seconds=30)
@@ -158,6 +159,7 @@ class VoiceModeratorCog(commands.Cog):
                 idle_delta=idle_delta,
                 high_accuracy=high_accuracy,
                 rules=rules,
+                transcript_only=transcript_only,
                 action_setting=action_setting,
                 aimod_debug=aimod_debug,
                 log_channel=log_channel,
@@ -185,6 +187,7 @@ class VoiceModeratorCog(commands.Cog):
         idle_delta: timedelta,
         high_accuracy: bool,
         rules: str,
+        transcript_only: bool,
         action_setting: list[str],
         aimod_debug: bool,
         log_channel: Optional[int],
@@ -247,6 +250,7 @@ class VoiceModeratorCog(commands.Cog):
                 api_key=AUTOMOD_OPENAI_KEY,
                 system_prompt=VOICE_SYSTEM_PROMPT,
                 rules=rules,
+                transcript_only=transcript_only,
                 violation_history_blob=vhist_blob,
                 transcript=transcript,
                 base_system_tokens=BASE_SYSTEM_TOKENS,

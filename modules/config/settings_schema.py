@@ -439,4 +439,16 @@ SETTINGS_SCHEMA = {
         setting_type=discord.TextChannel,
         hidden=True,
     ),
+    "vcmod-transcript-only": Setting(
+        name="vcmod-transcript-only",
+        description=(
+            "When enabled, the bot will only transcribe voice chat without applying AI rule checks "
+            "or moderation actions. This significantly reduces budget usage."
+        ),
+        setting_type=bool,
+        default=False,
+        hidden=False,
+        accelerated=True,
+        choices=["true", "false"]
+    ),
 }

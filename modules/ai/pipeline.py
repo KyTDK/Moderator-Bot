@@ -87,6 +87,7 @@ async def run_moderation_pipeline_voice(
     api_key: str,
     system_prompt: str,
     rules: str,
+    transcript_only: bool,
     violation_history_blob: str,
     transcript: str,
     base_system_tokens: int,
@@ -119,7 +120,11 @@ async def run_moderation_pipeline_voice(
     if rules.strip() == "":
         # No rules means no context to guide moderation; skip to save cost
         return None, total_tokens, 0.0, usage, "no_rules"
-
+    
+    if transcript_only:
+        # AI Moderation is disabled; skip to save cost
+        return None, total_tokens, 0.0, usage, "transcript_only"
+    
     user_prompt = build_user_prompt(rules, violation_history_blob, transcript)
     report = await run_parsed_ai(
         api_key=api_key,
