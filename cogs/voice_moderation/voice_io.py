@@ -11,6 +11,7 @@ from modules.utils import mysql
 from modules.ai.costs import WHISPER_PRICE_PER_MINUTE_USD
 import sys
 import os
+import logging
 
 
 def _ensure_opus_loaded() -> None:
@@ -67,7 +68,11 @@ def _ensure_opus_loaded() -> None:
 try:
     from openai import AsyncOpenAI
 except Exception:  # pragma: no cover - import fallback
-    AsyncOpenAI = None  # type: ignore
+AsyncOpenAI = None  # type: ignore
+
+
+# Reduce noisy warnings from opus decoder packet flushes (harmless at end of cycle)
+logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
 
 
 async def _ensure_connected(
