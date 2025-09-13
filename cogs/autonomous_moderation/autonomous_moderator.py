@@ -1,4 +1,3 @@
-import openai
 import discord
 from datetime import datetime, timedelta, timezone
 from discord.ext import commands, tasks
@@ -13,9 +12,10 @@ from cogs.autonomous_moderation import helpers as am_helpers
 from cogs.autonomous_moderation.prompt import (
     SYSTEM_PROMPT,
     BASE_SYSTEM_TOKENS,
-    get_model_limit,
     NEW_MEMBER_THRESHOLD_HOURS,
 )
+from modules.ai.mod_utils import get_model_limit, budget_allows, pick_model
+from modules.ai.engine import run_parsed_ai
 
 from dotenv import load_dotenv
 import os
@@ -23,18 +23,6 @@ import os
 load_dotenv()
 AUTOMOD_OPENAI_KEY = os.getenv('AUTOMOD_OPENAI_KEY')
 AIMOD_MODEL = os.getenv('AIMOD_MODEL', 'gpt-5-nano')
-# Pricing and budget: $0.45 per 1M tokens, $2 budget per cycle
-PRICE_PER_MTOK = 0.45
-PRICE_PER_TOKEN = PRICE_PER_MTOK / 1_000_000
-BUDGET_USD = 2.0
-
-PRICES_PER_MTOK = {
-    'gpt-5-nano': 0.45,
-    'gpt-5-mini': 2.25,
-}
-
-def get_price_per_mtok(model_name: str) -> float:
-    return next((v for k, v in PRICES_PER_MTOK.items() if k in model_name), PRICE_PER_MTOK)
 
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
@@ -147,7 +135,7 @@ class AutonomousModeratorCog(commands.Cog):
 
             # Build transcript with truncation if needed
             high_accuracy = settings.get("aimod-high-accuracy") or False
-            model_for_guild = 'gpt-5-mini' if high_accuracy else AIMOD_MODEL
+            model_for_guild = pick_model(high_accuracy, AIMOD_MODEL)
             limit = get_model_limit(model_for_guild)
             max_tokens = int(limit * 0.9)
             current_total_tokens = (
@@ -169,11 +157,8 @@ class AutonomousModeratorCog(commands.Cog):
                 continue
 
             # Budget check before calling AI
-            usage = await mysql.get_aimod_usage(gid)
-            price_per_mtok = get_price_per_mtok(model_for_guild)
-            price_per_token = price_per_mtok / 1_000_000
-            request_cost = round(estimated_tokens * price_per_token, 6)
-            if (usage.get("cost_usd", 0.0) + request_cost) > usage.get("limit_usd", BUDGET_USD):
+            allow, request_cost, usage = await budget_allows(gid, model_for_guild, estimated_tokens)
+            if not allow:
                 # Notify reporter if applicable
                 if trigger_msg:
                     try:
@@ -200,19 +185,14 @@ class AutonomousModeratorCog(commands.Cog):
             user_prompt = f"{rules}{violation_history}Transcript:\n{transcript}"
 
             # AI call
-            client = openai.AsyncOpenAI(api_key=api_key)
             try:
-                kwargs = {
-                    "model": model_for_guild,
-                    "instructions": SYSTEM_PROMPT,
-                    "input": user_prompt,
-                    "text_format": ModerationReport, 
-                }
-                if model_for_guild.startswith("gpt-5"):
-                    kwargs["reasoning"] = {"effort": "minimal"}
-
-                completion = await client.responses.parse(**kwargs)
-                report: ModerationReport | None = completion.output_parsed
+                report: ModerationReport | None = await run_parsed_ai(
+                    api_key=api_key,
+                    model=model_for_guild,
+                    system_prompt=SYSTEM_PROMPT,
+                    user_prompt=user_prompt,
+                    text_format=ModerationReport,
+                )
             except Exception as e:
                 print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
