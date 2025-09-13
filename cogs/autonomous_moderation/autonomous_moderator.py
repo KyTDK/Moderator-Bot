@@ -49,7 +49,7 @@ SYSTEM_PROMPT = (
     "- If message_ids are included in a ViolationEvent, include 'delete' in that event's actions.\n\n"
 
     "Strict requirements:\n"
-    "- Each ViolationEvent must include: user_id, rule (quoted from or matching the provided Rules), reason, actions, message_ids.\n"
+    "- Each ViolationEvent must include: rule (quoted from or matching the provided Rules), reason, actions, and message_ids.\n"
     "- Only include message_ids for messages that break a rule; otherwise do not list them.\n"
     "- When uncertain, return no violations."
 )
@@ -78,6 +78,9 @@ def estimate_tokens(text: str) -> int:
     return ceil(len(text) / 4)
 
 MODEL_CONTEXT_WINDOWS = {
+    "gpt-5-nano": 128000,
+    "gpt-5-mini": 128000,
+    "gpt-5": 128000,
     "gpt-4.1": 1000000,
     "gpt-4.1-nano": 1000000,
     "gpt-4.1-mini": 1000000,
@@ -95,7 +98,6 @@ def get_model_limit(model_name: str) -> int:
     return next((limit for key, limit in MODEL_CONTEXT_WINDOWS.items() if key in model_name), 16000)
 
 class ViolationEvent(BaseModel):
-    user_id: int
     rule: str
     reason: str
     actions: list[str]
@@ -404,23 +406,34 @@ class AutonomousModeratorCog(commands.Cog):
                 continue
 
             for v in report.violations:
-                uid_str = v.user_id
                 actions = list(v.actions or [])
                 rule = (v.rule or "").strip()
                 reason = (v.reason or "").strip()
                 msg_ids = {int(m) for m in (v.message_ids or []) if str(m).isdigit()}
 
                 # Hard safeguards: require a non-empty rule and at least one concrete message id
-                if not uid_str or not actions or not rule or not msg_ids:
+                if not actions or not rule or not msg_ids:
                     continue
 
-                member = await safe_get_member(guild, int(uid_str))
+                # Prefer the actual author of the flagged message(s) when unambiguous
+                messages_to_delete = [m for (_, _, m) in batch if m.id in msg_ids] if msg_ids else []
+                resolved_uid = None
+                if messages_to_delete:
+                    author_ids = {m.author.id for m in messages_to_delete}
+                    if len(author_ids) == 1:
+                        resolved_uid = next(iter(author_ids))
+                if resolved_uid is None:
+                    # Ambiguous or missing authorship; skip to avoid misattribution
+                    continue
+
+                member = await safe_get_member(guild, resolved_uid)
+                if not member:
+                    # Could not resolve member; skip to avoid misattribution
+                    continue
 
                 # Ensure delete if message_ids present
                 if msg_ids and "delete" not in actions:
                     actions.append("delete")
-
-                messages_to_delete = [m for (_, _, m) in batch if m.id in msg_ids] if msg_ids else []
 
                 # Resolve configured actions
                 configured = settings.get(AIMOD_ACTION_SETTING) or ["auto"]
@@ -436,11 +449,11 @@ class AutonomousModeratorCog(commands.Cog):
                     message=messages_to_delete
                 )
 
-                violation_cache[int(uid_str)].append((rule, ", ".join(configured)))
+                violation_cache[resolved_uid].append((rule, ", ".join(configured)))
                 embed = discord.Embed(
                     title="AI-Flagged Violation",
                     description=(
-                        f"User: {member.mention if member else uid_str}\n"
+                        f"User: {member.mention if member else resolved_uid}\n"
                         f"Rule Broken: {rule}\n"
                         f"Reason: {reason}\n"
                         f"Actions: {', '.join(configured)}"
