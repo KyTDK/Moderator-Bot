@@ -40,16 +40,36 @@ else:
 
 collection.load()
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model  = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").to(device)
-proc   = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
+# Lazy-load CLIP model and processor on first use to avoid blocking startup
+_model = None
+_proc = None
+_device = None
+_init_lock = Lock()
 
 _write_lock = Lock()
 
+def _ensure_clip_loaded() -> None:
+    """Load CLIP model/processor on first use (thread-safe)."""
+    global _model, _proc, _device
+    if _model is not None and _proc is not None and _device is not None:
+        return
+    with _init_lock:
+        if _model is not None and _proc is not None and _device is not None:
+            return
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
+        m = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
+        p = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
+        _model = m.to(dev)
+        _proc = p
+        _device = dev
+
 def embed(img: Image.Image) -> np.ndarray:
-    t = proc(images=img, return_tensors="pt").to(device)
+    _ensure_clip_loaded()
+    t = _proc(images=img, return_tensors="pt")
+    # BatchEncoding supports .to(device)
+    t = t.to(_device) if hasattr(t, "to") else t
     with torch.no_grad():
-        v = model.get_image_features(**t).cpu().numpy().astype("float32")
+        v = _model.get_image_features(**t).cpu().numpy().astype("float32")
     v = v / np.linalg.norm(v, axis=1, keepdims=True)
     return v
 
