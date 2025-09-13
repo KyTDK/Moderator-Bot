@@ -32,29 +32,6 @@ AIMOD_ACTION_SETTING = "aimod-detection-action"
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10)) # user_id -> deque of (rule: str, action: str)
 
-SYSTEM_MSG = (
-    "You are an AI moderator.\n"
-    "The next user message will begin with 'Rules:' — those are the ONLY rules you are allowed to enforce.\n\n"
-    "Core constraints:\n"
-    "- No personal judgment or outside policies. Only enforce what is explicitly stated under 'Rules:'.\n"
-    "- No overreach. Ignore sarcasm, vague innuendo, or mere references. Only act on clear, explicit rule violations.\n"
-    "- Do not punish users who describe or report others' behavior. Only enforce rules when the speaker clearly admits to or commits a violation themselves.\n"
-    "- Only use prior violations to identify persistent rule-breaking. They may support your reasoning, but do not justify punishment on their own. The current message must clearly break a rule.\n"
-    "- If you are unsure, default to ok=true.\n\n"
-
-    "If any message_ids are listed, always include 'delete' in the actions array.\n"
-    "Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>.\n\n"
-    "Use timeout:<duration> with a clear time unit. Durations must include a unit like s, m, h, d, w, or mo (e.g., 10m for 10 minutes)."
-
-    "Punishment meanings:\n"
-    "- warn:<text>: Warn the user.\n"
-    "- delete: Always include this for rule-breaking messages to remove them from chat.\n"
-    "- timeout:<duration>: Temporarily mute the user.\n"
-    "- kick: Remove user from server (temporary).\n"
-    "- strike: Permanent record which comes with its own punishment.\n"
-    "- ban: Permanent removal from the server."
-)
-
 SYSTEM_PROMPT = (
     "You are an AI moderator.\n"
     "The next user message will begin with 'Rules:' — those are the ONLY rules you may enforce.\n\n"
