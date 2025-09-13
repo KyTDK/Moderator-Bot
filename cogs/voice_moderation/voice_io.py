@@ -7,6 +7,7 @@ from array import array
 import sys
 import os
 import logging
+import time
 
 import discord
 from discord.ext import voice_recv
@@ -74,19 +75,40 @@ class _CollectingSink(voice_recv.AudioSink):
     Collects decoded PCM per user into in-memory buffers.
 
     - Requests PCM (s16le, 48kHz, 2ch) from voice_recv.
-    - Attributes audio to user via SSRC→Member mapping.
-    - If mapping is briefly missing, falls back to get_speaking().
-    - Drops unattributed packets (counts them) instead of merging into a dummy user.
+    - Attributes audio via:
+        1) direct Member mapping
+        2) cached SSRC→user mapping from speaking events (recommended)
+        3) (last resort) voice_client.get_speaking() probe
+    - Drops unattributed packets (counts them).
     """
+
+    _SSRC_TTL_SECONDS = 300  # expire stale SSRC mappings after 5 minutes
 
     def __init__(self) -> None:
         super().__init__()
         self._buffers: Dict[int, io.BytesIO] = {}
         self._counts: Dict[int, int] = {}
         self._no_user_packets: int = 0
+        self._ssrc_to_uid: Dict[int, int] = {}
+        self._ssrc_last_seen: Dict[int, float] = {}
 
     def wants_opus(self) -> bool:
         return False  # request PCM from the router
+
+    def _resolve_uid_from_ssrc(self, ssrc: Optional[int]) -> Optional[int]:
+        if not isinstance(ssrc, int):
+            return None
+        # expire stale mappings
+        now = time.monotonic()
+        last = self._ssrc_last_seen.get(ssrc)
+        if last is not None and now - last > self._SSRC_TTL_SECONDS:
+            self._ssrc_to_uid.pop(ssrc, None)
+            self._ssrc_last_seen.pop(ssrc, None)
+            return None
+        uid = self._ssrc_to_uid.get(ssrc)
+        if uid:
+            self._ssrc_last_seen[ssrc] = now
+        return uid
 
     def write(self, user, data: voice_recv.VoiceData):
         pcm = getattr(data, "pcm", None)
@@ -94,32 +116,40 @@ class _CollectingSink(voice_recv.AudioSink):
             return
 
         uid: Optional[int] = None
-        # Primary path
+
+        # 1) Primary: library already resolved to a Member
         if user is not None:
             try:
                 uid = int(getattr(user, "id", user))
             except Exception:
                 uid = None
 
-        # Fallback path: briefly probe speaking flags to attribute
-        if uid is None and self.voice_client and hasattr(self.voice_client, "get_speaking"):
-            try:
-                ch = getattr(self.voice_client, "channel", None)
-                members = [m for m in (getattr(ch, "members", None) or []) if not getattr(m, "bot", False)]
-                speaking_now = [m for m in members if self.voice_client.get_speaking(m)]
-                if len(speaking_now) == 1:
-                    uid = int(speaking_now[0].id)
-                elif len(speaking_now) > 1:
-                    # deterministic tie-breaker
-                    speaking_now.sort(key=lambda m: int(m.id))
-                    uid = int(speaking_now[0].id)
-            except Exception:
-                pass
+        # 2) SSRC-based mapping (most reliable fallback)
+        if uid is None:
+            ssrc = getattr(data, "ssrc", None)
+            uid = self._resolve_uid_from_ssrc(ssrc)
+
+        # 3) Last resort: probe speaking flags briefly
+        if uid is None:
+            vc = getattr(self, "voice_client", None)  # set by router after listen()
+            if vc and hasattr(vc, "get_speaking"):
+                try:
+                    ch = getattr(vc, "channel", None)
+                    members = [m for m in (getattr(ch, "members", None) or []) if not getattr(m, "bot", False)]
+                    speaking_now = [m for m in members if vc.get_speaking(m)]
+                    if len(speaking_now) == 1:
+                        uid = int(speaking_now[0].id)
+                    elif len(speaking_now) > 1:
+                        speaking_now.sort(key=lambda m: int(m.id))
+                        uid = int(speaking_now[0].id)
+                except Exception:
+                    uid = None
 
         if uid is None:
             self._no_user_packets += 1
             return  # drop unattributed; don’t corrupt buffers
 
+        # Append PCM to buffer for this user
         buf = self._buffers.get(uid)
         if buf is None:
             buf = io.BytesIO()
@@ -141,9 +171,14 @@ class _CollectingSink(voice_recv.AudioSink):
     def get_user_pcm(self) -> Dict[int, bytes]:
         return {uid: b.getvalue() for uid, b in self._buffers.items() if b.getbuffer().nbytes}
 
+    # Speaking events: learn/refresh SSRC → user mapping
     @voice_recv.AudioSink.listener()
     def on_voice_member_speaking_state(self, member, ssrc, state):  # type: ignore[override]
         try:
+            if member is not None and isinstance(ssrc, int):
+                # Map/refresh whenever we get a state update (start/stop both refresh)
+                self._ssrc_to_uid[ssrc] = int(member.id)
+                self._ssrc_last_seen[ssrc] = time.monotonic()
             print(f"[VC IO] speaking_state member={getattr(member,'id',member)} ssrc={ssrc} state={state}")
         except Exception:
             pass
@@ -257,7 +292,6 @@ async def collect_utterances(
 
     # Start listening
     sink = _CollectingSink()
-
     listen_done = asyncio.Event()
 
     def _after(exc: Optional[Exception] = None):
@@ -267,7 +301,7 @@ async def collect_utterances(
             pass
 
     try:
-        vc.listen(sink, after=_after)
+        vc.listen(sink, after=_after)  # router will set sink.voice_client
         try:
             is_listening = getattr(vc, "is_listening", lambda: False)()
             print(f"[VC IO] listening started: is_listening={is_listening} in guild {guild.id} ch {channel.id}")
@@ -294,6 +328,7 @@ async def collect_utterances(
     try:
         total_bytes = sum(len(b) for b in audio_map.values())
         print(f"[VC IO] captured users={len(audio_map)} total_bytes={total_bytes} dropped_no_user={sink._no_user_packets}")
+        # Optional snapshot of speaking flags
         try:
             members = [m for m in getattr(channel, 'members', []) if not getattr(m, 'bot', False)]
             for m in members:
@@ -308,6 +343,9 @@ async def collect_utterances(
         pass
 
     if not audio_map:
+        # Helpful hint if mapping failed entirely
+        if sink._no_user_packets > 0:
+            print("[VC IO] Hint: Many packets had no user mapping. Ensure Intents.voice_states=True and the app intents are enabled.")
         await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
