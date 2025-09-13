@@ -69,7 +69,7 @@ def _ensure_opus_loaded() -> None:
 try:
     from openai import AsyncOpenAI
 except Exception:  # pragma: no cover - import fallback
-AsyncOpenAI = None  # type: ignore
+    AsyncOpenAI = None  # type: ignore
 
 
 # Reduce noisy warnings from opus decoder packet flushes (harmless at end of cycle)
