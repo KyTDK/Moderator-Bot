@@ -43,7 +43,6 @@ SETTINGS_SCHEMA = {
         description="Always send a detailed AI moderation debug message to the AI violations channel, including flagged messages, AI decision, and applied actions.",
         setting_type=bool,
         default=False,
-        hidden=True,
         choices=["true", "false"]
     ),
     "nsfw-verbose": Setting(
