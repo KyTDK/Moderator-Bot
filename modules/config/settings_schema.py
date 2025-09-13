@@ -272,7 +272,7 @@ SETTINGS_SCHEMA = {
         setting_type=str,
         default="1. Be respectful — no harassment or hate speech.\n2. No NSFW or obscene content.\n3. No spam or excessive self-promotion.\n4. Follow Discord's Terms of Service.",
         hidden=True,
-        # accelerated=True, # is_accelerated with exception of api key is set
+        accelerated=True,
     ),
     "aimod-detection-action": Setting(
         name="aimod-detection-action",
@@ -280,7 +280,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         hidden=True,
         default=["auto"],
-        # accelerated=True, # is_accelerated with exception of api key is set
+        accelerated=True,
         choices=["strike", "kick", "ban", "timeout", "delete", "auto"],
     ),
     "autonomous-mod": Setting(
@@ -289,14 +289,14 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         hidden=True,
-        # accelerated=True, # is_accelerated with exception of api key is set
+        accelerated=True,
         choices=["true", "false"]
     ),
     "aimod-check-interval": Setting(
         name="aimod-check-interval",
         description="How often to run the AI moderation batch process.",
         setting_type=TimeString,
-        # accelerated=True, # is_accelerated with exception of api key is set
+        accelerated=True,
         default=TimeString("1h"),
     ),
     "aimod-mode": Setting(
@@ -304,7 +304,7 @@ SETTINGS_SCHEMA = {
         description="Choose how AI moderation is triggered: `report` mode (only on mention), `interval` mode (automatic background scanning), or `adaptive` mode (dynamically switches based on server activity, events, or configuration).",
         setting_type=str,
         default="report",
-        # accelerated=True, # is_accelerated with exception of api key is set
+        accelerated=True,
         choices=["interval", "report", "adaptive"],
         hidden=True
     ),
@@ -314,7 +314,7 @@ SETTINGS_SCHEMA = {
             "Configure which events trigger switching AI moderation modes. "
         ),
         setting_type=dict[str, list[str]], #[event, list of actions]
-        # accelerated=True, # is_accelerated with exception of api key is set
+        accelerated=True,
         default={
             "mass_join": ["enable_interval", "disable_report"],
             "mass_leave": ["enable_interval", "disable_report"],
