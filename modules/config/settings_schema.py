@@ -283,6 +283,18 @@ SETTINGS_SCHEMA = {
         accelerated=True,
         choices=["strike", "kick", "ban", "timeout", "delete", "auto"],
     ),
+    "aimod-high-accuracy": Setting(
+        name="aimod-high-accuracy",
+        description=(
+            "Use higher-accuracy AI moderation with gpt-5-mini (approx. 2.25 USD per 1M tokens). "
+            "Consumes the monthly budget faster compared to the default."
+        ),
+        setting_type=bool,
+        default=False,
+        accelerated=True,
+        choices=["true", "false"]
+    ),
+
     "autonomous-mod": Setting(
         name="autonomous-mod",
         description="Use AI to automatically moderate your entire server.",

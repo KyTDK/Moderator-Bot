@@ -59,6 +59,7 @@ Automatically issues escalating punishments based on a user’s strike count:
 Uses OpenAI to detect violations in user messages.
 
 Budget: AI moderation is capped at $2 per billing cycle. Pricing is $0.45 per 1M tokens; once the cycle budget is reached, autonomous moderation pauses until the next cycle.
+Note: Enable higher-accuracy AI moderation with gpt-5-mini (approx. 2.25 USD per 1M tokens) via the `aimod-high-accuracy` setting. This consumes the monthly budget faster than the default gpt-5-nano (0.45 USD per 1M tokens).
 
 ### 🔧 Configuration:
 

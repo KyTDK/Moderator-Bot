@@ -28,6 +28,15 @@ PRICE_PER_MTOK = 0.45
 PRICE_PER_TOKEN = PRICE_PER_MTOK / 1_000_000
 BUDGET_USD = 2.0
 
+PRICES_PER_MTOK = {
+    'gpt-5-nano': 0.45,
+    'gpt-5-mini': 2.25,
+}
+
+def get_price_per_mtok(model_name: str) -> float:
+    return next((v for k, v in PRICES_PER_MTOK.items() if k in model_name), PRICE_PER_MTOK)
+
+
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10)) # user_id -> deque of (rule: str, action: str)
@@ -102,6 +111,7 @@ class AutonomousModeratorCog(commands.Cog):
                     "aimod-channel",
                     "aimod-debug",
                     AIMOD_ACTION_SETTING,
+                    "aimod-high-accuracy",
                 ],
             )
 
@@ -136,7 +146,9 @@ class AutonomousModeratorCog(commands.Cog):
             violation_history = am_helpers.build_violation_history(batch, violation_cache)
 
             # Build transcript with truncation if needed
-            limit = get_model_limit(AIMOD_MODEL)
+            high_accuracy = settings.get("aimod-high-accuracy") or False
+            model_for_guild = 'gpt-5-mini' if high_accuracy else AIMOD_MODEL
+            limit = get_model_limit(model_for_guild)
             max_tokens = int(limit * 0.9)
             current_total_tokens = (
                 BASE_SYSTEM_TOKENS
@@ -158,7 +170,9 @@ class AutonomousModeratorCog(commands.Cog):
 
             # Budget check before calling AI
             usage = await mysql.get_aimod_usage(gid)
-            request_cost = round(estimated_tokens * PRICE_PER_TOKEN, 6)
+            price_per_mtok = get_price_per_mtok(model_for_guild)
+            price_per_token = price_per_mtok / 1_000_000
+            request_cost = round(estimated_tokens * price_per_token, 6)
             if (usage.get("cost_usd", 0.0) + request_cost) > usage.get("limit_usd", BUDGET_USD):
                 # Notify reporter if applicable
                 if trigger_msg:
@@ -189,12 +203,12 @@ class AutonomousModeratorCog(commands.Cog):
             client = openai.AsyncOpenAI(api_key=api_key)
             try:
                 kwargs = {
-                    "model": AIMOD_MODEL,
+                    "model": model_for_guild,
                     "instructions": SYSTEM_PROMPT,
                     "input": user_prompt,
                     "text_format": ModerationReport, 
                 }
-                if AIMOD_MODEL.startswith("gpt-5"):
+                if model_for_guild.startswith("gpt-5"):
                     kwargs["reasoning"] = {"effort": "minimal"}
 
                 completion = await client.responses.parse(**kwargs)
