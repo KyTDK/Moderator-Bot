@@ -4,18 +4,31 @@ import os
 import time
 import logging
 import asyncio
+import warnings
 from dotenv import load_dotenv
 from modules.utils import mysql
 from modules.post_stats.topgg_poster import start_topgg_poster
 
 print(f"[BOOT] Starting Moderator Bot at {time.strftime('%X')}")
 
-# Ensure we see discord.py warnings/errors in Docker logs
+# --- Logging configuration ---
+# Default to WARNING to keep logs lean; override via LOG_LEVEL (e.g., INFO, DEBUG)
+LOG_LEVEL = os.getenv("LOG_LEVEL", "WARNING").upper()
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, LOG_LEVEL, logging.WARNING),
     format="%(asctime)s %(levelname)-7s %(name)s %(message)s",
 )
-logging.getLogger("discord").setLevel(logging.INFO)
+
+# Quiet noisy libraries unless explicitly raised via LOG_LEVEL
+for _lib in ("discord", "aiomysql", "aiohttp", "pymilvus", "transformers", "urllib3"):
+    logging.getLogger(_lib).setLevel(getattr(logging, LOG_LEVEL, logging.WARNING))
+
+# Suppress benign MySQL bootstrap warnings (tables/db already exist)
+warnings.filterwarnings(
+    "ignore",
+    message=r".*(database|Table).*already exists.*",
+    category=Warning,
+)
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -134,19 +147,18 @@ async def setup_hook():
 
     # Load cogs
     try:
+        log_cog_loads = os.getenv("LOG_COG_LOADS", "0").lower() in ("1", "true", "yes", "on")
         for filename in os.listdir('./cogs'):
             path = os.path.join('cogs', filename)
             if os.path.isfile(path) and filename.endswith('.py'):
                 try:
                     await bot.load_extension(f'cogs.{filename[:-3]}')
-                    print(f"Loaded Cog: {filename[:-3]}")
+                    if log_cog_loads:
+                        print(f"Loaded Cog: {filename[:-3]}")
                 except Exception as cog_err:
                     print(f"[FATAL] Failed to load cog {filename}: {cog_err}")
                     raise
-            else:
-                # Skip directories like __pycache__
-                if filename not in ('__pycache__',):
-                    print("Unable to load pycache folder.")
+            # Silently skip non-.py entries (e.g., __pycache__, directories)
     except Exception:
         # Re-raise to let main capture and print a full traceback
         raise
@@ -160,11 +172,8 @@ async def setup_hook():
     # Sync command tree (don't crash hard if this fails)
     try:
         await bot.tree.sync(guild=None)
-        print("[SYNC] Application commands synced (global).")
     except Exception as e:
         print(f"[ERROR] Command tree sync failed: {e}")
-
-    print("[SETUP] setup_hook completed.")
 
 async def _main():
     if not TOKEN:

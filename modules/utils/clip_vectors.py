@@ -1,4 +1,5 @@
 import json
+import logging
 import numpy as np
 import torch
 from PIL import Image
@@ -23,10 +24,11 @@ DIM = 768
 NLIST = 128
 NPROBE = max(1, NLIST // 8)
 
+log = logging.getLogger(__name__)
 connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
 collection = Collection(COLLECTION_NAME)
 if not collection.has_index():
-    print("No index found, creating one...")
+    log.info("Milvus collection has no index; creating one...")
     collection.create_index(
         field_name="vector",
         index_params={
@@ -36,7 +38,7 @@ if not collection.has_index():
         }
     )
 else:
-    print("Index already exists.")
+    log.debug("Milvus index already exists.")
 
 collection.load()
 
