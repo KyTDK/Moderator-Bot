@@ -82,30 +82,59 @@ async def _ensure_connected(
     channel: discord.VoiceChannel,
     voice: Optional[discord.VoiceClient],
 ) -> Optional[voice_recv.VoiceRecvClient]:
-    """Ensure the bot is connected to the given channel, attempting to move if already connected.
+    """Ensure the bot is connected to `channel` using VoiceRecvClient.
 
-    Returns a VoiceClient (possibly new) or None on failure.
+    If already connected in the same guild, reuses and moves when possible. If the existing
+    client is not a VoiceRecvClient, disconnects and reconnects with the correct class.
     """
     try:
-        if voice and voice.is_connected():
+        current = guild.voice_client or voice
+        # If currently connected
+        if current and current.is_connected():
+            # Same channel?
             try:
-                await voice.move_to(channel)
-                # If not using VoiceRecvClient, reconnect with correct cls
-                if not isinstance(voice, voice_recv.VoiceRecvClient):
+                current_ch = getattr(current, "channel", None)
+                if current_ch and getattr(current_ch, "id", None) == channel.id:
+                    if isinstance(current, voice_recv.VoiceRecvClient):
+                        return current
+                    # Wrong client type; reconnect with VoiceRecvClient
                     try:
-                        await voice.disconnect(force=True)
+                        await current.disconnect(force=True)
                     except Exception:
                         pass
                     return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
-                return voice
             except Exception:
+                pass
+
+            # Different channel; try moving first
+            try:
+                await current.move_to(channel)
+                if isinstance(current, voice_recv.VoiceRecvClient):
+                    return current
+                # After move, still wrong type; reconnect
                 try:
-                    await voice.disconnect(force=True)
+                    await current.disconnect(force=True)
                 except Exception:
                     pass
                 return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
-        else:
-            return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
+            except Exception as move_err:
+                # Could be in reconnecting state or incompatible; do a clean reconnect
+                try:
+                    await current.disconnect(force=True)
+                except Exception:
+                    pass
+                try:
+                    return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
+                except Exception as conn_err:
+                    # If "Already connected" raced, return the guild's client
+                    if "Already connected" in str(conn_err):
+                        gc = guild.voice_client
+                        if isinstance(gc, voice_recv.VoiceRecvClient):
+                            return gc
+                    raise
+
+        # Not connected: connect fresh
+        return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
     except Exception as e:
         print(f"[VC IO] failed to connect/move in guild {guild.id}, channel {channel.id}: {e}")
         return None
@@ -180,6 +209,12 @@ async def collect_utterances(
     if not voice:
         await asyncio.sleep(5)
         return None, []
+
+    # Ensure we have a VoiceRecvClient with listen capability
+    if not hasattr(voice, "listen") or not hasattr(voice, "stop_listening"):
+        print(f"[VC IO] Voice client missing listen/stop_listening; type={type(voice)}")
+        await asyncio.sleep(idle_delta.total_seconds())
+        return voice, []
 
     # Saver mode: presence only
     if not do_listen:
