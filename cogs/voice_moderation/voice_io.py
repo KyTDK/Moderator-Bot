@@ -84,7 +84,6 @@ class _CollectingSink(voice_recv.AudioSink):
         self._buffers: Dict[int, io.BytesIO] = {}
         self._counts: Dict[int, int] = {}
         self._no_user_packets: int = 0
-        self.voice_client: Optional[voice_recv.VoiceRecvClient] = None  # set by caller before listen()
 
     def wants_opus(self) -> bool:
         return False  # request PCM from the router
@@ -258,7 +257,6 @@ async def collect_utterances(
 
     # Start listening
     sink = _CollectingSink()
-    sink.voice_client = vc  # allow speaking-state fallback
 
     listen_done = asyncio.Event()
 
