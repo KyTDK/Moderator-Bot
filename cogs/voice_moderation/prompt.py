@@ -23,16 +23,3 @@ VOICE_SYSTEM_PROMPT = (
 
 BASE_SYSTEM_TOKENS = ceil(len(VOICE_SYSTEM_PROMPT) / 4)
 
-MODEL_CONTEXT_WINDOWS = {
-    "gpt-5-nano": 128000,
-    "gpt-5-mini": 128000,
-    "gpt-5": 128000,
-    "gpt-4.1": 1000000,
-    "gpt-4.1-nano": 1000000,
-    "gpt-4.1-mini": 1000000,
-    "gpt-4o": 128000,
-    "gpt-4o-mini": 128000,
-}
-
-def get_model_limit(model_name: str) -> int:
-    return next((limit for key, limit in MODEL_CONTEXT_WINDOWS.items() if key in model_name), 16000)

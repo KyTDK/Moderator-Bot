@@ -1,5 +1,4 @@
 import asyncio
-import io
 import os
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
@@ -17,29 +16,8 @@ from modules.utils.time import parse_duration
 from cogs.autonomous_moderation import helpers as am_helpers
 from cogs.voice_moderation.models import VoiceModerationReport
 from cogs.voice_moderation.prompt import VOICE_SYSTEM_PROMPT, BASE_SYSTEM_TOKENS
-from modules.ai.mod_utils import get_model_limit, pick_model, budget_allows
-from modules.ai.mod_utils import get_price_per_mtok  # re-exported for callers that rely on cost calc
-from modules.ai.engine import run_parsed_ai
-
-try:
-    from openai import AsyncOpenAI
-except Exception:  # pragma: no cover - import fallback
-    AsyncOpenAI = None  # type: ignore
-
-
-# Optional sinks support (Pycord or discord-ext-sinks)
-SINKS_MODULE = None
-try:  # Pycord-style
-    import discord.sinks as _sinks  # type: ignore
-
-    SINKS_MODULE = _sinks
-except Exception:
-    try:  # discord-ext-sinks package
-        from discord.ext import sinks as _ext_sinks  # type: ignore
-
-        SINKS_MODULE = _ext_sinks
-    except Exception:
-        SINKS_MODULE = None
+from cogs.voice_moderation.voice_io import collect_utterances
+from modules.ai.pipeline import run_moderation_pipeline
 
 
 load_dotenv()
@@ -150,43 +128,47 @@ class VoiceModeratorCog(commands.Cog):
             # Try to fetch, but avoid REST spam
             try:
                 fetched = await self.bot.fetch_channel(chan_id)
-                if not isinstance(fetched, discord.VoiceChannel):
-                    # skip if not a VC
-                    st.index = (st.index + 1) % len(channel_ids)
-                    st.next_start = now + timedelta(seconds=10)
+                if isinstance(fetched, discord.VoiceChannel):
+                    channel = fetched
+                else:
+                    st.index += 1
+                    st.next_start = datetime.now(timezone.utc)
                     return
-                channel = fetched
             except Exception:
-                st.index = (st.index + 1) % len(channel_ids)
-                st.next_start = now + timedelta(seconds=10)
+                st.index += 1
+                st.next_start = datetime.now(timezone.utc)
                 return
 
-        # Decide durations
+        high_accuracy = settings.get("vcmod-high-accuracy") or False
+        rules = settings.get("vcmod-rules") or ""
+        action_setting = settings.get("vcmod-detection-action") or ["auto"]
+        aimod_debug = settings.get("aimod-debug") or False
+        log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
+
         listen_delta = parse_duration(listen_str) or timedelta(minutes=2)
         idle_delta = parse_duration(idle_str) or timedelta(seconds=30)
 
-        do_listen = (not saver_mode) and (SINKS_MODULE is not None)
+        do_listen = not saver_mode
 
-        # Start a run for this guild
-        st.busy_task = asyncio.create_task(
-            self._run_cycle_for_channel(
+        async def _run():
+            await self._run_cycle_for_channel(
                 guild=guild,
                 channel=channel,
                 do_listen=do_listen,
                 listen_delta=listen_delta,
                 idle_delta=idle_delta,
-                high_accuracy=settings.get("vcmod-high-accuracy") or False,
-                rules=settings.get("vcmod-rules") or "",
-                action_setting=settings.get("vcmod-detection-action") or ["auto"],
-                aimod_debug=settings.get("aimod-debug") or False,
-                log_channel=settings.get("aimod-channel") or settings.get("monitor-channel"),
+                high_accuracy=high_accuracy,
+                rules=rules,
+                action_setting=action_setting,
+                aimod_debug=aimod_debug,
+                log_channel=log_channel,
             )
-        )
 
-        # Schedule next start immediately after this task completes
+        st.busy_task = self.bot.loop.create_task(_run())
+
         def _done_callback(_):
             try:
-                st.index = (st.index + 1) % len(channel_ids) if len(channel_ids) > 1 else st.index
+                st.index += 1
                 st.next_start = datetime.now(timezone.utc)
             except Exception:
                 st.next_start = datetime.now(timezone.utc) + timedelta(seconds=10)
@@ -207,123 +189,21 @@ class VoiceModeratorCog(commands.Cog):
         aimod_debug: bool,
         log_channel: Optional[int],
     ):
-        # Join/move voice
+        # Use the voice IO helper to handle connection, recording, and transcription
         st = self._get_state(guild.id)
-        try:
-            if st.voice and st.voice.is_connected():
-                try:
-                    await st.voice.move_to(channel)
-                except Exception:
-                    await st.voice.disconnect(force=True)
-                    st.voice = await channel.connect(self_deaf=False, self_mute=True)
-            else:
-                st.voice = await channel.connect(self_deaf=False, self_mute=True)
-        except Exception as e:
-            print(f"[VCMod] failed to connect/move in {guild.id} → {channel.id}: {e}")
-            await asyncio.sleep(5)
-            return
-
-        # Presence-only saver mode or sinks unavailable → wait idle and return
-        if not do_listen:
-            await asyncio.sleep(idle_delta.total_seconds())
-            return
-
-        if AsyncOpenAI is None:
-            print("[VCMod] openai client not available; skipping listen")
-            await asyncio.sleep(idle_delta.total_seconds())
-            return
-
-        if SINKS_MODULE is None:
-            print("[VCMod] sinks not available; cannot record audio")
-            await asyncio.sleep(idle_delta.total_seconds())
-            return
-
-        # Record for the listen duration
-        record_done = asyncio.Event()
-        sink = getattr(SINKS_MODULE, "WaveSink", None)
-        if sink is None:
-            sink = getattr(SINKS_MODULE, "WAVSink", None)
-        if sink is None:
-            # Last resort: MP3
-            sink = getattr(SINKS_MODULE, "MP3Sink", None)
-
-        if sink is None:
-            print("[VCMod] no compatible sink found (need WaveSink/MP3Sink)")
-            await asyncio.sleep(idle_delta.total_seconds())
-            return
-
-        active_sink = sink()
-
-        def _finished_cb(rec_sink, *_):
-            try:
-                record_done.set()
-            except Exception:
-                pass
-
-        try:
-            st.voice.start_recording(active_sink, _finished_cb)
-        except Exception as e:
-            print(f"[VCMod] start_recording failed: {e}")
-            await asyncio.sleep(idle_delta.total_seconds())
-            return
-
-        # Wait for duration then stop
-        await asyncio.sleep(listen_delta.total_seconds())
-        try:
-            st.voice.stop_recording()
-        except Exception:
-            pass
-        # Wait for sink to flush
-        try:
-            await asyncio.wait_for(record_done.wait(), timeout=5)
-        except asyncio.TimeoutError:
-            pass
-
-        # Collect per-user audio bytes
-        audio_map: dict[int, bytes] = {}
-        try:
-            data = getattr(active_sink, "audio_data", {}) or {}
-            for user, udata in data.items():
-                uid = int(getattr(user, "id", user))
-                # Try common attributes across sinks
-                content: Optional[bytes] = None
-                for attr in ("file", "data", "audio", "buffer"):
-                    if hasattr(udata, attr):
-                        obj = getattr(udata, attr)
-                        if isinstance(obj, (bytes, bytearray)):
-                            content = bytes(obj)
-                            break
-                        if hasattr(obj, "read"):
-                            try:
-                                content = obj.read()
-                                break
-                            except Exception:
-                                pass
-                if content:
-                    audio_map[uid] = content
-        except Exception as e:
-            print(f"[VCMod] failed to extract audio: {e}")
-
-        # Transcribe with Whisper API
-        client = AsyncOpenAI(api_key=AUTOMOD_OPENAI_KEY)
-        utterances: list[tuple[int, str]] = []  # (user_id, text)
-        for uid, audio_bytes in audio_map.items():
-            try:
-                fobj = io.BytesIO(audio_bytes)
-                fobj.name = "audio.wav"  # hint for encoder
-                tr = await client.audio.transcriptions.create(model="whisper-1", file=fobj)
-                text = getattr(tr, "text", None) or ""
-                if text.strip():
-                    utterances.append((uid, text.strip()))
-            except Exception as e:
-                print(f"[VCMod] transcription failed for {uid}: {e}")
-
-        # If nothing to analyze, idle dwell
+        st.voice, utterances = await collect_utterances(
+            guild=guild,
+            channel=channel,
+            voice=st.voice,
+            do_listen=do_listen,
+            listen_delta=listen_delta,
+            idle_delta=idle_delta,
+            api_key=AUTOMOD_OPENAI_KEY,
+        )
         if not utterances:
-            await asyncio.sleep(idle_delta.total_seconds())
             return
 
-        # Build transcript text and token estimate
+        # Build transcript text
         lines: list[str] = []
         for uid, text in utterances:
             member = await safe_get_member(guild, uid)
@@ -335,21 +215,30 @@ class VoiceModeratorCog(commands.Cog):
         user_ids = {uid for uid, _ in utterances}
         vhist_blob = am_helpers.build_violation_history_for_users(user_ids, violation_cache)
 
-        high_model = pick_model(high_accuracy, AIMOD_MODEL)
-        limit = get_model_limit(high_model)
-        max_tokens = int(limit * 0.9)
-        current_tokens = BASE_SYSTEM_TOKENS + am_helpers.estimate_tokens(vhist_blob) + am_helpers.estimate_tokens(rules)
-        total_tokens = current_tokens + am_helpers.estimate_tokens(transcript)
-
-        if total_tokens >= max_tokens:
-            # Skip this cycle if too large
+        # Run the shared moderation pipeline
+        try:
+            report, total_tokens, request_cost, usage, status = await run_moderation_pipeline(
+                guild_id=guild.id,
+                api_key=AUTOMOD_OPENAI_KEY,
+                system_prompt=VOICE_SYSTEM_PROMPT,
+                rules=rules,
+                violation_history_blob=vhist_blob,
+                transcript=transcript,
+                base_system_tokens=BASE_SYSTEM_TOKENS,
+                default_model=AIMOD_MODEL,
+                high_accuracy=high_accuracy,
+                text_format=VoiceModerationReport,
+                estimate_tokens_fn=am_helpers.estimate_tokens,
+            )
+        except Exception as e:
+            print(f"[VCMod] pipeline failed: {e}")
             await asyncio.sleep(idle_delta.total_seconds())
             return
 
-        # Budget check
-        allow, request_cost, usage = await budget_allows(guild.id, high_model, total_tokens)
-        if not allow:
-            if aimod_debug and log_channel:
+        # No violations
+        if not report:
+            # budget reached notification (debug only)
+            if status == "budget" and aimod_debug and log_channel:
                 embed = discord.Embed(
                     title="VC Moderation Budget Reached",
                     description="Skipping analysis for this cycle due to budget limit.",
@@ -359,29 +248,7 @@ class VoiceModeratorCog(commands.Cog):
             await asyncio.sleep(idle_delta.total_seconds())
             return
 
-        # Call AI moderation
-        user_prompt = f"Rules:\n{rules}\n\n{vhist_blob}Transcript:\n{transcript}"
-        try:
-            report: VoiceModerationReport | None = await run_parsed_ai(
-                api_key=AUTOMOD_OPENAI_KEY,
-                model=high_model,
-                system_prompt=VOICE_SYSTEM_PROMPT,
-                user_prompt=user_prompt,
-                text_format=VoiceModerationReport,
-            )
-        except Exception as e:
-            print(f"[VCMod] AI analysis failed: {e}")
-            await asyncio.sleep(idle_delta.total_seconds())
-            return
-
-        # Record usage
-        try:
-            await mysql.add_aimod_usage(guild.id, total_tokens, request_cost)
-        except Exception as e:
-            print(f"[VCMod] failed to record usage: {e}")
-
-        # No violations
-        if not report or not getattr(report, "violations", None):
+        if not getattr(report, "violations", None):
             if aimod_debug and log_channel:
                 embed = am_helpers.build_no_violations_embed(len(utterances), "vc")
                 await mod_logging.log_to_channel(embed, log_channel, self.bot)
@@ -420,21 +287,9 @@ class VoiceModeratorCog(commands.Cog):
                 {"vcmod-detection-action": action_setting}, all_actions, "vcmod-detection-action"
             )
 
-            reasons = data.get("reasons") or []
-            if not reasons:
-                out_reason = "Violation detected"
-            elif len(reasons) == 1:
-                out_reason = reasons[0]
-            else:
-                out_reason = "Multiple violations: " + "; ".join(reasons)
-
-            rules_set = list(data.get("rules") or [])
-            if not rules_set:
-                out_rule = "Rule violation"
-            elif len(rules_set) == 1:
-                out_rule = rules_set[0]
-            else:
-                out_rule = "Multiple rules: " + ", ".join(rules_set)
+            out_reason, out_rule = am_helpers.summarize_reason_rule(
+                data.get("reasons"), data.get("rules")
+            )
 
             await am_helpers.apply_actions_and_log(
                 bot=self.bot,
@@ -454,3 +309,4 @@ class VoiceModeratorCog(commands.Cog):
 
 async def setup_voice_moderation(bot: commands.Bot):
     await bot.add_cog(VoiceModeratorCog(bot))
+

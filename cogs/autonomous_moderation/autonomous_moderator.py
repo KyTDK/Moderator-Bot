@@ -14,8 +14,8 @@ from cogs.autonomous_moderation.prompt import (
     BASE_SYSTEM_TOKENS,
     NEW_MEMBER_THRESHOLD_HOURS,
 )
-from modules.ai.mod_utils import get_model_limit, budget_allows, pick_model
-from modules.ai.engine import run_parsed_ai
+from modules.ai.mod_utils import get_model_limit, pick_model
+from modules.ai.pipeline import run_moderation_pipeline
 
 from dotenv import load_dotenv
 import os
@@ -156,21 +156,24 @@ class AutonomousModeratorCog(commands.Cog):
             if not batch:
                 continue
 
-            # Budget check before calling AI
-            allow, request_cost, usage = await budget_allows(gid, model_for_guild, estimated_tokens)
-            if not allow:
-                # Notify reporter if applicable
-                if trigger_msg:
-                    try:
-                        cycle_end = usage.get("cycle_end")
-                        reset_str = cycle_end.strftime('%Y-%m-%d %H:%M UTC') if cycle_end else "the next cycle"
-                        await trigger_msg.reply(
-                            f"AI moderation budget reached for this billing cycle. Resets at {reset_str}.",
-                            mention_author=False,
-                        )
-                    except discord.HTTPException:
-                        pass
-                # Keep batches so we can try again next cycle
+            # Run unified moderation pipeline
+            try:
+                report, _total_tokens, request_cost, usage, status = await run_moderation_pipeline(
+                    guild_id=gid,
+                    api_key=api_key,
+                    system_prompt=SYSTEM_PROMPT,
+                    rules=rules,
+                    violation_history_blob=violation_history,
+                    transcript=transcript,
+                    base_system_tokens=BASE_SYSTEM_TOKENS,
+                    default_model=model_for_guild,
+                    high_accuracy=False,
+                    text_format=ModerationReport,
+                    estimate_tokens_fn=am_helpers.estimate_tokens,
+                    precomputed_total_tokens=estimated_tokens,
+                )
+            except Exception as e:
+                print(f"[batch_runner] AI call failed for guild {gid}: {e}")
                 continue
 
             self.last_run[gid] = now
@@ -181,27 +184,19 @@ class AutonomousModeratorCog(commands.Cog):
             if not guild:
                 continue
 
-            # Prompt for AI
-            user_prompt = f"{rules}{violation_history}Transcript:\n{transcript}"
-
-            # AI call
-            try:
-                report: ModerationReport | None = await run_parsed_ai(
-                    api_key=api_key,
-                    model=model_for_guild,
-                    system_prompt=SYSTEM_PROMPT,
-                    user_prompt=user_prompt,
-                    text_format=ModerationReport,
-                )
-            except Exception as e:
-                print(f"[batch_runner] AI call failed for guild {gid}: {e}")
+            # Budget notification if applicable
+            if report is None and trigger_msg and status == "budget":
+                try:
+                    cycle_end = usage.get("cycle_end")
+                    reset_str = cycle_end.strftime('%Y-%m-%d %H:%M UTC') if cycle_end else "the next cycle"
+                    await trigger_msg.reply(
+                        f"AI moderation budget reached for this billing cycle. Resets at {reset_str}.",
+                        mention_author=False,
+                    )
+                except discord.HTTPException:
+                    pass
+                # Keep batches so we can try again next cycle
                 continue
-
-            # Record usage after a successful API call
-            try:
-                await mysql.add_aimod_usage(gid, estimated_tokens, request_cost)
-            except Exception as e:
-                print(f"[aimod_usage] Failed to record usage for guild {gid}: {e}")
 
             aimod_debug = settings.get("aimod-debug") or False
             ai_channel_id = settings.get("aimod-channel")
@@ -237,21 +232,9 @@ class AutonomousModeratorCog(commands.Cog):
                     settings, all_actions, AIMOD_ACTION_SETTING
                 )
 
-                reasons = data.get("reasons") or []
-                if not reasons:
-                    out_reason = "Violation detected"
-                elif len(reasons) == 1:
-                    out_reason = reasons[0]
-                else:
-                    out_reason = "Multiple violations: " + "; ".join(reasons)
-
-                rules = list(data.get("rules") or [])
-                if not rules:
-                    out_rule = "Rule violation"
-                elif len(rules) == 1:
-                    out_rule = rules[0]
-                else:
-                    out_rule = "Multiple rules: " + ", ".join(rules)
+                out_reason, out_rule = am_helpers.summarize_reason_rule(
+                    data.get("reasons"), data.get("rules")
+                )
 
                 await am_helpers.apply_actions_and_log(
                     bot=self.bot,

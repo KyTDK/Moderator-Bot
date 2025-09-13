@@ -1,4 +1,3 @@
-from math import ceil
 import re
 import discord
 from datetime import timedelta
@@ -6,6 +5,7 @@ from modules.utils.discord_utils import safe_get_member
 from modules.utils import mod_logging
 from modules.moderation import strike
 from typing import Iterable, Tuple
+from modules.ai.token_utils import estimate_tokens as _estimate_tokens
 
 IMAGE_EXT = re.compile(r"\.(?:png|jpe?g|webp|bmp|tiff?)$", re.I)
 GIF_EXT = re.compile(r"\.(?:gif|apng)$", re.I)
@@ -24,7 +24,8 @@ def collapse_media(url: str) -> str:
     return url
 
 def estimate_tokens(text: str) -> int:
-    return ceil(len(text) / 4)
+    # Delegate to shared token estimator for consistency
+    return _estimate_tokens(text)
 
 async def format_event(
     msg: discord.Message,
@@ -304,3 +305,28 @@ def aggregate_violations(
                 agg["rules"].add(rule)
 
     return aggregated, fanout_authors
+
+def summarize_reason_rule(reasons: list[str] | None, rules: set[str] | list[str] | None) -> tuple[str, str]:
+    """Create user-facing reason and rule strings from collections.
+
+    - Reasons: prefer single entry; otherwise combine with semicolons; default fallback.
+    - Rules: prefer single entry; otherwise combine with commas; default fallback.
+    """
+    reasons = reasons or []
+    rules_list = list(rules or [])
+
+    if not reasons:
+        out_reason = "Violation detected"
+    elif len(reasons) == 1:
+        out_reason = reasons[0]
+    else:
+        out_reason = "Multiple violations: " + "; ".join(reasons)
+
+    if not rules_list:
+        out_rule = "Rule violation"
+    elif len(rules_list) == 1:
+        out_rule = rules_list[0]
+    else:
+        out_rule = "Multiple rules: " + ", ".join(rules_list)
+
+    return out_reason, out_rule

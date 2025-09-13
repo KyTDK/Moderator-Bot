@@ -29,16 +29,3 @@ BASE_SYSTEM_TOKENS = ceil(len(SYSTEM_PROMPT) / 4)
 # New member window used for transcript annotations
 NEW_MEMBER_THRESHOLD_HOURS = 48
 
-MODEL_CONTEXT_WINDOWS = {
-    "gpt-5-nano": 128000,
-    "gpt-5-mini": 128000,
-    "gpt-5": 128000,
-    "gpt-4.1": 1000000,
-    "gpt-4.1-nano": 1000000,
-    "gpt-4.1-mini": 1000000,
-    "gpt-4o": 128000,
-    "gpt-4o-mini": 128000,
-}
-
-def get_model_limit(model_name: str) -> int:
-    return next((limit for key, limit in MODEL_CONTEXT_WINDOWS.items() if key in model_name), 16000)
