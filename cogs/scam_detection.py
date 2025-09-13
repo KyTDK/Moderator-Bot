@@ -1,5 +1,6 @@
 import json
 import os
+import asyncio
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
@@ -192,7 +193,7 @@ class ScamDetectionCog(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.scam_schedule.start()
+        # Start background tasks after cog is fully loaded to avoid blocking startup
         self.free_queue = WorkerQueue(max_workers=1)
         self.accelerated_queue = WorkerQueue(max_workers=3)
 
@@ -402,7 +403,11 @@ class ScamDetectionCog(commands.Cog):
     async def scam_schedule(self):
         try:
             print("[PhishTank] Auto-refresh started...")
-            await update_cache()
+            # Run refresh with an upper bound to avoid long blocking
+            try:
+                await asyncio.wait_for(update_cache(), timeout=30)
+            except asyncio.TimeoutError:
+                print("[PhishTank] Refresh timed out; will retry later.")
             print("[PhishTank] Cache refreshed successfully.")
 
             print("[URLExtract] Updating TLD list...")
@@ -412,9 +417,16 @@ class ScamDetectionCog(commands.Cog):
         except Exception as e:
             print(f"[scam_schedule] Error during scheduled refresh: {e}")
 
+    @scam_schedule.before_loop
+    async def before_scam_schedule(self):
+        # Ensure the bot is fully ready before first run
+        await self.bot.wait_until_ready()
+
     async def cog_load(self):
         await self.free_queue.start()
         await self.accelerated_queue.start()
+        # Start the scheduled task only after the cog is loaded
+        self.scam_schedule.start()
 
     async def cog_unload(self):
         self.scam_schedule.cancel()
