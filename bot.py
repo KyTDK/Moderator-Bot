@@ -1,12 +1,21 @@
 from discord.ext import commands, tasks
 import discord
 import os
+import time
+import logging
+import asyncio
 from dotenv import load_dotenv
 from modules.utils import mysql
 from modules.post_stats.topgg_poster import start_topgg_poster
-import time
 
 print(f"[BOOT] Starting Moderator Bot at {time.strftime('%X')}")
+
+# Ensure we see discord.py warnings/errors in Docker logs
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-7s %(name)s %(message)s",
+)
+logging.getLogger("discord").setLevel(logging.INFO)
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -110,24 +119,71 @@ async def on_guild_remove(guild: discord.Guild):
 @bot.event
 async def setup_hook():
     # Initialize the MySQL connection pool
-    await mysql.initialise_and_get_pool()
-    
-    # Start cleanup
-    cleanup_task.start()
-    
-    # Start cogs
-    for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
-            await bot.load_extension(f'cogs.{filename[:-3]}')
-            print(f"Loaded Cog: {filename[:-3]}")
-        else:
-            print("Unable to load pycache folder.")
+    try:
+        await mysql.initialise_and_get_pool()
+    except Exception as e:
+        print(f"[FATAL] MySQL init failed: {e}")
+        raise
+
+    # Start cleanup (non-blocking, will wait for ready inside the loop)
+    try:
+        cleanup_task.start()
+    except RuntimeError:
+        # task already started; ignore
+        pass
+
+    # Load cogs
+    try:
+        for filename in os.listdir('./cogs'):
+            path = os.path.join('cogs', filename)
+            if os.path.isfile(path) and filename.endswith('.py'):
+                try:
+                    await bot.load_extension(f'cogs.{filename[:-3]}')
+                    print(f"Loaded Cog: {filename[:-3]}")
+                except Exception as cog_err:
+                    print(f"[FATAL] Failed to load cog {filename}: {cog_err}")
+                    raise
+            else:
+                # Skip directories like __pycache__
+                if filename not in ('__pycache__',):
+                    print("Unable to load pycache folder.")
+    except Exception:
+        # Re-raise to let main capture and print a full traceback
+        raise
 
     # Start Top.gg poster
-    start_topgg_poster(bot)
+    try:
+        start_topgg_poster(bot)
+    except Exception as e:
+        print(f"[WARN] top.gg poster could not start: {e}")
 
-    # Sync command tree
-    await bot.tree.sync(guild=None)
+    # Sync command tree (don't crash hard if this fails)
+    try:
+        await bot.tree.sync(guild=None)
+        print("[SYNC] Application commands synced (global).")
+    except Exception as e:
+        print(f"[ERROR] Command tree sync failed: {e}")
+
+    print("[SETUP] setup_hook completed.")
+
+async def _main():
+    if not TOKEN:
+        print("[FATAL] DISCORD_TOKEN is not set. Exiting.")
+        return
+    try:
+        await bot.start(TOKEN)
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        # Print full traceback so we can see the crash reason in docker logs
+        print(f"[FATAL] Bot crashed: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        try:
+            await mysql.close_pool()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
-    bot.run(TOKEN)
+    asyncio.run(_main())
