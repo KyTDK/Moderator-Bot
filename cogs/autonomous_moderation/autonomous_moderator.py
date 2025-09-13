@@ -2,7 +2,7 @@ import openai
 import discord
 from datetime import datetime, timedelta, timezone
 from discord.ext import commands, tasks
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from modules.cache import CachedMessage
 from modules.utils import mod_logging, mysql
