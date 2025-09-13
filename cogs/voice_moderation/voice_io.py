@@ -155,9 +155,14 @@ class _CollectingSink(voice_recv.AudioSink):
         return False  # request PCM
 
     def write(self, user, data: voice_recv.VoiceData):
-        if user is None:
-            return
-        uid = int(getattr(user, "id", user))
+        # Some setups deliver packets before SSRC→Member mapping is ready; user can be None.
+        # In that case, bucket under uid=0 so we still capture audio for transcription.
+        uid = 0
+        try:
+            if user is not None:
+                uid = int(getattr(user, "id", user))
+        except Exception:
+            uid = 0
         pcm = getattr(data, "pcm", None)
         if not pcm:
             return
