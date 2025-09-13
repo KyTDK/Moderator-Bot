@@ -86,6 +86,16 @@ class CollectingSink(voice_recv.AudioSink):
             print(f"[VC IO] sink wrote {c} packets for user {uid}")
         self._packet_counts[uid] = c
 
+    def cleanup(self) -> None:
+        """ Clear internal state.
+        """
+        try:
+            self._ssrc_to_uid.clear()
+            self._ssrc_last_seen.clear()
+            self._packet_counts.clear()
+        except Exception:
+            pass
+
     # Speaking events keep SSRC mapping fresh
     @voice_recv.AudioSink.listener()
     def on_voice_member_speaking_state(self, member, ssrc, state):  # type: ignore[override]
