@@ -7,6 +7,8 @@ from typing import Optional, Tuple, List, Dict
 import discord
 
 from discord.ext import voice_recv
+from modules.utils import mysql
+from modules.ai.costs import WHISPER_PRICE_PER_MINUTE_USD
 import sys
 import os
 
@@ -210,9 +212,31 @@ async def collect_utterances(
     except asyncio.TimeoutError:
         pass
 
-    # Collect per-user audio bytes
-    # Gather PCM per user
+    # Collect per-user audio bytes (PCM)
     audio_map: Dict[int, bytes] = active_sink.get_user_pcm()
+
+    # If nothing recorded, dwell and return
+    if not audio_map:
+        await asyncio.sleep(idle_delta.total_seconds())
+        return voice, []
+
+    # Estimate Whisper cost from total PCM duration
+    BYTES_PER_SECOND = 48000 * 2 * 2  # sample_rate * channels * bytes_per_sample
+    BYTES_PER_MINUTE = BYTES_PER_SECOND * 60
+    total_minutes = sum(len(b) for b in audio_map.values()) / float(BYTES_PER_MINUTE)
+    whisper_cost_usd = round(total_minutes * WHISPER_PRICE_PER_MINUTE_USD, 6)
+
+    # Budget check for Whisper cost before calling API
+    try:
+        usage = await mysql.get_vcmod_usage(guild.id)
+        current_cost = float(usage.get("cost_usd", 0.0))
+        limit = float(usage.get("limit_usd", 2.0))
+        if current_cost + whisper_cost_usd > limit:
+            print("[VC IO] Budget reached; skipping transcription this cycle.")
+            await asyncio.sleep(idle_delta.total_seconds())
+            return voice, []
+    except Exception as e:
+        print(f"[VC IO] budget check failed, proceeding cautiously: {e}")
 
     # Transcribe with Whisper API
     client = AsyncOpenAI(api_key=api_key)
@@ -239,6 +263,12 @@ async def collect_utterances(
                 utterances.append((uid, text.strip()))
         except Exception as e:
             print(f"[VC IO] transcription failed for {uid}: {e}")
+
+    # Record Whisper usage cost (even if zero utterances)
+    try:
+        await mysql.add_vcmod_usage(guild.id, 0, whisper_cost_usd)
+    except Exception as e:
+        print(f"[VC IO] failed to record whisper cost: {e}")
 
     # If nothing to analyze, idle dwell similar to previous behavior
     if not utterances:

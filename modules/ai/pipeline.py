@@ -6,7 +6,9 @@ from modules.ai.mod_utils import (
     get_model_limit,
     pick_model,
     budget_allows,
+    budget_allows_voice,
 )
+from modules.ai.costs import MAX_CONTEXT_USAGE_FRACTION
 from modules.ai.engine import run_parsed_ai
 from modules.utils import mysql
 
@@ -55,7 +57,7 @@ async def run_moderation_pipeline(
 
     # Context window check
     limit = get_model_limit(model)
-    max_tokens = int(limit * 0.9)
+    max_tokens = int(limit * MAX_CONTEXT_USAGE_FRACTION)
     if total_tokens >= max_tokens:
         return None, total_tokens, 0.0, {}, "too_large"
 
@@ -76,4 +78,52 @@ async def run_moderation_pipeline(
 
     # Record usage on success
     await mysql.add_aimod_usage(guild_id, total_tokens, request_cost)
+    return report, total_tokens, request_cost, usage, "ok"
+
+
+async def run_moderation_pipeline_voice(
+    *,
+    guild_id: int,
+    api_key: str,
+    system_prompt: str,
+    rules: str,
+    violation_history_blob: str,
+    transcript: str,
+    base_system_tokens: int,
+    default_model: str,
+    high_accuracy: bool,
+    text_format: Type[Any],
+    estimate_tokens_fn,
+    precomputed_total_tokens: Optional[int] = None,
+) -> tuple[Optional[Any], int, float, dict, str]:
+    """Voice-specific pipeline variant using VC budget and usage accounting."""
+    model = pick_model(high_accuracy, default_model)
+    if precomputed_total_tokens is not None:
+        total_tokens = int(precomputed_total_tokens)
+    else:
+        total_tokens = estimate_total_tokens(
+            base_system_tokens=base_system_tokens,
+            estimate_tokens_fn=estimate_tokens_fn,
+            parts=[rules, violation_history_blob, transcript],
+        )
+
+    limit = get_model_limit(model)
+    max_tokens = int(limit * MAX_CONTEXT_USAGE_FRACTION)
+    if total_tokens >= max_tokens:
+        return None, total_tokens, 0.0, {}, "too_large"
+
+    allow, request_cost, usage = await budget_allows_voice(guild_id, model, total_tokens)
+    if not allow:
+        return None, total_tokens, request_cost, usage, "budget"
+
+    user_prompt = build_user_prompt(rules, violation_history_blob, transcript)
+    report = await run_parsed_ai(
+        api_key=api_key,
+        model=model,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        text_format=text_format,
+    )
+
+    await mysql.add_vcmod_usage(guild_id, total_tokens, request_cost)
     return report, total_tokens, request_cost, usage, "ok"

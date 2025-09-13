@@ -1,0 +1,20 @@
+"""Centralized cost and budget constants for AI moderation.
+
+Keep all pricing knobs and default limits here so budgeting logic stays consistent.
+"""
+
+# Default monthly budget limits (USD)
+DEFAULT_BUDGET_LIMIT_USD: float = 2.00
+
+# Model pricing per million tokens (USD/MTok)
+PRICES_PER_MTOK: dict[str, float] = {
+    "gpt-5-nano": 0.45,
+    "gpt-5-mini": 2.25,
+}
+
+# Whisper transcription pricing (USD per minute of audio)
+WHISPER_PRICE_PER_MINUTE_USD: float = 0.0006
+
+# Fraction of the model context window we allow to use for prompts
+MAX_CONTEXT_USAGE_FRACTION: float = 0.9
+

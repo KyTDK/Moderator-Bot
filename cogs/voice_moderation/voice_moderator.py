@@ -17,7 +17,7 @@ from cogs.autonomous_moderation import helpers as am_helpers
 from cogs.voice_moderation.models import VoiceModerationReport
 from cogs.voice_moderation.prompt import VOICE_SYSTEM_PROMPT, BASE_SYSTEM_TOKENS
 from cogs.voice_moderation.voice_io import collect_utterances
-from modules.ai.pipeline import run_moderation_pipeline
+from modules.ai.pipeline import run_moderation_pipeline_voice
 
 
 load_dotenv()
@@ -217,7 +217,7 @@ class VoiceModeratorCog(commands.Cog):
 
         # Run the shared moderation pipeline
         try:
-            report, total_tokens, request_cost, usage, status = await run_moderation_pipeline(
+            report, total_tokens, request_cost, usage, status = await run_moderation_pipeline_voice(
                 guild_id=guild.id,
                 api_key=AUTOMOD_OPENAI_KEY,
                 system_prompt=VOICE_SYSTEM_PROMPT,
@@ -309,4 +309,3 @@ class VoiceModeratorCog(commands.Cog):
 
 async def setup_voice_moderation(bot: commands.Bot):
     await bot.add_cog(VoiceModeratorCog(bot))
-
