@@ -38,6 +38,14 @@ SETTINGS_SCHEMA = {
         setting_type=discord.TextChannel,
         hidden=True
     ),
+    "aimod-debug": Setting(
+        name="aimod-debug",
+        description="Always send a detailed AI moderation debug message to the AI violations channel, including flagged messages, AI decision, and applied actions.",
+        setting_type=bool,
+        default=False,
+        hidden=True,
+        choices=["true", "false"]
+    ),
     "nsfw-verbose": Setting(
         name="nsfw-verbose",
         description="Post a detailed scan report embed in the same channel as the scanned media.",

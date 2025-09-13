@@ -257,6 +257,7 @@ class AutonomousModeratorCog(commands.Cog):
                     "aimod-check-interval",
                     "monitor-channel",
                     "aimod-channel",
+                    "aimod-debug",
                     AIMOD_ACTION_SETTING,
                 ],
             )
@@ -376,12 +377,30 @@ class AutonomousModeratorCog(commands.Cog):
             except Exception as e:
                 print(f"[aimod_usage] Failed to record usage for guild {gid}: {e}")
 
+            aimod_debug = settings.get("aimod-debug") or False
+            ai_channel_id = settings.get("aimod-channel")
+            monitor_channel_id = settings.get("monitor-channel")
+            debug_log_channel = ai_channel_id or monitor_channel_id
+
             if not report or not report.violations:
                 if trigger_msg:
                     try:
                         await trigger_msg.reply("Thanks for the report. No violations were found.")
                     except discord.HTTPException:
                         pass
+                # Always log to AI violations channel when debug is enabled
+                if aimod_debug and debug_log_channel:
+                    embed = discord.Embed(
+                        title="AI Moderation Scan (Debug)",
+                        description=(
+                            "No violations were found in the latest scan."
+                        ),
+                        colour=discord.Colour.dark_grey()
+                    )
+                    # Provide a tiny bit of context
+                    embed.add_field(name="Scanned Messages", value=str(len(batch)), inline=True)
+                    embed.add_field(name="Mode", value=await get_active_mode(gid), inline=True)
+                    await mod_logging.log_to_channel(embed, debug_log_channel, self.bot)
                 continue
 
             for v in report.violations:
@@ -428,7 +447,31 @@ class AutonomousModeratorCog(commands.Cog):
                     ),
                     colour=discord.Colour.red()
                 )
-                log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
+                # When debug is enabled, append extra details
+                if aimod_debug:
+                    # Show what the AI suggested vs. what we applied
+                    try:
+                        ai_decision = ", ".join(actions) if actions else "None"
+                    except Exception:
+                        ai_decision = "Unknown"
+                    embed.add_field(name="AI Decision", value=ai_decision or "None", inline=False)
+                    embed.add_field(name="Applied Actions", value=", ".join(configured) or "None", inline=False)
+
+                    # Include flagged messages (content)
+                    if messages_to_delete:
+                        def _trim(s: str, n: int = 300) -> str:
+                            s = s or ""
+                            return s if len(s) <= n else s[:n] + "…"
+
+                        flagged_lines = []
+                        for m in messages_to_delete:
+                            content = m.content or "[no text content]"
+                            flagged_lines.append(f"• ID {m.id}: {_trim(content)}")
+                        flagged_blob = "\n".join(flagged_lines)
+                        embed.add_field(name="Flagged Message(s)", value=flagged_blob[:1000], inline=False)
+
+                # Prefer AI violations channel when debug is enabled
+                log_channel = (ai_channel_id or monitor_channel_id) if aimod_debug else (ai_channel_id or monitor_channel_id)
                 if log_channel:
                     await mod_logging.log_to_channel(embed, log_channel, self.bot)
 
