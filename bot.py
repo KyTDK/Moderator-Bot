@@ -37,6 +37,8 @@ intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 intents.message_content = True
+intents.voice_states = True
+
 bot = commands.Bot(command_prefix=lambda b, m: [],
                    intents=intents,
                    chunk_guilds_at_startup=False, 
