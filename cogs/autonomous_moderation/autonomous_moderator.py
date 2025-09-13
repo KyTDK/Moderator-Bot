@@ -55,7 +55,29 @@ SYSTEM_MSG = (
     "- ban: Permanent removal from the server."
 )
 
-BASE_SYSTEM_TOKENS = ceil(len(SYSTEM_MSG) / 4)
+SYSTEM_PROMPT = (
+    "You are an AI moderator.\n"
+    "The next user message will begin with 'Rules:' — those are the ONLY rules you may enforce.\n\n"
+    "Output policy:\n"
+    "- Return a JSON object matching the ModerationReport schema.\n"
+    "- If no rules are clearly broken, return violations as an empty array.\n"
+    "- Only include a ViolationEvent when a message explicitly breaks a listed rule.\n"
+    "- Do not infer intent; ignore sarcasm, vague innuendo, or second-hand reports.\n"
+    "- Do not punish users who merely quote, discuss, or report others' behavior.\n"
+    "- Prior violations are context only; the current message must itself break a rule.\n\n"
+
+    "Actions:\n"
+    "- Valid actions: delete, strike, kick, ban, timeout:<duration>, warn:<text>.\n"
+    "- Use timeout:<duration> with a unit (s, m, h, d, w, mo).\n"
+    "- If message_ids are included in a ViolationEvent, include 'delete' in that event's actions.\n\n"
+
+    "Strict requirements:\n"
+    "- Each ViolationEvent must include: user_id, rule (quoted from or matching the provided Rules), reason, actions, message_ids.\n"
+    "- Only include message_ids for messages that break a rule; otherwise do not list them.\n"
+    "- When uncertain, return no violations."
+)
+
+BASE_SYSTEM_TOKENS = ceil(len(SYSTEM_PROMPT) / 4)
 NEW_MEMBER_THRESHOLD = timedelta(hours=48)
 
 IMAGE_EXT  = re.compile(r"\.(?:png|jpe?g|webp|bmp|tiff?)$", re.I)
@@ -358,7 +380,7 @@ class AutonomousModeratorCog(commands.Cog):
             try:
                 kwargs = {
                     "model": AIMOD_MODEL,
-                    "instructions": SYSTEM_MSG,
+                    "instructions": SYSTEM_PROMPT,
                     "input": user_prompt,
                     "text_format": ModerationReport, 
                 }
@@ -388,11 +410,12 @@ class AutonomousModeratorCog(commands.Cog):
             for v in report.violations:
                 uid_str = v.user_id
                 actions = list(v.actions or [])
-                rule = v.rule or ""
-                reason = v.reason or ""
+                rule = (v.rule or "").strip()
+                reason = (v.reason or "").strip()
                 msg_ids = {int(m) for m in (v.message_ids or []) if str(m).isdigit()}
 
-                if not uid_str or not actions:
+                # Hard safeguards: require a non-empty rule and at least one concrete message id
+                if not uid_str or not actions or not rule or not msg_ids:
                     continue
 
                 member = await safe_get_member(guild, int(uid_str))
