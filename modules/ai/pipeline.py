@@ -115,6 +115,10 @@ async def run_moderation_pipeline_voice(
     allow, request_cost, usage = await budget_allows_voice(guild_id, model, total_tokens)
     if not allow:
         return None, total_tokens, request_cost, usage, "budget"
+    
+    if rules.strip() == "":
+        # No rules means no context to guide moderation; skip to save cost
+        return None, total_tokens, 0.0, usage, "no_rules"
 
     user_prompt = build_user_prompt(rules, violation_history_blob, transcript)
     report = await run_parsed_ai(
