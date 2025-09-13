@@ -39,10 +39,12 @@ intents.presences = True
 intents.message_content = True
 intents.voice_states = True
 
+member_cache_flags = discord.MemberCacheFlags.from_intents(intents)
+
 bot = commands.Bot(command_prefix=lambda b, m: [],
                    intents=intents,
                    chunk_guilds_at_startup=False, 
-                   member_cache_flags=discord.MemberCacheFlags.none(),
+                   member_cache_flags=member_cache_flags,
                    help_command=None,
                    max_messages=None)
 
