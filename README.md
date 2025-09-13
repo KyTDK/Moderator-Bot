@@ -12,9 +12,13 @@ Free AI-powered moderation for Discord. Detects nudity, gore, scams, and other v
 * **Strikes**
   Escalating punishment system with custom durations, action cycling, and optional DM notifications. Fully configurable.
 
-* **AI Moderation**
+* **🤖 AI Moderation** *(Accelerated only)*
   Uses OpenAI models to moderate messages based on rules. Supports autonomous mode, batch scanning, and context-aware enforcement.
   **Default: AI moderation runs in `report` mode when users @mention the bot.**
+
+
+* **Voice Chat Moderation** *(Accelerated only)*
+  Transcribes and scans live voice channels for violations (e.g., hate speech, self-harm encouragement, harassment). Supports configurable actions and monthly budget controls.
 
 * **Scam Detection**
   Detects scam/phishing messages using patterns, Google Safe Browsing, PhishTank, and link unshortening.
@@ -60,6 +64,11 @@ Uses OpenAI to detect violations in user messages.
 
 Budget: AI moderation is capped at $2 per billing cycle. Pricing is $0.45 per 1M tokens; once the cycle budget is reached, autonomous moderation pauses until the next cycle.
 Note: Enable higher-accuracy AI moderation with gpt-5-mini (approx. 2.25 USD per 1M tokens) via the `aimod-high-accuracy` setting. This consumes the monthly budget faster than the default gpt-5-nano (0.45 USD per 1M tokens).
+
+
+## 🎙️ Voice Chat Moderation
+
+Real-time moderation for Discord voice channels. Audio is transcribed, analyzed by AI, and checked against your configured rules.
 
 ### 🔧 Configuration:
 
