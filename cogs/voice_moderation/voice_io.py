@@ -176,6 +176,10 @@ async def collect_utterances(
         print("[VC IO] AUTOMOD_OPENAI_KEY missing; skipping listen")
         await asyncio.sleep(idle_delta.total_seconds())
         return voice, []
+    if not discord.opus.is_loaded():
+        print("[VC IO] Opus still not loaded; skipping listen (see OPUS installation notes)")
+        await asyncio.sleep(idle_delta.total_seconds())
+        return voice, []
 
     # Start listening with custom sink
     active_sink = _CollectingSink()

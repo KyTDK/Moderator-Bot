@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     make \
     pkg-config \
+    libopus0 \
     libpng-dev \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
