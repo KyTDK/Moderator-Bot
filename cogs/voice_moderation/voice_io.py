@@ -349,10 +349,19 @@ async def collect_utterances(
         await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
-    # Estimate Whisper cost
-    BYTES_PER_SECOND = 48000 * 2 * 2  # sample_rate * channels * bytes_per_sample
+    # Filter very short clips to avoid pointless API calls and charges
+    BYTES_PER_SECOND = 48000 * 2 * 2  # sample_rate * channels * bytes_per_sample (48kHz, s16le, stereo)
     BYTES_PER_MINUTE = BYTES_PER_SECOND * 60
-    total_minutes = sum(len(b) for b in audio_map.values()) / float(BYTES_PER_MINUTE)
+    MIN_SECONDS_PER_USER = 1.0
+    eligible_map: Dict[int, bytes] = {uid: b for uid, b in audio_map.items() if len(b) >= int(BYTES_PER_SECOND * MIN_SECONDS_PER_USER)}
+
+    if not eligible_map:
+        # Nothing meaningful to transcribe; do not call Whisper or charge budget
+        await asyncio.sleep(idle_delta.total_seconds())
+        return vc, []
+
+    # Estimate Whisper cost only for eligible audio we will send
+    total_minutes = sum(len(b) for b in eligible_map.values()) / float(BYTES_PER_MINUTE)
     whisper_cost_usd = round(total_minutes * WHISPER_PRICE_PER_MINUTE_USD, 6)
 
     try:
@@ -380,7 +389,7 @@ async def collect_utterances(
         out.seek(0)
         return out.getvalue()
 
-    for uid, pcm_bytes in audio_map.items():
+    for uid, pcm_bytes in eligible_map.items():
         try:
             if isinstance(pcm_bytes, array):
                 pcm_bytes = pcm_bytes.tobytes()
@@ -394,11 +403,14 @@ async def collect_utterances(
         except Exception as e:
             print(f"[VC IO] transcription failed for {uid}: {e}")
 
-    # Record cost even if no utterances (you used minutes)
-    try:
-        await mysql.add_vcmod_usage(guild.id, 0, whisper_cost_usd)
-    except Exception as e:
-        print(f"[VC IO] failed to record whisper cost: {e}")
+    # Only charge budget when we actually produced any transcript text
+    if utterances:
+        try:
+            await mysql.add_vcmod_usage(guild.id, 0, whisper_cost_usd)
+        except Exception as e:
+            print(f"[VC IO] failed to record whisper cost: {e}")
+    else:
+        print("[VC IO] No transcript text produced; skipping budget charge.")
 
     if not utterances:
         await asyncio.sleep(idle_delta.total_seconds())
