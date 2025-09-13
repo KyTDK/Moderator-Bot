@@ -19,13 +19,11 @@ from cogs.voice_moderation.prompt import VOICE_SYSTEM_PROMPT, BASE_SYSTEM_TOKENS
 from cogs.voice_moderation.voice_io import collect_utterances
 from modules.ai.pipeline import run_moderation_pipeline_voice
 
-
 load_dotenv()
 AUTOMOD_OPENAI_KEY = os.getenv("AUTOMOD_OPENAI_KEY")
 AIMOD_MODEL = os.getenv("AIMOD_MODEL", "gpt-5-nano")
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10))
-
 
 class _GuildVCState:
     def __init__(self) -> None:
@@ -34,7 +32,6 @@ class _GuildVCState:
         self.busy_task: Optional[asyncio.Task] = None
         self.voice: Optional[discord.VoiceClient] = None
         self.next_start: datetime = datetime.now(timezone.utc)
-
 
 class VoiceModeratorCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:

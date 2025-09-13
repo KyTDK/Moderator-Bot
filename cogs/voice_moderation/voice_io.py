@@ -1,28 +1,20 @@
 import asyncio
-import io
-import wave
 from datetime import timedelta
 from typing import Optional, Tuple, List, Dict
-from array import array
 import sys
 import os
 import logging
-import time
 
 import discord
 from discord.ext import voice_recv
-from modules.utils import mysql
 from modules.ai.costs import WHISPER_PRICE_PER_MINUTE_USD
-
-try:
-    from openai import AsyncOpenAI
-except Exception:
-    AsyncOpenAI = None  # type: ignore
-
+from modules.utils import mysql
+from cogs.voice_moderation.buffers import PCMBufferPool, BYTES_PER_SECOND
+from cogs.voice_moderation.sink import CollectingSink
+from cogs.voice_moderation.transcriber import transcribe_pcm_map
 
 # Reduce noisy warnings from decoder flushes at the end of cycles
 logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
-
 
 def _ensure_opus_loaded() -> None:
     """Ensure opus is loaded for voice receive/PCM decode."""
@@ -68,135 +60,6 @@ def _ensure_opus_loaded() -> None:
             "[VC IO] Opus library not loaded. Install system opus and/or set OPUS_LIBRARY_PATH. "
             f"Platform={sys.platform}"
         )
-
-
-class _CollectingSink(voice_recv.AudioSink):
-    """
-    Collects decoded PCM per user into in-memory buffers.
-
-    - Requests PCM (s16le, 48kHz, 2ch) from voice_recv.
-    - Attributes audio via:
-        1) direct Member mapping
-        2) cached SSRC→user mapping from speaking events (recommended)
-        3) (last resort) voice_client.get_speaking() probe
-    - Drops unattributed packets (counts them).
-    """
-
-    _SSRC_TTL_SECONDS = 300  # expire stale SSRC mappings after 5 minutes
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._buffers: Dict[int, io.BytesIO] = {}
-        self._counts: Dict[int, int] = {}
-        self._no_user_packets: int = 0
-        self._ssrc_to_uid: Dict[int, int] = {}
-        self._ssrc_last_seen: Dict[int, float] = {}
-
-    def wants_opus(self) -> bool:
-        return False  # request PCM from the router
-
-    def _resolve_uid_from_ssrc(self, ssrc: Optional[int]) -> Optional[int]:
-        if not isinstance(ssrc, int):
-            return None
-        # expire stale mappings
-        now = time.monotonic()
-        last = self._ssrc_last_seen.get(ssrc)
-        if last is not None and now - last > self._SSRC_TTL_SECONDS:
-            self._ssrc_to_uid.pop(ssrc, None)
-            self._ssrc_last_seen.pop(ssrc, None)
-            return None
-        uid = self._ssrc_to_uid.get(ssrc)
-        if uid:
-            self._ssrc_last_seen[ssrc] = now
-        return uid
-
-    def write(self, user, data: voice_recv.VoiceData):
-        pcm = getattr(data, "pcm", None)
-        if not pcm:
-            return
-
-        uid: Optional[int] = None
-
-        # 1) Primary: library already resolved to a Member
-        if user is not None:
-            try:
-                uid = int(getattr(user, "id", user))
-            except Exception:
-                uid = None
-
-        # 2) SSRC-based mapping (most reliable fallback)
-        if uid is None:
-            ssrc = getattr(data, "ssrc", None)
-            uid = self._resolve_uid_from_ssrc(ssrc)
-
-        # 3) Last resort: probe speaking flags briefly
-        if uid is None:
-            vc = getattr(self, "voice_client", None)  # set by router after listen()
-            if vc and hasattr(vc, "get_speaking"):
-                try:
-                    ch = getattr(vc, "channel", None)
-                    members = [m for m in (getattr(ch, "members", None) or []) if not getattr(m, "bot", False)]
-                    speaking_now = [m for m in members if vc.get_speaking(m)]
-                    if len(speaking_now) == 1:
-                        uid = int(speaking_now[0].id)
-                    elif len(speaking_now) > 1:
-                        speaking_now.sort(key=lambda m: int(m.id))
-                        uid = int(speaking_now[0].id)
-                except Exception:
-                    uid = None
-
-        if uid is None:
-            self._no_user_packets += 1
-            return  # drop unattributed; don’t corrupt buffers
-
-        # Append PCM to buffer for this user
-        buf = self._buffers.get(uid)
-        if buf is None:
-            buf = io.BytesIO()
-            self._buffers[uid] = buf
-
-        if isinstance(pcm, (bytes, bytearray, memoryview)):
-            buf.write(bytes(pcm))
-        elif isinstance(pcm, array):
-            buf.write(pcm.tobytes())
-
-        c = self._counts.get(uid, 0) + 1
-        if c % 100 == 0:
-            print(f"[VC IO] sink wrote {c} packets for user {uid}")
-        self._counts[uid] = c
-
-    def cleanup(self):
-        pass
-
-    def get_user_pcm(self) -> Dict[int, bytes]:
-        return {uid: b.getvalue() for uid, b in self._buffers.items() if b.getbuffer().nbytes}
-
-    # Speaking events: learn/refresh SSRC → user mapping
-    @voice_recv.AudioSink.listener()
-    def on_voice_member_speaking_state(self, member, ssrc, state):  # type: ignore[override]
-        try:
-            if member is not None and isinstance(ssrc, int):
-                # Map/refresh whenever we get a state update (start/stop both refresh)
-                self._ssrc_to_uid[ssrc] = int(member.id)
-                self._ssrc_last_seen[ssrc] = time.monotonic()
-            print(f"[VC IO] speaking_state member={getattr(member,'id',member)} ssrc={ssrc} state={state}")
-        except Exception:
-            pass
-
-    @voice_recv.AudioSink.listener()
-    def on_voice_member_speaking_start(self, member):  # type: ignore[override]
-        try:
-            print(f"[VC IO] speaking_start member={getattr(member,'id',member)}")
-        except Exception:
-            pass
-
-    @voice_recv.AudioSink.listener()
-    def on_voice_member_speaking_stop(self, member):  # type: ignore[override]
-        try:
-            print(f"[VC IO] speaking_stop member={getattr(member,'id',member)}")
-        except Exception:
-            pass
-
 
 async def _ensure_connected(
     *,
@@ -277,10 +140,6 @@ async def collect_utterances(
         await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
-    if AsyncOpenAI is None:
-        print("[VC IO] openai client not available; skipping listen")
-        await asyncio.sleep(idle_delta.total_seconds())
-        return vc, []
     if not api_key:
         print("[VC IO] AUTOMOD_OPENAI_KEY missing; skipping listen")
         await asyncio.sleep(idle_delta.total_seconds())
@@ -290,123 +149,56 @@ async def collect_utterances(
         await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
-    # Start listening
-    sink = _CollectingSink()
-    listen_done = asyncio.Event()
-
-    def _after(exc: Optional[Exception] = None):
+    # Continuous listening + chunker:
+    # Ensure a persistent sink/pool on the voice client
+    pool: PCMBufferPool = getattr(vc, "_mod_pool", None)
+    sink: CollectingSink = getattr(vc, "_mod_sink", None)
+    if pool is None or sink is None:
+        pool = PCMBufferPool()
+        sink = CollectingSink(pool)
         try:
-            listen_done.set()
-        except Exception:
-            pass
+            vc.listen(sink)
+            setattr(vc, "_mod_pool", pool)
+            setattr(vc, "_mod_sink", sink)
+            print(f"[VC IO] continuous listening started in guild {guild.id} ch {channel.id}")
+        except Exception as e:
+            print(f"[VC IO] continuous listen failed: {e}")
+            await asyncio.sleep(idle_delta.total_seconds())
+            return vc, []
 
-    try:
-        vc.listen(sink, after=_after)  # router will set sink.voice_client
-        try:
-            is_listening = getattr(vc, "is_listening", lambda: False)()
-            print(f"[VC IO] listening started: is_listening={is_listening} in guild {guild.id} ch {channel.id}")
-        except Exception:
-            pass
-    except Exception as e:
-        print(f"[VC IO] listen() failed: {e}")
-        await asyncio.sleep(idle_delta.total_seconds())
-        return vc, []
+    # Harvest per-user PCM for the requested window
+    window_seconds = max(1.0, float(listen_delta.total_seconds()))
+    pcm_map: Dict[int, bytes] = pool.harvest(window_seconds)
 
-    # Wait, then stop
-    await asyncio.sleep(listen_delta.total_seconds())
-    try:
-        vc.stop_listening()
-    except Exception:
-        pass
-    try:
-        await asyncio.wait_for(listen_done.wait(), timeout=5)
-    except asyncio.TimeoutError:
-        pass
-
-    # Gather PCM by user
-    audio_map: Dict[int, bytes] = sink.get_user_pcm()
-    try:
-        total_bytes = sum(len(b) for b in audio_map.values())
-        print(f"[VC IO] captured users={len(audio_map)} total_bytes={total_bytes} dropped_no_user={sink._no_user_packets}")
-        # Optional snapshot of speaking flags
-        try:
-            members = [m for m in getattr(channel, 'members', []) if not getattr(m, 'bot', False)]
-            for m in members:
-                try:
-                    state = getattr(vc, 'get_speaking', lambda _m: None)(m)
-                    print(f"[VC IO] get_speaking member={m.id} -> {state}")
-                except Exception:
-                    pass
-        except Exception:
-            pass
-    except Exception:
-        pass
-
-    if not audio_map:
-        # Helpful hint if mapping failed entirely
-        if sink._no_user_packets > 0:
-            print("[VC IO] Hint: Many packets had no user mapping. Ensure Intents.voice_states=True and the app intents are enabled.")
-        await asyncio.sleep(idle_delta.total_seconds())
-        return vc, []
-
-    # Filter very short clips to avoid pointless API calls and charges
-    BYTES_PER_SECOND = 48000 * 2 * 2  # sample_rate * channels * bytes_per_sample (48kHz, s16le, stereo)
-    BYTES_PER_MINUTE = BYTES_PER_SECOND * 60
-    MIN_SECONDS_PER_USER = 1.0
-    eligible_map: Dict[int, bytes] = {uid: b for uid, b in audio_map.items() if len(b) >= int(BYTES_PER_SECOND * MIN_SECONDS_PER_USER)}
-
+    # Filter very short clips
+    eligible_map: Dict[int, bytes] = {uid: b for uid, b in pcm_map.items() if len(b) >= int(BYTES_PER_SECOND * 1.0)}
     if not eligible_map:
-        # Nothing meaningful to transcribe; do not call Whisper or charge budget
         await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
-    # Estimate Whisper cost only for eligible audio we will send
-    total_minutes = sum(len(b) for b in eligible_map.values()) / float(BYTES_PER_MINUTE)
-    whisper_cost_usd = round(total_minutes * WHISPER_PRICE_PER_MINUTE_USD, 6)
-
+    # Budget pre-check from estimated minutes
+    bytes_per_minute = BYTES_PER_SECOND * 60
+    est_minutes = sum(len(b) for b in eligible_map.values()) / float(bytes_per_minute)
+    est_cost = round(est_minutes * WHISPER_PRICE_PER_MINUTE_USD, 6)
     try:
         usage = await mysql.get_vcmod_usage(guild.id)
-        current_cost = float(usage.get("cost_usd", 0.0))
-        limit = float(usage.get("limit_usd", 2.0))
-        if current_cost + whisper_cost_usd > limit:
-            print(f"[VC IO] Budget reached; skipping (cost now {current_cost:.6f} + est {whisper_cost_usd:.6f} > limit {limit:.2f})")
+        if (usage.get("cost_usd", 0.0) + est_cost) > usage.get("limit_usd", 2.0):
+            print(f"[VC IO] Budget reached; skipping (est {est_cost:.6f}usd)")
             await asyncio.sleep(idle_delta.total_seconds())
             return vc, []
     except Exception as e:
         print(f"[VC IO] budget check failed, proceeding cautiously: {e}")
 
-    # Transcribe
-    client = AsyncOpenAI(api_key=api_key)
-    utterances: List[Tuple[int, str]] = []
+    # Transcribe and charge only if text is produced
+    utterances, actual_cost = await transcribe_pcm_map(
+        guild_id=guild.id,
+        api_key=api_key,
+        pcm_map=eligible_map,
+    )
 
-    def _pcm_to_wav_bytes(pcm_bytes: bytes, *, channels: int = 2, sample_width: int = 2, sample_rate: int = 48000) -> bytes:
-        out = io.BytesIO()
-        with wave.open(out, 'wb') as wf:
-            wf.setnchannels(channels)
-            wf.setsampwidth(sample_width)
-            wf.setframerate(sample_rate)
-            wf.writeframes(pcm_bytes)
-        out.seek(0)
-        return out.getvalue()
-
-    for uid, pcm_bytes in eligible_map.items():
-        try:
-            if isinstance(pcm_bytes, array):
-                pcm_bytes = pcm_bytes.tobytes()
-            wav_bytes = _pcm_to_wav_bytes(pcm_bytes)
-            fobj = io.BytesIO(wav_bytes)
-            fobj.name = "audio.wav"
-            tr = await client.audio.transcriptions.create(model="whisper-1", file=fobj)
-            text = (getattr(tr, "text", None) or "").strip()
-            if text:
-                utterances.append((uid, text))
-        except Exception as e:
-            print(f"[VC IO] transcription failed for {uid}: {e}")
-
-    # Only charge budget when we actually produced any transcript text
     if utterances:
         try:
-            await mysql.add_vcmod_usage(guild.id, 0, whisper_cost_usd)
+            await mysql.add_vcmod_usage(guild.id, 0, actual_cost)
         except Exception as e:
             print(f"[VC IO] failed to record whisper cost: {e}")
     else:
