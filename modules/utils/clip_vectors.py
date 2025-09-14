@@ -20,26 +20,32 @@ load_dotenv()
 MILVUS_HOST = os.getenv("MILVUS_HOST", "localhost")
 MILVUS_PORT = os.getenv("MILVUS_PORT", "19530")
 COLLECTION_NAME = "clip_vectors"
-DIM = 768
-NLIST = 128
-NPROBE = max(1, NLIST // 8)
 
 log = logging.getLogger(__name__)
 connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
 collection = Collection(COLLECTION_NAME)
+
+def _suggest_ivf_params(n_vectors: int) -> tuple[int, int]:
+    # NLIST ≈ 2–4 * sqrt(N); clamp to [256, 4096] for practicality
+    import math
+    nlist = int(max(256, min(4096, round(4 * math.sqrt(max(n_vectors, 1))))))
+    # NPROBE ≈ 3% of NLIST=
+    nprobe = max(8, min(nlist, int(round(nlist * 0.03))))
+    # round nprobe to nearest power-of-two-ish for convenience
+    pow2 = 1 << (nprobe - 1).bit_length()
+    nprobe = min(pow2, nlist)
+    return nlist, nprobe
+
+# After connecting:
+n_vectors = collection.num_entities
+NLIST, NPROBE = _suggest_ivf_params(n_vectors)
+log.info(f"Using IVF params: NLIST={NLIST}, NPROBE={NPROBE} for N={n_vectors}")
+
 if not collection.has_index():
-    log.info("Milvus collection has no index; creating one...")
     collection.create_index(
         field_name="vector",
-        index_params={
-            "index_type": "IVF_FLAT",
-            "metric_type": "IP",
-            "params": {"nlist": NLIST}, 
-        }
+        index_params={"index_type": "IVF_FLAT", "metric_type": "IP", "params": {"nlist": NLIST}}
     )
-else:
-    log.debug("Milvus index already exists.")
-
 collection.load()
 
 # Lazy-load CLIP model and processor on first use to avoid blocking startup
