@@ -121,7 +121,7 @@ async def transcribe_pcm_map(
 
     Returns (utterances, cost_usd_estimate).
     """
-    model_name = "base"
+    model_name = "large-v3-turbo"
 
     sem = asyncio.Semaphore(max_concurrency)
     utterances: List[Tuple[int, str]] = []
