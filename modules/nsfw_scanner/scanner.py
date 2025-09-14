@@ -207,6 +207,8 @@ class NSFWScanner:
                 if similarity_response:
                     for item in similarity_response:
                         sim = float(item.get("similarity", 0) or 0)
+                        if sim < CLIP_THRESHOLD:
+                            continue
                         if sim > max_similarity:
                             max_similarity = sim
 
