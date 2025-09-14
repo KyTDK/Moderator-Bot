@@ -215,7 +215,7 @@ class NSFWScanner:
                         similarity = float(item.get("similarity", 0) or 0)
 
                         if not category:
-                            print(f"[process_image] Similar SFW image found with similarity {similarity:.2f}.")
+                            print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} for guild {guild_id}.")
                             if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
                                 break # continue to API check
                             return {
@@ -228,7 +228,7 @@ class NSFWScanner:
                             }
 
                         if is_allowed_category(category, allowed_categories):
-                            print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f}.")
+                            print(f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} for guild {guild_id}.")
                             # High-accuracy mode: require very high similarity to skip API
                             if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
                                 break # continue to API check
@@ -260,7 +260,7 @@ class NSFWScanner:
                     image=image,
                     skip_vector_add=had_similarity,
                 )
-                print(f"[process_image] Moderation result for {original_filename}: {response}")
+                print(f"[process_image] Moderation result for {original_filename}: {response} (similarity={max_similarity:.2f}) for guild {guild_id}")
                 # Attach similarity/meta context
                 if isinstance(response, dict):
                     response.setdefault("max_similarity", max_similarity)
