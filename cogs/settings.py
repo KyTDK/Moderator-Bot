@@ -257,7 +257,7 @@ class Settings(commands.Cog):
                 "[Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • "
                 "[ToS](https://modbot.neomechanical.com/terms-of-service) • "
                 "[Privacy](https://modbot.neomechanical.com/privacy-policy) • "
-                "[Trusted Developers]<#362421457759764481> (fork_prongs - 362421457759764481) • "
+                "[Trusted Developers]<@362421457759764481> (fork_prongs - 362421457759764481) • "
             ),
             inline=False,
         )
