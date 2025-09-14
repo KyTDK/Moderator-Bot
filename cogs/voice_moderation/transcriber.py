@@ -19,10 +19,15 @@ BYTES_PER_MINUTE = BYTES_PER_SECOND * 60
 
 _WHISPER_MODEL: Optional[WhisperModel] = None
 _WHISPER_MODEL_NAME: Optional[str] = None
+
+_WHISPER_CPU_MODEL: Optional[WhisperModel] = None
+_WHISPER_CPU_MODEL_NAME: Optional[str] = None
+
 _WHISPER_LOCK = asyncio.Lock()
 
+
 async def _load_whisper_model(model_name: str) -> WhisperModel:
-    """Async-safe lazy loader for faster-whisper models with robust compute_type + device fallback."""
+    """Async-safe lazy loader for faster-whisper models with robust compute_type + device fallback (prefers CUDA)."""
     global _WHISPER_MODEL, _WHISPER_MODEL_NAME
     async with _WHISPER_LOCK:
         if _WHISPER_MODEL is not None and _WHISPER_MODEL_NAME == model_name:
@@ -53,17 +58,39 @@ async def _load_whisper_model(model_name: str) -> WhisperModel:
                 print(f"[whisper] loaded model='{model_name}' device='cuda'")
             except Exception as e:
                 msg = str(e)
-                if "cudnn" in msg.lower() or "Invalid handle" in msg or "libcudnn" in msg.lower():
-                    print("[whisper] CUDA available but cuDNN not found/usable; falling back to CPU.")
+                if "cudnn" in msg.lower() or "invalid handle" in msg.lower() or "libcudnn" in msg.lower():
+                    print("[whisper] CUDA available but cuDNN not usable; falling back to CPU at load.")
                     model = await loop.run_in_executor(None, _try, "cpu", ["int8", "int16", "float32"])
                 else:
-                    print(f"[whisper] CUDA init failed ({e!r}); falling back to CPU.")
+                    print(f"[whisper] CUDA init failed ({e!r}); falling back to CPU at load.")
                     model = await loop.run_in_executor(None, _try, "cpu", ["int8", "int16", "float32"])
         else:
             model = await loop.run_in_executor(None, _try, "cpu", ["int8", "int16", "float32"])
 
         _WHISPER_MODEL = model
         _WHISPER_MODEL_NAME = model_name
+        return model
+
+
+async def _load_whisper_model_cpu(model_name: str) -> WhisperModel:
+    """Lazy-load and cache a CPU model (used for runtime fallback if GPU/cuDNN fails)."""
+    global _WHISPER_CPU_MODEL, _WHISPER_CPU_MODEL_NAME
+    async with _WHISPER_LOCK:
+        if _WHISPER_CPU_MODEL is not None and _WHISPER_CPU_MODEL_NAME == model_name:
+            return _WHISPER_CPU_MODEL
+
+        loop = asyncio.get_running_loop()
+
+        def _load():
+            # Prefer int8 on CPU; fall back to float32 if needed
+            try:
+                return WhisperModel(model_name, device="cpu", compute_type="int8")
+            except Exception:
+                return WhisperModel(model_name, device="cpu", compute_type="float32")
+
+        model = await loop.run_in_executor(None, _load)
+        _WHISPER_CPU_MODEL = model
+        _WHISPER_CPU_MODEL_NAME = model_name
         return model
 
 def pcm_to_wav_bytes(
@@ -88,6 +115,15 @@ def estimate_minutes_from_pcm_map(pcm_map: Dict[int, bytes]) -> float:
     total_bytes = sum(len(b) for b in pcm_map.values())
     return total_bytes / float(BYTES_PER_MINUTE)
 
+async def _transcribe_with_model(model: WhisperModel, tmp_path: str, language: Optional[str]) -> str:
+    segments, info = model.transcribe(
+        tmp_path,
+        language=language,
+        vad_filter=False,
+        condition_on_previous_text=False,
+    )
+    return "".join(seg.text for seg in segments).strip()
+
 async def _transcribe_wav_bytes(
     wav_bytes: bytes,
     *,
@@ -95,39 +131,70 @@ async def _transcribe_wav_bytes(
     language: Optional[str] = None,
     fp16: Optional[bool] = None,
 ) -> str:
-    """Run faster-whisper transcription off the event loop."""
-    model = await _load_whisper_model(model_name)
-
-    # Write bytes to a temporary WAV file path for robust decoding
-    loop = asyncio.get_running_loop()
-
-    def _run(tmp_path: str) -> str:
-        segments, info = model.transcribe(
-            tmp_path,
-            language=language,
-            vad_filter=False,
-            condition_on_previous_text=False,
-        )
-        return "".join(seg.text for seg in segments).strip()
-
+    """Run faster-whisper transcription off the event loop, with cuDNN-aware CPU fallback."""
+    # Prepare temp file
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf:
         tf.write(wav_bytes)
         tmp_path = tf.name
 
+    loop = asyncio.get_running_loop()
+
     try:
-        result_text = await loop.run_in_executor(None, _run, tmp_path)
+        # Try with whichever device the loader gave us (likely CUDA)
+        model = await _load_whisper_model(model_name)
+
+        def _run_gpu():
+            return asyncio.run_coroutine_threadsafe(
+                _transcribe_with_model(model, tmp_path, language), asyncio.get_event_loop()
+            )
+
+        # We can’t call loop directly inside run_in_executor; wrap properly:
+        result_text = await loop.run_in_executor(None, lambda: model.transcribe(
+            tmp_path,
+            language=language,
+            vad_filter=False,
+            condition_on_previous_text=False,
+        ))
+        # result_text here is (segments generator, info) if we call model.transcribe directly;
+        # to keep minimal change, rebuild text:
+        if isinstance(result_text, tuple):
+            segments, info = result_text
+            text = "".join(seg.text for seg in segments).strip()
+        else:
+            # Safety: if the API shape changes, just return empty
+            text = ""
+        return text
+
+    except Exception as e:
+        # cuDNN runtime issues at inference time → retry on CPU
+        msg = str(e)
+        if "cudnn" in msg.lower() or "CUDNN_STATUS_" in msg or "sublibrary" in msg.lower():
+            print("[whisper] cuDNN runtime error during transcribe; retrying on CPU...")
+            cpu_model = await _load_whisper_model_cpu(model_name)
+            # Run CPU transcribe in executor
+            def _run_cpu():
+                segments, info = cpu_model.transcribe(
+                    tmp_path,
+                    language=language,
+                    vad_filter=False,
+                    condition_on_previous_text=False,
+                )
+                return "".join(seg.text for seg in segments).strip()
+
+            return await loop.run_in_executor(None, _run_cpu)
+        # Other errors propagate
+        raise
     finally:
         try:
             os.remove(tmp_path)
         except Exception:
             pass
 
-    return result_text
 
 async def transcribe_pcm_map(
     *,
     guild_id: int,
-    api_key: str, 
+    api_key: str,
     pcm_map: Dict[int, bytes],
     language: Optional[str] = None,
     max_concurrency: int = 2,
@@ -161,5 +228,4 @@ async def transcribe_pcm_map(
     await asyncio.gather(*[_work(uid, pcm) for uid, pcm in pcm_map.items()])
 
     cost_usd = round(estimate_minutes_from_pcm_map(pcm_map) * LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD, 6)
-
     return utterances, cost_usd
