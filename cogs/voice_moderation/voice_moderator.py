@@ -74,6 +74,7 @@ class VoiceModeratorCog(commands.Cog):
                 "aimod-channel",
                 "monitor-channel",
                 "vcmod-transcript-channel",
+                "vcmod-transcript-only",
             ],
         )
 
