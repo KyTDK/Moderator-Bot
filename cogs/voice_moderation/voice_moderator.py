@@ -225,19 +225,42 @@ class VoiceModeratorCog(commands.Cog):
             lines.append(f"AUTHOR: {author_str}\nUTTERANCE: {text}\n---")
 
         transcript = "\n".join(lines)
-        # Optionally post transcript embed to configured channel
+
+        def _chunk_text(s: str, limit: int = 3900) -> list[str]:
+            """Split text into chunks <= limit, preferring newline boundaries."""
+            if len(s) <= limit:
+                return [s]
+            parts: list[str] = []
+            i = 0
+            n = len(s)
+            while i < n:
+                j = min(i + limit, n)
+                if j < n:
+                    # try to break at the last newline within the window
+                    k = s.rfind("\n", i, j)
+                    if k != -1 and k > i:
+                        j = k + 1
+                parts.append(s[i:j])
+                i = j
+            return parts
+
         if transcript_channel_id:
             try:
-                desc_limit = 4000  # safe margin under 4096
-                tdesc = transcript if len(transcript) <= desc_limit else (transcript[: desc_limit - 3] + "...")
-                embed = discord.Embed(
-                    title="VC Transcript",
-                    description=tdesc,
-                    colour=discord.Colour.blurple(),
-                )
-                embed.add_field(name="Channel", value=channel.mention, inline=True)
-                embed.add_field(name="Utterances", value=str(len(utterances)), inline=True)
-                await mod_logging.log_to_channel(embed, transcript_channel_id, self.bot)
+                chunks = _chunk_text(transcript, limit=3900)  # margin under 4096
+                total = len(chunks)
+                # Post each chunk as its own embed
+                for idx, part in enumerate(chunks, start=1):
+                    title = "VC Transcript" if total == 1 else f"VC Transcript (part {idx}/{total})"
+                    embed = discord.Embed(
+                        title=title,
+                        description=part,
+                        colour=discord.Colour.blurple(),
+                        timestamp=discord.utils.utcnow(),
+                    )
+                    embed.add_field(name="Channel", value=channel.mention, inline=True)
+                    embed.add_field(name="Utterances", value=str(len(utterances)), inline=True)
+                    await mod_logging.log_to_channel(embed, transcript_channel_id, self.bot)
+
             except Exception as e:
                 print(f"[VCMod] failed to post transcript: {e}")
         # Violation history for context (shared helper)
