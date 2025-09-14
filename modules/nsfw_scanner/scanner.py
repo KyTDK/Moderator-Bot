@@ -199,7 +199,7 @@ class NSFWScanner:
                 )
                 allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
                 high_accuracy = bool(settings.get("nsfw-high-accuracy", False))
-                similarity_response = clip_vectors.query_similar(image, threshold=CLIP_THRESHOLD)
+                similarity_response = clip_vectors.query_similar(image, threshold=0)
 
                 # Track if we had any similarity above CLIP threshold
                 had_similarity = bool(similarity_response)
@@ -213,6 +213,10 @@ class NSFWScanner:
                     for item in similarity_response:
                         category = item.get("category")
                         similarity = float(item.get("similarity", 0) or 0)
+
+                        # Only consider results above CLIP_THRESHOLD
+                        if similarity < CLIP_THRESHOLD:
+                            continue
 
                         if not category:
                             print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} for guild {guild_id}.")
