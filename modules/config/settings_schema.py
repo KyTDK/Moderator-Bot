@@ -386,7 +386,7 @@ SETTINGS_SCHEMA = {
     ),
     "vcmod-idle-duration": Setting(
         name="vcmod-idle-duration",
-        description="How long to stay in a channel when in saver mode (presence only) before moving on.",
+        description="How long to pause between each transcription in Saver Mode.",
         setting_type=TimeString,
         default=TimeString("30s"),
         accelerated=True,
