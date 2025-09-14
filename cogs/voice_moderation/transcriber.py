@@ -3,9 +3,11 @@ from __future__ import annotations
 import asyncio
 import io
 import wave
+import tempfile
+import os
 from typing import Dict, List, Tuple, Optional
 
-import whisper
+from faster_whisper import WhisperModel
 
 from modules.ai.costs import LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD
 
@@ -15,24 +17,38 @@ BYTES_PER_SAMPLE = 2
 BYTES_PER_SECOND = SAMPLE_RATE * CHANNELS * BYTES_PER_SAMPLE
 BYTES_PER_MINUTE = BYTES_PER_SECOND * 60
 
-_WHISPER_MODEL: Optional[whisper.Whisper] = None
+_WHISPER_MODEL: Optional[WhisperModel] = None
 _WHISPER_MODEL_NAME: Optional[str] = None
 _WHISPER_LOCK = asyncio.Lock()
 
 
-async def _load_whisper_model(model_name: str) -> whisper.Whisper:
-    """Async-safe lazy loader for Whisper models."""
+async def _load_whisper_model(model_name: str) -> WhisperModel:
+    """Async-safe lazy loader for faster-whisper models."""
     global _WHISPER_MODEL, _WHISPER_MODEL_NAME
     async with _WHISPER_LOCK:
         if _WHISPER_MODEL is not None and _WHISPER_MODEL_NAME == model_name:
             return _WHISPER_MODEL
 
+        try:
+            import torch
+            if torch.cuda.is_available():
+                device = "cuda"
+                compute_type = "float16"
+            else:
+                device = "cpu"
+                compute_type = "int8"
+        except Exception:
+            device = "cpu"
+            compute_type = "int8"
+
         loop = asyncio.get_running_loop()
-        model = await loop.run_in_executor(None, whisper.load_model, model_name)
+        def _load():
+            return WhisperModel(model_name, device=device, compute_type=compute_type)
+
+        model = await loop.run_in_executor(None, _load)
         _WHISPER_MODEL = model
         _WHISPER_MODEL_NAME = model_name
         return model
-
 
 def pcm_to_wav_bytes(
     pcm_bytes: bytes,
@@ -50,46 +66,58 @@ def pcm_to_wav_bytes(
     out.seek(0)
     return out.getvalue()
 
-
 def estimate_minutes_from_pcm_map(pcm_map: Dict[int, bytes]) -> float:
     if not pcm_map:
         return 0.0
     total_bytes = sum(len(b) for b in pcm_map.values())
     return total_bytes / float(BYTES_PER_MINUTE)
 
-
 async def _transcribe_wav_bytes(
     wav_bytes: bytes,
     *,
     model_name: str,
     language: Optional[str] = None,
-    fp16: Optional[bool] = None, 
+    fp16: Optional[bool] = None,
 ) -> str:
-    """Run Whisper transcription off the event loop."""
+    """Run faster-whisper transcription off the event loop."""
     model = await _load_whisper_model(model_name)
 
+    # Write bytes to a temporary WAV file path for robust decoding
     loop = asyncio.get_running_loop()
-    def _run():
-        return model.transcribe(
-            io.BytesIO(wav_bytes),
+
+    def _run(tmp_path: str) -> str:
+        segments, info = model.transcribe(
+            tmp_path,
             language=language,
-            fp16=fp16,
+            vad_filter=False,
+            condition_on_previous_text=False,
         )
+        return "".join(seg.text for seg in segments).strip()
 
-    result = await loop.run_in_executor(None, _run)
-    return (result.get("text") or "").strip()
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf:
+        tf.write(wav_bytes)
+        tmp_path = tf.name
 
+    try:
+        result_text = await loop.run_in_executor(None, _run, tmp_path)
+    finally:
+        try:
+            os.remove(tmp_path)
+        except Exception:
+            pass
+
+    return result_text
 
 async def transcribe_pcm_map(
     *,
     guild_id: int,
-    api_key: str,  
+    api_key: str, 
     pcm_map: Dict[int, bytes],
     language: Optional[str] = None,
     max_concurrency: int = 2,
 ) -> Tuple[List[Tuple[int, str]], float]:
     """
-    Transcribe per-user PCM bytes using local Whisper with lazy model loading.
+    Transcribe per-user PCM bytes using local faster-whisper with lazy model loading.
 
     Returns (utterances, cost_usd_estimate).
     """
