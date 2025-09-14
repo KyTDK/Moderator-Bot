@@ -133,21 +133,23 @@ async def collect_utterances(
 
     if not hasattr(vc, "listen") or not hasattr(vc, "stop_listening"):
         print(f"[VC IO] Voice client missing listen/stop_listening; type={type(vc)}")
-        await asyncio.sleep(idle_delta.total_seconds())
-        return vc, []
-
-    if not do_listen:
-        await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
     if not api_key:
         print("[VC IO] AUTOMOD_OPENAI_KEY missing; skipping listen")
-        await asyncio.sleep(idle_delta.total_seconds())
+        if not do_listen:
+            await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
+
     if not discord.opus.is_loaded():
         print("[VC IO] Opus still not loaded; skipping listen (see OPUS installation notes)")
-        await asyncio.sleep(idle_delta.total_seconds())
+        if not do_listen:
+            await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
+
+    # Saver mode, idle wait then contain trascription
+    if not do_listen:
+        await asyncio.sleep(idle_delta.total_seconds())
 
     # Continuous listening + chunker:
     # Ensure a persistent sink/pool on the voice client
@@ -163,7 +165,8 @@ async def collect_utterances(
             print(f"[VC IO] continuous listening started in guild {guild.id} ch {channel.id}")
         except Exception as e:
             print(f"[VC IO] continuous listen failed: {e}")
-            await asyncio.sleep(idle_delta.total_seconds())
+            if not do_listen:
+                await asyncio.sleep(idle_delta.total_seconds())
             return vc, []
 
     # Harvest per-user PCM for the requested window
@@ -173,7 +176,8 @@ async def collect_utterances(
     # Filter very short clips
     eligible_map: Dict[int, bytes] = {uid: b for uid, b in pcm_map.items() if len(b) >= int(BYTES_PER_SECOND * 1.0)}
     if not eligible_map:
-        await asyncio.sleep(idle_delta.total_seconds())
+        if not do_listen:
+            await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
     # Budget pre-check from estimated minutes
@@ -184,7 +188,8 @@ async def collect_utterances(
         usage = await mysql.get_vcmod_usage(guild.id)
         if (usage.get("cost_usd", 0.0) + est_cost) > usage.get("limit_usd", 2.0):
             print(f"[VC IO] Budget reached; skipping (est {est_cost:.6f}usd)")
-            await asyncio.sleep(idle_delta.total_seconds())
+            if not do_listen:
+                await asyncio.sleep(idle_delta.total_seconds())
             return vc, []
     except Exception as e:
         print(f"[VC IO] budget check failed, proceeding cautiously: {e}")
@@ -201,11 +206,11 @@ async def collect_utterances(
             await mysql.add_vcmod_usage(guild.id, 0, actual_cost)
         except Exception as e:
             print(f"[VC IO] failed to record whisper cost: {e}")
-    else:
-        print("[VC IO] No transcript text produced; skipping budget charge.")
 
     if not utterances:
-        await asyncio.sleep(idle_delta.total_seconds())
+        print("[VC IO] No transcript text produced; skipping budget charge.")
+        if not do_listen:
+            await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
     return vc, utterances
