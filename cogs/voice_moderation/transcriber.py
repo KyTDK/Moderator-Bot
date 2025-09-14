@@ -21,9 +21,8 @@ _WHISPER_MODEL: Optional[WhisperModel] = None
 _WHISPER_MODEL_NAME: Optional[str] = None
 _WHISPER_LOCK = asyncio.Lock()
 
-
 async def _load_whisper_model(model_name: str) -> WhisperModel:
-    """Async-safe lazy loader for faster-whisper models."""
+    """Async-safe lazy loader for faster-whisper models with robust compute_type fallback."""
     global _WHISPER_MODEL, _WHISPER_MODEL_NAME
     async with _WHISPER_LOCK:
         if _WHISPER_MODEL is not None and _WHISPER_MODEL_NAME == model_name:
@@ -31,24 +30,39 @@ async def _load_whisper_model(model_name: str) -> WhisperModel:
 
         try:
             import torch
-            if torch.cuda.is_available():
-                device = "cuda"
-                compute_type = "float16"
-            else:
-                device = "cpu"
-                compute_type = "int8"
+            has_cuda = torch.cuda.is_available()
         except Exception:
+            has_cuda = False
+
+        if has_cuda:
+            device = "cuda"
+            candidates = ["float16", "int8_float16", "float32"]
+        else:
             device = "cpu"
-            compute_type = "int8"
+            candidates = ["int8", "int16", "float32"]
 
         loop = asyncio.get_running_loop()
-        def _load():
-            return WhisperModel(model_name, device=device, compute_type=compute_type)
 
-        model = await loop.run_in_executor(None, _load)
-        _WHISPER_MODEL = model
-        _WHISPER_MODEL_NAME = model_name
-        return model
+        def _try_load(ct: str) -> WhisperModel:
+            return WhisperModel(model_name, device=device, compute_type=ct)
+
+        last_err = None
+        for ct in candidates:
+            try:
+                model = await loop.run_in_executor(None, _try_load, ct)
+                # Cache and return
+                _WHISPER_MODEL = model
+                _WHISPER_MODEL_NAME = model_name
+                print(f"[whisper] loaded model='{model_name}' device='{device}' compute_type='{ct}'")
+                return model
+            except Exception as e:
+                last_err = e
+                continue
+
+        raise RuntimeError(
+            f"Failed to load WhisperModel(model='{model_name}', device='{device}'). "
+            f"Tried compute_types={candidates}. Last error: {last_err}"
+        )
 
 def pcm_to_wav_bytes(
     pcm_bytes: bytes,
