@@ -4,7 +4,7 @@ import io
 import wave
 from typing import Dict, List, Tuple
 
-from modules.ai.costs import WHISPER_PRICE_PER_MINUTE_USD
+from modules.ai.costs import TRANSCRIPTION_PRICE_PER_MINUTE_USD
 
 try:
     from openai import AsyncOpenAI
@@ -39,10 +39,10 @@ async def transcribe_pcm_map(
     api_key: str,
     pcm_map: Dict[int, bytes],
 ) -> Tuple[List[Tuple[int, str]], float]:
-    """Transcribe per-user PCM bytes to text using Whisper.
+    """Transcribe per-user PCM bytes to text using transcription.
 
     Returns (utterances, cost_usd_estimate). Cost uses the minutes estimate of the
-    input we actually send to Whisper.
+    input we actually send to transcription.
     """
     if AsyncOpenAI is None:
         raise RuntimeError("OpenAI Async client unavailable")
@@ -56,7 +56,7 @@ async def transcribe_pcm_map(
             wav_bytes = pcm_to_wav_bytes(pcm)
             fobj = io.BytesIO(wav_bytes)
             fobj.name = "audio.wav"
-            tr = await client.audio.transcriptions.create(model="whisper-1", file=fobj)
+            tr = await client.audio.transcriptions.create(model="gpt-4o-mini-transcribe", file=fobj)
             text = (getattr(tr, "text", None) or "").strip()
             if text:
                 utterances.append((uid, text))
@@ -64,5 +64,5 @@ async def transcribe_pcm_map(
             print(f"[VC IO] transcription failed for {uid}: {e}")
 
     minutes = estimate_minutes_from_pcm_map(pcm_map)
-    cost_usd = round(minutes * WHISPER_PRICE_PER_MINUTE_USD, 6)
+    cost_usd = round(minutes * TRANSCRIPTION_PRICE_PER_MINUTE_USD, 6)
     return utterances, cost_usd

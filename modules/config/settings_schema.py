@@ -362,7 +362,7 @@ SETTINGS_SCHEMA = {
     ),
     "vcmod-enabled": Setting(
         name="vcmod-enabled",
-        description="Enable voice channel moderation with Whisper transcription.",
+        description="Enable voice channel moderation and transcription.",
         setting_type=bool,
         default=False,
         hidden=True,

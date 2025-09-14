@@ -7,7 +7,7 @@ import logging
 
 import discord
 from discord.ext import voice_recv
-from modules.ai.costs import WHISPER_PRICE_PER_MINUTE_USD
+from modules.ai.costs import TRANSCRIPTION_PRICE_PER_MINUTE_USD
 from modules.utils import mysql
 from cogs.voice_moderation.buffers import PCMBufferPool, BYTES_PER_SECOND
 from cogs.voice_moderation.sink import CollectingSink
@@ -183,7 +183,7 @@ async def collect_utterances(
     # Budget pre-check from estimated minutes
     bytes_per_minute = BYTES_PER_SECOND * 60
     est_minutes = sum(len(b) for b in eligible_map.values()) / float(bytes_per_minute)
-    est_cost = round(est_minutes * WHISPER_PRICE_PER_MINUTE_USD, 6)
+    est_cost = round(est_minutes * TRANSCRIPTION_PRICE_PER_MINUTE_USD, 6)
     try:
         usage = await mysql.get_vcmod_usage(guild.id)
         if (usage.get("cost_usd", 0.0) + est_cost) > usage.get("limit_usd", 2.0):
@@ -205,7 +205,7 @@ async def collect_utterances(
         try:
             await mysql.add_vcmod_usage(guild.id, 0, actual_cost)
         except Exception as e:
-            print(f"[VC IO] failed to record whisper cost: {e}")
+            print(f"[VC IO] failed to record transcription cost: {e}")
 
     if not utterances:
         print("[VC IO] No transcript text produced; skipping budget charge.")
