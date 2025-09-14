@@ -22,7 +22,7 @@ _WHISPER_MODEL_NAME: Optional[str] = None
 _WHISPER_LOCK = asyncio.Lock()
 
 async def _load_whisper_model(model_name: str) -> WhisperModel:
-    """Async-safe lazy loader for faster-whisper models with robust compute_type fallback."""
+    """Async-safe lazy loader for faster-whisper models with robust compute_type + device fallback."""
     global _WHISPER_MODEL, _WHISPER_MODEL_NAME
     async with _WHISPER_LOCK:
         if _WHISPER_MODEL is not None and _WHISPER_MODEL_NAME == model_name:
@@ -34,35 +34,37 @@ async def _load_whisper_model(model_name: str) -> WhisperModel:
         except Exception:
             has_cuda = False
 
-        if has_cuda:
-            device = "cuda"
-            candidates = ["float16", "int8_float16", "float32"]
-        else:
-            device = "cpu"
-            candidates = ["int8", "int16", "float32"]
-
         loop = asyncio.get_running_loop()
 
-        def _try_load(ct: str) -> WhisperModel:
-            return WhisperModel(model_name, device=device, compute_type=ct)
+        def _try(device: str, compute_types: list[str]) -> Optional[WhisperModel]:
+            last_err = None
+            for ct in compute_types:
+                try:
+                    return WhisperModel(model_name, device=device, compute_type=ct)
+                except Exception as e:
+                    last_err = e
+            if last_err:
+                raise last_err
+            return None
 
-        last_err = None
-        for ct in candidates:
+        if has_cuda:
             try:
-                model = await loop.run_in_executor(None, _try_load, ct)
-                # Cache and return
-                _WHISPER_MODEL = model
-                _WHISPER_MODEL_NAME = model_name
-                print(f"[whisper] loaded model='{model_name}' device='{device}' compute_type='{ct}'")
-                return model
+                model = await loop.run_in_executor(None, _try, "cuda", ["float16", "int8_float16", "float32"])
+                print(f"[whisper] loaded model='{model_name}' device='cuda'")
             except Exception as e:
-                last_err = e
-                continue
+                msg = str(e)
+                if "cudnn" in msg.lower() or "Invalid handle" in msg or "libcudnn" in msg.lower():
+                    print("[whisper] CUDA available but cuDNN not found/usable; falling back to CPU.")
+                    model = await loop.run_in_executor(None, _try, "cpu", ["int8", "int16", "float32"])
+                else:
+                    print(f"[whisper] CUDA init failed ({e!r}); falling back to CPU.")
+                    model = await loop.run_in_executor(None, _try, "cpu", ["int8", "int16", "float32"])
+        else:
+            model = await loop.run_in_executor(None, _try, "cpu", ["int8", "int16", "float32"])
 
-        raise RuntimeError(
-            f"Failed to load WhisperModel(model='{model_name}', device='{device}'). "
-            f"Tried compute_types={candidates}. Last error: {last_err}"
-        )
+        _WHISPER_MODEL = model
+        _WHISPER_MODEL_NAME = model_name
+        return model
 
 def pcm_to_wav_bytes(
     pcm_bytes: bytes,
