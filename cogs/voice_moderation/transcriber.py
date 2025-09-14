@@ -23,53 +23,14 @@ _WHISPER_MODEL_NAME: Optional[str] = None
 _WHISPER_CPU_MODEL: Optional[WhisperModel] = None
 _WHISPER_CPU_MODEL_NAME: Optional[str] = None
 
+_WHISPER_FORCE_CPU: bool = False
+
 _WHISPER_LOCK = asyncio.Lock()
 
 
-async def _load_whisper_model(model_name: str) -> WhisperModel:
-    """Async-safe lazy loader for faster-whisper models with robust compute_type + device fallback (prefers CUDA)."""
-    global _WHISPER_MODEL, _WHISPER_MODEL_NAME
-    async with _WHISPER_LOCK:
-        if _WHISPER_MODEL is not None and _WHISPER_MODEL_NAME == model_name:
-            return _WHISPER_MODEL
-
-        try:
-            import torch
-            has_cuda = torch.cuda.is_available()
-        except Exception:
-            has_cuda = False
-
-        loop = asyncio.get_running_loop()
-
-        def _try(device: str, compute_types: list[str]) -> Optional[WhisperModel]:
-            last_err = None
-            for ct in compute_types:
-                try:
-                    return WhisperModel(model_name, device=device, compute_type=ct)
-                except Exception as e:
-                    last_err = e
-            if last_err:
-                raise last_err
-            return None
-
-        if has_cuda:
-            try:
-                model = await loop.run_in_executor(None, _try, "cuda", ["float16", "int8_float16", "float32"])
-                print(f"[whisper] loaded model='{model_name}' device='cuda'")
-            except Exception as e:
-                msg = str(e)
-                if "cudnn" in msg.lower() or "invalid handle" in msg.lower() or "libcudnn" in msg.lower():
-                    print("[whisper] CUDA available but cuDNN not usable; falling back to CPU at load.")
-                    model = await loop.run_in_executor(None, _try, "cpu", ["int8", "int16", "float32"])
-                else:
-                    print(f"[whisper] CUDA init failed ({e!r}); falling back to CPU at load.")
-                    model = await loop.run_in_executor(None, _try, "cpu", ["int8", "int16", "float32"])
-        else:
-            model = await loop.run_in_executor(None, _try, "cpu", ["int8", "int16", "float32"])
-
-        _WHISPER_MODEL = model
-        _WHISPER_MODEL_NAME = model_name
-        return model
+def _normalize_text(s: str) -> str:
+    # Remove newlines and collapse any repeated whitespace
+    return " ".join(s.replace("\n", " ").split())
 
 
 async def _load_whisper_model_cpu(model_name: str) -> WhisperModel:
@@ -93,6 +54,64 @@ async def _load_whisper_model_cpu(model_name: str) -> WhisperModel:
         _WHISPER_CPU_MODEL_NAME = model_name
         return model
 
+
+async def _load_whisper_model(model_name: str) -> WhisperModel:
+    """
+    Async-safe lazy loader for faster-whisper models with robust compute_type + device fallback (prefers CUDA).
+    Respects a sticky CPU fallback via _WHISPER_FORCE_CPU to avoid repeated GPU attempts.
+    """
+    global _WHISPER_MODEL, _WHISPER_MODEL_NAME, _WHISPER_FORCE_CPU
+    async with _WHISPER_LOCK:
+        # If we've forced CPU, always return the cached CPU model (or load it once)
+        if _WHISPER_FORCE_CPU:
+            return await _load_whisper_model_cpu(model_name)
+
+        # If we already have a GPU model for this name, return it
+        if _WHISPER_MODEL is not None and _WHISPER_MODEL_NAME == model_name:
+            return _WHISPER_MODEL
+
+        # Try CUDA first (unless FORCE_CPU is set above)
+        try:
+            import torch
+            has_cuda = torch.cuda.is_available()
+        except Exception:
+            has_cuda = False
+
+        loop = asyncio.get_running_loop()
+
+        def _try(device: str, compute_types: list[str]) -> Optional[WhisperModel]:
+            last_err = None
+            for ct in compute_types:
+                try:
+                    return WhisperModel(model_name, device=device, compute_type=ct)
+                except Exception as e:
+                    last_err = e
+            if last_err:
+                raise last_err
+            return None
+
+        if has_cuda:
+            try:
+                # Prefer int8_float16 on older GPUs; fall back to float32
+                model = await loop.run_in_executor(None, _try, "cuda", ["int8_float16", "float32"])
+                print(f"[whisper] loaded model='{model_name}' device='cuda'")
+                _WHISPER_MODEL = model
+                _WHISPER_MODEL_NAME = model_name
+                return model
+            except Exception as e:
+                msg = str(e)
+                # Sticky switch to CPU if it's a cuDNN-related failure or any CUDA init error
+                if "cudnn" in msg.lower() or "invalid handle" in msg.lower() or "libcudnn" in msg.lower():
+                    print("[whisper] CUDA available but cuDNN not usable; switching to CPU permanently for this process.")
+                else:
+                    print(f"[whisper] CUDA init failed ({e!r}); switching to CPU permanently for this process.")
+                _WHISPER_FORCE_CPU = True
+                return await _load_whisper_model_cpu(model_name)
+        else:
+            _WHISPER_FORCE_CPU = True
+            return await _load_whisper_model_cpu(model_name)
+
+
 def pcm_to_wav_bytes(
     pcm_bytes: bytes,
     *,
@@ -109,29 +128,27 @@ def pcm_to_wav_bytes(
     out.seek(0)
     return out.getvalue()
 
+
 def estimate_minutes_from_pcm_map(pcm_map: Dict[int, bytes]) -> float:
     if not pcm_map:
         return 0.0
     total_bytes = sum(len(b) for b in pcm_map.values())
     return total_bytes / float(BYTES_PER_MINUTE)
 
-async def _transcribe_with_model(model: WhisperModel, tmp_path: str, language: Optional[str]) -> str:
-    segments, info = model.transcribe(
-        tmp_path,
-        language=language,
-        vad_filter=False,
-        condition_on_previous_text=False,
-    )
-    return "".join(seg.text for seg in segments).strip()
 
 async def _transcribe_wav_bytes(
     wav_bytes: bytes,
     *,
     model_name: str,
     language: Optional[str] = None,
-    fp16: Optional[bool] = None,
+    fp16: Optional[bool] = None,  # kept for API compatibility
 ) -> str:
-    """Run faster-whisper transcription off the event loop, with cuDNN-aware CPU fallback."""
+    """
+    Run faster-whisper transcription off the event loop, with cuDNN-aware CPU fallback.
+    If a cuDNN error occurs, set _WHISPER_FORCE_CPU = True so we don't keep retrying CUDA.
+    """
+    global _WHISPER_FORCE_CPU
+
     # Prepare temp file
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf:
         tf.write(wav_bytes)
@@ -139,49 +156,47 @@ async def _transcribe_wav_bytes(
 
     loop = asyncio.get_running_loop()
 
-    try:
-        # Try with whichever device the loader gave us (likely CUDA)
-        model = await _load_whisper_model(model_name)
-
-        def _run_gpu():
-            return asyncio.run_coroutine_threadsafe(
-                _transcribe_with_model(model, tmp_path, language), asyncio.get_event_loop()
-            )
-
-        # We can’t call loop directly inside run_in_executor; wrap properly:
-        result_text = await loop.run_in_executor(None, lambda: model.transcribe(
+    def _gpu_run(model: WhisperModel) -> str:
+        segments, info = model.transcribe(
             tmp_path,
             language=language,
             vad_filter=False,
             condition_on_previous_text=False,
-        ))
-        # result_text here is (segments generator, info) if we call model.transcribe directly;
-        # to keep minimal change, rebuild text:
-        if isinstance(result_text, tuple):
-            segments, info = result_text
-            text = "".join(seg.text for seg in segments).strip()
-        else:
-            # Safety: if the API shape changes, just return empty
-            text = ""
-        return text
+        )
+        return _normalize_text("".join(seg.text for seg in segments))
+
+    def _cpu_run(cpu_model: WhisperModel) -> str:
+        segments, info = cpu_model.transcribe(
+            tmp_path,
+            language=language,
+            vad_filter=False,
+            condition_on_previous_text=False,
+        )
+        return _normalize_text("".join(seg.text for seg in segments))
+
+    try:
+        # If we've already forced CPU, skip GPU path entirely
+        if _WHISPER_FORCE_CPU:
+            cpu_model = await _load_whisper_model_cpu(model_name)
+            return await loop.run_in_executor(None, _cpu_run, cpu_model)
+
+        # Try on whatever device _load_whisper_model picks (likely CUDA the first time)
+        model = await _load_whisper_model(model_name)
+        # If the loader returned a CPU model due to sticky flag, skip GPU run
+        if _WHISPER_FORCE_CPU:
+            return await loop.run_in_executor(None, _cpu_run, model)
+
+        # Otherwise, run on GPU
+        return await loop.run_in_executor(None, _gpu_run, model)
 
     except Exception as e:
-        # cuDNN runtime issues at inference time → retry on CPU
+        # cuDNN runtime issues at inference time → switch to CPU permanently and retry once
         msg = str(e)
-        if "cudnn" in msg.lower() or "CUDNN_STATUS_" in msg or "sublibrary" in msg.lower():
-            print("[whisper] cuDNN runtime error during transcribe; retrying on CPU...")
+        if ("cudnn" in msg.lower()) or ("CUDNN_STATUS_" in msg) or ("sublibrary" in msg.lower()):
+            print("[whisper] cuDNN runtime error during transcribe; switching to CPU permanently and retrying...")
+            _WHISPER_FORCE_CPU = True
             cpu_model = await _load_whisper_model_cpu(model_name)
-            # Run CPU transcribe in executor
-            def _run_cpu():
-                segments, info = cpu_model.transcribe(
-                    tmp_path,
-                    language=language,
-                    vad_filter=False,
-                    condition_on_previous_text=False,
-                )
-                return "".join(seg.text for seg in segments).strip()
-
-            return await loop.run_in_executor(None, _run_cpu)
+            return await loop.run_in_executor(None, _cpu_run, cpu_model)
         # Other errors propagate
         raise
     finally:
