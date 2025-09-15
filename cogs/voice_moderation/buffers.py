@@ -26,23 +26,16 @@ class RollingPCMBuffer:
         window_seconds: Optional[float] = None,
         keep_seconds: float = 10.0,
     ) -> bytes:
-        """Return unread PCM since last read, optionally limited to a time window.
+        """Return all unread PCM since last read.
 
-        When ``window_seconds`` is provided and there is more unread data than the window size,
-        this returns the earliest unread window (from ``read_offset`` forward) so that long
-        continuous speech is chunked sequentially without dropping audio.
-
-        Output is aligned to PCM frame boundaries.
+        The optional ``window_seconds`` is treated only as a retention hint for bounding
+        in-memory buffer size after the read (e.g., keep about 2x window). It does NOT cap
+        how much audio is returned per call. Output is aligned to PCM frame boundaries.
         """
         start = self.read_offset
         end = len(self.data)
         if start >= end:
             return b""
-
-        # If a window is provided, cap the slice length to that window from the current start
-        if window_seconds and window_seconds > 0:
-            max_bytes = int(BYTES_PER_SECOND * window_seconds)
-            end = min(end, start + max_bytes)
 
         # Align the END down to a frame boundary so (end - start) % FRAME_BYTES == 0
         end_aligned = end - ((end - start) % FRAME_BYTES)
