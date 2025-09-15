@@ -243,6 +243,9 @@ class VoiceModeratorCog(commands.Cog):
                 remaining = min(listen_delta.total_seconds(), next_tick - time.monotonic())
                 if remaining > 0:
                     await asyncio.sleep(remaining)
+                else:
+                    # We overran the target tick; useful for debugging cadence
+                    print(f"[VCMod] Harvest overrun by {abs(remaining):.2f}s (transcribe backlog likely)")
                 # stop once listen window elapsed
                 if (time.monotonic() - start) >= listen_delta.total_seconds():
                     break

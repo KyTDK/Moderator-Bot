@@ -195,7 +195,20 @@ async def harvest_pcm_chunk(
 
     # Simple debug output for harvesting
     total_bytes = sum(len(b) for b in eligible_map.values())
-    print(f"[VC IO] Harvested chunk: users={len(eligible_map)} bytes={total_bytes} window={window_seconds:.1f}s")
+    # Estimate backlog seconds (unread after this chunk) across users for visibility
+    try:
+        backlog_secs = [
+            (uid, round((len(pool._buffers.get(uid).data) - pool._buffers.get(uid).read_offset) / float(BYTES_PER_SECOND), 2))
+            for uid in eligible_map.keys()
+            if pool._buffers.get(uid) is not None
+        ]
+        max_backlog = max((s for _uid, s in backlog_secs), default=0.0)
+    except Exception:
+        max_backlog = 0.0
+    print(
+        f"[VC IO] Harvested chunk: users={len(eligible_map)} bytes={total_bytes} "
+        f"window={window_seconds:.1f}s backlog_max={max_backlog:.2f}s"
+    )
 
     return vc, eligible_map, end_ts_map, duration_map_s
 
