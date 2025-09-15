@@ -17,7 +17,7 @@ from modules.utils.time import parse_duration
 from cogs.autonomous_moderation import helpers as am_helpers
 from cogs.voice_moderation.models import VoiceModerationReport
 from cogs.voice_moderation.prompt import VOICE_SYSTEM_PROMPT, BASE_SYSTEM_TOKENS
-from cogs.voice_moderation.voice_io import collect_utterances
+from cogs.voice_moderation.voice_io import collect_utterances, HARVEST_WINDOW_SECONDS
 from modules.ai.pipeline import run_moderation_pipeline_voice
 
 load_dotenv()
@@ -153,7 +153,6 @@ class VoiceModeratorCog(commands.Cog):
         do_listen = not saver_mode
 
         async def _run():
-            start_mono = time.monotonic()
             await self._run_cycle_for_channel(
                 guild=guild,
                 channel=channel,
@@ -168,12 +167,6 @@ class VoiceModeratorCog(commands.Cog):
                 log_channel=log_channel,
                 transcript_channel_id=transcript_channel_id,
             )
-            # Ensure we spend approximately listen_delta in this channel before cycling
-            if do_listen:
-                elapsed = time.monotonic() - start_mono
-                remaining = listen_delta.total_seconds() - elapsed
-                if remaining > 0:
-                    await asyncio.sleep(remaining)
 
         st.busy_task = self.bot.loop.create_task(_run())
 
@@ -204,15 +197,43 @@ class VoiceModeratorCog(commands.Cog):
     ):
         # Use the voice IO helper to handle connection, recording, and transcription
         st = self._get_state(guild.id)
-        st.voice, utterances = await collect_utterances(
-            guild=guild,
-            channel=channel,
-            voice=st.voice,
-            do_listen=do_listen,
-            listen_delta=listen_delta,
-            idle_delta=idle_delta,
-            api_key=AUTOMOD_OPENAI_KEY,
-        )
+        utterances: list[tuple[int, str, datetime]] = []
+        if do_listen:
+            # Harvest and transcribe repeatedly every window seconds during the listen duration
+            start = time.monotonic()
+            next_tick = start
+            while True:
+                st.voice, chunk_utts = await collect_utterances(
+                    guild=guild,
+                    channel=channel,
+                    voice=st.voice,
+                    do_listen=True,
+                    listen_delta=listen_delta,
+                    idle_delta=idle_delta,
+                    api_key=AUTOMOD_OPENAI_KEY,
+                )
+                if chunk_utts:
+                    utterances.extend(chunk_utts)
+                # schedule next harvest
+                next_tick += HARVEST_WINDOW_SECONDS
+                remaining = min(listen_delta.total_seconds(), next_tick - time.monotonic())
+                if remaining > 0:
+                    await asyncio.sleep(remaining)
+                # stop once listen window elapsed
+                if (time.monotonic() - start) >= listen_delta.total_seconds():
+                    break
+        else:
+            # Saver mode: no listening/transcribing in this cycle
+            st.voice, _ = await collect_utterances(
+                guild=guild,
+                channel=channel,
+                voice=st.voice,
+                do_listen=False,
+                listen_delta=listen_delta,
+                idle_delta=idle_delta,
+                api_key=AUTOMOD_OPENAI_KEY,
+            )
+            return
         if not utterances:
             return
 

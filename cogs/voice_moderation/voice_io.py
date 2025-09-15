@@ -178,8 +178,8 @@ async def collect_utterances(
     window_seconds = HARVEST_WINDOW_SECONDS
     pcm_map: Dict[int, bytes] = pool.harvest(window_seconds)
 
-    # Filter very short clips
-    eligible_map: Dict[int, bytes] = {uid: b for uid, b in pcm_map.items() if len(b) >= int(BYTES_PER_SECOND * 1.0)}
+    # Transcribe whatever is available; do not drop short clips to avoid losing audio
+    eligible_map: Dict[int, bytes] = {uid: b for uid, b in pcm_map.items() if len(b) > 0}
     if not eligible_map:
         if not do_listen:
             await asyncio.sleep(idle_delta.total_seconds())
@@ -192,8 +192,10 @@ async def collect_utterances(
     duration_map_s: Dict[int, float] = {}
     for uid, pcm in eligible_map.items():
         last = pool.last_write_ts(uid)
+        # Adjust end time by the unread tail that remains after this chunk
+        tail_after_chunk_s = pool.unread_seconds(uid)
         if last is not None:
-            delta_s = max(0.0, now_mono - last)
+            delta_s = max(0.0, (now_mono - last) + tail_after_chunk_s)
             end_ts_map[uid] = now_wall - timedelta(seconds=delta_s)
         else:
             end_ts_map[uid] = now_wall

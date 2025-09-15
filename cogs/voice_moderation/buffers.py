@@ -26,20 +26,23 @@ class RollingPCMBuffer:
         window_seconds: Optional[float] = None,
         keep_seconds: float = 10.0,
     ) -> bytes:
-        """Return bytes since last read. If a window is given and the unread span exceeds it,
-        only the last `window_seconds` are returned and earlier unread audio is dropped.
-        Output is aligned to PCM frame boundaries."""
+        """Return unread PCM since last read, optionally limited to a time window.
+
+        When ``window_seconds`` is provided and there is more unread data than the window size,
+        this returns the earliest unread window (from ``read_offset`` forward) so that long
+        continuous speech is chunked sequentially without dropping audio.
+
+        Output is aligned to PCM frame boundaries.
+        """
         start = self.read_offset
         end = len(self.data)
         if start >= end:
             return b""
 
-        # Bound the start if a window is provided (drop earlier unread audio)
+        # If a window is provided, cap the slice length to that window from the current start
         if window_seconds and window_seconds > 0:
             max_bytes = int(BYTES_PER_SECOND * window_seconds)
-            unread = end - start
-            if unread > max_bytes:
-                start = end - max_bytes
+            end = min(end, start + max_bytes)
 
         # Align the END down to a frame boundary so (end - start) % FRAME_BYTES == 0
         end_aligned = end - ((end - start) % FRAME_BYTES)
@@ -93,3 +96,11 @@ class PCMBufferPool:
         """Return the monotonic timestamp of the last write for a user, if available."""
         buf = self._buffers.get(user_id)
         return buf.last_write_ts if buf is not None else None
+
+    def unread_seconds(self, user_id: int) -> float:
+        """Return seconds of unread audio currently buffered for a user after the last harvest."""
+        buf = self._buffers.get(user_id)
+        if buf is None:
+            return 0.0
+        unread = max(0, len(buf.data) - buf.read_offset)
+        return unread / float(BYTES_PER_SECOND)
