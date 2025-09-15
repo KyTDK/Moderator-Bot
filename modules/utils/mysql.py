@@ -1,4 +1,5 @@
 import logging
+import math
 import aiomysql
 import os
 import json
@@ -132,6 +133,14 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            # Ensure expected column definitions even on existing installs
+            try:
+                await cur.execute(
+                    "ALTER TABLE aimod_usage MODIFY COLUMN cost_usd DECIMAL(12,6) NOT NULL DEFAULT 0"
+                )
+            except Exception:
+                # Ignore if already compliant or permissions restricted
+                pass
             await cur.execute(
                 """
                 CREATE TABLE IF NOT EXISTS vcmod_usage (
@@ -144,6 +153,12 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            try:
+                await cur.execute(
+                    "ALTER TABLE vcmod_usage MODIFY COLUMN cost_usd DECIMAL(12,6) NOT NULL DEFAULT 0"
+                )
+            except Exception:
+                pass
             await cur.execute(
                 """
                 CREATE TABLE IF NOT EXISTS timeouts (
@@ -505,7 +520,7 @@ async def add_aimod_usage(guild_id: int, tokens: int, cost_usd: float):
     # Ensure cost precision matches DECIMAL(12,6) to avoid MySQL truncation warnings
     try:
         cost_usd = round(float(cost_usd), 6)
-        if cost_usd < 0:
+        if not math.isfinite(cost_usd) or cost_usd < 0:
             cost_usd = 0.0
     except Exception:
         cost_usd = 0.0
@@ -600,7 +615,7 @@ async def add_vcmod_usage(guild_id: int, tokens: int, cost_usd: float):
     snapshot = await get_vcmod_usage(guild_id)
     try:
         cost_usd = round(float(cost_usd), 6)
-        if cost_usd < 0:
+        if not math.isfinite(cost_usd) or cost_usd < 0:
             cost_usd = 0.0
     except Exception:
         cost_usd = 0.0
