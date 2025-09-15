@@ -17,7 +17,11 @@ from modules.utils.time import parse_duration
 from cogs.autonomous_moderation import helpers as am_helpers
 from cogs.voice_moderation.models import VoiceModerationReport
 from cogs.voice_moderation.prompt import VOICE_SYSTEM_PROMPT, BASE_SYSTEM_TOKENS
-from cogs.voice_moderation.voice_io import collect_utterances, HARVEST_WINDOW_SECONDS
+from cogs.voice_moderation.voice_io import (
+    HARVEST_WINDOW_SECONDS,
+    harvest_pcm_chunk,
+    transcribe_harvest_chunk,
+)
 from modules.ai.pipeline import run_moderation_pipeline_voice
 
 load_dotenv()
@@ -195,25 +199,45 @@ class VoiceModeratorCog(commands.Cog):
         log_channel: Optional[int],
         transcript_channel_id: Optional[int],
     ):
-        # Use the voice IO helper to handle connection, recording, and transcription
+        # Use the voice IO helper to handle connection and harvesting
         st = self._get_state(guild.id)
         utterances: list[tuple[int, str, datetime]] = []
+        chunk_tasks: list[asyncio.Task] = []
+        sem = asyncio.Semaphore(2)
         if do_listen:
             # Harvest and transcribe repeatedly every window seconds during the listen duration
             start = time.monotonic()
             next_tick = start
             while True:
-                st.voice, chunk_utts = await collect_utterances(
+                # Harvest only, fast path
+                st.voice, eligible_map, end_ts_map, duration_map_s = await harvest_pcm_chunk(
                     guild=guild,
                     channel=channel,
                     voice=st.voice,
                     do_listen=True,
-                    listen_delta=listen_delta,
                     idle_delta=idle_delta,
-                    api_key=AUTOMOD_OPENAI_KEY,
+                    window_seconds=HARVEST_WINDOW_SECONDS,
                 )
-                if chunk_utts:
-                    utterances.extend(chunk_utts)
+                if eligible_map:
+                    # Spawn a background transcribe task, bounded by semaphore
+                    async def _do_transcribe(em=eligible_map, etm=end_ts_map, dmap=duration_map_s):
+                        async with sem:
+                            try:
+                                chunk_utts, _ = await transcribe_harvest_chunk(
+                                    guild_id=guild.id,
+                                    api_key=AUTOMOD_OPENAI_KEY or "",
+                                    eligible_map=em,
+                                    end_ts_map=etm,
+                                    duration_map_s=dmap,
+                                )
+                                if chunk_utts:
+                                    utterances.extend(chunk_utts)
+                            except Exception as e:
+                                print(f"[VCMod] transcribe task failed: {e}")
+
+                    t = asyncio.create_task(_do_transcribe())
+                    chunk_tasks.append(t)
+                    print(f"[VCMod] Spawned transcribe task. pending={len([x for x in chunk_tasks if not x.done()])}")
                 # schedule next harvest
                 next_tick += HARVEST_WINDOW_SECONDS
                 remaining = min(listen_delta.total_seconds(), next_tick - time.monotonic())
@@ -222,16 +246,19 @@ class VoiceModeratorCog(commands.Cog):
                 # stop once listen window elapsed
                 if (time.monotonic() - start) >= listen_delta.total_seconds():
                     break
+            # Wait for all chunk tasks to complete before processing results
+            if chunk_tasks:
+                print(f"[VCMod] Waiting for {len(chunk_tasks)} transcribe tasks to finish...")
+                await asyncio.gather(*chunk_tasks, return_exceptions=True)
         else:
             # Saver mode: no listening/transcribing in this cycle
-            st.voice, _ = await collect_utterances(
+            await harvest_pcm_chunk(
                 guild=guild,
                 channel=channel,
                 voice=st.voice,
                 do_listen=False,
-                listen_delta=listen_delta,
                 idle_delta=idle_delta,
-                api_key=AUTOMOD_OPENAI_KEY,
+                window_seconds=HARVEST_WINDOW_SECONDS,
             )
             return
         if not utterances:
