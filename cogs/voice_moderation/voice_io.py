@@ -210,31 +210,33 @@ async def collect_utterances(
         print(f"[VC IO] budget check failed, proceeding cautiously: {e}")
 
     # Transcribe and charge only if text is produced
-    utterances, actual_cost = await transcribe_pcm_map(
+    segs, actual_cost = await transcribe_pcm_map(
         guild_id=guild.id,
         api_key=api_key,
         pcm_map=eligible_map,
     )
 
-    if utterances:
+    if segs:
         try:
             await mysql.add_vcmod_usage(guild.id, 0, actual_cost)
         except Exception as e:
             print(f"[VC IO] failed to record transcription cost: {e}")
 
-    if not utterances:
+    if not segs:
         print("[VC IO] No transcript text produced; skipping budget charge.")
         if not do_listen:
             await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
-    # Attach timestamps (end of harvested audio) to each utterance
+    # Attach absolute timestamps to each segment midpoint for proper interleaving ordering
     utterances_with_ts: List[tuple[int, str, datetime]] = []
-    for uid, text in utterances:
+    for uid, text, seg_start, seg_end in segs:
         end_ts = end_ts_map.get(uid, now_wall)
-        dur = duration_map_s.get(uid, 0.0)
-        # Use midpoint timestamp of the harvested audio for better ordering accuracy
-        ts = end_ts - timedelta(seconds=dur / 2.0)
+        chunk_dur = duration_map_s.get(uid, 0.0)
+        # Absolute chunk start = end_ts - chunk_duration
+        chunk_start_abs = end_ts - timedelta(seconds=chunk_dur)
+        seg_mid_rel = (float(seg_start) + float(seg_end)) / 2.0
+        ts = chunk_start_abs + timedelta(seconds=seg_mid_rel)
         utterances_with_ts.append((uid, text, ts))
 
     return vc, utterances_with_ts

@@ -142,7 +142,7 @@ async def _transcribe_wav_bytes(
     model_name: str,
     language: Optional[str] = None,
     fp16: Optional[bool] = None,  # kept for API compatibility
-) -> str:
+) -> List[Tuple[str, float, float]]:
     """
     Run faster-whisper transcription off the event loop, with cuDNN-aware CPU fallback.
     If a cuDNN error occurs, set _WHISPER_FORCE_CPU = True so we don't keep retrying CUDA.
@@ -156,23 +156,40 @@ async def _transcribe_wav_bytes(
 
     loop = asyncio.get_running_loop()
 
-    def _gpu_run(model: WhisperModel) -> str:
+    def _gpu_run(model: WhisperModel) -> List[Tuple[str, float, float]]:
         segments, info = model.transcribe(
             tmp_path,
             language=language,
             vad_filter=False,
             condition_on_previous_text=False,
         )
-        return _normalize_text("".join(seg.text for seg in segments))
+        out: List[Tuple[str, float, float]] = []
+        for seg in segments:
+            try:
+                text = _normalize_text(seg.text)
+                if text:
+                    # seg.start/end are seconds (float)
+                    out.append((text, float(seg.start or 0.0), float(seg.end or 0.0)))
+            except Exception:
+                continue
+        return out
 
-    def _cpu_run(cpu_model: WhisperModel) -> str:
+    def _cpu_run(cpu_model: WhisperModel) -> List[Tuple[str, float, float]]:
         segments, info = cpu_model.transcribe(
             tmp_path,
             language=language,
             vad_filter=False,
             condition_on_previous_text=False,
         )
-        return _normalize_text("".join(seg.text for seg in segments))
+        out: List[Tuple[str, float, float]] = []
+        for seg in segments:
+            try:
+                text = _normalize_text(seg.text)
+                if text:
+                    out.append((text, float(seg.start or 0.0), float(seg.end or 0.0)))
+            except Exception:
+                continue
+        return out
 
     try:
         # If we've already forced CPU, skip GPU path entirely
@@ -213,7 +230,7 @@ async def transcribe_pcm_map(
     pcm_map: Dict[int, bytes],
     language: Optional[str] = None,
     max_concurrency: int = 2,
-) -> Tuple[List[Tuple[int, str]], float]:
+) -> Tuple[List[Tuple[int, str, float, float]], float]:
     """
     Transcribe per-user PCM bytes using local faster-whisper with lazy model loading.
 
@@ -222,7 +239,8 @@ async def transcribe_pcm_map(
     model_name = "large-v3-turbo"
 
     sem = asyncio.Semaphore(max_concurrency)
-    utterances: List[Tuple[int, str]] = []
+    # (user_id, text, seg_start_s, seg_end_s) start/end relative to the provided PCM buffer
+    utterances: List[Tuple[int, str, float, float]] = []
 
     async def _work(uid: int, pcm: bytes):
         if not pcm:
@@ -230,13 +248,14 @@ async def transcribe_pcm_map(
         try:
             wav_bytes = pcm_to_wav_bytes(pcm)
             async with sem:
-                text = await _transcribe_wav_bytes(
+                segs = await _transcribe_wav_bytes(
                     wav_bytes,
                     model_name=model_name,
                     language=language,
                 )
-            if text:
-                utterances.append((uid, text))
+            for (text, seg_start, seg_end) in segs:
+                if text:
+                    utterances.append((uid, text, seg_start, seg_end))
         except Exception as e:
             print(f"[VC IO] transcription failed for {uid}: {e}")
 

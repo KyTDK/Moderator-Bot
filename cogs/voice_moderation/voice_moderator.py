@@ -208,9 +208,9 @@ class VoiceModeratorCog(commands.Cog):
         if not utterances:
             return
 
-        # Build transcript text (include member mention when available)
+        # Build transcript text for AI in chronological order (segment-level)
         lines: list[str] = []
-        for uid, text, _ts in utterances:
+        for uid, text, _ts in sorted(utterances, key=lambda x: x[2]):
             # Treat uid==0 as unmapped speaker; avoid showing id 0
             if uid and uid > 0:
                 member = await safe_get_member(guild, uid)
