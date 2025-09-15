@@ -3,6 +3,7 @@ import os
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+import time
 
 import discord
 from discord.ext import commands, tasks
@@ -152,6 +153,7 @@ class VoiceModeratorCog(commands.Cog):
         do_listen = not saver_mode
 
         async def _run():
+            start_mono = time.monotonic()
             await self._run_cycle_for_channel(
                 guild=guild,
                 channel=channel,
@@ -166,6 +168,12 @@ class VoiceModeratorCog(commands.Cog):
                 log_channel=log_channel,
                 transcript_channel_id=transcript_channel_id,
             )
+            # Ensure we spend approximately listen_delta in this channel before cycling
+            if do_listen:
+                elapsed = time.monotonic() - start_mono
+                remaining = listen_delta.total_seconds() - elapsed
+                if remaining > 0:
+                    await asyncio.sleep(remaining)
 
         st.busy_task = self.bot.loop.create_task(_run())
 

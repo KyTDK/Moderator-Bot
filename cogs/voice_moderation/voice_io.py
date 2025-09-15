@@ -17,6 +17,10 @@ from cogs.voice_moderation.transcriber import transcribe_pcm_map
 # Reduce noisy warnings from decoder flushes at the end of cycles
 logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
 
+# Fixed harvest window for transcription chunks (seconds)
+# Keeps segments reasonably sized even if a speaker talks continuously.
+HARVEST_WINDOW_SECONDS: float = 20.0
+
 def _ensure_opus_loaded() -> None:
     """Ensure opus is loaded for voice receive/PCM decode."""
     if discord.opus.is_loaded():
@@ -170,8 +174,8 @@ async def collect_utterances(
                 await asyncio.sleep(idle_delta.total_seconds())
             return vc, []
 
-    # Harvest per-user PCM for the requested window
-    window_seconds = max(1.0, float(listen_delta.total_seconds()))
+    # Harvest per-user PCM using a fixed window to avoid unbounded growth during continuous speech
+    window_seconds = HARVEST_WINDOW_SECONDS
     pcm_map: Dict[int, bytes] = pool.harvest(window_seconds)
 
     # Filter very short clips
