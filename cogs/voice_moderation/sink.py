@@ -63,10 +63,8 @@ class CollectingSink(voice_recv.AudioSink):
                     ch = getattr(vc, "channel", None)
                     members = [m for m in (getattr(ch, "members", None) or []) if not getattr(m, "bot", False)]
                     speaking_now = [m for m in members if vc.get_speaking(m)]
+                    # Only trust speaking probe when exactly one non-bot member is speaking.
                     if len(speaking_now) == 1:
-                        uid = int(speaking_now[0].id)
-                    elif len(speaking_now) > 1:
-                        speaking_now.sort(key=lambda m: int(m.id))
                         uid = int(speaking_now[0].id)
                 except Exception:
                     uid = None

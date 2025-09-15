@@ -342,9 +342,11 @@ class VoiceModeratorCog(commands.Cog):
 
             except Exception as e:
                 print(f"[VCMod] failed to post transcript: {e}")
-        # Violation history for context (shared helper)
-        user_ids = {uid for uid, *_ in utterances}
-        vhist_blob = am_helpers.build_violation_history_for_users(user_ids, violation_cache)
+        # Violation history: disable for voice to avoid biasing attribution/actions.
+        # Keep the block explicit so the prompt reminds the model not to use history.
+        vhist_blob = (
+            "Violation history:\nNot provided by policy; do not consider prior violations.\n\n"
+        )
 
         # Run the shared moderation pipeline
         try:
