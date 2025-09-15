@@ -249,7 +249,9 @@ class VoiceModeratorCog(commands.Cog):
                 # Build a chat-style transcript with real timestamps (end of harvested audio)
                 pretty_lines: list[str] = []
                 for uid, text, ts in sorted(utterances, key=lambda x: x[2]):
-                    stamp = ts.strftime("%H:%M:%S")
+                    # Discord-localized timestamp (short time)
+                    unix = int(ts.timestamp())
+                    stamp = f"<t:{unix}:t>"
                     if uid and uid > 0:
                         member = await safe_get_member(guild, uid)
                         if member is not None:
