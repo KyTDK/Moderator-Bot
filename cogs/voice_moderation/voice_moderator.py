@@ -210,7 +210,7 @@ class VoiceModeratorCog(commands.Cog):
 
         # Build transcript text (include member mention when available)
         lines: list[str] = []
-        for uid, text in utterances:
+        for uid, text, _ts in utterances:
             # Treat uid==0 as unmapped speaker; avoid showing id 0
             if uid and uid > 0:
                 member = await safe_get_member(guild, uid)
@@ -246,7 +246,25 @@ class VoiceModeratorCog(commands.Cog):
 
         if transcript_channel_id:
             try:
-                chunks = _chunk_text(transcript, limit=3900)  # margin under 4096
+                # Build a chat-style transcript with real timestamps (end of harvested audio)
+                pretty_lines: list[str] = []
+                for uid, text, ts in sorted(utterances, key=lambda x: x[2]):
+                    stamp = ts.strftime("%H:%M:%S")
+                    if uid and uid > 0:
+                        member = await safe_get_member(guild, uid)
+                        if member is not None:
+                            who = member.display_name
+                            who_prefix = member.mention
+                        else:
+                            who = f"User {uid}"
+                            who_prefix = f"<@{uid}>"
+                    else:
+                        who = "Unknown speaker"
+                        who_prefix = "Unknown"
+                    pretty_lines.append(f"[{stamp}] {who_prefix} ({who}): {text}")
+                embed_transcript = "\n".join(pretty_lines)
+
+                chunks = _chunk_text(embed_transcript, limit=3900)  # margin under 4096
                 total = len(chunks)
                 # Post each chunk as its own embed
                 for idx, part in enumerate(chunks, start=1):
@@ -264,7 +282,7 @@ class VoiceModeratorCog(commands.Cog):
             except Exception as e:
                 print(f"[VCMod] failed to post transcript: {e}")
         # Violation history for context (shared helper)
-        user_ids = {uid for uid, _ in utterances}
+        user_ids = {uid for uid, *_ in utterances}
         vhist_blob = am_helpers.build_violation_history_for_users(user_ids, violation_cache)
 
         # Run the shared moderation pipeline

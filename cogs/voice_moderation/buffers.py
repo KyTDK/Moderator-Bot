@@ -88,3 +88,8 @@ class PCMBufferPool:
         dead = [uid for uid, b in self._buffers.items() if (now - b.last_write_ts) > idle_seconds]
         for uid in dead:
             self._buffers.pop(uid, None)
+
+    def last_write_ts(self, user_id: int) -> Optional[float]:
+        """Return the monotonic timestamp of the last write for a user, if available."""
+        buf = self._buffers.get(user_id)
+        return buf.last_write_ts if buf is not None else None

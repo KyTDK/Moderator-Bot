@@ -1,9 +1,10 @@
 import asyncio
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from typing import Optional, Tuple, List, Dict
 import sys
 import os
 import logging
+import time
 
 import discord
 from discord.ext import voice_recv
@@ -117,7 +118,7 @@ async def collect_utterances(
     listen_delta: timedelta,
     idle_delta: timedelta,
     api_key: Optional[str],
-) -> Tuple[Optional[discord.VoiceClient], List[tuple[int, str]]]:
+) -> Tuple[Optional[discord.VoiceClient], List[tuple[int, str, datetime]]]:
     """
     Join/move to a voice channel, optionally record, and transcribe utterances.
 
@@ -180,6 +181,20 @@ async def collect_utterances(
             await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
+    # Compute approximate end timestamps for each user's harvested audio using monotonic->wall clock mapping
+    now_wall = datetime.now(timezone.utc)
+    now_mono = time.monotonic()
+    end_ts_map: Dict[int, datetime] = {}
+    duration_map_s: Dict[int, float] = {}
+    for uid, pcm in eligible_map.items():
+        last = pool.last_write_ts(uid)
+        if last is not None:
+            delta_s = max(0.0, now_mono - last)
+            end_ts_map[uid] = now_wall - timedelta(seconds=delta_s)
+        else:
+            end_ts_map[uid] = now_wall
+        duration_map_s[uid] = len(pcm) / float(BYTES_PER_SECOND)
+
     # Budget pre-check from estimated minutes
     bytes_per_minute = BYTES_PER_SECOND * 60
     est_minutes = sum(len(b) for b in eligible_map.values()) / float(bytes_per_minute)
@@ -213,4 +228,13 @@ async def collect_utterances(
             await asyncio.sleep(idle_delta.total_seconds())
         return vc, []
 
-    return vc, utterances
+    # Attach timestamps (end of harvested audio) to each utterance
+    utterances_with_ts: List[tuple[int, str, datetime]] = []
+    for uid, text in utterances:
+        end_ts = end_ts_map.get(uid, now_wall)
+        dur = duration_map_s.get(uid, 0.0)
+        # Use midpoint timestamp of the harvested audio for better ordering accuracy
+        ts = end_ts - timedelta(seconds=dur / 2.0)
+        utterances_with_ts.append((uid, text, ts))
+
+    return vc, utterances_with_ts
