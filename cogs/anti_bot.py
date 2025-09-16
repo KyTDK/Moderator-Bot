@@ -142,7 +142,7 @@ class AntiBotCog(commands.Cog):
         await self._save_conditions(interaction.guild.id, conditions)
 
         await interaction.followup.send(
-            f"Added condition `{condition.id}`: {signal_meta.name} {condition.operator} {format_expected(condition)}.",
+            f"Added condition: {signal_meta.name} {condition.operator} {format_expected(condition)}.",
             ephemeral=True,
         )
 
