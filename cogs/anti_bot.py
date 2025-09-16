@@ -75,6 +75,13 @@ class AntiBotCog(commands.Cog):
         if not signal:
             return []
         query = (current or "").lower()
+        if signal.value_type == "boolean":
+            bool_options = [("True", "true"), ("False", "false")]
+            return [
+                app_commands.Choice(name=name, value=value)
+                for name, value in bool_options
+                if not query or query in name.lower() or query in value.lower()
+            ][:25]
         return [
             app_commands.Choice(name=op, value=op)
             for op in signal.operators
