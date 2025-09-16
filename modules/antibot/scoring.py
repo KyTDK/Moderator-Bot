@@ -255,23 +255,14 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
 
     try:
         primary = getattr(user, 'primary_guild', None)
-        if primary is None:
-            primaries = getattr(user, 'primary_guilds', None)
-            if primaries:
-                try:
-                    primary = next(iter(primaries), None)
-                except TypeError:
-                    primary = primaries
         primary_label = None
         if primary is not None:
             tag = getattr(primary, 'tag', None)
             if tag:
                 primary_label = str(tag)
             else:
-                name = getattr(primary, 'name', None)
-                if name:
-                    primary_label = str(name)
-            ident = getattr(primary, 'id', None) or getattr(primary, 'guild_id', None)
+                primary_label = None
+            ident = getattr(primary, 'id', None)
             if primary_label and ident:
                 primary_label = f"{primary_label} ({ident})"
             elif ident and not primary_label:
