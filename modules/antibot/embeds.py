@@ -158,7 +158,8 @@ def build_join_embed(
             f"Activities: `{details.get('activities_count')}`\n"
             f"Server Tag: `{details.get('primary_guild') or 'none'}` | "
             f"Collectibles: `{details.get('collectibles_count') or 0}` | "
-            f"Member Flags: `{details.get('member_flags_count') or 0}`"
+            f"Member Flags: `{details.get('member_flags_count') or 0}` | "
+            f"Conditions: `{details.get('conditions_passed', 0)}/{details.get('conditions_total', 0)}`"
         ),
         inline=False,
     )

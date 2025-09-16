@@ -459,18 +459,18 @@ SETTINGS_SCHEMA = {
         default=False,
         choices=["true", "false"],
     ),
-    "antibot-min-score": Setting(
-        name="antibot-min-score",
-        description="Minimum trust score required to stay on join (0-100).",
-        setting_type=int,
-        default=0,
-    ),
     "antibot-autorole": Setting(
         name="antibot-autorole",
         description="Role to auto-assign to members meeting the trust score threshold.",
         setting_type=discord.Role,
         default=None,
         hidden=False,
+    ),
+    "antibot-min-pass": Setting(
+        name="antibot-min-pass",
+        description="Minimum number of AntiBot conditions that must be satisfied on join.",
+        setting_type=int,
+        default=1,
     ),
     "antibot-conditions": Setting(
         name="antibot-conditions",
@@ -482,10 +482,10 @@ SETTINGS_SCHEMA = {
         ],
         hidden=False
     ),
-    "antibot-autorole-min-score": Setting(
-        name="antibot-autorole-min-score",
-        description="Minimum trust score (0-100) for auto-role assignment.",
+    "antibot-autorole-min-pass": Setting(
+        name="antibot-autorole-min-pass",
+        description="Minimum number of AntiBot conditions that must be satisfied for auto-role assignment.",
         setting_type=int,
-        default=70,
+        default=0,
     ),
 }

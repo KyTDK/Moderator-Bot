@@ -133,11 +133,11 @@ async def harvest_pcm_chunk(
     vc = await _ensure_connected(guild=guild, channel=channel, voice=voice)
     if not vc:
         await asyncio.sleep(5)
-        return None, []
+        return None, {}, {}, {}
 
     if not hasattr(vc, "listen") or not hasattr(vc, "stop_listening"):
         print(f"[VC IO] Voice client missing listen/stop_listening; type={type(vc)}")
-        return vc, []
+        return vc, {}, {}, {}
 
     if not discord.opus.is_loaded():
         print("[VC IO] Opus still not loaded; skipping listen (see OPUS installation notes)")

@@ -308,55 +308,122 @@ class AntiBotCog(commands.Cog):
         await interaction.followup.send(embed=emb, ephemeral=True)
 
 
+    async def _hydrate_member_for_scoring(self, guild: discord.Guild, member: discord.Member) -> discord.Member:
+        try:
+            enriched = await ensure_member_with_presence(guild, member.id)
+            if enriched is not None:
+                member = enriched
+        except Exception:
+            pass
+
+        try:
+            fetched_member = await safe_get_member(guild, member.id, force_fetch=True)
+            if fetched_member is not None:
+                member = fetched_member
+        except Exception:
+            pass
+
+        try:
+            full_user = await safe_get_user(self.bot, member.id, force_fetch=True)
+            if full_user:
+                member._user = full_user
+        except Exception:
+            pass
+
+        return member
+
+    def _resolve_antibot_thresholds(self, settings: dict[str, object]) -> tuple[int, int]:
+        raw_join_min = settings.get("antibot-min-pass")
+        if raw_join_min is None:
+            legacy_join_min = settings.get("antibot-min-score", 0)
+            raw_join_min = 1 if legacy_join_min and int(legacy_join_min or 0) > 0 else 0
+        join_required = int(raw_join_min or 0)
+
+        raw_autorole_min = settings.get("antibot-autorole-min-pass")
+        if raw_autorole_min is None:
+            legacy_auto_min = settings.get("antibot-autorole-min-score", 0)
+            raw_autorole_min = 1 if legacy_auto_min and int(legacy_auto_min or 0) > 0 else 0
+        autorole_required = int(raw_autorole_min or 0)
+
+        return join_required, autorole_required
+
+    def _evaluate_join_conditions(self, conditions, member, details, join_required: int, autorole_required: int):
+        condition_results = evaluate_conditions(conditions, member, details) if conditions else []
+        conditions_passed = sum(1 for result in condition_results if result.passed)
+        total_conditions = len(conditions)
+
+        if total_conditions == 0:
+            join_required = 0
+            autorole_required = 0
+
+        join_required = max(join_required, 0)
+        autorole_required = max(autorole_required, 0)
+
+        join_required_count = min(join_required, total_conditions) if total_conditions and join_required else 0
+        autorole_required_count = min(autorole_required, total_conditions) if total_conditions and autorole_required else 0
+
+        join_failure = join_required_count and conditions_passed < join_required_count
+        autorole_failure = False
+        if total_conditions and autorole_required_count:
+            autorole_failure = conditions_passed < autorole_required_count
+        elif autorole_required and not total_conditions:
+            autorole_failure = True
+
+        return {
+            "results": condition_results,
+            "passed": conditions_passed,
+            "total": total_conditions,
+            "join_required_count": join_required_count,
+            "join_failure": join_failure,
+            "autorole_required_count": autorole_required_count,
+            "autorole_failure": autorole_failure,
+        }
+
+    @staticmethod
+    def _should_kick(enabled: bool, failure: bool, total_conditions: int, required_count: int, conditions_passed: int) -> tuple[bool, str | None]:
+        if not enabled or not required_count or not total_conditions:
+            return False, None
+        if not failure:
+            return False, None
+        return True, f"conditions {conditions_passed}/{required_count}"
+
     # ---------- Join hook ----------
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         try:
             settings = await mysql.get_settings(member.guild.id, [
                 "antibot-enabled",
+                "antibot-min-pass",
                 "antibot-min-score",
                 "antibot-autorole",
+                "antibot-autorole-min-pass",
                 "antibot-autorole-min-score",
                 "monitor-channel",
+                "antibot-conditions",
             ])
             enabled = bool(settings.get("antibot-enabled", False))
-            min_score = int(settings.get("antibot-min-score", 0) or 0)
+            join_required, autorole_required = self._resolve_antibot_thresholds(settings)
             autorole_id = settings.get("antibot-autorole")
-            autorole_min = int(settings.get("antibot-autorole-min-score", 70) or 70)
             monitor_channel_id = settings.get("monitor-channel")
+            raw_conditions = settings.get("antibot-conditions") or []
+            join_conditions = self._load_conditions(raw_conditions)
 
-            try:
-                enriched = await ensure_member_with_presence(member.guild, member.id)
-                if enriched is not None:
-                    member = enriched
-            except Exception:
-                pass
-
-            try:
-                fetched_member = await safe_get_member(member.guild, member.id, force_fetch=True)
-                if fetched_member is not None:
-                    member = fetched_member
-            except Exception:
-                pass
-
-            try:
-                full_user = await safe_get_user(self.bot, member.id, force_fetch=True)
-                if full_user:
-                    member._user = full_user
-            except Exception:
-                pass
+            member = await self._hydrate_member_for_scoring(member.guild, member)
 
             score, details = evaluate_member(member, bot=self.bot)
+            condition_state = self._evaluate_join_conditions(join_conditions, member, details, join_required, autorole_required)
+            details['conditions_total'] = condition_state['total']
+            details['conditions_passed'] = condition_state['passed']
 
             if monitor_channel_id:
                 emb = build_join_embed(member, score, details)
                 await log_to_channel(emb, int(monitor_channel_id), self.bot)
 
-            if autorole_id and score >= autorole_min and not member.pending:
+            if autorole_id and not condition_state['autorole_failure'] and not member.pending:
                 role = member.guild.get_role(int(autorole_id))
                 if role:
                     try:
-                        await member.add_roles(role, reason=f"Auto role via AntiBot (score {score} >= {autorole_min})")
+                        await member.add_roles(role, reason="Auto role via AntiBot (conditions met)")
                     except (discord.Forbidden, discord.HTTPException):
                         if monitor_channel_id:
                             warn = discord.Embed(
@@ -372,24 +439,20 @@ class AntiBotCog(commands.Cog):
                             except Exception:
                                 pass
 
-            if enabled and min_score and score < min_score:
-                severe_flags = 0
-                if details.get("default_avatar", False):
-                    severe_flags += 1
-                if details.get("membership_screening_pending", False):
-                    severe_flags += 1
-                if (details.get("account_age_days") or 9999) <= 3:
-                    severe_flags += 1
-                if (details.get("creation_to_join_minutes") or 9999) <= 60:
-                    severe_flags += 1
-                if (details.get("name_digits_ratio") or 0.0) >= 0.5 and (details.get("name_longest_digit_run") or 0) >= 5:
-                    severe_flags += 1
+            should_kick, failure_reason = self._should_kick(
+                enabled,
+                condition_state['join_failure'],
+                condition_state['total'],
+                condition_state['join_required_count'],
+                condition_state['passed'],
+            )
 
-                if severe_flags >= 3:
-                    try:
-                        await member.kick(reason=f"Auto-kicked: low trust ({score}<{min_score}) and {severe_flags} strong indicators")
-                    except (discord.Forbidden, discord.HTTPException):
-                        pass
+            if should_kick:
+                try:
+                    detail = failure_reason or f"conditions {condition_state['passed']}/{condition_state['join_required_count']}"
+                    await member.kick(reason=f"Auto-kicked: {detail}")
+                except (discord.Forbidden, discord.HTTPException):
+                    pass
 
         except Exception:
             return
@@ -397,4 +460,5 @@ class AntiBotCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AntiBotCog(bot))
+
 
