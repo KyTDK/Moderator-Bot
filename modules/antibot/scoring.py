@@ -265,13 +265,6 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
             ident = getattr(primary, 'id', None)
             if primary_label and ident:
                 primary_label = f"{primary_label} ({ident})"
-            elif ident and not primary_label:
-                primary_label = str(ident)
-            elif primary_label is None:
-                try:
-                    primary_label = str(primary)
-                except Exception:
-                    primary_label = None
         if primary_label:
             details['primary_guild'] = primary_label
             score += 2; contrib['primary_guild'] = contrib.get('primary_guild', 0) + 2
