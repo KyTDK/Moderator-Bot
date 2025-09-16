@@ -42,12 +42,19 @@ class Settings(commands.Cog):
             for choice in schema.choices if current.lower() in choice.lower()
         ][:25]
 
-    # List to hold choices for non-channel settings
-    choices_without_hidden = [
-        app_commands.Choice(name=setting.name[:100], value=setting_name[:100])
-        for setting_name, setting in SETTINGS_SCHEMA.items()
-        if setting.hidden is False
-    ]
+    # Autocomplete helpers
+    async def name_autocomplete(self, interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
+        query = (current or "").lower()
+        results: list[app_commands.Choice[str]] = []
+        for setting_name, setting in SETTINGS_SCHEMA.items():
+            if getattr(setting, "hidden", False):
+                continue
+            if query and query not in setting_name.lower() and query not in setting.name.lower():
+                continue
+            results.append(app_commands.Choice(name=setting.name[:100], value=setting_name[:100]))
+            if len(results) >= 25:
+                break
+        return results
 
     settings_group = app_commands.Group(
         name="settings",
@@ -82,8 +89,7 @@ class Settings(commands.Cog):
             await interaction.followup.send("You are already using default settings.")
 
     @settings_group.command(name="set", description="Set a server setting.")
-    @app_commands.autocomplete(value=value_autocomplete)
-    @app_commands.choices(name=choices_without_hidden)
+    @app_commands.autocomplete(value=value_autocomplete, name=name_autocomplete)
     async def set_setting(
         self,
         interaction: Interaction,
@@ -280,7 +286,7 @@ class Settings(commands.Cog):
         ][:25]
 
     @settings_group.command(name="get", description="Get the current value of a server setting.")
-    @app_commands.choices(name=choices_without_hidden[:25])
+    @app_commands.autocomplete(name=name_autocomplete)
     async def get_setting(self, interaction: Interaction, name: str):
         """Get the current value of a server setting."""
         await interaction.response.defer(ephemeral=True)
@@ -340,7 +346,7 @@ class Settings(commands.Cog):
         )
 
     @settings_group.command(name="remove", description="Remove a server setting or an item from a list-type setting.")
-    @app_commands.choices(name=choices_without_hidden[:25])
+    @app_commands.autocomplete(name=name_autocomplete)
     async def remove_setting(
         self,
         interaction: Interaction,
