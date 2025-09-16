@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional
+﻿from typing import Any, Callable, Optional
 import discord
 from modules.variables.TimeString import TimeString
 
@@ -471,6 +471,16 @@ SETTINGS_SCHEMA = {
         setting_type=discord.Role,
         default=None,
         hidden=False,
+    ),
+    "antibot-conditions": Setting(
+        name="antibot-conditions",
+        description="Custom AntiBot inspection conditions (stored as a list of rules).",
+        setting_type=list[dict],
+        default=[
+            {"id": "score-default", "signal": "final_score", "operator": ">=", "value": 60, "label": "Score >= 60"},
+            {"id": "age-default", "signal": "account_age_days", "operator": ">=", "value": 7, "label": "Account age >= 7d"}
+        ],
+        hidden=False
     ),
     "antibot-autorole-min-score": Setting(
         name="antibot-autorole-min-score",

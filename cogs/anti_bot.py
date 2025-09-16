@@ -1,13 +1,22 @@
-import discord
+﻿import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
-from typing import Optional
+from typing import Optional, List
 
 from modules.utils import mysql
 from modules.utils.mod_logging import log_to_channel
 from modules.utils.discord_utils import safe_get_member, safe_get_user, ensure_member_with_presence
 from modules.antibot.scoring import evaluate_member
 from modules.antibot.embeds import build_inspection_embed, build_join_embed
+from modules.antibot.conditions import (
+    Condition,
+    evaluate_conditions,
+    list_signals,
+    make_condition,
+    get_signal,
+    format_actual,
+    format_expected,
+)
 
 
 class AntiBotCog(commands.Cog):
@@ -24,19 +33,157 @@ class AntiBotCog(commands.Cog):
         default_permissions=discord.Permissions(administrator=True),
     )
 
-    @antibot.command(name="inspect", description="Inspect a user's signals and compute a trust score")
+    conditions_group = app_commands.Group(
+        name="conditions",
+        description="Manage AntiBot inspection conditions",
+        guild_only=True,
+        default_permissions=discord.Permissions(administrator=True),
+    )
+    antibot.add_command(conditions_group)
+
+    # ----- Helpers -----
+    @staticmethod
+    def _load_conditions(raw: Optional[List[dict]]) -> List[Condition]:
+        conditions: List[Condition] = []
+        if not raw:
+            return conditions
+        for entry in raw:
+            try:
+                conditions.append(Condition.from_dict(entry))
+            except Exception:
+                continue
+        return conditions
+
+    async def _save_conditions(self, guild_id: int, conditions: List[Condition]):
+        payload = [cond.to_dict() for cond in conditions]
+        await mysql.update_settings(guild_id, "antibot-conditions", payload)
+
+    async def _condition_signal_autocomplete(self, interaction: Interaction, current: str):
+        options = []
+        query = (current or "").lower()
+        for signal in list_signals():
+            if query and query not in signal.key.lower() and query not in signal.name.lower():
+                continue
+            options.append(app_commands.Choice(name=f"{signal.name} ({signal.key})"[:100], value=signal.key[:100]))
+            if len(options) >= 25:
+                break
+        return options
+
+    async def _condition_operator_autocomplete(self, interaction: Interaction, current: str):
+        signal_key = getattr(interaction.namespace, "signal", None)
+        signal = get_signal(signal_key) if signal_key else None
+        if not signal:
+            return []
+        query = (current or "").lower()
+        return [
+            app_commands.Choice(name=op, value=op)
+            for op in signal.operators
+            if query in op.lower()
+        ][:25]
+
+    async def _condition_remove_autocomplete(self, interaction: Interaction, current: str):
+        raw = await mysql.get_settings(interaction.guild.id, "antibot-conditions") or []
+        conditions = self._load_conditions(raw)
+        query = (current or "").lower()
+        results = []
+        for cond in conditions:
+            label = cond.label or f"{cond.signal} {cond.operator} {cond.value}"
+            if query and query not in cond.id.lower() and query not in label.lower():
+                continue
+            results.append(app_commands.Choice(name=f"{cond.id}: {label}"[:100], value=cond.id))
+            if len(results) >= 25:
+                break
+        return results
+
+    # ----- Conditions commands -----
+    @conditions_group.command(name="add", description="Add a new AntiBot condition")
+    @app_commands.autocomplete(signal=_condition_signal_autocomplete, operator=_condition_operator_autocomplete)
+    @app_commands.describe(signal="Signal to check", operator="Comparator", value="Target value", label="Optional label")
+    async def condition_add(self, interaction: Interaction, signal: str, operator: str, value: Optional[str] = None, label: Optional[str] = None):
+        await interaction.response.defer(ephemeral=True)
+        signal_meta = get_signal(signal)
+        if not signal_meta:
+            await interaction.followup.send("Unknown signal.", ephemeral=True)
+            return
+        if operator not in signal_meta.operators:
+            await interaction.followup.send(f"Operator must be one of {', '.join(signal_meta.operators)}.", ephemeral=True)
+            return
+        try:
+            condition = make_condition(signal_meta, operator, value, label)
+        except ValueError as err:
+            await interaction.followup.send(str(err), ephemeral=True)
+            return
+
+        raw = await mysql.get_settings(interaction.guild.id, "antibot-conditions") or []
+        conditions = self._load_conditions(raw)
+        conditions.append(condition)
+        await self._save_conditions(interaction.guild.id, conditions)
+
+        await interaction.followup.send(
+            f"Added condition `{condition.id}`: {signal_meta.name} {operator} {format_expected(condition)}.",
+            ephemeral=True,
+        )
+
+    @conditions_group.command(name="remove", description="Remove an existing condition")
+    @app_commands.autocomplete(condition_id=_condition_remove_autocomplete)
+    async def condition_remove(self, interaction: Interaction, condition_id: str):
+        await interaction.response.defer(ephemeral=True)
+        raw = await mysql.get_settings(interaction.guild.id, "antibot-conditions") or []
+        conditions = self._load_conditions(raw)
+        updated = [cond for cond in conditions if cond.id != condition_id]
+        if len(updated) == len(conditions):
+            await interaction.followup.send("Condition ID not found.", ephemeral=True)
+            return
+        await self._save_conditions(interaction.guild.id, updated)
+        await interaction.followup.send(f"Removed condition `{condition_id}`.", ephemeral=True)
+
+    @conditions_group.command(name="list", description="List configured AntiBot conditions")
+    async def condition_list(self, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True)
+        raw = await mysql.get_settings(interaction.guild.id, "antibot-conditions") or []
+        conditions = self._load_conditions(raw)
+        if not conditions:
+            await interaction.followup.send("No conditions configured. Use `/antibot conditions add`.", ephemeral=True)
+            return
+        embed = discord.Embed(title="Configured AntiBot Conditions", color=discord.Color.blurple())
+        for cond in conditions:
+            signal = get_signal(cond.signal)
+            name = cond.label or (signal.name if signal else cond.signal)
+            expected = format_expected(cond)
+            embed.add_field(
+                name=f"{cond.id}: {name}",
+                value=f"Signal `{cond.signal}` {cond.operator} `{expected}`",
+                inline=False,
+            )
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @conditions_group.command(name="clear", description="Remove all AntiBot conditions")
+    async def condition_clear(self, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True)
+        await self._save_conditions(interaction.guild.id, [])
+        await interaction.followup.send("Cleared all AntiBot conditions.", ephemeral=True)
+
+    # ----- Inspect command -----
+    @antibot.command(name="inspect", description="Run AntiBot checks using configured conditions")
     @app_commands.describe(user="Select a user to inspect (or provide ID)", user_id="Optional user ID if not selectable")
     async def inspect(self, interaction: Interaction, user: Optional[discord.User] = None, user_id: Optional[str] = None):
         await interaction.response.defer(ephemeral=True)
 
-        # Resolve the member within this guild
-        target_member: Optional[discord.Member] = None
         guild = interaction.guild
         if guild is None:
             await interaction.followup.send("This command can only be used in a server.", ephemeral=True)
             return
 
-        # Prefer an explicit chooser, then ID fallback
+        raw_conditions = await mysql.get_settings(guild.id, "antibot-conditions") or []
+        conditions = self._load_conditions(raw_conditions)
+        if not conditions:
+            await interaction.followup.send(
+                "No AntiBot conditions configured. Use `/antibot conditions add` to create rules.",
+                ephemeral=True,
+            )
+            return
+
+        target_member: Optional[discord.Member] = None
         if user is not None:
             target_member = await safe_get_member(guild, user.id, force_fetch=True)
         elif user_id and user_id.isdigit():
@@ -46,10 +193,9 @@ class AntiBotCog(commands.Cog):
             await interaction.followup.send("Could not resolve that user as a member of this server.", ephemeral=True)
             return
 
-        # Try to enhance the Member with presence/activities for better signals
         try:
             enriched = await ensure_member_with_presence(guild, target_member.id)
-            if enriched is not None:
+            if enriched:
                 target_member = enriched
         except Exception:
             pass
@@ -61,25 +207,45 @@ class AntiBotCog(commands.Cog):
         except Exception:
             pass
 
-        # Ensure we have a fully populated user for banner/accent
         try:
             full_user = await safe_get_user(self.bot, target_member.id, force_fetch=True)
             if full_user:
-                # overwrite banner/accent fields if available
                 target_member._user = full_user
         except Exception:
             pass
 
         score, details = evaluate_member(target_member, bot=self.bot)
+        results = evaluate_conditions(conditions, target_member, details)
+        passed = sum(1 for r in results if r.passed)
+        color = discord.Color.green() if passed == len(results) else discord.Color.orange() if passed else discord.Color.red()
 
-        emb = build_inspection_embed(target_member, score, details)
-        await interaction.followup.send(embed=emb, ephemeral=True)
+        embed = discord.Embed(
+            title=f"AntiBot Condition Check: {target_member}",
+            description=f"Conditions satisfied: **{passed}/{len(results)}**",
+            color=color,
+        )
+        embed.add_field(name="Score", value=f"`{score}` / 100", inline=False)
+
+        for res in results:
+            cond = res.condition
+            signal_meta = get_signal(cond.signal)
+            label = cond.label or (signal_meta.name if signal_meta else cond.signal)
+            expected = format_expected(cond)
+            actual = format_actual(cond.signal, res.actual_value)
+            status = "✅" if res.passed else "❌"
+            embed.add_field(
+                name=f"{status} {label}",
+                value=f"`{cond.signal}` {cond.operator} `{expected}`\nActual: `{actual}`",
+                inline=False,
+            )
+
+        embed.set_footer(text="Detailed view available via /debug inspect.")
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
     # ---------- Join hook ----------
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         try:
-            # Read relevant settings (use defaults if unset)
             settings = await mysql.get_settings(member.guild.id, [
                 "antibot-enabled",
                 "antibot-min-score",
@@ -93,7 +259,6 @@ class AntiBotCog(commands.Cog):
             autorole_min = int(settings.get("antibot-autorole-min-score", 70) or 70)
             monitor_channel_id = settings.get("monitor-channel")
 
-            # Try to enrich the join member with presence info (best-effort)
             try:
                 enriched = await ensure_member_with_presence(member.guild, member.id)
                 if enriched is not None:
@@ -117,20 +282,16 @@ class AntiBotCog(commands.Cog):
 
             score, details = evaluate_member(member, bot=self.bot)
 
-            # Always log a compact embed if monitor channel is configured
             if monitor_channel_id:
                 emb = build_join_embed(member, score, details)
                 await log_to_channel(emb, int(monitor_channel_id), self.bot)
 
-            # Optional auto-role
             if autorole_id and score >= autorole_min and not member.pending:
                 role = member.guild.get_role(int(autorole_id))
                 if role:
                     try:
-                        # Validate hierarchy/permissions implicitly via add_roles
                         await member.add_roles(role, reason=f"Auto role via AntiBot (score {score} >= {autorole_min})")
                     except (discord.Forbidden, discord.HTTPException):
-                        # Report failure to monitor channel (if set)
                         if monitor_channel_id:
                             warn = discord.Embed(
                                 title="AntiBot: Auto-role failed",
@@ -145,10 +306,8 @@ class AntiBotCog(commands.Cog):
                             except Exception:
                                 pass
 
-            # Optional auto-kick with guardrails: require multiple strong indicators
             if enabled and min_score and score < min_score:
                 severe_flags = 0
-                # Strong negatives
                 if details.get("default_avatar", False):
                     severe_flags += 1
                 if details.get("membership_screening_pending", False):
@@ -159,7 +318,6 @@ class AntiBotCog(commands.Cog):
                     severe_flags += 1
                 if (details.get("name_digits_ratio") or 0.0) >= 0.5 and (details.get("name_longest_digit_run") or 0) >= 5:
                     severe_flags += 1
-                # roles removed as a pointer (do not count)
 
                 if severe_flags >= 3:
                     try:
@@ -168,7 +326,6 @@ class AntiBotCog(commands.Cog):
                         pass
 
         except Exception:
-            # Never let join handling crash other cogs
             return
 
 
