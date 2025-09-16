@@ -91,6 +91,24 @@ async def safe_get_member(guild: discord.Guild, user_id: int) -> Optional[discor
     except discord.HTTPException as e:
         print(f"[safe_get_member] fetch_member({user_id}) failed: {e}")
         return None
+
+async def ensure_member_with_presence(guild: discord.Guild, user_id: int) -> Optional[discord.Member]:
+    """
+    Ensure we have a Member object enhanced with presence/activities when possible.
+
+    - If the member is cached and already has the `activities` attribute populated, return it.
+    - Otherwise, use `guild.query_members` with `presences=True` to fetch a fresh Member with presence.
+    - Falls back to the cached Member (or None) if the query fails.
+    """
+    m = guild.get_member(user_id)
+    if m is not None and getattr(m, "activities", None) is not None:
+        return m
+    try:
+        # Query a single member by ID and request presences
+        members = await guild.query_members(user_ids=[user_id], presences=True, limit=1)
+        return members[0] if members else m
+    except Exception:
+        return m
     
 async def safe_get_message(channel: discord.TextChannel, message_id: int) -> Optional[discord.Message]:
     """

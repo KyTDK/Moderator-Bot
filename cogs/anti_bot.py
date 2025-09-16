@@ -5,7 +5,7 @@ from typing import Optional
 
 from modules.utils import mysql
 from modules.utils.mod_logging import log_to_channel
-from modules.utils.discord_utils import safe_get_member, safe_get_user
+from modules.utils.discord_utils import safe_get_member, safe_get_user, ensure_member_with_presence
 from modules.antibot.scoring import evaluate_member
 from modules.antibot.embeds import build_inspection_embed, build_join_embed
 
@@ -46,6 +46,14 @@ class AntiBotCog(commands.Cog):
             await interaction.followup.send("Could not resolve that user as a member of this server.", ephemeral=True)
             return
 
+        # Try to enhance the Member with presence/activities for better signals
+        try:
+            enriched = await ensure_member_with_presence(guild, target_member.id)
+            if enriched is not None:
+                target_member = enriched
+        except Exception:
+            pass
+
         # Ensure we have a fully populated user for banner/accent
         try:
             full_user = await safe_get_user(self.bot, target_member.id)
@@ -77,6 +85,14 @@ class AntiBotCog(commands.Cog):
             autorole_id = settings.get("antibot-autorole")
             autorole_min = int(settings.get("antibot-autorole-min-score", 70) or 70)
             monitor_channel_id = settings.get("monitor-channel")
+
+            # Try to enrich the join member with presence info (best-effort)
+            try:
+                enriched = await ensure_member_with_presence(member.guild, member.id)
+                if enriched is not None:
+                    member = enriched
+            except Exception:
+                pass
 
             score, details = evaluate_member(member, bot=self.bot)
 
