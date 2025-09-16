@@ -61,15 +61,37 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
     if getattr(member, "guild_avatar", None) is not None:
         score += 2; contrib["server_avatar"] = contrib.get("server_avatar", 0) + 2
 
-    has_banner = getattr(user, "banner", None) is not None
+    banner_asset = getattr(user, "banner", None)
+    has_banner = banner_asset is not None
     details["has_banner"] = has_banner
     if has_banner:
         score += 3; contrib["banner_present"] = 3
+        try:
+            details["banner_url"] = banner_asset.url  # type: ignore[attr-defined]
+        except Exception:
+            try:
+                details["banner_url"] = str(banner_asset)
+            except Exception:
+                pass
 
     has_accent = getattr(user, "accent_color", None) is not None
     details["has_accent_color"] = has_accent
     if has_accent:
         score += 2; contrib["accent_color"] = 2
+        try:
+            details["accent_color_value"] = getattr(user.accent_color, "value", None)  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+    bio_raw = getattr(user, "bio", None)
+    if bio_raw is None:
+        bio_raw = getattr(user, "description", None)
+    bio = str(bio_raw).strip() if bio_raw else ""
+    has_bio = bool(bio)
+    details["has_bio"] = has_bio
+    if has_bio:
+        details["bio_preview"] = bio[:300]
+        score += 3; contrib["bio_present"] = 3
 
     # 4) Roles removed as a pointer (intentionally not used in scoring)
 

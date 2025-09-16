@@ -94,6 +94,13 @@ class AntiBotCog(commands.Cog):
             except Exception:
                 pass
 
+            try:
+                full_user = await safe_get_user(self.bot, member.id)
+                if full_user:
+                    member._user = full_user
+            except Exception:
+                pass
+
             score, details = evaluate_member(member, bot=self.bot)
 
             # Always log a compact embed if monitor channel is configured
