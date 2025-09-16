@@ -89,6 +89,10 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
             score += 2; contrib["listening"] = contrib.get("listening", 0) + 2
         if any(getattr(a, "type", None) == discord.ActivityType.streaming for a in acts):
             score += 4; contrib["streaming"] = contrib.get("streaming", 0) + 4
+        if any(getattr(a, "type", None) == discord.ActivityType.custom for a in acts):
+            score += 2; contrib["custom_status"] = contrib.get("custom_status", 0) + 2
+        if len(acts) >= 3:
+            score += 2; contrib["many_activities"] = 2
 
     # 6) Membership screening pending
     pending = getattr(member, "pending", False)
@@ -133,7 +137,10 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
     details["name_entropy"] = round(ent, 2)
     details["name_digits_ratio"] = round(dr, 2)
     details["name_longest_digit_run"] = ldr
-    suspicious_kw = any(k in uname_l for k in ("bot", "spam", "giveaway", "airdrop"))
+    suspicious_kw = any(k in uname_l for k in (
+        "bot", "spam", "giveaway", "airdrop", "crypto", "nitro", "gift",
+        "promo", "steam", "free", "http", "https", "discord.gift"
+    ))
     details["name_suspicious_kw"] = suspicious_kw
     # Apply cautious weights
     if suspicious_kw and not is_bot:
@@ -173,6 +180,20 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
                 score += 5; contrib["mutual_guilds>=3"] = 5
             elif mg >= 2:
                 score += 3; contrib["mutual_guilds>=2"] = 3
+    except Exception:
+        pass
+
+    # 12) Nickname present
+    try:
+        if getattr(member, "nick", None):
+            score += 3; contrib["nickname_set"] = 3
+    except Exception:
+        pass
+
+    # 13) Animated avatar
+    try:
+        if getattr(member, "display_avatar", None) and member.display_avatar.is_animated():
+            score += 3; contrib["animated_avatar"] = 3
     except Exception:
         pass
 
