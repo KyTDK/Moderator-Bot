@@ -479,7 +479,7 @@ SETTINGS_SCHEMA = {
         default=[
             {"signal": "final_score", "operator": ">=", "value": 60, "label": "Score >= 60"},
             {"signal": "account_age_days", "operator": ">=", "value": 7, "label": "Account age >= 7d"},
-            {"signal":"server_tag_present", "operator":"==","value": True, "label":"Server tag present"},
+            {"signal": "server_tag_present", "operator":"==", "value": True, "label": "Server tag present"},
             
         ],
         hidden=False
