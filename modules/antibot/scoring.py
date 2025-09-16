@@ -71,16 +71,7 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
     if has_accent:
         score += 2; contrib["accent_color"] = 2
 
-    # 4) Roles (excluding @everyone)
-    role_count = max(0, len([r for r in member.roles if r != member.guild.default_role]))
-    details["role_count"] = role_count
-    # Roles are a weak signal and can be gamed
-    if role_count >= 5:
-        score += 8; contrib["roles>=5"] = 8
-    elif role_count >= 2:
-        score += 5; contrib["roles>=2"] = 5
-    elif role_count == 0:
-        score -= 8; contrib["roles=0"] = -8
+    # 4) Roles removed as a pointer (intentionally not used in scoring)
 
     # 5) Presence & activities
     status = getattr(member, "status", discord.Status.offline)

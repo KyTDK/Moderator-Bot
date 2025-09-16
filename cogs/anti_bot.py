@@ -57,37 +57,7 @@ class AntiBotCog(commands.Cog):
 
         score, details = evaluate_member(target_member, bot=self.bot)
 
-        # Contextual tips for admins using the inspect command
-        tips: list[str] = []
-        try:
-            settings = await mysql.get_settings(guild.id, [
-                "antibot-enabled",
-                "antibot-min-score",
-                "antibot-autorole",
-                "antibot-autorole-min-score",
-                "monitor-channel",
-            ])
-            if not settings.get("monitor-channel"):
-                tips.append("Set a monitor channel: /settings set name:monitor-channel channel:#mod-log")
-            if not settings.get("antibot-enabled"):
-                tips.append("Enable auto-kick for low scores: /settings set name:antibot-enabled value:true")
-            if not (settings.get("antibot-min-score") or 0):
-                tips.append("Choose a minimum join score (e.g., 40): /settings set name:antibot-min-score value:40")
-            if not settings.get("antibot-autorole"):
-                tips.append("Auto-assign a role to trusted users: /settings set name:antibot-autorole role:@Verified")
-            if not (settings.get("antibot-autorole-min-score") or 0):
-                tips.append("Set the auto-role score (e.g., 75): /settings set name:antibot-autorole-min-score value:75")
-        except Exception:
-            pass
-
-        # Presence signals note when nothing is available
-        try:
-            if str(details.get("status")) == str(discord.Status.offline) and int(details.get("activities_count", 0)) == 0:
-                tips.append("Presence/activity signals are limited when users are offline. Ensure the Presences intent is enabled in your bot settings.")
-        except Exception:
-            pass
-
-        emb = build_inspection_embed(target_member, score, details, tips=tips)
+        emb = build_inspection_embed(target_member, score, details)
         await interaction.followup.send(embed=emb, ephemeral=True)
 
     # ---------- Join hook ----------
@@ -112,19 +82,7 @@ class AntiBotCog(commands.Cog):
 
             # Always log a compact embed if monitor channel is configured
             if monitor_channel_id:
-                hints: list[str] = []
-                if not enabled:
-                    hints.append("Enable auto-kick with /settings set name:antibot-enabled value:true")
-                if not min_score:
-                    hints.append("Pick a minimum join score (e.g., 40) via /settings set name:antibot-min-score value:40")
-                if autorole_id and score < autorole_min:
-                    hints.append(f"User below auto-role threshold ({autorole_min}). Adjust if desired: /settings set name:antibot-autorole-min-score value:{autorole_min}")
-                if not autorole_id:
-                    hints.append("Set an auto-role for trusted users: /settings set name:antibot-autorole role:@Verified")
-
-                # Always include a quick inspect tip for moderators
-                hints.append("Inspect this member with /antibot inspect and select them")
-                emb = build_join_embed(member, score, details, hints=hints)
+                emb = build_join_embed(member, score, details)
                 await log_to_channel(emb, int(monitor_channel_id), self.bot)
 
             # Optional auto-role
@@ -164,8 +122,7 @@ class AntiBotCog(commands.Cog):
                     severe_flags += 1
                 if (details.get("name_digits_ratio") or 0.0) >= 0.5 and (details.get("name_longest_digit_run") or 0) >= 5:
                     severe_flags += 1
-                if (details.get("role_count") or 0) == 0:
-                    severe_flags += 1
+                # roles removed as a pointer (do not count)
 
                 if severe_flags >= 3:
                     try:

@@ -18,7 +18,6 @@ def build_inspection_embed(
     member: discord.Member,
     score: int,
     details: Dict[str, Any],
-    tips: List[str] | None = None,
 ) -> discord.Embed:
     emb = discord.Embed(
         title=f"User Inspection: {member}",
@@ -56,7 +55,7 @@ def build_inspection_embed(
         name="Guild",
         value=(
             f"Joined: `{member.joined_at}` (≈ {details.get('guild_join_days')} days)\n"
-            f"Roles ({details.get('role_count')}): {role_str}\n"
+            f"Roles ({len(roles)}): {role_str}\n"
             f"Screening Pending: `{fmt_bool(details.get('membership_screening_pending', False))}`\n"
             f"Boosting: `{fmt_bool(member.premium_since is not None)}`"
         ),
@@ -81,11 +80,6 @@ def build_inspection_embed(
         lines = [f"{k}: {'+' if v>=0 else ''}{v}" for k, v in pairs]
         emb.add_field(name="Signals (weighted)", value="\n".join(lines), inline=False)
 
-    # Optional tips
-    if tips:
-        tip_lines = [f"• {t}" for t in tips][:6]
-        emb.add_field(name="Tips", value="\n".join(tip_lines), inline=False)
-
     emb.set_footer(text="Note: Discord profile connections are not available to bots.")
     return emb
 
@@ -94,7 +88,6 @@ def build_join_embed(
     member: discord.Member,
     score: int,
     details: Dict[str, Any],
-    hints: list[str] | None = None,
 ) -> discord.Embed:
     emb = discord.Embed(
         title="Anti-Bot Check: Member Joined",
@@ -108,15 +101,11 @@ def build_join_embed(
             f"Account age: `{details.get('account_age_days')}`d | "
             f"Joined: `{details.get('guild_join_days')}`d\n"
             f"Avatar: `{fmt_bool(details.get('has_avatar', False))}` | "
-            f"Roles: `{details.get('role_count')}` | "
             f"Pending: `{fmt_bool(details.get('membership_screening_pending', False))}`\n"
             f"Status: `{details.get('status')}` | "
             f"Activities: `{details.get('activities_count')}`"
         ),
         inline=False,
     )
-
-    if hints:
-        emb.add_field(name="Setup Tips", value="\n".join([f"• {h}" for h in hints][:6]), inline=False)
 
     return emb
