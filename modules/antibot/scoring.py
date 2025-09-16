@@ -94,6 +94,20 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
         if len(acts) >= 3:
             score += 2; contrib["many_activities"] = 2
 
+    # Platform presence (if available): being online on multiple platforms is a small positive
+    try:
+        platforms = [
+            getattr(member, "desktop_status", None),
+            getattr(member, "web_status", None),
+            getattr(member, "mobile_status", None),
+        ]
+        online_platforms = sum(1 for s in platforms if s and s != discord.Status.offline)
+        details["platforms_online"] = online_platforms
+        if online_platforms >= 2:
+            score += 2; contrib["multi_platform_online"] = 2
+    except Exception:
+        pass
+
     # 6) Membership screening pending
     pending = getattr(member, "pending", False)
     details["membership_screening_pending"] = pending
@@ -107,14 +121,51 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
         flags = list(pf.all()) if pf else []
     except Exception:
         flags = []
-    details["public_flags"] = [str(f) for f in flags]
-    if flags:
-        score += 5; contrib["public_flags"] = 5
+    # More granular weighting of public flags
+    flag_names = []
+    flag_weight = 0
+    for f in flags:
+        name = getattr(f, "name", None) or str(f)
+        flag_names.append(name)
+        wmap = {
+            "staff": 8,
+            "partner": 6,
+            "bug_hunter_level_2": 5,
+            "bug_hunter": 3,
+            "early_supporter": 3,
+            "active_developer": 3,
+            "hypesquad": 2,
+            "hypesquad_bravery": 2,
+            "hypesquad_brilliance": 2,
+            "hypesquad_balance": 2,
+            # verified_bot/verified_developer won't increase trust here (bots are handled elsewhere)
+            "verified_bot": 0,
+            "verified_bot_developer": 4,
+            "early_verified_developer": 4,
+        }
+        flag_weight += wmap.get(name, 0)
+    details["public_flags"] = flag_names
+    if flag_weight:
+        score += flag_weight; contrib["public_flags_weight"] = flag_weight
 
     # 8.5) Nitro boosting is a strong human signal
     try:
         if getattr(member, "premium_since", None):
             score += 5; contrib["boosting"] = 5
+    except Exception:
+        pass
+
+    # 8.6) Global display name set (humans often set one)
+    try:
+        if getattr(user, "global_name", None):
+            score += 2; contrib["global_name"] = 2
+    except Exception:
+        pass
+
+    # 8.7) Avatar decoration (Nitro feature)
+    try:
+        if getattr(user, "avatar_decoration", None) or getattr(user, "avatar_decoration_data", None):
+            score += 2; contrib["avatar_decoration"] = 2
     except Exception:
         pass
 
