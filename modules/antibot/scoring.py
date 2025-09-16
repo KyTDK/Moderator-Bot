@@ -225,6 +225,105 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
     except Exception:
         pass
 
+    # 8.45) Collectibles and server tag
+    try:
+        raw_collectibles = getattr(user, "collectibles", None)
+        collected_labels: list[str] = []
+        if raw_collectibles:
+            try:
+                iterator = list(raw_collectibles)
+            except TypeError:
+                iterator = [raw_collectibles]
+            for item in iterator:
+                if item is None:
+                    continue
+                label = getattr(item, 'label', None) or getattr(item, 'name', None) or getattr(item, 'title', None)
+                if not label:
+                    try:
+                        label = str(item)
+                    except Exception:
+                        label = None
+                if label:
+                    collected_labels.append(str(label))
+        if collected_labels:
+            details['collectibles'] = collected_labels[:10]
+            details['collectibles_count'] = len(collected_labels)
+            bonus = min(4, len(collected_labels))
+            score += bonus; contrib['collectibles'] = bonus
+    except Exception:
+        pass
+
+    try:
+        primary = getattr(user, 'primary_guild', None)
+        if primary is None:
+            primaries = getattr(user, 'primary_guilds', None)
+            if primaries:
+                try:
+                    primary = next(iter(primaries), None)
+                except TypeError:
+                    primary = primaries
+        primary_label = None
+        if primary is not None:
+            tag = getattr(primary, 'tag', None)
+            if tag:
+                primary_label = str(tag)
+            else:
+                name = getattr(primary, 'name', None)
+                if name:
+                    primary_label = str(name)
+            ident = getattr(primary, 'id', None) or getattr(primary, 'guild_id', None)
+            if primary_label and ident:
+                primary_label = f"{primary_label} ({ident})"
+            elif ident and not primary_label:
+                primary_label = str(ident)
+            elif primary_label is None:
+                try:
+                    primary_label = str(primary)
+                except Exception:
+                    primary_label = None
+        if primary_label:
+            details['primary_guild'] = primary_label
+            score += 2; contrib['primary_guild'] = contrib.get('primary_guild', 0) + 2
+    except Exception:
+        pass
+
+    # 8.46) Member flags
+    try:
+        member_flags = getattr(member, 'flags', None)
+        flag_names: list[str] = []
+        flag_weight = 0
+        weight_map = {
+            'completed_onboarding': 3,
+            'completed_home_actions': 2,
+            'started_onboarding': 1,
+            'started_home_actions': 1,
+            'did_rejoin': 1,
+            'dm_settings_upsell_acknowledged': 1,
+            'bypasses_verification': 1,
+            'automod_quarantined_username': -6,
+            'automod_quarantined_guild_tag': -4,
+            'guest': 0,
+        }
+        if member_flags:
+            try:
+                pairs = list(member_flags)
+            except TypeError:
+                pairs = []
+            for name, enabled in pairs:
+                if not enabled:
+                    continue
+                flag_names.append(name)
+                flag_weight += weight_map.get(name, 1)
+        if member_flags and hasattr(member_flags, 'value'):
+            details['member_flags_value'] = member_flags.value
+        details['member_flags_list'] = flag_names
+        details['member_flags'] = ', '.join(flag_names) if flag_names else 'none'
+        details['member_flags_count'] = len(flag_names)
+        if flag_weight:
+            score += flag_weight; contrib['member_flags'] = flag_weight
+    except Exception:
+        pass
+
     # 8.5) Nitro boosting is a strong human signal
     try:
         if getattr(member, "premium_since", None):

@@ -47,7 +47,6 @@ def build_inspection_embed(
     if isinstance(accent_value, int):
         accent_label = f"{accent_label} (#{accent_value:06X})"
 
-    bio_flag = fmt_bool(details.get('has_bio', False))
     banner_label = fmt_bool(details.get('has_banner', False))
 
     has_decoration = bool(getattr(member, 'avatar_decoration', None) or getattr(member, 'avatar_decoration_data', None))
@@ -58,8 +57,7 @@ def build_inspection_embed(
             f"Avatar: `{fmt_bool(details.get('has_avatar', False))}` | "
             f"Banner: `{banner_label}` | "
             f"Accent: `{accent_label}` | "
-            f"Decoration: `{fmt_bool(has_decoration)}` | "
-            f"Bio: `{bio_flag}`\n"
+            f"Decoration: `{fmt_bool(has_decoration)}`\n"
         ),
         inline=False,
     )
@@ -75,12 +73,34 @@ def build_inspection_embed(
     extra_weight = contrib.get('extra_badges')
     if extra_weight:
         badge_lines.append(f"Extra Badge Weight: {extra_weight:+d}")
+
     emb.add_field(name="Badges", value="\n".join(badge_lines), inline=False)
 
-    bio_preview = (details.get('bio_preview') or '').strip()
-    if bio_preview:
-        bio_text = bio_preview if len(bio_preview) <= 1021 else bio_preview[:1021] + '...'
-        emb.add_field(name="Profile Bio", value=bio_text, inline=False)
+    identity_lines = []
+    primary_guild = details.get('primary_guild')
+    if primary_guild:
+        identity_lines.append(f"Server Tag: `{primary_guild}`")
+    collectibles = list(details.get('collectibles') or [])
+    collectibles_total = details.get('collectibles_count') or len(collectibles)
+    if collectibles:
+        preview = ', '.join(collectibles[:5]) or 'none'
+        if collectibles_total > 5 and len(collectibles) >= 5:
+            preview = f"{preview} (+{collectibles_total - 5} more)"
+        identity_lines.append(f"Collectibles ({collectibles_total}): `{preview}`")
+    elif primary_guild:
+        identity_lines.append("Collectibles (0): `none`")
+    member_flags = list(details.get('member_flags_list') or [])
+    member_flags_total = details.get('member_flags_count') or len(member_flags)
+    if member_flags:
+        flags_preview = ', '.join(member_flags[:5]) or 'none'
+        if member_flags_total > 5 and len(member_flags) >= 5:
+            flags_preview = f"{flags_preview} (+{member_flags_total - 5} more)"
+        identity_lines.append(f"Member Flags ({member_flags_total}): `{flags_preview}`")
+    elif member_flags_total == 0 and identity_lines:
+        identity_lines.append("Member Flags (0): `none`")
+    if identity_lines:
+        emb.add_field(name="Identity", value='\n'.join(identity_lines), inline=False)
+
 
     roles = [r.mention for r in member.roles if r != member.guild.default_role]
     role_str = ", ".join(roles[:10]) if roles else "none"
@@ -133,10 +153,12 @@ def build_join_embed(
             f"Account age: `{details.get('account_age_days')}`d | "
             f"Joined: `{details.get('guild_join_days')}`d\n"
             f"Avatar: `{fmt_bool(details.get('has_avatar', False))}` | "
-            f"Bio: `{fmt_bool(details.get('has_bio', False))}` | "
             f"Pending: `{fmt_bool(details.get('membership_screening_pending', False))}`\n"
             f"Status: `{details.get('status')}` | "
-            f"Activities: `{details.get('activities_count')}`"
+            f"Activities: `{details.get('activities_count')}`\n"
+            f"Server Tag: `{details.get('primary_guild') or 'none'}` | "
+            f"Collectibles: `{details.get('collectibles_count') or 0}` | "
+            f"Member Flags: `{details.get('member_flags_count') or 0}`"
         ),
         inline=False,
     )
