@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import discord
-from typing import Any, Dict, Iterable, List, Optional
-from string import capwords
+from typing import Any, Dict, List
 
 from .utils import fmt_bool, age_compact
 
@@ -13,53 +12,6 @@ def _color_for_score(score: int) -> discord.Color:
             discord.Color.orange() if score >= 40 else discord.Color.red()
         )
     )
-
-
-_BADGE_LABEL_OVERRIDES: Dict[str, str] = {
-    "staff": "Discord Staff",
-    "partner": "Discord Partner",
-    "bug_hunter_level_2": "Bug Hunter Level 2",
-    "bug_hunter": "Bug Hunter",
-    "early_supporter": "Early Supporter",
-    "active_developer": "Active Developer",
-    "discord_certified_moderator": "Discord Certified Moderator",
-    "moderator_programs_alumni": "Moderator Programs Alumni",
-    "hypesquad": "HypeSquad Events",
-    "hypesquad_bravery": "HypeSquad Bravery",
-    "hypesquad_brilliance": "HypeSquad Brilliance",
-    "hypesquad_balance": "HypeSquad Balance",
-    "verified_bot": "Verified Bot",
-    "verified_bot_developer": "Verified Bot Developer",
-    "early_verified_developer": "Early Verified Developer",
-}
-
-
-def _format_badge_list(values: Optional[Iterable[str]]) -> str:
-    if not values:
-        return "none"
-
-    formatted: List[str] = []
-    seen = set()
-    for raw in values:
-        raw_str = str(raw).strip()
-        if not raw_str:
-            continue
-        normalized = raw_str.lower()
-        if "(" in normalized and normalized.endswith(")"):
-            inner = normalized[normalized.find("(") + 1:-1]
-            if inner:
-                normalized = inner
-        if normalized in seen:
-            continue
-        seen.add(normalized)
-
-        label = _BADGE_LABEL_OVERRIDES.get(normalized)
-        if not label:
-            cleaned = normalized.replace("_", " ").replace("-", " ").strip()
-            label = capwords(cleaned) if cleaned else raw_str
-        formatted.append(label)
-
-    return ", ".join(formatted) if formatted else "none"
 
 
 def build_inspection_embed(
@@ -112,11 +64,11 @@ def build_inspection_embed(
         inline=False,
     )
 
-    public_flags_str = _format_badge_list(details.get('public_flags'))
+    public_flags_str = (details.get('public_flags') or 'none')
     extra_badges_raw = list(details.get('badges_extra') or [])
     badge_lines = [f"Public Flags: `{public_flags_str}`"]
     if extra_badges_raw:
-        badge_lines.append(f"Extra Badges: `{_format_badge_list(extra_badges_raw[:10])}`")
+        badge_lines.append(f"Extra Badges: `{', '.join(map(str, extra_badges_raw[:10])) or 'none'}`")
     badge_weight = contrib.get('public_flags_weight')
     if badge_weight:
         badge_lines.append(f"Public Flag Weight: {badge_weight:+d}")

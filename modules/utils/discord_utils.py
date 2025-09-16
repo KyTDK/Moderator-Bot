@@ -50,16 +50,17 @@ async def safe_get_channel(bot: commands.Bot, channel_id: int) -> discord.TextCh
             print(f"failed to fetch channel {channel_id}: {e}")
     return chan
 
-async def safe_get_user(bot: discord.Client, user_id: int) -> Optional[discord.User]:
+async def safe_get_user(bot: discord.Client, user_id: int, *, force_fetch: bool = False) -> Optional[discord.User]:
     """
-    Return a User object without wasting REST quota.
-    • First try the local cache (bot.get_user)
-    • If missing, fall back to fetch_user (1 REST call)
-    • Returns None if the fetch fails (user deleted or we lack perms)
+    Return a User object, optionally forcing a fresh REST fetch.
+
+    - When `force_fetch` is False (default), try the local cache first.
+    - When `force_fetch` is True, bypass the cache but still fall back to it if the fetch fails.
+    - Returns None only when no data could be retrieved.
     """
-    user = bot.get_user(user_id)
-    if user is not None:                       # already in cache
-        return user
+    cached = bot.get_user(user_id)
+    if cached is not None and not force_fetch:
+        return cached
 
     try:
         user = await bot.fetch_user(user_id)   # 1 REST call
@@ -68,13 +69,14 @@ async def safe_get_user(bot: discord.Client, user_id: int) -> Optional[discord.U
         # user_id no longer exists (account deleted)
         return None
     except discord.Forbidden:
-        # we don’t share a guild and the user has DMs disabled
-        return None
+        # we don't share a guild and the user has DMs disabled
+        return cached
     except discord.HTTPException as e:
-        # network / rate‑limit issue – log and fail gracefully
+        # network / rate-limit issue - log and fail gracefully
         print(f"[safe_get_user] fetch_user({user_id}) failed: {e}")
-        return None
-    
+        return cached
+
+
 async def safe_get_member(guild: discord.Guild, user_id: int) -> Optional[discord.Member]:
     """
     Safely get a Member from cache or fetch.

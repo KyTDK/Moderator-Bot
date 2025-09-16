@@ -202,7 +202,7 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
             else:
                 w = 1  # small positive for any unknown public badge
         flag_weight += w
-    details["public_flags"] = flag_names
+    details["public_flags"] = ", ".join(flag_names) if flag_names else "none"
     if flag_weight:
         score += flag_weight; contrib["public_flags_weight"] = flag_weight
 

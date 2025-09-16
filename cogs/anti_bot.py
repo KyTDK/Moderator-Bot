@@ -56,7 +56,7 @@ class AntiBotCog(commands.Cog):
 
         # Ensure we have a fully populated user for banner/accent
         try:
-            full_user = await safe_get_user(self.bot, target_member.id)
+            full_user = await safe_get_user(self.bot, target_member.id, force_fetch=True)
             if full_user:
                 # overwrite banner/accent fields if available
                 target_member._user = full_user
@@ -95,7 +95,7 @@ class AntiBotCog(commands.Cog):
                 pass
 
             try:
-                full_user = await safe_get_user(self.bot, member.id)
+                full_user = await safe_get_user(self.bot, member.id, force_fetch=True)
                 if full_user:
                     member._user = full_user
             except Exception:
