@@ -16,6 +16,20 @@ def age_days(dt: Optional[datetime]) -> Optional[int]:
     return max(0, int((now - base).total_seconds() // 86400))
 
 
+def age_compact(dt: Optional[datetime]) -> str:
+    """Return a compact age string like '3d' or '12h' (falls back to '?')."""
+    if not dt:
+        return "?"
+    now = datetime.now(timezone.utc)
+    base = dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    secs = max(0, int((now - base).total_seconds()))
+    if secs < 86400:
+        hours = secs // 3600
+        return f"{hours}h"
+    days = secs // 86400
+    return f"{days}d"
+
+
 def fmt_bool(b: bool) -> str:
     return "Yes" if b else "No"
 

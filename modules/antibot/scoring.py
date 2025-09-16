@@ -115,18 +115,35 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
         score -= 25; contrib["membership_screening_pending"] = -25
 
     # 7) Public flags (hypesquad etc.)
-    flags = []
-    try:
-        pf = getattr(user, "public_flags", None)
-        flags = list(pf.all()) if pf else []
-    except Exception:
-        flags = []
+    # Public flags: robust extraction across discord.py versions
+    pf = getattr(user, "public_flags", None)
+    # Collect set flags as lowercase names
+    flag_names: list[str] = []
+    if pf:
+        extracted: dict[str, bool] | None = None
+        # Prefer to_dict() when available
+        try:
+            extracted = pf.to_dict()  # type: ignore[attr-defined]
+        except Exception:
+            extracted = None
+        if not extracted:
+            # Fallback: introspect attributes that are bools
+            extracted = {}
+            for k in dir(pf):
+                if k.startswith("_"):
+                    continue
+                try:
+                    v = getattr(pf, k)
+                except Exception:
+                    continue
+                if isinstance(v, bool):
+                    extracted[k] = v
+        flag_names = [k for k, v in (extracted or {}).items() if v]
+
     # More granular weighting of public flags
-    flag_names = []
     flag_weight = 0
-    for f in flags:
-        name = getattr(f, "name", None) or str(f)
-        flag_names.append(name)
+    for name in flag_names:
+        lname = name.lower()
         wmap = {
             "staff": 8,
             "partner": 6,
@@ -134,6 +151,8 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
             "bug_hunter": 3,
             "early_supporter": 3,
             "active_developer": 3,
+            "discord_certified_moderator": 4,
+            "moderator_programs_alumni": 3,
             "hypesquad": 2,
             "hypesquad_bravery": 2,
             "hypesquad_brilliance": 2,
@@ -143,10 +162,46 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
             "verified_bot_developer": 4,
             "early_verified_developer": 4,
         }
-        flag_weight += wmap.get(name, 0)
+        w = wmap.get(lname)
+        if w is None:
+            # Heuristic weighting for unknown/new badges
+            if "moderator" in lname:
+                w = 4
+            elif "founder" in lname:
+                w = 3
+            elif "subscriber" in lname or "member_since" in lname:
+                w = 3
+            elif "quest" in lname:
+                w = 2
+            elif "contributor" in lname or "contrib" in lname:
+                w = 2
+            elif "beta" in lname or "alpha" in lname:
+                w = 1
+            else:
+                w = 1  # small positive for any unknown public badge
+        flag_weight += w
     details["public_flags"] = flag_names
     if flag_weight:
         score += flag_weight; contrib["public_flags_weight"] = flag_weight
+
+    # Attempt to consider any additional badge containers (future-proofing)
+    try:
+        extra_badges = []
+        for attr in ("badges", "profile_badges", "user_badges"):
+            v = getattr(user, attr, None)
+            if not v:
+                continue
+            try:
+                for b in v:
+                    extra_badges.append(str(b))
+            except TypeError:
+                extra_badges.append(str(v))
+        if extra_badges:
+            details["badges_extra"] = extra_badges[:10]
+            score += min(3, len(extra_badges))  # small bonus capped
+            contrib["extra_badges"] = min(3, len(extra_badges))
+    except Exception:
+        pass
 
     # 8.5) Nitro boosting is a strong human signal
     try:
@@ -215,24 +270,7 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
     except Exception:
         pass
 
-    # 11) Mutual guilds with this bot (cache-only)
-    try:
-        if bot is not None:
-            mg = 0
-            for g in getattr(bot, "guilds", []) or []:
-                if g.id == member.guild.id:
-                    continue
-                if g.get_member(member.id) is not None:
-                    mg += 1
-                if mg >= 5:
-                    break
-            details["mutual_guilds_with_bot"] = mg
-            if mg >= 3:
-                score += 5; contrib["mutual_guilds>=3"] = 5
-            elif mg >= 2:
-                score += 3; contrib["mutual_guilds>=2"] = 3
-    except Exception:
-        pass
+    # 11) Mutual guilds removed as a signal
 
     # 12) Nickname present
     try:

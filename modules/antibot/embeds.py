@@ -3,7 +3,7 @@ from __future__ import annotations
 import discord
 from typing import Any, Dict, List
 
-from .utils import fmt_bool
+from .utils import fmt_bool, age_compact
 
 
 def _color_for_score(score: int) -> discord.Color:
@@ -32,18 +32,19 @@ def build_inspection_embed(
             f"Bot: `{fmt_bool(getattr(member, 'bot', False))}`\n"
             f"Status: `{details.get('status')}`\n"
             f"Activities: `{details.get('activities_count')}`\n"
-            f"Mutual Guilds: `{details.get('mutual_guilds_with_bot', 0)}`\n"
         ),
         inline=False,
     )
 
+    has_decoration = bool(getattr(member, 'avatar_decoration', None) or getattr(member, 'avatar_decoration_data', None))
     emb.add_field(
         name="Account",
         value=(
-            f"Created: `{member.created_at}` (≈ {details.get('account_age_days')} days)\n"
+            f"Created: `{member.created_at}` (≈ {age_compact(member.created_at)})\n"
             f"Avatar: `{fmt_bool(details.get('has_avatar', False))}` | "
             f"Banner: `{fmt_bool(details.get('has_banner', False))}` | "
-            f"Accent: `{fmt_bool(details.get('has_accent_color', False))}`\n"
+            f"Accent: `{fmt_bool(details.get('has_accent_color', False))}` | "
+            f"Decoration: `{fmt_bool(has_decoration)}`\n"
             f"Public Flags: `{', '.join(details.get('public_flags', []) or ['none'])}`"
         ),
         inline=False,
@@ -54,7 +55,7 @@ def build_inspection_embed(
     emb.add_field(
         name="Guild",
         value=(
-            f"Joined: `{member.joined_at}` (≈ {details.get('guild_join_days')} days)\n"
+            f"Joined: `{member.joined_at}` (≈ {age_compact(member.joined_at)})\n"
             f"Roles ({len(roles)}): {role_str}\n"
             f"Screening Pending: `{fmt_bool(details.get('membership_screening_pending', False))}`\n"
             f"Boosting: `{fmt_bool(member.premium_since is not None)}`"
