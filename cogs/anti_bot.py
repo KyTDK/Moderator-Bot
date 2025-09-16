@@ -190,7 +190,7 @@ class AntiBotCog(commands.Cog):
             name = cond.label or (signal.name if signal else cond.signal)
             expected = format_expected(cond)
             embed.add_field(
-                name=f"{cond.id}: {name}",
+                name=name,
                 value=f"Signal `{cond.signal}` {cond.operator} `{expected}`",
                 inline=False,
             )
