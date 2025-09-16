@@ -105,11 +105,26 @@ class AntiBotCog(commands.Cog):
         if not signal_meta:
             await interaction.followup.send("Unknown signal.", ephemeral=True)
             return
-        if operator not in signal_meta.operators:
-            await interaction.followup.send(f"Operator must be one of {', '.join(signal_meta.operators)}.", ephemeral=True)
+
+        operator_input = operator.strip() if operator else ""
+        value_input = value
+
+        if signal_meta.value_type == "boolean":
+            if operator_input.lower() in {"true", "false"} and not value_input:
+                value_input = operator_input
+                operator_input = "=="
+            if not operator_input:
+                operator_input = "=="
+            if not value_input:
+                value_input = "true"
+        if operator_input not in signal_meta.operators:
+            await interaction.followup.send(
+                f"Operator must be one of {', '.join(signal_meta.operators)}.",
+                ephemeral=True,
+            )
             return
         try:
-            condition = make_condition(signal_meta, operator, value, label)
+            condition = make_condition(signal_meta, operator_input, value_input, label)
         except ValueError as err:
             await interaction.followup.send(str(err), ephemeral=True)
             return
@@ -120,7 +135,7 @@ class AntiBotCog(commands.Cog):
         await self._save_conditions(interaction.guild.id, conditions)
 
         await interaction.followup.send(
-            f"Added condition `{condition.id}`: {signal_meta.name} {operator} {format_expected(condition)}.",
+            f"Added condition `{condition.id}`: {signal_meta.name} {condition.operator} {format_expected(condition)}.",
             ephemeral=True,
         )
 
@@ -331,3 +346,4 @@ class AntiBotCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AntiBotCog(bot))
+

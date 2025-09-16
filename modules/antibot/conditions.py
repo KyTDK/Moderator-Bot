@@ -254,22 +254,26 @@ def _compare(operator: str, actual: Any, expected: Any, signal: Optional[Conditi
         try:
             if actual is None:
                 return False
-            actual_num = float(actual)
-            expected_num = float(expected)
+            if operator in {"==", "!="} and signal and signal.value_type == "boolean":
+                actual_val = bool(actual)
+                expected_val = bool(expected)
+            else:
+                actual_val = float(actual)
+                expected_val = float(expected)
         except Exception:
-            actual_num, expected_num = actual, expected
+            actual_val, expected_val = actual, expected
         if operator == ">":
-            return actual_num > expected_num
+            return actual_val > expected_val
         if operator == ">=":
-            return actual_num >= expected_num
+            return actual_val >= expected_val
         if operator == "<":
-            return actual_num < expected_num
+            return actual_val < expected_val
         if operator == "<=":
-            return actual_num <= expected_num
+            return actual_val <= expected_val
         if operator == "==":
-            return actual_num == expected_num
+            return actual_val == expected_val
         if operator == "!=":
-            return actual_num != expected_num
+            return actual_val != expected_val
     elif operator == "contains":
         if actual is None:
             return False
@@ -308,4 +312,5 @@ __all__ = [
     'format_actual',
     'format_expected',
 ]
+
 
