@@ -256,6 +256,57 @@ class AntiBotCog(commands.Cog):
 
         embed.set_footer(text="Detailed view available via /debug inspect.")
         await interaction.followup.send(embed=embed, ephemeral=True)
+    @antibot.command(name="debug", description="Inspect a user's signals and compute a trust score")
+    @app_commands.describe(user="Select a user to inspect (or provide ID)", user_id="Optional user ID if not selectable")
+    async def debug(self, interaction: Interaction, user: Optional[discord.User] = None, user_id: Optional[str] = None):
+        await interaction.response.defer(ephemeral=True)
+
+        # Resolve the member within this guild
+        target_member: Optional[discord.Member] = None
+        guild = interaction.guild
+        if guild is None:
+            await interaction.followup.send("This command can only be used in a server.", ephemeral=True)
+            return
+
+        # Prefer an explicit chooser, then ID fallback
+        if user is not None:
+            target_member = await safe_get_member(guild, user.id, force_fetch=True)
+        elif user_id and user_id.isdigit():
+            target_member = await safe_get_member(guild, int(user_id), force_fetch=True)
+
+        if target_member is None:
+            await interaction.followup.send("Could not resolve that user as a member of this server.", ephemeral=True)
+            return
+
+        # Try to enhance the Member with presence/activities for better signals
+        try:
+            enriched = await ensure_member_with_presence(guild, target_member.id)
+            if enriched is not None:
+                target_member = enriched
+        except Exception:
+            pass
+
+        try:
+            fetched_member = await safe_get_member(guild, target_member.id, force_fetch=True)
+            if fetched_member is not None:
+                target_member = fetched_member
+        except Exception:
+            pass
+
+        # Ensure we have a fully populated user for banner/accent
+        try:
+            full_user = await safe_get_user(self.bot, target_member.id, force_fetch=True)
+            if full_user:
+                # overwrite banner/accent fields if available
+                target_member._user = full_user
+        except Exception:
+            pass
+
+        score, details = evaluate_member(target_member, bot=self.bot)
+
+        emb = build_inspection_embed(target_member, score, details)
+        await interaction.followup.send(embed=emb, ephemeral=True)
+
 
     # ---------- Join hook ----------
     @commands.Cog.listener()
