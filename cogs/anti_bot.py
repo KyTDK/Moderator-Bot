@@ -38,9 +38,9 @@ class AntiBotCog(commands.Cog):
 
         # Prefer an explicit chooser, then ID fallback
         if user is not None:
-            target_member = await safe_get_member(guild, user.id)
+            target_member = await safe_get_member(guild, user.id, force_fetch=True)
         elif user_id and user_id.isdigit():
-            target_member = await safe_get_member(guild, int(user_id))
+            target_member = await safe_get_member(guild, int(user_id), force_fetch=True)
 
         if target_member is None:
             await interaction.followup.send("Could not resolve that user as a member of this server.", ephemeral=True)
@@ -51,6 +51,13 @@ class AntiBotCog(commands.Cog):
             enriched = await ensure_member_with_presence(guild, target_member.id)
             if enriched is not None:
                 target_member = enriched
+        except Exception:
+            pass
+
+        try:
+            fetched_member = await safe_get_member(guild, target_member.id, force_fetch=True)
+            if fetched_member is not None:
+                target_member = fetched_member
         except Exception:
             pass
 
@@ -91,6 +98,13 @@ class AntiBotCog(commands.Cog):
                 enriched = await ensure_member_with_presence(member.guild, member.id)
                 if enriched is not None:
                     member = enriched
+            except Exception:
+                pass
+
+            try:
+                fetched_member = await safe_get_member(member.guild, member.id, force_fetch=True)
+                if fetched_member is not None:
+                    member = fetched_member
             except Exception:
                 pass
 

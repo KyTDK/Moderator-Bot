@@ -96,7 +96,7 @@ def build_inspection_embed(
         if member_flags_total > 5 and len(member_flags) >= 5:
             flags_preview = f"{flags_preview} (+{member_flags_total - 5} more)"
         identity_lines.append(f"Member Flags ({member_flags_total}): `{flags_preview}`")
-    elif member_flags_total == 0 and identity_lines:
+    elif member_flags_total == 0:
         identity_lines.append("Member Flags (0): `none`")
     if identity_lines:
         emb.add_field(name="Identity", value='\n'.join(identity_lines), inline=False)

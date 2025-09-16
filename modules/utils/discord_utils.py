@@ -77,22 +77,25 @@ async def safe_get_user(bot: discord.Client, user_id: int, *, force_fetch: bool 
         return cached
 
 
-async def safe_get_member(guild: discord.Guild, user_id: int) -> Optional[discord.Member]:
+async def safe_get_member(guild: discord.Guild, user_id: int, *, force_fetch: bool = False) -> Optional[discord.Member]:
     """
     Safely get a Member from cache or fetch.
-    Returns None if the user is not in the guild or can't be fetched.
+
+    When ``force_fetch`` is True, always perform a fresh fetch to hydrate newer fields
+    (e.g. member flags). Returns None if the user cannot be fetched.
     """
     member = guild.get_member(user_id)
-    if member is not None:
+    if member is not None and not force_fetch:
         return member
 
     try:
-        return await guild.fetch_member(user_id)
+        fetched = await guild.fetch_member(user_id)
+        return fetched or member
     except (discord.NotFound, discord.Forbidden):
-        return None
+        return member if member is not None else None
     except discord.HTTPException as e:
         print(f"[safe_get_member] fetch_member({user_id}) failed: {e}")
-        return None
+        return member if member is not None else None
 
 async def ensure_member_with_presence(guild: discord.Guild, user_id: int) -> Optional[discord.Member]:
     """
