@@ -55,8 +55,39 @@ class AntiBotCog(commands.Cog):
         except Exception:
             pass
 
-        score, details = evaluate_member(target_member)
-        emb = build_inspection_embed(target_member, score, details)
+        score, details = evaluate_member(target_member, bot=self.bot)
+
+        # Contextual tips for admins using the inspect command
+        tips: list[str] = []
+        try:
+            settings = await mysql.get_settings(guild.id, [
+                "antibot-enabled",
+                "antibot-min-score",
+                "antibot-autorole",
+                "antibot-autorole-min-score",
+                "monitor-channel",
+            ])
+            if not settings.get("monitor-channel"):
+                tips.append("Set a monitor channel: /settings set name:monitor-channel channel:#mod-log")
+            if not settings.get("antibot-enabled"):
+                tips.append("Enable auto-kick for low scores: /settings set name:antibot-enabled value:true")
+            if not (settings.get("antibot-min-score") or 0):
+                tips.append("Choose a minimum join score (e.g., 40): /settings set name:antibot-min-score value:40")
+            if not settings.get("antibot-autorole"):
+                tips.append("Auto-assign a role to trusted users: /settings set name:antibot-autorole role:@Verified")
+            if not (settings.get("antibot-autorole-min-score") or 0):
+                tips.append("Set the auto-role score (e.g., 75): /settings set name:antibot-autorole-min-score value:75")
+        except Exception:
+            pass
+
+        # Presence signals note when nothing is available
+        try:
+            if str(details.get("status")) == str(discord.Status.offline) and int(details.get("activities_count", 0)) == 0:
+                tips.append("Presence/activity signals are limited when users are offline. Ensure the Presences intent is enabled in your bot settings.")
+        except Exception:
+            pass
+
+        emb = build_inspection_embed(target_member, score, details, tips=tips)
         await interaction.followup.send(embed=emb, ephemeral=True)
 
     # ---------- Join hook ----------
@@ -77,32 +108,70 @@ class AntiBotCog(commands.Cog):
             autorole_min = int(settings.get("antibot-autorole-min-score", 70) or 70)
             monitor_channel_id = settings.get("monitor-channel")
 
-            score, details = evaluate_member(member)
+            score, details = evaluate_member(member, bot=self.bot)
 
             # Always log a compact embed if monitor channel is configured
             if monitor_channel_id:
-                emb = build_join_embed(member, score, details)
+                hints: list[str] = []
+                if not enabled:
+                    hints.append("Enable auto-kick with /settings set name:antibot-enabled value:true")
+                if not min_score:
+                    hints.append("Pick a minimum join score (e.g., 40) via /settings set name:antibot-min-score value:40")
+                if autorole_id and score < autorole_min:
+                    hints.append(f"User below auto-role threshold ({autorole_min}). Adjust if desired: /settings set name:antibot-autorole-min-score value:{autorole_min}")
+                if not autorole_id:
+                    hints.append("Set an auto-role for trusted users: /settings set name:antibot-autorole role:@Verified")
+
+                # Always include a quick inspect tip for moderators
+                hints.append("Inspect this member with /antibot inspect and select them")
+                emb = build_join_embed(member, score, details, hints=hints)
                 await log_to_channel(emb, int(monitor_channel_id), self.bot)
 
             # Optional auto-role
             if autorole_id and score >= autorole_min and not member.pending:
                 role = member.guild.get_role(int(autorole_id))
-                if role and role < member.guild.me.top_role:
+                if role:
                     try:
+                        # Validate hierarchy/permissions implicitly via add_roles
                         await member.add_roles(role, reason=f"Auto role via AntiBot (score {score} >= {autorole_min})")
-                    except discord.Forbidden:
-                        pass
-                    except discord.HTTPException:
-                        pass
+                    except (discord.Forbidden, discord.HTTPException):
+                        # Report failure to monitor channel (if set)
+                        if monitor_channel_id:
+                            warn = discord.Embed(
+                                title="AntiBot: Auto-role failed",
+                                description=(
+                                    f"Could not assign {role.mention} to {member.mention}.\n"
+                                    "Check the bot role is above the target role and has Manage Roles."
+                                ),
+                                color=discord.Color.orange(),
+                            )
+                            try:
+                                await log_to_channel(warn, int(monitor_channel_id), self.bot)
+                            except Exception:
+                                pass
 
-            # Optional auto-kick
+            # Optional auto-kick with guardrails: require multiple strong indicators
             if enabled and min_score and score < min_score:
-                try:
-                    await member.kick(reason=f"Auto-kicked: low trust score ({score} < {min_score})")
-                except discord.Forbidden:
-                    pass
-                except discord.HTTPException:
-                    pass
+                severe_flags = 0
+                # Strong negatives
+                if details.get("default_avatar", False):
+                    severe_flags += 1
+                if details.get("membership_screening_pending", False):
+                    severe_flags += 1
+                if (details.get("account_age_days") or 9999) <= 3:
+                    severe_flags += 1
+                if (details.get("creation_to_join_minutes") or 9999) <= 60:
+                    severe_flags += 1
+                if (details.get("name_digits_ratio") or 0.0) >= 0.5 and (details.get("name_longest_digit_run") or 0) >= 5:
+                    severe_flags += 1
+                if (details.get("role_count") or 0) == 0:
+                    severe_flags += 1
+
+                if severe_flags >= 3:
+                    try:
+                        await member.kick(reason=f"Auto-kicked: low trust ({score}<{min_score}) and {severe_flags} strong indicators")
+                    except (discord.Forbidden, discord.HTTPException):
+                        pass
 
         except Exception:
             # Never let join handling crash other cogs

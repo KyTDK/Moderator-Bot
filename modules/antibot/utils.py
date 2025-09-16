@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Optional
+from collections import Counter
+from math import log2
+
 
 
 def age_days(dt: Optional[datetime]) -> Optional[int]:
@@ -16,3 +19,29 @@ def age_days(dt: Optional[datetime]) -> Optional[int]:
 def fmt_bool(b: bool) -> str:
     return "Yes" if b else "No"
 
+
+def shannon_entropy(s: str) -> float:
+    if not s:
+        return 0.0
+    counts = Counter(s)
+    n = len(s)
+    return -sum((c / n) * log2(c / n) for c in counts.values())
+
+
+def digits_ratio(s: str) -> float:
+    if not s:
+        return 0.0
+    d = sum(ch.isdigit() for ch in s)
+    return d / len(s)
+
+
+def longest_digit_run(s: str) -> int:
+    best = cur = 0
+    for ch in s:
+        if ch.isdigit():
+            cur += 1
+            if cur > best:
+                best = cur
+        else:
+            cur = 0
+    return best

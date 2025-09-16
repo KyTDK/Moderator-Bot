@@ -7,10 +7,19 @@ from .utils import fmt_bool
 
 
 def _color_for_score(score: int) -> discord.Color:
-    return discord.Color.green() if score >= 70 else (discord.Color.orange() if score >= 40 else discord.Color.red())
+    return (
+        discord.Color.green() if score >= 70 else (
+            discord.Color.orange() if score >= 40 else discord.Color.red()
+        )
+    )
 
 
-def build_inspection_embed(member: discord.Member, score: int, details: Dict[str, Any]) -> discord.Embed:
+def build_inspection_embed(
+    member: discord.Member,
+    score: int,
+    details: Dict[str, Any],
+    tips: List[str] | None = None,
+) -> discord.Embed:
     emb = discord.Embed(
         title=f"User Inspection: {member}",
         color=_color_for_score(score),
@@ -24,6 +33,7 @@ def build_inspection_embed(member: discord.Member, score: int, details: Dict[str
             f"Bot: `{fmt_bool(getattr(member, 'bot', False))}`\n"
             f"Status: `{details.get('status')}`\n"
             f"Activities: `{details.get('activities_count')}`\n"
+            f"Mutual Guilds: `{details.get('mutual_guilds_with_bot', 0)}`\n"
         ),
         inline=False,
     )
@@ -63,11 +73,29 @@ def build_inspection_embed(member: discord.Member, score: int, details: Dict[str
         emb.add_field(name="Recent Activity", value="\n".join(lines), inline=False)
 
     emb.add_field(name="Trust Score", value=f"`{score}` / 100", inline=False)
+
+    # Weighted signals (top 10 by magnitude)
+    contrib = (details or {}).get("contrib") or {}
+    if contrib:
+        pairs = sorted(contrib.items(), key=lambda kv: abs(kv[1]), reverse=True)[:10]
+        lines = [f"{k}: {'+' if v>=0 else ''}{v}" for k, v in pairs]
+        emb.add_field(name="Signals (weighted)", value="\n".join(lines), inline=False)
+
+    # Optional tips
+    if tips:
+        tip_lines = [f"• {t}" for t in tips][:6]
+        emb.add_field(name="Tips", value="\n".join(tip_lines), inline=False)
+
     emb.set_footer(text="Note: Discord profile connections are not available to bots.")
     return emb
 
 
-def build_join_embed(member: discord.Member, score: int, details: Dict[str, Any]) -> discord.Embed:
+def build_join_embed(
+    member: discord.Member,
+    score: int,
+    details: Dict[str, Any],
+    hints: list[str] | None = None,
+) -> discord.Embed:
     emb = discord.Embed(
         title="Anti-Bot Check: Member Joined",
         description=f"{member.mention} (`{member.id}`)\nScore: `{score}` / 100",
@@ -87,5 +115,8 @@ def build_join_embed(member: discord.Member, score: int, details: Dict[str, Any]
         ),
         inline=False,
     )
-    return emb
 
+    if hints:
+        emb.add_field(name="Setup Tips", value="\n".join([f"• {h}" for h in hints][:6]), inline=False)
+
+    return emb
