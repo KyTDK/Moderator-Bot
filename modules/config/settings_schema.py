@@ -451,4 +451,31 @@ SETTINGS_SCHEMA = {
         accelerated=True,
         choices=["true", "false"]
     ),
+    # Antibot settings
+    "antibot-enabled": Setting(
+        name="antibot-enabled",
+        description="Enable auto-kick based on low trust score for new joins.",
+        setting_type=bool,
+        default=False,
+        choices=["true", "false"],
+    ),
+    "antibot-min-score": Setting(
+        name="antibot-min-score",
+        description="Minimum trust score required to stay on join (0-100).",
+        setting_type=int,
+        default=0,
+    ),
+    "antibot-autorole": Setting(
+        name="antibot-autorole",
+        description="Role to auto-assign to members meeting the trust score threshold.",
+        setting_type=discord.Role,
+        default=None,
+        hidden=False,
+    ),
+    "antibot-autorole-min-score": Setting(
+        name="antibot-autorole-min-score",
+        description="Minimum trust score (0-100) for auto-role assignment.",
+        setting_type=int,
+        default=70,
+    ),
 }
