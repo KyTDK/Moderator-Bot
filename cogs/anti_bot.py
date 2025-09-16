@@ -1,4 +1,5 @@
-﻿import discord
+﻿import json
+import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
 from typing import Optional, List
@@ -93,11 +94,14 @@ class AntiBotCog(commands.Cog):
         conditions = self._load_conditions(raw)
         query = (current or "").lower()
         results = []
-        for cond in conditions:
-            label = cond.label or f"{cond.signal} {cond.operator} {cond.value}"
-            if query and query not in cond.id.lower() and query not in label.lower():
+        for idx, cond in enumerate(conditions):
+            signal_meta = get_signal(cond.signal)
+            label = cond.label or (signal_meta.name if signal_meta else cond.signal)
+            expected = format_expected(cond)
+            display = f"{idx + 1}. {label} {cond.operator} {expected}"
+            if query and query not in label.lower() and query not in cond.signal.lower() and query not in expected.lower():
                 continue
-            results.append(app_commands.Choice(name=f"{cond.id}: {label}"[:100], value=cond.id))
+            results.append(app_commands.Choice(name=display[:100], value=str(idx)))
             if len(results) >= 25:
                 break
         return results
@@ -152,12 +156,25 @@ class AntiBotCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         raw = await mysql.get_settings(interaction.guild.id, "antibot-conditions") or []
         conditions = self._load_conditions(raw)
-        updated = [cond for cond in conditions if cond.id != condition_id]
-        if len(updated) == len(conditions):
-            await interaction.followup.send("Condition ID not found.", ephemeral=True)
+        try:
+            index = int(condition_id)
+        except (TypeError, ValueError):
+            await interaction.followup.send("Select a condition from the suggestions.", ephemeral=True)
             return
-        await self._save_conditions(interaction.guild.id, updated)
-        await interaction.followup.send(f"Removed condition `{condition_id}`.", ephemeral=True)
+        if index < 0 or index >= len(conditions):
+            await interaction.followup.send("Condition not found.", ephemeral=True)
+            return
+
+        removed = conditions.pop(index)
+        await self._save_conditions(interaction.guild.id, conditions)
+
+        signal_meta = get_signal(removed.signal)
+        name = removed.label or (signal_meta.name if signal_meta else removed.signal)
+        expected = format_expected(removed)
+        await interaction.followup.send(
+            f"Removed condition: {name} {removed.operator} {expected}.",
+            ephemeral=True,
+        )
 
     @conditions_group.command(name="list", description="List configured AntiBot conditions")
     async def condition_list(self, interaction: Interaction):

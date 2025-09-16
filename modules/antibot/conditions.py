@@ -1,6 +1,5 @@
 ﻿from __future__ import annotations
 
-import uuid
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
@@ -194,7 +193,6 @@ def parse_condition_value(signal: ConditionSignal, raw_value: Optional[str]) -> 
 
 @dataclass
 class Condition:
-    id: str
     signal: str
     operator: str
     value: Any
@@ -203,7 +201,6 @@ class Condition:
     @classmethod
     def from_dict(cls, payload: Dict[str, Any]) -> "Condition":
         return cls(
-            id=str(payload.get('id')),
             signal=payload['signal'],
             operator=payload['operator'],
             value=payload.get('value'),
@@ -212,7 +209,6 @@ class Condition:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            'id': self.id,
             'signal': self.signal,
             'operator': self.operator,
             'value': self.value,
@@ -229,8 +225,7 @@ class ConditionResult:
 
 def make_condition(signal: ConditionSignal, operator: str, raw_value: Optional[str], label: Optional[str]) -> Condition:
     value = parse_condition_value(signal, raw_value)
-    cond_id = uuid.uuid4().hex[:8]
-    return Condition(id=cond_id, signal=signal.key, operator=operator, value=value, label=label)
+    return Condition(signal=signal.key, operator=operator, value=value, label=label)
 
 
 def evaluate_condition(condition: Condition, member: discord.Member, details: Dict[str, Any]) -> ConditionResult:
