@@ -18,6 +18,7 @@ class ConditionSignal:
     accessor: SignalAccessor
     parser: Optional[Callable[[str], Any]] = None
     formatter: Optional[Callable[[Any], str]] = None
+    choices: Optional[List[str]] = None
 
 
 def _bool_parser(raw: str) -> bool:
@@ -117,6 +118,17 @@ _register(ConditionSignal(
     parser=_number_parser,
     formatter=_number_formatter,
 ))
+_register(ConditionSignal(
+    key="public_flags_count",
+    name="Public Flags Count",
+    description="Number of public user flags set on the account.",
+    value_type="number",
+    operators=[">=", ">", "<", "<=", "==", "!="],
+    accessor=lambda _member, details: details.get("public_flags_count", 0),
+    parser=_number_parser,
+    formatter=_number_formatter,
+))
+
 
 _register(ConditionSignal(
     key="has_avatar",
@@ -151,6 +163,52 @@ _register(ConditionSignal(
     formatter=_bool_formatter,
 ))
 
+PUBLIC_FLAG_CHOICES = [
+    "active_developer",
+    "bot_http_interactions",
+    "bug_hunter",
+    "bug_hunter_level_2",
+    "discord_certified_moderator",
+    "early_supporter",
+    "early_verified_bot_developer",
+    "early_verified_developer",
+    "hypesquad",
+    "hypesquad_balance",
+    "hypesquad_bravery",
+    "hypesquad_brilliance",
+    "moderator_programs_alumni",
+    "partner",
+    "spammer",
+    "staff",
+    "system",
+    "team_user",
+    "verified_bot",
+    "verified_bot_developer",
+]
+
+_register(ConditionSignal(
+    key="public_flags_contains",
+    name="Public Flags Contains",
+    description="Checks if a specific public user flag is present.",
+    value_type="string",
+    operators=["contains", "not_contains"],
+    accessor=lambda _member, details: details.get("public_flags_list") or [],
+    formatter=_identity_formatter,
+    choices=PUBLIC_FLAG_CHOICES,
+))
+
+MEMBER_FLAG_CHOICES = [
+    "automod_quarantined_guild_tag",
+    "automod_quarantined_username",
+    "bypasses_verification",
+    "completed_home_actions",
+    "completed_onboarding",
+    "did_rejoin",
+    "dm_settings_upsell_acknowledged",
+    "guest",
+    "started_home_actions",
+    "started_onboarding",
+]
 _register(ConditionSignal(
     key="member_flags_contains",
     name="Member Flags Contains",
@@ -159,6 +217,7 @@ _register(ConditionSignal(
     operators=["contains", "not_contains"],
     accessor=lambda member, details: details.get("member_flags_list") or [],
     formatter=_identity_formatter,
+    choices=MEMBER_FLAG_CHOICES,
 ))
 
 
@@ -183,7 +242,11 @@ def parse_condition_value(signal: ConditionSignal, raw_value: Optional[str]) -> 
     if signal.value_type == "string":
         if raw_value is None or not raw_value.strip():
             raise ValueError("Enter a value for this condition.")
-        return raw_value.strip()
+        value = raw_value.strip()
+        if signal.choices and value not in signal.choices:
+            allowed = ", ".join(signal.choices)
+            raise ValueError(f"Value must be one of: {allowed}.")
+        return value
     if signal.value_type == "list":
         if raw_value is None:
             raise ValueError("Enter a value for this condition.")
@@ -297,6 +360,8 @@ def format_expected(condition: Condition) -> str:
 
 
 __all__ = [
+    'PUBLIC_FLAG_CHOICES',
+    'MEMBER_FLAG_CHOICES',
     'Condition',
     'ConditionResult',
     'ConditionSignal',

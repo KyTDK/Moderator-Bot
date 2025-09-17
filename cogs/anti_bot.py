@@ -89,6 +89,21 @@ class AntiBotCog(commands.Cog):
             if query in op.lower()
         ][:25]
 
+    async def _condition_value_autocomplete(self, interaction: Interaction, current: str):
+        signal_key = getattr(interaction.namespace, "signal", None)
+        signal = get_signal(signal_key) if signal_key else None
+        if not signal or not getattr(signal, 'choices', None):
+            return []
+        query = (current or "").lower()
+        results = []
+        for choice in signal.choices:
+            if query and query not in choice.lower():
+                continue
+            results.append(app_commands.Choice(name=choice[:100], value=choice[:100]))
+            if len(results) >= 25:
+                break
+        return results
+
     async def _condition_remove_autocomplete(self, interaction: Interaction, current: str):
         raw = await mysql.get_settings(interaction.guild.id, "antibot-conditions") or []
         conditions = self._load_conditions(raw)
@@ -108,7 +123,7 @@ class AntiBotCog(commands.Cog):
 
     # ----- Conditions commands -----
     @conditions_group.command(name="add", description="Add a new AntiBot condition")
-    @app_commands.autocomplete(signal=_condition_signal_autocomplete, operator=_condition_operator_autocomplete)
+    @app_commands.autocomplete(signal=_condition_signal_autocomplete, operator=_condition_operator_autocomplete, value=_condition_value_autocomplete)
     @app_commands.describe(signal="Signal to check", operator="Comparator", value="Target value", label="Optional label")
     async def condition_add(self, interaction: Interaction, signal: str, operator: str, value: Optional[str] = None, label: Optional[str] = None):
         await interaction.response.defer(ephemeral=True)

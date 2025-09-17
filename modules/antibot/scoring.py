@@ -3,7 +3,11 @@ from __future__ import annotations
 import discord
 from typing import Any, Dict, Tuple, Optional
 
+from .conditions import MEMBER_FLAG_CHOICES, PUBLIC_FLAG_CHOICES
 from .utils import age_days, shannon_entropy, digits_ratio, longest_digit_run
+
+ALLOWED_MEMBER_FLAGS = frozenset(MEMBER_FLAG_CHOICES)
+ALLOWED_PUBLIC_FLAGS = frozenset(PUBLIC_FLAG_CHOICES)
 
 
 def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None) -> Tuple[int, Dict[str, Any]]:
@@ -139,8 +143,7 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
     # 7) Public flags (hypesquad etc.)
     # Public flags: robust extraction across discord.py versions
     pf = getattr(user, "public_flags", None)
-    # Collect set flags as lowercase names
-    flag_names: list[str] = []
+    raw_flag_names: list[str] = []
     if pf:
         extracted: dict[str, bool] | None = None
         # Prefer to_dict() when available
@@ -160,31 +163,37 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
                     continue
                 if isinstance(v, bool):
                     extracted[k] = v
-        flag_names = [k for k, v in (extracted or {}).items() if v]
-
-    # More granular weighting of public flags
-    flag_weight = 0
-    for name in flag_names:
+        raw_flag_names = [k for k, v in (extracted or {}).items() if v]
+    normalized_flags: list[str] = []
+    seen_flags: set[str] = set()
+    for name in raw_flag_names:
         lname = name.lower()
-        wmap = {
-            "staff": 8,
-            "partner": 6,
-            "bug_hunter_level_2": 5,
-            "bug_hunter": 3,
-            "early_supporter": 3,
-            "active_developer": 3,
-            "discord_certified_moderator": 4,
-            "moderator_programs_alumni": 3,
-            "hypesquad": 2,
-            "hypesquad_bravery": 2,
-            "hypesquad_brilliance": 2,
-            "hypesquad_balance": 2,
-            # verified_bot/verified_developer won't increase trust here (bots are handled elsewhere)
-            "verified_bot": 0,
-            "verified_bot_developer": 4,
-            "early_verified_developer": 4,
-        }
-        w = wmap.get(lname)
+        if lname in seen_flags:
+            continue
+        normalized_flags.append(lname)
+        seen_flags.add(lname)
+    # More granular weighting of public flags
+    weight_map = {
+        "staff": 8,
+        "partner": 6,
+        "bug_hunter_level_2": 5,
+        "bug_hunter": 3,
+        "early_supporter": 3,
+        "active_developer": 3,
+        "discord_certified_moderator": 4,
+        "moderator_programs_alumni": 3,
+        "hypesquad": 2,
+        "hypesquad_bravery": 2,
+        "hypesquad_brilliance": 2,
+        "hypesquad_balance": 2,
+        # verified_bot/verified_developer won't increase trust here (bots are handled elsewhere)
+        "verified_bot": 0,
+        "verified_bot_developer": 4,
+        "early_verified_developer": 4,
+    }
+    flag_weight = 0
+    for lname in normalized_flags:
+        w = weight_map.get(lname)
         if w is None:
             # Heuristic weighting for unknown/new badges
             if "moderator" in lname:
@@ -202,9 +211,19 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
             else:
                 w = 1  # small positive for any unknown public badge
         flag_weight += w
-    details["public_flags"] = ", ".join(flag_names) if flag_names else "none"
+    if pf and hasattr(pf, "value"):
+        try:
+            details["public_flags_value"] = pf.value
+        except Exception:
+            pass
+    allowed_flags = ALLOWED_PUBLIC_FLAGS
+    filtered_flags = [lname for lname in normalized_flags if lname in allowed_flags]
+    details["public_flags_list"] = filtered_flags
+    details["public_flags_count"] = len(filtered_flags)
+    details["public_flags"] = ", ".join(normalized_flags) if normalized_flags else "none"
     if flag_weight:
         score += flag_weight; contrib["public_flags_weight"] = flag_weight
+
 
     # Attempt to consider any additional badge containers (future-proofing)
     try:
@@ -293,8 +312,9 @@ def evaluate_member(member: discord.Member, bot: Optional[discord.Client] = None
                 pairs = list(member_flags)
             except TypeError:
                 pairs = []
+            allowed_flags = ALLOWED_MEMBER_FLAGS
             for name, enabled in pairs:
-                if not enabled:
+                if not enabled or name not in allowed_flags:
                     continue
                 flag_names.append(name)
                 flag_weight += weight_map.get(name, 1)

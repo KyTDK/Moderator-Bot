@@ -477,10 +477,11 @@ SETTINGS_SCHEMA = {
         description="Custom AntiBot inspection conditions (stored as a list of rules).",
         setting_type=list[dict],
         default=[
-            {"signal": "final_score", "operator": ">=", "value": 60, "label": "Score >= 60"},
-            {"signal": "account_age_days", "operator": ">=", "value": 7, "label": "Account age >= 7d"},
-            {"signal": "server_tag_present", "operator":"==", "value": True, "label": "Server tag present"},
-            
+            {"signal": "final_score", "operator": ">=", "value": 55, "label": "Score >= 55"},
+            {"signal": "account_age_days", "operator": ">=", "value": 14, "label": "Account age >= 14d"},
+            {"signal": "public_flags_count", "operator": ">=", "value": 1, "label": "Has public badge"},
+            {"signal": "member_flags_contains", "operator": "contains", "value": "completed_onboarding", "label": "Completed onboarding"},
+            {"signal": "has_avatar", "operator": "==", "value": True, "label": "Has custom avatar"},
         ],
         hidden=False
     ),
