@@ -3,6 +3,7 @@ from __future__ import annotations
 from .config import (
     ACCOUNT_AGE_BONUSES,
     ACCOUNT_AGE_PENALTIES,
+    CREATION_TO_JOIN_BONUSES,
     CREATION_TO_JOIN_PENALTIES,
     GUILD_TENURE_BONUSES,
     GUILD_TENURE_PENALTIES,
@@ -76,5 +77,10 @@ def _score_creation_to_join_delta(ctx: ScoreContext) -> None:
 
     for rule in CREATION_TO_JOIN_PENALTIES:
         if delta_minutes <= rule["max_minutes"]:
+            ctx.add(rule["label"], rule["score"])
+            break
+
+    for rule in CREATION_TO_JOIN_BONUSES:
+        if delta_minutes >= rule["min_minutes"]:
             ctx.add(rule["label"], rule["score"])
             break

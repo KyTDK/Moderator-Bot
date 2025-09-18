@@ -34,6 +34,13 @@ GUILD_TENURE_PENALTIES = ()
 
 MEMBERSHIP_PENDING_PENALTY = {"label": "membership_screening_pending", "score": -6}
 
+CREATION_TO_JOIN_BONUSES = (
+    {"label": "join_after_90d", "min_minutes": 129600, "score": 12},
+    {"label": "join_after_30d", "min_minutes": 43200, "score": 9},
+    {"label": "join_after_14d", "min_minutes": 20160, "score": 6},
+    {"label": "join_after_7d", "min_minutes": 10080, "score": 4},
+)
+
 CREATION_TO_JOIN_PENALTIES = (
     {"label": "join_soon_after_creation", "max_minutes": 10, "score": -6},
     {"label": "join_within_1h", "max_minutes": 60, "score": -4},
