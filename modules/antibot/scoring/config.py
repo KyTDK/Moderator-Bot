@@ -8,38 +8,41 @@ MIN_SCORE = 0
 MAX_SCORE = 100
 
 ACCOUNT_AGE_BONUSES = (
-    {"label": "account_age>=365d", "min_days": 365, "score": 20},
-    {"label": "account_age>=180d", "min_days": 180, "score": 14},
-    {"label": "account_age>=90d", "min_days": 90, "score": 8},
-    {"label": "account_age>=30d", "min_days": 30, "score": 4},
+    {"label": "account_age>=365d", "min_days": 365, "score": 24},
+    {"label": "account_age>=180d", "min_days": 180, "score": 18},
+    {"label": "account_age>=90d", "min_days": 90, "score": 12},
+    {"label": "account_age>=30d", "min_days": 30, "score": 7},
+    {"label": "account_age>=14d", "min_days": 14, "score": 4},
+    {"label": "account_age>=7d", "min_days": 7, "score": 2},
 )
 
 ACCOUNT_AGE_PENALTIES = (
-    {"label": "account_age<=3d", "max_days": 3, "score": -10},
-    {"label": "account_age<=7d", "max_days": 7, "score": -6},
-    {"label": "account_age<=14d", "max_days": 14, "score": -3},
+    {"label": "account_age<=3d", "max_days": 3, "score": -6},
+    {"label": "account_age<=7d", "max_days": 7, "score": -2},
 )
 
 GUILD_TENURE_BONUSES = (
-    {"label": "guild_tenure>=365d", "min_days": 365, "score": 10},
-    {"label": "guild_tenure>=180d", "min_days": 180, "score": 7},
-    {"label": "guild_tenure>=90d", "min_days": 90, "score": 5},
-    {"label": "guild_tenure>=30d", "min_days": 30, "score": 3},
+    {"label": "guild_tenure>=365d", "min_days": 365, "score": 12},
+    {"label": "guild_tenure>=180d", "min_days": 180, "score": 9},
+    {"label": "guild_tenure>=90d", "min_days": 90, "score": 6},
+    {"label": "guild_tenure>=30d", "min_days": 30, "score": 4},
+    {"label": "guild_tenure>=14d", "min_days": 14, "score": 3},
+    {"label": "guild_tenure>=7d", "min_days": 7, "score": 2},
 )
 
 GUILD_TENURE_PENALTIES = ()
 
-MEMBERSHIP_PENDING_PENALTY = {"label": "membership_screening_pending", "score": -8}
+MEMBERSHIP_PENDING_PENALTY = {"label": "membership_screening_pending", "score": -6}
 
 CREATION_TO_JOIN_PENALTIES = (
-    {"label": "join_soon_after_creation", "max_minutes": 10, "score": -8},
-    {"label": "join_within_1h", "max_minutes": 60, "score": -5},
-    {"label": "join_within_1d", "max_minutes": 1_440, "score": -3},
+    {"label": "join_soon_after_creation", "max_minutes": 10, "score": -6},
+    {"label": "join_within_1h", "max_minutes": 60, "score": -4},
+    {"label": "join_within_1d", "max_minutes": 1_440, "score": -2},
 )
 
 PROFILE_WEIGHTS = {
-    "avatar_present": 8,
-    "avatar_missing": -6,
+    "avatar_present": 9,
+    "avatar_missing": -5,
     "server_avatar": 3,
     "banner_present": 2,
     "accent_color": 1,
@@ -52,15 +55,15 @@ PROFILE_WEIGHTS = {
 COLLECTIBLE_DETAIL_LIMIT = 10
 BADGE_DETAIL_LIMIT = 10
 
-STATUS_BONUS = {"label": "status!=offline", "score": 5}
-ACTIVITY_BASE_BONUS = {"label": "has_activity", "score": 6}
+STATUS_BONUS = {"label": "status!=offline", "score": 6}
+ACTIVITY_BASE_BONUS = {"label": "has_activity", "score": 8}
 ACTIVITY_TYPE_WEIGHTS = {
     discord.ActivityType.playing: {"label": "playing", "score": 2},
-    discord.ActivityType.listening: {"label": "listening", "score": 1},
-    discord.ActivityType.streaming: {"label": "streaming", "score": 3},
-    discord.ActivityType.custom: {"label": "custom_status", "score": 1},
+    discord.ActivityType.listening: {"label": "listening", "score": 2},
+    discord.ActivityType.streaming: {"label": "streaming", "score": 4},
+    discord.ActivityType.custom: {"label": "custom_status", "score": 2},
 }
-ACTIVITY_MANY_BONUS = {"label": "many_activities", "min_count": 3, "score": 1}
+ACTIVITY_MANY_BONUS = {"label": "many_activities", "min_count": 3, "score": 2}
 PLATFORM_PRESENCE_BONUS = {"label": "multi_platform_online", "min_platforms": 2, "score": 1}
 
 PUBLIC_FLAG_WEIGHT_MAP = {
