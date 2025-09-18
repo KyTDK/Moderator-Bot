@@ -202,7 +202,6 @@ class NSFWScanner:
                 similarity_response = clip_vectors.query_similar(image, threshold=0)
 
                 # Track if we had any similarity above CLIP threshold
-                had_similarity = bool(similarity_response)
                 max_similarity = 0.0
                 if similarity_response:
                     for item in similarity_response:
@@ -249,11 +248,12 @@ class NSFWScanner:
                             }
                         
                 # No similarity results above CLIP_THRESHOLD, or high-accuracy requested API confirmation
+                skip_vector = max_similarity >= CLIP_THRESHOLD
                 response = await self.moderator_api(
                     image_path=png_converted_path,
                     guild_id=guild_id,
                     image=image,
-                    skip_vector_add=had_similarity,
+                    skip_vector_add=skip_vector,
                 )
                 print(f"[process_image] Moderation result for {original_filename}: {response} (similarity={max_similarity:.2f}) for guild {guild_id}")
                 # Attach similarity/meta context
