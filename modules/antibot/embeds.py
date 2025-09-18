@@ -49,7 +49,7 @@ def build_inspection_embed(
 
     banner_label = fmt_bool(details.get('has_banner', False))
 
-    has_decoration = bool(getattr(member, 'avatar_decoration', None) or getattr(member, 'avatar_decoration_data', None))
+    has_decoration = bool(getattr(member, 'avatar_decoration', None))
     emb.add_field(
         name="Account",
         value=(

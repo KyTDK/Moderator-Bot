@@ -87,8 +87,12 @@ def _score_global_profile_features(ctx: ScoreContext) -> None:
     except Exception:
         pass
 
+    has_decoration = False
     try:
-        if getattr(user, "avatar_decoration", None) or getattr(user, "avatar_decoration_data", None):
-            ctx.add("avatar_decoration", PROFILE_WEIGHTS["avatar_decoration"])
+        decoration = getattr(user, "avatar_decoration", None)
+        has_decoration = bool(decoration)
     except Exception:
-        pass
+        has_decoration = False
+    ctx.set_detail("has_avatar_decoration", has_decoration)
+    if has_decoration:
+        ctx.add("avatar_decoration", PROFILE_WEIGHTS["avatar_decoration"])

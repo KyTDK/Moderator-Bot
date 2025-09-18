@@ -153,6 +153,17 @@ _register(ConditionSignal(
 ))
 
 _register(ConditionSignal(
+    key="has_avatar_decoration",
+    name="Has Avatar Decoration",
+    description="Whether the user has an avatar decoration enabled.",
+    value_type="boolean",
+    operators=["==", "!="],
+    accessor=lambda _member, details: bool(details.get("has_avatar_decoration")),
+    parser=_bool_parser,
+    formatter=_bool_formatter,
+))
+
+_register(ConditionSignal(
     key="server_tag_present",
     name="Server Tag Present",
     description="Whether the user has a primary guild/server tag set.",
