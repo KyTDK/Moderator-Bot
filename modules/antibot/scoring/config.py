@@ -113,22 +113,6 @@ MEMBER_FLAG_WEIGHT_MAP = {
 
 NITRO_BOOST_BONUS = {"label": "boosting", "score": 5}
 
-USERNAME_SUSPICIOUS_KEYWORDS = (
-    "bot",
-    "spam",
-    "giveaway",
-    "airdrop",
-    "crypto",
-    "nitro",
-    "gift",
-    "promo",
-    "steam",
-    "free",
-    "http",
-    "https",
-    "discord.gift",
-)
-USERNAME_KEYWORD_PENALTY = {"label": "name_keyword", "score": -5}
 USERNAME_DIGIT_RULE = {
     "label": "many_digits",
     "min_ratio": 0.5,

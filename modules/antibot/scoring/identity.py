@@ -4,8 +4,6 @@ from .config import (
     BOT_ACCOUNT_LABEL,
     USERNAME_DIGIT_RULE,
     USERNAME_ENTROPY_RULE,
-    USERNAME_KEYWORD_PENALTY,
-    USERNAME_SUSPICIOUS_KEYWORDS,
 )
 from .context import ScoreContext
 from ..utils import digits_ratio, longest_digit_run, shannon_entropy
@@ -45,15 +43,9 @@ def _score_username(ctx: ScoreContext, is_bot: bool) -> None:
     ratio = digits_ratio(uname_lower)
     longest_run = longest_digit_run(uname_lower)
 
-    suspicious_kw = any(keyword in uname_lower for keyword in USERNAME_SUSPICIOUS_KEYWORDS)
-
     ctx.set_detail("name_entropy", round(entropy, 2))
     ctx.set_detail("name_digits_ratio", round(ratio, 2))
     ctx.set_detail("name_longest_digit_run", longest_run)
-    ctx.set_detail("name_suspicious_kw", suspicious_kw)
-
-    if suspicious_kw and not is_bot:
-        ctx.add(USERNAME_KEYWORD_PENALTY["label"], USERNAME_KEYWORD_PENALTY["score"])
 
     digit_rule = USERNAME_DIGIT_RULE
     if (
