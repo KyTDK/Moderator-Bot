@@ -11,6 +11,7 @@ class MonitoringCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.invite_cache: dict[int, dict[str, int]] = {} # guild_id: {invite_code: uses}
+        self._monitor_blocked_channels: set[int] = set()
 
     async def get_monitor_channel(self, guild_id: int) -> Optional[int]:
         id = await mysql.get_settings(guild_id, "monitor-channel")
@@ -31,6 +32,21 @@ class MonitoringCog(commands.Cog):
         if channel_id:
             channel = guild.get_channel(channel_id)
             if channel:
+                bot_user = self.bot.user
+                if not bot_user:
+                    print(f"Missing bot user when logging monitor event for guild {guild.id}")
+                    return
+                me = guild.me or guild.get_member(bot_user.id)
+                if not me:
+                    print(f"Missing guild member record for bot in guild {guild.id}")
+                    return
+                if hasattr(channel, "permissions_for"):
+                    perms = channel.permissions_for(me)
+                    if not perms.view_channel or not perms.send_messages:
+                        if channel.id not in self._monitor_blocked_channels:
+                            print(f"Missing access to send messages in channel ID {channel.id} for guild {guild.id}")
+                        self._monitor_blocked_channels.add(channel.id)
+                        return
                 try:
                     allowed = discord.AllowedMentions.all() if mention_user else discord.AllowedMentions.none()
                     # Set footer embed for non-accelerated users
@@ -51,8 +67,11 @@ class MonitoringCog(commands.Cog):
                         embed=embed,
                         allowed_mentions=allowed
                     )
+                    self._monitor_blocked_channels.discard(channel.id)
                 except discord.Forbidden:
-                    print(f"Missing access to send messages in channel ID {channel.id} for guild {guild.id}")
+                    if channel.id not in self._monitor_blocked_channels:
+                        print(f"Missing access to send messages in channel ID {channel.id} for guild {guild.id}")
+                    self._monitor_blocked_channels.add(channel.id)
 
     @commands.Cog.listener()
     async def on_ready(self):
