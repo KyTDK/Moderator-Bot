@@ -8,12 +8,12 @@ MIN_SCORE = 0
 MAX_SCORE = 100
 
 ACCOUNT_AGE_BONUSES = (
-    {"label": "account_age>=365d", "min_days": 365, "score": 24},
-    {"label": "account_age>=180d", "min_days": 180, "score": 18},
-    {"label": "account_age>=90d", "min_days": 90, "score": 12},
-    {"label": "account_age>=30d", "min_days": 30, "score": 7},
-    {"label": "account_age>=14d", "min_days": 14, "score": 4},
-    {"label": "account_age>=7d", "min_days": 7, "score": 2},
+    {"label": "account_age>=365d", "min_days": 365, "score": 32},
+    {"label": "account_age>=180d", "min_days": 180, "score": 24},
+    {"label": "account_age>=90d", "min_days": 90, "score": 16},
+    {"label": "account_age>=30d", "min_days": 30, "score": 10},
+    {"label": "account_age>=14d", "min_days": 14, "score": 6},
+    {"label": "account_age>=7d", "min_days": 7, "score": 3},
 )
 
 ACCOUNT_AGE_PENALTIES = (
@@ -22,10 +22,10 @@ ACCOUNT_AGE_PENALTIES = (
 )
 
 GUILD_TENURE_BONUSES = (
-    {"label": "guild_tenure>=365d", "min_days": 365, "score": 12},
-    {"label": "guild_tenure>=180d", "min_days": 180, "score": 9},
-    {"label": "guild_tenure>=90d", "min_days": 90, "score": 6},
-    {"label": "guild_tenure>=30d", "min_days": 30, "score": 4},
+    {"label": "guild_tenure>=365d", "min_days": 365, "score": 14},
+    {"label": "guild_tenure>=180d", "min_days": 180, "score": 10},
+    {"label": "guild_tenure>=90d", "min_days": 90, "score": 7},
+    {"label": "guild_tenure>=30d", "min_days": 30, "score": 5},
     {"label": "guild_tenure>=14d", "min_days": 14, "score": 3},
     {"label": "guild_tenure>=7d", "min_days": 7, "score": 2},
 )
