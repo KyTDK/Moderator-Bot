@@ -110,7 +110,7 @@ UNKNOWN_PUBLIC_DEFAULT_WEIGHT = 2
 
 EXTRA_BADGE_BONUS_CAP = 4
 COLLECTIBLE_BONUS_CAP = 5
-PRIMARY_GUILD_BONUS = {"label": "primary_guild", "score": 3}
+PRIMARY_GUILD_BONUS = {"label": "primary_guild", "score": 5}
 
 MEMBER_FLAG_WEIGHT_MAP = {
     "completed_onboarding": 4,
