@@ -218,10 +218,12 @@ class NSFWScanner:
                         if similarity < CLIP_THRESHOLD:
                             continue
 
+                        # Handle high accuracy mode
+                        if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
+                            break # continue to API check
+
                         if not category:
                             print(f"[process_image] Similar SFW image found with similarity {similarity:.2f} for guild {guild_id}.")
-                            if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
-                                break # continue to API check
                             return {
                                 "is_nsfw": False,
                                 "reason": "Similarity match",
@@ -245,18 +247,7 @@ class NSFWScanner:
                                 "clip_threshold": CLIP_THRESHOLD,
                                 "similarity": similarity,
                             }
-
-                    # If we reached here, either no actionable NSFW similarity or high-accuracy wants API confirmation
-                    if not high_accuracy:
-                        # No NSFW detected by similarity alone
-                        return {
-                            "is_nsfw": False,
-                            "reason": "No NSFW similarity match",
-                            "max_similarity": max_similarity,
-                            "high_accuracy": high_accuracy,
-                            "clip_threshold": CLIP_THRESHOLD,
-                        }
-
+                        
                 # No similarity results above CLIP_THRESHOLD, or high-accuracy requested API confirmation
                 response = await self.moderator_api(
                     image_path=png_converted_path,
