@@ -69,6 +69,7 @@ class BannedWordsCog(commands.Cog):
     )
     async def add_banned_word(self, interaction: Interaction, word: str):
         """Add a word to the banned words list."""
+        await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild.id
         # Check if the word is already in the database
         existing_word, _ = await execute_query(
@@ -77,7 +78,7 @@ class BannedWordsCog(commands.Cog):
             fetch_one=True
         )
         if existing_word:
-            await interaction.response.send_message(f"The word '{word}' is already banned.", ephemeral=True)
+            await interaction.followup.send(f"The word '{word}' is already banned.", ephemeral=True)
             return
         
         # Check how many banned words exist
@@ -87,7 +88,7 @@ class BannedWordsCog(commands.Cog):
             fetch_one=True
         )
         if count_result and count_result[0] >= MAX_BANNED_WORDS:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"You've reached the limit of {MAX_BANNED_WORDS} banned words for this server.\n"
                 f"Use `/bannedwords remove` or `/bannedwords clear` to make space.",
                 ephemeral=True
@@ -99,7 +100,7 @@ class BannedWordsCog(commands.Cog):
             "INSERT INTO banned_words (guild_id, word) VALUES (%s, %s)",
             (guild_id, word)
         )
-        await interaction.response.send_message(f"The word '{word}' has been added to the banned words list.", ephemeral=True)
+        await interaction.followup.send(f"The word '{word}' has been added to the banned words list.", ephemeral=True)
 
     # Remove a banned word
     @bannedwords_group.command(
@@ -108,6 +109,7 @@ class BannedWordsCog(commands.Cog):
     )
     async def remove_banned_word(self, interaction: Interaction, word: str):
         """Remove a word from the banned words list."""
+        await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild.id
         # Check if the word exists in the database
         rows, _ = await execute_query(
@@ -117,7 +119,7 @@ class BannedWordsCog(commands.Cog):
         )
         existing_word = rows[0] if rows else None
         if not existing_word:
-            await interaction.response.send_message(f"The word '{word}' is not banned.", ephemeral=True)
+            await interaction.followup.send(f"The word '{word}' is not banned.", ephemeral=True)
             return
 
         # Remove the banned word from the database
@@ -125,7 +127,7 @@ class BannedWordsCog(commands.Cog):
             "DELETE FROM banned_words WHERE guild_id = %s AND word = %s",
             (guild_id, word)
         )
-        await interaction.response.send_message(f"The word '{word}' has been removed from the banned words list.", ephemeral=True)
+        await interaction.followup.send(f"The word '{word}' has been removed from the banned words list.", ephemeral=True)
     @remove_banned_word.autocomplete("word")
     async def banned_word_autocomplete(
         self,
@@ -151,6 +153,7 @@ class BannedWordsCog(commands.Cog):
     )
     async def list_banned_words(self, interaction: Interaction):
         """List all banned words."""
+        await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild.id
         # Retrieve all banned words from the database
         rows, _ = await execute_query(
@@ -162,7 +165,7 @@ class BannedWordsCog(commands.Cog):
         banned_words = [row[0] for row in rows]
 
         if not banned_words or len(banned_words) == 0:
-            await interaction.response.send_message("No banned words found.", ephemeral=True)
+            await interaction.followup.send("No banned words found.", ephemeral=True)
             return
 
         file_content = "Banned Words:\n"
@@ -172,7 +175,7 @@ class BannedWordsCog(commands.Cog):
             file_buffer = io.StringIO(file_content)
             file = discord.File(file_buffer, filename = f"banned_words_{interaction.guild.id}.txt")
 
-        await interaction.response.send_message(file=file, ephemeral=True)
+        await interaction.followup.send(file=file, ephemeral=True)
 
     # Clear all banned words
     @bannedwords_group.command(
@@ -181,6 +184,7 @@ class BannedWordsCog(commands.Cog):
     )
     async def clear_banned_words(self, interaction: Interaction):
         """Clear all banned words."""
+        await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild.id
         # Clear all banned words from the database
         _, affected_rows = await execute_query(
@@ -188,9 +192,9 @@ class BannedWordsCog(commands.Cog):
             (guild_id,)
         )
         if affected_rows == 0:
-            await interaction.response.send_message("No banned words found to clear.", ephemeral=True)
+            await interaction.followup.send("No banned words found to clear.", ephemeral=True)
             return
-        await interaction.response.send_message("All banned words have been cleared.", ephemeral=True)
+        await interaction.followup.send("All banned words have been cleared.", ephemeral=True)
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
