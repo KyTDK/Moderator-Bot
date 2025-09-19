@@ -587,7 +587,7 @@ class NSFWScanner:
                 threshold = float(settings.get("threshold", 0.7))
             except (TypeError, ValueError):
                 threshold = 0.7
-            flagged_categories = []
+            guild_flagged_categories = []
             flagged_any = False
             for category, is_flagged in results.categories.__dict__.items():
                 normalized_category = category.replace("/", "_").replace("-", "_")
@@ -596,28 +596,32 @@ class NSFWScanner:
                 if not is_flagged:
                     continue
                 flagged_any = True
+
                 # Add vector for flagged category unless similarity already matched
                 if not skip_vector_add:
                     print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
                     clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
+                
                 # Ignore low confidence scores based on guild preferences
                 if score < threshold:
                     print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
                     continue
+                
                 # Check if category is allowed in this guild
                 if allowed_categories and not is_allowed_category(category, allowed_categories):
                     continue
-                # Add to flagged categories
-                flagged_categories.append((normalized_category, score))
+                
+                # Add to guild flagged categories
+                guild_flagged_categories.append((normalized_category, score))
 
-            if not flagged_categories and ADD_SFW_VECTOR and not flagged_any and not skip_vector_add:
-                print("[moderator_api] Adding SFW vector to index")
+            if ADD_SFW_VECTOR and not flagged_any and not skip_vector_add:
+                print("[moderator_api] Adding SFW vector to index for guild {guild_id}.")
                 clip_vectors.add_vector(image, metadata={"category": None, "score": 0})
 
-            if flagged_categories:
+            if guild_flagged_categories:
                 # Return highest scored category
-                flagged_categories.sort(key=lambda x: x[1], reverse=True)
-                best_category, best_score = flagged_categories[0]
+                guild_flagged_categories.sort(key=lambda x: x[1], reverse=True)
+                best_category, best_score = guild_flagged_categories[0]
                 return {
                     "is_nsfw": True,
                     "category": best_category,
@@ -626,6 +630,8 @@ class NSFWScanner:
                     "threshold": threshold,
                 }
 
-            return {"is_nsfw": False, "reason": "OpenAI moderation", "threshold": threshold}
+            return {"is_nsfw": False, 
+                    "reason": "OpenAI moderation", 
+                    "threshold": threshold}
 
         return result
