@@ -36,10 +36,13 @@ async def process_image(
 
     try:
         with Image.open(png_converted_path) as image:
+            accelerated = False
             settings = await mysql.get_settings(
                 guild_id,
                 [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
             )
+            if guild_id is not None:
+                accelerated = await mysql.is_accelerated(guild_id=guild_id)
             allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
             high_accuracy = bool(settings.get("nsfw-high-accuracy", False))
             similarity_response = clip_vectors.query_similar(image, threshold=0)
@@ -54,7 +57,7 @@ async def process_image(
                         max_similarity = similarity
                         max_category = item.get("category")
 
-                if VECTOR_REFRESH_DIVISOR > 0 and random.randint(1, VECTOR_REFRESH_DIVISOR) == 1:
+                if not accelerated and VECTOR_REFRESH_DIVISOR > 0 and random.randint(1, VECTOR_REFRESH_DIVISOR) == 1:
                     refresh_triggered = True
                     best_item = max(
                         similarity_response,
