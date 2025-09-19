@@ -133,14 +133,6 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
-            # Ensure expected column definitions even on existing installs
-            try:
-                await cur.execute(
-                    "ALTER TABLE aimod_usage MODIFY COLUMN cost_usd DECIMAL(12,6) NOT NULL DEFAULT 0"
-                )
-            except Exception:
-                # Ignore if already compliant or permissions restricted
-                pass
             await cur.execute(
                 """
                 CREATE TABLE IF NOT EXISTS vcmod_usage (
@@ -153,12 +145,6 @@ async def _ensure_database_exists():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
-            try:
-                await cur.execute(
-                    "ALTER TABLE vcmod_usage MODIFY COLUMN cost_usd DECIMAL(12,6) NOT NULL DEFAULT 0"
-                )
-            except Exception:
-                pass
             await cur.execute(
                 """
                 CREATE TABLE IF NOT EXISTS timeouts (
