@@ -38,16 +38,18 @@ async def is_accelerated(user_id: int | None = None, guild_id: int | None = None
 
 async def get_premium_status(guild_id: int):
     """
-    Return a dict with 'status' and 'next_billing' for a guild, or None if not found.
+    Return a dict with 'status', 'next_billing', and 'tier' for a guild, or None if not found.
     """
     row, _ = await execute_query(
-        "SELECT status, next_billing FROM premium_guilds WHERE guild_id = %s LIMIT 1",
+        "SELECT status, next_billing, tier FROM premium_guilds WHERE guild_id = %s LIMIT 1",
         (guild_id,),
         fetch_one=True,
     )
     if not row:
         return None
-    return {"status": row[0], "next_billing": row[1]}
+
+    tier = row[2] if len(row) > 2 else "accelerated"
+    return {"status": row[0], "next_billing": row[1], "tier": tier}
 
 async def add_guild(guild_id: int, name: str, owner_id: int):
     """

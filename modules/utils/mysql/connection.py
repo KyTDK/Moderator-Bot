@@ -132,6 +132,7 @@ async def _ensure_database_exists() -> None:
                     guild_id BIGINT NOT NULL,
                     buyer_id BIGINT NOT NULL,
                     subscription_id VARCHAR(64) NOT NULL,
+                    tier ENUM('accelerated', 'accelerated_pro', 'accelerated_ultra') NOT NULL DEFAULT 'accelerated',
                     status ENUM('pending', 'active', 'cancelled', 'expired') DEFAULT 'pending',
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     activated_at DATETIME NULL DEFAULT NULL,
@@ -139,6 +140,12 @@ async def _ensure_database_exists() -> None:
                     PRIMARY KEY (guild_id),
                     UNIQUE KEY subscription_id_unique (subscription_id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
+                ALTER TABLE premium_guilds
+                ADD COLUMN IF NOT EXISTS tier ENUM('accelerated', 'accelerated_pro', 'accelerated_ultra') NOT NULL DEFAULT 'accelerated';
                 """
             )
             await cur.execute(
