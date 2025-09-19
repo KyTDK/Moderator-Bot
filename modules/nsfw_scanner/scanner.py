@@ -203,11 +203,13 @@ class NSFWScanner:
 
                 # Track if we had any similarity above CLIP threshold
                 max_similarity = 0.0
+                max_category = None
                 if similarity_response:
                     for item in similarity_response:
                         sim = float(item.get("similarity", 0) or 0)
                         if sim > max_similarity:
                             max_similarity = sim
+                            max_category = item.get("category")
 
                     for item in similarity_response:
                         category = item.get("category")
@@ -227,6 +229,7 @@ class NSFWScanner:
                                 "is_nsfw": False,
                                 "reason": "Similarity match",
                                 "max_similarity": max_similarity,
+                                "max_category": max_category,
                                 "high_accuracy": high_accuracy,
                                 "clip_threshold": CLIP_THRESHOLD,
                                 "similarity": similarity,
@@ -242,6 +245,7 @@ class NSFWScanner:
                                 "category": category,
                                 "reason": "Similarity match",
                                 "max_similarity": max_similarity,
+                                "max_category": max_category,
                                 "high_accuracy": high_accuracy,
                                 "clip_threshold": CLIP_THRESHOLD,
                                 "similarity": similarity,
@@ -259,6 +263,7 @@ class NSFWScanner:
                 # Attach similarity/meta context
                 if isinstance(response, dict):
                     response.setdefault("max_similarity", max_similarity)
+                    response.setdefault("max_category", max_category)
                     response.setdefault("high_accuracy", high_accuracy)
                     response.setdefault("clip_threshold", CLIP_THRESHOLD)
                 return response
@@ -331,6 +336,8 @@ class NSFWScanner:
                         embed.add_field(name="Flagged Any", value=str(bool(scan_result.get("flagged_any"))).lower(), inline=True)
                     if scan_result.get("max_similarity") is not None:
                         embed.add_field(name="Max Similarity", value=f"{float(scan_result.get('max_similarity') or 0):.3f}", inline=True)
+                    if scan_result.get("max_category") is not None:
+                        embed.add_field(name="Max Similarity Category", value=str(scan_result.get("max_category")), inline=True)
                     if scan_result.get("similarity") is not None:
                         embed.add_field(name="Matched Similarity", value=f"{float(scan_result.get('similarity') or 0):.3f}", inline=True)
                     if scan_result.get("high_accuracy") is not None:
