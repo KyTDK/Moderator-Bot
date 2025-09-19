@@ -1,5 +1,6 @@
 import asyncio
 import os
+import random
 import traceback
 import uuid
 from typing import Any
@@ -13,6 +14,7 @@ from ..constants import (
     CLIP_THRESHOLD,
     HIGH_ACCURACY_SIMILARITY,
     TMP_DIR,
+    VECTOR_REFRESH_DIVISOR,
 )
 from ..utils import convert_to_png_safe, is_allowed_category, safe_delete
 from .moderation import moderator_api
@@ -44,6 +46,7 @@ async def process_image(
 
             max_similarity = 0.0
             max_category = None
+            refresh_triggered = False
             if similarity_response:
                 for item in similarity_response:
                     similarity = float(item.get("similarity", 0) or 0)
@@ -51,6 +54,24 @@ async def process_image(
                         max_similarity = similarity
                         max_category = item.get("category")
 
+                if VECTOR_REFRESH_DIVISOR > 0 and random.randint(1, VECTOR_REFRESH_DIVISOR) == 1:
+                    refresh_triggered = True
+                    best_item = max(
+                        similarity_response,
+                        key=lambda candidate: float(candidate.get("similarity", 0) or 0)
+                    )
+                    best_similarity = float(best_item.get("similarity", 0) or 0)
+                    vector_id = best_item.get("vector_id")
+                    print(
+                        f"[process_image] Refreshing vector {vector_id} (similarity {best_similarity:.2f}) for guild {guild_id}."
+                    )
+                    if vector_id is not None:
+                        try:
+                            clip_vectors.delete_vectors([vector_id])
+                        except Exception as exc:
+                            print(f"[process_image] Failed to delete vector {vector_id}: {exc}")
+
+            if similarity_response and not refresh_triggered:
                 for item in similarity_response:
                     category = item.get("category")
                     similarity = float(item.get("similarity", 0) or 0)
@@ -92,7 +113,9 @@ async def process_image(
                             "similarity": similarity,
                         }
 
-            skip_vector = max_similarity >= CLIP_THRESHOLD
+            # Skip vector when high-accuracy is enabled and we had a strong similarity match
+            # dont skip if we are refreshing the vector
+            skip_vector = max_similarity >= CLIP_THRESHOLD and not refresh_triggered
             response = await moderator_api(
                 scanner,
                 image_path=png_converted_path,

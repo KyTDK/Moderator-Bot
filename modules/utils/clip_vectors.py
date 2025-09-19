@@ -1,19 +1,17 @@
 import json
 import logging
+import math
+import os
+from collections import defaultdict
+from threading import Lock
+from typing import Dict, Iterable, List
+
 import numpy as np
 import torch
 from PIL import Image
-from collections import defaultdict
-from threading import Lock
-from transformers import CLIPProcessor, CLIPModel
-from typing import List, Dict
-
-from pymilvus import (
-    connections, Collection
-)
-
-import os
 from dotenv import load_dotenv
+from pymilvus import Collection, connections
+from transformers import CLIPModel, CLIPProcessor
 
 load_dotenv()
 # Milvus connection/config
@@ -26,34 +24,28 @@ connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
 collection = Collection(COLLECTION_NAME)
 
 def _suggest_ivf_params(n_vectors: int) -> tuple[int, int]:
-    # NLIST ≈ 2–4 * sqrt(N); clamp to [256, 4096] for practicality
-    import math
+    """Suggest reasonable IVF parameters for the current collection size."""
     nlist = int(max(256, min(4096, round(4 * math.sqrt(max(n_vectors, 1))))))
-    # NPROBE ≈ 3% of NLIST=
     nprobe = max(8, min(nlist, int(round(nlist * 0.03))))
-    # round nprobe to nearest power-of-two-ish for convenience
     pow2 = 1 << (nprobe - 1).bit_length()
     nprobe = min(pow2, nlist)
     return nlist, nprobe
 
-# After connecting:
 n_vectors = collection.num_entities
 NLIST, NPROBE = _suggest_ivf_params(n_vectors)
-log.info(f"Using IVF params: NLIST={NLIST}, NPROBE={NPROBE} for N={n_vectors}")
+log.info("Using IVF params: NLIST=%s, NPROBE=%s for N=%s", NLIST, NPROBE, n_vectors)
 
 if not collection.has_index():
     collection.create_index(
         field_name="vector",
-        index_params={"index_type": "IVF_FLAT", "metric_type": "IP", "params": {"nlist": NLIST}}
+        index_params={"index_type": "IVF_FLAT", "metric_type": "IP", "params": {"nlist": NLIST}},
     )
 collection.load()
 
-# Lazy-load CLIP model and processor on first use to avoid blocking startup
 _model = None
 _proc = None
 _device = None
 _init_lock = Lock()
-
 _write_lock = Lock()
 
 def _ensure_clip_loaded() -> None:
@@ -81,13 +73,25 @@ def embed(img: Image.Image) -> np.ndarray:
     v = v / np.linalg.norm(v, axis=1, keepdims=True)
     return v
 
-def add_vector(img: Image.Image, metadata: dict):
+def add_vector(img: Image.Image, metadata: dict) -> None:
     vec = embed(img)[0]
     category = metadata.get("category") or "safe"
     meta = json.dumps(metadata)
     with _write_lock:
         data = [[vec], [category], [meta]]
         collection.insert(data)
+
+
+def delete_vectors(ids: Iterable[int]) -> None:
+    """Remove vectors identified by their primary keys."""
+    normalized_ids = [int(value) for value in ids if value is not None]
+    if not normalized_ids:
+        return
+    expr = "id in [" + ", ".join(str(value) for value in normalized_ids) + "]"
+    with _write_lock:
+        collection.delete(expr)
+        collection.flush()
+
 
 def query_similar(
     img: Image.Image,
@@ -102,7 +106,7 @@ def query_similar(
     }
 
     results = collection.search(
-        data=[vec], 
+        data=[vec],
         anns_field="vector",
         param=search_params,
         limit=k,
@@ -122,6 +126,10 @@ def query_similar(
         meta_json = hit.entity.get("meta")
         meta = json.loads(meta_json) if meta_json else {}
         meta["similarity"] = sim
+        try:
+            meta["vector_id"] = int(hit.id)
+        except (TypeError, ValueError):
+            meta["vector_id"] = hit.id
 
         votes[category].append(sim)
         if category not in top_hit or sim > top_hit[category]["similarity"]:
