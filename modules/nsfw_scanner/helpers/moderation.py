@@ -105,7 +105,7 @@ async def moderator_api(
 
             if not skip_vector_add:
                 print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
-                clip_vectors.add_vector(image, metadata={"category": normalized_category, "score": score})
+                await asyncio.to_thread(clip_vectors.add_vector, image, metadata={"category": normalized_category, "score": score})
 
             if score < threshold:
                 print(f"[moderator_api] Category '{normalized_category}' flagged with low score {score:.2f}. Ignoring.")
@@ -119,7 +119,7 @@ async def moderator_api(
 
         if ADD_SFW_VECTOR and not flagged_any and not skip_vector_add:
             print(f"[moderator_api] Adding SFW vector to index for guild {guild_id}.")
-            clip_vectors.add_vector(image, metadata={"category": None, "score": 0})
+            await asyncio.to_thread(clip_vectors.add_vector, image, metadata={"category": None, "score": 0})
 
         if guild_flagged_categories:
             guild_flagged_categories.sort(key=lambda item: item[1], reverse=True)

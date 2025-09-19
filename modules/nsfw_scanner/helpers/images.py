@@ -45,7 +45,7 @@ async def process_image(
                 accelerated = await mysql.is_accelerated(guild_id=guild_id)
             allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
             high_accuracy = bool(settings.get("nsfw-high-accuracy", False))
-            similarity_response = clip_vectors.query_similar(image, threshold=0)
+            similarity_response = await asyncio.to_thread(clip_vectors.query_similar, image, threshold=0)
 
             max_similarity = 0.0
             max_category = None
