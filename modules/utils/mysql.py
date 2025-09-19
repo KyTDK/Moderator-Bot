@@ -720,17 +720,45 @@ async def is_accelerated(user_id: int = None, guild_id: int = None) -> bool:
     return result is not None
 
 async def get_premium_status(guild_id: int):
-    """
-    Return a dict with 'status' and 'next_billing' for a guild, or None if not found.
-    """
+    """Return resolved premium metadata for a guild, or None if not found."""
     row, _ = await execute_query(
-        "SELECT status, next_billing FROM premium_guilds WHERE guild_id = %s LIMIT 1",
+        "SELECT status, next_billing, tier FROM premium_guilds WHERE guild_id = %s LIMIT 1",
         (guild_id,),
         fetch_one=True,
     )
     if not row:
         return None
-    return {"status": row[0], "next_billing": row[1]}
+
+    status, next_billing_raw, tier = row[0], row[1], row[2] if len(row) > 2 else None
+    next_billing = next_billing_raw
+    if isinstance(next_billing, str):
+        try:
+            next_billing = datetime.strptime(next_billing, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        except ValueError:
+            try:
+                next_billing = datetime.fromisoformat(next_billing)
+                next_billing = next_billing if next_billing.tzinfo else next_billing.replace(tzinfo=timezone.utc)
+            except ValueError:
+                next_billing = None
+    elif isinstance(next_billing, datetime):
+        next_billing = next_billing if next_billing.tzinfo else next_billing.replace(tzinfo=timezone.utc)
+    else:
+        next_billing = None
+
+    normalized_tier = tier or "accelerated"
+    now = datetime.now(timezone.utc)
+    is_active = False
+    if status == "active" and (next_billing is None or next_billing > now):
+        is_active = True
+    elif status == "cancelled" and next_billing and next_billing > now:
+        is_active = True
+
+    return {
+        "status": status,
+        "next_billing": next_billing,
+        "tier": normalized_tier,
+        "is_active": is_active,
+    }
 
 async def add_guild(guild_id: int, name: str, owner_id: int):
     """
@@ -753,3 +781,4 @@ async def remove_guild(guild_id: int):
         "DELETE FROM guilds WHERE guild_id = %s",
         (guild_id,),
     )
+

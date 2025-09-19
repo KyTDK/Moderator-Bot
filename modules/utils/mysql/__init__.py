@@ -10,7 +10,12 @@ from .settings import get_settings, update_settings
 from .strikes import cleanup_expired_strikes, get_strike_count, get_strikes
 from .usage import add_aimod_usage, add_vcmod_usage, get_aimod_usage, get_vcmod_usage
 from .cleanup import cleanup_orphaned_guilds
-from .premium import add_guild, get_premium_status, is_accelerated, remove_guild
+from .premium import (
+    add_guild,
+    get_premium_status,
+    is_accelerated,
+    remove_guild,
+)
 
 __all__ = [
     "MYSQL_CONFIG",

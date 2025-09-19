@@ -9,21 +9,60 @@ from modules.utils import mysql
 from ..constants import (
     ACCELERATED_MAX_CONCURRENT_FRAMES,
     ACCELERATED_MAX_FRAMES_PER_VIDEO,
+    ACCELERATED_PRO_CONCURRENT_FRAMES,
+    ACCELERATED_PRO_MAX_FRAMES_PER_VIDEO,
+    ACCELERATED_ULTRA_CONCURRENT_FRAMES,
+    ACCELERATED_ULTRA_MAX_FRAMES_PER_VIDEO,
     MAX_CONCURRENT_FRAMES,
     MAX_FRAMES_PER_VIDEO,
 )
 from ..utils import extract_frames_threaded, safe_delete
 from .images import process_image
 
+FRAME_LIMITS_BY_TIER = {
+    "accelerated": ACCELERATED_MAX_FRAMES_PER_VIDEO,
+    "accelerated_pro": ACCELERATED_PRO_MAX_FRAMES_PER_VIDEO,
+    "accelerated_ultra": ACCELERATED_ULTRA_MAX_FRAMES_PER_VIDEO,
+}
+
+CONCURRENCY_LIMITS_BY_TIER = {
+    "accelerated": ACCELERATED_MAX_CONCURRENT_FRAMES,
+    "accelerated_pro": ACCELERATED_PRO_CONCURRENT_FRAMES,
+    "accelerated_ultra": ACCELERATED_ULTRA_CONCURRENT_FRAMES,
+}
+
+DEFAULT_PREMIUM_TIER = "accelerated"
+
+
+async def _resolve_video_limits(guild_id: int | None) -> tuple[Optional[int], int]:
+    frames_limit: Optional[int] = MAX_FRAMES_PER_VIDEO
+    concurrency_limit = MAX_CONCURRENT_FRAMES
+
+    if guild_id is None:
+        return frames_limit, concurrency_limit
+
+    premium = await mysql.get_premium_status(guild_id)
+    if not premium or not premium.get("is_active"):
+        return frames_limit, concurrency_limit
+
+    tier = premium.get("tier") or DEFAULT_PREMIUM_TIER
+    frames_limit = FRAME_LIMITS_BY_TIER.get(
+        tier,
+        FRAME_LIMITS_BY_TIER[DEFAULT_PREMIUM_TIER],
+    )
+    concurrency_limit = CONCURRENCY_LIMITS_BY_TIER.get(
+        tier,
+        CONCURRENCY_LIMITS_BY_TIER[DEFAULT_PREMIUM_TIER],
+    )
+    return frames_limit, concurrency_limit
+
+
 async def process_video(
     scanner,
     original_filename: str,
     guild_id: int,
 ) -> tuple[Optional[discord.File], dict[str, Any] | None]:
-    frames_to_scan = MAX_FRAMES_PER_VIDEO
-    if await mysql.is_accelerated(guild_id=guild_id):
-        frames_to_scan = ACCELERATED_MAX_FRAMES_PER_VIDEO
-
+    frames_to_scan, max_concurrent_frames = await _resolve_video_limits(guild_id)
     temp_frames = await asyncio.to_thread(
         extract_frames_threaded, original_filename, frames_to_scan
     )
@@ -39,9 +78,7 @@ async def process_video(
             "video_frames_target": frames_to_scan,
         }
 
-    semaphore = asyncio.Semaphore(MAX_CONCURRENT_FRAMES)
-    if await mysql.is_accelerated(guild_id=guild_id):
-        semaphore = asyncio.Semaphore(ACCELERATED_MAX_CONCURRENT_FRAMES)
+    semaphore = asyncio.Semaphore(max_concurrent_frames)
 
     async def analyse(path: str):
         async with semaphore:

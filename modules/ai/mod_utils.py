@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Tuple
 
 from modules.utils import mysql
@@ -45,37 +44,6 @@ def pick_model(high_accuracy: bool, default_model: str) -> str:
     return "gpt-5-mini" if high_accuracy else default_model
 
 
-def _parse_next_billing(value) -> datetime | None:
-    if value is None:
-        return None
-    if isinstance(value, datetime):
-        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
-    if isinstance(value, str):
-        try:
-            return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-        except ValueError:
-            return None
-    return None
-
-
-def _premium_is_active(premium: dict | None) -> tuple[bool, str]:
-    if not premium:
-        return False, "accelerated"
-
-    status = premium.get("status")
-    tier = premium.get("tier") or "accelerated"
-    next_billing = _parse_next_billing(premium.get("next_billing"))
-    now = datetime.now(timezone.utc)
-
-    if status == "active" and (next_billing is None or next_billing > now):
-        return True, tier
-
-    if status == "cancelled" and next_billing and next_billing > now:
-        return True, tier
-
-    return False, "accelerated"
-
-
 async def _resolve_budget_limit(guild_id: int, usage: dict, table: str) -> float:
     try:
         stored_limit = float(usage.get("limit_usd", ACCELERATED_BUDGET_LIMIT_USD))
@@ -86,8 +54,11 @@ async def _resolve_budget_limit(guild_id: int, usage: dict, table: str) -> float
         stored_limit = ACCELERATED_BUDGET_LIMIT_USD
 
     premium = await mysql.get_premium_status(guild_id)
-    is_active, tier = _premium_is_active(premium)
-    tier_limit = TIER_BUDGET_LIMITS.get(tier, ACCELERATED_BUDGET_LIMIT_USD) if is_active else ACCELERATED_BUDGET_LIMIT_USD
+    if premium and premium.get("is_active"):
+        tier = premium.get("tier")
+        tier_limit = TIER_BUDGET_LIMITS.get(tier, ACCELERATED_BUDGET_LIMIT_USD)
+    else:
+        tier_limit = ACCELERATED_BUDGET_LIMIT_USD
 
     effective_limit = max(stored_limit, tier_limit)
 

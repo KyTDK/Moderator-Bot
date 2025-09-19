@@ -55,8 +55,22 @@ def determine_file_type(filename: str) -> str:
 
     return mime
 
-def extract_frames_threaded(filename: str, wanted: int) -> list[str]:
+
+def extract_frames_threaded(filename: str, wanted: Optional[int]) -> list[str]:
     temp_frames: list[str] = []
+
+    def resolve_target(total: int) -> int:
+        if total <= 0:
+            return 0
+        if wanted is None:
+            return total
+        try:
+            desired = int(wanted)
+        except (TypeError, ValueError):
+            return 0
+        if desired <= 0:
+            return 0
+        return min(desired, total)
 
     ext = os.path.splitext(filename)[1].lower()
     if ext in {".webp", ".apng", ".avif"}:
@@ -65,7 +79,10 @@ def extract_frames_threaded(filename: str, wanted: int) -> list[str]:
                 n = getattr(img, "n_frames", 1)
                 if n <= 1:
                     return []
-                idxs = np.linspace(0, n - 1, min(wanted, n), dtype=int)
+                target = resolve_target(n)
+                if target <= 0:
+                    return []
+                idxs = np.linspace(0, n - 1, target, dtype=int)
                 for idx in idxs:
                     img.seek(int(idx))
                     frame = img.convert("RGBA")
@@ -79,10 +96,11 @@ def extract_frames_threaded(filename: str, wanted: int) -> list[str]:
     cap = cv2.VideoCapture(filename)
     try:
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-        if total <= 0 or wanted <= 0:
+        target = resolve_target(total)
+        if target <= 0:
             return []
 
-        idxs = set(np.linspace(0, total - 1, min(wanted, total), dtype=int))
+        idxs = set(np.linspace(0, total - 1, target, dtype=int))
         if not idxs:
             return []
 
