@@ -70,7 +70,7 @@ async def process_image(
                     )
                     if vector_id is not None:
                         try:
-                            clip_vectors.delete_vectors([vector_id])
+                            await clip_vectors.delete_vectors([vector_id])
                         except Exception as exc:
                             print(f"[process_image] Failed to delete vector {vector_id}: {exc}")
 

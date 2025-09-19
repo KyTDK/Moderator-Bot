@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import math
@@ -81,17 +82,19 @@ def add_vector(img: Image.Image, metadata: dict) -> None:
         data = [[vec], [category], [meta]]
         collection.insert(data)
 
-
-def delete_vectors(ids: Iterable[int]) -> None:
+async def delete_vectors(ids: Iterable[int]) -> None:
     """Remove vectors identified by their primary keys."""
     normalized_ids = [int(value) for value in ids if value is not None]
     if not normalized_ids:
         return
     expr = "id in [" + ", ".join(str(value) for value in normalized_ids) + "]"
-    with _write_lock:
-        collection.delete(expr)
-        collection.flush()
 
+    def _delete_and_flush() -> None:
+        with _write_lock:
+            collection.delete(expr)
+            collection.flush()
+
+    await asyncio.to_thread(_delete_and_flush)
 
 def query_similar(
     img: Image.Image,
