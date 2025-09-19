@@ -12,7 +12,7 @@ class WorkerQueue:
         backlog_high_watermark: int = 30,
         backlog_low_watermark: int = 5,
         autoscale_check_interval: float = 2.0,
-        scale_down_grace: float = 15.0,
+        scale_down_grace: float = 5.0,
         name: Optional[str] = None,
         backlog_hard_limit: Optional[int] = 500,
         backlog_shed_to: Optional[int] = None,
