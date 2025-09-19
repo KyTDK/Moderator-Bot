@@ -22,8 +22,6 @@ from .helpers import (
 )
 from .utils import safe_delete
 
-
-
 class NSFWScanner:
     def __init__(self, bot: commands.Bot):
         self.bot = bot

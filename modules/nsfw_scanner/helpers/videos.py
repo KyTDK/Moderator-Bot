@@ -15,7 +15,6 @@ from ..constants import (
 from ..utils import extract_frames_threaded, safe_delete
 from .images import process_image
 
-
 async def process_video(
     scanner,
     original_filename: str,

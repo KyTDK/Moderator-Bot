@@ -8,7 +8,6 @@ from modules.utils import mod_logging, mysql
 
 from .utils import safe_delete
 
-
 async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id: int, reason: str, image: discord.File, message: discord.Message, confidence: float | None = None, confidence_source: str | None = None):
     action_flag = await mysql.get_settings(guild_id, NSFW_ACTION_SETTING)
     if action_flag:
