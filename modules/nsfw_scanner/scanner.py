@@ -618,6 +618,7 @@ class NSFWScanner:
                 
                 # Check if category is allowed in this guild
                 if allowed_categories and not is_allowed_category(category, allowed_categories):
+                    print(f"[moderator_api] Category '{normalized_category}' is not allowed in guild {guild_id}. Ignoring.")
                     continue
                 
                 # Add to guild flagged categories
