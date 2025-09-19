@@ -452,43 +452,43 @@ SETTINGS_SCHEMA = {
         choices=["true", "false"]
     ),
     # Antibot settings
-    "antibot-enabled": Setting(
-        name="antibot-enabled",
-        description="Enable auto-kick based on low trust score for new joins.",
-        setting_type=bool,
-        default=False,
-        choices=["true", "false"],
-    ),
-    "antibot-autorole": Setting(
-        name="antibot-autorole",
-        description="Role to auto-assign to members meeting the trust score threshold.",
-        setting_type=discord.Role,
-        default=None,
-        hidden=False,
-    ),
-    "antibot-min-pass": Setting(
-        name="antibot-min-pass",
-        description="Minimum number of AntiBot conditions that must be satisfied on join.",
-        setting_type=int,
-        default=1,
-    ),
-    "antibot-conditions": Setting(
-        name="antibot-conditions",
-        description="Custom AntiBot inspection conditions (stored as a list of rules).",
-        setting_type=list[dict],
-        default=[
-            {"signal": "final_score", "operator": ">=", "value": 55, "label": "Score >= 55"},
-            {"signal": "account_age_days", "operator": ">=", "value": 14, "label": "Account age >= 14d"},
-            {"signal": "public_flags_count", "operator": ">=", "value": 1, "label": "Has public badge"},
-            {"signal": "member_flags_contains", "operator": "contains", "value": "completed_onboarding", "label": "Completed onboarding"},
-            {"signal": "has_avatar", "operator": "==", "value": True, "label": "Has custom avatar"},
-        ],
-        hidden=False
-    ),
-    "antibot-autorole-min-pass": Setting(
-        name="antibot-autorole-min-pass",
-        description="Minimum number of AntiBot conditions that must be satisfied for auto-role assignment.",
-        setting_type=int,
-        default=0,
-    ),
+    # "antibot-enabled": Setting(
+    #     name="antibot-enabled",
+    #     description="Enable auto-kick based on low trust score for new joins.",
+    #     setting_type=bool,
+    #     default=False,
+    #     choices=["true", "false"],
+    # ),
+    # "antibot-autorole": Setting(
+    #     name="antibot-autorole",
+    #     description="Role to auto-assign to members meeting the trust score threshold.",
+    #     setting_type=discord.Role,
+    #     default=None,
+    #     hidden=False,
+    # ),
+    # "antibot-min-pass": Setting(
+    #     name="antibot-min-pass",
+    #     description="Minimum number of AntiBot conditions that must be satisfied on join.",
+    #     setting_type=int,
+    #     default=1,
+    # ),
+    # "antibot-conditions": Setting(
+    #     name="antibot-conditions",
+    #     description="Custom AntiBot inspection conditions (stored as a list of rules).",
+    #     setting_type=list[dict],
+    #     default=[
+    #         {"signal": "final_score", "operator": ">=", "value": 55, "label": "Score >= 55"},
+    #         {"signal": "account_age_days", "operator": ">=", "value": 14, "label": "Account age >= 14d"},
+    #         {"signal": "public_flags_count", "operator": ">=", "value": 1, "label": "Has public badge"},
+    #         {"signal": "member_flags_contains", "operator": "contains", "value": "completed_onboarding", "label": "Completed onboarding"},
+    #         {"signal": "has_avatar", "operator": "==", "value": True, "label": "Has custom avatar"},
+    #     ],
+    #     hidden=False
+    # ),
+    # "antibot-autorole-min-pass": Setting(
+    #     name="antibot-autorole-min-pass",
+    #     description="Minimum number of AntiBot conditions that must be satisfied for auto-role assignment.",
+    #     setting_type=int,
+    #     default=0,
+    # ),
 }
