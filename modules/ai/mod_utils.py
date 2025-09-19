@@ -1,10 +1,20 @@
 from __future__ import annotations
+
+from datetime import datetime, timezone
 from typing import Tuple
+
 from modules.utils import mysql
-from modules.ai.costs import PRICES_PER_MTOK, DEFAULT_BUDGET_LIMIT_USD
+from modules.ai.costs import (
+    PRICES_PER_MTOK,
+    ACCELERATED_BUDGET_LIMIT_USD,
+    ACCELERATED_PRO_BUDGET_LIMIT_USD,
+    ACCELERATED_ULTRA_BUDGET_LIMIT_USD,
+)
+
 
 def get_price_per_mtok(model_name: str) -> float:
     return next((v for k, v in PRICES_PER_MTOK.items() if k in model_name), 0.45)
+
 
 MODEL_CONTEXT_WINDOWS = {
     "gpt-5-nano": 128000,
@@ -17,11 +27,81 @@ MODEL_CONTEXT_WINDOWS = {
     "gpt-4o-mini": 128000,
 }
 
+
+TIER_BUDGET_LIMITS = {
+    "accelerated": ACCELERATED_BUDGET_LIMIT_USD,
+    "accelerated_pro": ACCELERATED_PRO_BUDGET_LIMIT_USD,
+    "accelerated_ultra": ACCELERATED_ULTRA_BUDGET_LIMIT_USD,
+}
+
+BUDGET_EPSILON = 1e-6
+
+
 def get_model_limit(model_name: str) -> int:
     return next((limit for key, limit in MODEL_CONTEXT_WINDOWS.items() if key in model_name), 16000)
 
+
 def pick_model(high_accuracy: bool, default_model: str) -> str:
     return "gpt-5-mini" if high_accuracy else default_model
+
+
+def _parse_next_billing(value) -> datetime | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    if isinstance(value, str):
+        try:
+            return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        except ValueError:
+            return None
+    return None
+
+
+def _premium_is_active(premium: dict | None) -> tuple[bool, str]:
+    if not premium:
+        return False, "accelerated"
+
+    status = premium.get("status")
+    tier = premium.get("tier") or "accelerated"
+    next_billing = _parse_next_billing(premium.get("next_billing"))
+    now = datetime.now(timezone.utc)
+
+    if status == "active" and (next_billing is None or next_billing > now):
+        return True, tier
+
+    if status == "cancelled" and next_billing and next_billing > now:
+        return True, tier
+
+    return False, "accelerated"
+
+
+async def _resolve_budget_limit(guild_id: int, usage: dict, table: str) -> float:
+    try:
+        stored_limit = float(usage.get("limit_usd", ACCELERATED_BUDGET_LIMIT_USD))
+    except (TypeError, ValueError):
+        stored_limit = ACCELERATED_BUDGET_LIMIT_USD
+
+    if stored_limit <= 0:
+        stored_limit = ACCELERATED_BUDGET_LIMIT_USD
+
+    premium = await mysql.get_premium_status(guild_id)
+    is_active, tier = _premium_is_active(premium)
+    tier_limit = TIER_BUDGET_LIMITS.get(tier, ACCELERATED_BUDGET_LIMIT_USD) if is_active else ACCELERATED_BUDGET_LIMIT_USD
+
+    effective_limit = max(stored_limit, tier_limit)
+
+    if stored_limit + BUDGET_EPSILON < effective_limit:
+        usage["limit_usd"] = effective_limit
+        await mysql.execute_query(
+            f"UPDATE {table} SET limit_usd = %s WHERE guild_id = %s",
+            (effective_limit, guild_id),
+        )
+    else:
+        usage["limit_usd"] = stored_limit
+
+    return effective_limit
+
 
 async def budget_allows(
     guild_id: int,
@@ -33,9 +113,10 @@ async def budget_allows(
     Returns (allow, request_cost, usage_snapshot_dict).
     """
     usage = await mysql.get_aimod_usage(guild_id)
+    limit = await _resolve_budget_limit(guild_id, usage, "aimod_usage")
     price_per_token = get_price_per_mtok(model_name) / 1_000_000
     request_cost = round(estimated_tokens * price_per_token, 6)
-    allow = (usage.get("cost_usd", 0.0) + request_cost) <= usage.get("limit_usd", DEFAULT_BUDGET_LIMIT_USD)
+    allow = (usage.get("cost_usd", 0.0) + request_cost) <= limit
     return allow, request_cost, usage
 
 
@@ -49,8 +130,8 @@ async def budget_allows_voice(
     Returns (allow, request_cost, usage_snapshot_dict).
     """
     usage = await mysql.get_vcmod_usage(guild_id)
+    limit = await _resolve_budget_limit(guild_id, usage, "vcmod_usage")
     price_per_token = get_price_per_mtok(model_name) / 1_000_000
     request_cost = round(estimated_tokens * price_per_token, 6)
-    limit = float(usage.get("limit_usd", DEFAULT_BUDGET_LIMIT_USD))
     allow = (usage.get("cost_usd", 0.0) + request_cost) <= limit
     return allow, request_cost, usage

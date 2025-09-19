@@ -1,7 +1,7 @@
 import math
 from datetime import datetime, timezone
 
-from modules.ai.costs import DEFAULT_BUDGET_LIMIT_USD
+from modules.ai.costs import ACCELERATED_BUDGET_LIMIT_USD
 
 from .connection import execute_query
 from .premium import get_premium_status
@@ -63,7 +63,7 @@ async def get_aimod_usage(guild_id: int):
         return {
             "tokens_used": 0,
             "cost_usd": 0.0,
-            "limit_usd": DEFAULT_BUDGET_LIMIT_USD,
+            "limit_usd": ACCELERATED_BUDGET_LIMIT_USD,
             "cycle_end": target_end,
         }
 
@@ -91,7 +91,7 @@ async def get_aimod_usage(guild_id: int):
         return {
             "tokens_used": 0,
             "cost_usd": 0.0,
-            "limit_usd": float(limit_usd or DEFAULT_BUDGET_LIMIT_USD),
+            "limit_usd": float(limit_usd or ACCELERATED_BUDGET_LIMIT_USD),
             "cycle_end": target_end,
         }
 
@@ -103,7 +103,7 @@ async def get_aimod_usage(guild_id: int):
     return {
         "tokens_used": int(tokens_used or 0),
         "cost_usd": float(cost_usd or 0),
-        "limit_usd": float(limit_usd or DEFAULT_BUDGET_LIMIT_USD),
+        "limit_usd": float(limit_usd or ACCELERATED_BUDGET_LIMIT_USD),
         "cycle_end": stored_end,
     }
 
@@ -137,7 +137,7 @@ async def add_aimod_usage(guild_id: int, tokens: int, cost_usd: float):
             INSERT INTO aimod_usage (guild_id, cycle_end, tokens_used, cost_usd, limit_usd)
             VALUES (%s, %s, %s, %s, %s)
             """,
-            (guild_id, snapshot["cycle_end"].replace(tzinfo=None), int(tokens), cost_usd, DEFAULT_BUDGET_LIMIT_USD),
+            (guild_id, snapshot["cycle_end"].replace(tzinfo=None), int(tokens), cost_usd, ACCELERATED_BUDGET_LIMIT_USD),
         )
     # Return updated snapshot
     return await get_aimod_usage(guild_id)
@@ -171,7 +171,7 @@ async def get_vcmod_usage(guild_id: int):
         return {
             "tokens_used": 0,
             "cost_usd": 0.0,
-            "limit_usd": DEFAULT_BUDGET_LIMIT_USD,
+            "limit_usd": ACCELERATED_BUDGET_LIMIT_USD,
             "cycle_end": target_end,
         }
 
@@ -197,7 +197,7 @@ async def get_vcmod_usage(guild_id: int):
         return {
             "tokens_used": 0,
             "cost_usd": 0.0,
-            "limit_usd": float(limit_usd or DEFAULT_BUDGET_LIMIT_USD),
+            "limit_usd": float(limit_usd or ACCELERATED_BUDGET_LIMIT_USD),
             "cycle_end": target_end,
         }
 
@@ -208,7 +208,7 @@ async def get_vcmod_usage(guild_id: int):
     return {
         "tokens_used": int(tokens_used or 0),
         "cost_usd": float(cost_usd or 0),
-        "limit_usd": float(limit_usd or DEFAULT_BUDGET_LIMIT_USD),
+        "limit_usd": float(limit_usd or ACCELERATED_BUDGET_LIMIT_USD),
         "cycle_end": stored_end,
     }
 
@@ -236,6 +236,6 @@ async def add_vcmod_usage(guild_id: int, tokens: int, cost_usd: float):
             INSERT INTO vcmod_usage (guild_id, cycle_end, tokens_used, cost_usd, limit_usd)
             VALUES (%s, %s, %s, %s, %s)
             """,
-            (guild_id, snapshot["cycle_end"].replace(tzinfo=None), int(tokens), cost_usd, DEFAULT_BUDGET_LIMIT_USD),
+            (guild_id, snapshot["cycle_end"].replace(tzinfo=None), int(tokens), cost_usd, ACCELERATED_BUDGET_LIMIT_USD),
         )
     return await get_vcmod_usage(guild_id)
