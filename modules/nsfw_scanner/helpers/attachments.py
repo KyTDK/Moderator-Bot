@@ -168,18 +168,18 @@ async def check_attachment(
 
     if nsfw_callback and scan_result and scan_result.get("is_nsfw"):
         category_name = scan_result.get("category") or "unspecified"
-        confidence_str = ""
+        confidence_value = None
+        confidence_source = None
         try:
             if scan_result.get("score") is not None:
-                confidence_str = (
-                    f", Confidence: {float(scan_result.get('score')):.2f}"
-                )
+                confidence_value = float(scan_result.get("score"))
+                confidence_source = "Score"
             elif scan_result.get("similarity") is not None:
-                confidence_str = (
-                    f", Confidence: {float(scan_result.get('similarity')):.2f}"
-                )
+                confidence_value = float(scan_result.get("similarity"))
+                confidence_source = "Similarity"
         except Exception:
-            confidence_str = ""
+            confidence_value = None
+            confidence_source = None
 
         if file is None:
             file = discord.File(temp_filename, filename=filename)
@@ -188,9 +188,11 @@ async def check_attachment(
                 author,
                 scanner.bot,
                 guild_id,
-                f"Detected potential policy violation (Category: **{category_name.title()}**{confidence_str})",
+                f"Detected potential policy violation (Category: **{category_name.title()}**)",
                 file,
                 message,
+                confidence=confidence_value,
+                confidence_source=confidence_source,
             )
         finally:
             try:
