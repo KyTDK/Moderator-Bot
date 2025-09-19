@@ -11,7 +11,6 @@ from modules.utils import api, clip_vectors, mysql
 from ..constants import ADD_SFW_VECTOR
 from ..utils import file_to_b64, is_allowed_category
 
-
 async def moderator_api(
     scanner,
     text: str | None = None,
@@ -98,7 +97,8 @@ async def moderator_api(
             score = results.category_scores.__dict__.get(category, 0)
             if not is_flagged:
                 continue
-            flagged_any = True
+            else:
+                flagged_any = True
 
             if not skip_vector_add:
                 print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
@@ -127,6 +127,7 @@ async def moderator_api(
                 "score": best_score,
                 "reason": "OpenAI moderation",
                 "threshold": threshold,
+                "raw_api_results": results.__dict__,
             }
 
         return {
@@ -134,6 +135,7 @@ async def moderator_api(
             "reason": "OpenAI moderation",
             "flagged_any": flagged_any,
             "threshold": threshold,
+            "raw_api_results": results.__dict__,
         }
 
     return result

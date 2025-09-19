@@ -166,7 +166,4 @@ class NSFWScanner:
                 print(f"[emoji-scan] Failed to scan custom emoji {emoji_obj}: {e}")
 
         return False
-
-
-
-
+    
