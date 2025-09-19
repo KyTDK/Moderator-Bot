@@ -327,6 +327,8 @@ class NSFWScanner:
                         embed.add_field(name="Category", value=str(scan_result.get("category")), inline=True)
                     if scan_result.get("score") is not None:
                         embed.add_field(name="Score", value=f"{float(scan_result.get('score') or 0):.3f}", inline=True)
+                    if scan_result.get("flagged_any") is not None:
+                        embed.add_field(name="Flagged Any", value=str(bool(scan_result.get("flagged_any"))).lower(), inline=True)
                     if scan_result.get("max_similarity") is not None:
                         embed.add_field(name="Max Similarity", value=f"{float(scan_result.get('max_similarity') or 0):.3f}", inline=True)
                     if scan_result.get("similarity") is not None:
@@ -631,7 +633,8 @@ class NSFWScanner:
                 }
 
             return {"is_nsfw": False, 
-                    "reason": "OpenAI moderation", 
+                    "reason": "OpenAI moderation",
+                    "flagged_any": flagged_any,
                     "threshold": threshold}
 
         return result
