@@ -10,7 +10,6 @@ from discord import app_commands
 class MonitoringCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.invite_cache: dict[int, dict[str, int]] = {} # guild_id: {invite_code: uses}
         self._monitor_blocked_channels: set[int] = set()
 
     async def get_monitor_channel(self, guild_id: int) -> Optional[int]:
@@ -74,55 +73,12 @@ class MonitoringCog(commands.Cog):
                     self._monitor_blocked_channels.add(channel.id)
 
     @commands.Cog.listener()
-    async def on_ready(self):
-        for guild in self.bot.guilds:
-            try:
-                invites = await guild.invites()
-                self.invite_cache[guild.id] = {i.code: i.uses or 0 for i in invites}
-            except Exception as e:
-                print(f"Failed to fetch invites for {guild.name}: {e}")
-
-    @commands.Cog.listener()
-    async def on_invite_create(self, invite):
-        self.invite_cache.setdefault(invite.guild.id, {})[invite.code] = invite.uses or 0
-
-    @commands.Cog.listener()
-    async def on_invite_delete(self, invite):
-        self.invite_cache.get(invite.guild.id, {}).pop(invite.code, None)
-
-    @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         guild = member.guild
         gid = guild.id
 
         if not await self.is_event_enabled(gid, "join"):
             return
-
-        inviter_reason = None
-        used_invite = None
-
-        try:
-            new_invites = await guild.invites()
-            
-            # Look for the invite whose usage increased
-            for invite in new_invites:
-                old = self.invite_cache.get(gid, {}).get(invite.code, 0)
-                if (invite.uses or 0) > old:
-                    used_invite = invite
-                    break
-
-            # Update cache
-            self.invite_cache[gid] = {i.code: i.uses or 0 for i in new_invites}
-
-            if not used_invite:
-                inviter_reason = "Invite not previously tracked or uses unchanged"
-
-        except discord.Forbidden:
-            inviter_reason = "Missing Manage Server permission"
-            print(f"[Join Log] {inviter_reason} in {guild.name}")
-        except Exception as e:
-            inviter_reason = f"Error while fetching invites ({e})"
-            print(f"[Join Log] {inviter_reason}")
 
         try:
             embed = Embed(
@@ -145,20 +101,6 @@ class MonitoringCog(commands.Cog):
                 value=format_dt(member.joined_at or utcnow(), style="F"),
                 inline=True,
             )
-
-            if used_invite:
-                inviter = used_invite.inviter
-                embed.add_field(
-                    name="Invited By",
-                    value=f"{inviter.mention} — {inviter.name} • Code: `{used_invite.code}`",
-                    inline=True,
-                )
-            else:
-                embed.add_field(
-                    name="Invited By",
-                    value=f"Could not determine inviter → {inviter_reason or 'Unknown reason'}",
-                    inline=True,
-                )
 
             embed.set_footer(text="Bot account" if member.bot else "User account")
             await self.log_event(member.guild, embed=embed)
