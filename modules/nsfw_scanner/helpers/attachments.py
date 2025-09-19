@@ -100,10 +100,10 @@ async def check_attachment(
                         value=str(bool(scan_result.get("flagged_any"))).lower(),
                         inline=True,
                     )
-                if scan_result.get("raw_api_results") is not None:
+                if scan_result.get("summary_categories") is not None:
                     embed.add_field(
-                        name="Raw API Results",
-                        value=f"```json\n{scan_result.get('raw_api_results')}\n```",
+                        name="Summary Categories",
+                        value=str(scan_result.get("summary_categories")),
                         inline=False,
                     )
                 if scan_result.get("max_similarity") is not None:

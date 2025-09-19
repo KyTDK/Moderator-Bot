@@ -91,6 +91,7 @@ async def moderator_api(
         except (TypeError, ValueError):
             threshold = 0.7
         guild_flagged_categories: list[tuple[str, float]] = []
+        summary_categories = {} # category: score
         flagged_any = False
         for category, is_flagged in results.categories.__dict__.items():
             normalized_category = category.replace("/", "_").replace("-", "_")
@@ -99,6 +100,8 @@ async def moderator_api(
                 continue
             else:
                 flagged_any = True
+            
+            summary_categories[normalized_category] = score
 
             if not skip_vector_add:
                 print(f"[moderator_api] Adding vector for category '{normalized_category}' with score {score:.2f}")
@@ -127,7 +130,7 @@ async def moderator_api(
                 "score": best_score,
                 "reason": "OpenAI moderation",
                 "threshold": threshold,
-                "raw_api_results": results.__dict__,
+                "summary_categories": summary_categories,
             }
 
         return {
@@ -135,7 +138,7 @@ async def moderator_api(
             "reason": "OpenAI moderation",
             "flagged_any": flagged_any,
             "threshold": threshold,
-            "raw_api_results": results.__dict__,
+            "summary_categories": summary_categories,
         }
 
     return result
