@@ -632,6 +632,7 @@ class NSFWScanner:
                     "threshold": threshold,
                 }
 
+            # No categories flagged or none passed guild checks
             return {"is_nsfw": False, 
                     "reason": "OpenAI moderation",
                     "flagged_any": flagged_any,
