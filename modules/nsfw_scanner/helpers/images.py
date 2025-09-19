@@ -1,0 +1,119 @@
+import asyncio
+import os
+import traceback
+import uuid
+from typing import Any
+
+from PIL import Image
+
+from cogs.nsfw import NSFW_CATEGORY_SETTING
+from modules.utils import clip_vectors, mysql
+
+from ..constants import (
+    CLIP_THRESHOLD,
+    HIGH_ACCURACY_SIMILARITY,
+    TMP_DIR,
+)
+from ..utils import convert_to_png_safe, is_allowed_category, safe_delete
+from .moderation import moderator_api
+
+
+async def process_image(
+    scanner,
+    original_filename: str,
+    guild_id: int | None = None,
+    clean_up: bool = True,
+) -> dict[str, Any] | None:
+    png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
+    conversion_result = await asyncio.to_thread(
+        convert_to_png_safe, original_filename, png_converted_path
+    )
+    if not conversion_result:
+        print(f"[process_image] PNG conversion failed: {original_filename}")
+        return None
+
+    try:
+        with Image.open(png_converted_path) as image:
+            settings = await mysql.get_settings(
+                guild_id,
+                [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
+            )
+            allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
+            high_accuracy = bool(settings.get("nsfw-high-accuracy", False))
+            similarity_response = clip_vectors.query_similar(image, threshold=0)
+
+            max_similarity = 0.0
+            max_category = None
+            if similarity_response:
+                for item in similarity_response:
+                    similarity = float(item.get("similarity", 0) or 0)
+                    if similarity > max_similarity:
+                        max_similarity = similarity
+                        max_category = item.get("category")
+
+                for item in similarity_response:
+                    category = item.get("category")
+                    similarity = float(item.get("similarity", 0) or 0)
+
+                    if similarity < CLIP_THRESHOLD:
+                        continue
+
+                    if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
+                        break
+
+                    if not category:
+                        print(
+                            f"[process_image] Similar SFW image found with similarity {similarity:.2f} for guild {guild_id}."
+                        )
+                        return {
+                            "is_nsfw": False,
+                            "reason": "Similarity match",
+                            "max_similarity": max_similarity,
+                            "max_category": max_category,
+                            "high_accuracy": high_accuracy,
+                            "clip_threshold": CLIP_THRESHOLD,
+                            "similarity": similarity,
+                        }
+
+                    if is_allowed_category(category, allowed_categories):
+                        print(
+                            f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} for guild {guild_id}."
+                        )
+                        if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
+                            break
+                        return {
+                            "is_nsfw": True,
+                            "category": category,
+                            "reason": "Similarity match",
+                            "max_similarity": max_similarity,
+                            "max_category": max_category,
+                            "high_accuracy": high_accuracy,
+                            "clip_threshold": CLIP_THRESHOLD,
+                            "similarity": similarity,
+                        }
+
+            skip_vector = max_similarity >= CLIP_THRESHOLD
+            response = await moderator_api(
+                scanner,
+                image_path=png_converted_path,
+                guild_id=guild_id,
+                image=image,
+                skip_vector_add=skip_vector,
+            )
+            print(
+                f"[process_image] Moderation result for {original_filename}: {response} (similarity={max_similarity:.2f}) for guild {guild_id}"
+            )
+            if isinstance(response, dict):
+                response.setdefault("max_similarity", max_similarity)
+                response.setdefault("max_category", max_category)
+                response.setdefault("high_accuracy", high_accuracy)
+                response.setdefault("clip_threshold", CLIP_THRESHOLD)
+            return response
+    except Exception as exc:
+        print(traceback.format_exc())
+        print(f"[process_image] Error processing image {original_filename}: {exc}")
+        return None
+    finally:
+        safe_delete(png_converted_path)
+        if clean_up:
+            safe_delete(original_filename)
