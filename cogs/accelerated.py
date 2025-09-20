@@ -72,7 +72,6 @@ class AcceleratedCog(commands.Cog):
             title="🚀 Upgrade to Moderator Bot Accelerated!",
             description=(
                 "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\n"
-                "💎 **1-Month Free Trial for New Subscribers!**\n"
                 "After your free month, continue for just **$5/month** to keep your server safer, faster."
             ),
             color=Color.green()
