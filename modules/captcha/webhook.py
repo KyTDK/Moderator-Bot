@@ -1,6 +1,8 @@
 ﻿from __future__ import annotations
 
 import asyncio
+import hashlib
+import hmac
 import json
 import logging
 from typing import Any
@@ -16,20 +18,26 @@ from .models import (
     CaptchaWebhookResult,
 )
 from .processor import CaptchaCallbackProcessor
+from .sessions import CaptchaSessionStore
 
 _logger = logging.getLogger(__name__)
 
 class CaptchaWebhookServer:
     """Thin aiohttp wrapper that exposes the /captcha/callback endpoint."""
 
-    def __init__(self, bot: commands.Bot, config: CaptchaWebhookConfig) -> None:
-        self._bot = bot
-        self._config = config
-        self._processor = CaptchaCallbackProcessor(bot)
-        self._app: web.Application | None = None
-        self._runner: web.AppRunner | None = None
-        self._site: web.BaseSite | None = None
-        self._started = asyncio.Event()
+    def __init__(
+        self,
+        bot: commands.Bot,
+        config: CaptchaWebhookConfig,
+        session_store: CaptchaSessionStore,
+    ) -> None:
+         self._bot = bot
+         self._config = config
+         self._processor = CaptchaCallbackProcessor(bot, session_store)
+         self._app: web.Application | None = None
+         self._runner: web.AppRunner | None = None
+         self._site: web.BaseSite | None = None
+         self._started = asyncio.Event()
 
     @property
     def started(self) -> bool:
@@ -70,13 +78,17 @@ class CaptchaWebhookServer:
         self._app = None
 
     async def _handle_callback(self, request: web.Request) -> web.Response:
-        if not self._is_authorized(request):
+        body = await request.read()
+
+        if not self._is_authorized(request, body):
             return web.json_response({"error": "unauthorized"}, status=401)
 
         try:
             payload_dict = await request.json(loads=self._json_loads)
         except json.JSONDecodeError:
-            return web.json_response({"error": "invalid_json"}, status=400)
+            payload_dict = self._json_loads(body.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+             return web.json_response({"error": "invalid_json"}, status=400)
 
         try:
             payload = CaptchaCallbackPayload.from_mapping(payload_dict)
@@ -109,16 +121,26 @@ class CaptchaWebhookServer:
 
         return web.json_response(_serialize_result(result))
 
-    def _is_authorized(self, request: web.Request) -> bool:
-        if not self._config.token:
-            return True
+    def _is_authorized(self, request: web.Request, body: bytes) -> bool:
+        if self._config.shared_secret:
+            signature = (request.headers.get("X-Signature") or "").strip()
+            expected = hmac.new(
+                self._config.shared_secret,
+                body,
+                hashlib.sha256,
+            ).hexdigest()
+            if signature and hmac.compare_digest(signature.lower(), expected.lower()):
+                return True
+            return False
 
+        if not self._config.token:
+             return True
+ 
         auth_header = request.headers.get("Authorization") or ""
         token = _extract_token(auth_header)
         if token and token == self._config.token:
             return True
 
-        # Fallback to query-string token for easier local testing
         token_query = request.query.get("token")
         if token_query and token_query == self._config.token:
             return True

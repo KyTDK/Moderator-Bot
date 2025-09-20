@@ -13,16 +13,33 @@ from .models import (
     CaptchaProcessingError,
     CaptchaWebhookResult,
 )
+from .sessions import CaptchaSessionStore
 
 _logger = logging.getLogger(__name__)
 
 class CaptchaCallbackProcessor:
     """Handles captcha callback business logic for a guild member."""
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, session_store: CaptchaSessionStore):
         self._bot = bot
+        self._sessions = session_store
 
     async def process(self, payload: CaptchaCallbackPayload) -> CaptchaWebhookResult:
+        session = await self._sessions.get(payload.guild_id, payload.user_id)
+        if session is None:
+            raise CaptchaProcessingError(
+                "unknown_token",
+                "No pending captcha verification found for this user.",
+                http_status=404,
+            )
+
+        if session.token != payload.token:
+            raise CaptchaProcessingError(
+                "token_mismatch",
+                "Captcha token does not match the pending verification.",
+                http_status=404,
+            )
+
         guild = await self._resolve_guild(payload.guild_id)
         member = await self._resolve_member(guild, payload.user_id)
 
@@ -40,6 +57,7 @@ class CaptchaCallbackProcessor:
                 "Captcha callback ignored because captcha verification is disabled for guild %s",
                 guild.id,
             )
+            await self._sessions.remove(payload.guild_id, payload.user_id)
             return CaptchaWebhookResult(status="disabled", roles_applied=0)
 
         if not payload.success:
@@ -49,16 +67,22 @@ class CaptchaCallbackProcessor:
                 guild.id,
                 payload.failure_reason or "unknown reason",
             )
-            return CaptchaWebhookResult(status="failed", roles_applied=0, message=payload.failure_reason)
+            return CaptchaWebhookResult(
+                status="failed",
+                roles_applied=0,
+                message=payload.failure_reason,
+            )
 
         role_ids = settings.get("captcha-success-roles") or []
         roles_to_add = _filter_roles(guild, role_ids, member)
 
         applied = 0
+        session_consumed = False
         if roles_to_add:
             try:
                 await member.add_roles(*roles_to_add, reason="Captcha verification successful")
                 applied = len(roles_to_add)
+                session_consumed = True
             except discord.Forbidden as exc:
                 raise CaptchaProcessingError(
                     "missing_permissions",
@@ -70,6 +94,8 @@ class CaptchaCallbackProcessor:
                     "role_assignment_failed",
                     "Failed to apply success roles due to a Discord API error.",
                 ) from exc
+        else:
+            session_consumed = True
 
         message_template = settings.get("captcha-success-message") or ""
         if message_template:
@@ -79,6 +105,9 @@ class CaptchaCallbackProcessor:
                 _logger.debug("Could not DM captcha success message to user %s", member.id)
             except discord.HTTPException:
                 _logger.debug("Failed to send captcha success DM to user %s", member.id)
+
+        if session_consumed:
+            await self._sessions.remove(payload.guild_id, payload.user_id)
 
         return CaptchaWebhookResult(status="ok", roles_applied=applied)
 
@@ -109,32 +138,22 @@ class CaptchaCallbackProcessor:
         except discord.NotFound as exc:
             raise CaptchaProcessingError(
                 "member_not_found",
-                f"User {user_id} is not a member of guild {guild.id}.",
+                f"Member {user_id} not found in guild {guild.id}.",
                 http_status=404,
             ) from exc
         except discord.HTTPException as exc:
             raise CaptchaProcessingError(
                 "member_fetch_failed",
-                f"Failed to fetch user {user_id} from guild {guild.id}.",
+                f"Failed to fetch member {user_id} from guild {guild.id}.",
             ) from exc
 
+
 def _filter_roles(
-    guild: discord.Guild,
-    role_ids: Iterable[int | str],
-    member: discord.Member,
+    guild: discord.Guild, role_ids: Iterable[int], member: discord.Member
 ) -> list[discord.Role]:
     roles: list[discord.Role] = []
     for role_id in role_ids:
-        try:
-            role_int = int(role_id)
-        except (TypeError, ValueError):
-            _logger.debug("Skipping invalid role id %s for guild %s", role_id, guild.id)
-            continue
-        role = guild.get_role(role_int)
-        if role is None:
-            _logger.debug("Guild %s missing configured captcha success role %s", guild.id, role_int)
-            continue
-        if role in member.roles:
-            continue
-        roles.append(role)
+        role = guild.get_role(int(role_id))
+        if role and role not in member.roles:
+            roles.append(role)
     return roles

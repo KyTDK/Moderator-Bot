@@ -6,6 +6,7 @@ from .models import (
     CaptchaWebhookResult,
 )
 from .processor import CaptchaCallbackProcessor
+from .sessions import CaptchaSession, CaptchaSessionStore
 from .webhook import CaptchaWebhookServer
 
 __all__ = [
@@ -15,5 +16,7 @@ __all__ = [
     "CaptchaProcessingError",
     "CaptchaWebhookResult",
     "CaptchaCallbackProcessor",
+    "CaptchaSession",
+    "CaptchaSessionStore",
     "CaptchaWebhookServer",
 ]

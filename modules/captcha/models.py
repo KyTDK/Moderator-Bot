@@ -3,8 +3,18 @@
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-_TRUE_VALUES = {"1", "true", "yes", "on", "success", "passed", "complete", "completed"}
-_FALSE_VALUES = {"0", "false", "no", "off", "failed", "failure"}
+_TRUE_VALUES = {
+    "1",
+    "true",
+    "yes",
+    "on",
+    "success",
+    "passed",
+    "complete",
+    "completed",
+    "verified",
+}
+_FALSE_VALUES = {"0", "false", "no", "off", "failed", "failure", "denied"}
 
 class CaptchaPayloadError(ValueError):
     """Raised when the incoming webhook payload is invalid."""
@@ -13,8 +23,10 @@ class CaptchaPayloadError(ValueError):
 class CaptchaCallbackPayload:
     guild_id: int
     user_id: int
+    token: str
+    status: str
     success: bool
-    request_id: str | None
+    state: str | None
     failure_reason: str | None
     metadata: dict[str, Any]
 
@@ -23,8 +35,12 @@ class CaptchaCallbackPayload:
         try:
             raw_guild = data["guild_id"]
             raw_user = data["user_id"]
-        except KeyError as exc:  # pragma: no cover - defensive guard
-            raise CaptchaPayloadError(f"Missing required field: {exc.args[0]}") from exc
+        except KeyError:
+            try:
+                raw_guild = data["guildId"]
+                raw_user = data["userId"]
+            except KeyError as exc:  # pragma: no cover - defensive guard
+                raise CaptchaPayloadError(f"Missing required field: {exc.args[0]}") from exc
 
         try:
             guild_id = int(raw_guild)
@@ -32,17 +48,36 @@ class CaptchaCallbackPayload:
         except (TypeError, ValueError) as exc:
             raise CaptchaPayloadError("guild_id and user_id must be integers") from exc
 
+        token = _coerce_token(data)
         success = _coerce_success(data)
+        status = _coerce_status(data, success)
+        state = _coerce_state(data)
         failure_reason = data.get("failure_reason") or data.get("reason")
-        request_id = _coerce_request_id(data)
 
         metadata = {
             key: value
             for key, value in data.items()
-            if key not in {"guild_id", "user_id", "success", "status", "result", "passed", "failure_reason", "reason", "request_id", "session_id", "metadata"}
+            if key
+            not in {
+                "guild_id",
+                "guildId",
+                "user_id",
+                "userId",
+                "success",
+                "status",
+                "result",
+                "outcome",
+                "passed",
+                "failure_reason",
+                "reason",
+                "request_id",
+                "session_id",
+                "metadata",
+                "token",
+                "state",
+            }
         }
 
-        # Allow nested metadata dict provided as "metadata"
         nested_meta = data.get("metadata")
         if isinstance(nested_meta, Mapping):
             metadata.update(dict(nested_meta))
@@ -50,8 +85,10 @@ class CaptchaCallbackPayload:
         return cls(
             guild_id=guild_id,
             user_id=user_id,
+            token=token,
+            status=status,
             success=success,
-            request_id=request_id,
+            state=state,
             failure_reason=failure_reason,
             metadata=metadata,
         )
@@ -64,8 +101,40 @@ def _coerce_success(data: Mapping[str, Any]) -> bool:
     for key in ("status", "result", "outcome"):
         if key in data:
             return _to_bool(data[key])
-    # Default to False if explicitly absent to avoid granting roles accidentally
     return False
+
+def _coerce_status(data: Mapping[str, Any], success: bool) -> str:
+    status = data.get("status")
+    if isinstance(status, str) and status.strip():
+        return status
+    if isinstance(status, bool):
+        return "passed" if status else "failed"
+
+    for key in ("result", "outcome"):
+        value = data.get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+        if isinstance(value, bool):
+            return "passed" if value else "failed"
+
+    return "passed" if success else "failed"
+
+def _coerce_state(data: Mapping[str, Any]) -> str | None:
+    value = data.get("state")
+    if isinstance(value, str) and value:
+        return value
+    metadata = data.get("metadata")
+    if isinstance(metadata, Mapping):
+        nested = metadata.get("state")
+        if isinstance(nested, str) and nested:
+            return nested
+    return None
+
+def _coerce_token(data: Mapping[str, Any]) -> str:
+    token = data.get("token") or data.get("session_token")
+    if isinstance(token, str) and token:
+        return token
+    raise CaptchaPayloadError("Missing captcha session token")
 
 def _to_bool(value: Any) -> bool:
     if isinstance(value, bool):
@@ -80,12 +149,6 @@ def _to_bool(value: Any) -> bool:
             return False
     return False
 
-def _coerce_request_id(data: Mapping[str, Any]) -> str | None:
-    for key in ("request_id", "session_id", "challenge_id", "verification_id"):
-        value = data.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return None
 
 @dataclass(slots=True)
 class CaptchaWebhookResult:
