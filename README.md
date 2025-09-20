@@ -214,5 +214,7 @@ Set the following environment variables on every worker:
 - `MODBOT_SHARD_STALE_SECONDS`: How long (in seconds) before an unresponsive shard is recycled. Defaults to 300.
 - `MODBOT_SHARD_HEARTBEAT_SECONDS`: Heartbeat frequency in seconds. Defaults to 60.
 - `MODBOT_INSTANCE_ID`: Optional stable identifier for the process. If omitted, a hostname/PID/UUID combo is generated automatically.
+- `MODBOT_STANDBY_WHEN_FULL`: Set to `0` to exit instead of waiting when all shards are busy. Defaults to standby mode.
+- `MODBOT_STANDBY_POLL_SECONDS`: How often to retry claiming a shard while standing by. Defaults to 30 seconds.
 
 Shard rows and the required table are created automatically on startup; no manual migrations are needed.

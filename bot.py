@@ -24,16 +24,24 @@ async def _main() -> None:
 
     try:
         await mysql.initialise_and_get_pool()
-        try:
-            shard_assignment = await mysql.claim_shard(
-                config.shard.instance_id,
-                total_shards=config.shard.total_shards,
-                preferred_shard=config.shard.preferred_shard,
-                stale_after_seconds=config.shard.stale_seconds,
-            )
-        except mysql.ShardClaimError as exc:
-            logger.error("Shard claim failed: %s", exc)
-            return
+        while True:
+            try:
+                shard_assignment = await mysql.claim_shard(
+                    config.shard.instance_id,
+                    total_shards=config.shard.total_shards,
+                    preferred_shard=config.shard.preferred_shard,
+                    stale_after_seconds=config.shard.stale_seconds,
+                )
+                break
+            except mysql.ShardClaimError as exc:
+                if not config.shard.standby_when_full:
+                    logger.error("Shard claim failed: %s", exc)
+                    return
+                logger.info(
+                    "Shard pool full; standby for %ss before retrying",
+                    config.shard.standby_poll_seconds,
+                )
+                await asyncio.sleep(config.shard.standby_poll_seconds)
 
         print(
             f"[SHARD] Instance {config.shard.instance_id} claimed shard "

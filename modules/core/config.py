@@ -38,6 +38,8 @@ class ShardConfig:
     stale_seconds: int
     heartbeat_seconds: int
     instance_id: str
+    standby_when_full: bool
+    standby_poll_seconds: int
 
 
 @dataclass(slots=True)
@@ -49,6 +51,12 @@ class RuntimeConfig:
 
 
 TRUE_VALUES = {"1", "true", "yes", "on"}
+
+
+def _parse_bool(raw: str | None, *, default: bool) -> bool:
+    if raw is None or raw == "":
+        return default
+    return raw.lower() in TRUE_VALUES
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -92,12 +100,25 @@ def load_runtime_config() -> RuntimeConfig:
         or f"{socket.gethostname()}-{os.getpid()}-{uuid.uuid4().hex[:8]}"
     )
 
+    standby_when_full = _parse_bool(
+        os.getenv("MODBOT_STANDBY_WHEN_FULL"),
+        default=True,
+    )
+    standby_poll_seconds = _parse_int(
+        os.getenv("MODBOT_STANDBY_POLL_SECONDS"),
+        default=30,
+        minimum=5,
+        name="MODBOT_STANDBY_POLL_SECONDS",
+    )
+
     shard_config = ShardConfig(
         total_shards=total_shards,
         preferred_shard=preferred_shard,
         stale_seconds=stale_seconds,
         heartbeat_seconds=heartbeat_seconds,
         instance_id=instance_id,
+        standby_when_full=standby_when_full,
+        standby_poll_seconds=standby_poll_seconds,
     )
 
     log_cog_loads = os.getenv("LOG_COG_LOADS", "0").lower() in TRUE_VALUES
