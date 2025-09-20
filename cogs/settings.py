@@ -4,6 +4,7 @@ from discord import app_commands, Interaction
 import discord
 from modules.utils import mysql
 from modules.config.settings_schema import SETTINGS_SCHEMA
+from modules.config.premium_plans import describe_plan_requirements
 import traceback
 from modules.variables.TimeString import TimeString
 
@@ -106,9 +107,14 @@ class Settings(commands.Cog):
 
         expected = schema.type
         try:
-            # Check if accelerated only
-            if schema.accelerated and not await mysql.is_accelerated(guild_id=interaction.guild.id):
-                raise ValueError(f"This setting requires an active Accelerated subscription. Use `/accelerated`")
+            required_plans = getattr(schema, "required_plans", None)
+            if required_plans:
+                active_plan = await mysql.resolve_guild_plan(interaction.guild.id)
+                if active_plan not in required_plans:
+                    requirement = describe_plan_requirements(required_plans)
+                    raise ValueError(
+                        f"This setting requires {requirement}. Use `/accelerated subscribe` to upgrade."
+                    )
             # Validate required parameters for expected type
             if expected == bool and value == None:
                 raise ValueError(f"**`{name}` expects a boolean. Use the `value` option.**")

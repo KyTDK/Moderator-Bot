@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+from modules.config.premium_plans import PLAN_CORE, PLAN_FREE, tier_to_plan
+
 from .connection import execute_query
 
 DEFAULT_PREMIUM_TIER = "accelerated"
@@ -89,6 +91,15 @@ async def get_premium_status(guild_id: int) -> Optional[Dict[str, Any]]:
     }
 
 
+async def resolve_guild_plan(guild_id: int) -> str:
+    """Return the current active plan name for a guild (or free)."""
+    status = await get_premium_status(guild_id)
+    if not status or not status.get("is_active"):
+        return PLAN_FREE
+    tier = status.get("tier") or DEFAULT_PREMIUM_TIER
+    plan = tier_to_plan(tier, default=PLAN_CORE)
+    return plan or PLAN_CORE
+
 async def add_guild(guild_id: int, name: str, owner_id: int):
     """Add a new guild to the database."""
     await execute_query(
@@ -107,3 +118,4 @@ async def remove_guild(guild_id: int):
         "DELETE FROM guilds WHERE guild_id = %s",
         (guild_id,),
     )
+

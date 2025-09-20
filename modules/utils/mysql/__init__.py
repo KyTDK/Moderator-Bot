@@ -15,6 +15,7 @@ from .premium import (
     get_premium_status,
     is_accelerated,
     remove_guild,
+    resolve_guild_plan,
 )
 
 from .shards import (
@@ -46,6 +47,7 @@ __all__ = [
     "cleanup_orphaned_guilds",
     "is_accelerated",
     "get_premium_status",
+    "resolve_guild_plan",
     "add_guild",
     "remove_guild",
     "ShardAssignment",

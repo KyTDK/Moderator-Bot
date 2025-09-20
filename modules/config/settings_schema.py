@@ -1,5 +1,7 @@
-﻿from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional
+from collections.abc import Iterable
 import discord
+from modules.config.premium_plans import PLAN_CORE, PLAN_PRO, PLAN_ULTRA, resolve_required_plans
 from modules.variables.TimeString import TimeString
 
 class Setting:
@@ -12,9 +14,9 @@ class Setting:
         encrypted: bool = False,
         hidden: bool = False,
         private: bool = False,
-        accelerated: bool = False,
         validator: Optional[Callable] = None,
-        choices: Optional[list[str]] = None
+        choices: Optional[list[str]] = None,
+        required_plans: str | Iterable[str] | None = None,
     ):
         self.name = name
         self.description = description
@@ -23,9 +25,12 @@ class Setting:
         self.encrypted = encrypted
         self.hidden = hidden
         self.private = private
-        self.accelerated = accelerated
         self.validator = validator
         self.choices = choices
+
+        normalized_plans = resolve_required_plans(required_plans) if required_plans is not None else None
+        self.required_plans = frozenset(normalized_plans) if normalized_plans else None
+        self.accelerated = bool(self.required_plans)
 
     async def validate(self, value: Any):
         if self.validator:
@@ -97,7 +102,7 @@ SETTINGS_SCHEMA = {
             "violence_graphic",
             "sexual"
         ],
-        accelerated=True,
+        required_plans=PLAN_CORE,
         hidden=True,
     ),
     "nsfw-high-accuracy": Setting(
@@ -105,7 +110,7 @@ SETTINGS_SCHEMA = {
         description="Enable high-accuracy NSFW scans for more reliable detection. Accelerated only.",
         setting_type=bool,
         default=False,
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["true", "false"]
     ),
     "threshold": Setting(
@@ -178,7 +183,7 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False, # False by default to avoid unnecessary API calls
         choices=["true", "false"],
-        accelerated=True,
+        required_plans=PLAN_CORE,
     ),
     "nsfw-pfp-action": Setting(
         name="nsfw-pfp-action",
@@ -197,7 +202,7 @@ SETTINGS_SCHEMA = {
             "Your profile picture is not appropriate for this server.",
             "Your profile picture has been flagged as NSFW.",
         ],
-        accelerated=True
+        required_plans=PLAN_CORE
     ),
     "unmute-on-safe-pfp": Setting(
         name="unmute-on-safe-pfp",
@@ -205,7 +210,7 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         choices=["true", "false"],
-        accelerated=True
+        required_plans=PLAN_CORE
     ),
     "scan-age-restricted": Setting(
         name="scan-age-restricted",
@@ -272,7 +277,7 @@ SETTINGS_SCHEMA = {
         setting_type=str,
         default="1. Be respectful — no harassment or hate speech.\n2. No NSFW or obscene content.\n3. No spam or excessive self-promotion.\n4. Follow Discord's Terms of Service.",
         hidden=True,
-        accelerated=True,
+        required_plans=PLAN_CORE,
     ),
     "aimod-detection-action": Setting(
         name="aimod-detection-action",
@@ -280,7 +285,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         hidden=True,
         default=["auto"],
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["strike", "kick", "ban", "timeout", "delete", "auto"],
     ),
     "aimod-high-accuracy": Setting(
@@ -291,7 +296,7 @@ SETTINGS_SCHEMA = {
         ),
         setting_type=bool,
         default=False,
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["true", "false"]
     ),
 
@@ -301,14 +306,14 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         hidden=True,
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["true", "false"]
     ),
     "aimod-check-interval": Setting(
         name="aimod-check-interval",
         description="How often to run the AI moderation batch process.",
         setting_type=TimeString,
-        accelerated=True,
+        required_plans=PLAN_CORE,
         default=TimeString("1h"),
     ),
     "aimod-mode": Setting(
@@ -316,7 +321,7 @@ SETTINGS_SCHEMA = {
         description="Choose how AI moderation is triggered: `report` mode (only on mention), `interval` mode (automatic background scanning), or `adaptive` mode (dynamically switches based on server activity, events, or configuration).",
         setting_type=str,
         default="report",
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["interval", "report", "adaptive"],
         hidden=True
     ),
@@ -326,7 +331,7 @@ SETTINGS_SCHEMA = {
             "Configure which events trigger switching AI moderation modes. "
         ),
         setting_type=dict[str, list[str]], #[event, list of actions]
-        accelerated=True,
+        required_plans=PLAN_CORE,
         default={
             "mass_join": ["enable_interval", "disable_report"],
             "mass_leave": ["enable_interval", "disable_report"],
@@ -366,7 +371,7 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         hidden=True,
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["true", "false"]
     ),
     "vcmod-channels": Setting(
@@ -381,7 +386,7 @@ SETTINGS_SCHEMA = {
         description="How long to actively listen per voice channel during a cycle (e.g., 2m, 5m).",
         setting_type=TimeString,
         default=TimeString("2m"),
-        accelerated=True,
+        required_plans=PLAN_CORE,
         hidden=True
     ),
     "vcmod-idle-duration": Setting(
@@ -389,7 +394,7 @@ SETTINGS_SCHEMA = {
         description="How long to pause between each transcription in Saver Mode.",
         setting_type=TimeString,
         default=TimeString("30s"),
-        accelerated=True,
+        required_plans=PLAN_CORE,
         hidden=True
     ),
     "vcmod-saver-mode": Setting(
@@ -398,7 +403,7 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         hidden=True,
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["true", "false"]
     ),
     "vcmod-rules": Setting(
@@ -413,7 +418,7 @@ SETTINGS_SCHEMA = {
             "5. Follow Discord's Terms of Service."
         ),
         hidden=True,
-        accelerated=True,
+        required_plans=PLAN_CORE,
     ),
     "vcmod-detection-action": Setting(
         name="vcmod-detection-action",
@@ -421,7 +426,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=["auto"],
         hidden=True,
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["strike", "kick", "ban", "timeout", "delete", "auto"]
     ),
     "vcmod-high-accuracy": Setting(
@@ -430,7 +435,7 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         hidden=True,
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["true", "false"]
     ),
     "vcmod-transcript-channel": Setting(
@@ -448,7 +453,164 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         hidden=False,
-        accelerated=True,
+        required_plans=PLAN_CORE,
         choices=["true", "false"]
     ),
+    "captcha-verification-enabled": Setting(
+        name="captcha-verification-enabled",
+        description="Require newcomers to pass a captcha challenge before they gain access.",
+        setting_type=bool,
+        default=False,
+        choices=["true", "false"],
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-verification-channel": Setting(
+        name="captcha-verification-channel",
+        description="Channel where captcha prompts are posted for new members.",
+        setting_type=discord.TextChannel,
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-grace-period": Setting(
+        name="captcha-grace-period",
+        description="How long a new member has to complete verification before actions trigger.",
+        setting_type=str,
+        default="10m",
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-max-attempts": Setting(
+        name="captcha-max-attempts",
+        description="Number of verification attempts allowed before the member is considered to have failed.",
+        setting_type=int,
+        default=3,
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-success-roles": Setting(
+        name="captcha-success-roles",
+        description="Roles granted automatically after successful verification.",
+        setting_type=list[discord.Role],
+        default=[],
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-bypass-roles": Setting(
+        name="captcha-bypass-roles",
+        description="Members with these roles skip captcha verification entirely.",
+        setting_type=list[discord.Role],
+        default=[],
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-failure-actions": Setting(
+        name="captcha-failure-actions",
+        description="Actions to take when a member fails or abandons captcha verification.",
+        setting_type=list[str],
+        default=["kick"],
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-dm-reminder": Setting(
+        name="captcha-dm-reminder",
+        description="Send a reminder DM with the verification link after a delay.",
+        setting_type=bool,
+        default=True,
+        hidden=True,
+        choices=["true", "false"],
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-success-message": Setting(
+        name="captcha-success-message",
+        description="Message sent to members once they pass verification.",
+        setting_type=str,
+        default="Welcome aboard! You're verified.",
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-enabled-types": Setting(
+        name="captcha-enabled-types",
+        description="Captcha styles that are available for new members.",
+        setting_type=list[str],
+        default=["button", "image"],
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-type-priority": Setting(
+        name="captcha-type-priority",
+        description="Order in which captcha types are attempted when several are enabled.",
+        setting_type=list[str],
+        default=["button", "image"],
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-image-difficulty": Setting(
+        name="captcha-image-difficulty",
+        description="Difficulty level for image captcha challenges.",
+        setting_type=str,
+        default="balanced",
+        hidden=True,
+        choices=["relaxed", "balanced", "strict"],
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-image-refreshes": Setting(
+        name="captcha-image-refreshes",
+        description="How many times a member can refresh the captcha image before failing.",
+        setting_type=int,
+        default=2,
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-button-time-limit": Setting(
+        name="captcha-button-time-limit",
+        description="Time limit for button captcha interactions.",
+        setting_type=str,
+        default="45s",
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-button-variants": Setting(
+        name="captcha-button-variants",
+        description="Possible prompts used for button captcha challenges.",
+        setting_type=list[str],
+        default=[],
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-math-difficulty": Setting(
+        name="captcha-math-difficulty",
+        description="Difficulty level for math captcha challenges.",
+        setting_type=str,
+        default="medium",
+        hidden=True,
+        choices=["easy", "medium", "hard"],
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-math-time-limit": Setting(
+        name="captcha-math-time-limit",
+        description="Time limit for math captcha challenges.",
+        setting_type=str,
+        default="60s",
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-question-pool": Setting(
+        name="captcha-question-pool",
+        description="Question and answer pairs used for security question captcha challenges.",
+        setting_type=list[str],
+        default=[],
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
+    "captcha-question-case-sensitive": Setting(
+        name="captcha-question-case-sensitive",
+        description="Require case-sensitive answers for security question captcha challenges.",
+        setting_type=bool,
+        default=False,
+        hidden=True,
+        choices=["true", "false"],
+        required_plans=PLAN_PRO,
+    ),
 }
+
+
