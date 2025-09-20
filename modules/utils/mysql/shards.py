@@ -24,10 +24,10 @@ async def ensure_shard_records(total_shards: int) -> None:
     pool = await get_pool()
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
-            values = [(idx,) for idx in range(total_shards)]
+            values = [(idx, idx) for idx in range(total_shards)]
             if values:
                 await cur.executemany(
-                    "INSERT IGNORE INTO bot_shards (shard_id) VALUES (%s)",
+                    "INSERT INTO bot_shards (shard_id) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM bot_shards WHERE shard_id = %s)",
                     values,
                 )
                 await conn.commit()
