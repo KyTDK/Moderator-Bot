@@ -152,7 +152,7 @@ class CaptchaCog(commands.Cog):
 
 
 def _resolve_api_base() -> str:
-    raw = os.getenv("CAPTCHA_API_BASE_URL") or os.getenv("CAPTCHA_API_URL")
+    raw = os.getenv("CAPTCHA_PUBLIC_VERIFY_URL")
     if raw:
         base = raw.strip()
         if "?" in base:
