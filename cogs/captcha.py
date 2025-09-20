@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import Optional
+from urllib.parse import urlsplit, urlunsplit
 
 import discord
 from discord.ext import commands
@@ -151,16 +152,33 @@ class CaptchaCog(commands.Cog):
 
 def _resolve_api_base() -> str:
     raw = os.getenv("CAPTCHA_PUBLIC_VERIFY_URL")
-    if raw:
-        base = raw.strip()
-        if "?" in base:
-            base = base.split("?", 1)[0]
-        if base.endswith("/start"):
-            base = base[: -len("/start")]
-        if "accelerated/captcha" in base:
-            base = base.replace("accelerated/captcha", "captcha")
-        return base.rstrip("/") or _DEFAULT_API_BASE
-    return _DEFAULT_API_BASE
+    if not raw:
+        return _DEFAULT_API_BASE
+
+    base = raw.strip()
+    if not base:
+        return _DEFAULT_API_BASE
+
+    parts = urlsplit(base)
+    path = parts.path
+
+    if path.endswith("/start"):
+        path = path[: -len("/start")]
+
+    path = path.rstrip("/")
+
+    if path.endswith("/accelerated/captcha"):
+        path = f"{path[: -len('/accelerated/captcha')]}/api/captcha"
+    elif path.endswith("/captcha"):
+        path = f"{path[: -len('/captcha')]}/api/captcha"
+    elif not path.endswith("/api/captcha"):
+        if path:
+            path = f"{path}/api/captcha"
+        else:
+            path = "/api/captcha"
+
+    rebuilt = parts._replace(path=path, query="", fragment="")
+    return urlunsplit(rebuilt).rstrip("/") or _DEFAULT_API_BASE
 
 async def setup(bot: commands.Bot) -> None:
     cog = CaptchaCog(bot)
