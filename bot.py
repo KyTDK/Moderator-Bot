@@ -37,9 +37,13 @@ async def _main() -> None:
                 if not config.shard.standby_when_full:
                     logger.error("Shard claim failed: %s", exc)
                     return
-                logger.info(
-                    "Shard pool full; standby for %ss before retrying",
+                logger.warning(
+                    "Shard pool full; standby for %ss before retrying (%s)",
                     config.shard.standby_poll_seconds,
+                    exc,
+                )
+                print(
+                    f"[SHARD] Waiting {config.shard.standby_poll_seconds}s before retrying shard claim: {exc}"
                 )
                 await asyncio.sleep(config.shard.standby_poll_seconds)
 

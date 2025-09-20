@@ -16,6 +16,8 @@ class ShardAssignment:
     shard_id: int
     shard_count: int
 
+_logger = logging.getLogger(__name__)
+
 async def ensure_shard_records(total_shards: int) -> None:
     """Guarantee that placeholder rows exist for the expected shard range."""
     if total_shards < 1:
@@ -69,6 +71,14 @@ async def claim_shard(
                 (stale_after_seconds, stale_after_seconds),
             )
 
+            stale_released = cur.rowcount
+            if stale_released:
+                _logger.info(
+                    "Released %s stale shard(s) before claiming for %s",
+                    stale_released,
+                    instance_id,
+                )
+
             candidate: Optional[dict] = None
 
             await cur.execute(
@@ -102,7 +112,7 @@ async def claim_shard(
                     if row:
                         candidate = row
                 else:
-                    logging.warning(
+                    _logger.warning(
                         "Preferred shard %s is outside configured total (%s)",
                         preferred_shard,
                         total_shards,
@@ -124,8 +134,60 @@ async def claim_shard(
                     candidate = row
 
             if candidate is None:
+                await cur.execute(
+                    """
+                    SELECT status, COUNT(*) AS count
+                    FROM bot_shards
+                    GROUP BY status
+                    ORDER BY status
+                    """
+                )
+                status_counts = await cur.fetchall()
+
+                await cur.execute(
+                    """
+                    SELECT shard_id,
+                           status,
+                           claimed_by,
+                           TIMESTAMPDIFF(SECOND, last_heartbeat, UTC_TIMESTAMP()) AS heartbeat_age,
+                           TIMESTAMPDIFF(SECOND, claimed_at, UTC_TIMESTAMP()) AS claim_age
+                    FROM bot_shards
+                    ORDER BY shard_id
+                    LIMIT 5
+                    """
+                )
+                sample_rows = await cur.fetchall()
+
                 await conn.rollback()
-                raise ShardClaimError("No free shards available to claim")
+
+                status_counts_text = (
+                    ", ".join(
+                        f"{row['status'] or 'NULL'}={row['count']}"
+                        for row in status_counts
+                    )
+                    or "empty"
+                )
+                sample_preview = [
+                    {
+                        "id": row["shard_id"],
+                        "status": row["status"],
+                        "claimed_by": row["claimed_by"],
+                        "heartbeat_age": row["heartbeat_age"],
+                        "claim_age": row["claim_age"],
+                    }
+                    for row in sample_rows
+                ]
+
+                _logger.warning(
+                    "Shard claim failed for %s; no free shards. Status counts: %s; sample: %s",
+                    instance_id,
+                    status_counts_text,
+                    sample_preview,
+                )
+
+                raise ShardClaimError(
+                    f"No free shards available to claim (status counts: {status_counts_text})"
+                )
 
             shard_id = int(candidate["shard_id"])
 
@@ -203,3 +265,4 @@ async def release_shard(shard_id: int, instance_id: str, *, clear_error: bool = 
             await cur.execute(query, (shard_id, instance_id))
             await conn.commit()
             return cur.rowcount == 1
+
