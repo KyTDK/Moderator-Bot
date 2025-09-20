@@ -19,6 +19,7 @@ from modules.captcha.models import CaptchaCallbackPayload, CaptchaPayloadError
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
 from modules.captcha.config import CaptchaWebhookConfig
 from modules.captcha.webhook import CaptchaWebhookServer
+from modules.captcha.processor import FailureAction, _normalize_failure_actions
 
 def test_session_store_round_trip() -> None:
     async def run() -> None:
@@ -215,3 +216,43 @@ def test_webhook_start_returns_true_when_enabled() -> None:
         assert webhook.started is False
 
     asyncio.run(run())
+
+
+def test_normalize_failure_actions_handles_mixed_entries() -> None:
+    actions = _normalize_failure_actions(
+        [
+            "kick",
+            "timeout:30m",
+            {"value": "log", "extra": "123"},
+            {"value": "dm_staff", "extra": "1, 2"},
+        ]
+    )
+
+    assert [action.action for action in actions] == [
+        "kick",
+        "timeout",
+        "log",
+        "dm_staff",
+    ]
+    assert actions[1].extra == "30m"
+    assert actions[2].extra == "123"
+    assert actions[3].extra == "1, 2"
+
+
+def test_normalize_failure_actions_supports_nested_extra() -> None:
+    actions = _normalize_failure_actions(
+        [
+            {
+                "value": "timeout",
+                "extra": {"value": "15m"},
+            }
+        ]
+    )
+
+    assert actions == [FailureAction(action="timeout", extra="15m")]
+
+
+def test_normalize_failure_actions_filters_invalid_entries() -> None:
+    actions = _normalize_failure_actions([{}, 42, "   "])
+
+    assert actions == []

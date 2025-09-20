@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import timedelta
 from typing import Optional
 from urllib.parse import urlsplit, urlunsplit
 
 import discord
 from discord.ext import commands
+from discord.utils import utcnow
 
 from modules.utils import mysql
+from modules.utils.time import parse_duration
 
 from modules.captcha import CaptchaWebhookConfig, CaptchaWebhookServer
 from modules.captcha.client import (
@@ -57,9 +60,16 @@ class CaptchaCog(commands.Cog):
         if member.bot or member.guild is None:
             return
 
-        enabled = await mysql.get_settings(
-            member.guild.id, "captcha-verification-enabled",)
-        if not enabled:
+        settings = await mysql.get_settings(
+            member.guild.id,
+            [
+                "captcha-verification-enabled",
+                "captcha-grace-period",
+                "captcha-max-attempts",
+            ],
+        )
+
+        if not settings.get("captcha-verification-enabled"):
             return
 
         if not self._api_client.is_configured:
@@ -108,7 +118,12 @@ class CaptchaCog(commands.Cog):
         )
         await self._session_store.put(session)
 
-        await self._notify_member(member, start_response)
+        await self._notify_member(
+            member,
+            start_response,
+            grace_period=self._coerce_grace_period(settings.get("captcha-grace-period")),
+            max_attempts=self._coerce_positive_int(settings.get("captcha-max-attempts")),
+        )
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:
@@ -116,20 +131,42 @@ class CaptchaCog(commands.Cog):
             return
         await self._session_store.remove(member.guild.id, member.id)
 
-    async def _notify_member(self, member: discord.Member, response: CaptchaStartResponse) -> None:
+    async def _notify_member(
+        self,
+        member: discord.Member,
+        response: CaptchaStartResponse,
+        *,
+        grace_period: str | None,
+        max_attempts: int | None,
+    ) -> None:
+        grace_delta = parse_duration(grace_period) if grace_period else None
+        if grace_delta is None:
+            grace_delta = timedelta(minutes=10)
+        grace_seconds = int(grace_delta.total_seconds()) if grace_delta else 600
+        if grace_seconds <= 0:
+            grace_seconds = 600
+
+        expires_in: int | None = None
+        if response.expires_at:
+            remaining = int((response.expires_at - utcnow()).total_seconds())
+            expires_in = remaining if remaining > 0 else None
+
+        view_timeout = grace_seconds
+        if expires_in is not None:
+            view_timeout = max(1, min(grace_seconds, expires_in))
+
+        display_grace = grace_period or self._format_duration(grace_delta)
+
         # Build an embed
         embed = discord.Embed(
             title="Captcha Verification Required",
-            description=(
-                f"Hi {member.mention}! To finish joining **{member.guild.name}**, "
-                "please complete the captcha within **10 minutes**."
-            ),
+            description=self._build_description(member, display_grace, max_attempts),
             color=discord.Color.blurple(),
         )
         embed.set_footer(text="Powered by Moderator Bot")
 
         # Build a button view (link style)
-        view = discord.ui.View(timeout=600)
+        view = discord.ui.View(timeout=float(view_timeout))
         view.add_item(
             discord.ui.Button(
                 label="Click here to verify",
@@ -182,6 +219,58 @@ class CaptchaCog(commands.Cog):
                 return channel
 
         return None
+
+    @staticmethod
+    def _coerce_positive_int(value: object) -> int | None:
+        try:
+            number = int(str(value))
+        except (TypeError, ValueError):
+            return None
+        return number if number > 0 else None
+
+    @staticmethod
+    def _coerce_grace_period(value: object) -> str | None:
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    @staticmethod
+    def _format_duration(delta: timedelta | None) -> str:
+        if not delta:
+            return "a few minutes"
+        total_seconds = int(delta.total_seconds())
+        if total_seconds < 60:
+            return f"{total_seconds} second{'s' if total_seconds != 1 else ''}"
+        minutes, seconds = divmod(total_seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        days, hours = divmod(hours, 24)
+
+        parts: list[str] = []
+        if days:
+            parts.append(f"{days} day{'s' if days != 1 else ''}")
+        if hours:
+            parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+        if minutes:
+            parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+        if not parts and seconds:
+            parts.append(f"{seconds} second{'s' if seconds != 1 else ''}")
+        return ", ".join(parts)
+
+    def _build_description(
+        self,
+        member: discord.Member,
+        grace_text: str,
+        max_attempts: int | None,
+    ) -> str:
+        description = (
+            f"Hi {member.mention}! To finish joining **{member.guild.name}**, "
+            f"please complete the captcha within **{grace_text}**."
+        )
+        if max_attempts:
+            attempt_label = "attempt" if max_attempts == 1 else "attempts"
+            description += f" You have **{max_attempts}** {attempt_label}."
+        return description
 
 def _resolve_api_base() -> str:
     raw = os.getenv("CAPTCHA_PUBLIC_VERIFY_URL")
