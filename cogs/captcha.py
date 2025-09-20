@@ -18,7 +18,7 @@ from modules.captcha.client import (
 )
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
 
-_DEFAULT_API_BASE = "https://modbot.moderatorbot.com/api/captcha"
+_DEFAULT_API_BASE = "https://modbot.neomechanical.com/api/captcha"
 _logger = logging.getLogger(__name__)
 
 class CaptchaCog(commands.Cog):
