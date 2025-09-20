@@ -104,26 +104,46 @@ class CaptchaCog(commands.Cog):
         await self._session_store.remove(member.guild.id, member.id)
 
     async def _notify_member(self, member: discord.Member, response: CaptchaStartResponse) -> None:
-        message = (
-            f"Hi {member.mention}! To finish joining **{member.guild.name}**, please complete the "
-            f"captcha within 10 minutes: {response.verification_url}"
+        # Build an embed
+        embed = discord.Embed(
+            title="Captcha Verification Required",
+            description=(
+                f"Hi {member.mention}! To finish joining **{member.guild.name}**, "
+                "please complete the captcha within **10 minutes**."
+            ),
+            color=discord.Color.blurple(),
+        )
+        embed.set_footer(text="Powered by Moderator Bot")
+
+        # Build a button view (link style)
+        view = discord.ui.View(timeout=600)
+        view.add_item(
+            discord.ui.Button(
+                label="Click here to verify",
+                url=response.verification_url,
+                style=discord.ButtonStyle.link,
+            )
         )
 
+        # Try DM first
         try:
-            await member.send(message)
+            await member.send(embed=embed, view=view)
             return
         except discord.Forbidden:
             _logger.debug("Could not DM captcha instructions to user %s", member.id)
         except discord.HTTPException:
             _logger.debug("Failed to DM captcha instructions to user %s", member.id)
 
+        # Fallback to a guild channel
         channel = self._find_fallback_channel(member.guild)
         if channel is None:
             return
 
         try:
             await channel.send(
-                f"{member.mention}, complete verification here: {response.verification_url}",
+                content=member.mention,
+                embed=embed,
+                view=view,
                 allowed_mentions=discord.AllowedMentions(users=True),
             )
         except discord.HTTPException:
