@@ -9,7 +9,6 @@ from discord.ext import commands
 
 from modules.utils import mysql
 from modules.utils import mod_logging
-from modules.utils.time import parse_duration
 from modules.moderation import strike
 
 from .models import (
@@ -135,35 +134,17 @@ class CaptchaCallbackProcessor:
     ) -> None:
         actions = _normalize_failure_actions(settings.get("captcha-failure-actions"))
         disciplinary_actions: list[str] = []
-        applied_actions: list[str] = []
-        notifications: list[str] = []
-        log_channel_override: int | None = None
 
         for action in actions:
-            if action.action in {"strike", "kick", "ban"}:
-                disciplinary_actions.append(action.action)
-                applied_actions.append(action.action)
-            elif action.action == "timeout":
-                duration = action.extra
-                if duration and parse_duration(duration):
-                    entry = f"timeout:{duration}"
-                    disciplinary_actions.append(entry)
-                    applied_actions.append(entry)
-                else:
-                    _logger.warning(
-                        "Ignoring captcha timeout action for guild %s due to invalid duration: %s",
-                        member.guild.id,
-                        duration,
-                    )
-            elif action.action == "log":
-                notifications.append("log")
-                override = _coerce_int(action.extra)
-                if override:
-                    log_channel_override = override
-            else:
+            if action.action == "log":
                 _logger.debug(
-                    "Unknown captcha failure action '%s' for guild %s", action.action, member.guild.id
+                    "Ignoring deprecated captcha failure action 'log' for guild %s", member.guild.id
                 )
+                continue
+            if action.extra:
+                disciplinary_actions.append(f"{action.action}:{action.extra}")
+            else:
+                disciplinary_actions.append(action.action)
 
         reason = payload.failure_reason or "Failed captcha verification."
 
@@ -191,9 +172,7 @@ class CaptchaCallbackProcessor:
         await self._log_failure(
             member,
             payload,
-            applied_actions,
-            notifications,
-            log_channel_override,
+            disciplinary_actions,
             settings,
         )
 
@@ -261,20 +240,9 @@ class CaptchaCallbackProcessor:
         member: discord.Member,
         payload: CaptchaCallbackPayload,
         applied_actions: list[str],
-        notifications: list[str],
-        override_channel: int | None,
         settings: dict[str, Any],
     ) -> None:
-        channel_id = override_channel
-        if channel_id is None:
-            configured = _coerce_int(settings.get("captcha-log-channel"))
-            if configured:
-                channel_id = configured
-
-        if channel_id is None and "log" in notifications:
-            monitor = await mysql.get_settings(member.guild.id, "monitor-channel")
-            channel_id = _coerce_int(monitor)
-
+        channel_id = _coerce_int(settings.get("captcha-log-channel"))
         if not channel_id:
             _logger.debug(
                 "Captcha failure logging skipped for guild %s; no log channel configured.",
@@ -306,10 +274,6 @@ class CaptchaCallbackProcessor:
                 value=", ".join(applied_actions),
                 inline=False,
             )
-        if notifications:
-            unique_notifications = sorted({n for n in notifications})
-            extras = [n.replace("_", " ").title() for n in unique_notifications]
-            embed.add_field(name="Notifications", value=", ".join(extras), inline=False)
         if attempts is not None or max_attempts is not None:
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
