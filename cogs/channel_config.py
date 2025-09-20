@@ -8,6 +8,7 @@ LOG_CHANNEL_TYPES = {
     "NSFW": "nsfw-channel",
     "AI": "aimod-channel",
     "Monitor": "monitor-channel",
+    "Captcha": "captcha-log-channel",
     "VC Transcript": "vcmod-transcript-channel",
 }
 

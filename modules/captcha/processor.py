@@ -1,4 +1,4 @@
-﻿﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
@@ -55,6 +55,7 @@ class CaptchaCallbackProcessor:
                 "captcha-success-message",
                 "captcha-failure-actions",
                 "captcha-max-attempts",
+                "captcha-log-channel",
             ],
         )
 
@@ -117,6 +118,13 @@ class CaptchaCallbackProcessor:
         if session_consumed:
             await self._sessions.remove(payload.guild_id, payload.user_id)
 
+        await self._log_success(
+            member,
+            payload,
+            roles_to_add if applied else [],
+            settings,
+        )
+
         return CaptchaWebhookResult(status="ok", roles_applied=applied)
 
     async def _apply_failure_actions(
@@ -126,14 +134,10 @@ class CaptchaCallbackProcessor:
         settings: dict[str, Any],
     ) -> None:
         actions = _normalize_failure_actions(settings.get("captcha-failure-actions"))
-        if not actions:
-            return
-
         disciplinary_actions: list[str] = []
         applied_actions: list[str] = []
         notifications: list[str] = []
         log_channel_override: int | None = None
-        notify_roles: set[int] = set()
 
         for action in actions:
             if action.action in {"strike", "kick", "ban"}:
@@ -156,9 +160,6 @@ class CaptchaCallbackProcessor:
                 override = _coerce_int(action.extra)
                 if override:
                     log_channel_override = override
-            elif action.action == "dm_staff":
-                notifications.append("dm_staff")
-                notify_roles.update(_parse_role_ids(action.extra))
             else:
                 _logger.debug(
                     "Unknown captcha failure action '%s' for guild %s", action.action, member.guild.id
@@ -196,8 +197,64 @@ class CaptchaCallbackProcessor:
             settings,
         )
 
-        if notify_roles:
-            await self._notify_staff(member, payload, notify_roles, settings)
+    async def _log_success(
+        self,
+        member: discord.Member,
+        payload: CaptchaCallbackPayload,
+        roles_applied: list[discord.Role],
+        settings: dict[str, Any],
+    ) -> None:
+        channel_id = _coerce_int(settings.get("captcha-log-channel"))
+        if not channel_id:
+            return
+
+        embed = discord.Embed(
+            title="Captcha Verification Passed",
+            description=f"{member.mention} ({member.id}) passed captcha verification.",
+            colour=discord.Colour.green(),
+        )
+
+        if roles_applied:
+            role_mentions = ", ".join(role.mention for role in roles_applied)
+            embed.add_field(name="Roles Granted", value=role_mentions, inline=False)
+
+        attempts = _extract_metadata_int(payload.metadata, "attempts", "attemptCount", "attempt")
+        max_attempts = _extract_metadata_int(
+            payload.metadata,
+            "maxAttempts",
+            "max_attempts",
+            "attempt_limit",
+            "limit",
+        )
+        if attempts is not None or max_attempts is not None:
+            total = max_attempts if max_attempts is not None else "?"
+            used = attempts if attempts is not None else "?"
+            embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
+
+        challenge = _extract_metadata_str(
+            payload.metadata,
+            "challenge",
+            "challenge_type",
+            "challengeType",
+            "type",
+        )
+        if challenge:
+            embed.add_field(name="Challenge", value=challenge, inline=True)
+
+        review_url = _extract_metadata_str(payload.metadata, "reviewUrl", "review_url")
+        if review_url:
+            embed.add_field(name="Review", value=review_url, inline=False)
+
+        embed.set_footer(text=f"Guild ID: {member.guild.id}")
+
+        try:
+            await mod_logging.log_to_channel(embed, channel_id, self._bot)
+        except Exception:
+            _logger.exception(
+                "Failed to send captcha success log for guild %s to channel %s",
+                member.guild.id,
+                channel_id,
+            )
 
     async def _log_failure(
         self,
@@ -208,12 +265,13 @@ class CaptchaCallbackProcessor:
         override_channel: int | None,
         settings: dict[str, Any],
     ) -> None:
-        wants_logging = "log" in notifications or override_channel is not None
-        if not wants_logging:
-            return
-
         channel_id = override_channel
         if channel_id is None:
+            configured = _coerce_int(settings.get("captcha-log-channel"))
+            if configured:
+                channel_id = configured
+
+        if channel_id is None and "log" in notifications:
             monitor = await mysql.get_settings(member.guild.id, "monitor-channel")
             channel_id = _coerce_int(monitor)
 
@@ -282,69 +340,6 @@ class CaptchaCallbackProcessor:
                 member.guild.id,
                 channel_id,
             )
-
-    async def _notify_staff(
-        self,
-        member: discord.Member,
-        payload: CaptchaCallbackPayload,
-        role_ids: set[int],
-        settings: dict[str, Any],
-    ) -> None:
-        recipients: dict[int, discord.Member] = {}
-        for role_id in role_ids:
-            role = member.guild.get_role(role_id)
-            if role is None:
-                continue
-            for staff_member in role.members:
-                if staff_member.id == member.id or staff_member.bot:
-                    continue
-                recipients[staff_member.id] = staff_member
-
-        if not recipients:
-            return
-
-        attempts = _extract_metadata_int(payload.metadata, "attempts", "attemptCount", "attempt")
-        max_attempts = _extract_metadata_int(
-            payload.metadata,
-            "maxAttempts",
-            "max_attempts",
-            "attempt_limit",
-            "limit",
-        )
-        if max_attempts is None:
-            max_attempts = _coerce_int(settings.get("captcha-max-attempts"))
-
-        review_url = _extract_metadata_str(payload.metadata, "reviewUrl", "review_url")
-
-        lines = [
-            f"{member.mention} ({member.id}) failed captcha verification in **{member.guild.name}**.",
-        ]
-        if payload.failure_reason:
-            lines.append(f"Reason: {payload.failure_reason}")
-        if attempts is not None or max_attempts is not None:
-            total = max_attempts if max_attempts is not None else "?"
-            used = attempts if attempts is not None else "?"
-            lines.append(f"Attempts: {used}/{total}")
-        if review_url:
-            lines.append(f"Review session: {review_url}")
-
-        message = "\n".join(lines)
-
-        for staff_member in recipients.values():
-            try:
-                await staff_member.send(message)
-            except discord.Forbidden:
-                _logger.debug(
-                    "Could not DM staff member %s about captcha failure in guild %s",
-                    staff_member.id,
-                    member.guild.id,
-                )
-            except discord.HTTPException:
-                _logger.debug(
-                    "Failed to DM staff member %s about captcha failure in guild %s",
-                    staff_member.id,
-                    member.guild.id,
-                )
 
     async def _resolve_guild(self, guild_id: int) -> discord.Guild:
         guild = self._bot.get_guild(guild_id)
@@ -459,19 +454,6 @@ def _coerce_int(value: Any) -> int | None:
         return int(text)
     except (TypeError, ValueError):
         return None
-
-
-def _parse_role_ids(value: str | None) -> set[int]:
-    if not value:
-        return set()
-    tokens = str(value).replace("\n", ",").split(",")
-    role_ids: set[int] = set()
-    for token in tokens:
-        number = _coerce_int(token)
-        if number:
-            role_ids.add(number)
-    return role_ids
-
 
 def _extract_metadata_int(metadata: Mapping[str, Any], *keys: str) -> int | None:
     for key in keys:

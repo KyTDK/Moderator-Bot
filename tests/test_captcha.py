@@ -224,7 +224,6 @@ def test_normalize_failure_actions_handles_mixed_entries() -> None:
             "kick",
             "timeout:30m",
             {"value": "log", "extra": "123"},
-            {"value": "dm_staff", "extra": "1, 2"},
         ]
     )
 
@@ -232,11 +231,9 @@ def test_normalize_failure_actions_handles_mixed_entries() -> None:
         "kick",
         "timeout",
         "log",
-        "dm_staff",
     ]
     assert actions[1].extra == "30m"
     assert actions[2].extra == "123"
-    assert actions[3].extra == "1, 2"
 
 
 def test_normalize_failure_actions_supports_nested_extra() -> None:
