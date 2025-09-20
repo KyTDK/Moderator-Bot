@@ -66,6 +66,7 @@ class CaptchaCog(commands.Cog):
                 "captcha-verification-enabled",
                 "captcha-grace-period",
                 "captcha-max-attempts",
+                "pre-captcha-roles",
             ],
         )
 
@@ -80,6 +81,23 @@ class CaptchaCog(commands.Cog):
 
         callback_url = self._webhook_config.callback_url
 
+        # Give pre-captcha roles if configured
+        pre_roles = settings.get("pre-captcha-roles") or []
+        if pre_roles:
+            try:
+                await member.add_roles(*pre_roles, reason="Assigning pre-captcha roles")
+            except discord.Forbidden:
+                _logger.warning(
+                    "Missing permissions to assign pre-captcha roles in guild %s",
+                    member.guild.id,
+                )
+            except discord.HTTPException:
+                _logger.warning(
+                    "Failed to assign pre-captcha roles in guild %s for user %s",
+                    member.guild.id,
+                    member.id,
+                )
+        
         try:
             start_response = await self._api_client.start_session(
                 member.guild.id,

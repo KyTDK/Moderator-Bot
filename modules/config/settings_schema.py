@@ -479,6 +479,14 @@ SETTINGS_SCHEMA = {
         hidden=True,
         required_plans=PLAN_PRO,
     ),
+    "pre-captcha-roles": Setting(
+        name="pre-captcha-roles",
+        description="Roles assigned to newcomers before they complete captcha verification.",
+        setting_type=list[discord.Role],
+        default=[],
+        hidden=True,
+        required_plans=PLAN_PRO,
+    ),
     "captcha-failure-actions": Setting(
         name="captcha-failure-actions",
         description="Actions to perform automatically when a member fails captcha verification.",
