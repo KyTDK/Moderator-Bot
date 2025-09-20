@@ -150,6 +150,23 @@ async def _ensure_database_exists() -> None:
             )
             await cur.execute(
                 """
+                CREATE TABLE IF NOT EXISTS bot_shards (
+                    shard_id INT PRIMARY KEY,
+                    status VARCHAR(32) NOT NULL DEFAULT 'available',
+                    claimed_by VARCHAR(128) NULL,
+                    claimed_at DATETIME NULL,
+                    last_heartbeat DATETIME NULL,
+                    session_id VARCHAR(128) NULL,
+                    resume_gateway_url TEXT NULL,
+                    last_error TEXT NULL,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    INDEX idx_status (status),
+                    INDEX idx_claimed_by (claimed_by)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
+            await cur.execute(
+                """
                 CREATE TABLE IF NOT EXISTS guilds (
                     guild_id BIGINT PRIMARY KEY,
                     name VARCHAR(255) NOT NULL,

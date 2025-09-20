@@ -17,6 +17,15 @@ from .premium import (
     remove_guild,
 )
 
+from .shards import (
+    ShardAssignment,
+    ShardClaimError,
+    claim_shard,
+    ensure_shard_records,
+    release_shard,
+    update_shard_status,
+)
+
 __all__ = [
     "MYSQL_CONFIG",
     "fernet",
@@ -39,4 +48,10 @@ __all__ = [
     "get_premium_status",
     "add_guild",
     "remove_guild",
+    "ShardAssignment",
+    "ShardClaimError",
+    "claim_shard",
+    "ensure_shard_records",
+    "release_shard",
+    "update_shard_status",
 ]
