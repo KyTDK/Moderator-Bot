@@ -471,10 +471,10 @@ SETTINGS_SCHEMA = {
         choices=["true", "false"],
         required_plans=PLAN_PRO,
     ),
-    "captcha-success-roles": Setting(
-        name="captcha-success-roles",
-        description="Roles granted automatically after successful verification.",
-        setting_type=list[discord.Role],
+    "captcha-success-actions": Setting(
+        name="captcha-success-actions",
+        description="Actions performed automatically after successful verification.",
+        setting_type=list[str],
         default=[],
         hidden=True,
         required_plans=PLAN_PRO,

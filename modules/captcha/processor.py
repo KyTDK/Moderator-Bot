@@ -50,7 +50,7 @@ class CaptchaCallbackProcessor:
             guild.id,
             [
                 "captcha-verification-enabled",
-                "captcha-success-roles",
+                "captcha-success-actions",
                 "captcha-success-message",
                 "captcha-failure-actions",
                 "captcha-max-attempts",
@@ -81,29 +81,24 @@ class CaptchaCallbackProcessor:
                 message=payload.failure_reason,
             )
 
-        role_ids = settings.get("captcha-success-roles") or []
-        roles_to_add = _filter_roles(guild, role_ids, member)
+        action_result: str | None = None
+        raw_success_actions = settings.get("captcha-success-actions")
+        if raw_success_actions:
+            action_result = await strike.perform_disciplinary_action(
+                user=member,
+                bot=self._bot,
+                action_string=raw_success_actions,
+                reason="Captcha verification successful",
+                source="captcha",
+            )
 
-        applied = 0
-        session_consumed = False
-        if roles_to_add:
-            try:
-                await member.add_roles(*roles_to_add, reason="Captcha verification successful")
-                applied = len(roles_to_add)
-                session_consumed = True
-            except discord.Forbidden as exc:
-                raise CaptchaProcessingError(
-                    "missing_permissions",
-                    "Bot is missing permissions to assign success roles.",
-                    http_status=403,
-                ) from exc
-            except discord.HTTPException as exc:
-                raise CaptchaProcessingError(
-                    "role_assignment_failed",
-                    "Failed to apply success roles due to a Discord API error.",
-                ) from exc
-        else:
-            session_consumed = True
+        if action_result and "Action failed" in action_result:
+            raise CaptchaProcessingError(
+                "role_assignment_failed",
+                "Failed to apply captcha success actions due to a Discord API error.",
+            )
+
+        success_actions = _extract_action_strings(raw_success_actions)
 
         message_template = settings.get("captcha-success-message") or ""
         if message_template:
@@ -114,17 +109,20 @@ class CaptchaCallbackProcessor:
             except discord.HTTPException:
                 _logger.debug("Failed to send captcha success DM to user %s", member.id)
 
-        if session_consumed:
-            await self._sessions.remove(payload.guild_id, payload.user_id)
+        await self._sessions.remove(payload.guild_id, payload.user_id)
 
         await self._log_success(
             member,
             payload,
-            roles_to_add if applied else [],
+            success_actions,
             settings,
         )
 
-        return CaptchaWebhookResult(status="ok", roles_applied=applied)
+        roles_applied = sum(
+            1 for action in success_actions if action.partition(":")[0] == "give_role"
+        )
+
+        return CaptchaWebhookResult(status="ok", roles_applied=roles_applied)
 
     async def _apply_failure_actions(
         self,
@@ -180,7 +178,7 @@ class CaptchaCallbackProcessor:
         self,
         member: discord.Member,
         payload: CaptchaCallbackPayload,
-        roles_applied: list[discord.Role],
+        actions: list[str],
         settings: dict[str, Any],
     ) -> None:
         channel_id = _coerce_int(settings.get("captcha-log-channel"))
@@ -193,9 +191,12 @@ class CaptchaCallbackProcessor:
             colour=discord.Colour.green(),
         )
 
-        if roles_applied:
-            role_mentions = ", ".join(role.mention for role in roles_applied)
-            embed.add_field(name="Roles Granted", value=role_mentions, inline=False)
+        if actions:
+            embed.add_field(
+                name="Actions Applied",
+                value=", ".join(actions),
+                inline=False,
+            )
 
         attempts = _extract_metadata_int(payload.metadata, "attempts", "attemptCount", "attempt")
         max_attempts = _extract_metadata_int(
@@ -340,19 +341,6 @@ class CaptchaCallbackProcessor:
                 "member_fetch_failed",
                 f"Failed to fetch member {user_id} from guild {guild.id}.",
             ) from exc
-
-
-def _filter_roles(
-    guild: discord.Guild, role_ids: Iterable[int], member: discord.Member
-) -> list[discord.Role]:
-    roles: list[discord.Role] = []
-    for role_id in role_ids:
-        role = guild.get_role(int(role_id))
-        if role and role not in member.roles:
-            roles.append(role)
-    return roles
-
-
 @dataclass(slots=True)
 class FailureAction:
     action: str
@@ -396,6 +384,28 @@ def _normalize_failure_actions(raw: Any) -> list[FailureAction]:
             normalized.append(FailureAction(action=action, extra=extra))
 
     return normalized
+
+
+def _extract_action_strings(raw: Any) -> list[str]:
+    if raw is None:
+        return []
+
+    entries: Iterable[Any]
+    if isinstance(raw, str):
+        entries = [raw]
+    elif isinstance(raw, Iterable):
+        entries = raw
+    else:
+        entries = [raw]
+
+    result: list[str] = []
+    for entry in entries:
+        if isinstance(entry, str):
+            text = entry.strip()
+            if text:
+                result.append(text)
+
+    return result
 
 
 def _split_action(entry: str) -> tuple[str | None, str | None]:

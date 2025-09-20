@@ -19,7 +19,11 @@ from modules.captcha.models import CaptchaCallbackPayload, CaptchaPayloadError
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
 from modules.captcha.config import CaptchaWebhookConfig
 from modules.captcha.webhook import CaptchaWebhookServer
-from modules.captcha.processor import FailureAction, _normalize_failure_actions
+from modules.captcha.processor import (
+    FailureAction,
+    _extract_action_strings,
+    _normalize_failure_actions,
+)
 
 def test_session_store_round_trip() -> None:
     async def run() -> None:
@@ -253,3 +257,19 @@ def test_normalize_failure_actions_filters_invalid_entries() -> None:
     actions = _normalize_failure_actions([{}, 42, "   "])
 
     assert actions == []
+
+
+def test_extract_action_strings_filters_entries() -> None:
+    actions = _extract_action_strings([
+        " give_role:1  ",
+        "",
+        None,
+        "strike",
+        42,
+    ])
+
+    assert actions == ["give_role:1", "strike"]
+
+
+def test_extract_action_strings_handles_single_string() -> None:
+    assert _extract_action_strings("take_role:5") == ["take_role:5"]
