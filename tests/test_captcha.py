@@ -14,7 +14,6 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from modules.captcha.models import CaptchaCallbackPayload, CaptchaPayloadError
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
 
-
 def test_session_store_round_trip() -> None:
     async def run() -> None:
         store = CaptchaSessionStore()
@@ -30,7 +29,6 @@ def test_session_store_round_trip() -> None:
 
     asyncio.run(run())
 
-
 def test_session_store_expires_automatically() -> None:
     async def run() -> None:
         store = CaptchaSessionStore()
@@ -41,7 +39,6 @@ def test_session_store_expires_automatically() -> None:
         assert await store.get(5, 6) is None
 
     asyncio.run(run())
-
 
 def test_callback_payload_parses_new_format() -> None:
     payload = CaptchaCallbackPayload.from_mapping(
@@ -61,7 +58,6 @@ def test_callback_payload_parses_new_format() -> None:
     assert payload.status == "passed"
     assert payload.state == "opaque"
 
-
 def test_callback_payload_handles_boolean_success() -> None:
     payload = CaptchaCallbackPayload.from_mapping(
         {
@@ -75,7 +71,6 @@ def test_callback_payload_handles_boolean_success() -> None:
     assert payload.success is False
     assert payload.status == "failed"
     assert payload.failure_reason is None
-
 
 def test_callback_payload_missing_token() -> None:
     with pytest.raises(CaptchaPayloadError):
