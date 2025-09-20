@@ -66,6 +66,7 @@ class CaptchaApiClient:
         *,
         state: str | None = None,
         redirect: str | None = None,
+        callback_url: str | None = None,
     ) -> CaptchaStartResponse:
         if not self.is_configured:
             raise CaptchaApiError("Captcha API token or base URL is not configured.")
@@ -78,6 +79,8 @@ class CaptchaApiClient:
             payload["state"] = state
         if redirect:
             payload["redirect"] = redirect
+        if callback_url:
+            payload["callbackUrl"] = callback_url
 
         session = await self._ensure_session()
         url = f"{self._base_url}/start"

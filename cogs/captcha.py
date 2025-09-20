@@ -61,8 +61,14 @@ class CaptchaCog(commands.Cog):
             )
             return
 
+        callback_url = self._webhook_config.callback_url
+
         try:
-            start_response = await self._api_client.start_session(member.guild.id, member.id)
+            start_response = await self._api_client.start_session(
+                member.guild.id,
+                member.id,
+                callback_url=callback_url,
+            )
         except CaptchaNotAvailableError as exc:
             _logger.info(
                 "Captcha not available for guild %s: %s",

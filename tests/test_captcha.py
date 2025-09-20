@@ -11,8 +11,10 @@ import pytest
 os.environ.setdefault("FERNET_SECRET_KEY", "DeJ3sXDDTTbikeRSJzRgg8r_Ch61_NbE8D3LWnLOJO4=")
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
+from modules.captcha.client import CaptchaApiClient
 from modules.captcha.models import CaptchaCallbackPayload, CaptchaPayloadError
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
+from modules.captcha.config import CaptchaWebhookConfig
 
 def test_session_store_round_trip() -> None:
     async def run() -> None:
@@ -81,3 +83,78 @@ def test_callback_payload_missing_token() -> None:
                 "status": "passed",
             }
         )
+
+
+def test_webhook_config_uses_public_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CAPTCHA_WEBHOOK_HOST", raising=False)
+    monkeypatch.delenv("CAPTCHA_WEBHOOK_PORT", raising=False)
+    monkeypatch.delenv("CAPTCHA_WEBHOOK_TOKEN", raising=False)
+    monkeypatch.delenv("CAPTCHA_API_TOKEN", raising=False)
+    monkeypatch.delenv("CAPTCHA_SHARED_SECRET", raising=False)
+    monkeypatch.setenv("CAPTCHA_WEBHOOK_ENABLED", "true")
+    monkeypatch.setenv("CAPTCHA_WEBHOOK_PUBLIC_URL", "https://example.com/bot")
+
+    config = CaptchaWebhookConfig.from_env()
+
+    assert config.enabled is True
+    assert config.callback_url == "https://example.com/bot/captcha/callback"
+
+
+def test_webhook_config_loopback_callback(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CAPTCHA_WEBHOOK_HOST", "localhost")
+    monkeypatch.setenv("CAPTCHA_WEBHOOK_PORT", "9000")
+    monkeypatch.setenv("CAPTCHA_WEBHOOK_ENABLED", "true")
+    monkeypatch.delenv("CAPTCHA_WEBHOOK_PUBLIC_URL", raising=False)
+    monkeypatch.delenv("CAPTCHA_WEBHOOK_TOKEN", raising=False)
+    monkeypatch.delenv("CAPTCHA_API_TOKEN", raising=False)
+    monkeypatch.delenv("CAPTCHA_SHARED_SECRET", raising=False)
+
+    config = CaptchaWebhookConfig.from_env()
+
+    assert config.callback_url == "http://localhost:9000/captcha/callback"
+
+
+def test_start_session_includes_callback_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def run() -> None:
+        client = CaptchaApiClient("https://api.example.com/captcha", "token-123")
+
+        class DummyResponse:
+            def __init__(self) -> None:
+                self.status = 200
+
+            async def json(self) -> dict[str, str]:
+                return {
+                    "token": "abc",
+                    "guildId": "1",
+                    "userId": "2",
+                    "verificationUrl": "https://verify",
+                    "expiresAt": 1,
+                }
+
+            async def __aenter__(self) -> "DummyResponse":
+                return self
+
+            async def __aexit__(self, *args: object) -> None:
+                return None
+
+        class DummySession:
+            def __init__(self) -> None:
+                self.payload: dict[str, object] | None = None
+
+            def post(self, url: str, *, json: dict[str, object], headers: dict[str, str]) -> DummyResponse:
+                self.payload = json
+                return DummyResponse()
+
+        session = DummySession()
+
+        async def fake_ensure_session() -> DummySession:
+            return session
+
+        monkeypatch.setattr(client, "_ensure_session", fake_ensure_session)
+
+        await client.start_session(1, 2, callback_url="https://bot.example.com/captcha/callback")
+
+        assert session.payload is not None
+        assert session.payload["callbackUrl"] == "https://bot.example.com/captcha/callback"
+
+    asyncio.run(run())
