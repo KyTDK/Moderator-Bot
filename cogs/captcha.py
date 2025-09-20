@@ -21,7 +21,6 @@ from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
 _DEFAULT_API_BASE = "https://modbot.moderatorbot.com/api/captcha"
 _logger = logging.getLogger(__name__)
 
-
 class CaptchaCog(commands.Cog):
     """Captcha verification flow for new guild members."""
 
@@ -150,7 +149,6 @@ class CaptchaCog(commands.Cog):
 
         return None
 
-
 def _resolve_api_base() -> str:
     raw = os.getenv("CAPTCHA_PUBLIC_VERIFY_URL")
     if raw:
@@ -163,7 +161,6 @@ def _resolve_api_base() -> str:
             base = base.replace("accelerated/captcha", "captcha")
         return base.rstrip("/") or _DEFAULT_API_BASE
     return _DEFAULT_API_BASE
-
 
 async def setup(bot: commands.Bot) -> None:
     cog = CaptchaCog(bot)
