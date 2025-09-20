@@ -144,12 +144,6 @@ async def _ensure_database_exists() -> None:
             )
             await cur.execute(
                 """
-                ALTER TABLE premium_guilds
-                ADD COLUMN IF NOT EXISTS tier ENUM('accelerated', 'accelerated_pro', 'accelerated_ultra') NOT NULL DEFAULT 'accelerated';
-                """
-            )
-            await cur.execute(
-                """
                 CREATE TABLE IF NOT EXISTS bot_shards (
                     shard_id INT PRIMARY KEY,
                     status VARCHAR(32) NOT NULL DEFAULT 'available',
