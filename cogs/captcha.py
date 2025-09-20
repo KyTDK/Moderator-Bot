@@ -50,11 +50,9 @@ class CaptchaCog(commands.Cog):
         if member.bot or member.guild is None:
             return
 
-        settings = await mysql.get_settings(
-            member.guild.id,
-            ["captcha-verification-enabled"],
-        )
-        if not settings.get("captcha-verification-enabled"):
+        enabled = await mysql.get_settings(
+            member.guild.id, "captcha-verification-enabled",)
+        if not enabled:
             return
 
         if not self._api_client.is_configured:
