@@ -1,14 +1,22 @@
+import logging
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 from discord import Interaction, Member, Embed, Color, Message
+
+import discord
+from discord import Color, Embed, Interaction, Member, Message
 from discord.ext import commands
 from modules.utils.discord_utils import message_user
+
+from modules.utils.discord_utils import message_user, resolve_role_references
 from modules.utils.mysql import execute_query
 from datetime import datetime, timedelta, timezone
 from modules.utils import mod_logging
 from modules.utils import mysql
 from modules.utils.time import parse_duration
 import discord
-from discord.utils import get
+
+_logger = logging.getLogger(__name__)
 
 def get_ban_threshold(strike_settings):
     """
@@ -123,21 +131,33 @@ async def perform_disciplinary_action(
                 continue
 
             if base_action == "give_role":
-                role = get(user.guild.roles, id=int(param)) if param and param.isdigit() else get(user.guild.roles, name=param)
-                if role:
-                    await user.add_roles(role, reason=reason)
-                    results.append(f"Role '{role.name}' given.")
-                else:
+                if not param:
+                    results.append("No role specified to give.")
+                    continue
+
+                roles = resolve_role_references(user.guild, [param], logger=_logger)
+                role = roles[0] if roles else None
+                if role is None:
                     results.append(f"Role '{param}' not found.")
+                    continue
+
+                await user.add_roles(role, reason=reason)
+                results.append(f"Role '{role.name}' given.")
                 continue
 
             if base_action == "take_role":
-                role = get(user.guild.roles, id=int(param)) if param and param.isdigit() else get(user.guild.roles, name=param)
-                if role:
-                    await user.remove_roles(role, reason=reason)
-                    results.append(f"Role '{role.name}' removed.")
-                else:
+                if not param:
+                    results.append("No role specified to remove.")
+                    continue
+
+                roles = resolve_role_references(user.guild, [param], logger=_logger)
+                role = roles[0] if roles else None
+                if role is None:
                     results.append(f"Role '{param}' not found.")
+                    continue
+
+                await user.remove_roles(role, reason=reason)
+                results.append(f"Role '{role.name}' removed.")
                 continue
 
             if base_action == "warn":
