@@ -1,7 +1,11 @@
+import logging
+from collections.abc import Iterable
+from typing import Optional
+
 import discord
 from discord import Interaction, app_commands
 from discord.ext import commands
-from typing import Optional
+
 from modules import cache
 from modules.utils import mysql
 
@@ -145,4 +149,95 @@ async def require_accelerated(interaction: Interaction):
         )
         return False
     return True
+
+
+def resolve_role_references(
+    guild: discord.Guild,
+    references: Iterable[object],
+    *,
+    allow_names: bool = True,
+    logger: logging.Logger | None = None,
+) -> list[discord.Role]:
+    """Resolve a collection of role identifiers or names to concrete :class:`discord.Role` objects.
+
+    Parameters
+    ----------
+    guild:
+        The guild whose role cache will be consulted.
+    references:
+        An iterable of role references. Items may be role IDs (``int`` or digit-only ``str``),
+        role names (``str``) when ``allow_names`` is True, or concrete :class:`discord.Role`
+        instances.
+    allow_names:
+        When True (default), fall back to role name lookups for non-numeric strings. When False,
+        name lookups are skipped and only numeric identifiers are considered valid.
+    logger:
+        Optional :class:`logging.Logger` used for debug-level diagnostics when references are
+        invalid or cannot be resolved.
+
+    Returns
+    -------
+    list[:class:`discord.Role`]
+        Unique role objects resolved from the provided references, preserving input order.
+    """
+
+    resolved: list[discord.Role] = []
+    seen: set[int] = set()
+
+    for reference in references:
+        if reference is None:
+            continue
+
+        role: discord.Role | None = None
+        role_id: int | None = None
+
+        if isinstance(reference, discord.Role):
+            role = reference
+        else:
+            text = str(reference).strip()
+            if not text:
+                if logger is not None:
+                    logger.debug(
+                        "Ignoring blank role reference for guild %s", guild.id
+                    )
+                continue
+
+            if text.isdigit():
+                try:
+                    role_id = int(text)
+                except ValueError:
+                    role_id = None
+            elif hasattr(reference, "id"):
+                try:
+                    role_id = int(getattr(reference, "id"))
+                except (TypeError, ValueError):
+                    role_id = None
+            elif allow_names:
+                role = discord.utils.get(guild.roles, name=text)
+                if role is None and logger is not None:
+                    logger.debug(
+                        "Role with name '%s' not found in guild %s", text, guild.id
+                    )
+
+        if role is None and role_id is not None:
+            role = guild.get_role(role_id)
+            if role is None and logger is not None:
+                logger.debug(
+                    "Role with ID %s not found in guild %s", role_id, guild.id
+                )
+
+        if role is None:
+            if logger is not None and role_id is None:
+                logger.debug(
+                    "Ignoring invalid role reference for guild %s: %r", guild.id, reference
+                )
+            continue
+
+        if role.id in seen:
+            continue
+
+        seen.add(role.id)
+        resolved.append(role)
+
+    return resolved
     

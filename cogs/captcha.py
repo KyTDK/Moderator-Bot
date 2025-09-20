@@ -11,6 +11,7 @@ from discord.ext import commands
 from discord.utils import utcnow
 
 from modules.utils import mysql
+from modules.utils.discord_utils import resolve_role_references
 from modules.utils.time import parse_duration
 
 from modules.captcha import CaptchaWebhookConfig, CaptchaWebhookServer
@@ -82,7 +83,17 @@ class CaptchaCog(commands.Cog):
         callback_url = self._webhook_config.callback_url
 
         # Give pre-captcha roles if configured
-        pre_roles = settings.get("pre-captcha-roles") or []
+        raw_pre_roles = settings.get("pre-captcha-roles") or []
+        pre_roles = [
+            role
+            for role in resolve_role_references(
+                member.guild,
+                raw_pre_roles,
+                allow_names=False,
+                logger=_logger,
+            )
+            if role not in member.roles
+        ]
         if pre_roles:
             try:
                 await member.add_roles(*pre_roles, reason="Assigning pre-captcha roles")
