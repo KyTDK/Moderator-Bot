@@ -134,6 +134,12 @@ SETTINGS_SCHEMA = {
         description="Channel to log all server activities, including message edits, deletions, and user join/leave events.",
         setting_type=discord.TextChannel,
     ),
+    "captcha-log-channel": Setting(
+        name="captcha-log-channel",
+        description="Channel where captcha verification logs and activity updates are posted.",
+        setting_type=discord.TextChannel,
+        hidden=True,
+    ),
     "aimod-channel": Setting(
         name="aimod-channel",
         description="Channel where AI violation logs are posted.",
