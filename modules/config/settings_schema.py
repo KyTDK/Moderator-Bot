@@ -456,6 +456,7 @@ SETTINGS_SCHEMA = {
         required_plans=PLAN_CORE,
         choices=["true", "false"]
     ),
+    # Captcha settings
     "captcha-verification-enabled": Setting(
         name="captcha-verification-enabled",
         description="Require newcomers to pass a captcha challenge before they gain access.",
@@ -464,60 +465,12 @@ SETTINGS_SCHEMA = {
         choices=["true", "false"],
         required_plans=PLAN_PRO,
     ),
-    "captcha-verification-channel": Setting(
-        name="captcha-verification-channel",
-        description="Channel where captcha prompts are posted for new members.",
-        setting_type=discord.TextChannel,
-        hidden=True,
-        required_plans=PLAN_PRO,
-    ),
-    "captcha-grace-period": Setting(
-        name="captcha-grace-period",
-        description="How long a new member has to complete verification before actions trigger.",
-        setting_type=str,
-        default="10m",
-        hidden=True,
-        required_plans=PLAN_PRO,
-    ),
-    "captcha-max-attempts": Setting(
-        name="captcha-max-attempts",
-        description="Number of verification attempts allowed before the member is considered to have failed.",
-        setting_type=int,
-        default=3,
-        hidden=True,
-        required_plans=PLAN_PRO,
-    ),
     "captcha-success-roles": Setting(
         name="captcha-success-roles",
         description="Roles granted automatically after successful verification.",
         setting_type=list[discord.Role],
         default=[],
         hidden=True,
-        required_plans=PLAN_PRO,
-    ),
-    "captcha-bypass-roles": Setting(
-        name="captcha-bypass-roles",
-        description="Members with these roles skip captcha verification entirely.",
-        setting_type=list[discord.Role],
-        default=[],
-        hidden=True,
-        required_plans=PLAN_PRO,
-    ),
-    "captcha-failure-actions": Setting(
-        name="captcha-failure-actions",
-        description="Actions to take when a member fails or abandons captcha verification.",
-        setting_type=list[str],
-        default=["kick"],
-        hidden=True,
-        required_plans=PLAN_PRO,
-    ),
-    "captcha-dm-reminder": Setting(
-        name="captcha-dm-reminder",
-        description="Send a reminder DM with the verification link after a delay.",
-        setting_type=bool,
-        default=True,
-        hidden=True,
-        choices=["true", "false"],
         required_plans=PLAN_PRO,
     ),
     "captcha-success-message": Setting(
