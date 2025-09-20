@@ -3,10 +3,13 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta, timezone
 import os
+import socket
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
+from discord.ext import commands
 
 os.environ.setdefault("FERNET_SECRET_KEY", "DeJ3sXDDTTbikeRSJzRgg8r_Ch61_NbE8D3LWnLOJO4=")
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -15,6 +18,7 @@ from modules.captcha.client import CaptchaApiClient
 from modules.captcha.models import CaptchaCallbackPayload, CaptchaPayloadError
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
 from modules.captcha.config import CaptchaWebhookConfig
+from modules.captcha.webhook import CaptchaWebhookServer
 
 def test_session_store_round_trip() -> None:
     async def run() -> None:
@@ -156,5 +160,58 @@ def test_start_session_includes_callback_url(monkeypatch: pytest.MonkeyPatch) ->
 
         assert session.payload is not None
         assert session.payload["callbackUrl"] == "https://bot.example.com/captcha/callback"
+
+    asyncio.run(run())
+
+
+def _build_config(*, enabled: bool, host: str = "127.0.0.1", port: int = 8080) -> CaptchaWebhookConfig:
+    return CaptchaWebhookConfig(
+        enabled=enabled,
+        host=host,
+        port=port,
+        token=None,
+        shared_secret=None,
+        public_url=None,
+    )
+
+
+def _get_free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+def test_webhook_start_returns_false_when_disabled() -> None:
+    async def run() -> None:
+        bot = MagicMock(spec=commands.Bot)
+        store = CaptchaSessionStore()
+        webhook = CaptchaWebhookServer(bot, _build_config(enabled=False), store)
+
+        started = await webhook.start()
+
+        assert started is False
+        assert webhook.started is False
+
+    asyncio.run(run())
+
+
+def test_webhook_start_returns_true_when_enabled() -> None:
+    async def run() -> None:
+        bot = MagicMock(spec=commands.Bot)
+        store = CaptchaSessionStore()
+        port = _get_free_port()
+        webhook = CaptchaWebhookServer(
+            bot,
+            _build_config(enabled=True, port=port),
+            store,
+        )
+
+        started = await webhook.start()
+
+        assert started is True
+        assert webhook.started is True
+
+        await webhook.stop()
+        assert webhook.started is False
 
     asyncio.run(run())

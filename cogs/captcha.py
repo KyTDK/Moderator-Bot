@@ -39,7 +39,14 @@ class CaptchaCog(commands.Cog):
             )
 
     async def cog_load(self) -> None:
-        await self._webhook.start()
+        started = await self._webhook.start()
+        if started:
+            print(
+                "[CAPTCHA] Webhook listening on "
+                f"{self._webhook_config.host}:{self._webhook_config.port}"
+            )
+        else:
+            print("[CAPTCHA] Captcha webhook disabled; local callback server not started.")
 
     async def cog_unload(self) -> None:
         await self._webhook.stop()

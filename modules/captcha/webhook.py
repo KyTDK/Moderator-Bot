@@ -43,12 +43,13 @@ class CaptchaWebhookServer:
     def started(self) -> bool:
         return self._started.is_set()
 
-    async def start(self) -> None:
+    async def start(self) -> bool:
         if not self._config.enabled:
+            self._started.clear()
             _logger.info("Captcha webhook is disabled; skipping startup")
-            return
+            return False
         if self._runner is not None:
-            return
+            return True
 
         self._app = web.Application()
         self._app.add_routes([web.post("/captcha/callback", self._handle_callback)])
@@ -63,6 +64,7 @@ class CaptchaWebhookServer:
         _logger.info(
             "Captcha webhook listening on %s:%s", self._config.host, self._config.port
         )
+        return True
 
     async def stop(self) -> None:
         self._started.clear()
