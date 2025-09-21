@@ -37,6 +37,7 @@ class ShardConfig:
     preferred_shard: int | None
     stale_seconds: int
     heartbeat_seconds: int
+    instance_heartbeat_seconds: int
     instance_id: str
     standby_when_full: bool
     standby_poll_seconds: int
@@ -94,6 +95,12 @@ def load_runtime_config() -> RuntimeConfig:
         minimum=15,
         name="MODBOT_SHARD_HEARTBEAT_SECONDS",
     )
+    instance_heartbeat_seconds = _parse_int(
+        os.getenv("MODBOT_INSTANCE_HEARTBEAT_SECONDS"),
+        default=3,
+        minimum=2,
+        name="MODBOT_INSTANCE_HEARTBEAT_SECONDS",
+    )
     instance_id = (
         os.getenv("MODBOT_INSTANCE_ID")
         or os.getenv("INSTANCE_ID")
@@ -116,6 +123,7 @@ def load_runtime_config() -> RuntimeConfig:
         preferred_shard=preferred_shard,
         stale_seconds=stale_seconds,
         heartbeat_seconds=heartbeat_seconds,
+        instance_heartbeat_seconds=instance_heartbeat_seconds,
         instance_id=instance_id,
         standby_when_full=standby_when_full,
         standby_poll_seconds=standby_poll_seconds,
