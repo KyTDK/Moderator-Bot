@@ -12,6 +12,9 @@ Free AI-powered moderation for Discord. Detects nudity, gore, scams, and other v
 * **Strikes**
   Escalating punishment system with custom durations, action cycling, and optional DM notifications. Fully configurable.
 
+* **Captcha Verification**
+  Require newcomers to pass a captcha challenge before gaining access. Customize grace periods, attempt limits, pre-access roles, success/failure actions, and logging.
+
 * **🤖 AI Moderation** *(Accelerated only)*
   Uses OpenAI models to moderate messages based on rules. Supports autonomous mode, batch scanning, and context-aware enforcement.
   **Default: AI moderation runs in `report` mode when users @mention the bot.**
@@ -34,6 +37,26 @@ Free AI-powered moderation for Discord. Detects nudity, gore, scams, and other v
 
 * **Private API Pool**
   Users can contribute OpenAI keys (encrypted) to a shared pool to increase moderation capacity. Guild-level keys are not used.
+
+---
+
+## 🧩 Captcha Verification
+
+Require new members to complete a captcha before they can see or interact with the rest of your server. Moderator Bot DMs the verification link (with a public channel fallback) and automatically cleans up pending sessions when members leave. On success, it can grant roles or run other onboarding actions; on failure, it enforces your chosen punishments and logs the outcome.
+
+### 🔧 Configuration:
+
+* `/settings set name=captcha-verification-enabled value=true` – Turn captcha verification on or off.
+* `/settings set name=captcha-grace-period value=10m` – Control how long newcomers have to finish the captcha.
+* `/settings set name=captcha-max-attempts value=3` – Limit how many attempts a user gets before failure actions trigger.
+* `/settings set name=pre-captcha-roles role=@Visitor` – Assign temporary roles while members are awaiting verification.
+* `/settings set name=captcha-success-actions value="give_role:Member"` – Run success actions (e.g., grant roles, clear timeouts) after completion.
+* `/settings set name=captcha-success-message value="Welcome aboard!"` – DM a custom message after a user passes.
+* `/settings set name=captcha-failure-actions value="timeout:1d"` – Apply disciplinary actions when the captcha is failed.
+
+### 📜 Logging:
+
+* `/channels set type=Captcha channel=#mod-logs` – Choose where captcha pass/fail embeds are posted.
 
 ---
 
