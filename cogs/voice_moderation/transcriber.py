@@ -380,10 +380,10 @@ async def transcribe_pcm_map(
             )
             if segs:
                 return segs, est_cost, True
-            # Remote returned nothing – fall back to local so we don't bill needlessly.
-            print("[VC Transcriber] Remote transcription returned no text; using local Whisper.")
+            print("[VC Transcriber] Remote transcription returned no text from remote service.")
         except Exception as e:
-            print(f"[VC Transcriber] Remote transcription failed; retrying locally: {e}")
+            print(f"[VC Transcriber] Remote transcription failed: {e}")
+        return [], 0.0, True
 
     segs, cost = await _transcribe_local_pcm_map(
         guild_id=guild_id,
