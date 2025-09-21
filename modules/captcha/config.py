@@ -75,7 +75,7 @@ def _resolve_shared_secret() -> bytes | None:
 
 
 def _resolve_redis_url() -> str | None:
-    url = os.getenv("CAPTCHA_REDIS_URL") or os.getenv("REDIS_URL")
+    url = os.getenv("REDIS_URL")
     if not url:
         return None
 
