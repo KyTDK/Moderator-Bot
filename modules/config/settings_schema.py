@@ -469,14 +469,12 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         choices=["true", "false"],
-        required_plans=PLAN_PRO,
     ),
     "captcha-grace-period": Setting(
         name="captcha-grace-period",
         description="How long newcomers have to finish captcha verification (e.g. 10m, 1h).",
         setting_type=TimeString,
         default="10m",
-        required_plans=PLAN_PRO,
     ),
     "captcha-success-actions": Setting(
         name="captcha-success-actions",
@@ -484,7 +482,6 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=[],
         hidden=True,
-        required_plans=PLAN_PRO,
     ),
     "pre-captcha-roles": Setting(
         name="pre-captcha-roles",
@@ -492,14 +489,12 @@ SETTINGS_SCHEMA = {
         setting_type=list[discord.Role],
         default=[],
         hidden=True,
-        required_plans=PLAN_PRO,
     ),
     "captcha-failure-actions": Setting(
         name="captcha-failure-actions",
         description="Actions to perform automatically when a member fails captcha verification.",
         setting_type=list[str],
         default=["kick"],
-        required_plans=PLAN_PRO,
     ),
     "captcha-user-lookup": Setting(
         name="captcha-user-lookup",
