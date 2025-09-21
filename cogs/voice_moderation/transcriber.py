@@ -297,7 +297,7 @@ async def _transcribe_remote_pcm_map(
                 kwargs = {
                     "model": "gpt-4o-mini-transcribe",
                     "file": wav_file,
-                    "response_format": "verbose_json",
+                    "response_format": "json",
                 }
                 if language:
                     kwargs["language"] = language
