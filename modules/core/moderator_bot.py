@@ -1,7 +1,8 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 import os
+from typing import Optional
 
 import discord
 from discord.ext import commands, tasks
@@ -15,11 +16,12 @@ _logger = logging.getLogger(__name__)
 class ModeratorBot(commands.Bot):
     def __init__(
         self,
-        shard_assignment: mysql.ShardAssignment,
         *,
         instance_id: str,
         heartbeat_seconds: int,
         log_cog_loads: bool,
+        total_shards: int,
+        shard_assignment: Optional[mysql.ShardAssignment] = None,
     ) -> None:
         intents = discord.Intents.default()
         intents.members = True
@@ -30,6 +32,13 @@ class ModeratorBot(commands.Bot):
         member_cache_flags = discord.MemberCacheFlags.none()
         member_cache_flags.voice = True
 
+        shard_id = shard_assignment.shard_id if shard_assignment else None
+        shard_count = (
+            shard_assignment.shard_count
+            if shard_assignment is not None
+            else total_shards
+        )
+
         super().__init__(
             command_prefix=lambda _, __: [],
             intents=intents,
@@ -37,14 +46,15 @@ class ModeratorBot(commands.Bot):
             member_cache_flags=member_cache_flags,
             help_command=None,
             max_messages=None,
-            shard_id=shard_assignment.shard_id,
-            shard_count=shard_assignment.shard_count,
+            shard_id=shard_id,
+            shard_count=shard_count,
         )
 
-        self._shard_assignment = shard_assignment
+        self._shard_assignment: Optional[mysql.ShardAssignment] = shard_assignment
         self._instance_id = instance_id
         self._heartbeat_seconds = heartbeat_seconds
         self._log_cog_loads = log_cog_loads
+        self._standby_login_performed = False
 
         if self._heartbeat_seconds != 60:
             try:
@@ -52,7 +62,27 @@ class ModeratorBot(commands.Bot):
             except RuntimeError:
                 _logger.warning("Failed to adjust heartbeat interval; using default 60s")
 
+    def set_shard_assignment(self, shard_assignment: mysql.ShardAssignment) -> None:
+        """Attach a shard assignment to the bot (used for standby takeover)."""
+
+        self._shard_assignment = shard_assignment
+        self.shard_id = shard_assignment.shard_id
+        self.shard_count = shard_assignment.shard_count
+        self._connection.shard_id = shard_assignment.shard_id
+        self._connection.shard_count = shard_assignment.shard_count
+
+    async def prepare_standby(self, token: str) -> None:
+        """Log in without connecting so the bot is ready for a fast takeover."""
+
+        if self._standby_login_performed:
+            return
+
+        await self.login(token)
+        self._standby_login_performed = True
+
     async def push_status(self, status: str, *, last_error: str | None = None) -> None:
+        if self._shard_assignment is None:
+            return
         ws = getattr(self, "ws", None)
         session_id = getattr(ws, "session_id", None)
         resume_url = getattr(ws, "resume_url", None)

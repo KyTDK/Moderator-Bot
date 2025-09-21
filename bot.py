@@ -20,23 +20,56 @@ async def _main() -> None:
         return
 
     shard_assignment: mysql.ShardAssignment | None = None
-    bot: ModeratorBot | None = None
+    standby_prepared = False
+    bot = ModeratorBot(
+        instance_id=config.shard.instance_id,
+        heartbeat_seconds=config.shard.heartbeat_seconds,
+        log_cog_loads=config.log_cog_loads,
+        total_shards=config.shard.total_shards,
+    )
 
     try:
         await mysql.initialise_and_get_pool()
+        failover_after_seconds = max(config.shard.heartbeat_seconds * 2, 30)
+        stale_after_seconds = max(
+            30,
+            min(config.shard.stale_seconds, failover_after_seconds),
+        )
         while True:
             try:
                 shard_assignment = await mysql.claim_shard(
                     config.shard.instance_id,
                     total_shards=config.shard.total_shards,
                     preferred_shard=config.shard.preferred_shard,
-                    stale_after_seconds=config.shard.stale_seconds,
+                    stale_after_seconds=stale_after_seconds,
                 )
                 break
             except mysql.ShardClaimError as exc:
                 if not config.shard.standby_when_full:
                     logger.error("Shard claim failed: %s", exc)
                     return
+                if not standby_prepared:
+                    logger.warning(
+                        "Shard pool full; preparing hot standby while waiting (%s)",
+                        exc,
+                    )
+                    print(
+                        "[SHARD] Entering standby mode; logging in and loading extensions"
+                    )
+                    try:
+                        await bot.prepare_standby(config.token)
+                    except Exception:
+                        logger.exception("Failed to prepare standby login")
+                        await asyncio.sleep(config.shard.standby_poll_seconds)
+                        continue
+                    standby_prepared = True
+                released = await mysql.recover_stuck_shards(stale_after_seconds)
+                if released:
+                    logger.warning(
+                        "Recovered %s stale shard(s) while waiting to claim",
+                        released,
+                    )
+                    continue
                 logger.warning(
                     "Shard pool full; standby for %ss before retrying (%s)",
                     config.shard.standby_poll_seconds,
@@ -52,14 +85,14 @@ async def _main() -> None:
             f"{shard_assignment.shard_id}/{shard_assignment.shard_count}"
         )
 
-        bot = ModeratorBot(
-            shard_assignment,
-            instance_id=config.shard.instance_id,
-            heartbeat_seconds=config.shard.heartbeat_seconds,
-            log_cog_loads=config.log_cog_loads,
-        )
+        bot.set_shard_assignment(shard_assignment)
+        await bot.push_status("starting")
 
-        await bot.start(config.token)
+        if standby_prepared:
+            print("[SHARD] Standby takeover complete; connecting to gateway")
+            await bot.connect(reconnect=True)
+        else:
+            await bot.start(config.token)
     except KeyboardInterrupt:
         pass
     except Exception as exc:
