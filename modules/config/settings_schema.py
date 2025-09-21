@@ -471,6 +471,13 @@ SETTINGS_SCHEMA = {
         choices=["true", "false"],
         required_plans=PLAN_PRO,
     ),
+    "captcha-grace-period": Setting(
+        name="captcha-grace-period",
+        description="How long newcomers have to finish captcha verification (e.g. 10m, 1h).",
+        setting_type=TimeString,
+        default="10m",
+        required_plans=PLAN_PRO,
+    ),
     "captcha-success-actions": Setting(
         name="captcha-success-actions",
         description="Actions performed automatically after successful verification.",
