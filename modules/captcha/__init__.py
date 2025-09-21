@@ -1,6 +1,6 @@
 ﻿from __future__ import annotations
 
-from .config import CaptchaStreamConfig, CaptchaWebhookConfig
+from .config import CaptchaStreamConfig
 from .models import (
     CaptchaCallbackPayload,
     CaptchaPayloadError,
@@ -14,7 +14,6 @@ from .webhook import CaptchaWebhookServer
 
 __all__ = [
     "CaptchaStreamConfig",
-    "CaptchaWebhookConfig",
     "CaptchaCallbackPayload",
     "CaptchaPayloadError",
     "CaptchaProcessingError",

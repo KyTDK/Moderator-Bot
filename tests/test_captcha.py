@@ -17,7 +17,6 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from modules.captcha.client import CaptchaApiClient
 from modules.captcha.models import CaptchaCallbackPayload, CaptchaPayloadError
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
-from modules.captcha.config import CaptchaWebhookConfig
 from modules.captcha.webhook import CaptchaWebhookServer
 from modules.captcha.processor import (
     FailureAction,
@@ -94,35 +93,6 @@ def test_callback_payload_missing_token() -> None:
         )
 
 
-def test_webhook_config_uses_public_url(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("CAPTCHA_WEBHOOK_HOST", raising=False)
-    monkeypatch.delenv("CAPTCHA_WEBHOOK_PORT", raising=False)
-    monkeypatch.delenv("CAPTCHA_WEBHOOK_TOKEN", raising=False)
-    monkeypatch.delenv("CAPTCHA_API_TOKEN", raising=False)
-    monkeypatch.delenv("CAPTCHA_SHARED_SECRET", raising=False)
-    monkeypatch.setenv("CAPTCHA_WEBHOOK_ENABLED", "true")
-    monkeypatch.setenv("CAPTCHA_WEBHOOK_PUBLIC_URL", "https://example.com/bot")
-
-    config = CaptchaWebhookConfig.from_env()
-
-    assert config.enabled is True
-    assert config.callback_url == "https://example.com/bot/captcha/callback"
-
-
-def test_webhook_config_loopback_callback(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CAPTCHA_WEBHOOK_HOST", "localhost")
-    monkeypatch.setenv("CAPTCHA_WEBHOOK_PORT", "9000")
-    monkeypatch.setenv("CAPTCHA_WEBHOOK_ENABLED", "true")
-    monkeypatch.delenv("CAPTCHA_WEBHOOK_PUBLIC_URL", raising=False)
-    monkeypatch.delenv("CAPTCHA_WEBHOOK_TOKEN", raising=False)
-    monkeypatch.delenv("CAPTCHA_API_TOKEN", raising=False)
-    monkeypatch.delenv("CAPTCHA_SHARED_SECRET", raising=False)
-
-    config = CaptchaWebhookConfig.from_env()
-
-    assert config.callback_url == "http://localhost:9000/captcha/callback"
-
-
 def test_start_session_includes_callback_url(monkeypatch: pytest.MonkeyPatch) -> None:
     async def run() -> None:
         client = CaptchaApiClient("https://api.example.com/captcha", "token-123")
@@ -169,17 +139,6 @@ def test_start_session_includes_callback_url(monkeypatch: pytest.MonkeyPatch) ->
     asyncio.run(run())
 
 
-def _build_config(*, enabled: bool, host: str = "127.0.0.1", port: int = 8080) -> CaptchaWebhookConfig:
-    return CaptchaWebhookConfig(
-        enabled=enabled,
-        host=host,
-        port=port,
-        token=None,
-        shared_secret=None,
-        public_url=None,
-    )
-
-
 def _get_free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
@@ -190,7 +149,13 @@ def test_webhook_start_returns_false_when_disabled() -> None:
     async def run() -> None:
         bot = MagicMock(spec=commands.Bot)
         store = CaptchaSessionStore()
-        webhook = CaptchaWebhookServer(bot, _build_config(enabled=False), store)
+        webhook = CaptchaWebhookServer(
+            bot,
+            store,
+            enabled=False,
+            host="127.0.0.1",
+            port=8080,
+        )
 
         started = await webhook.start()
 
@@ -207,8 +172,10 @@ def test_webhook_start_returns_true_when_enabled() -> None:
         port = _get_free_port()
         webhook = CaptchaWebhookServer(
             bot,
-            _build_config(enabled=True, port=port),
             store,
+            enabled=True,
+            host="127.0.0.1",
+            port=port,
         )
 
         started = await webhook.start()

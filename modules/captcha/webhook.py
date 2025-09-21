@@ -10,7 +10,6 @@ from typing import Any
 from aiohttp import web
 from discord.ext import commands
 
-from .config import CaptchaWebhookConfig
 from .models import (
     CaptchaCallbackPayload,
     CaptchaPayloadError,
@@ -28,23 +27,32 @@ class CaptchaWebhookServer:
     def __init__(
         self,
         bot: commands.Bot,
-        config: CaptchaWebhookConfig,
         session_store: CaptchaSessionStore,
+        *,
+        enabled: bool,
+        host: str = "0.0.0.0",
+        port: int = 8080,
+        token: str | None = None,
+        shared_secret: bytes | None = None,
     ) -> None:
-         self._bot = bot
-         self._config = config
-         self._processor = CaptchaCallbackProcessor(bot, session_store)
-         self._app: web.Application | None = None
-         self._runner: web.AppRunner | None = None
-         self._site: web.BaseSite | None = None
-         self._started = asyncio.Event()
+        self._bot = bot
+        self._enabled = enabled
+        self._host = host
+        self._port = port
+        self._token = token
+        self._shared_secret = shared_secret
+        self._processor = CaptchaCallbackProcessor(bot, session_store)
+        self._app: web.Application | None = None
+        self._runner: web.AppRunner | None = None
+        self._site: web.BaseSite | None = None
+        self._started = asyncio.Event()
 
     @property
     def started(self) -> bool:
         return self._started.is_set()
 
     async def start(self) -> bool:
-        if not self._config.enabled:
+        if not self._enabled:
             self._started.clear()
             _logger.info("Captcha webhook is disabled; skipping startup")
             return False
@@ -57,12 +65,12 @@ class CaptchaWebhookServer:
         self._runner = web.AppRunner(self._app)
         await self._runner.setup()
 
-        self._site = web.TCPSite(self._runner, self._config.host, self._config.port)
+        self._site = web.TCPSite(self._runner, self._host, self._port)
         await self._site.start()
 
         self._started.set()
         _logger.info(
-            "Captcha webhook listening on %s:%s", self._config.host, self._config.port
+            "Captcha webhook listening on %s:%s", self._host, self._port
         )
         return True
 
@@ -124,10 +132,10 @@ class CaptchaWebhookServer:
         return web.json_response(_serialize_result(result))
 
     def _is_authorized(self, request: web.Request, body: bytes) -> bool:
-        if self._config.shared_secret:
+        if self._shared_secret:
             signature = (request.headers.get("X-Signature") or "").strip()
             expected = hmac.new(
-                self._config.shared_secret,
+                self._shared_secret,
                 body,
                 hashlib.sha256,
             ).hexdigest()
@@ -135,16 +143,16 @@ class CaptchaWebhookServer:
                 return True
             return False
 
-        if not self._config.token:
-             return True
+        if not self._token:
+            return True
  
         auth_header = request.headers.get("Authorization") or ""
         token = _extract_token(auth_header)
-        if token and token == self._config.token:
+        if token and token == self._token:
             return True
 
         token_query = request.query.get("token")
-        if token_query and token_query == self._config.token:
+        if token_query and token_query == self._token:
             return True
 
         return False
