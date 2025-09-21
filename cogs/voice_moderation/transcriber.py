@@ -289,17 +289,14 @@ async def _transcribe_remote_pcm_map(
             return
 
         wav_bytes = pcm_to_wav_bytes(pcm)
-        payload = {
-            "filename": f"{uid}.wav",
-            "content": wav_bytes,
-            "mime_type": "audio/wav",
-        }
+        wav_file = io.BytesIO(wav_bytes)
+        wav_file.name = f"{uid}.wav"
 
         async with sem:
             try:
                 kwargs = {
                     "model": "gpt-4o-mini-transcribe",
-                    "file": payload,
+                    "file": wav_file,
                     "response_format": "verbose_json",
                 }
                 if language:
