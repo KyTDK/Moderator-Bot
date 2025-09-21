@@ -496,14 +496,6 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=["kick"],
     ),
-    "captcha-user-lookup": Setting(
-        name="captcha-user-lookup",
-        description="Check users against known violations during captcha verification.",
-        setting_type=bool,
-        default=False,
-        required_plans=PLAN_PRO,
-        choices=["true", "false"],
-    ),
 }
 
 
