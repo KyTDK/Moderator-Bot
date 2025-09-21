@@ -51,7 +51,6 @@ Require new members to complete a captcha before they can see or interact with t
 * `/settings set name=captcha-max-attempts value=3` – Limit how many attempts a user gets before failure actions trigger.
 * `/settings set name=pre-captcha-roles role=@Visitor` – Assign temporary roles while members are awaiting verification.
 * `/settings set name=captcha-success-actions value="give_role:Member"` – Run success actions (e.g., grant roles, clear timeouts) after completion.
-* `/settings set name=captcha-success-message value="Welcome aboard!"` – DM a custom message after a user passes.
 * `/settings set name=captcha-failure-actions value="timeout:1d"` – Apply disciplinary actions when the captcha is failed.
 
 ### 📜 Logging:

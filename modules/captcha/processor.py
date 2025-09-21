@@ -51,7 +51,6 @@ class CaptchaCallbackProcessor:
             [
                 "captcha-verification-enabled",
                 "captcha-success-actions",
-                "captcha-success-message",
                 "captcha-failure-actions",
                 "captcha-max-attempts",
                 "captcha-log-channel",
@@ -100,15 +99,6 @@ class CaptchaCallbackProcessor:
             )
 
         success_actions = _extract_action_strings(raw_success_actions)
-
-        message_template = settings.get("captcha-success-message") or ""
-        if message_template:
-            try:
-                await member.send(message_template)
-            except discord.Forbidden:
-                _logger.debug("Could not DM captcha success message to user %s", member.id)
-            except discord.HTTPException:
-                _logger.debug("Failed to send captcha success DM to user %s", member.id)
 
         await self._sessions.remove(payload.guild_id, payload.user_id)
 
