@@ -27,3 +27,4 @@ httpx==0.27.0
 discord-ext-voice-recv==0.5.2a179
 pynacl==1.5.0
 faster-whisper==1.2.0
+redis==6.4.0

@@ -14,7 +14,7 @@ from modules.utils import mysql
 from modules.utils.discord_utils import resolve_role_references
 from modules.utils.time import parse_duration
 
-from modules.captcha import CaptchaWebhookConfig, CaptchaWebhookServer
+from modules.captcha import CaptchaStreamConfig, CaptchaStreamListener
 from modules.captcha.client import (
     CaptchaApiClient,
     CaptchaApiError,
@@ -34,8 +34,8 @@ class CaptchaCog(commands.Cog):
         self._session_store = CaptchaSessionStore()
         self._api_base = _resolve_api_base()
         self._api_client = CaptchaApiClient(self._api_base, os.getenv("CAPTCHA_API_TOKEN"))
-        self._webhook_config = CaptchaWebhookConfig.from_env()
-        self._webhook = CaptchaWebhookServer(bot, self._webhook_config, self._session_store)
+        self._stream_config = CaptchaStreamConfig.from_env()
+        self._stream_listener = CaptchaStreamListener(bot, self._stream_config, self._session_store)
 
         if not self._api_client.is_configured:
             _logger.warning(
@@ -43,17 +43,18 @@ class CaptchaCog(commands.Cog):
             )
 
     async def cog_load(self) -> None:
-        started = await self._webhook.start()
+        started = await self._stream_listener.start()
         if started:
             print(
-                "[CAPTCHA] Webhook listening on "
-                f"{self._webhook_config.host}:{self._webhook_config.port}"
+                "[CAPTCHA] Redis stream listener subscribed to "
+                f"{self._stream_config.stream} as "
+                f"{self._stream_config.group}/{self._stream_config.consumer_name}"
             )
         else:
-            print("[CAPTCHA] Captcha webhook disabled; local callback server not started.")
+            print("[CAPTCHA] Captcha Redis stream listener disabled; callbacks will not be processed.")
 
     async def cog_unload(self) -> None:
-        await self._webhook.stop()
+        await self._stream_listener.stop()
         await self._api_client.close()
 
     @commands.Cog.listener()
@@ -79,8 +80,6 @@ class CaptchaCog(commands.Cog):
                 "Captcha API not configured; skipping verification for guild %s", member.guild.id
             )
             return
-
-        callback_url = self._webhook_config.callback_url
 
         # Give pre-captcha roles if configured
         raw_pre_roles = settings.get("pre-captcha-roles") or []
@@ -113,7 +112,6 @@ class CaptchaCog(commands.Cog):
             start_response = await self._api_client.start_session(
                 member.guild.id,
                 member.id,
-                callback_url=callback_url,
             )
         except CaptchaNotAvailableError as exc:
             _logger.info(
