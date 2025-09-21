@@ -16,7 +16,7 @@ PRICES_PER_MTOK: dict[str, float] = {
 
 # Transcription pricing (USD per minute of audio)
 TRANSCRIPTION_PRICE_PER_MINUTE_USD: float = 0.003
-LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD: float = 0.001
+LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD: float = 0.0003
 
 # Fraction of the model context window we allow to use for prompts
 MAX_CONTEXT_USAGE_FRACTION: float = 0.9
