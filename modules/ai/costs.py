@@ -5,8 +5,8 @@ Keep all pricing knobs and default limits here so budgeting logic stays consiste
 
 # Default monthly budget limits (USD)
 ACCELERATED_BUDGET_LIMIT_USD: float = 2.00
-ACCELERATED_PRO_BUDGET_LIMIT_USD: float = 5.00 # x2.5 the base
-ACCELERATED_ULTRA_BUDGET_LIMIT_USD: float = 15.00 # x7.5 the base
+ACCELERATED_PRO_BUDGET_LIMIT_USD: float = 6.00 # x3 the base
+ACCELERATED_ULTRA_BUDGET_LIMIT_USD: float = 20.00 # x7.5 the base
 
 # Model pricing per million tokens (USD/MTok)
 PRICES_PER_MTOK: dict[str, float] = {
@@ -16,7 +16,7 @@ PRICES_PER_MTOK: dict[str, float] = {
 
 # Transcription pricing (USD per minute of audio)
 TRANSCRIPTION_PRICE_PER_MINUTE_USD: float = 0.003
-LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD: float = 0.0001
+LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD: float = 0.001
 
 # Fraction of the model context window we allow to use for prompts
 MAX_CONTEXT_USAGE_FRACTION: float = 0.9
