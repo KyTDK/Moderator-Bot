@@ -19,6 +19,7 @@ class ModeratorBot(commands.Bot):
         *,
         instance_id: str,
         heartbeat_seconds: int,
+        instance_heartbeat_seconds: int,
         log_cog_loads: bool,
         total_shards: int,
         shard_assignment: Optional[mysql.ShardAssignment] = None,
@@ -53,6 +54,7 @@ class ModeratorBot(commands.Bot):
         self._shard_assignment: Optional[mysql.ShardAssignment] = shard_assignment
         self._instance_id = instance_id
         self._heartbeat_seconds = heartbeat_seconds
+        self._instance_heartbeat_seconds = instance_heartbeat_seconds
         self._log_cog_loads = log_cog_loads
         self._standby_login_performed = False
 
@@ -61,6 +63,16 @@ class ModeratorBot(commands.Bot):
                 self.shard_heartbeat.change_interval(seconds=self._heartbeat_seconds)
             except RuntimeError:
                 _logger.warning("Failed to adjust heartbeat interval; using default 60s")
+
+        if self._instance_heartbeat_seconds != 5:
+            try:
+                self.instance_heartbeat.change_interval(
+                    seconds=self._instance_heartbeat_seconds
+                )
+            except RuntimeError:
+                _logger.warning(
+                    "Failed to adjust instance heartbeat interval; using default 5s"
+                )
 
     def set_shard_assignment(self, shard_assignment: mysql.ShardAssignment) -> None:
         """Attach a shard assignment to the bot (used for standby takeover)."""
@@ -105,7 +117,9 @@ class ModeratorBot(commands.Bot):
             print(f"[FATAL] MySQL init failed: {exc}")
             raise
 
-        for loop_task in (self.cleanup_task, self.shard_heartbeat):
+        await mysql.update_instance_heartbeat(self._instance_id)
+
+        for loop_task in (self.cleanup_task, self.shard_heartbeat, self.instance_heartbeat):
             if not loop_task.is_running():
                 try:
                     loop_task.start()
@@ -237,6 +251,13 @@ class ModeratorBot(commands.Bot):
             await self.push_status(status)
         except Exception:
             _logger.exception("Failed to submit shard heartbeat")
+
+    @tasks.loop(seconds=5)
+    async def instance_heartbeat(self) -> None:
+        try:
+            await mysql.update_instance_heartbeat(self._instance_id)
+        except Exception:
+            _logger.exception("Failed to submit instance heartbeat")
 
     async def close(self) -> None:
         await super().close()

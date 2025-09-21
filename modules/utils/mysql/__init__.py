@@ -17,6 +17,10 @@ from .premium import (
     remove_guild,
     resolve_guild_plan,
 )
+from .instances import (
+    clear_instance_heartbeat,
+    update_instance_heartbeat,
+)
 
 from .shards import (
     ShardAssignment,
@@ -51,6 +55,8 @@ __all__ = [
     "resolve_guild_plan",
     "add_guild",
     "remove_guild",
+    "update_instance_heartbeat",
+    "clear_instance_heartbeat",
     "ShardAssignment",
     "ShardClaimError",
     "claim_shard",
