@@ -334,8 +334,11 @@ class VoiceModeratorCog(commands.Cog):
                 total = len(chunks)
                 # Post each chunk as its own embed
                 transcript_mode = (
-                    "High accuracy transcript" if high_accuracy else "Normal accuracy transcript"
+                    "High accuracy transcript"
+                    if high_quality_transcription
+                    else "Normal accuracy transcript"
                 )
+
                 for idx, part in enumerate(chunks, start=1):
                     title = "VC Transcript" if total == 1 else f"VC Transcript (part {idx}/{total})"
                     embed = discord.Embed(
