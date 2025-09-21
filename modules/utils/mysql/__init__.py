@@ -7,7 +7,7 @@ from .connection import (
     initialise_and_get_pool,
 )
 from .settings import get_settings, update_settings
-from .strikes import cleanup_expired_strikes, get_strike_count, get_strikes
+from .strikes import cleanup_expired_strikes, get_strike_count, get_strikes, get_violations_stats
 from .usage import add_aimod_usage, add_vcmod_usage, get_aimod_usage, get_vcmod_usage
 from .cleanup import cleanup_orphaned_guilds
 from .premium import (
@@ -43,6 +43,7 @@ __all__ = [
     "get_strike_count",
     "get_strikes",
     "cleanup_expired_strikes",
+    "get_violations_stats",
     "get_settings",
     "update_settings",
     "get_aimod_usage",
