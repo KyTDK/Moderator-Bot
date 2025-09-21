@@ -54,7 +54,6 @@ class CaptchaCallbackProcessor:
                 "captcha-failure-actions",
                 "captcha-max-attempts",
                 "captcha-log-channel",
-                "captcha-user-lookup",
             ],
         )
 
@@ -182,11 +181,6 @@ class CaptchaCallbackProcessor:
             colour=discord.Colour.green(),
         )
 
-        if settings.get("captcha-user-lookup"):
-            lookup_text = await _fetch_violation_lookup(member.id)
-            if lookup_text:
-                embed.add_field(name="Violation Lookup", value=lookup_text, inline=False)
-
         if actions:
             embed.add_field(
                 name="Actions Applied",
@@ -265,11 +259,6 @@ class CaptchaCallbackProcessor:
             ),
             colour=discord.Colour.red(),
         )
-
-        if settings.get("captcha-user-lookup"):
-            lookup_text = await _fetch_violation_lookup(member.id)
-            if lookup_text:
-                embed.add_field(name="Violation Lookup", value=lookup_text, inline=False)
 
         if applied_actions:
             embed.add_field(
@@ -430,42 +419,6 @@ def _coerce_int(value: Any) -> int | None:
         return int(text)
     except (TypeError, ValueError):
         return None
-
-
-async def _fetch_violation_lookup(user_id: int) -> str | None:
-    try:
-        stats = await mysql.get_violations_stats(user_id)
-    except Exception:
-        _logger.exception("Failed to fetch violation stats for user %s", user_id)
-        return None
-
-    return _format_violation_lookup(stats)
-
-
-def _format_violation_lookup(stats: Mapping[str, Any] | None) -> str:
-    if not stats:
-        return "No past violations found."
-
-    try:
-        total = int(stats.get("total_strikes", 0))
-    except (TypeError, ValueError):
-        total = 0
-    try:
-        guild_count = int(stats.get("guild_count", 0))
-    except (TypeError, ValueError):
-        guild_count = 0
-
-    if total <= 0:
-        return "No past violations found."
-
-    strike_word = "strike" if total == 1 else "strikes"
-    guild_word = "server" if guild_count == 1 else "servers"
-
-    if guild_count <= 0:
-        return f"{total} {strike_word} on record."
-
-    return f"{total} {strike_word} across {guild_count} {guild_word}."
-
 
 def _extract_metadata_int(metadata: Mapping[str, Any], *keys: str) -> int | None:
     for key in keys:
