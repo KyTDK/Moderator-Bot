@@ -5,8 +5,10 @@ from datetime import datetime, timedelta, timezone
 import os
 import sys
 from pathlib import Path
+from typing import cast
 
 import pytest
+from discord.ext import commands
 
 os.environ.setdefault("FERNET_SECRET_KEY", "DeJ3sXDDTTbikeRSJzRgg8r_Ch61_NbE8D3LWnLOJO4=")
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -20,6 +22,7 @@ from modules.captcha.processor import (
     _extract_action_strings,
     _normalize_failure_actions,
 )
+from modules.captcha.stream import CaptchaStreamListener, RedisConnectionError
 
 def test_session_store_round_trip() -> None:
     async def run() -> None:
@@ -208,3 +211,53 @@ def test_extract_action_strings_filters_entries() -> None:
 
 def test_extract_action_strings_handles_single_string() -> None:
     assert _extract_action_strings("take_role:5") == ["take_role:5"]
+
+
+def test_stream_listener_handles_redis_connection_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    class DummyPool:
+        def __init__(self) -> None:
+            self.disconnected = False
+
+        async def disconnect(self) -> None:
+            self.disconnected = True
+
+    class DummyRedis:
+        def __init__(self) -> None:
+            self.closed = False
+            self.connection_pool = DummyPool()
+
+        async def xgroup_create(self, *args: object, **kwargs: object) -> None:
+            raise RedisConnectionError("boom")
+
+        async def close(self) -> None:
+            self.closed = True
+
+    dummy_redis = DummyRedis()
+
+    def fake_from_url(url: str, *, decode_responses: bool) -> DummyRedis:
+        assert decode_responses is True
+        assert url == "redis://localhost:6379/0"
+        return dummy_redis
+
+    monkeypatch.setattr("modules.captcha.stream.redis_from_url", fake_from_url)
+
+    config = CaptchaStreamConfig(
+        enabled=True,
+        redis_url="redis://localhost:6379/0",
+        stream="captcha:callbacks",
+        group="modbot",
+        consumer_name="consumer",
+        block_ms=1000,
+        batch_size=5,
+        max_requeue_attempts=3,
+        shared_secret=None,
+    )
+
+    listener = CaptchaStreamListener(cast(commands.Bot, object()), config, CaptchaSessionStore())
+
+    async def run() -> None:
+        started = await listener.start()
+        assert started is False
+        assert listener._redis is None  # type: ignore[attr-defined]
+
+    asyncio.run(run())

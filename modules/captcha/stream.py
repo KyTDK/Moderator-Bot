@@ -11,11 +11,15 @@ from discord.ext import commands
 
 try:  # pragma: no cover - exercised indirectly via start()
     from redis.asyncio import Redis, from_url as redis_from_url
-    from redis.exceptions import ResponseError
+    from redis.exceptions import (
+        ConnectionError as RedisConnectionError,
+        ResponseError,
+    )
 except ModuleNotFoundError:  # pragma: no cover - handled gracefully in start()
     Redis = None  # type: ignore[assignment]
     redis_from_url = None  # type: ignore[assignment]
     ResponseError = Exception  # type: ignore[assignment]
+    RedisConnectionError = Exception  # type: ignore[assignment]
 
 from .config import CaptchaStreamConfig
 from .models import (
@@ -64,6 +68,22 @@ class CaptchaStreamListener:
 
         try:
             await self._ensure_consumer_group()
+        except RedisConnectionError as exc:
+            _logger.error(
+                "Unable to connect to Redis for captcha callbacks at %s: %s. Captcha callbacks will be disabled.",
+                self._config.redis_url,
+                exc,
+            )
+            await self._close_redis()
+            return False
+        except OSError as exc:
+            _logger.error(
+                "Unexpected OS error while connecting to Redis for captcha callbacks at %s: %s. Captcha callbacks will be disabled.",
+                self._config.redis_url,
+                exc,
+            )
+            await self._close_redis()
+            return False
         except Exception:
             await self._close_redis()
             raise
