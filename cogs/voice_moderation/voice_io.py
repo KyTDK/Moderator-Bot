@@ -8,11 +8,17 @@ import time
 
 import discord
 from discord.ext import voice_recv
-from modules.ai.costs import TRANSCRIPTION_PRICE_PER_MINUTE_USD
 from modules.utils import mysql
+from modules.ai.costs import (
+    TRANSCRIPTION_PRICE_PER_MINUTE_USD,
+    LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD,
+)
 from cogs.voice_moderation.buffers import PCMBufferPool, BYTES_PER_SECOND
 from cogs.voice_moderation.sink import CollectingSink
-from cogs.voice_moderation.transcriber import transcribe_pcm_map
+from cogs.voice_moderation.transcriber import (
+    transcribe_pcm_map,
+    estimate_minutes_from_pcm_map,
+)
 
 # Reduce noisy warnings from decoder flushes at the end of cycles
 logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
@@ -220,6 +226,7 @@ async def transcribe_harvest_chunk(
     eligible_map: Dict[int, bytes],
     end_ts_map: Dict[int, datetime],
     duration_map_s: Dict[int, float],
+    high_quality: bool = False,
 ) -> Tuple[List[Tuple[int, str, datetime]], float]:
     """Transcribe a previously harvested PCM chunk and return utterances with absolute timestamps.
 
@@ -229,9 +236,13 @@ async def transcribe_harvest_chunk(
         return [], 0.0
 
     # Budget pre-check from estimated minutes
-    bytes_per_minute = BYTES_PER_SECOND * 60
-    est_minutes = sum(len(b) for b in eligible_map.values()) / float(bytes_per_minute)
-    est_cost = round(est_minutes * TRANSCRIPTION_PRICE_PER_MINUTE_USD, 6)
+    est_minutes = estimate_minutes_from_pcm_map(eligible_map)
+    price_per_minute = (
+        TRANSCRIPTION_PRICE_PER_MINUTE_USD
+        if high_quality
+        else LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD
+    )
+    est_cost = round(est_minutes * price_per_minute, 6)
     try:
         usage = await mysql.get_vcmod_usage(guild_id)
         if (usage.get("cost_usd", 0.0) + est_cost) > usage.get("limit_usd", 2.0):
@@ -241,11 +252,16 @@ async def transcribe_harvest_chunk(
         print(f"[VC IO] budget check failed, proceeding cautiously: {e}")
 
     # Transcribe
-    print(f"[VC IO] Transcribing chunk: users={len(eligible_map)} est_minutes={est_minutes:.3f}")
-    segs, actual_cost = await transcribe_pcm_map(
+    print(
+        f"[VC IO] Transcribing chunk: users={len(eligible_map)} est_minutes={est_minutes:.3f} "
+        f"target={'gpt-4o-mini-transcribe' if high_quality else 'local-whisper'}"
+    )
+
+    segs, actual_cost, used_remote = await transcribe_pcm_map(
         guild_id=guild_id,
         api_key=api_key,
         pcm_map=eligible_map,
+        high_quality=high_quality,
     )
 
     if segs:
@@ -268,5 +284,8 @@ async def transcribe_harvest_chunk(
         ts = chunk_start_abs + timedelta(seconds=seg_mid_rel)
         utterances_with_ts.append((uid, text, ts))
 
-    print(f"[VC IO] Transcribed chunk utterances={len(utterances_with_ts)} cost={actual_cost:.6f}usd")
+    mode = "gpt-4o-mini-transcribe" if used_remote else "local-whisper"
+    print(
+        f"[VC IO] Transcribed chunk utterances={len(utterances_with_ts)} cost={actual_cost:.6f}usd mode={mode}"
+    )
     return utterances_with_ts, actual_cost

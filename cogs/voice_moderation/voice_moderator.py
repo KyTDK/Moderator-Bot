@@ -74,6 +74,7 @@ class VoiceModeratorCog(commands.Cog):
                 "vcmod-saver-mode",
                 "vcmod-rules",
                 "vcmod-high-accuracy",
+                "vcmod-high-quality-transcription",
                 "vcmod-detection-action",
                 "aimod-debug",
                 "aimod-channel",
@@ -150,6 +151,7 @@ class VoiceModeratorCog(commands.Cog):
         log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
         transcript_channel_id = settings.get("vcmod-transcript-channel")
         transcript_only = settings.get("vcmod-transcript-only") or False
+        high_quality_transcription = settings.get("vcmod-high-quality-transcription") or False
 
         listen_delta = parse_duration(listen_str) or timedelta(minutes=2)
         idle_delta = parse_duration(idle_str) or timedelta(seconds=30)
@@ -164,6 +166,7 @@ class VoiceModeratorCog(commands.Cog):
                 listen_delta=listen_delta,
                 idle_delta=idle_delta,
                 high_accuracy=high_accuracy,
+                high_quality_transcription=high_quality_transcription,
                 rules=rules,
                 transcript_only=transcript_only,
                 action_setting=action_setting,
@@ -192,6 +195,7 @@ class VoiceModeratorCog(commands.Cog):
         listen_delta: timedelta,
         idle_delta: timedelta,
         high_accuracy: bool,
+        high_quality_transcription: bool,
         rules: str,
         transcript_only: bool,
         action_setting: list[str],
@@ -229,6 +233,7 @@ class VoiceModeratorCog(commands.Cog):
                                     eligible_map=em,
                                     end_ts_map=etm,
                                     duration_map_s=dmap,
+                                    high_quality=high_quality_transcription,
                                 )
                                 if chunk_utts:
                                     utterances.extend(chunk_utts)

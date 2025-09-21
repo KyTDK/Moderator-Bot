@@ -9,7 +9,15 @@ from typing import Dict, List, Tuple, Optional
 
 from faster_whisper import WhisperModel
 
-from modules.ai.costs import LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD
+from modules.ai.costs import (
+    LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD,
+    TRANSCRIPTION_PRICE_PER_MINUTE_USD,
+)
+
+try:  # pragma: no cover - optional dependency guard
+    from openai import AsyncOpenAI
+except Exception:  # pragma: no cover
+    AsyncOpenAI = None  # type: ignore
 
 SAMPLE_RATE = 48000
 CHANNELS = 2
@@ -223,7 +231,7 @@ async def _transcribe_wav_bytes(
             pass
 
 
-async def transcribe_pcm_map(
+async def _transcribe_local_pcm_map(
     *,
     guild_id: int,
     api_key: str,
@@ -231,11 +239,7 @@ async def transcribe_pcm_map(
     language: Optional[str] = None,
     max_concurrency: int = 2,
 ) -> Tuple[List[Tuple[int, str, float, float]], float]:
-    """
-    Transcribe per-user PCM bytes using local faster-whisper with lazy model loading.
-
-    Returns (utterances, cost_usd_estimate).
-    """
+    """Transcribe PCM bytes with the local Whisper model."""
     model_name = "large-v3-turbo"
 
     sem = asyncio.Semaphore(max_concurrency)
@@ -263,3 +267,129 @@ async def transcribe_pcm_map(
 
     cost_usd = round(estimate_minutes_from_pcm_map(pcm_map) * LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD, 6)
     return utterances, cost_usd
+
+async def _transcribe_remote_pcm_map(
+    *,
+    api_key: str,
+    pcm_map: Dict[int, bytes],
+    language: Optional[str] = None,
+    max_concurrency: int = 2,
+) -> List[Tuple[int, str, float, float]]:
+    """Transcribe PCM buffers with OpenAI's hosted model."""
+
+    if AsyncOpenAI is None:
+        raise RuntimeError("OpenAI Async client unavailable")
+
+    client = AsyncOpenAI(api_key=api_key)
+    sem = asyncio.Semaphore(max_concurrency)
+    utterances: List[Tuple[int, str, float, float]] = []
+
+    async def _work(uid: int, pcm: bytes):
+        if not pcm:
+            return
+
+        wav_bytes = pcm_to_wav_bytes(pcm)
+        payload = {
+            "filename": f"{uid}.wav",
+            "content": wav_bytes,
+            "mime_type": "audio/wav",
+        }
+
+        async with sem:
+            try:
+                kwargs = {
+                    "model": "gpt-4o-mini-transcribe",
+                    "file": payload,
+                    "response_format": "verbose_json",
+                }
+                if language:
+                    kwargs["language"] = language
+                resp = await client.audio.transcriptions.create(**kwargs)
+            except Exception as e:
+                print(f"[VC Transcriber] remote transcription failed for {uid}: {e}")
+                return
+
+        segments = getattr(resp, "segments", None)
+        if segments is None and isinstance(resp, dict):
+            segments = resp.get("segments")
+
+        if not segments:
+            text = getattr(resp, "text", None) if not isinstance(resp, dict) else resp.get("text")
+            text = (text or "").strip()
+            if text:
+                utterances.append((uid, text, 0.0, 0.0))
+            return
+
+        for seg in segments:
+            try:
+                if isinstance(seg, dict):
+                    text = (seg.get("text") or "").strip()
+                    if not text:
+                        continue
+                    start = float(seg.get("start") or 0.0)
+                    end = float(seg.get("end") or 0.0)
+                else:
+                    text = (getattr(seg, "text", "") or "").strip()
+                    if not text:
+                        continue
+                    start = float(getattr(seg, "start", 0.0) or 0.0)
+                    end = float(getattr(seg, "end", 0.0) or 0.0)
+                utterances.append((uid, text, start, end))
+            except Exception:
+                continue
+
+    await asyncio.gather(*[_work(uid, pcm) for uid, pcm in pcm_map.items()])
+    return utterances
+from modules.ai.costs import TRANSCRIPTION_PRICE_PER_MINUTE_USD
+
+async def transcribe_pcm_map(
+    *,
+    guild_id: int,
+    api_key: str,
+    pcm_map: Dict[int, bytes],
+    language: Optional[str] = None,
+    high_quality: bool = False,
+    max_concurrency: int = 2,
+) -> Tuple[List[Tuple[int, str, float, float]], float, bool]:
+    """
+    Transcribe per-user PCM bytes, optionally using the hosted GPT-4o Mini Transcribe model.
+
+    Returns (utterances, cost_usd, used_remote).
+    """
+
+    if not pcm_map:
+        return [], 0.0, False
+
+    est_minutes = estimate_minutes_from_pcm_map(pcm_map)
+
+    use_remote = bool(high_quality and api_key and AsyncOpenAI is not None)
+    if high_quality and not use_remote:
+        if not api_key:
+            print("[VC Transcriber] High quality transcription requested but API key missing; using local Whisper.")
+        elif AsyncOpenAI is None:
+            print("[VC Transcriber] High quality transcription requested but OpenAI client unavailable; using local Whisper.")
+
+    if use_remote:
+        est_cost = round(est_minutes * TRANSCRIPTION_PRICE_PER_MINUTE_USD, 6)
+        try:
+            segs = await _transcribe_remote_pcm_map(
+                api_key=api_key,
+                pcm_map=pcm_map,
+                language=language,
+                max_concurrency=max_concurrency,
+            )
+            if segs:
+                return segs, est_cost, True
+            # Remote returned nothing – fall back to local so we don't bill needlessly.
+            print("[VC Transcriber] Remote transcription returned no text; using local Whisper.")
+        except Exception as e:
+            print(f"[VC Transcriber] Remote transcription failed; retrying locally: {e}")
+
+    segs, cost = await _transcribe_local_pcm_map(
+        guild_id=guild_id,
+        api_key=api_key,
+        pcm_map=pcm_map,
+        language=language,
+        max_concurrency=max_concurrency,
+    )
+    return segs, cost, False

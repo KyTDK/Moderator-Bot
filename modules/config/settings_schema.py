@@ -444,6 +444,15 @@ SETTINGS_SCHEMA = {
         required_plans=PLAN_CORE,
         choices=["true", "false"]
     ),
+    "vcmod-high-quality-transcription": Setting(
+        name="vcmod-high-quality-transcription",
+        description="Enable clearer voice transcripts with premium processing (higher cost).",
+        setting_type=bool,
+        default=False,
+        hidden=True,
+        required_plans=PLAN_CORE,
+        choices=["true", "false"]
+    ),
     "vcmod-transcript-channel": Setting(
         name="vcmod-transcript-channel",
         description="Channel where VC transcripts are posted.",
