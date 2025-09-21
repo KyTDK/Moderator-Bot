@@ -5,8 +5,8 @@ Keep all pricing knobs and default limits here so budgeting logic stays consiste
 
 # Default monthly budget limits (USD)
 ACCELERATED_BUDGET_LIMIT_USD: float = 2.00
-ACCELERATED_PRO_BUDGET_LIMIT_USD: float = 6.00 # x3 the base
-ACCELERATED_ULTRA_BUDGET_LIMIT_USD: float = 20.00 # x7.5 the base
+ACCELERATED_PRO_BUDGET_LIMIT_USD: float = 4.00 # x2 the base
+ACCELERATED_ULTRA_BUDGET_LIMIT_USD: float = 10.00 # x5 the base
 
 # Model pricing per million tokens (USD/MTok)
 PRICES_PER_MTOK: dict[str, float] = {
