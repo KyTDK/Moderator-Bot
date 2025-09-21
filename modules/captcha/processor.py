@@ -14,7 +14,7 @@ from modules.moderation import strike
 from .models import (
     CaptchaCallbackPayload,
     CaptchaProcessingError,
-    CaptchaWebhookResult,
+    CaptchaProcessResult,
 )
 from .sessions import CaptchaSessionStore
 
@@ -27,7 +27,7 @@ class CaptchaCallbackProcessor:
         self._bot = bot
         self._sessions = session_store
 
-    async def process(self, payload: CaptchaCallbackPayload) -> CaptchaWebhookResult:
+    async def process(self, payload: CaptchaCallbackPayload) -> CaptchaProcessResult:
         session = await self._sessions.get(payload.guild_id, payload.user_id)
         if session is None:
             raise CaptchaProcessingError(
@@ -64,7 +64,7 @@ class CaptchaCallbackProcessor:
                 guild.id,
             )
             await self._sessions.remove(payload.guild_id, payload.user_id)
-            return CaptchaWebhookResult(status="disabled", roles_applied=0)
+            return CaptchaProcessResult(status="disabled", roles_applied=0)
 
         if not payload.success:
             _logger.info(
@@ -75,7 +75,7 @@ class CaptchaCallbackProcessor:
             )
             await self._apply_failure_actions(member, payload, settings)
             await self._sessions.remove(payload.guild_id, payload.user_id)
-            return CaptchaWebhookResult(
+            return CaptchaProcessResult(
                 status="failed",
                 roles_applied=0,
                 message=payload.failure_reason,
@@ -122,7 +122,7 @@ class CaptchaCallbackProcessor:
             1 for action in success_actions if action.partition(":")[0] == "give_role"
         )
 
-        return CaptchaWebhookResult(status="ok", roles_applied=roles_applied)
+        return CaptchaProcessResult(status="ok", roles_applied=roles_applied)
 
     async def _apply_failure_actions(
         self,

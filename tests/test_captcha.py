@@ -3,21 +3,18 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta, timezone
 import os
-import socket
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
-from discord.ext import commands
 
 os.environ.setdefault("FERNET_SECRET_KEY", "DeJ3sXDDTTbikeRSJzRgg8r_Ch61_NbE8D3LWnLOJO4=")
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
+from modules.captcha.config import CaptchaStreamConfig
 from modules.captcha.client import CaptchaApiClient
 from modules.captcha.models import CaptchaCallbackPayload, CaptchaPayloadError
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
-from modules.captcha.webhook import CaptchaWebhookServer
 from modules.captcha.processor import (
     FailureAction,
     _extract_action_strings,
@@ -139,54 +136,25 @@ def test_start_session_includes_callback_url(monkeypatch: pytest.MonkeyPatch) ->
     asyncio.run(run())
 
 
-def _get_free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind(("127.0.0.1", 0))
-        return sock.getsockname()[1]
+def test_stream_config_disabled_without_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CAPTCHA_REDIS_URL", raising=False)
+    monkeypatch.delenv("REDIS_URL", raising=False)
+    monkeypatch.delenv("CAPTCHA_STREAM_ENABLED", raising=False)
+
+    config = CaptchaStreamConfig.from_env()
+
+    assert config.redis_url is None
+    assert config.enabled is False
 
 
-def test_webhook_start_returns_false_when_disabled() -> None:
-    async def run() -> None:
-        bot = MagicMock(spec=commands.Bot)
-        store = CaptchaSessionStore()
-        webhook = CaptchaWebhookServer(
-            bot,
-            store,
-            enabled=False,
-            host="127.0.0.1",
-            port=8080,
-        )
+def test_stream_config_uses_explicit_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CAPTCHA_REDIS_URL", "  redis://localhost:6379/2  ")
+    monkeypatch.delenv("CAPTCHA_STREAM_ENABLED", raising=False)
 
-        started = await webhook.start()
+    config = CaptchaStreamConfig.from_env()
 
-        assert started is False
-        assert webhook.started is False
-
-    asyncio.run(run())
-
-
-def test_webhook_start_returns_true_when_enabled() -> None:
-    async def run() -> None:
-        bot = MagicMock(spec=commands.Bot)
-        store = CaptchaSessionStore()
-        port = _get_free_port()
-        webhook = CaptchaWebhookServer(
-            bot,
-            store,
-            enabled=True,
-            host="127.0.0.1",
-            port=port,
-        )
-
-        started = await webhook.start()
-
-        assert started is True
-        assert webhook.started is True
-
-        await webhook.stop()
-        assert webhook.started is False
-
-    asyncio.run(run())
+    assert config.redis_url == "redis://localhost:6379/2"
+    assert config.enabled is True
 
 
 def test_normalize_failure_actions_handles_mixed_entries() -> None:

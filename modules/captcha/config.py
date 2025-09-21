@@ -76,23 +76,11 @@ def _resolve_shared_secret() -> bytes | None:
 
 def _resolve_redis_url() -> str | None:
     url = os.getenv("CAPTCHA_REDIS_URL") or os.getenv("REDIS_URL")
-    if url:
-        cleaned = url.strip()
-        return cleaned or None
-
-    host = os.getenv("CAPTCHA_REDIS_HOST")
-    if not host:
+    if not url:
         return None
 
-    port = os.getenv("CAPTCHA_REDIS_PORT", "6379")
-    db = os.getenv("CAPTCHA_REDIS_DB", "0")
-    password = os.getenv("CAPTCHA_REDIS_PASSWORD")
-
-    auth_part = ""
-    if password:
-        auth_part = f":{password}@"
-
-    return f"redis://{auth_part}{host}:{port}/{db}"
+    cleaned = url.strip()
+    return cleaned or None
 
 
 def _coerce_positive_int(value: str | None) -> int | None:
