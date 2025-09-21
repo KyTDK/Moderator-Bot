@@ -29,6 +29,28 @@ async def get_strikes(user_id: int, guild_id: int):
     )
     return strikes
 
+async def get_violations_stats(user_id: int):
+    """
+    Return dict of number of strikes and in how many guilds:
+    {
+        "total_strikes": int,
+        "guild_count": int
+    }
+    """
+    result, _ = await execute_query(
+        """
+        SELECT COUNT(*) AS total_strikes, COUNT(DISTINCT guild_id) AS guild_count
+        FROM strikes
+        WHERE user_id = %s
+          AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())
+        """,
+        (user_id,),
+        fetch_one=True,
+    )
+    if result:
+        return {"total_strikes": result[0], "guild_count": result[1]}
+    return {"total_strikes": 0, "guild_count": 0}
+
 async def cleanup_expired_strikes():
     """
     Delete expired strikes from the database (where expires_at < now).
