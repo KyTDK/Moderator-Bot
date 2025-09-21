@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Mapping
@@ -17,7 +17,7 @@ _TRUE_VALUES = {
 _FALSE_VALUES = {"0", "false", "no", "off", "failed", "failure", "denied"}
 
 class CaptchaPayloadError(ValueError):
-    """Raised when the incoming webhook payload is invalid."""
+    """Raised when an incoming captcha callback payload is invalid."""
 
 @dataclass(slots=True)
 class CaptchaCallbackPayload:
@@ -151,7 +151,7 @@ def _to_bool(value: Any) -> bool:
 
 
 @dataclass(slots=True)
-class CaptchaWebhookResult:
+class CaptchaProcessResult:
     status: str
     roles_applied: int
     message: str | None = None
