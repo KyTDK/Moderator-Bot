@@ -4,7 +4,7 @@ Keep all pricing knobs and default limits here so budgeting logic stays consiste
 """
 
 # Default monthly budget limits (USD)
-ACCELERATED_BUDGET_LIMIT_USD: float = 2.00
+ACCELERATED_BUDGET_LIMIT_USD: float = 2.00 # Base budget for accelerated plan
 ACCELERATED_PRO_BUDGET_LIMIT_USD: float = 4.00 # x2 the base
 ACCELERATED_ULTRA_BUDGET_LIMIT_USD: float = 10.00 # x5 the base
 
