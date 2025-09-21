@@ -23,6 +23,7 @@ from .shards import (
     ShardClaimError,
     claim_shard,
     ensure_shard_records,
+    recover_stuck_shards,
     release_shard,
     update_shard_status,
 )
@@ -54,6 +55,7 @@ __all__ = [
     "ShardClaimError",
     "claim_shard",
     "ensure_shard_records",
+    "recover_stuck_shards",
     "release_shard",
     "update_shard_status",
 ]

@@ -214,6 +214,37 @@ async def claim_shard(
 
     return ShardAssignment(shard_id=shard_id, shard_count=total_shards)
 
+async def recover_stuck_shards(stale_after_seconds: int) -> int:
+    """Force release shard rows whose heartbeat has not updated in time."""
+
+    if stale_after_seconds < 1:
+        raise ValueError("stale_after_seconds must be >= 1")
+
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                UPDATE bot_shards
+                SET status = 'available',
+                    claimed_by = NULL,
+                    claimed_at = NULL,
+                    last_heartbeat = NULL,
+                    session_id = NULL,
+                    resume_gateway_url = NULL,
+                    last_error = NULL
+                WHERE claimed_by IS NOT NULL
+                  AND (
+                        last_heartbeat IS NULL
+                     OR last_heartbeat < UTC_TIMESTAMP() - INTERVAL %s SECOND
+                  )
+                """,
+                (stale_after_seconds,),
+            )
+            await conn.commit()
+            return cur.rowcount
+
+
 async def update_shard_status(
     shard_id: int,
     instance_id: str,
