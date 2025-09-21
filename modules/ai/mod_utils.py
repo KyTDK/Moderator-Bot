@@ -62,7 +62,7 @@ async def _resolve_budget_limit(guild_id: int, usage: dict, table: str) -> float
 
     effective_limit = max(stored_limit, tier_limit)
 
-    if stored_limit + BUDGET_EPSILON < effective_limit:
+    if abs(stored_limit - effective_limit) > BUDGET_EPSILON:
         usage["limit_usd"] = effective_limit
         await mysql.execute_query(
             f"UPDATE {table} SET limit_usd = %s WHERE guild_id = %s",
