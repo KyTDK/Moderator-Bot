@@ -60,7 +60,10 @@ async def _resolve_budget_limit(guild_id: int, usage: dict, table: str) -> float
     else:
         tier_limit = ACCELERATED_BUDGET_LIMIT_USD
 
-    effective_limit = max(stored_limit, tier_limit)
+    if stored_limit > tier_limit + BUDGET_EPSILON:
+        effective_limit = tier_limit
+    else:
+        effective_limit = max(stored_limit, tier_limit)
 
     if abs(stored_limit - effective_limit) > BUDGET_EPSILON:
         usage["limit_usd"] = effective_limit
@@ -69,7 +72,7 @@ async def _resolve_budget_limit(guild_id: int, usage: dict, table: str) -> float
             (effective_limit, guild_id),
         )
     else:
-        usage["limit_usd"] = stored_limit
+        usage["limit_usd"] = effective_limit
 
     return effective_limit
 
