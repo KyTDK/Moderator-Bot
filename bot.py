@@ -24,6 +24,7 @@ async def _main() -> None:
     bot = ModeratorBot(
         instance_id=config.shard.instance_id,
         heartbeat_seconds=config.shard.heartbeat_seconds,
+        instance_heartbeat_seconds=config.shard.instance_heartbeat_seconds,
         log_cog_loads=config.log_cog_loads,
         total_shards=config.shard.total_shards,
     )
@@ -35,13 +36,24 @@ async def _main() -> None:
             30,
             min(config.shard.stale_seconds, failover_after_seconds),
         )
+        instance_failover_after_seconds = max(
+            config.shard.instance_heartbeat_seconds * 2,
+            config.shard.instance_heartbeat_seconds + 3,
+            6,
+        )
+        await mysql.recover_stuck_shards(
+            stale_after_seconds,
+            instance_stale_after_seconds=instance_failover_after_seconds,
+        )
         while True:
             try:
+                await mysql.update_instance_heartbeat(config.shard.instance_id)
                 shard_assignment = await mysql.claim_shard(
                     config.shard.instance_id,
                     total_shards=config.shard.total_shards,
                     preferred_shard=config.shard.preferred_shard,
                     stale_after_seconds=stale_after_seconds,
+                    instance_stale_after_seconds=instance_failover_after_seconds,
                 )
                 break
             except mysql.ShardClaimError as exc:
@@ -63,7 +75,10 @@ async def _main() -> None:
                         await asyncio.sleep(config.shard.standby_poll_seconds)
                         continue
                     standby_prepared = True
-                released = await mysql.recover_stuck_shards(stale_after_seconds)
+                released = await mysql.recover_stuck_shards(
+                    stale_after_seconds,
+                    instance_stale_after_seconds=instance_failover_after_seconds,
+                )
                 if released:
                     logger.warning(
                         "Recovered %s stale shard(s) while waiting to claim",
@@ -113,6 +128,10 @@ async def _main() -> None:
                 await bot.close()
             except Exception:
                 logger.exception("Failed to close bot cleanly")
+        try:
+            await mysql.clear_instance_heartbeat(config.shard.instance_id)
+        except Exception:
+            logger.exception("Failed to clear instance heartbeat")
         if shard_assignment is not None:
             try:
                 await mysql.release_shard(shard_assignment.shard_id, config.shard.instance_id)

@@ -40,6 +40,7 @@ async def claim_shard(
     total_shards: int,
     preferred_shard: Optional[int] = None,
     stale_after_seconds: int = 300,
+    instance_stale_after_seconds: int | None = None,
 ) -> ShardAssignment:
     """Claim a shard row, ensuring no other live instance owns it."""
     if total_shards < 1:
@@ -47,12 +48,35 @@ async def claim_shard(
 
     await ensure_shard_records(total_shards)
 
+    if instance_stale_after_seconds is not None and instance_stale_after_seconds < 1:
+        raise ValueError("instance_stale_after_seconds must be >= 1")
+
     pool = await get_pool()
     async with pool.acquire() as conn:
         await conn.begin()
         async with conn.cursor(aiomysql.DictCursor) as cur:
+            conditions = [
+                "last_heartbeat IS NULL",
+                "last_heartbeat < UTC_TIMESTAMP() - INTERVAL %s SECOND",
+                "(status = 'starting' AND claimed_at < UTC_TIMESTAMP() - INTERVAL %s SECOND)",
+            ]
+            params: list[int] = [stale_after_seconds, stale_after_seconds]
+
+            if instance_stale_after_seconds is not None:
+                conditions.append(
+                    "NOT EXISTS ("
+                    "    SELECT 1"
+                    "    FROM bot_instances bi"
+                    "    WHERE bi.instance_id = bot_shards.claimed_by"
+                    "      AND bi.last_seen >= UTC_TIMESTAMP() - INTERVAL %s SECOND"
+                    ")"
+                )
+                params.append(instance_stale_after_seconds)
+
+            condition_sql = " OR ".join(f"({clause})" for clause in conditions)
+
             await cur.execute(
-                """
+                f"""
                 UPDATE bot_shards
                 SET status = 'available',
                     claimed_by = NULL,
@@ -62,13 +86,9 @@ async def claim_shard(
                     resume_gateway_url = NULL,
                     last_error = NULL
                 WHERE claimed_by IS NOT NULL
-                  AND (
-                        last_heartbeat IS NULL
-                     OR last_heartbeat < UTC_TIMESTAMP() - INTERVAL %s SECOND
-                     OR (status = 'starting' AND claimed_at < UTC_TIMESTAMP() - INTERVAL %s SECOND)
-                  )
+                  AND ({condition_sql})
                 """,
-                (stale_after_seconds, stale_after_seconds),
+                tuple(params),
             )
 
             stale_released = cur.rowcount
@@ -214,17 +234,46 @@ async def claim_shard(
 
     return ShardAssignment(shard_id=shard_id, shard_count=total_shards)
 
-async def recover_stuck_shards(stale_after_seconds: int) -> int:
-    """Force release shard rows whose heartbeat has not updated in time."""
+async def recover_stuck_shards(
+    shard_stale_after_seconds: int,
+    *,
+    instance_stale_after_seconds: int | None = None,
+) -> int:
+    """Force release shard rows whose owners have stopped reporting in time."""
 
-    if stale_after_seconds < 1:
-        raise ValueError("stale_after_seconds must be >= 1")
+    if shard_stale_after_seconds < 1:
+        raise ValueError("shard_stale_after_seconds must be >= 1")
+    if instance_stale_after_seconds is not None and instance_stale_after_seconds < 1:
+        raise ValueError("instance_stale_after_seconds must be >= 1")
 
     pool = await get_pool()
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
+            conditions = [
+                "last_heartbeat IS NULL",
+                "last_heartbeat < UTC_TIMESTAMP() - INTERVAL %s SECOND",
+                "(status = 'starting' AND claimed_at < UTC_TIMESTAMP() - INTERVAL %s SECOND)",
+            ]
+            params: list[int] = [
+                shard_stale_after_seconds,
+                shard_stale_after_seconds,
+            ]
+
+            if instance_stale_after_seconds is not None:
+                conditions.append(
+                    "NOT EXISTS ("
+                    "    SELECT 1"
+                    "    FROM bot_instances bi"
+                    "    WHERE bi.instance_id = bot_shards.claimed_by"
+                    "      AND bi.last_seen >= UTC_TIMESTAMP() - INTERVAL %s SECOND"
+                    ")"
+                )
+                params.append(instance_stale_after_seconds)
+
+            condition_sql = " OR ".join(f"({clause})" for clause in conditions)
+
             await cur.execute(
-                """
+                f"""
                 UPDATE bot_shards
                 SET status = 'available',
                     claimed_by = NULL,
@@ -234,15 +283,30 @@ async def recover_stuck_shards(stale_after_seconds: int) -> int:
                     resume_gateway_url = NULL,
                     last_error = NULL
                 WHERE claimed_by IS NOT NULL
-                  AND (
-                        last_heartbeat IS NULL
-                     OR last_heartbeat < UTC_TIMESTAMP() - INTERVAL %s SECOND
-                  )
+                  AND ({condition_sql})
                 """,
-                (stale_after_seconds,),
+                tuple(params),
             )
+
+            released = cur.rowcount
+
+            if instance_stale_after_seconds is not None:
+                await cur.execute(
+                    """
+                    DELETE FROM bot_instances
+                    WHERE last_seen < UTC_TIMESTAMP() - INTERVAL %s SECOND
+                    """,
+                    (instance_stale_after_seconds,),
+                )
+
             await conn.commit()
-            return cur.rowcount
+
+            if released:
+                _logger.info(
+                    "Released %s shard(s) from stalled owners", released
+                )
+
+            return released
 
 
 async def update_shard_status(
