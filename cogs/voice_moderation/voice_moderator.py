@@ -333,6 +333,9 @@ class VoiceModeratorCog(commands.Cog):
                 chunks = _chunk_text(embed_transcript, limit=3900)  # margin under 4096
                 total = len(chunks)
                 # Post each chunk as its own embed
+                transcript_mode = (
+                    "High accuracy transcript" if high_accuracy else "Normal accuracy transcript"
+                )
                 for idx, part in enumerate(chunks, start=1):
                     title = "VC Transcript" if total == 1 else f"VC Transcript (part {idx}/{total})"
                     embed = discord.Embed(
@@ -343,6 +346,7 @@ class VoiceModeratorCog(commands.Cog):
                     )
                     embed.add_field(name="Channel", value=channel.mention, inline=True)
                     embed.add_field(name="Utterances", value=str(len(utterances)), inline=True)
+                    embed.set_footer(text=transcript_mode)
                     await mod_logging.log_to_channel(embed, transcript_channel_id, self.bot)
 
             except Exception as e:
