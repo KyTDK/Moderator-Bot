@@ -51,6 +51,11 @@ class CaptchaSessionStore:
                 self._sessions.pop(key, None)
                 return None
             return session
+        
+    async def peek(self, guild_id: int, user_id: int) -> CaptchaSession | None:
+        key = (guild_id, user_id)
+        async with self._lock:
+            return self._sessions.get(key)
 
     async def remove(self, guild_id: int, user_id: int) -> None:
         key = (guild_id, user_id)

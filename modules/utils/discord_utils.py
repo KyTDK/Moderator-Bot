@@ -240,4 +240,3 @@ def resolve_role_references(
         resolved.append(role)
 
     return resolved
-    

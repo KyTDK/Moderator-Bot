@@ -57,6 +57,19 @@ def test_session_store_expires_automatically() -> None:
 
     asyncio.run(run())
 
+def test_session_store_peek_does_not_evict() -> None:
+    async def run() -> None:
+        store = CaptchaSessionStore()
+        expires = datetime.now(timezone.utc) + timedelta(minutes=1)
+        session = CaptchaSession(guild_id=9, user_id=10, token="peek", expires_at=expires)
+
+        await store.put(session)
+        peeked = await store.peek(9, 10)
+        assert peeked is session
+        assert await store.get(9, 10) is session
+
+    asyncio.run(run())
+
 def test_callback_payload_parses_new_format() -> None:
     payload = CaptchaCallbackPayload.from_mapping(
         {

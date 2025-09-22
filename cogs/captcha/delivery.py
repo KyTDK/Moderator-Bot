@@ -31,7 +31,7 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         grace_delta: timedelta,
         grace_text: str,
         max_attempts: int | None,
-    ) -> bool:
+    ) -> CaptchaSession | None:
         try:
             await self._api_client.start_session(member.guild.id, member.id)
         except (CaptchaApiError, CaptchaNotAvailableError) as exc:
@@ -60,21 +60,21 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
                 grace_text,
                 max_attempts,
             )
-            return True
+            return session
 
         _logger.warning(
             "Captcha embed channel %s not found in guild %s; falling back to DMs",
             channel_id,
             member.guild.id,
         )
-        return False
+        return None
 
     async def _handle_dm_delivery(
         self,
         member: discord.Member,
         grace_setting: str | None,
         max_attempts: int | None,
-    ) -> None:
+    ) -> CaptchaStartResponse | None:
         try:
             start_response = await self._api_client.start_session(
                 member.guild.id,
@@ -94,14 +94,14 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
                 member.id,
                 exc,
             )
-            return
+            return None
         except Exception:
             _logger.exception(
                 "Unexpected error when creating captcha session for guild %s user %s",
                 member.guild.id,
                 member.id,
             )
-            return
+            return None
 
         session = CaptchaSession(
             guild_id=start_response.guild_id,
@@ -119,6 +119,7 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
             grace_period=grace_setting,
             max_attempts=max_attempts,
         )
+        return start_response
 
     async def _notify_member(
         self,
