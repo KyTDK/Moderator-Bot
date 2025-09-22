@@ -36,12 +36,17 @@ class CaptchaCallbackProcessor:
                 http_status=404,
             )
 
-        if session.token != payload.token:
-            raise CaptchaProcessingError(
-                "token_mismatch",
-                "Captcha token does not match the pending verification.",
-                http_status=404,
-            )
+        if session.token and session.token != payload.token:
+            if session.delivery_method == "embed":
+                session.token = payload.token
+            else:
+                raise CaptchaProcessingError(
+                    "token_mismatch",
+                    "Captcha token does not match the pending verification.",
+                    http_status=404,
+                )
+        elif not session.token:
+            session.token = payload.token
 
         guild = await self._resolve_guild(payload.guild_id)
         member = await self._resolve_member(guild, payload.user_id)

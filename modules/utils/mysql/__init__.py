@@ -6,7 +6,12 @@ from .connection import (
     init_pool,
     initialise_and_get_pool,
 )
-from .settings import get_settings, update_settings
+from .settings import (
+    add_settings_listener,
+    get_settings,
+    remove_settings_listener,
+    update_settings,
+)
 from .strikes import cleanup_expired_strikes, get_strike_count, get_strikes
 from .usage import add_aimod_usage, add_vcmod_usage, get_aimod_usage, get_vcmod_usage
 from .cleanup import cleanup_orphaned_guilds
@@ -20,6 +25,12 @@ from .premium import (
 from .instances import (
     clear_instance_heartbeat,
     update_instance_heartbeat,
+)
+from .captcha import (
+    CaptchaEmbedRecord,
+    delete_captcha_embed_record,
+    get_captcha_embed_record,
+    upsert_captcha_embed_record,
 )
 
 from .shards import (
@@ -45,6 +56,8 @@ __all__ = [
     "cleanup_expired_strikes",
     "get_settings",
     "update_settings",
+    "add_settings_listener",
+    "remove_settings_listener",
     "get_aimod_usage",
     "add_aimod_usage",
     "get_vcmod_usage",
@@ -57,6 +70,10 @@ __all__ = [
     "remove_guild",
     "update_instance_heartbeat",
     "clear_instance_heartbeat",
+    "CaptchaEmbedRecord",
+    "get_captcha_embed_record",
+    "upsert_captcha_embed_record",
+    "delete_captcha_embed_record",
     "ShardAssignment",
     "ShardClaimError",
     "claim_shard",

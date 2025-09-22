@@ -492,6 +492,20 @@ SETTINGS_SCHEMA = {
         default=[],
         hidden=True,
     ),
+    "captcha-delivery-method": Setting(
+        name="captcha-delivery-method",
+        description="How captcha verification links are delivered to new members (dm or embed).",
+        setting_type=str,
+        default="dm",
+        choices=["dm", "embed"],
+        hidden=True,
+    ),
+    "captcha-embed-channel-id": Setting(
+        name="captcha-embed-channel-id",
+        description="Channel where the captcha verification embed is posted when using embed delivery.",
+        setting_type=discord.TextChannel,
+        hidden=True,
+    ),
     "pre-captcha-roles": Setting(
         name="pre-captcha-roles",
         description="Roles assigned to newcomers before they complete captcha verification.",

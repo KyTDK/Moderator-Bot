@@ -180,6 +180,16 @@ async def _ensure_database_exists() -> None:
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS captcha_embeds (
+                    guild_id BIGINT PRIMARY KEY,
+                    channel_id BIGINT NOT NULL,
+                    message_id BIGINT NOT NULL,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
             await conn.commit()
         finally:
             conn.close()
