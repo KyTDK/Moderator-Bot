@@ -58,20 +58,57 @@ class CaptchaBaseMixin:
         member: discord.Member,
         grace_text: str | None,
         max_attempts: int | None,
+        *,
+        location: str | None = None,
     ) -> str:
         has_grace_period = bool(grace_text and grace_text != "0")
+        instruction = location or "complete the captcha"
         description = (
             f"Hi {member.mention}! To finish joining **{member.guild.name}**, "
             + (
-                f"please complete the captcha within **{grace_text}**."
+                f"please {instruction} within **{grace_text}**."
                 if has_grace_period
-                else "please complete the captcha when you're ready."
+                else f"please {instruction} when you're ready."
             )
         )
         if max_attempts:
             attempt_label = "attempt" if max_attempts == 1 else "attempts"
             description += f" You have **{max_attempts}** {attempt_label}."
         return description
+
+    def _create_embed(
+        self,
+        *,
+        description: str,
+        title: str = "Captcha Verification Required",
+        footer: str | None = "Powered by Moderator Bot",
+        colour: discord.Colour | None = None,
+    ) -> discord.Embed:
+        embed = discord.Embed(
+            title=title,
+            description=description,
+            colour=colour or discord.Color.blurple(),
+        )
+        if footer:
+            embed.set_footer(text=footer)
+        return embed
+
+    def _build_link_view(
+        self,
+        url: str,
+        *,
+        timeout: float | None = None,
+        label: str = "Verify now",
+    ) -> discord.ui.View:
+        view = discord.ui.View(timeout=timeout)
+        view.add_item(
+            discord.ui.Button(
+                label=label,
+                url=url,
+                style=discord.ButtonStyle.link,
+            )
+        )
+        return view
 
     def _build_public_verification_url(self, guild_id: int) -> str:
         base = self._public_verify_url or DEFAULT_PUBLIC_VERIFY_URL

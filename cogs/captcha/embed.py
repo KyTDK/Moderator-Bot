@@ -201,23 +201,14 @@ class CaptchaEmbedMixin(CaptchaBaseMixin):
         if requires_login:
             description += " You may be asked to log in to the Moderator Bot dashboard first."
 
-        embed = discord.Embed(
+        embed = self._create_embed(
             title="Complete Captcha Verification",
             description=description,
-            colour=discord.Colour.blurple(),
+            footer=f"Guild ID: {guild.id} • Powered by Moderator Bot",
         )
         if provider_label:
             embed.add_field(name="Provider", value=provider_label, inline=True)
-        embed.set_footer(text=f"Guild ID: {guild.id} • Powered by Moderator Bot")
-
-        view = discord.ui.View(timeout=None)
-        view.add_item(
-            discord.ui.Button(
-                label="Verify now",
-                url=self._build_public_verification_url(guild.id),
-                style=discord.ButtonStyle.link,
-            )
-        )
+        view = self._build_link_view(self._build_public_verification_url(guild.id))
         return embed, view
 
     async def _fetch_guild_config(self, guild_id: int) -> CaptchaGuildConfig | None:

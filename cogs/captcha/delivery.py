@@ -150,21 +150,19 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
             self._format_duration(grace_delta) if grace_delta is not None else None
         )
 
-        embed = discord.Embed(
-            title="Captcha Verification Required",
-            description=self._build_description(member, display_grace, max_attempts),
-            color=discord.Color.blurple(),
+        embed = self._create_embed(
+            description=self._build_description(
+                member,
+                display_grace,
+                max_attempts,
+            ),
         )
-        embed.set_footer(text="Powered by Moderator Bot")
 
         timeout_value = None if view_timeout is None else float(view_timeout)
-        view = discord.ui.View(timeout=timeout_value)
-        view.add_item(
-            discord.ui.Button(
-                label="Click here to verify",
-                url=response.verification_url,
-                style=discord.ButtonStyle.link,
-            )
+        view = self._build_link_view(
+            response.verification_url,
+            timeout=timeout_value,
+            label="Click here to verify",
         )
 
         try:
@@ -201,41 +199,19 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         max_attempts: int | None,
     ) -> None:
         url = self._build_public_verification_url(member.guild.id)
-        has_grace_period = bool(grace_text and grace_text != "0")
-        if has_grace_period:
-            description = (
-                f"Hi {member.mention}! To finish joining **{member.guild.name}**, please visit "
-                f"{channel.mention} and complete the captcha within **{grace_text}**."
-            )
-        else:
-            description = (
-                f"Hi {member.mention}! To finish joining **{member.guild.name}**, please visit "
-                f"{channel.mention} and complete the captcha when you're ready."
-            )
-        if max_attempts:
-            attempt_label = "attempt" if max_attempts == 1 else "attempts"
-            description += f" You have **{max_attempts}** {attempt_label}."
-
-        embed = discord.Embed(
-            title="Captcha Verification Required",
-            description=description,
-            color=discord.Color.blurple(),
+        description = self._build_description(
+            member,
+            grace_text,
+            max_attempts,
+            location=f"visit {channel.mention} and complete the captcha",
         )
+        embed = self._create_embed(description=description)
         embed.add_field(
             name="Need help?",
             value="Click the button below to open the verification page.",
             inline=False,
         )
-        embed.set_footer(text="Powered by Moderator Bot")
-
-        view = discord.ui.View(timeout=None)
-        view.add_item(
-            discord.ui.Button(
-                label="Open verification page",
-                url=url,
-                style=discord.ButtonStyle.link,
-            )
-        )
+        view = self._build_link_view(url, label="Open verification page")
 
         try:
             await member.send(embed=embed, view=view)
