@@ -56,6 +56,18 @@ class CaptchaCallbackProcessor:
             return CaptchaProcessResult(status="disabled", roles_applied=0)
 
         if not payload.success:
+            if self._is_grace_period_disabled(settings) and self._is_timeout_failure(payload):
+                _logger.info(
+                    "Ignoring captcha timeout for user %s in guild %s because grace period is disabled",
+                    member.id,
+                    guild.id,
+                )
+                await self._sessions.remove(payload.guild_id, payload.user_id)
+                return CaptchaProcessResult(
+                    status="timeout_ignored",
+                    roles_applied=0,
+                    message=payload.failure_reason,
+                )
             _logger.info(
                 "Captcha callback reported failure for user %s in guild %s: %s",
                 member.id,
@@ -190,6 +202,38 @@ class CaptchaCallbackProcessor:
         if grace.total_seconds() <= 0:
             return None
         return utcnow() + grace
+
+    @staticmethod
+    def _is_grace_period_disabled(settings: Mapping[str, Any]) -> bool:
+        raw_grace = settings.get("captcha-grace-period")
+        if raw_grace is None:
+            return False
+        if isinstance(raw_grace, (int, float)):
+            return raw_grace <= 0
+        text = str(raw_grace).strip()
+        if not text:
+            return False
+        grace = parse_duration(text)
+        if grace is not None:
+            return grace.total_seconds() <= 0
+        try:
+            numeric = float(text)
+        except ValueError:
+            return False
+        return numeric <= 0
+
+    @staticmethod
+    def _is_timeout_failure(payload: CaptchaCallbackPayload) -> bool:
+        reason = payload.metadata.get("reason")
+        if isinstance(reason, str) and reason.lower() in {"expired", "timeout"}:
+            return True
+        if payload.metadata.get("timeout"):
+            return True
+        if isinstance(payload.failure_reason, str) and "timeout" in payload.failure_reason.lower():
+            return True
+        if payload.status and payload.status.lower() in {"expired", "timeout"}:
+            return True
+        return False
 
     async def _apply_failure_actions(
         self,
