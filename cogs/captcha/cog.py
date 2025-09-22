@@ -210,3 +210,6 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         if member.guild is None:
             return
         await self._session_store.remove(member.guild.id, member.id)
+
+async def setup_captcha(bot: commands.Bot) -> None:
+    await bot.add_cog(CaptchaCog(bot))
