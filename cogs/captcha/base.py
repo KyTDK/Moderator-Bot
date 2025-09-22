@@ -59,11 +59,12 @@ class CaptchaBaseMixin:
         grace_text: str | None,
         max_attempts: int | None,
     ) -> str:
+        has_grace_period = bool(grace_text and grace_text != "0")
         description = (
             f"Hi {member.mention}! To finish joining **{member.guild.name}**, "
             + (
                 f"please complete the captcha within **{grace_text}**."
-                if grace_text
+                if has_grace_period
                 else "please complete the captcha when you're ready."
             )
         )

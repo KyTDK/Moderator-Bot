@@ -201,7 +201,8 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         max_attempts: int | None,
     ) -> None:
         url = self._build_public_verification_url(member.guild.id)
-        if grace_text:
+        has_grace_period = bool(grace_text and grace_text != "0")
+        if has_grace_period:
             description = (
                 f"Hi {member.mention}! To finish joining **{member.guild.name}**, please visit "
                 f"{channel.mention} and complete the captcha within **{grace_text}**."
