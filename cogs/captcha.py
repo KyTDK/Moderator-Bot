@@ -170,12 +170,12 @@ class CaptchaCog(commands.Cog):
                     "Missing permissions to assign pre-captcha roles in guild %s",
                     member.guild.id,
                 )
-        except discord.HTTPException:
-            _logger.warning(
-                "Failed to assign pre-captcha roles in guild %s for user %s",
-                member.guild.id,
-                member.id,
-            )
+            except discord.HTTPException:
+                _logger.warning(
+                    "Failed to assign pre-captcha roles in guild %s for user %s",
+                    member.guild.id,
+                    member.id,
+                )
 
         delivery_method = str(settings.get("captcha-delivery-method") or "dm").lower()
         embed_channel_id = self._coerce_positive_int(settings.get("captcha-embed-channel-id"))
