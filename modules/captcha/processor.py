@@ -2,23 +2,34 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any, Iterable, Mapping
 
 import discord
 from discord.ext import commands
+from discord.utils import utcnow
 
 from modules.utils import mysql
 from modules.utils import mod_logging
 from modules.moderation import strike
+from modules.utils.time import parse_duration
 
 from .models import (
     CaptchaCallbackPayload,
     CaptchaProcessingError,
     CaptchaProcessResult,
 )
-from .sessions import CaptchaSessionStore
+from .sessions import CaptchaSession, CaptchaSessionStore
 
 _logger = logging.getLogger(__name__)
+
+
+@dataclass(slots=True)
+class _CaptchaProcessingContext:
+    guild: discord.Guild
+    member: discord.Member
+    settings: dict[str, Any]
+    session: CaptchaSession
 
 class CaptchaCallbackProcessor:
     """Handles captcha callback business logic for a guild member."""
@@ -28,39 +39,13 @@ class CaptchaCallbackProcessor:
         self._sessions = session_store
 
     async def process(self, payload: CaptchaCallbackPayload) -> CaptchaProcessResult:
-        session = await self._sessions.get(payload.guild_id, payload.user_id)
-        if session is None:
-            raise CaptchaProcessingError(
-                "unknown_token",
-                "No pending captcha verification found for this user.",
-                http_status=404,
-            )
+        context = await self._build_context(payload)
+        session = context.session
+        settings = context.settings
+        guild = context.guild
+        member = context.member
 
-        if session.token and session.token != payload.token:
-            if session.delivery_method == "embed":
-                session.token = payload.token
-            else:
-                raise CaptchaProcessingError(
-                    "token_mismatch",
-                    "Captcha token does not match the pending verification.",
-                    http_status=404,
-                )
-        elif not session.token:
-            session.token = payload.token
-
-        guild = await self._resolve_guild(payload.guild_id)
-        member = await self._resolve_member(guild, payload.user_id)
-
-        settings = await mysql.get_settings(
-            guild.id,
-            [
-                "captcha-verification-enabled",
-                "captcha-success-actions",
-                "captcha-failure-actions",
-                "captcha-max-attempts",
-                "captcha-log-channel",
-            ],
-        )
+        self._synchronise_session(session, payload)
 
         if not settings.get("captcha-verification-enabled"):
             _logger.debug(
@@ -118,6 +103,89 @@ class CaptchaCallbackProcessor:
         )
 
         return CaptchaProcessResult(status="ok", roles_applied=roles_applied)
+
+    async def _build_context(
+        self, payload: CaptchaCallbackPayload
+    ) -> _CaptchaProcessingContext:
+        guild = await self._resolve_guild(payload.guild_id)
+        member = await self._resolve_member(guild, payload.user_id)
+        settings = await mysql.get_settings(
+            guild.id,
+            [
+                "captcha-verification-enabled",
+                "captcha-success-actions",
+                "captcha-failure-actions",
+                "captcha-max-attempts",
+                "captcha-log-channel",
+                "captcha-delivery-method",
+                "captcha-grace-period",
+            ],
+        )
+        session = await self._ensure_session(payload, settings)
+        return _CaptchaProcessingContext(
+            guild=guild,
+            member=member,
+            settings=settings,
+            session=session,
+        )
+
+    async def _ensure_session(
+        self,
+        payload: CaptchaCallbackPayload,
+        settings: Mapping[str, Any],
+    ) -> CaptchaSession:
+        session = await self._sessions.get(payload.guild_id, payload.user_id)
+        if session is not None:
+            return session
+
+        method = str(settings.get("captcha-delivery-method") or "dm").strip().lower()
+        if method != "embed":
+            raise CaptchaProcessingError(
+                "unknown_token",
+                "No pending captcha verification found for this user.",
+                http_status=404,
+            )
+
+        embed_session = CaptchaSession(
+            guild_id=payload.guild_id,
+            user_id=payload.user_id,
+            token=payload.token,
+            expires_at=self._determine_embed_expiry(settings),
+            state=payload.state,
+            delivery_method="embed",
+        )
+        await self._sessions.put(embed_session)
+        _logger.debug(
+            "Reconstructed embed captcha session for guild %s user %s from callback",
+            payload.guild_id,
+            payload.user_id,
+        )
+        return embed_session
+
+    def _synchronise_session(
+        self, session: CaptchaSession, payload: CaptchaCallbackPayload
+    ) -> None:
+        if session.token and session.token != payload.token:
+            if session.delivery_method == "embed":
+                session.token = payload.token
+            else:
+                raise CaptchaProcessingError(
+                    "token_mismatch",
+                    "Captcha token does not match the pending verification.",
+                    http_status=404,
+                )
+        elif not session.token:
+            session.token = payload.token
+
+        if payload.state:
+            session.state = payload.state
+
+    def _determine_embed_expiry(self, settings: Mapping[str, Any]):
+        raw_grace = settings.get("captcha-grace-period")
+        grace = parse_duration(raw_grace) if raw_grace else None
+        if grace is None or grace.total_seconds() <= 0:
+            grace = timedelta(minutes=10)
+        return utcnow() + grace
 
     async def _apply_failure_actions(
         self,

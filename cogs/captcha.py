@@ -187,33 +187,69 @@ class CaptchaCog(commands.Cog):
         max_attempts = self._coerce_positive_int(settings.get("captcha-max-attempts"))
 
         if delivery_method == "embed" and embed_channel_id:
-            expires_at = utcnow() + grace_delta
-            session = CaptchaSession(
-                guild_id=member.guild.id,
-                user_id=member.id,
-                token=None,
-                expires_at=expires_at,
-                delivery_method="embed",
+            handled = await self._handle_embed_delivery(
+                member,
+                embed_channel_id,
+                grace_delta,
+                grace_display,
+                max_attempts,
             )
-            await self._session_store.put(session)
-
-            channel = member.guild.get_channel(embed_channel_id)
-            if isinstance(channel, discord.TextChannel):
-                await self._sync_guild_embed(member.guild)
-                await self._notify_member_embed(
-                    member,
-                    channel,
-                    grace_display,
-                    max_attempts,
-                )
+            if handled:
                 return
-            else:
-                _logger.warning(
-                    "Captcha embed channel %s not found in guild %s; falling back to DMs",
-                    embed_channel_id,
-                    member.guild.id,
-                )
 
+        await self._handle_dm_delivery(
+            member,
+            grace_setting,
+            max_attempts,
+        )
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member) -> None:
+        if member.guild is None:
+            return
+        await self._session_store.remove(member.guild.id, member.id)
+
+    async def _handle_embed_delivery(
+        self,
+        member: discord.Member,
+        channel_id: int,
+        grace_delta: timedelta,
+        grace_text: str,
+        max_attempts: int | None,
+    ) -> bool:
+        session = CaptchaSession(
+            guild_id=member.guild.id,
+            user_id=member.id,
+            token=None,
+            expires_at=utcnow() + grace_delta,
+            delivery_method="embed",
+        )
+        await self._session_store.put(session)
+
+        channel = member.guild.get_channel(channel_id)
+        if isinstance(channel, discord.TextChannel):
+            await self._sync_guild_embed(member.guild)
+            await self._notify_member_embed(
+                member,
+                channel,
+                grace_text,
+                max_attempts,
+            )
+            return True
+
+        _logger.warning(
+            "Captcha embed channel %s not found in guild %s; falling back to DMs",
+            channel_id,
+            member.guild.id,
+        )
+        return False
+
+    async def _handle_dm_delivery(
+        self,
+        member: discord.Member,
+        grace_setting: str | None,
+        max_attempts: int | None,
+    ) -> None:
         try:
             start_response = await self._api_client.start_session(
                 member.guild.id,
@@ -258,12 +294,6 @@ class CaptchaCog(commands.Cog):
             grace_period=grace_setting,
             max_attempts=max_attempts,
         )
-
-    @commands.Cog.listener()
-    async def on_member_remove(self, member: discord.Member) -> None:
-        if member.guild is None:
-            return
-        await self._session_store.remove(member.guild.id, member.id)
 
     async def _notify_member(
         self,
