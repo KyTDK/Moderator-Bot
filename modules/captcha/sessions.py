@@ -15,12 +15,14 @@ class CaptchaSession:
     guild_id: int
     user_id: int
     token: str | None
-    expires_at: datetime
+    expires_at: datetime | None
     state: str | None = None
     redirect: str | None = None
     delivery_method: str = "dm"
 
     def is_expired(self, now: datetime | None = None) -> bool:
+        if self.expires_at is None:
+            return False
         if now is None:
             now = datetime.now(timezone.utc)
         # Normalise to aware UTC for comparison safety.

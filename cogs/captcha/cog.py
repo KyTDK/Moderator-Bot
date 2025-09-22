@@ -200,9 +200,13 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         embed_channel_id = self._coerce_positive_int(settings.get("captcha-embed-channel-id"))
         grace_setting = self._coerce_grace_period(settings.get("captcha-grace-period"))
         grace_delta = parse_duration(grace_setting) if grace_setting else None
-        if grace_delta is None:
-            grace_delta = timedelta(minutes=10)
-        grace_display = grace_setting or self._format_duration(grace_delta)
+        if grace_delta is not None and grace_delta.total_seconds() <= 0:
+            grace_delta = None
+            grace_display: str | None = None
+        else:
+            if grace_delta is None:
+                grace_delta = timedelta(minutes=10)
+            grace_display = grace_setting or self._format_duration(grace_delta)
         max_attempts = self._coerce_positive_int(settings.get("captcha-max-attempts"))
 
         if delivery_method == "embed" and embed_channel_id:
@@ -223,14 +227,15 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
 
         start_response = await self._handle_dm_delivery(
             member,
-            grace_setting,
+            grace_delta,
+            grace_display,
             max_attempts,
         )
         if start_response is not None:
             self._schedule_session_timeout(
                 member.guild.id,
                 member.id,
-                start_response.expires_at,
+                start_response.expires_at if grace_delta is not None else None,
             )
 
     @commands.Cog.listener()

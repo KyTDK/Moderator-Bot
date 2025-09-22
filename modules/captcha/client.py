@@ -32,7 +32,7 @@ class CaptchaStartResponse:
     guild_id: int
     user_id: int
     verification_url: str
-    expires_at: datetime
+    expires_at: datetime | None
     state: str | None
 
 
@@ -248,7 +248,9 @@ async def _read_json(response: aiohttp.ClientResponse) -> Any:
         ) from None
 
 
-def _coerce_datetime(value: Any) -> datetime:
+def _coerce_datetime(value: Any) -> datetime | None:
+    if value is None:
+        return None
     try:
         millis = float(value)
     except (TypeError, ValueError) as exc:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Iterable, Mapping
 
 import discord
@@ -180,11 +180,15 @@ class CaptchaCallbackProcessor:
         if payload.state:
             session.state = payload.state
 
-    def _determine_embed_expiry(self, settings: Mapping[str, Any]):
+    def _determine_embed_expiry(
+        self, settings: Mapping[str, Any]
+    ) -> datetime | None:
         raw_grace = settings.get("captcha-grace-period")
         grace = parse_duration(raw_grace) if raw_grace else None
-        if grace is None or grace.total_seconds() <= 0:
-            grace = timedelta(minutes=10)
+        if grace is None:
+            return utcnow() + timedelta(minutes=10)
+        if grace.total_seconds() <= 0:
+            return None
         return utcnow() + grace
 
     async def _apply_failure_actions(

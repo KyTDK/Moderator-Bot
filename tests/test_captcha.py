@@ -57,6 +57,16 @@ def test_session_store_expires_automatically() -> None:
 
     asyncio.run(run())
 
+def test_session_store_supports_indefinite_sessions() -> None:
+    async def run() -> None:
+        store = CaptchaSessionStore()
+        session = CaptchaSession(guild_id=3, user_id=4, token="indef", expires_at=None)
+
+        await store.put(session)
+        assert await store.get(3, 4) is session
+
+    asyncio.run(run())
+
 def test_session_store_peek_does_not_evict() -> None:
     async def run() -> None:
         store = CaptchaSessionStore()
@@ -69,6 +79,14 @@ def test_session_store_peek_does_not_evict() -> None:
         assert await store.get(9, 10) is session
 
     asyncio.run(run())
+
+def test_processor_embed_expiry_disabled() -> None:
+    store = CaptchaSessionStore()
+    processor = CaptchaCallbackProcessor(cast(commands.Bot, object()), store)
+
+    expires = processor._determine_embed_expiry({"captcha-grace-period": "0m"})
+
+    assert expires is None
 
 def test_callback_payload_parses_new_format() -> None:
     payload = CaptchaCallbackPayload.from_mapping(

@@ -56,12 +56,16 @@ class CaptchaBaseMixin:
     def _build_description(
         self,
         member: discord.Member,
-        grace_text: str,
+        grace_text: str | None,
         max_attempts: int | None,
     ) -> str:
         description = (
             f"Hi {member.mention}! To finish joining **{member.guild.name}**, "
-            f"please complete the captcha within **{grace_text}**."
+            + (
+                f"please complete the captcha within **{grace_text}**."
+                if grace_text
+                else "please complete the captcha when you're ready."
+            )
         )
         if max_attempts:
             attempt_label = "attempt" if max_attempts == 1 else "attempts"

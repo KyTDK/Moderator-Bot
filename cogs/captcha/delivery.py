@@ -13,8 +13,6 @@ from modules.captcha.client import (
     CaptchaStartResponse,
 )
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
-from modules.utils.time import parse_duration
-
 from .base import CaptchaBaseMixin
 
 _logger = logging.getLogger(__name__)
@@ -28,8 +26,8 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         self,
         member: discord.Member,
         channel_id: int,
-        grace_delta: timedelta,
-        grace_text: str,
+        grace_delta: timedelta | None,
+        grace_text: str | None,
         max_attempts: int | None,
     ) -> CaptchaSession | None:
         try:
@@ -42,11 +40,13 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
                 exc,
             )
 
+        expires_at = utcnow() + grace_delta if grace_delta is not None else None
+
         session = CaptchaSession(
             guild_id=member.guild.id,
             user_id=member.id,
             token=None,
-            expires_at=utcnow() + grace_delta,
+            expires_at=expires_at,
             delivery_method="embed",
         )
         await self._session_store.put(session)
@@ -72,8 +72,9 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
     async def _handle_dm_delivery(
         self,
         member: discord.Member,
-        grace_setting: str | None,
         max_attempts: int | None,
+        grace_delta: timedelta | None,
+        grace_text: str | None,
     ) -> CaptchaStartResponse | None:
         try:
             start_response = await self._api_client.start_session(
@@ -107,7 +108,7 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
             guild_id=start_response.guild_id,
             user_id=start_response.user_id,
             token=start_response.token,
-            expires_at=start_response.expires_at,
+            expires_at=start_response.expires_at if grace_delta is not None else None,
             state=start_response.state,
             delivery_method="dm",
         )
@@ -116,7 +117,8 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         await self._notify_member(
             member,
             start_response,
-            grace_period=grace_setting,
+            grace_delta=grace_delta,
+            grace_text=grace_text,
             max_attempts=max_attempts,
         )
         return start_response
@@ -126,26 +128,27 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         member: discord.Member,
         response: CaptchaStartResponse,
         *,
-        grace_period: str | None,
+        grace_delta: timedelta | None,
+        grace_text: str | None,
         max_attempts: int | None,
     ) -> None:
-        grace_delta = parse_duration(grace_period) if grace_period else None
-        if grace_delta is None:
-            grace_delta = timedelta(minutes=10)
-        grace_seconds = int(grace_delta.total_seconds()) if grace_delta else 600
-        if grace_seconds <= 0:
-            grace_seconds = 600
-
         expires_in: int | None = None
-        if response.expires_at:
+        if grace_delta is not None and response.expires_at:
             remaining = int((response.expires_at - utcnow()).total_seconds())
             expires_in = remaining if remaining > 0 else None
 
-        view_timeout = grace_seconds
-        if expires_in is not None:
-            view_timeout = max(1, min(grace_seconds, expires_in))
+        view_timeout: int | None
+        if grace_delta is None:
+            view_timeout = None
+        else:
+            grace_seconds = max(1, int(grace_delta.total_seconds()))
+            view_timeout = grace_seconds
+            if expires_in is not None:
+                view_timeout = max(1, min(grace_seconds, expires_in))
 
-        display_grace = grace_period or self._format_duration(grace_delta)
+        display_grace = grace_text or (
+            self._format_duration(grace_delta) if grace_delta is not None else None
+        )
 
         embed = discord.Embed(
             title="Captcha Verification Required",
@@ -154,7 +157,8 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         )
         embed.set_footer(text="Powered by Moderator Bot")
 
-        view = discord.ui.View(timeout=float(view_timeout))
+        timeout_value = None if view_timeout is None else float(view_timeout)
+        view = discord.ui.View(timeout=timeout_value)
         view.add_item(
             discord.ui.Button(
                 label="Click here to verify",
@@ -193,14 +197,20 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         self,
         member: discord.Member,
         channel: discord.TextChannel,
-        grace_text: str,
+        grace_text: str | None,
         max_attempts: int | None,
     ) -> None:
         url = self._build_public_verification_url(member.guild.id)
-        description = (
-            f"Hi {member.mention}! To finish joining **{member.guild.name}**, please visit "
-            f"{channel.mention} and complete the captcha within **{grace_text}**."
-        )
+        if grace_text:
+            description = (
+                f"Hi {member.mention}! To finish joining **{member.guild.name}**, please visit "
+                f"{channel.mention} and complete the captcha within **{grace_text}**."
+            )
+        else:
+            description = (
+                f"Hi {member.mention}! To finish joining **{member.guild.name}**, please visit "
+                f"{channel.mention} and complete the captcha when you're ready."
+            )
         if max_attempts:
             attempt_label = "attempt" if max_attempts == 1 else "attempts"
             description += f" You have **{max_attempts}** {attempt_label}."
