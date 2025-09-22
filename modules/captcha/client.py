@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Mapping
 
 import aiohttp
 
@@ -84,8 +84,6 @@ class CaptchaApiClient:
         redirect: str | None = None,
         callback_url: str | None = None,
     ) -> CaptchaStartResponse:
-        if not self.is_configured:
-            raise CaptchaApiError("Captcha API token or base URL is not configured.")
 
         payload: dict[str, Any] = {
             "guildId": str(guild_id),
@@ -98,36 +96,7 @@ class CaptchaApiClient:
         if callback_url:
             payload["callbackUrl"] = callback_url
 
-        session = await self._ensure_session()
-        url = f"{self._base_url}/start"
-        headers = {"Authorization": f"Bot {self._api_token}"}
-
-        try:
-            async with session.post(url, json=payload, headers=headers) as resp:
-                data = await _read_json(resp)
-        except aiohttp.ClientError as exc:
-            raise CaptchaApiError("Failed to contact captcha API.") from exc
-
-        if isinstance(data, dict):
-            message = data.get("error") or data.get("message")
-        else:
-            message = None
-
-        if resp.status == 404:
-            raise CaptchaNotAvailableError(
-                message or "Captcha is not enabled for this guild.",
-                status=resp.status,
-            )
-        if resp.status == 401:
-            raise CaptchaApiError("Captcha API token is invalid.", status=resp.status)
-        if resp.status >= 400:
-            raise CaptchaApiError(
-                message or f"Captcha API returned HTTP {resp.status}.",
-                status=resp.status,
-            )
-
-        if not isinstance(data, dict):
-            raise CaptchaApiError("Unexpected response from captcha API.")
+        data = await self._request("POST", "/start", json_payload=payload)
 
         try:
             token = data["token"]
@@ -155,34 +124,7 @@ class CaptchaApiClient:
         )
 
     async def fetch_guild_config(self, guild_id: int) -> CaptchaGuildConfig:
-        if not self.is_configured:
-            raise CaptchaApiError("Captcha API token or base URL is not configured.")
-
-        session = await self._ensure_session()
-        url = self._base_url
-        headers = {"Authorization": f"Bot {self._api_token}"}
-
-        try:
-            async with session.get(url, params={"gid": str(guild_id)}, headers=headers) as resp:
-                data = await _read_json(resp)
-        except aiohttp.ClientError as exc:
-            raise CaptchaApiError("Failed to contact captcha API.") from exc
-
-        if resp.status == 404:
-            raise CaptchaNotAvailableError(
-                "Captcha is not enabled for this guild.",
-                status=resp.status,
-            )
-        if resp.status == 401:
-            raise CaptchaApiError("Captcha API token is invalid.", status=resp.status)
-        if resp.status >= 400:
-            raise CaptchaApiError(
-                f"Captcha API returned HTTP {resp.status}.",
-                status=resp.status,
-            )
-
-        if not isinstance(data, dict):
-            raise CaptchaApiError("Unexpected response from captcha API.")
+        data = await self._request("GET", params={"gid": str(guild_id)})
 
         delivery_raw = data.get("delivery")
         if isinstance(delivery_raw, dict):
@@ -232,6 +174,68 @@ class CaptchaApiClient:
                 self._session = aiohttp.ClientSession(timeout=self._timeout)
             return self._session
 
+    async def _request(
+        self,
+        method: str,
+        path: str = "",
+        *,
+        params: dict[str, str] | None = None,
+        json_payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        if not self.is_configured:
+            raise CaptchaApiError("Captcha API token or base URL is not configured.")
+
+        session = await self._ensure_session()
+        url = f"{self._base_url}{path}" if path else self._base_url
+        headers = {"Authorization": f"Bot {self._api_token}"}
+
+        request_kwargs: dict[str, Any] = {"headers": headers}
+        if params is not None:
+            request_kwargs["params"] = params
+        if json_payload is not None:
+            request_kwargs["json"] = json_payload
+
+        method_name = method.lower()
+        requester = getattr(session, method_name, None)
+        if requester is None:
+            requester = getattr(session, "request", None)
+        if requester is None:
+            raise CaptchaApiError("Captcha HTTP client is missing request method implementations.")
+
+        try:
+            async with requester(url, **request_kwargs) as resp:
+                data = await _read_json(resp)
+                status = resp.status
+        except aiohttp.ClientError as exc:
+            raise CaptchaApiError("Failed to contact captcha API.") from exc
+
+        if status == 404:
+            raise CaptchaNotAvailableError(
+                _extract_message(data) or "Captcha is not enabled for this guild.",
+                status=status,
+            )
+        if status == 401:
+            raise CaptchaApiError("Captcha API token is invalid.", status=status)
+        if status >= 400:
+            raise CaptchaApiError(
+                _extract_message(data) or f"Captcha API returned HTTP {status}.",
+                status=status,
+            )
+
+        if not isinstance(data, dict):
+            raise CaptchaApiError("Unexpected response from captcha API.")
+
+        return data
+
+
+def _extract_message(data: Any) -> str | None:
+    if not isinstance(data, Mapping):
+        return None
+    for key in ("error", "message"):
+        value = data.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return None
 
 async def _read_json(response: aiohttp.ClientResponse) -> Any:
     try:
