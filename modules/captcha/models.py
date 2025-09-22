@@ -93,6 +93,64 @@ class CaptchaCallbackPayload:
             metadata=metadata,
         )
 
+
+@dataclass(slots=True)
+class CaptchaSettingsUpdatePayload:
+    guild_id: int
+    key: str
+    value: Any
+    updated_at: int
+    version: int | None
+
+    @classmethod
+    def from_mapping(cls, data: Mapping[str, Any]) -> "CaptchaSettingsUpdatePayload":
+        try:
+            raw_guild = data["guildId"]
+        except KeyError:
+            try:
+                raw_guild = data["guild_id"]
+            except KeyError as exc:  # pragma: no cover - defensive guard
+                raise CaptchaPayloadError(f"Missing required field: {exc.args[0]}") from exc
+
+        try:
+            guild_id = int(raw_guild)
+        except (TypeError, ValueError) as exc:
+            raise CaptchaPayloadError("guildId must be an integer") from exc
+
+        key = data.get("key")
+        if not isinstance(key, str) or not key.strip():
+            raise CaptchaPayloadError("Missing setting key")
+
+        updated_raw = data.get("updatedAt")
+        if updated_raw is None:
+            updated_raw = data.get("updated_at")
+        if updated_raw is None:
+            raise CaptchaPayloadError("Missing updatedAt timestamp")
+
+        try:
+            updated_at = int(updated_raw)
+        except (TypeError, ValueError) as exc:
+            raise CaptchaPayloadError("updatedAt must be an integer timestamp") from exc
+
+        version_raw = data.get("eventVersion")
+        if version_raw is None:
+            version_raw = data.get("event_version")
+        version: int | None
+        try:
+            version = int(version_raw) if version_raw is not None else None
+        except (TypeError, ValueError):
+            version = None
+
+        value = data.get("value")
+
+        return cls(
+            guild_id=guild_id,
+            key=key,
+            value=value,
+            updated_at=updated_at,
+            version=version,
+        )
+
 def _coerce_success(data: Mapping[str, Any]) -> bool:
     if "success" in data:
         return _to_bool(data["success"])

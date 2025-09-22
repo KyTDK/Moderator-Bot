@@ -16,7 +16,11 @@ from modules.utils import mysql
 from modules.utils.discord_utils import resolve_role_references
 from modules.utils.time import parse_duration
 
-from modules.captcha import CaptchaStreamConfig, CaptchaStreamListener
+from modules.captcha import (
+    CaptchaSettingsUpdatePayload,
+    CaptchaStreamConfig,
+    CaptchaStreamListener,
+)
 from modules.captcha.client import (
     CaptchaApiClient,
     CaptchaApiError,
@@ -46,7 +50,12 @@ class CaptchaCog(commands.Cog):
         self._api_base = _resolve_api_base()
         self._api_client = CaptchaApiClient(self._api_base, os.getenv("CAPTCHA_API_TOKEN"))
         self._stream_config = CaptchaStreamConfig.from_env()
-        self._stream_listener = CaptchaStreamListener(bot, self._stream_config, self._session_store)
+        self._stream_listener = CaptchaStreamListener(
+            bot,
+            self._stream_config,
+            self._session_store,
+            self._handle_stream_setting_update,
+        )
         self._public_verify_url = _resolve_public_verify_url()
         self._settings_listener_registered = False
         self._embed_sync_task: asyncio.Task[None] | None = None
@@ -454,6 +463,11 @@ class CaptchaCog(commands.Cog):
                 _logger.exception(
                     "Failed to synchronise captcha embed for guild %s", guild.id
                 )
+
+    async def _handle_stream_setting_update(
+        self, payload: CaptchaSettingsUpdatePayload
+    ) -> None:
+        await self._handle_setting_update(payload.guild_id, payload.key, payload.value)
 
     async def _handle_setting_update(self, guild_id: int, key: str, value: object) -> None:
         if key not in {

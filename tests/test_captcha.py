@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
+import json
 import os
 import sys
 from pathlib import Path
@@ -19,6 +20,7 @@ from modules.captcha.models import (
     CaptchaCallbackPayload,
     CaptchaPayloadError,
     CaptchaProcessingError,
+    CaptchaSettingsUpdatePayload,
 )
 from modules.captcha.sessions import CaptchaSession, CaptchaSessionStore
 from modules.captcha.processor import (
@@ -96,6 +98,25 @@ def test_callback_payload_missing_token() -> None:
                 "status": "passed",
             }
         )
+
+
+def test_settings_update_payload_parses() -> None:
+    payload = CaptchaSettingsUpdatePayload.from_mapping(
+        {
+            "eventType": "captcha.settings.updated",
+            "guildId": "123",
+            "key": "captcha-delivery-method",
+            "value": "embed",
+            "updatedAt": "1700000000000",
+            "eventVersion": 1,
+        }
+    )
+
+    assert payload.guild_id == 123
+    assert payload.key == "captcha-delivery-method"
+    assert payload.value == "embed"
+    assert payload.updated_at == 1700000000000
+    assert payload.version == 1
 
 
 def test_start_session_includes_callback_url(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -326,6 +347,57 @@ def test_stream_listener_handles_redis_connection_error(monkeypatch: pytest.Monk
         assert listener._redis is None  # type: ignore[attr-defined]
 
     asyncio.run(run())
+
+
+def test_stream_listener_invokes_settings_callback() -> None:
+    config = CaptchaStreamConfig(
+        enabled=True,
+        redis_url="redis://localhost:6379/0",
+        stream="captcha:callbacks",
+        group="modbot",
+        consumer_name="consumer",
+        block_ms=1000,
+        batch_size=5,
+        max_requeue_attempts=3,
+        shared_secret=None,
+    )
+
+    received: list[CaptchaSettingsUpdatePayload] = []
+
+    async def callback(payload: CaptchaSettingsUpdatePayload) -> None:
+        received.append(payload)
+
+    listener = CaptchaStreamListener(
+        cast(commands.Bot, object()),
+        config,
+        CaptchaSessionStore(),
+        callback,
+    )
+
+    async def run() -> None:
+        listener._redis = cast(Any, object())  # type: ignore[attr-defined]
+        fields = {
+            "payload": json.dumps(
+                {
+                    "eventType": "captcha.settings.updated",
+                    "guildId": "123",
+                    "key": "captcha-delivery-method",
+                    "value": "embed",
+                    "updatedAt": 1700000000000,
+                    "eventVersion": 1,
+                }
+            )
+        }
+        result = await listener._process_message("captcha:callbacks", "1-0", fields)
+        assert result is True
+
+    asyncio.run(run())
+
+    assert len(received) == 1
+    payload = received[0]
+    assert payload.guild_id == 123
+    assert payload.key == "captcha-delivery-method"
+    assert payload.value == "embed"
 
 
 def test_captcha_processor_recovers_embed_session(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -6,6 +6,7 @@ from .models import (
     CaptchaPayloadError,
     CaptchaProcessingError,
     CaptchaProcessResult,
+    CaptchaSettingsUpdatePayload,
 )
 from .processor import CaptchaCallbackProcessor
 from .sessions import CaptchaSession, CaptchaSessionStore
@@ -17,6 +18,7 @@ __all__ = [
     "CaptchaPayloadError",
     "CaptchaProcessingError",
     "CaptchaProcessResult",
+    "CaptchaSettingsUpdatePayload",
     "CaptchaCallbackProcessor",
     "CaptchaSession",
     "CaptchaSessionStore",

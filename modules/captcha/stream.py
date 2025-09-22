@@ -3,9 +3,10 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import hmac
+import inspect
 import json
 import logging
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 from discord.ext import commands
 
@@ -26,11 +27,15 @@ from .models import (
     CaptchaCallbackPayload,
     CaptchaPayloadError,
     CaptchaProcessingError,
+    CaptchaSettingsUpdatePayload,
 )
 from .processor import CaptchaCallbackProcessor
 from .sessions import CaptchaSessionStore
 
 _logger = logging.getLogger(__name__)
+
+
+SettingsUpdateCallback = Callable[[CaptchaSettingsUpdatePayload], Awaitable[None] | None]
 
 
 class CaptchaStreamListener:
@@ -41,6 +46,7 @@ class CaptchaStreamListener:
         bot: commands.Bot,
         config: CaptchaStreamConfig,
         session_store: CaptchaSessionStore,
+        settings_update_callback: SettingsUpdateCallback | None = None,
     ) -> None:
         self._bot = bot
         self._config = config
@@ -48,6 +54,7 @@ class CaptchaStreamListener:
         self._redis: Redis | None = None
         self._task: asyncio.Task[None] | None = None
         self._stopped = asyncio.Event()
+        self._settings_callback: SettingsUpdateCallback | None = settings_update_callback
 
     async def start(self) -> bool:
         if not self._config.enabled:
@@ -214,6 +221,24 @@ class CaptchaStreamListener:
             _logger.warning("Captcha callback %s contains invalid JSON payload", message_id)
             return True
 
+        event_type_raw = payload_dict.get("eventType") or payload_dict.get("event_type")
+        event_type = str(event_type_raw).strip() if isinstance(event_type_raw, str) else ""
+
+        if event_type == "captcha.settings.updated":
+            return await self._handle_settings_update_event(message_id, payload_dict)
+
+        if event_type and event_type != "captcha.verification.completed":
+            _logger.debug("Ignoring unknown captcha event type %s", event_type)
+            return True
+
+        return await self._handle_verification_event(message_id, payload_dict, fields)
+
+    async def _handle_verification_event(
+        self,
+        message_id: str,
+        payload_dict: dict[str, Any],
+        fields: dict[str, Any],
+    ) -> bool:
         try:
             payload = CaptchaCallbackPayload.from_mapping(payload_dict)
         except CaptchaPayloadError as exc:
@@ -253,6 +278,40 @@ class CaptchaStreamListener:
                 payload.guild_id,
                 payload.user_id,
             )
+        return True
+
+    async def _handle_settings_update_event(
+        self,
+        message_id: str,
+        payload_dict: dict[str, Any],
+    ) -> bool:
+        if self._settings_callback is None:
+            _logger.debug(
+                "No settings update callback configured; acknowledging message %s",
+                message_id,
+            )
+            return True
+
+        try:
+            payload = CaptchaSettingsUpdatePayload.from_mapping(payload_dict)
+        except CaptchaPayloadError as exc:
+            _logger.warning(
+                "Captcha settings update %s rejected: %s",
+                message_id,
+                exc,
+            )
+            return True
+
+        try:
+            result = self._settings_callback(payload)
+            if inspect.isawaitable(result):
+                await result
+        except Exception:
+            _logger.exception(
+                "Failed to handle captcha settings update for guild %s",
+                payload.guild_id,
+            )
+
         return True
 
     async def _acknowledge(self, message_id: str) -> None:
