@@ -42,12 +42,14 @@ class CaptchaDeliveryPreferences:
     requires_login: bool
     embed_channel_id: int | None
 
+
 @dataclass(slots=True)
 class CaptchaGuildConfig:
     guild_id: int
     delivery: CaptchaDeliveryPreferences
     provider: str | None
     provider_label: str | None
+
 
 class CaptchaApiClient:
     """Lightweight HTTP client for the captcha backend."""
