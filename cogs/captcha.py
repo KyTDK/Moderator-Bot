@@ -226,6 +226,17 @@ class CaptchaCog(commands.Cog):
         grace_text: str,
         max_attempts: int | None,
     ) -> bool:
+        # Seed requirement in Redis
+        try:
+            # We don't need the URL here; this just creates/refreshes the requirement+session
+            await self._api_client.start_session(member.guild.id, member.id)
+        except (CaptchaApiError, CaptchaNotAvailableError) as exc:
+            _logger.warning(
+                "Failed to seed captcha requirement for guild %s user %s: %s",
+                member.guild.id, member.id, exc,
+            )
+
+        # Store a placeholder session to mark the user as pending verification
         session = CaptchaSession(
             guild_id=member.guild.id,
             user_id=member.id,
