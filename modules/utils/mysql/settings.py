@@ -1,6 +1,11 @@
+from __future__ import annotations
+
+import asyncio
 import copy
+import inspect
 import json
-from typing import Any
+import logging
+from typing import Any, Awaitable, Callable
 
 from modules.config.premium_plans import (
     PLAN_FREE,
@@ -11,6 +16,56 @@ from modules.config.settings_schema import SETTINGS_SCHEMA
 from .config import fernet
 from .connection import execute_query
 from .premium import resolve_guild_plan
+
+_logger = logging.getLogger(__name__)
+
+SettingsListener = Callable[[int, str, Any], Awaitable[None] | None]
+
+_settings_listeners: list[SettingsListener] = []
+
+
+def add_settings_listener(listener: SettingsListener) -> None:
+    """Register a coroutine or callback invoked when a setting changes."""
+
+    if listener in _settings_listeners:
+        return
+    _settings_listeners.append(listener)
+
+
+def remove_settings_listener(listener: SettingsListener) -> None:
+    """Unregister a previously registered settings listener."""
+
+    try:
+        _settings_listeners.remove(listener)
+    except ValueError:
+        pass
+
+
+def _notify_settings_listeners(guild_id: int, key: str, value: Any) -> None:
+    if not _settings_listeners:
+        return
+
+    loop = asyncio.get_running_loop()
+
+    for listener in list(_settings_listeners):
+        try:
+            result = listener(guild_id, key, value)
+        except Exception:  # pragma: no cover - defensive logging
+            _logger.exception("Settings listener %r raised an error", listener)
+            continue
+
+        if result is None:
+            continue
+
+        if inspect.isawaitable(result):
+            loop.create_task(_run_listener(listener, result))
+
+
+async def _run_listener(listener: SettingsListener, awaitable: Awaitable[None]) -> None:
+    try:
+        await awaitable
+    except Exception:  # pragma: no cover - defensive logging
+        _logger.exception("Settings listener %r raised an error", listener)
 
 async def get_settings(
     guild_id: int,
@@ -100,12 +155,15 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
             requirement = describe_plan_requirements(schema.required_plans)
             raise ValueError(f"This setting requires {requirement}.")
 
+    public_value = settings_value
+
     if settings_value is None:
         changed = settings.pop(settings_key, None) is not None
     else:
-        if settings_key == "strike-actions" and isinstance(settings_value, dict):
+        processed_value = settings_value
+        if settings_key == "strike-actions" and isinstance(processed_value, dict):
             converted: dict[str, list[str]] = {}
-            for key, value in settings_value.items():
+            for key, value in processed_value.items():
                 if isinstance(value, list):
                     converted[key] = value
                 elif isinstance(value, tuple):
@@ -113,12 +171,16 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
                     converted[key] = [f"{action}:{duration}" if duration else action]
                 else:
                     converted[key] = [str(value)]
-            settings_value = converted
+            processed_value = converted
 
-        if encrypt_current and isinstance(settings_value, str):
-            settings_value = fernet.encrypt(settings_value.encode()).decode()
+        public_value = processed_value
 
-        settings[settings_key] = settings_value
+        if encrypt_current and isinstance(processed_value, str):
+            stored_value = fernet.encrypt(processed_value.encode()).decode()
+        else:
+            stored_value = processed_value
+
+        settings[settings_key] = stored_value
         changed = True
 
     settings_json = json.dumps(settings)
@@ -130,4 +192,8 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
         """,
         (guild_id, settings_json),
     )
+
+    if changed:
+        _notify_settings_listeners(guild_id, settings_key, public_value)
+
     return changed

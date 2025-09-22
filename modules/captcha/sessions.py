@@ -14,10 +14,11 @@ class CaptchaSession:
 
     guild_id: int
     user_id: int
-    token: str
+    token: str | None
     expires_at: datetime
     state: str | None = None
     redirect: str | None = None
+    delivery_method: str = "dm"
 
     def is_expired(self, now: datetime | None = None) -> bool:
         if now is None:

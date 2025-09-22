@@ -139,6 +139,66 @@ def test_start_session_includes_callback_url(monkeypatch: pytest.MonkeyPatch) ->
     asyncio.run(run())
 
 
+def test_fetch_guild_config_parses_delivery(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def run() -> None:
+        client = CaptchaApiClient("https://api.example.com/captcha", "token-xyz")
+
+        class DummyResponse:
+            def __init__(self) -> None:
+                self.status = 200
+
+            async def json(self) -> dict[str, object]:
+                return {
+                    "guildId": "123",
+                    "delivery": {
+                        "method": "embed",
+                        "requiresLogin": True,
+                        "embedChannelId": "789",
+                    },
+                    "captcha": {
+                        "provider": "turnstile",
+                        "providerLabel": "Cloudflare Turnstile",
+                    },
+                }
+
+            async def __aenter__(self) -> "DummyResponse":
+                return self
+
+            async def __aexit__(self, *args: object) -> None:
+                return None
+
+        class DummySession:
+            def __init__(self) -> None:
+                self.params: dict[str, object] | None = None
+                self.headers: dict[str, str] | None = None
+
+            def get(self, url: str, *, params: dict[str, object], headers: dict[str, str]) -> DummyResponse:
+                assert url == "https://api.example.com/captcha"
+                self.params = params
+                self.headers = headers
+                return DummyResponse()
+
+        dummy_session = DummySession()
+
+        async def fake_ensure_session() -> DummySession:
+            return dummy_session
+
+        monkeypatch.setattr(client, "_ensure_session", fake_ensure_session)
+
+        config = await client.fetch_guild_config(123)
+
+        assert dummy_session.params == {"gid": "123"}
+        assert dummy_session.headers == {"Authorization": "Bot token-xyz"}
+        assert config.guild_id == 123
+        assert config.delivery.method == "embed"
+        assert config.delivery.requires_login is True
+        assert config.delivery.embed_channel_id == 789
+        assert config.provider == "turnstile"
+        assert config.provider_label == "Cloudflare Turnstile"
+
+    asyncio.run(run())
+
+
 def test_stream_config_disabled_without_url(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("CAPTCHA_REDIS_URL", raising=False)
     monkeypatch.delenv("REDIS_URL", raising=False)
