@@ -483,7 +483,7 @@ SETTINGS_SCHEMA = {
         name="captcha-grace-period",
         description="How long newcomers have to finish captcha verification (e.g. 10m, 1h).",
         setting_type=TimeString,
-        default="10m",
+        default="0", # No time limit by default
     ),
     "captcha-success-actions": Setting(
         name="captcha-success-actions",
