@@ -4,7 +4,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt/lists \
+    apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv python3-dev \
     build-essential gcc g++ make pkg-config \
     libopus0 libpng-dev zlib1g-dev \
@@ -18,10 +20,10 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-RUN --mount=type=cache,target=/root/.cache/pip \
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python -m pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
+    pip install -r requirements.txt
+    
 COPY . .
 
 CMD ["python", "bot.py"]

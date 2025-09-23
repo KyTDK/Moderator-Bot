@@ -4,3 +4,9 @@ __pycache__/
 *.pyo
 .env
 tmp/
+.github/
+.vscode/
+tests/
+test/
+.env_example
+README.md
