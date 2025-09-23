@@ -6,21 +6,25 @@ import hmac
 import inspect
 import json
 import logging
-from typing import Any, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 from discord.ext import commands
 
 try:  # pragma: no cover - exercised indirectly via start()
-    from redis.asyncio import Redis, from_url as redis_from_url
+    from redis.asyncio import from_url as redis_from_url
     from redis.exceptions import (
         ConnectionError as RedisConnectionError,
         ResponseError,
     )
 except ModuleNotFoundError:  # pragma: no cover - handled gracefully in start()
-    Redis = None  # type: ignore[assignment]
     redis_from_url = None  # type: ignore[assignment]
     ResponseError = Exception  # type: ignore[assignment]
     RedisConnectionError = Exception  # type: ignore[assignment]
+
+if TYPE_CHECKING:
+    from redis.asyncio import Redis as RedisClient
+else:  # pragma: no cover - used when redis-py is not installed
+    RedisClient = Any
 
 from .config import CaptchaStreamConfig
 from .models import (
@@ -34,9 +38,7 @@ from .sessions import CaptchaSessionStore
 
 _logger = logging.getLogger(__name__)
 
-
 SettingsUpdateCallback = Callable[[CaptchaSettingsUpdatePayload], Awaitable[None] | None]
-
 
 class CaptchaStreamListener:
     """Consumes captcha callbacks from a Redis stream using a consumer group."""
@@ -51,7 +53,7 @@ class CaptchaStreamListener:
         self._bot = bot
         self._config = config
         self._processor = CaptchaCallbackProcessor(bot, session_store)
-        self._redis: Redis | None = None
+        self._redis: RedisClient | None = None
         self._task: asyncio.Task[None] | None = None
         self._stopped = asyncio.Event()
         self._settings_callback: SettingsUpdateCallback | None = settings_update_callback
@@ -392,4 +394,3 @@ class CaptchaStreamListener:
         if isinstance(decoded, str):
             return decoded
         return str(decoded)
-    
