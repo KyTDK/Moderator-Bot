@@ -198,11 +198,13 @@ class CaptchaStreamListener:
             _logger.warning("Captcha callback %s missing payload field; acknowledging", message_id)
             return True
 
-        payload_text = str(payload_raw)
+        payload_text = self._coerce_text(payload_raw)
 
         if self._config.shared_secret:
             signature = fields.get("signature")
-            signature_text = str(signature) if signature is not None else ""
+            signature_text = (
+                self._coerce_text(signature) if signature is not None else ""
+            )
             expected = hmac.new(
                 self._config.shared_secret,
                 payload_text.encode("utf-8"),
@@ -349,19 +351,45 @@ class CaptchaStreamListener:
     @staticmethod
     def _coerce_field_mapping(raw_fields: Any) -> dict[str, Any]:
         if isinstance(raw_fields, dict):
-            return raw_fields
+            return {
+                CaptchaStreamListener._coerce_key(key): CaptchaStreamListener._decode_if_bytes(value)
+                for key, value in raw_fields.items()
+            }
         # redis-py returns list of tuples when decode_responses is False; guard defensively.
         mapping: dict[str, Any] = {}
         if isinstance(raw_fields, (list, tuple)):
             for item in raw_fields:
                 if isinstance(item, (list, tuple)) and len(item) == 2:
                     key, value = item
-                    mapping[str(key)] = value
+                    mapping[CaptchaStreamListener._coerce_key(key)] = CaptchaStreamListener._decode_if_bytes(value)
         return mapping
 
     @staticmethod
     def _coerce_int(value: Any) -> int | None:
         try:
-            return int(str(value))
+            decoded = CaptchaStreamListener._decode_if_bytes(value)
+            return int(str(decoded))
         except (TypeError, ValueError):
             return None
+        
+    @staticmethod
+    def _decode_if_bytes(value: Any) -> Any:
+        if isinstance(value, (bytes, bytearray)):
+            try:
+                return value.decode("utf-8")
+            except UnicodeDecodeError:
+                return value.decode("utf-8", "replace")
+        return value
+
+    @staticmethod
+    def _coerce_key(value: Any) -> str:
+        decoded = CaptchaStreamListener._decode_if_bytes(value)
+        return str(decoded)
+
+    @staticmethod
+    def _coerce_text(value: Any) -> str:
+        decoded = CaptchaStreamListener._decode_if_bytes(value)
+        if isinstance(decoded, str):
+            return decoded
+        return str(decoded)
+    
