@@ -102,6 +102,44 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                 ephemeral=True,
             )
 
+    @captcha_group.command(
+        name="request", description="Send a captcha verification request to a member."
+    )
+    @app_commands.describe(member="The member who should complete verification")
+    async def request_verification_command(
+        self, interaction: Interaction, member: discord.Member
+    ) -> None:
+        if interaction.guild is None:
+            await interaction.response.send_message(
+                "This command can only be used in a server.", ephemeral=True
+            )
+            return
+
+        if member.guild is None or member.guild.id != interaction.guild.id:
+            await interaction.response.send_message(
+                "Please choose a member from this server.", ephemeral=True
+            )
+            return
+
+        if member.bot:
+            await interaction.response.send_message(
+                "Bots do not require captcha verification.", ephemeral=True
+            )
+            return
+
+        await interaction.response.defer(ephemeral=True)
+
+        success, message = await self._initiate_verification(member)
+        if success:
+            await interaction.followup.send(
+                message or "Verification request sent.", ephemeral=True
+            )
+            return
+
+        await interaction.followup.send(
+            message or "Unable to send verification instructions.", ephemeral=True
+        )
+
     async def cog_load(self) -> None:
         started = await self._stream_listener.start()
         if started:
@@ -149,6 +187,14 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         if member.bot or member.guild is None:
             return
 
+        await self._initiate_verification(member)
+
+    async def _initiate_verification(
+        self, member: discord.Member
+    ) -> tuple[bool, str | None]:
+        if member.guild is None:
+            return False, "This member is not part of a guild."
+
         settings = await mysql.get_settings(
             member.guild.id,
             [
@@ -162,13 +208,13 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         )
 
         if not settings.get("captcha-verification-enabled"):
-            return
+            return False, "Captcha verification is not enabled for this server."
 
         if not self._api_client.is_configured:
             _logger.debug(
                 "Captcha API not configured; skipping verification for guild %s", member.guild.id
             )
-            return
+            return False, "Captcha verification is not configured."
 
         raw_pre_roles = settings.get("pre-captcha-roles") or []
         pre_roles = [
@@ -223,7 +269,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                     member.id,
                     session.expires_at,
                 )
-                return
+                return True, "Verification instructions posted in the configured channel."
 
         start_response = await self._handle_dm_delivery(
             member,
@@ -237,7 +283,10 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                 member.id,
                 start_response.expires_at if grace_delta is not None else None,
             )
+            return True, "Verification message sent to the member."
 
+        return False, "Unable to send verification instructions; please check the configuration."
+    
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:
         if member.guild is None:
