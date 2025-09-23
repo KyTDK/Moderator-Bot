@@ -227,9 +227,9 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
 
         start_response = await self._handle_dm_delivery(
             member,
+            max_attempts,
             grace_delta,
             grace_display,
-            max_attempts,
         )
         if start_response is not None:
             self._schedule_session_timeout(
