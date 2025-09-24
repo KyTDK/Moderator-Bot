@@ -222,7 +222,7 @@ SETTINGS_SCHEMA = {
         name="scan-age-restricted",
         description="Scan age-restricted (NSFW) channels. When off, NSFW channels are skipped.",
         setting_type=bool,
-        default=False,
+        default=True,
         choices=["true", "false"]
     ),
     "check-tenor-gifs": Setting(
