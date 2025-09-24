@@ -206,8 +206,6 @@ class CaptchaEmbedMixin(CaptchaBaseMixin):
             description=description,
             footer=f"Guild ID: {guild.id} • Powered by Moderator Bot",
         )
-        if provider_label:
-            embed.add_field(name="Provider", value=provider_label, inline=True)
         view = self._build_link_view(self._build_public_verification_url(guild.id))
         return embed, view
 
