@@ -231,7 +231,10 @@ class CaptchaStreamListener:
         if event_type == "captcha.settings.updated":
             return await self._handle_settings_update_event(message_id, payload_dict)
 
-        if event_type and event_type != "captcha.verification.completed":
+        if event_type and event_type not in {
+            "captcha.verification.completed",
+            "captcha.verification.failed",
+        }:
             _logger.debug("Ignoring unknown captcha event type %s", event_type)
             return True
 
