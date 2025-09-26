@@ -140,7 +140,8 @@ class AggregatedModerationCog(commands.Cog):
             guild=reaction.message.guild,
             message=reaction.message,
             emoji=reaction.emoji,
-            member=user
+            member=user,
+            user_id=user.id,
         )
 
     # Fallback for when message isn't cached
@@ -178,14 +179,15 @@ class AggregatedModerationCog(commands.Cog):
 
         # Avoid scanning again
         for r in message.reactions:
-            if r.emoji == emoji and r.count > 1:
+            if str(r.emoji) == str(emoji) and r.count > 1:
                 return
 
         await self._queue_emoji_scan(
             guild=guild,
             message=message,
             emoji=emoji,
-            member=member
+            member=member,
+            user_id=payload.user_id,
         )
 
     async def _queue_emoji_scan(
@@ -194,8 +196,36 @@ class AggregatedModerationCog(commands.Cog):
         guild: discord.Guild,
         message: discord.Message,
         emoji: discord.Emoji | discord.PartialEmoji,
-        member: discord.Member | discord.User | None
+        member: discord.Member | discord.User | None,
+        user_id: int | None = None,
     ):
+        async def resolve_message_for_removal(msg):
+            if msg is None:
+                return None
+            if hasattr(msg, 'remove_reaction'):
+                return msg
+
+            channel = getattr(msg, 'channel', None)
+            channel_id = getattr(channel, 'id', None) or getattr(msg, 'channel_id', None)
+            message_id = getattr(msg, 'id', None) or getattr(msg, 'message_id', None)
+            if channel_id is None or message_id is None:
+                return None
+
+            if channel is None:
+                channel = self.bot.get_channel(channel_id)
+            if channel is None:
+                channel = await safe_get_channel(self.bot, channel_id)
+            if channel is None:
+                return None
+
+            try:
+                return await channel.fetch_message(message_id)
+            except (discord.NotFound, discord.Forbidden):
+                return None
+            except discord.HTTPException as e:
+                print(f"[emoji] failed to refetch message {message_id}: {e}")
+                return None
+
         async def scan_task():
             flagged = await self.scanner.is_nsfw(
                 url=str(emoji.url),
@@ -204,8 +234,18 @@ class AggregatedModerationCog(commands.Cog):
                 nsfw_callback=handle_nsfw_content
             )
             if flagged:
+                target_message = await resolve_message_for_removal(message)
+                if target_message is None:
+                    print("[emoji] unable to resolve message for reaction removal")
+                    return
+
+                target_member = member or (discord.Object(id=user_id) if user_id is not None else None)
+                if target_member is None:
+                    print("[emoji] unable to resolve member for reaction removal")
+                    return
+
                 try:
-                    await message.remove_reaction(emoji, member)
+                    await target_message.remove_reaction(emoji, target_member)
                 except discord.Forbidden:
                     print("[emoji] lacking permissions to remove reaction")
                 except discord.HTTPException as e:
