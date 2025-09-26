@@ -316,6 +316,10 @@ class CaptchaCallbackProcessor:
             used = attempts if attempts is not None else "?"
             embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
 
+        provider = _extract_metadata_str(payload.metadata, "provider")
+        if provider:
+            embed.add_field(name="Provider", value=provider, inline=True)
+            
         challenge = _extract_metadata_str(payload.metadata,"challengeType")
         if challenge:
             embed.add_field(name="Challenge", value=challenge, inline=True)
