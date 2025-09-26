@@ -343,9 +343,8 @@ class CaptchaCallbackProcessor:
                 inline=False,
             )
 
-        attempts = _extract_metadata_int(payload.metadata, "failureCount")
-        max_attempts = _extract_metadata_int(payload.metadata, "maxAttempts")
-        if attempts is not None or max_attempts is not None:
+        attempts, max_attempts = _extract_attempt_counts(payload.metadata)
+        if (attempts is not None and attempts > 0) or (attempts is None and max_attempts is not None):
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
             embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
@@ -390,16 +389,11 @@ class CaptchaCallbackProcessor:
             )
             return
 
-        attempts = _extract_metadata_int(payload.metadata, "attempts", "attemptCount", "attempt")
-        max_attempts = _extract_metadata_int(
+        fallback_max_attempts = _coerce_int(settings.get("captcha-max-attempts"))
+        attempts, max_attempts = _extract_attempt_counts(
             payload.metadata,
-            "maxAttempts",
-            "max_attempts",
-            "attempt_limit",
-            "limit",
+            fallback_max=fallback_max_attempts,
         )
-        if max_attempts is None:
-            max_attempts = _coerce_int(settings.get("captcha-max-attempts"))
 
         embed = discord.Embed(
             title="Captcha Verification Failed",
@@ -417,7 +411,7 @@ class CaptchaCallbackProcessor:
             )
         if note:
             embed.add_field(name="Notes", value=note, inline=False)
-        if attempts is not None or max_attempts is not None:
+        if (attempts is not None and attempts > 0) or (attempts is None and max_attempts is not None):
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
             embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
@@ -580,6 +574,53 @@ def _extract_metadata_int(metadata: Mapping[str, Any], *keys: str) -> int | None
                 return number
     return None
 
+
+def _extract_attempt_counts(
+    metadata: Mapping[str, Any],
+    *,
+    fallback_max: int | None = None,
+) -> tuple[int | None, int | None]:
+    attempts = _extract_metadata_int(
+        metadata,
+        "failureCount",
+        "attempts",
+        "attemptCount",
+        "attempt",
+    )
+    max_attempts = _extract_metadata_int(
+        metadata,
+        "maxAttempts",
+        "max_attempts",
+        "attempt_limit",
+        "limit",
+    )
+    attempts_remaining = _extract_metadata_int(
+        metadata,
+        "attemptsRemaining",
+        "attempts_remaining",
+        "remainingAttempts",
+        "remaining_attempts",
+        "attemptsLeft",
+        "attempts_left",
+    )
+
+    if max_attempts is None:
+        max_attempts = fallback_max
+
+    if attempts is None and max_attempts is not None and attempts_remaining is not None:
+        computed = max_attempts - attempts_remaining
+        if computed >= 0:
+            attempts = computed
+
+    if attempts is not None:
+        attempts = max(attempts, 0)
+
+    if max_attempts is None and attempts is not None and attempts_remaining is not None:
+        computed_total = attempts + attempts_remaining
+        if computed_total >= attempts:
+            max_attempts = computed_total
+
+    return attempts, max_attempts
 
 def _extract_metadata_str(metadata: Mapping[str, Any], *keys: str) -> str | None:
     for key in keys:
