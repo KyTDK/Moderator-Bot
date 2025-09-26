@@ -22,6 +22,7 @@ class CaptchaStreamConfig:
     block_ms: int
     batch_size: int
     max_requeue_attempts: int
+    start_id: str
     shared_secret: bytes | None
     pending_auto_claim_ms: int
 
@@ -51,6 +52,7 @@ class CaptchaStreamConfig:
                 pending_auto_claim_ms = max(parsed_pending, 0)
 
         shared_secret = _resolve_shared_secret()
+        start_id = _resolve_stream_start_id(os.getenv("CAPTCHA_STREAM_START_ID"))
 
         enabled_raw = os.getenv("CAPTCHA_STREAM_ENABLED")
         if enabled_raw is None:
@@ -76,6 +78,7 @@ class CaptchaStreamConfig:
             block_ms=block_ms,
             batch_size=batch_size,
             max_requeue_attempts=max_requeue_attempts,
+            start_id=start_id,
             shared_secret=shared_secret,
             pending_auto_claim_ms=pending_auto_claim_ms,
         )
@@ -84,6 +87,22 @@ class CaptchaStreamConfig:
 def _resolve_shared_secret() -> bytes | None:
     raw = os.getenv("CAPTCHA_SHARED_SECRET")
     return raw.encode("utf-8") if raw else None
+
+
+def _resolve_stream_start_id(raw: str | None) -> str:
+    if raw is None:
+        return "$"
+
+    text = str(raw).strip()
+    if not text:
+        return "$"
+
+    lowered = text.lower()
+    if lowered in {"$", "latest", "new"}:
+        return "$"
+    if lowered in {"0", "zero", "start", "history", "from_start"}:
+        return "0"
+    return text
 
 
 def _resolve_redis_url() -> str | None:

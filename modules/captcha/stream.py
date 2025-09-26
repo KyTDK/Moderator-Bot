@@ -74,6 +74,7 @@ class CaptchaStreamListener:
         self._settings_callback: SettingsUpdateCallback | None = settings_update_callback
         self._supports_xautoclaim = True
         self._autoclaim_warning_emitted = False
+        self._last_message_id: str = config.start_id
 
     async def start(self) -> bool:
         _ensure_logger_configured()
@@ -118,10 +119,11 @@ class CaptchaStreamListener:
         self._stopped.clear()
         self._task = asyncio.create_task(self._run_loop(), name="captcha-stream-listener")
         _logger.info(
-            "Subscribed to captcha callback stream %s as consumer %s/%s",
+            "Subscribed to captcha callback stream %s as consumer %s/%s (start=%s)",
             self._config.stream,
             self._config.group,
             self._config.consumer_name,
+            self._config.start_id,
         )
         return True
 
@@ -147,14 +149,25 @@ class CaptchaStreamListener:
             await self._redis.connection_pool.disconnect()
             self._redis = None
 
+    @property
+    def last_message_id(self) -> str:
+        """Return the last Redis stream ID processed by this listener."""
+        return self._last_message_id
+
     async def _ensure_consumer_group(self) -> None:
         assert self._redis is not None
         try:
             await self._redis.xgroup_create(
                 self._config.stream,
                 self._config.group,
-                id="$",
+                id=self._config.start_id,
                 mkstream=True,
+            )
+            _logger.info(
+                "Ensured captcha consumer group %s on %s starting at %s",
+                self._config.group,
+                self._config.stream,
+                self._config.start_id,
             )
         except ResponseError as exc:
             if "BUSYGROUP" not in str(exc):
@@ -278,9 +291,13 @@ class CaptchaStreamListener:
         assert self._redis is not None
         streams = {self._config.stream: ">"}
         block = self._config.block_ms
+        retry_delay = 1.0
+        max_retry = 30.0
         while not self._stopped.is_set():
             try:
                 await self._claim_stale_messages()
+            except asyncio.CancelledError:
+                raise
             except Exception:
                 _logger.exception(
                     "Failed to reclaim pending captcha callbacks for stream %s; continuing",
@@ -294,19 +311,54 @@ class CaptchaStreamListener:
                     count=self._config.batch_size,
                     block=block,
                 )
+                retry_delay = 1.0
             except asyncio.CancelledError:
                 raise
+            except (RedisConnectionError, OSError) as exc:
+                delay = retry_delay
+                retry_delay = min(retry_delay * 2, max_retry)
+                _logger.warning(
+                    "Transient Redis error while reading captcha callbacks; retrying in %.1fs (%s)",
+                    delay,
+                    exc,
+                )
+                await asyncio.sleep(delay)
+                continue
             except Exception:
-                _logger.exception("Error while reading captcha callback stream; retrying in 5 seconds")
-                await asyncio.sleep(5)
+                retry_delay = min(retry_delay * 2, max_retry)
+                _logger.exception(
+                    "Error while reading captcha callback stream; retrying in %.1fs",
+                    retry_delay,
+                )
+                await asyncio.sleep(retry_delay)
                 continue
 
             if not entries:
                 continue
 
+            batch_entries: list[tuple[str, str, Any]] = []
+            batch_summary: list[dict[str, Any]] = []
             for stream_name, messages in entries:
                 for message_id, fields in messages:
-                    await self._handle_message(stream_name, message_id, fields)
+                    batch_entries.append((stream_name, message_id, fields))
+                    payload_preview = self._extract_payload_preview(fields)
+                    batch_summary.append(
+                        {
+                            "stream": stream_name,
+                            "id": message_id,
+                            "payload": payload_preview,
+                        }
+                    )
+
+            if batch_summary:
+                _logger.info(
+                    "[captcha/callback] xreadgroup batch size=%s summary=%s",
+                    len(batch_summary),
+                    batch_summary,
+                )
+
+            for stream_name, message_id, fields in batch_entries:
+                await self._handle_message(stream_name, message_id, fields)
 
     async def _handle_message(self, stream: str, message_id: str, fields: Any) -> None:
         should_ack = True
@@ -321,8 +373,11 @@ class CaptchaStreamListener:
                 stream,
             )
         finally:
-            if should_ack:
-                await self._acknowledge(message_id)
+            try:
+                if should_ack:
+                    await self._acknowledge(message_id)
+            finally:
+                self._last_message_id = message_id
 
     async def _process_message(self, stream: str, message_id: str, raw_fields: Any) -> bool:
         if self._redis is None:
@@ -505,6 +560,18 @@ class CaptchaStreamListener:
             _logger.debug("Requeued captcha callback for guild %s", new_fields.get("guildId") or new_fields.get("guild_id"))
         except Exception:
             _logger.exception("Failed to requeue captcha callback for other consumers")
+
+    @staticmethod
+    def _extract_payload_preview(fields: Any, *, max_length: int = 256) -> str | None:
+        mapping = CaptchaStreamListener._coerce_field_mapping(fields)
+        payload = mapping.get("payload")
+        if payload is None:
+            return None
+        text = CaptchaStreamListener._coerce_text(payload)
+        if len(text) > max_length:
+            return text[:max_length] + "..."
+        return text
+
 
     @staticmethod
     def _coerce_field_mapping(raw_fields: Any) -> dict[str, Any]:

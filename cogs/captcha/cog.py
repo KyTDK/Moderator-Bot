@@ -146,7 +146,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
             print(
                 "[CAPTCHA] Redis stream listener subscribed to "
                 f"{self._stream_config.stream} as "
-                f"{self._stream_config.group}/{self._stream_config.consumer_name}"
+                f"{self._stream_config.group}/{self._stream_config.consumer_name} (start={self._stream_config.start_id})"
             )
         else:
             print(

@@ -265,6 +265,7 @@ def test_stream_config_disabled_without_url(monkeypatch: pytest.MonkeyPatch) -> 
 
     assert config.redis_url is None
     assert config.enabled is False
+    assert config.start_id == "$"
 
 
 def test_stream_config_uses_explicit_url(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -275,6 +276,17 @@ def test_stream_config_uses_explicit_url(monkeypatch: pytest.MonkeyPatch) -> Non
 
     assert config.redis_url == "redis://localhost:6379/2"
     assert config.enabled is True
+    assert config.start_id == "$"
+
+
+def test_stream_config_honours_start_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CAPTCHA_REDIS_URL", "redis://localhost:6379/0")
+    monkeypatch.setenv("CAPTCHA_STREAM_START_ID", "0")
+    monkeypatch.delenv("CAPTCHA_STREAM_ENABLED", raising=False)
+
+    config = CaptchaStreamConfig.from_env()
+
+    assert config.start_id == "0"
 
 
 def test_normalize_failure_actions_handles_mixed_entries() -> None:
@@ -367,6 +379,7 @@ def test_stream_listener_handles_redis_connection_error(monkeypatch: pytest.Monk
         block_ms=1000,
         batch_size=5,
         max_requeue_attempts=3,
+        start_id="$",
         shared_secret=None,
         pending_auto_claim_ms=0,
     )
@@ -391,6 +404,7 @@ def test_stream_listener_invokes_settings_callback() -> None:
         block_ms=1000,
         batch_size=5,
         max_requeue_attempts=3,
+        start_id="$",
         shared_secret=None,
         pending_auto_claim_ms=0,
     )
@@ -492,6 +506,7 @@ def test_stream_listener_claims_stale_messages() -> None:
         block_ms=1000,
         batch_size=5,
         max_requeue_attempts=3,
+        start_id="$",
         shared_secret=None,
         pending_auto_claim_ms=1000,
     )
@@ -513,6 +528,7 @@ def test_stream_listener_claims_stale_messages() -> None:
     payload = processed[0]
     assert payload.guild_id == 123
     assert payload.user_id == 456
+    assert listener.last_message_id == "1-0"
     assert acked == [(config.stream, config.group, "1-0")]
 
 
