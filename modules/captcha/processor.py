@@ -275,7 +275,7 @@ class CaptchaCallbackProcessor:
             else:
                 disciplinary_actions.append(action.action)
 
-        reason = payload.failure_reason or "Failed captcha verification."
+        resolved_reason = _resolve_failure_reason(payload) or "Failed captcha verification."
 
         applied_actions: list[str] = []
         skip_note: str | None = None
@@ -285,7 +285,7 @@ class CaptchaCallbackProcessor:
                     user=member,
                     bot=self._bot,
                     action_string=disciplinary_actions,
-                    reason=reason,
+                    reason=resolved_reason,
                     source="captcha",
                 )
             except discord.Forbidden as exc:
@@ -424,8 +424,9 @@ class CaptchaCallbackProcessor:
         )
         if challenge:
             embed.add_field(name="Challenge", value=challenge, inline=True)
-        if payload.failure_reason:
-            embed.add_field(name="Reason", value=payload.failure_reason, inline=False)
+        resolved_reason = _resolve_failure_reason(payload)
+        if resolved_reason:
+            embed.add_field(name="Reason", value=resolved_reason, inline=False)
 
         review_url = _extract_metadata_str(payload.metadata, "reviewUrl", "review_url")
         if review_url:
@@ -621,6 +622,19 @@ def _extract_attempt_counts(
             max_attempts = computed_total
 
     return attempts, max_attempts
+
+def _resolve_failure_reason(payload: CaptchaCallbackPayload) -> str | None:
+    reason = payload.failure_reason
+    if reason:
+        return reason
+    return _extract_metadata_str(
+        payload.metadata,
+        "failureReason",
+        "failure_reason",
+        "failure_message",
+        "failureMessage",
+        "reason",
+    )
 
 def _extract_metadata_str(metadata: Mapping[str, Any], *keys: str) -> str | None:
     for key in keys:
