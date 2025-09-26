@@ -194,13 +194,32 @@ class CaptchaStreamListener:
         if self._redis is None:
             return True
 
+        _logger.info(
+            "[captcha/callback] received redis entry %s/%s: raw_fields=%r",
+            stream,
+            message_id,
+            raw_fields,
+        )
+
         fields = self._coerce_field_mapping(raw_fields)
+        _logger.info(
+            "[captcha/callback] normalized redis entry %s/%s: fields=%r",
+            stream,
+            message_id,
+            fields,
+        )
         payload_raw = fields.get("payload")
         if not payload_raw:
             _logger.warning("Captcha callback %s missing payload field; acknowledging", message_id)
             return True
 
         payload_text = self._coerce_text(payload_raw)
+        _logger.info(
+            "[captcha/callback] payload text for %s/%s: %s",
+            stream,
+            message_id,
+            payload_text,
+        )
 
         if self._config.shared_secret:
             signature = fields.get("signature")
