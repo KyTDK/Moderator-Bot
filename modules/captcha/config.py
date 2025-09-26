@@ -23,6 +23,7 @@ class CaptchaStreamConfig:
     batch_size: int
     max_requeue_attempts: int
     shared_secret: bytes | None
+    pending_auto_claim_ms: int
 
     @classmethod
     def from_env(cls) -> "CaptchaStreamConfig":
@@ -38,6 +39,16 @@ class CaptchaStreamConfig:
         block_ms = _coerce_positive_int(os.getenv("CAPTCHA_STREAM_BLOCK_MS")) or 10000
         batch_size = _coerce_positive_int(os.getenv("CAPTCHA_STREAM_BATCH_SIZE")) or 10
         max_requeue_attempts = _coerce_positive_int(os.getenv("CAPTCHA_STREAM_MAX_REQUEUE")) or 3
+
+        pending_idle_raw = os.getenv("CAPTCHA_STREAM_PENDING_IDLE_MS")
+        pending_auto_claim_ms = 5000
+        if pending_idle_raw is not None:
+            try:
+                parsed_pending = int(str(pending_idle_raw).strip())
+            except (TypeError, ValueError):
+                parsed_pending = None
+            if parsed_pending is not None:
+                pending_auto_claim_ms = max(parsed_pending, 0)
 
         shared_secret = _resolve_shared_secret()
 
@@ -66,6 +77,7 @@ class CaptchaStreamConfig:
             batch_size=batch_size,
             max_requeue_attempts=max_requeue_attempts,
             shared_secret=shared_secret,
+            pending_auto_claim_ms=pending_auto_claim_ms,
         )
 
 

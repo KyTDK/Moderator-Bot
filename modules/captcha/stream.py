@@ -72,6 +72,8 @@ class CaptchaStreamListener:
         self._task: asyncio.Task[None] | None = None
         self._stopped = asyncio.Event()
         self._settings_callback: SettingsUpdateCallback | None = settings_update_callback
+        self._supports_xautoclaim = True
+        self._autoclaim_warning_emitted = False
 
     async def start(self) -> bool:
         _ensure_logger_configured()
@@ -163,11 +165,127 @@ class CaptchaStreamListener:
                 self._config.stream,
             )
 
+    async def _claim_stale_messages(self) -> None:
+        redis = self._redis
+        if redis is None:
+            return
+        idle_ms = self._config.pending_auto_claim_ms
+        if idle_ms <= 0:
+            return
+
+        if self._supports_xautoclaim:
+            try:
+                await self._claim_with_xautoclaim(redis, idle_ms)
+                return
+            except ResponseError as exc:
+                message = str(exc).lower()
+                if "unknown command" in message or "syntax error" in message:
+                    self._supports_xautoclaim = False
+                    if not self._autoclaim_warning_emitted:
+                        self._autoclaim_warning_emitted = True
+                        _logger.info(
+                            "Redis server does not support XAUTOCLAIM; falling back to XCLAIM for pending captcha callbacks.",
+                        )
+                else:
+                    _logger.exception(
+                        "Failed to auto-claim pending captcha callbacks using XAUTOCLAIM.",
+                    )
+                    return
+            except Exception:
+                _logger.exception(
+                    "Failed to auto-claim pending captcha callbacks using XAUTOCLAIM.",
+                )
+                return
+
+        await self._claim_with_xclaim(redis, idle_ms)
+
+    async def _claim_with_xautoclaim(self, redis: RedisClient, idle_ms: int) -> None:
+        stream = self._config.stream
+        next_id = "0-0"
+        while not self._stopped.is_set():
+            next_id, messages = await redis.xautoclaim(
+                stream,
+                self._config.group,
+                self._config.consumer_name,
+                idle_ms,
+                next_id,
+                count=self._config.batch_size,
+            )
+            if not messages:
+                break
+            for message_id, fields in messages:
+                await self._handle_message(stream, message_id, fields)
+            if not next_id or next_id == "0-0":
+                break
+
+    async def _claim_with_xclaim(self, redis: RedisClient, idle_ms: int) -> None:
+        try:
+            pending_entries = await redis.xpending_range(
+                self._config.stream,
+                self._config.group,
+                min='-',
+                max='+',
+                count=self._config.batch_size,
+            )
+        except ResponseError:
+            _logger.exception(
+                "Failed to inspect pending captcha callbacks for stream %s",
+                self._config.stream,
+            )
+            return
+        except Exception:
+            _logger.exception(
+                "Failed to inspect pending captcha callbacks for stream %s",
+                self._config.stream,
+            )
+            return
+
+        if not pending_entries:
+            return
+
+        for entry in pending_entries:
+            message_id = getattr(entry, 'message_id', None) or getattr(entry, 'id', None)
+            idle_time = getattr(entry, 'idle', None) or getattr(entry, 'idle_time', None)
+            if message_id is None or idle_time is None or idle_time < idle_ms:
+                continue
+            try:
+                claimed = await redis.xclaim(
+                    self._config.stream,
+                    self._config.group,
+                    self._config.consumer_name,
+                    idle_ms,
+                    [message_id],
+                )
+            except ResponseError:
+                _logger.exception(
+                    "Failed to claim pending captcha callback %s from stream %s",
+                    message_id,
+                    self._config.stream,
+                )
+                continue
+            except Exception:
+                _logger.exception(
+                    "Failed to claim pending captcha callback %s from stream %s",
+                    message_id,
+                    self._config.stream,
+                )
+                continue
+
+            for claimed_id, fields in claimed:
+                await self._handle_message(self._config.stream, claimed_id, fields)
+
     async def _run_loop(self) -> None:
         assert self._redis is not None
         streams = {self._config.stream: ">"}
         block = self._config.block_ms
         while not self._stopped.is_set():
+            try:
+                await self._claim_stale_messages()
+            except Exception:
+                _logger.exception(
+                    "Failed to reclaim pending captcha callbacks for stream %s; continuing",
+                    self._config.stream,
+                )
             try:
                 entries = await self._redis.xreadgroup(
                     self._config.group,

@@ -368,6 +368,7 @@ def test_stream_listener_handles_redis_connection_error(monkeypatch: pytest.Monk
         batch_size=5,
         max_requeue_attempts=3,
         shared_secret=None,
+        pending_auto_claim_ms=0,
     )
 
     listener = CaptchaStreamListener(cast(commands.Bot, object()), config, CaptchaSessionStore())
@@ -391,6 +392,7 @@ def test_stream_listener_invokes_settings_callback() -> None:
         batch_size=5,
         max_requeue_attempts=3,
         shared_secret=None,
+        pending_auto_claim_ms=0,
     )
 
     received: list[CaptchaSettingsUpdatePayload] = []
@@ -429,6 +431,89 @@ def test_stream_listener_invokes_settings_callback() -> None:
     assert payload.guild_id == 123
     assert payload.key == "captcha-delivery-method"
     assert payload.value == "embed"
+
+
+
+
+def test_stream_listener_claims_stale_messages() -> None:
+    processed: list[CaptchaCallbackPayload] = []
+    acked: list[tuple[str, str, str]] = []
+
+    class DummyBot:
+        def get_guild(self, guild_id: int) -> object | None:
+            assert guild_id == 123
+            return object()
+
+    class DummyRedis:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def xautoclaim(
+            self,
+            stream: str,
+            group: str,
+            consumer: str,
+            min_idle_time: int,
+            start: str,
+            *,
+            count: int | None = None,
+        ) -> tuple[str, list[tuple[str, dict[str, Any]]]]:
+            self.calls += 1
+            assert stream == "captcha:callbacks"
+            assert group == "modbot"
+            assert consumer == "consumer"
+            assert min_idle_time == 1000
+            if self.calls == 1:
+                payload = {
+                    "eventType": "captcha.verification.completed",
+                    "guildId": "123",
+                    "userId": "456",
+                    "token": "abc",
+                    "success": True,
+                    "status": "passed",
+                    "metadata": {},
+                }
+                return "0-0", [("1-0", {"payload": json.dumps(payload)})]
+            return "0-0", []
+
+        async def xack(self, stream: str, group: str, message_id: str) -> None:
+            acked.append((stream, group, message_id))
+
+    class DummyProcessor:
+        async def process(self, payload: CaptchaCallbackPayload) -> None:
+            processed.append(payload)
+
+    config = CaptchaStreamConfig(
+        enabled=True,
+        redis_url="redis://localhost:6379/0",
+        stream="captcha:callbacks",
+        group="modbot",
+        consumer_name="consumer",
+        block_ms=1000,
+        batch_size=5,
+        max_requeue_attempts=3,
+        shared_secret=None,
+        pending_auto_claim_ms=1000,
+    )
+
+    listener = CaptchaStreamListener(
+        cast(commands.Bot, DummyBot()),
+        config,
+        CaptchaSessionStore(),
+    )
+    listener._redis = cast(Any, DummyRedis())  # type: ignore[attr-defined]
+    listener._processor = cast(Any, DummyProcessor())  # type: ignore[attr-defined]
+
+    async def run() -> None:
+        await listener._claim_stale_messages()
+
+    asyncio.run(run())
+
+    assert len(processed) == 1
+    payload = processed[0]
+    assert payload.guild_id == 123
+    assert payload.user_id == 456
+    assert acked == [(config.stream, config.group, "1-0")]
 
 
 def test_captcha_processor_recovers_embed_session(monkeypatch: pytest.MonkeyPatch) -> None:
