@@ -997,3 +997,36 @@ def test_captcha_failure_removes_session_when_attempts_exhausted(monkeypatch: py
         assert await store.get(guild_id, user_id) is None
 
     asyncio.run(run())
+
+def test_normalize_xautoclaim_response_handles_extended_list() -> None:
+    response = [
+        "0-2",
+        [("1-0", {"payload": "data"})],
+        ["deleted-id"],
+    ]
+    next_id, messages = CaptchaStreamListener._normalize_xautoclaim_response(response)
+    assert next_id == "0-2"
+    assert messages == response[1]
+
+def test_normalize_xautoclaim_response_handles_response_object() -> None:
+    class DummyResponse:
+        def __init__(self) -> None:
+            self.next_start_id = "5-0"
+            self.messages = [("2-0", {"payload": "data"})]
+            self.deleted_ids = ["1-0"]
+
+    dummy = DummyResponse()
+    next_id, messages = CaptchaStreamListener._normalize_xautoclaim_response(dummy)
+    assert next_id == "5-0"
+    assert messages == dummy.messages
+
+def test_normalize_xautoclaim_response_rejects_unknown_shape() -> None:
+    class UnknownResponse:
+        pass
+
+    with pytest.raises(TypeError):
+        CaptchaStreamListener._normalize_xautoclaim_response(UnknownResponse())
+
+def test_normalize_xautoclaim_response_rejects_short_sequence() -> None:
+    with pytest.raises(ValueError):
+        CaptchaStreamListener._normalize_xautoclaim_response(["only-one-element"])

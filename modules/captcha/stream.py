@@ -224,14 +224,7 @@ class CaptchaStreamListener:
                 next_id,
                 count=self._config.batch_size,
             )
-            try:
-                next_id, messages = response
-            except ValueError:
-                if isinstance(response, tuple) and len(response) >= 3:
-                    next_id, messages = response[0], response[1]
-                    # redis-py>=5.0 returns (next_id, messages, deleted_ids)
-                else:
-                    raise
+            next_id, messages = self._normalize_xautoclaim_response(response)
             if not messages:
                 break
             for message_id, fields in messages:
@@ -582,6 +575,29 @@ class CaptchaStreamListener:
 
 
     @staticmethod
+    def _normalize_xautoclaim_response(response: Any) -> tuple[str, Any]:
+        if isinstance(response, (list, tuple)):
+            if len(response) < 2:
+                raise ValueError("XAUTOCLAIM response must contain at least two elements")
+            return response[0], response[1]
+        next_id: str | None = None
+        for attr in ("next_start_id", "next_id", "next", "id"):
+            if hasattr(response, attr):
+                next_id = getattr(response, attr)
+                break
+        messages: Any | None = None
+        for attr in ("messages", "entries", "ids"):
+            if hasattr(response, attr):
+                messages = getattr(response, attr)
+                break
+        if next_id is None or messages is None:
+            raise TypeError(
+                f"Cannot interpret XAUTOCLAIM response of type {type(response).__name__}",
+            )
+        return next_id, messages
+
+
+    @staticmethod
     def _coerce_field_mapping(raw_fields: Any) -> dict[str, Any]:
         if isinstance(raw_fields, dict):
             return {
@@ -625,3 +641,4 @@ class CaptchaStreamListener:
         if isinstance(decoded, str):
             return decoded
         return str(decoded)
+
