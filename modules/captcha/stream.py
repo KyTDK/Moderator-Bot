@@ -41,7 +41,7 @@ _logger = logging.getLogger(__name__)
 def _ensure_logger_configured() -> None:
     """Attach a fallback handler so INFO logs surface when logging is uninitialised."""
     root_logger = logging.getLogger()
-    if root_logger.handlers:
+    if root_logger.handlers and root_logger.isEnabledFor(logging.INFO):
         return
     if _logger.handlers:
         return
