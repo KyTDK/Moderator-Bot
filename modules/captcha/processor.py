@@ -83,8 +83,14 @@ class CaptchaCallbackProcessor:
                 guild.id,
                 payload.failure_reason or "unknown reason",
             )
-            await self._apply_failure_actions(member, payload, settings)
             exhausted, remaining = self._has_exhausted_attempts(payload, settings)
+            await self._apply_failure_actions(
+                member,
+                payload,
+                settings,
+                attempts_exhausted=exhausted,
+                attempts_remaining=remaining,
+            )
             if exhausted:
                 _logger.debug(
                     "Clearing captcha session for guild %s user %s after attempts were exhausted.",
@@ -303,6 +309,9 @@ class CaptchaCallbackProcessor:
         member: discord.Member | _PartialMember,
         payload: CaptchaCallbackPayload,
         settings: dict[str, Any],
+        *,
+        attempts_exhausted: bool,
+        attempts_remaining: int | None,
     ) -> None:
         actions = _normalize_failure_actions(settings.get("captcha-failure-actions"))
         disciplinary_actions: list[str] = []
@@ -310,7 +319,8 @@ class CaptchaCallbackProcessor:
         for action in actions:
             if action.action == "log":
                 _logger.debug(
-                    "Ignoring deprecated captcha failure action 'log' for guild %s", member.guild.id
+                    "Ignoring deprecated captcha failure action 'log' for guild %s",
+                    member.guild.id,
                 )
                 continue
             if action.extra:
@@ -322,7 +332,22 @@ class CaptchaCallbackProcessor:
 
         applied_actions: list[str] = []
         skip_note: str | None = None
-        if disciplinary_actions and isinstance(member, discord.Member):
+        if not attempts_exhausted:
+            if disciplinary_actions:
+                if attempts_remaining is None:
+                    skip_note = "Failure actions deferred; captcha attempts remain."
+                else:
+                    plural = "attempt" if attempts_remaining == 1 else "attempts"
+                    skip_note = (
+                        f"Failure actions deferred; {attempts_remaining} {plural} remaining."
+                    )
+                _logger.debug(
+                    "Deferring captcha failure actions for guild %s user %s; attempts remaining: %s",
+                    member.guild.id,
+                    member.id,
+                    "unknown" if attempts_remaining is None else attempts_remaining,
+                )
+        elif disciplinary_actions and isinstance(member, discord.Member):
             try:
                 await strike.perform_disciplinary_action(
                     user=member,
@@ -360,6 +385,8 @@ class CaptchaCallbackProcessor:
             applied_actions,
             settings,
             note=skip_note,
+            attempts_exhausted=attempts_exhausted,
+            attempts_remaining=attempts_remaining,
         )
 
     async def _log_success(
@@ -423,6 +450,8 @@ class CaptchaCallbackProcessor:
         settings: dict[str, Any],
         *,
         note: str | None = None,
+        attempts_exhausted: bool,
+        attempts_remaining: int | None,
     ) -> None:
         channel_id = _coerce_int(settings.get("captcha-log-channel"))
         if not channel_id:
@@ -438,12 +467,28 @@ class CaptchaCallbackProcessor:
             fallback_max=fallback_max_attempts,
         )
 
-        embed = discord.Embed(
-            title="Captcha Verification Failed",
-            description=(
+        if attempts_exhausted:
+            title = "Captcha Verification Failed"
+            description = (
                 f"{member.mention} ({member.id}) failed captcha verification."
-            ),
-            colour=discord.Colour.red(),
+            )
+            colour = discord.Colour.red()
+        else:
+            title = "Captcha Attempt Failed"
+            description = (
+                f"{member.mention} ({member.id}) failed a captcha attempt."
+            )
+            colour = discord.Colour.orange()
+            if attempts_remaining is None:
+                description += " Additional attempts remain."
+            elif attempts_remaining > 0:
+                plural = "attempt" if attempts_remaining == 1 else "attempts"
+                description += f" {attempts_remaining} {plural} remaining."
+
+        embed = discord.Embed(
+            title=title,
+            description=description,
+            colour=colour,
         )
 
         if applied_actions:
@@ -458,6 +503,12 @@ class CaptchaCallbackProcessor:
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
             embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
+        if not attempts_exhausted and attempts_remaining is not None and attempts_remaining >= 0:
+            embed.add_field(
+                name="Attempts Remaining",
+                value=str(attempts_remaining),
+                inline=True,
+            )
         challenge = _extract_metadata_str(
             payload.metadata,
             "challenge",
