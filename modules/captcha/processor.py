@@ -84,7 +84,21 @@ class CaptchaCallbackProcessor:
                 payload.failure_reason or "unknown reason",
             )
             await self._apply_failure_actions(member, payload, settings)
-            await self._sessions.remove(payload.guild_id, payload.user_id)
+            exhausted, remaining = self._has_exhausted_attempts(payload, settings)
+            if exhausted:
+                _logger.debug(
+                    "Clearing captcha session for guild %s user %s after attempts were exhausted.",
+                    guild.id,
+                    member.id,
+                )
+                await self._sessions.remove(payload.guild_id, payload.user_id)
+            else:
+                _logger.debug(
+                    "Captcha session retained for guild %s user %s; attempts remaining: %s",
+                    guild.id,
+                    member.id,
+                    "unknown" if remaining is None else remaining,
+                )
             return CaptchaProcessResult(
                 status="failed",
                 roles_applied=0,
@@ -254,6 +268,35 @@ class CaptchaCallbackProcessor:
         if payload.status and payload.status.lower() in {"expired", "timeout"}:
             return True
         return False
+
+    def _has_exhausted_attempts(
+        self,
+        payload: CaptchaCallbackPayload,
+        settings: Mapping[str, Any],
+    ) -> tuple[bool, int | None]:
+        fallback_max = _coerce_int(settings.get("captcha-max-attempts"))
+        attempts_remaining = _extract_metadata_int(
+            payload.metadata,
+            "attemptsRemaining",
+            "attempts_remaining",
+            "remainingAttempts",
+            "remaining_attempts",
+            "attemptsLeft",
+            "attempts_left",
+        )
+        if attempts_remaining is not None:
+            remaining = max(attempts_remaining, 0)
+            return attempts_remaining <= 0, remaining
+
+        attempts, max_attempts = _extract_attempt_counts(
+            payload.metadata,
+            fallback_max=fallback_max,
+        )
+        if max_attempts is not None and attempts is not None:
+            remaining = max_attempts - attempts
+            return remaining <= 0, max(remaining, 0)
+
+        return False, None
 
     async def _apply_failure_actions(
         self,
@@ -654,3 +697,5 @@ def _extract_metadata_str(metadata: Mapping[str, Any], *keys: str) -> str | None
         if isinstance(value, str) and value.strip():
             return value.strip()
     return None
+
+

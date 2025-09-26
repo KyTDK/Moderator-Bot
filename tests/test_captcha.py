@@ -700,3 +700,199 @@ def test_captcha_timeout_ignored_when_grace_disabled(
         assert await store.get(guild_id, user_id) is None
 
     asyncio.run(run())
+def test_captcha_failure_keeps_session_when_attempts_remaining(monkeypatch: pytest.MonkeyPatch) -> None:
+    class DummyMember:
+        def __init__(self, user_id: int, guild: "DummyGuild") -> None:
+            self.id = user_id
+            self.guild = guild
+            self.mention = f"<@{user_id}>"
+
+    class DummyGuild:
+        def __init__(self, guild_id: int) -> None:
+            self.id = guild_id
+            self._member: DummyMember | None = None
+
+        def set_member(self, member: DummyMember) -> None:
+            self._member = member
+
+        def get_member(self, user_id: int) -> DummyMember | None:
+            if self._member and self._member.id == user_id:
+                return self._member
+            return None
+
+        async def fetch_member(self, user_id: int) -> DummyMember:
+            member = self.get_member(user_id)
+            if member is None:
+                raise AssertionError("fetch_member should not be called")
+            return member
+
+    class DummyBot:
+        def __init__(self, guild: DummyGuild) -> None:
+            self._guild = guild
+
+        def get_guild(self, guild_id: int) -> DummyGuild | None:
+            if self._guild.id == guild_id:
+                return self._guild
+            return None
+
+        async def fetch_guild(self, guild_id: int) -> DummyGuild:
+            return self._guild
+
+    store = CaptchaSessionStore()
+    guild_id = 1122
+    user_id = 3344
+    dummy_guild = DummyGuild(guild_id)
+    dummy_member = DummyMember(user_id, dummy_guild)
+    dummy_guild.set_member(dummy_member)
+    bot = DummyBot(dummy_guild)
+
+    processor = CaptchaCallbackProcessor(cast(commands.Bot, bot), store)
+
+    async def fake_get_settings(guild: int, keys: list[str]) -> dict[str, Any]:
+        return {
+            "captcha-verification-enabled": True,
+            "captcha-success-actions": None,
+            "captcha-failure-actions": None,
+            "captcha-max-attempts": 3,
+            "captcha-log-channel": None,
+            "captcha-delivery-method": "dm",
+            "captcha-grace-period": None,
+        }
+
+    async def fake_log_to_channel(*args: Any, **kwargs: Any) -> None:
+        return None
+
+    monkeypatch.setattr("modules.utils.mysql.get_settings", fake_get_settings)
+    monkeypatch.setattr("modules.utils.mod_logging.log_to_channel", fake_log_to_channel)
+
+    payload = CaptchaCallbackPayload.from_mapping(
+        {
+            "guildId": str(guild_id),
+            "userId": str(user_id),
+            "token": "dm-token",
+            "status": "failed",
+            "success": False,
+            "failure_reason": "Incorrect answer.",
+            "metadata": {
+                "attemptsRemaining": 2,
+                "maxAttempts": 3,
+                "attempts": 1,
+            },
+        }
+    )
+
+    session = CaptchaSession(
+        guild_id=guild_id,
+        user_id=user_id,
+        token="dm-token",
+        expires_at=None,
+        delivery_method="dm",
+    )
+
+    async def run() -> None:
+        await store.put(session)
+        result = await processor.process(payload)
+        assert result.status == "failed"
+        assert result.roles_applied == 0
+        assert await store.get(guild_id, user_id) is session
+
+    asyncio.run(run())
+
+
+def test_captcha_failure_removes_session_when_attempts_exhausted(monkeypatch: pytest.MonkeyPatch) -> None:
+    class DummyMember:
+        def __init__(self, user_id: int, guild: "DummyGuild") -> None:
+            self.id = user_id
+            self.guild = guild
+            self.mention = f"<@{user_id}>"
+
+    class DummyGuild:
+        def __init__(self, guild_id: int) -> None:
+            self.id = guild_id
+            self._member: DummyMember | None = None
+
+        def set_member(self, member: DummyMember) -> None:
+            self._member = member
+
+        def get_member(self, user_id: int) -> DummyMember | None:
+            if self._member and self._member.id == user_id:
+                return self._member
+            return None
+
+        async def fetch_member(self, user_id: int) -> DummyMember:
+            member = self.get_member(user_id)
+            if member is None:
+                raise AssertionError("fetch_member should not be called")
+            return member
+
+    class DummyBot:
+        def __init__(self, guild: DummyGuild) -> None:
+            self._guild = guild
+
+        def get_guild(self, guild_id: int) -> DummyGuild | None:
+            if self._guild.id == guild_id:
+                return self._guild
+            return None
+
+        async def fetch_guild(self, guild_id: int) -> DummyGuild:
+            return self._guild
+
+    store = CaptchaSessionStore()
+    guild_id = 5566
+    user_id = 7788
+    dummy_guild = DummyGuild(guild_id)
+    dummy_member = DummyMember(user_id, dummy_guild)
+    dummy_guild.set_member(dummy_member)
+    bot = DummyBot(dummy_guild)
+
+    processor = CaptchaCallbackProcessor(cast(commands.Bot, bot), store)
+
+    async def fake_get_settings(guild: int, keys: list[str]) -> dict[str, Any]:
+        return {
+            "captcha-verification-enabled": True,
+            "captcha-success-actions": None,
+            "captcha-failure-actions": None,
+            "captcha-max-attempts": 3,
+            "captcha-log-channel": None,
+            "captcha-delivery-method": "dm",
+            "captcha-grace-period": None,
+        }
+
+    async def fake_log_to_channel(*args: Any, **kwargs: Any) -> None:
+        return None
+
+    monkeypatch.setattr("modules.utils.mysql.get_settings", fake_get_settings)
+    monkeypatch.setattr("modules.utils.mod_logging.log_to_channel", fake_log_to_channel)
+
+    payload = CaptchaCallbackPayload.from_mapping(
+        {
+            "guildId": str(guild_id),
+            "userId": str(user_id),
+            "token": "dm-token",
+            "status": "failed",
+            "success": False,
+            "failure_reason": "Incorrect answer.",
+            "metadata": {
+                "attemptsRemaining": 0,
+                "maxAttempts": 3,
+                "attempts": 3,
+            },
+        }
+    )
+
+    session = CaptchaSession(
+        guild_id=guild_id,
+        user_id=user_id,
+        token="dm-token",
+        expires_at=None,
+        delivery_method="dm",
+    )
+
+    async def run() -> None:
+        await store.put(session)
+        result = await processor.process(payload)
+        assert result.status == "failed"
+        assert result.roles_applied == 0
+        assert await store.get(guild_id, user_id) is None
+
+    asyncio.run(run())
