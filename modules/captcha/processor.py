@@ -25,9 +25,18 @@ _logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
+class _PartialMember:
+    guild: discord.Guild
+    id: int
+
+    @property
+    def mention(self) -> str:
+        return f"<@{self.id}>"
+
+@dataclass(slots=True)
 class _CaptchaProcessingContext:
     guild: discord.Guild
-    member: discord.Member
+    member: discord.Member | _PartialMember
     settings: dict[str, Any]
     session: CaptchaSession
 
@@ -120,7 +129,18 @@ class CaptchaCallbackProcessor:
         self, payload: CaptchaCallbackPayload
     ) -> _CaptchaProcessingContext:
         guild = await self._resolve_guild(payload.guild_id)
-        member = await self._resolve_member(guild, payload.user_id)
+        try:
+            member = await self._resolve_member(guild, payload.user_id)
+        except CaptchaProcessingError as exc:
+            if not payload.success and exc.code in {"member_not_found", "member_fetch_failed"}:
+                _logger.debug(
+                    "Member %s missing when processing failed captcha for guild %s; continuing with partial context.",
+                    payload.user_id,
+                    payload.guild_id,
+                )
+                member = _PartialMember(guild=guild, id=payload.user_id)
+            else:
+                raise
         settings = await mysql.get_settings(
             guild.id,
             [
@@ -237,7 +257,7 @@ class CaptchaCallbackProcessor:
 
     async def _apply_failure_actions(
         self,
-        member: discord.Member,
+        member: discord.Member | _PartialMember,
         payload: CaptchaCallbackPayload,
         settings: dict[str, Any],
     ) -> None:
@@ -257,7 +277,9 @@ class CaptchaCallbackProcessor:
 
         reason = payload.failure_reason or "Failed captcha verification."
 
-        if disciplinary_actions:
+        applied_actions: list[str] = []
+        skip_note: str | None = None
+        if disciplinary_actions and isinstance(member, discord.Member):
             try:
                 await strike.perform_disciplinary_action(
                     user=member,
@@ -277,12 +299,24 @@ class CaptchaCallbackProcessor:
                     "action_failed",
                     "Failed to apply captcha failure actions due to a Discord API error.",
                 ) from exc
+            else:
+                applied_actions = list(disciplinary_actions)
+        elif disciplinary_actions:
+            skip_note = (
+                "Member is no longer in the guild; configured failure actions were skipped."
+            )
+            _logger.info(
+                "Skipping captcha failure actions for guild %s user %s because the member is no longer in the guild.",
+                member.guild.id,
+                member.id,
+            )
 
         await self._log_failure(
             member,
             payload,
-            disciplinary_actions,
+            applied_actions,
             settings,
+            note=skip_note,
         )
 
     async def _log_success(
@@ -341,10 +375,12 @@ class CaptchaCallbackProcessor:
 
     async def _log_failure(
         self,
-        member: discord.Member,
+        member: discord.Member | _PartialMember,
         payload: CaptchaCallbackPayload,
         applied_actions: list[str],
         settings: dict[str, Any],
+        *,
+        note: str | None = None,
     ) -> None:
         channel_id = _coerce_int(settings.get("captcha-log-channel"))
         if not channel_id:
@@ -379,6 +415,8 @@ class CaptchaCallbackProcessor:
                 value=", ".join(applied_actions),
                 inline=False,
             )
+        if note:
+            embed.add_field(name="Notes", value=note, inline=False)
         if attempts is not None or max_attempts is not None:
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
