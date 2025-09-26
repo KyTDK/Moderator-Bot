@@ -38,6 +38,21 @@ from .sessions import CaptchaSessionStore
 
 _logger = logging.getLogger(__name__)
 
+def _ensure_logger_configured() -> None:
+    """Attach a fallback handler so INFO logs surface when logging is uninitialised."""
+    root_logger = logging.getLogger()
+    if root_logger.handlers:
+        return
+    if _logger.handlers:
+        return
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)-7s %(name)s %(message)s"))
+    handler.setLevel(logging.INFO)
+    _logger.addHandler(handler)
+    _logger.setLevel(logging.INFO)
+    _logger.propagate = False
+
 SettingsUpdateCallback = Callable[[CaptchaSettingsUpdatePayload], Awaitable[None] | None]
 
 class CaptchaStreamListener:
@@ -59,6 +74,7 @@ class CaptchaStreamListener:
         self._settings_callback: SettingsUpdateCallback | None = settings_update_callback
 
     async def start(self) -> bool:
+        _ensure_logger_configured()
         if not self._config.enabled:
             return False
 
