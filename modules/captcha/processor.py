@@ -309,26 +309,14 @@ class CaptchaCallbackProcessor:
                 inline=False,
             )
 
-        attempts = _extract_metadata_int(payload.metadata, "attempts", "attemptCount", "attempt")
-        max_attempts = _extract_metadata_int(
-            payload.metadata,
-            "maxAttempts",
-            "max_attempts",
-            "attempt_limit",
-            "limit",
-        )
+        attempts = _extract_metadata_int(payload.metadata, "failureCount")
+        max_attempts = _extract_metadata_int(payload.metadata, "maxAttempts")
         if attempts is not None or max_attempts is not None:
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
             embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
 
-        challenge = _extract_metadata_str(
-            payload.metadata,
-            "challenge",
-            "challenge_type",
-            "challengeType",
-            "type",
-        )
+        challenge = _extract_metadata_str(payload.metadata,"challengeType")
         if challenge:
             embed.add_field(name="Challenge", value=challenge, inline=True)
 
