@@ -612,6 +612,12 @@ def _extract_attempt_counts(
         computed = max_attempts - attempts_remaining
         if computed >= 0:
             attempts = computed
+            _logger.debug(
+                "Inferred attempts used (%s) from max attempts (%s) and attempts remaining (%s)",
+                attempts,
+                max_attempts,
+                attempts_remaining,
+            )
 
     if attempts is not None:
         attempts = max(attempts, 0)
@@ -620,6 +626,12 @@ def _extract_attempt_counts(
         computed_total = attempts + attempts_remaining
         if computed_total >= attempts:
             max_attempts = computed_total
+            _logger.debug(
+                "Inferred max attempts (%s) from attempts used (%s) and attempts remaining (%s)",
+                max_attempts,
+                attempts,
+                attempts_remaining,
+            )
 
     return attempts, max_attempts
 
