@@ -289,7 +289,14 @@ class CaptchaCallbackProcessor:
         payload: CaptchaCallbackPayload,
         settings: Mapping[str, Any],
     ) -> tuple[bool, int | None]:
-        fallback_max = _coerce_int(settings.get("captcha-max-attempts"))
+        fallback_max_setting = _coerce_int(settings.get("captcha-max-attempts"))
+        _, unlimited = _determine_attempt_limit(
+            payload.metadata,
+            fallback_max_setting,
+        )
+        if unlimited:
+            return False, None
+
         attempts_remaining = _extract_metadata_int(
             payload.metadata,
             "attemptsRemaining",
@@ -305,7 +312,7 @@ class CaptchaCallbackProcessor:
 
         attempts, max_attempts = _extract_attempt_counts(
             payload.metadata,
-            fallback_max=fallback_max,
+            fallback_max=fallback_max_setting,
         )
         if max_attempts is not None and attempts is not None:
             remaining = max_attempts - attempts
@@ -422,8 +429,26 @@ class CaptchaCallbackProcessor:
                 inline=False,
             )
 
-        attempts, max_attempts = _extract_attempt_counts(payload.metadata)
-        if (attempts is not None and attempts > 0) or (attempts is None and max_attempts is not None):
+        fallback_max_attempts = _coerce_int(settings.get("captcha-max-attempts"))
+        _, unlimited_attempts = _determine_attempt_limit(
+            payload.metadata,
+            fallback_max_attempts,
+        )
+        attempts, max_attempts = _extract_attempt_counts(
+            payload.metadata,
+            fallback_max=fallback_max_attempts,
+        )
+        if unlimited_attempts:
+            attempts = None
+            max_attempts = None
+
+        if (
+            not unlimited_attempts
+            and (
+                (attempts is not None and attempts > 0)
+                or (attempts is None and max_attempts is not None)
+            )
+        ):
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
             embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
@@ -471,10 +496,17 @@ class CaptchaCallbackProcessor:
             return
 
         fallback_max_attempts = _coerce_int(settings.get("captcha-max-attempts"))
+        _, unlimited_attempts = _determine_attempt_limit(
+            payload.metadata,
+            fallback_max_attempts,
+        )
         attempts, max_attempts = _extract_attempt_counts(
             payload.metadata,
             fallback_max=fallback_max_attempts,
         )
+        if unlimited_attempts:
+            attempts = None
+            max_attempts = None
 
         if attempts_exhausted:
             title = "Captcha Verification Failed"
@@ -489,7 +521,10 @@ class CaptchaCallbackProcessor:
             )
             colour = discord.Colour.orange()
             if attempts_remaining is None:
-                description += " Additional attempts remain."
+                if unlimited_attempts:
+                    description += " Unlimited attempts remain."
+                else:
+                    description += " Additional attempts remain."
             elif attempts_remaining > 0:
                 plural = "attempt" if attempts_remaining == 1 else "attempts"
                 description += f" {attempts_remaining} {plural} remaining."
@@ -508,11 +543,22 @@ class CaptchaCallbackProcessor:
             )
         if note:
             embed.add_field(name="Notes", value=note, inline=False)
-        if (attempts is not None and attempts > 0) or (attempts is None and max_attempts is not None):
+        if (
+            not unlimited_attempts
+            and (
+                (attempts is not None and attempts > 0)
+                or (attempts is None and max_attempts is not None)
+            )
+        ):
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
             embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
-        if not attempts_exhausted and attempts_remaining is not None and attempts_remaining >= 0:
+        if (
+            not attempts_exhausted
+            and not unlimited_attempts
+            and attempts_remaining is not None
+            and attempts_remaining >= 0
+        ):
             embed.add_field(
                 name="Attempts Remaining",
                 value=str(attempts_remaining),
@@ -679,6 +725,26 @@ def _extract_metadata_int(metadata: Mapping[str, Any], *keys: str) -> int | None
     return None
 
 
+def _determine_attempt_limit(
+    metadata: Mapping[str, Any],
+    fallback: int | None,
+) -> tuple[int | None, bool]:
+    limit = _extract_metadata_int(
+        metadata,
+        "maxAttempts",
+        "max_attempts",
+        "attempt_limit",
+        "limit",
+    )
+    if limit is None:
+        limit = fallback
+    if limit is None:
+        return None, False
+    if limit <= 0:
+        return None, True
+    return limit, False
+
+
 def _extract_attempt_counts(
     metadata: Mapping[str, Any],
     *,
@@ -691,13 +757,6 @@ def _extract_attempt_counts(
         "attemptCount",
         "attempt",
     )
-    max_attempts = _extract_metadata_int(
-        metadata,
-        "maxAttempts",
-        "max_attempts",
-        "attempt_limit",
-        "limit",
-    )
     attempts_remaining = _extract_metadata_int(
         metadata,
         "attemptsRemaining",
@@ -707,9 +766,7 @@ def _extract_attempt_counts(
         "attemptsLeft",
         "attempts_left",
     )
-
-    if max_attempts is None:
-        max_attempts = fallback_max
+    max_attempts, unlimited = _determine_attempt_limit(metadata, fallback_max)
 
     if attempts is None and max_attempts is not None and attempts_remaining is not None:
         computed = max_attempts - attempts_remaining
@@ -725,7 +782,12 @@ def _extract_attempt_counts(
     if attempts is not None:
         attempts = max(attempts, 0)
 
-    if max_attempts is None and attempts is not None and attempts_remaining is not None:
+    if (
+        not unlimited
+        and max_attempts is None
+        and attempts is not None
+        and attempts_remaining is not None
+    ):
         computed_total = attempts + attempts_remaining
         if computed_total >= attempts:
             max_attempts = computed_total
