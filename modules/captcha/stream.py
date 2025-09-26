@@ -216,7 +216,7 @@ class CaptchaStreamListener:
         stream = self._config.stream
         next_id = "0-0"
         while not self._stopped.is_set():
-            next_id, messages = await redis.xautoclaim(
+            response = await redis.xautoclaim(
                 stream,
                 self._config.group,
                 self._config.consumer_name,
@@ -224,6 +224,14 @@ class CaptchaStreamListener:
                 next_id,
                 count=self._config.batch_size,
             )
+            try:
+                next_id, messages = response
+            except ValueError:
+                if isinstance(response, tuple) and len(response) >= 3:
+                    next_id, messages = response[0], response[1]
+                    # redis-py>=5.0 returns (next_id, messages, deleted_ids)
+                else:
+                    raise
             if not messages:
                 break
             for message_id, fields in messages:
