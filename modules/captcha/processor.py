@@ -65,7 +65,8 @@ class CaptchaCallbackProcessor:
             return CaptchaProcessResult(status="disabled", roles_applied=0)
 
         if not payload.success:
-            if self._is_grace_period_disabled(settings) and self._is_timeout_failure(payload):
+            timeout_failure = self._is_timeout_failure(payload)
+            if self._is_grace_period_disabled(settings) and timeout_failure:
                 _logger.info(
                     "Ignoring captcha timeout for user %s in guild %s because grace period is disabled",
                     member.id,
@@ -84,6 +85,14 @@ class CaptchaCallbackProcessor:
                 payload.failure_reason or "unknown reason",
             )
             exhausted, remaining = self._has_exhausted_attempts(payload, settings)
+            if timeout_failure and not exhausted:
+                _logger.debug(
+                    "Treating captcha timeout as verification failure for user %s in guild %s.",
+                    member.id,
+                    guild.id,
+                )
+                exhausted = True
+                remaining = 0
             await self._apply_failure_actions(
                 member,
                 payload,
