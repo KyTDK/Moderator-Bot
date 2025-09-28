@@ -1,8 +1,8 @@
 ﻿{
   "bot": {
     "welcome": {
-      "message": "👋 **Thanks for adding Moderator Bot!**\n\n🛠️ **Dashboard:** [Open Dashboard]({dash_url})\n\n**Quick start**\n• Run **`/help`** to see commands (try `/help nsfw`, `/help strikes`)\n• Use the **Dashboard** to configure thresholds, actions, and toggles\n\n**Works out of the box**\nAI moderation is enabled with sane defaults. You can fine-tune anything in the Dashboard.\n\n**Need help?**\nOpen the Dashboard above, or run **`/help`** for details and the support link.",
-      "button_label": "Open Dashboard"
+      "message": "👋 **Cảm ơn bạn  Cảm ơn bạn vì đãt hêm Moderator Bot!**\n\n🛠️ **Bảng điều khiển:** [Mở bảng điều khiển]({dash_url})\n\n**Bắt đầu nhanh**\n• Chọn **`/help`** để xem các lệnh (thử `/help nsfw`, `/help strikes`)\n• Sử dụng **Bảng điều khiển** để load cấu hình ngưỡng, hành động, và chuyển đổi\n\n**Hoạt động ngay**\nAI kiểm duyệt được kích hoạt với các cài đặt mặc định hợp lý. Bạn có thể tùy chỉnh bất kỳ điều gì trong Bảng điều khiển.\n\n**Cần trợ giúp?**\nMở bảng điều khiển ở trên, hoặc chạy **`/help`** để biết thêm chi tiết và liên kết hỗ trợ.",
+      "button_label": "Mở bảng điều khiển"
     }
   }
 }
