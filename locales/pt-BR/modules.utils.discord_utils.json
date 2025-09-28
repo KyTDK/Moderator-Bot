@@ -2,7 +2,7 @@
   "modules": {
     "utils": {
       "discord_utils": {
-        "require_accelerated": "This command is only available for Accelerated (Premium) servers. Use `/accelerated subscribe` to enable it."
+        "require_accelerated": "Este comando está disponível apenas para servidores Acelerados (Premium). Use `/accelerated subscribe` para habilitá-lo."
       }
     }
   }
