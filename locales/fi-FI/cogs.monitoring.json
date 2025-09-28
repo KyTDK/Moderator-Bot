@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "Päivitä Accelerated-versioon nopeampaa NSFW- ja huijaustunnistusta varten — /accelerated",
+        "guild_footer": "Yhteisön ID: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Jäsen liittyi",
+        "description": "{mention} ({name}) on liittynyt palvelimelle.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Tili luotu",
+          "joined_at": "Liittynyt"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bottitili",
+          "user": "Käyttäjätili"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Jäsen asetettu jäähylle",
+        "title_removed": "Aikakatkaisu poistettu",
+        "description_applied": "{mention} ({name}) on asetettu jäähylle.",
+        "description_removed": "{mention} ({name}) on ollut jäähyllä.",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "Päättyy",
+          "moderator": "Moderaattori",
+          "reason": "Syyt"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Käyttäjä ID: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Jäsen potkittu",
+        "title_left": "Jäsen poistui",
+        "description_kicked": "{mention} ({name}) on potkittu palvelimelta.",
+        "description_left": "{mention} ({name}) on poistunut palvelimelta.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Potkinut käyttäjä",
+          "reason": "Syyt"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bottitili",
+          "user": "Käyttäjätili"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Viesti poistettu",
+        "description_with_author": "**Tekijä:** {author_mention} ({author_name})\n**Kanava:** {channel}\n",
+        "deleted_by": "**Poistettu käyttäjän toimesta:** {deleter}\n",
+        "content_label": "**Sisältö:**\n{content}",
+        "description_generic": "Viesti poistettiin kanavassa {channel}.",
+        "description_deleted_by": "\n**Poistettu käyttäjän toimesta:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Liitteet ({count})",
+          "embeds": "Upote {index}",
+          "stickers": "Tarrat ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Upotteen sisältö ei saatavilla]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "Käyttäjä ID: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Viesti Muokattu",
+        "description": "**Tekijä:** {author_mention} ({author_name})\n**Kanava:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Ennen",
+          "after": "Jälkeen"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Käyttäjä ID: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Jäsen estetty",
+        "description": "{mention} ({name}) oli estetty.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Käyttäjä joka esti",
+          "reason": "Syyt"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Käyttäjä ID: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Jäsen vapautettu estosta",
+        "description": "{mention} ({name}) oli vapautettu estosta.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Käyttäjä joka vapautti",
+          "reason": "Syyt"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Käyttäjä ID: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Seurantakanavaksi asetettu {channel}.",
+        "removed": "Seurantakanava on poistettu.",
+        "not_set": "Seurantakanavaa ei ollut asetettu.",
+        "current": "Nykyinen seurantakanava: {channel}",
+        "none": "Seurantakanavaa ei ole tällä hetkellä asetettu.",
+        "toggle": "Kirjaaminen tapahtumalle `{event}` on {state}.",
+        "state_enabled": "käytössä",
+        "state_disabled": "ei käytössä",
+        "list_heading": "**Valvontatapahtumat:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
