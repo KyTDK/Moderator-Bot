@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**הגדרות זמינות:**\\n",
+        "entry": "**{name}**: {description} (סוג: {type})",
+        "not_found": "לא נמצאה עזרה עבור `{command}`."
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "איפוס כל ההגדרות לברירת המחדל.",
+        "already": "אתה כבר משתמש בהגדרות ברירת מחדל."
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**שם הגדרה לא חוקי.**",
+        "requires_plan": "קביעת ערך זו דורשת {requirement}. השתמש ב`/accelerated subscribe` לשדרוג.",
+        "missing_boolean": "**`{name}` מצפה לבוליאני. השתמש באפשרות `value`.**",
+        "missing_integer": "**`{name}` מצפה למספר שלם. השתמש באפשרות `value`.**",
+        "missing_duration": "**`{name}` מצפה למשך זמן (למשל 30m, 1d).**",
+        "missing_channel": "**`{name}` מצפה לערוץ. השתמש באפשרות `channel`.**",
+        "missing_role": "**`{name}` מצפה לתפקיד. השתמש באפשרות `role`.**",
+        "missing_channel_add": "**`{name}` מצפה לערוץ להוספה. השתמש באפשרות `channel`.**",
+        "missing_role_add": "**`{name}` מצפה לתפקיד להוספה. השתמש באפשרות `role`.**",
         "boolean_values": {
           "true": [
-            "true",
+            "נכון",
             "1",
-            "yes"
+            "כן"
           ],
           "false": [
-            "false",
+            "לא נכון",
             "0",
-            "no"
+            "לא"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` מצפה לבוליאני.**",
+        "unknown_type": "הגדרה פוענחה כערך מאחר שהסוג אינו ידוע",
+        "success": "עודכן `{name}` ל-`{value}`.",
+        "unexpected": "אירעה שגיאה בלתי צפויה: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "שם הגדרה לא חוקי.",
+        "not_set": "`{name}` לא הוגדר. ברירת מחדל: `{default}`",
+        "private": "מטעמי פרטיות, הגדרה זו מוסתרת.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` מוגדר כעת ל:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "שם הגדרה לא חוקי.",
+        "not_set": "`{name}` לא הוגדר.",
+        "channel_required": "יש לציין ערוץ להסרה.",
+        "channel_missing": "{channel} אינו נמצא ב-`{name}`.",
+        "role_required": "יש לציין תפקיד להסרה.",
+        "role_missing": "{role} אינו נמצא ב-`{name}`.",
+        "removed_channel": "הוסר {channel} מה-`{name}`.",
+        "removed_role": "הוסר {role} מה-`{name}`.",
+        "removed_setting": "הוסרה הגדרה `{name}`. כעת ברירת מחדל בשימוש.",
+        "unexpected": "אירעה שגיאה בלתי צפויה: `{error}`"
       }
     }
   }
