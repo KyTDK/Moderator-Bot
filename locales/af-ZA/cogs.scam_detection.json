@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Bedroginstellings:**",
+        "actions": "- Bedrog aksies:\n{actions}",
+        "none": "*Geen aksies gestel.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Bedrog boodskap opgespoor",
+        "title": "Bedrog Boodskap Opgespoor",
+        "description": "{mention}, jou boodskap is as bedrog gemerk."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Kanaal {channel} is uitgesluit van bedrog opsporing.",
+        "already": "Kanaal {channel} is reeds uitgesluit van bedrog opsporing.",
+        "not_excluded": "Kanaal {channel} is nie uitgesluit van bedrog opsporing nie.",
+        "removed": "Kanaal {channel} is van die uitsluitingslys verwyder.",
+        "list_empty": "Geen kanale is tans uitgesluit van bedrog opsporing nie.",
+        "invalid": "Geen geldige uitgeslote kanale gevind nie.",
+        "list": "Uitgeslote kanale: {channels}"
       }
     }
   }
