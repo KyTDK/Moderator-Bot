@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Bedrägeriinställningar:**",
+        "actions": "- Bedrägerihandlingar:\n{actions}",
+        "none": "*Inga handlingar har satts.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Bedrägerimeddelande upptäckt",
+        "title": "Bedrägerimeddelande Upptäckt",
+        "description": "{mention}, ditt meddelande flaggades som bedrägeri."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Kanal {channel} har undantagits från bedrägeriupptäckning.",
+        "already": "Kanal {channel} är redan undantagen från bedrägeriupptäckning.",
+        "not_excluded": "Kanal {channel} är inte undantagen från bedrägeriupptäckning.",
+        "removed": "Kanal {channel} har tagits bort från undantagslistan.",
+        "list_empty": "Inga kanaler är för närvarande undantagna från bedrägeriupptäckning.",
+        "invalid": "Inga giltiga undantagna kanaler hits.",
+        "list": "Undantagna kanaler: {channels}"
       }
     }
   }
