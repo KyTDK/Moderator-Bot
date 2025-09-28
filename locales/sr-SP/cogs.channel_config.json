@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} није канал са ограничењем старосне доби. Молимо вас да изаберете NSFW канал.",
+      "missing_permissions": "Недостају ми следеће дозволе у {channel}: {permissions}",
+      "set_success": "{log_type} логови ће бити објављени у {channel}.",
+      "unset_success": "{log_type} лог канал је уклоњен.",
+      "invalid_guild": "Грешка: Неисправан формат ID-а за групу.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**Лог канали:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "Није постављено"
       }
     }
   }
