@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "Tauler del bot moderador",
+        "description": "[Clica aquí per obrir el tauler]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "Generant el teu enllaç del tauler..."
       }
     }
   }
