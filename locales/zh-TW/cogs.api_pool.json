@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**What is the API Pool?**\nAPI Pool 是一個安全且匿名的共享 OpenAI API 金鑰的集合。即使個別用戶面臨速率限制，它也可以使 Moderator Bot 能夠有效地繼續運行。\n\n**它如何運作？**\n- 當您將 OpenAI API 金鑰加入到池中時，它會被加密並安全地儲存。\n- 機器人僅使用這些金鑰來存取 OpenAI 模型以執行審核任務。\n- 您的 API 金鑰保持機密；沒有人，包括機器人開發人員，能夠查看它。\n- 您擁有完整的控制權，可以在任何時候從池中移除您的 API 金鑰。\n\n**重要:** 為了貢獻您的 API 金鑰，您的 OpenAI 帳戶必須至少加值 $5 美元的預付額度。儘管審核端點是免費使用的，但 OpenAI 要求帳戶必須有有效的計費資料和配額。您可以在此添加信用額度：<https://platform.openai.com/account/billing/overview>\n\n通過貢獻您的 API 金鑰，您幫助確保 Moderator Bot 對所有用戶保持敏捷和有效。"
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "此 API 金鑰已存在於池中。",
+        "success": "API 金鑰已添加到池中。"
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "API 金鑰已從您的池中刪除。",
+        "missing": "在您的池中未找到此 API 金鑰。使用 /api_pool list 查看您當前的 API 金鑰。"
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "您池中的所有 API 金鑰都已清除。",
+        "empty": "找不到可供清除的 API 金鑰。"
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "您的 API 金鑰：",
+        "empty": "您的池中未找到 API 金鑰。"
       }
     }
   }
