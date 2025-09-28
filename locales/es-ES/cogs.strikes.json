@@ -2,38 +2,38 @@
   "cogs": {
     "strikes": {
       "strike": {
-        "error": "An error occurred, please try again. If the issue persists, please join the support server (link in `/help`)."
+        "error": "Se produjo un error, por favor intente de nuevo. Si el problema persiste, únase al servidor de soporte (enlace en `/ayuda`)."
       },
       "get": {
-        "title": "Strikes for {name}",
-        "empty": "No strikes found for this user.",
-        "file_notice": "Strike list is too long to display inline, sending as a file:"
+        "title": "Sanciones para {name}",
+        "empty": "No se encontraron sanciones para este usuario.",
+        "file_notice": "La lista de sanciones es demasiado larga para mostrar en línea, se enviará como un archivo:"
       },
       "remove": {
-        "success": "Strike with ID `{id}` for {mention} has been successfully removed.",
-        "not_found": "No strike with ID `{id}` found for {mention} in this guild.\nUse `/strikes get <user>` to display all strikes and their IDs."
+        "success": "La sanción con ID `{id}` para {mention} ha sido eliminada con éxito.",
+        "not_found": "No se encontró una sanción con ID `{id}` para {mention} en este servidor.\nUse `/sanciones obtener <usuario>` para mostrar todas las sanciones y sus IDs."
       },
       "clear": {
-        "none": "No active strikes found for {mention}.",
-        "success": "Cleared {count} strike(s) for {mention}."
+        "none": "No se encontraron sanciones activas para {mention}.",
+        "success": "{count, plural, one {Eliminada} other {Eliminadas}} {count} sanción(es) para {mention}."
       },
       "actions": {
-        "exists": "Action `{action}` already exists for `{key}` strikes.",
-        "added": "Added `{action}` to actions for `{key}` strikes.",
-        "missing": "Action `{action}` not found for `{key}` strikes.",
-        "removed": "Removed `{action}` from `{key}` strike actions."
+        "exists": "La acción `{action}` ya existe para sanciones de `{key}`.",
+        "added": "Añadida `{action}` a las acciones para sanciones de `{key}`.",
+        "missing": "Acción `{action}` no encontrada para sanciones de `{key}`.",
+        "removed": "Eliminada `{action}` de las acciones de sanciones `{key}`."
       },
       "view_actions": {
-        "none": "No strike actions configured.",
-        "heading": "**Current strike actions:**",
+        "none": "No hay acciones de sanciones configuradas.",
+        "heading": "**Acciones de sanciones actuales:**",
         "item": "{key}: {actions}"
       },
       "intimidate": {
-        "user_title": "Final Warning for {name}",
-        "user_body": "{mention},\nYour actions are pushing the limits of what is acceptable within this server. Consider this your final warning before a strike is issued against your account. Continued disregard for the community guidelines will result in immediate disciplinary action, which may include further penalties or removal from the server.\n\nThis is not a request — comply with the rules now.",
-        "guild_title": "Official Moderation Notice",
-        "guild_body": "Please be advised that Moderator Bot is actively monitoring all activity in this channel. Any violations of community guidelines may result in disciplinary action. The severity and nature of these actions will depend on the circumstances of each case. We appreciate your cooperation in helping maintain a respectful and safe environment.",
-        "confirm": "Sent message."
+        "user_title": "Última advertencia para {name}",
+        "user_body": "{mention},\nTus acciones están sobrepasando los límites de lo aceptable dentro de este servidor. Considere esta su última advertencia antes de que se emita una sanción contra su cuenta. El desprecio continuo por las normas de la comunidad resultará en una acción disciplinaria inmediata, que puede incluir más sanciones o la expulsión del servidor.\n\nEsto no es una petición: cumpla con las reglas ahora.",
+        "guild_title": "Aviso oficial de moderación",
+        "guild_body": "Tenga en cuenta que el Bot Moderador está monitoreando activamente toda la actividad en este canal. Cualquier violación de las normas de la comunidad puede resultar en acciones disciplinarias. La severidad y naturaleza de estas acciones dependerán de las circunstancias de cada caso. Agradecemos su cooperación para ayudar a mantener un entorno respetuoso y seguro.",
+        "confirm": "Mensaje enviado."
       }
     }
   }
