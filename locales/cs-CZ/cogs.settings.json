@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**Dostupná nastavení:**\\n",
+        "entry": "**{name}**: {description} (Typ: {type})",
+        "not_found": "Nápověda pro `{command}` nebyla nalezena."
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "Obnovit všechna nastavení na výchozí.",
+        "already": "Již používáte výchozí nastavení."
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**Neplatný název nastavení.**",
+        "requires_plan": "Toto nastavení vyžaduje {requirement}. Použijte `/accelerated subscribe` pro upgrade.",
+        "missing_boolean": "**`{name}` očekává boolean. Použijte možnost `value`.**",
+        "missing_integer": "**`{name}` očekává celé číslo. Použijte možnost `value`.**",
+        "missing_duration": "**`{name}` očekává trvání (např. 30m, 1d).**",
+        "missing_channel": "**`{name}` očekává kanál. Použijte možnost `channel`.**",
+        "missing_role": "**`{name}` očekává roli. Použijte možnost `role`.**",
+        "missing_channel_add": "**`{name}` očekává přidání kanálu. Použijte možnost `channel`.**",
+        "missing_role_add": "**`{name}` očekává přidání role. Použijte možnost `role`.**",
         "boolean_values": {
           "true": [
             "true",
             "1",
-            "yes"
+            "ano"
           ],
           "false": [
             "false",
             "0",
-            "no"
+            "ne"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` očekává boolean.**",
+        "unknown_type": "Nastavení zpracováno jako hodnota, protože typ není známý",
+        "success": "Aktualizováno `{name}` na `{value}`.",
+        "unexpected": "Došlo k neočekávané chybě: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "Neplatný název nastavení.",
+        "not_set": "`{name}` není nastaveno. Výchozí: `{default}`",
+        "private": "Z důvodu ochrany soukromí je toto nastavení skryté.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` je momentálně nastaveno na:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "Neplatný název nastavení.",
+        "not_set": "`{name}` není nastaveno.",
+        "channel_required": "Musíte určit kanál k odstranění.",
+        "channel_missing": "{channel} není v `{name}`.",
+        "role_required": "Musíte určit roli k odstranění.",
+        "role_missing": "{role} není v `{name}`.",
+        "removed_channel": "Odstraněn kanál {channel} z `{name}`.",
+        "removed_role": "Odstraněna role {role} z `{name}`.",
+        "removed_setting": "Odstraněno nastavení `{name}`. Nyní se používá výchozí.",
+        "unexpected": "Došlo k neočekávané chybě: `{error}`"
       }
     }
   }
