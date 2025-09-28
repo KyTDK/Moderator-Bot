@@ -43,7 +43,10 @@ async def _validate_locale(value: Any) -> None:
         return
 
     normalized = normalise_locale(value)
-    if not normalized:
+    raw_value = getattr(value, "value", value)
+    candidate = str(raw_value).strip().replace("_", "-") if raw_value is not None else ""
+
+    if not normalized or candidate.lower() != normalized.lower():
         supported = ", ".join(list_supported_locales())
         raise ValueError(
             "Invalid locale. Supported locales: "
@@ -106,6 +109,7 @@ SETTINGS_SCHEMA = {
         setting_type=str,
         default=None,
         validator=_validate_locale,
+        choices=list_supported_locales(),
     ),
     "nsfw-detection-action": Setting(
         name="nsfw-detection-action",
