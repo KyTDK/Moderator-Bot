@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` on jo listassa.",
+          "success": "Lisätty `{action}` toimintoihin."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "Toimintoa `{action}` ei ole olemassa.",
+          "specific_success": "Poistettiin tietty toiminto `{action}`.",
+          "base_missing": "Toimintoja ei löytynyt `{action}`.",
+          "base_success": "Poistettu kaikki `{action}`-toiminnot."
         }
       }
     }
