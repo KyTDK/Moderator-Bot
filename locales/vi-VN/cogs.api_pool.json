@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**API Pool là gì?**\nAPI Pool là một bộ sưu tập khoá API OpenAI được chia sẻ, bảo mật và ẩn danh. Nó cho phép Moderator Bot tiếp tục hoạt động hiệu quả, ngay cả khi người dùng cá nhân gặp phải giới hạn tần suất.\n\n**Nó hoạt động như thế nào?**\n- Khi bạn thêm khóa API OpenAI của mình vào pool, nó sẽ được mã hóa và lưu trữ an toàn.\n- Bot chỉ sử dụng những khóa này để truy cập các mô hình OpenAI nhằm thực hiện nhiệm vụ kiểm duyệt.\n- Khóa API của bạn vẫn được bảo mật; không ai, kể cả các nhà phát triển bot, có thể xem nó.\n- Bạn hoàn toàn có quyền kiểm soát và có thể xóa khóa API của mình khỏi pool bất cứ lúc nào.\n\n**Quan trọng:** Để đóng góp khóa API của bạn, tài khoản OpenAI của bạn phải có ít nhất 5 đô la trong tài khoản trả trước. Mặc dù điểm cuối kiểm duyệt miễn phí sử dụng, OpenAI yêu cầu tài khoản phải có thông tin thanh toán hoạt động và hạn ngạch. Bạn có thể thêm dư tài khoản của mình tại đây: <https://platform.openai.com/account/billing/overview>\n\nBằng việc đóng góp khóa API của mình, bạn giúp đảm bảo rằng Moderator Bot luôn phản hồi và hiệu quả cho mọi người dùng."
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "Khóa API này đã tồn tại trong pool.",
+        "success": "Khóa API đã được thêm vào pool."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "Khóa API đã bị xóa khỏi pool của bạn.",
+        "missing": "Khóa API này không tồn tại trong pool của bạn. Sử dụng /api_pool list để xem các khóa API hiện tại của bạn."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Tất cả các khóa API đã được xóa khỏi pool của bạn.",
+        "empty": "Không tìm thấy khóa API nào để xóa."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Các Khóa API Của Bạn:",
+        "empty": "Không tìm thấy khóa API nào trong pool của bạn."
       }
     }
   }
