@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Configurações de Scam:**",
+        "actions": "- Ações de scam:\n{actions}",
+        "none": "*Nenhuma ação definida.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Mensagem de scam detectada",
+        "title": "Mensagem de Scam Detectada",
+        "description": "{mention}, sua mensagem foi marcada como scam."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "O canal {channel} foi excluído da detecção de scam.",
+        "already": "O canal {channel} já está excluído da detecção de scam.",
+        "not_excluded": "O canal {channel} não está excluído da detecção de scam.",
+        "removed": "O canal {channel} foi removido da lista de exclusão.",
+        "list_empty": "Nenhum canal está atualmente excluído da detecção de scam.",
+        "invalid": "Nenhum canal válido excluído encontrado.",
+        "list": "Canais excluídos: {channels}"
       }
     }
   }
