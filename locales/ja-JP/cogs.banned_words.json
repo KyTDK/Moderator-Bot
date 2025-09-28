@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "組み込みの不適切言語リストは**{state}**です。",
+        "updated": "組み込みの不適切言語リスト**{state}**。",
+        "state_enabled": "有効",
+        "state_disabled": "無効"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "このサーバーの禁止語句の上限 {limit} に達しました。\nバンされた語句を削除するには、`/bannedwords remove` または `/bannedwords clear` を使用してください。",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "単語 '{word}' はすでに禁止されています。",
+        "success": "単語 '{word}' が禁止語句リストに追加されました。"
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "単語 '{word}' は禁止されていません。",
+        "success": "単語 '{word}' が禁止語句リストから削除されました。"
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "禁止語句は見つかりませんでした。",
+        "file_header": "禁止語句:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "クリアする禁止語句は見つかりませんでした。",
+        "success": "すべての禁止語句がクリアされました。"
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "現在禁止語句に設定されているアクションはありません。",
+        "header": "**現在の禁止語句に対するアクション:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "メッセージに禁止語句が含まれていました",
+        "strike_source": "禁止語句",
+        "embed_title": "禁止語句が検出されました",
+        "embed_description": "{mention}、あなたのメッセージは禁止語句が含まれていたため削除されました。"
       }
     }
   }
