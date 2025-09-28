@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Тренутно нису постављене никакве NSFW радње.",
+        "heading": "**Тренутне NSFW радње:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Тренутно нису постављене никакве категорије.",
+        "heading": "**Тренутне NSFW категорије:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "Праг мора бити између 0,0 и 1,0.",
+        "set": "Праг откривања NSFW постављен на {value:.2f}.",
+        "unset": "Праг откривања NSFW није постављен.",
+        "current": "Тренутни праг откривања NSFW: {value:.2f}"
       }
     }
   }
