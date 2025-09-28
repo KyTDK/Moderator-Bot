@@ -204,7 +204,7 @@ class CaptchaEmbedMixin(CaptchaBaseMixin):
         embed = self._create_embed(
             title="Complete Captcha Verification",
             description=description,
-            footer=f"Guild ID: {guild.id} • Powered by Moderator Bot",
+            footer=f"Guild ID: {guild.id} | Powered by Moderator Bot",
         )
         view = self._build_link_view(self._build_public_verification_url(guild.id))
         return embed, view
@@ -234,3 +234,4 @@ class CaptchaEmbedMixin(CaptchaBaseMixin):
         self._config_cache[guild_id] = config
         self._config_cache_expiry[guild_id] = now + self._config_cache_ttl
         return config
+
