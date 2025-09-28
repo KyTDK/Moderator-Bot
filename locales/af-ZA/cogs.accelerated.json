@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "Bestuur jou **Versnelde** (Premium) intekening.",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "Versnelde Status",
+        "footer_base": "Moderator Bot Versnelde",
         "field_names": {
-          "tier": "Tier",
+          "tier": "Vlak",
           "status": "Status",
-          "next_billing": "Next Billing"
+          "next_billing": "Volgende Faktuur"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "Hierdie bediener is nog nie ingesluit in **Versnelde** nie. Teken nou in met `/versnelde inteken`.",
+          "tier_value": "`Geen`",
+          "status_value": "`Nie ingeteken nie`",
+          "next_billing_value": "Begin 'n plan met `/versnelde inteken`"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`Geen hernuwing geskeduleer nie`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - Volgende faktuursiklus",
+          "checked": "{base} - Status nagegaan"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "Aktief",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "Versnelde is aktief."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "Aktief - Kanselleer binnekort",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "Versnelde bly aktief tot die einde van hierdie faktuursiklus."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "Versnelde voordele is opgeskort. Herbegin enige tyd met `/versnelde inteken`."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 Jou gilde het reeds 'n aktiewe **Versnelde** intekening!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 Opgradeer na Moderator Bot Versnelde!",
+          "description": "**Geniet ongelooflike vinnige NSFW & bedrogopsporing, prioriteitrye en vroeë toegang tot nuwe funksies!**\n\nNa jou gratis maand, gaan voort vir net **$5/maand** om jou bediener veiliger en vinniger te hou.",
+          "footer": "Moderator Bot 🚀 Versnelde Plan",
+          "button_label": "🚀 Teken Nou In"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "Versnelde Voordele",
+        "description": "Verbeter jou ervaring met Moderator Bot Versnelde:\n• KI-aangedrewe outonome moderering-skandering om outomaties op reëloortredende boodskappe op te tree\n• Skandeer meer rame per video vir dieper NSFW-opsporing\n• Prioriteit NSFW & bedrog opsporing\n• Vroeë toegang tot nuwe funksies\n• Ondersteun die bot se ontwikkeling"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "Jy kan jou PayPal-intekening enige tyd kanselleer via jou **PayPal-rekening → Instellings → Betalings → Bestuur Outomatiese Betalings**.\nJou premium toegang duur tot aan die einde van die faktuursiklus."
       }
     }
   }
