@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "Dieser Server hat kein beschleunigtes Abonnement. Verwende `/accelerated subscribe`, um deinen Premium-Plan zu starten."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "Regeln aktualisiert.",
+        "none": "Es wurden keine Moderationsregeln festgelegt.",
+        "heading": "**Moderationsregeln:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "Lege zuerst Moderationsregeln mit `/ai_mod rules_set` fest.",
+        "enabled": "Automatische Moderation wurde **aktiviert**.",
+        "disabled": "Automatische Moderation wurde **deaktiviert**.",
+        "mode_set": "Der Modus wurde auf **{mode}** eingestellt.",
+        "status": "Die automatische Moderation ist **{state}**.\nAktueller Modus ist **{mode}**.",
+        "status_active": "\nAktiver Untermodus: **{active}**",
+        "state_enabled": "aktiviert",
+        "state_disabled": "deaktiviert",
+        "state_unknown": "unbekannt"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "Es sind derzeit keine Aktionen festgelegt.",
+        "heading": "**Aktuelle Aktionen:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "Dieser Ereignistyp erfordert eine Rolle.",
+        "threshold_required": "Dieser Ereignistyp erfordert einen Schwellenwert.",
+        "threshold_range": "Der Schwellenwert muss ein Wert zwischen 0 und 1 sein.",
+        "time_range_required": "Dieser Ereignistyp erfordert einen Zeitrahmen (z.B. 08:00-20:00).",
+        "error": "Fehler beim Einstellen des Ereignisses: {error}",
+        "cleared": "Alle adaptiven Ereignisse wurden gelöscht.",
+        "none": "Keine adaptiven Ereignisse festgelegt.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[ungültige Rolle: {value}]",
+        "detail_invalid": "[ungültig: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "Der adaptive Moderationsmodus ist nicht aktiviert. Verwende `/ai_mod set_mode`, um ihn zu aktivieren."
     }
   }
 }
