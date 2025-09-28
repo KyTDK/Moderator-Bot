@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "لا يمكن استخدام هذا الأمر إلا في خادم.",
+        "wrong_guild": "يرجى اختيار عضو من هذا الخادم.",
+        "is_bot": "الروبوتات لا تتطلب تحقق الكابتشا."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "حدث خطأ غير متوقع أثناء تحديث تضمين الكابتشا.",
+        "updated": "تم تحديث تضمين تحقق الكابتشا.",
+        "missing_delivery": "توصيل تضمين الكابتشا غير مُكوّن لهذا الخادم."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "تم إرسال طلب التحقق.",
+        "failure": "غير قادر على إرسال تعليمات التحقق.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "هذا العضو ليس جزءًا من مجموعة.",
+        "not_enabled": "لم يتم تمكين تحقق الكابتشا لهذا الخادم.",
+        "not_configured": "لم يتم تكوين تحقق الكابتشا.",
+        "embed_success": "تم نشر تعليمات التحقق في القناة المُكوّنة.",
+        "dm_success": "تم إرسال رسالة التحقق إلى العضو.",
+        "failure": "غير قادر على إرسال تعليمات التحقق؛ يرجى التحقق من التكوين."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "تعيين أدوار ما قبل الكابتشا"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "أنتهى وقت تحقق الكابتشا."
       }
     }
   }
