@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Ustawienia oszustwa:**",
+        "actions": "- Działania dotyczące oszustwa:\n{actions}",
+        "none": "*Nie ustawiono działań.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Wykryto wiadomość oszusta",
+        "title": "Wykryto Wiadomość Oszusta",
+        "description": "{mention}, twoja wiadomość została oznaczona jako oszustwo."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Kanał {channel} został wykluczony z wykrywania oszustw.",
+        "already": "Kanał {channel} jest już wykluczony z wykrywania oszustw.",
+        "not_excluded": "Kanał {channel} nie jest wykluczony z wykrywania oszustw.",
+        "removed": "Kanał {channel} został usunięty z listy wykluczonych.",
+        "list_empty": "Obecnie żadne kanały nie są wykluczone z wykrywania oszustw.",
+        "invalid": "Nie znaleziono żadnych prawidłowych wykluczonych kanałów.",
+        "list": "Wykluczone kanały: {channels}"
       }
     }
   }
