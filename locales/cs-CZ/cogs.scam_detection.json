@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Nastavení podvodů:**",
+        "actions": "- Podvodné akce:\n{actions}",
+        "none": "*Žádné akce nastaveny.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Zjištěna podvodná zpráva",
+        "title": "Zjištěna podvodná zpráva",
+        "description": "{mention}, vaše zpráva byla označena jako podvod."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Kanál {channel} byl vyloučen z detekce podvodů.",
+        "already": "Kanál {channel} je již vyloučen z detekce podvodů.",
+        "not_excluded": "Kanál {channel} není vyloučen z detekce podvodů.",
+        "removed": "Kanál {channel} byl odstraněn ze seznamu výjimek.",
+        "list_empty": "Žádné kanály nejsou aktuálně vyloučeny z detekce podvodů.",
+        "invalid": "Nebyly nalezeny platné vyloučené kanály.",
+        "list": "Vyloučené kanály: {channels}"
       }
     }
   }
