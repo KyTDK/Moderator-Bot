@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "Ви не маєте дозволу використовувати цю команду.",
+      "no_allocations": "Проектно-залежні виділення не знайдено.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "Статистика продуктивності бота",
+        "memory_name": "Використання пам'яті",
+        "memory_value": "**RSS (фактичний):** {rss:.2f} МБ\n**VMS (віртуальний):** {vms:.2f} МБ\n**Трасермолоч- поточний:** {current_mb:.2f} МБ\n**Трасермолоч- пік:** {peak_mb:.2f} МБ",
+        "cpu_name": "Процесор та потоки",
+        "cpu_value": "**Використання процесора:** {cpu_percent:.1f}%\n**Поточний стан:** {threads}\n**Ключі:** {handles}",
+        "bot_name": "Статистика бота",
+        "bot_value": "**Сервера:** {guilds}\n**Користувачі (в кеші):** {users}\n**Час роботи без зупинки:** {uptime}",
+        "allocations_name": "Топ виділення пам'яті {index}",
+        "worker_name": "Черги робітників",
+        "worker_error": "(помилка збору метрик: {error})",
+        "footer": "Хост: {host} | Python {python_version}"
       }
     }
   }
