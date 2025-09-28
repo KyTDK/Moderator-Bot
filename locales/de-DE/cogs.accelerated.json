@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "Verwalten Sie Ihr Accelerated (Premium) Abonnement.",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "Beschleunigter Status",
+        "footer_base": "Moderator Bot Beschleunigt",
         "field_names": {
-          "tier": "Tier",
+          "tier": "Stufe",
           "status": "Status",
-          "next_billing": "Next Billing"
+          "next_billing": "Nächste Abrechnung"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "Dieser Server ist noch nicht bei **Accelerated** angemeldet. Jetzt mit `/accelerated subscribe` abonnieren.",
+          "tier_value": "`Keine`",
+          "status_value": "`Nicht abonniert`",
+          "next_billing_value": "Beginnen Sie einen Plan mit `/accelerated subscribe`"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`Kein erneutes Laden geplant`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - Nächster Abrechnungszyklus",
+          "checked": "{base} - Status geprüft"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "Aktiv",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "Accelerated ist aktiv."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "Aktiv - Kündigt demnächst",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "Accelerated bleibt bis zum Ende dieses Abrechnungszyklus aktiv."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "Accelerated Vorteile sind pausiert. Starten Sie jederzeit neu mit `/accelerated subscribe`."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 Deine Gilde hat bereits ein aktives **Accelerated**-Abonnement!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
+          "title": "🚀 Upgrade auf Moderator Bot Accelerated!",
+          "description": "**Genießen Sie blitzschnelle NSFW- und Betrugserkennung, Prioritätsschlangen und frühen Zugriff auf neue Funktionen!**\n\nNach Ihrem kostenlosen Monat, für nur **5 €/Monat** weitermachen, um Ihren Server sicherer und schneller zu machen.",
           "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "button_label": "🚀 Jetzt abonnieren"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "Beschleunigte Vorteile",
+        "description": "Verbessern Sie Ihr Erlebnis mit Moderator Bot Accelerated:\n• KI-gesteuertes autonomes Moderationsscanning zur automatischen Erkennung und Handhabung regelwidriger Nachrichten\n• Scan mehr Frames pro Video für tiefere NSFW-Erkennung\n• Priorität bei NSFW- & Betrugserkennung\n• Früher Zugang zu neuen Funktionen\n• Unterstützt die Entwicklung des Bots"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "Sie können Ihr PayPal-Abonnement jederzeit über Ihr **PayPal-Konto → Einstellungen → Zahlungen → Automatische Zahlungen verwalten** kündigen.\nIhr Premium-Zugang dauert bis zum Ende des Abrechnungszyklus."
       }
     }
   }
