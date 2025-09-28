@@ -3,12 +3,12 @@
     "utils": {
       "list_manager": {
         "add": {
-          "duplicate": "`{item}` is already in the list.",
-          "success": "Added `{item}` to the list."
+          "duplicate": "`{item}` ya está en la lista.",
+          "success": "Se ha añadido `{item}` a la lista."
         },
         "remove": {
-          "missing": "`{item}` is not in the list.",
-          "success": "Removed `{item}` from the list."
+          "missing": "`{item}` no está en la lista.",
+          "success": "Se ha eliminado `{item}` de la lista."
         }
       }
     }
