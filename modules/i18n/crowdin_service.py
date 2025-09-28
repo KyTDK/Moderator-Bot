@@ -186,7 +186,10 @@ class CrowdinTranslationService:
 
         resource = self._client.source_files
         fetcher = resource.with_fetch_all()
-        for page in fetcher.list_project_branches(name=branch_name):
+        for page in fetcher.list_project_branches(
+            projectId=self._settings.project_id,
+            name=branch_name,
+        ):
             data = page["data"]
             if data.get("name") == branch_name:
                 return int(data["id"])
