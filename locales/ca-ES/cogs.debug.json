@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "No tens permís per utilitzar aquesta comanda.",
+      "no_allocations": "No s'han trobat assignacions relacionades amb el projecte.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "Estadístiques de Rendiment del Bot",
+        "memory_name": "Ús de Memòria",
+        "memory_value": "**RSS (Real):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Corrent:** {current_mb:.2f} MB\n**Tracemalloc Pic:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU i Fils",
+        "cpu_value": "**Ús de CPU:** {cpu_percent:.1f}%\n**Fils:** {threads}\n**Manipuladors:** {handles}",
+        "bot_name": "Estadístiques del Bot",
+        "bot_value": "**Guilds:** {guilds}\n**Usuaris (emmagatzemats):** {users}\n**Temps d'activitat:** {uptime}",
+        "allocations_name": "Principals Assignacions de Memòria {index}",
+        "worker_name": "Cues de Treballadors",
+        "worker_error": "(error en recollir mètriques: {error})",
+        "footer": "Amfitrió: {host} | Python {python_version}"
       }
     }
   }
