@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} không bị giới hạn độ tuổi. Vui lòng chọn kênh NSFW.",
+      "missing_permissions": "Tôi thiếu quyền sau trong {channel}: {permissions}",
+      "set_success": "{log_type} nhật ký sẽ được đăng trong {channel}.",
+      "unset_success": "Kênh ghi nhật ký {log_type} đã được bỏ cấu hình.",
+      "invalid_guild": "Lỗi: Định dạng ID guild không hợp lệ.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**Kênh ghi nhật ký:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "Chưa được cấu hình"
       }
     }
   }
