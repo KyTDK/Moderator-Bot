@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**Czym jest API Pool?**\nAPI Pool to bezpieczna i anonimowa kolekcja współdzielonych kluczy API OpenAI. Umożliwia Moderatorowi Botowi skuteczne działanie, nawet gdy poszczególni użytkownicy napotykają limity prędkości.\n\n**Jak to działa?**\n- Gdy dodasz swój klucz API OpenAI do puli, jest on szyfrowany i bezpiecznie przechowywany.\n- Bot używa tych kluczy wyłącznie do uzyskiwania dostępu do modeli OpenAI w celu wykonywania zadań moderacji.\n- Twój klucz API pozostaje poufny; nikt, w tym twórcy bota, nie może go zobaczyć.\n- Masz pełną kontrolę i możesz usunąć swój klucz API z puli w dowolnym momencie.\n\n**Ważne:** Aby dodać swój klucz API, twoje konto OpenAI musi mieć co najmniej 5 USD w przedpłatach. Chociaż punkt końcowy moderacji jest bezpłatny, OpenAI wymaga, aby konta miały aktywne dane rozliczeniowe i limit. Możesz dodać środki do swojego konta tutaj: <https://platform.openai.com/account/billing/overview>\n\nWnosząc swój klucz API, pomagasz zapewnić, że Bot Moderator pozostanie responsywny i skuteczny dla wszystkich użytkowników."
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "Ten klucz API już istnieje w puli.",
+        "success": "Klucz API dodany do puli."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "Klucz API usunięty z Twojej puli.",
+        "missing": "Nie znaleziono tego klucza API w Twojej puli. Użyj /api_pool list, aby zobaczyć swoje aktualne klucze API."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Wszystkie klucze API zostały usunięte z Twojej puli.",
+        "empty": "Nie znaleziono kluczy API do usunięcia."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Twoje klucze API:",
+        "empty": "Nie znaleziono kluczy API w Twojej puli."
       }
     }
   }
