@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Du har nått gränsen på {limit} blockerade URL-adresser för den här servern.\nAnvänd `/bannedurls remove` eller `/bannedurls clear` för att frigöra utrymme.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` är redan blockerad.",
+        "success": "`{url}` har lagts till i listan över blockerade adresser."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` finns inte i listan över blockerade adresser.",
+        "success": "`{url}` har tagits bort från listan över blockerade adresser."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "Inga blockerade URL-adresser hittades.",
+        "file_header": "Blockerade URL-adresser:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "Inga blockerade URL-adresser hittades att rensa.",
+        "success": "Alla blockerade URL-adresser har tagits bort."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "Meddelandet innehöll en blockerad URL ({url})",
+        "strike_source": "blockerad url",
+        "embed_title": "Blockerad URL Upptäckt",
+        "embed_description": "{mention}, ditt meddelande togs bort eftersom det innehöll en blockerad URL."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "Inga åtgärder är för närvarande inställda för blockerade URL-adresser.",
+        "header": "**Aktuella åtgärder för blockerade URL-adresser:**\n{actions}"
       }
     }
   }
