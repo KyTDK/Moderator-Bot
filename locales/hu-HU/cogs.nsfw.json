@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Jelenleg nincsenek beállítva NSFW műveletek.",
+        "heading": "**Jelenlegi NSFW műveletek:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Jelenleg nincsenek beállítva kategóriák.",
+        "heading": "**Jelenlegi NSFW kategóriák:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "A küszöbértéknek 0,0 és 1,0 között kell lennie.",
+        "set": "Az NSFW érzékelési küszöbérték {value:.2f}-re van beállítva.",
+        "unset": "Az NSFW érzékelési küszöbérték nincs beállítva.",
+        "current": "Jelenlegi NSFW érzékelési küszöbérték: {value:.2f}"
       }
     }
   }
