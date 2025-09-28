@@ -50,7 +50,15 @@
           "reason": "**Anledning:** {reason}",
           "expires": "**Löper ut:** {expiry}",
           "issued_by": "Utfärdad av",
-          "expiry_never": "Aldrig"
+          "expiry_never": "Aldrig",
+          "footer": "Server: {server}"
+        },
+        "warn_embed": {
+          "title": "⚠️ You Have Been Warned",
+          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
+          "reason_block": "**Reason:** {reason}\n\n",
+          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
+          "footer": "Server: {server}"
         },
         "errors": {
           "too_many_strikes": "Du kan inte ge samma spelare mer än 100 varningar. Använd `/strikes clear <user>` för att återställa deras varningar."
