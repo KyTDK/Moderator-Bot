@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "הגעת למגבלת {limit} כתובות אתרים חסומות עבור השרת הזה.\nהשתמש ב-`/bannedurls remove` או `/bannedurls clear` כדי לפנות מקום.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` כבר חסומה.",
+        "success": "הוספת `{url}` לרשימת החסומים."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` אינה נמצאת ברשימת החסומים.",
+        "success": "הוסרת `{url}` מרשימת החסומים."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "אין כתובות אתרים חסומות שנמצאו.",
+        "file_header": "כתובות אתרים חסומות:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "לא נמצאו כתובות אתרים חסומות לניקוי.",
+        "success": "כל כתובות האתרים החסומות נמחקו."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "ההודעה הכילה כתובת חסומה ({url})",
+        "strike_source": "כתובת חסומה",
+        "embed_title": "כתובת חסומה זוהתה",
+        "embed_description": "{mention}, ההודעה שלך הוסרה כי היא הכילה כתובת חסומה."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "אין פעולות שנקבעו כרגע לכתובות אתרים חסומות.",
+        "header": "**פעולות נוכחיות לכתובות אתרים חסומות:**\n{actions}"
       }
     }
   }
