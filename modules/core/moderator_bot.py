@@ -16,57 +16,61 @@ from modules.i18n import LocaleRepository, Translator
 
 _current_locale: ContextVar[str | None] = ContextVar("moderator_bot_locale", default=None)
 
-SUPPORTED_LOCALE_ALIASES: dict[str, str] = {
-    "bg": "bg",
-    "cs": "cs",
-    "da": "da",
-    "de": "de",
-    "de-de": "de",
-    "el": "el",
-    "es": "es",
-    "es-es": "es",
-    "es-419": "es",
-    "fi": "fi",
-    "fr": "fr",
-    "fr-fr": "fr",
-    "hi": "hi",
-    "hr": "hr",
-    "hu": "hu",
-    "id": "id",
-    "it": "it",
-    "ja": "ja",
-    "ko": "ko",
-    "lt": "lt",
-    "nl": "nl",
-    "no": "no",
-    "pl": "pl",
-    "pt": "pt",
-    "pt-pt": "pt",
-    "pt-br": "pt-BR",
-    "ro": "ro",
-    "ru": "ru",
-    "sk": "sk",
-    "sr": "sr",
-    "sv": "sv-SE",
-    "sv-se": "sv-SE",
-    "th": "th",
-    "tr": "tr",
-    "uk": "uk",
-    "vi": "vi",
-    "zh": "zh-CN",
-    "zh-cn": "zh-CN",
-    "zh-tw": "zh-TW",
-    "zh-hk": "zh-TW",
-    "en": "en",
-    "en-us": "en",
-    "en-gb": "en",
-    "en-ca": "en",
-    "en-au": "en",
-    "en-nz": "en",
-    "en-ie": "en",
-    "en-in": "en",
-    "en-za": "en",
-}
+def _build_locale_aliases() -> dict[str, str]:
+    mapping: dict[str, str] = {}
+
+    def register(canonical: str, *aliases: str) -> None:
+        normalized_canonical = canonical.strip().replace("_", "-")
+        if not normalized_canonical:
+            return
+        for candidate in (canonical, *aliases):
+            normalized = candidate.strip().replace("_", "-")
+            if not normalized:
+                continue
+            mapping[normalized.lower()] = normalized_canonical
+
+    register("af-ZA", "af")
+    register("ar-SA", "ar")
+    register("bg")
+    register("ca-ES", "ca")
+    register("cs-CZ", "cs")
+    register("da-DK", "da")
+    register("de-DE", "de")
+    register("el-GR", "el")
+    register("en", "en-US", "en-GB", "en-CA", "en-AU", "en-NZ", "en-IE", "en-IN", "en-ZA")
+    register("es-ES", "es", "es-419")
+    register("fi-FI", "fi")
+    register("fr-FR", "fr")
+    register("he-IL", "he")
+    register("hi")
+    register("hr")
+    register("hu-HU", "hu")
+    register("id")
+    register("it-IT", "it")
+    register("ja-JP", "ja")
+    register("ko-KR", "ko")
+    register("lt")
+    register("nl-NL", "nl")
+    register("no-NO", "no")
+    register("pl-PL", "pl")
+    register("pt-PT", "pt")
+    register("pt-BR")
+    register("ro-RO", "ro")
+    register("ru-RU", "ru")
+    register("sk")
+    register("sr-SP", "sr")
+    register("sv-SE", "sv")
+    register("th")
+    register("tr-TR", "tr")
+    register("uk-UA", "uk")
+    register("vi-VN", "vi")
+    register("zh-CN", "zh")
+    register("zh-TW", "zh-HK")
+
+    return mapping
+
+
+SUPPORTED_LOCALE_ALIASES: dict[str, str] = _build_locale_aliases()
 
 _logger = logging.getLogger(__name__)
 
