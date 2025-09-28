@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "Nincs engedélyed a parancs használatához.",
+      "no_allocations": "Nem található projekt-kapcsolatos allokáció.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "Bot teljesítmény statisztika",
+        "memory_name": "Memóriahasználat",
+        "memory_value": "**RSS (Valós):** {rss:.2f} MB\n**VMS (Virtuális):** {vms:.2f} MB\n**Jelenlegi Tracemalloc:** {current_mb:.2f} MB\n**Csúcs Tracemalloc:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU & Szálak",
+        "cpu_value": "**CPU Használat:** {cpu_percent:.1f}%\n**Szálak:** {threads}\n**Kezelők:** {handles}",
+        "bot_name": "Bot statisztika",
+        "bot_value": "**Guildek:** {guilds}\n**Felhasználók (gyorsítótár):** {users}\n**Üzemidő:** {uptime}",
+        "allocations_name": "Legnagyobb memória allokációk {index}",
+        "worker_name": "Dolgozó sorok",
+        "worker_error": "(hiba a metrikák gyűjtésénél: {error})",
+        "footer": "Hoszt: {host} | Python {python_version}"
       }
     }
   }
