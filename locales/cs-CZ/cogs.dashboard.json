@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "Přehledový panel Moderátora Bota",
+        "description": "[Klikněte zde pro otevření přehledového panelu]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "Generování odkazu na váš přehledový panel..."
       }
     }
   }
