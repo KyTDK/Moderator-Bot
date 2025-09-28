@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` είναι ήδη στη λίστα.",
+          "success": "Προστέθηκε το `{action}` στις ενέργειες."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "Η ενέργεια `{action}` δεν υπάρχει.",
+          "specific_success": "Αφαιρέθηκε η συγκεκριμένη ενέργεια `{action}`.",
+          "base_missing": "Δεν βρέθηκαν ενέργειες για το `{action}`.",
+          "base_success": "Αφαιρέθηκαν όλες οι ενέργειες `{action}`."
         }
       }
     }
