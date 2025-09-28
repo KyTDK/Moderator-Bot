@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Dit commando kan alleen op een server worden gebruikt.",
+        "wrong_guild": "Kies alstublieft een lid van deze server.",
+        "is_bot": "Bots hebben geen captcha-verificatie nodig."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Er is een onverwachte fout opgetreden tijdens het bijwerken van de captcha-embed.",
+        "updated": "Captcha-verificatie-inzet is bijgewerkt.",
+        "missing_delivery": "Captcha-inzet bezorging is niet geconfigureerd voor deze server."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Verificatieverzoek verzonden.",
+        "failure": "Niet in staat om verificatie-instructies te verzenden.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Dit lid maakt geen deel uit van een gilde.",
+        "not_enabled": "Captcha-verificatie is niet ingeschakeld voor deze server.",
+        "not_configured": "Captcha-verificatie is niet geconfigureerd.",
+        "embed_success": "Verificatie-instructies geplaatst in het geconfigureerde kanaal.",
+        "dm_success": "Verificatiebericht naar het lid verzonden.",
+        "failure": "Niet in staat om verificatie-instructies te verzenden; controleer de configuratie."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Pre-captcha rollen toewijzen"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Captcha-verificatie is verlopen."
       }
     }
   }
