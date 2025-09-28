@@ -50,15 +50,7 @@
           "reason": "**السبب:** {reason}",
           "expires": "**ينتهي:** {expiry}",
           "issued_by": "صادر عن",
-          "expiry_never": "أبداً",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "أبداً"
         },
         "errors": {
           "too_many_strikes": "لا يمكن منح نفس اللاعب أكثر من 100 إنذار. استخدم `/strikes clear <user>` لإعادة تعيين إنذاراتهم."
