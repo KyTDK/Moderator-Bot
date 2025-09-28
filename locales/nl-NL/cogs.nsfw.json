@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Er zijn momenteel geen NSFW-acties ingesteld.",
+        "heading": "**Huidige NSFW-acties:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Er zijn momenteel geen categorieën ingesteld.",
+        "heading": "**Huidige NSFW-categorieën:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "De drempelwaarde moet tussen 0,0 en 1,0 liggen.",
+        "set": "NSFW-detectiedrempel ingesteld op {value:.2f}.",
+        "unset": "NSFW-detectiedrempel is niet ingesteld.",
+        "current": "Huidige NSFW-detectiedrempel: {value:.2f}"
       }
     }
   }
