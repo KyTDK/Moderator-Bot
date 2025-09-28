@@ -43,7 +43,7 @@
         "private": "For privacy reasons, this setting is hidden.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
-        "dict_item": "**{key}** \u2014 `{values}`",
+        "dict_item": "**{key}** — `{values}`",
         "current": "**`{name}` is currently set to:**\n{value}"
       },
       "remove": {
