@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "您沒有權限使用此命令。",
+      "no_allocations": "未找到與專案相關的分配。",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "機器人性能統計",
+        "memory_name": "記憶體使用情況",
+        "memory_value": "**RSS（實際）：** {rss:.2f} MB\n**VMS（虛擬）：** {vms:.2f} MB\n**Tracemalloc 現在：** {current_mb:.2f} MB\n**Tracemalloc 峰值：** {peak_mb:.2f} MB",
+        "cpu_name": "CPU 和執行緒",
+        "cpu_value": "**CPU 使用率：** {cpu_percent:.1f}%\n**執行緒：** {threads}\n**控件：** {handles}",
+        "bot_name": "機器人統計",
+        "bot_value": "**伺服器：** {guilds}\n**使用者（緩存）：** {users}\n**正常運行時間：** {uptime}",
+        "allocations_name": "頂層內存分配 {index}",
+        "worker_name": "工作隊列",
+        "worker_error": "（收集指標時出錯：{error}）",
+        "footer": "主機：{host} | Python {python_version}"
       }
     }
   }
