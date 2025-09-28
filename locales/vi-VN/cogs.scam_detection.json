@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Cài đặt Lừa đảo:**",
+        "actions": "- Hành động lừa đảo:\n{actions}",
+        "none": "*Không có hành động nào được thiết lập.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Tin nhắn lừa đảo được phát hiện",
+        "title": "Tin nhắn lừa đảo được phát hiện",
+        "description": "{mention}, tin nhắn của bạn đã được gắn cờ là lừa đảo."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Kênh {channel} đã được loại trừ khỏi việc phát hiện lừa đảo.",
+        "already": "Kênh {channel} đã được loại trừ khỏi việc phát hiện lừa đảo.",
+        "not_excluded": "Kênh {channel} không bị loại trừ khỏi việc phát hiện lừa đảo.",
+        "removed": "Kênh {channel} đã được xóa khỏi danh sách loại trừ.",
+        "list_empty": "Hiện tại không có kênh nào bị loại trừ khỏi việc phát hiện lừa đảo.",
+        "invalid": "Không tìm thấy kênh nào bị loại trừ hợp lệ.",
+        "list": "Các kênh bị loại trừ: {channels}"
       }
     }
   }
