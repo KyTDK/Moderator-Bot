@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**Hva er API-poolen?**\nAPI-poolen er en sikker og anonym samling av delte OpenAI API-nøkler. Den gjør det mulig for Moderator Bot å fortsette å fungere effektivt, selv når enkeltbrukere møter grenseverdier.\n\n**Hvordan fungerer det?**\n- Når du legger til OpenAI API-nøkkelen din i poolen, blir den kryptert og lagret sikkert.\n- Boten bruker disse nøklene utelukkende for å få tilgang til OpenAI-modeller for å utføre moderasjonsoppgaver.\n- Din API-nøkkel forblir konfidensiell; ingen, inkludert botutviklerne, kan se den.\n- Du har full kontroll og kan fjerne API-nøkkelen din fra poolen når som helst.\n\n**Viktig:** For å bidra med din API-nøkkel må OpenAI-kontoen din ha minst $5 i forhåndsbetalte kreditter. Selv om moderasjonsendepunktet er gratis, krever OpenAI at kontoer har aktive fakturadetaljer og kvote. Du kan legge til kreditt på kontoen din her: <https://platform.openai.com/account/billing/overview>\n\nVed å bidra med din API-nøkkel, bidrar du til at Moderator Bot forblir responsiv og effektiv for alle brukere."
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "Denne API-nøkkelen finnes allerede i poolen.",
+        "success": "API-nøkkelen er lagt til i poolen."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "API-nøkkelen er fjernet fra poolen din.",
+        "missing": "Denne API-nøkkelen ble ikke funnet i poolen din. Bruk /api_pool list for å se dine nåværende API-nøkler."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Alle API-nøkler er fjernet fra poolen din.",
+        "empty": "Ingen API-nøkler funnet å fjerne."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Dine API-nøkler:",
+        "empty": "Ingen API-nøkler funnet i poolen din."
       }
     }
   }
