@@ -245,14 +245,34 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         delivery_method = str(settings.get("captcha-delivery-method") or "dm").lower()
         embed_channel_id = self._coerce_positive_int(settings.get("captcha-embed-channel-id"))
         grace_setting = self._coerce_grace_period(settings.get("captcha-grace-period"))
-        grace_delta = parse_duration(grace_setting) if grace_setting else None
-        if grace_delta is not None and grace_delta.total_seconds() <= 0:
+        grace_display: str | None = None
+
+        unlimited_grace = False
+        if grace_setting is not None:
+            try:
+                if float(grace_setting) <= 0:
+                    unlimited_grace = True
+            except ValueError:
+                pass
+
+        grace_delta: timedelta | None
+        if unlimited_grace:
             grace_delta = None
-            grace_display: str | None = None
         else:
-            if grace_delta is None:
+            parsed_grace = parse_duration(grace_setting) if grace_setting else None
+            if parsed_grace is None:
+                if grace_setting:
+                    _logger.debug("Invalid captcha grace period %r for guild %s; using default window.",
+                                  grace_setting,
+                                  member.guild.id,)
                 grace_delta = timedelta(minutes=10)
-            grace_display = grace_setting or self._format_duration(grace_delta)
+                grace_display = self._format_duration(grace_delta)
+            elif parsed_grace.total_seconds() <= 0:
+                grace_delta = None
+            else:
+                grace_delta = parsed_grace
+                grace_display = grace_setting or self._format_duration(parsed_grace)
+
         max_attempts = self._coerce_positive_int(settings.get("captcha-max-attempts"))
 
         if delivery_method == "embed" and embed_channel_id:
