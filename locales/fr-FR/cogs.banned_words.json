@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "La liste de vulgarités intégrée est **{state}**.",
+        "updated": "Liste de vulgarités intégrée **{state}**.",
+        "state_enabled": "activée",
+        "state_disabled": "désactivée"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Vous avez atteint la limite de {limit} mots interdits pour ce serveur.\nUtilisez `/bannedwords remove` ou `/bannedwords clear` pour libérer de l'espace.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "Le mot '{word}' est déjà interdit.",
+        "success": "Le mot '{word}' a été ajouté à la liste des mots interdits."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "Le mot '{word}' n'est pas interdit.",
+        "success": "Le mot '{word}' a été retiré de la liste des mots interdits."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Aucun mot interdit trouvé.",
+        "file_header": "Mots Interdits :",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Aucun mot interdit trouvé à effacer.",
+        "success": "Tous les mots interdits ont été effacés."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Aucune action n'est actuellement définie pour les mots interdits.",
+        "header": "**Actions actuelles pour les mots interdits :**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Message contenant un mot interdit",
+        "strike_source": "mot interdit",
+        "embed_title": "Mot Interdit Détecté",
+        "embed_description": "{mention}, votre message a été supprimé car il contenait un mot interdit."
       }
     }
   }
