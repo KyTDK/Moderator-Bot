@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "L'acció ha de ser una de les següents: {options}",
+          "duration_not_allowed": "No es permet la durada per aquesta ordre.",
+          "duration_required": "Has de proporcionar una durada (p. ex., `30m`, `1d`, `2w`).",
+          "duration_invalid": "Format de durada invàlid. Utilitza `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "No pots adjuntar un rol a una acció de temps d\u0000espera.",
+          "role_required": "Has d\u0000especificar un rol per a `{action}`.",
+          "duration_not_supported": "`{action}` no admet una durada.",
+          "role_not_supported": "`{action}` no utilitza cap rol.",
+          "warn_message_required": "Has de proporcionar un missatge d\u0000avís.",
+          "warn_role_disallowed": "No pots adjuntar un rol a una acció d\u0000avís."
         }
       }
     }
