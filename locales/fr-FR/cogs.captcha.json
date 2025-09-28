@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Cette commande ne peut être utilisée que sur un serveur.",
+        "wrong_guild": "Veuillez choisir un membre de ce serveur.",
+        "is_bot": "Les bots n'ont pas besoin de vérification captcha."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Une erreur inattendue s'est produite lors de la mise à jour du captcha intégré.",
+        "updated": "L'intégration de vérification captcha a été mise à jour.",
+        "missing_delivery": "La livraison de l'intégration captcha n'est pas configurée pour ce serveur."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Demande de vérification envoyée.",
+        "failure": "Impossible d'envoyer les instructions de vérification.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Ce membre ne fait pas partie d'une guilde.",
+        "not_enabled": "La vérification captcha n'est pas activée pour ce serveur.",
+        "not_configured": "La vérification captcha n'est pas configurée.",
+        "embed_success": "Instructions de vérification publiées dans le canal configuré.",
+        "dm_success": "Message de vérification envoyé au membre.",
+        "failure": "Impossible d'envoyer les instructions de vérification; veuillez vérifier la configuration."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Attribuer des rôles pré-captcha"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "La vérification captcha a expiré."
       }
     }
   }
