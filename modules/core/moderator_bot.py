@@ -220,7 +220,13 @@ class ModeratorBot(commands.Bot):
         locale = self._extract_locale_from_interaction(interaction)
         token = _current_locale.set(locale)
         try:
-            await super().on_interaction(interaction)
+            try:
+                parent_on_interaction = super().on_interaction  # type: ignore[attr-defined]
+            except AttributeError:
+                parent_on_interaction = None
+
+            if parent_on_interaction is not None:
+                await parent_on_interaction(interaction)
         finally:
             _current_locale.reset(token)
 
