@@ -207,50 +207,59 @@ class ScamDetectionCog(commands.Cog):
     @scam_group.command(name="exclude_channel_add", description="Exclude a channel from scam detection.")
     @app_commands.describe(channel="The channel to exclude")
     async def exclude_channel_add(self, interaction: Interaction, channel: discord.TextChannel):
+        texts = self.bot.translate("cogs.scam_detection.exclude")
         gid = interaction.guild.id
-        if channel.id in await get_settings(gid, EXCLUDE_CHANNELS_SETTING):
+        current_excluded = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
+        if channel.id in current_excluded:
             await interaction.response.send_message(
-                f"Channel {channel.mention} is already excluded from scam detection.", ephemeral=True
+                texts["already"].format(channel=channel.mention),
+                ephemeral=True,
             )
             return
-        current_excluded = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
         current_excluded.append(channel.id)
         await update_settings(gid, EXCLUDE_CHANNELS_SETTING, current_excluded)
         await interaction.response.send_message(
-            f"Channel {channel.mention} has been excluded from scam detection.", ephemeral=True
+            texts["added"].format(channel=channel.mention),
+            ephemeral=True,
         )
-    
+
     @scam_group.command(name="exclude_channel_remove", description="Remove a channel from the exclusion list.")
     @app_commands.describe(channel="The channel to remove from exclusion")
     async def exclude_channel_remove(self, interaction: Interaction, channel: discord.TextChannel):
+        texts = self.bot.translate("cogs.scam_detection.exclude")
         gid = interaction.guild.id
         current_excluded = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
         if channel.id not in current_excluded:
             await interaction.response.send_message(
-                f"Channel {channel.mention} is not excluded from scam detection.", ephemeral=True
+                texts["not_excluded"].format(channel=channel.mention),
+                ephemeral=True,
             )
             return
         current_excluded.remove(channel.id)
         await update_settings(gid, EXCLUDE_CHANNELS_SETTING, current_excluded)
         await interaction.response.send_message(
-            f"Channel {channel.mention} has been removed from the exclusion list.", ephemeral=True
+            texts["removed"].format(channel=channel.mention),
+            ephemeral=True,
         )
-    
+
     @scam_group.command(name="exclude_channel_list", description="List all excluded channels.")
     async def exclude_channel_list(self, interaction: Interaction):
+        texts = self.bot.translate("cogs.scam_detection.exclude")
         gid = interaction.guild.id
         excluded_channels = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
         if not excluded_channels:
-            await interaction.response.send_message("No channels are currently excluded from scam detection.", ephemeral=True)
+            await interaction.response.send_message(texts["list_empty"], ephemeral=True)
             return
         channels = [interaction.guild.get_channel(cid) for cid in excluded_channels if interaction.guild.get_channel(cid)]
         if not channels:
-            await interaction.response.send_message("No valid excluded channels found.", ephemeral=True)
+            await interaction.response.send_message(texts["invalid"], ephemeral=True)
             return
         channel_mentions = ", ".join(channel.mention for channel in channels)
         await interaction.response.send_message(
-            f"Excluded channels: {channel_mentions}", ephemeral=True
+            texts["list"].format(channels=channel_mentions),
+            ephemeral=True,
         )
+
 
     @scam_group.command(name="check_links", description="Toggle or view link checking.")
     @app_commands.describe(action="enable | disable | status")
@@ -300,11 +309,12 @@ class ScamDetectionCog(commands.Cog):
             role=role,
             valid_actions=VALID_ACTION_VALUES,
             param=reason,
+            translator=self.bot.translate,
         )
         if action_str is None:
             return
 
-        msg = await manager.add_action(gid, action_str)
+        msg = await manager.add_action(gid, action_str, translator=self.bot.translate)
         await interaction.followup.send(msg, ephemeral=True)
 
     @scam_group.command(name="remove_action", description="Remove an action from the scam punishment list.")
@@ -312,7 +322,7 @@ class ScamDetectionCog(commands.Cog):
     @app_commands.autocomplete(action=manager.autocomplete)
     async def scam_remove_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
-        msg = await manager.remove_action(gid, action)
+        msg = await manager.remove_action(gid, action, translator=self.bot.translate)
         await interaction.response.send_message(msg, ephemeral=True)
 
     @scam_group.command(name="view", description="View current scam settings.")
@@ -376,24 +386,25 @@ class ScamDetectionCog(commands.Cog):
                         user=message.author,
                         bot=self.bot,
                         action_string=action_flag,
-                        reason="Scam message detected",
+                        reason=self.bot.translate("cogs.scam_detection.detection.reason"),
                         source="scam",
                         message=message,
                     )
                 except Exception:
                     pass
 
+            detection_texts = self.bot.translate("cogs.scam_detection.detection")
             try:
                 embed = discord.Embed(
-                    title="Scam Message Detected",
-                    description=f"{message.author.mention}, your message was flagged as scam.",
-                    color=discord.Color.red()
+                    title=detection_texts["title"],
+                    description=detection_texts["description"].format(mention=message.author.mention),
+                    color=discord.Color.red(),
                 )
                 embed.set_thumbnail(url=message.author.display_avatar.url)
                 await mod_logging.log_to_channel(
                     embed=embed,
                     channel_id=message.channel.id,
-                    bot=self.bot
+                    bot=self.bot,
                 )
             except Exception:
                 pass

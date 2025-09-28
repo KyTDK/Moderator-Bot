@@ -49,19 +49,32 @@ class BannedWordsCog(commands.Cog):
 
         if action == "status":
             current = await mysql.get_settings(guild_id, "use-default-banned-words")
-            state   = "enabled" if current is not False else "disabled"
-            await interaction.response.send_message(
-                f"The built-in profanity list is **{state}**.", ephemeral=True
+            state_key = (
+                "cogs.banned_words.defaults.state_enabled"
+                if current is not False
+                else "cogs.banned_words.defaults.state_disabled"
             )
+            state = self.bot.translate(state_key)
+            message = self.bot.translate(
+                "cogs.banned_words.defaults.status",
+                placeholders={"state": state},
+            )
+            await interaction.response.send_message(message, ephemeral=True)
             return
 
         new_value = (action == "true")
         await mysql.update_settings(guild_id, "use-default-banned-words", new_value)
-
-        await interaction.response.send_message(
-            f"Built-in profanity list **{'enabled' if new_value else 'disabled'}**.",
-            ephemeral=True
+        state_key = (
+            "cogs.banned_words.defaults.state_enabled"
+            if new_value
+            else "cogs.banned_words.defaults.state_disabled"
         )
+        state = self.bot.translate(state_key)
+        message = self.bot.translate(
+            "cogs.banned_words.defaults.updated",
+            placeholders={"state": state},
+        )
+        await interaction.response.send_message(message, ephemeral=True)
 
     @bannedwords_group.command(
         name="add",
@@ -78,7 +91,10 @@ class BannedWordsCog(commands.Cog):
             fetch_one=True
         )
         if existing_word:
-            await interaction.followup.send(f"The word '{word}' is already banned.", ephemeral=True)
+            await interaction.followup.send(
+                self.bot.translate("cogs.banned_words.add.duplicate", placeholders={"word": word}),
+                ephemeral=True,
+            )
             return
         
         # Check how many banned words exist
@@ -89,9 +105,8 @@ class BannedWordsCog(commands.Cog):
         )
         if count_result and count_result[0] >= MAX_BANNED_WORDS:
             await interaction.followup.send(
-                f"You've reached the limit of {MAX_BANNED_WORDS} banned words for this server.\n"
-                f"Use `/bannedwords remove` or `/bannedwords clear` to make space.",
-                ephemeral=True
+                self.bot.translate("cogs.banned_words.limit_reached", placeholders={"limit": MAX_BANNED_WORDS}),
+                ephemeral=True,
             )
             return
 
@@ -100,7 +115,10 @@ class BannedWordsCog(commands.Cog):
             "INSERT INTO banned_words (guild_id, word) VALUES (%s, %s)",
             (guild_id, word)
         )
-        await interaction.followup.send(f"The word '{word}' has been added to the banned words list.", ephemeral=True)
+        await interaction.followup.send(
+            self.bot.translate("cogs.banned_words.add.success", placeholders={"word": word}),
+            ephemeral=True,
+        )
 
     # Remove a banned word
     @bannedwords_group.command(
@@ -119,7 +137,10 @@ class BannedWordsCog(commands.Cog):
         )
         existing_word = rows[0] if rows else None
         if not existing_word:
-            await interaction.followup.send(f"The word '{word}' is not banned.", ephemeral=True)
+            await interaction.followup.send(
+                self.bot.translate("cogs.banned_words.remove.missing", placeholders={"word": word}),
+                ephemeral=True,
+            )
             return
 
         # Remove the banned word from the database
@@ -127,7 +148,10 @@ class BannedWordsCog(commands.Cog):
             "DELETE FROM banned_words WHERE guild_id = %s AND word = %s",
             (guild_id, word)
         )
-        await interaction.followup.send(f"The word '{word}' has been removed from the banned words list.", ephemeral=True)
+        await interaction.followup.send(
+            self.bot.translate("cogs.banned_words.remove.success", placeholders={"word": word}),
+            ephemeral=True,
+        )
     @remove_banned_word.autocomplete("word")
     async def banned_word_autocomplete(
         self,
@@ -165,13 +189,16 @@ class BannedWordsCog(commands.Cog):
         banned_words = [row[0] for row in rows]
 
         if not banned_words or len(banned_words) == 0:
-            await interaction.followup.send("No banned words found.", ephemeral=True)
+            await interaction.followup.send(
+                self.bot.translate("cogs.banned_words.list.empty"),
+                ephemeral=True,
+            )
             return
 
-        file_content = "Banned Words:\n"
+        file_content = self.bot.translate("cogs.banned_words.list.file_header") + "\n"
         if banned_words and len(banned_words) > 0:
             for word in banned_words:
-                file_content += f"- {word}\n"
+                file_content += self.bot.translate("cogs.banned_words.list.file_item", placeholders={"word": word}) + "\n"
             file_buffer = io.StringIO(file_content)
             file = discord.File(file_buffer, filename = f"banned_words_{interaction.guild.id}.txt")
 
@@ -192,9 +219,15 @@ class BannedWordsCog(commands.Cog):
             (guild_id,)
         )
         if affected_rows == 0:
-            await interaction.followup.send("No banned words found to clear.", ephemeral=True)
+            await interaction.followup.send(
+                self.bot.translate("cogs.banned_words.clear.empty"),
+                ephemeral=True,
+            )
             return
-        await interaction.followup.send("All banned words have been cleared.", ephemeral=True)
+        await interaction.followup.send(
+            self.bot.translate("cogs.banned_words.clear.success"),
+            ephemeral=True,
+        )
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
@@ -253,8 +286,8 @@ class BannedWordsCog(commands.Cog):
                     user=message.author,
                     bot=self.bot,
                     action_string=action_flag,
-                    reason="Message contained banned word",
-                    source="banned word",
+                    reason=self.bot.translate("cogs.banned_words.enforcement.strike_reason"),
+                    source=self.bot.translate("cogs.banned_words.enforcement.strike_source"),
                     message=message
                 )
             except Exception:
@@ -262,8 +295,8 @@ class BannedWordsCog(commands.Cog):
 
         try:
             embed = discord.Embed(
-                title="Banned Word Detected",
-                description=f"{message.author.mention}, your message was removed because it contained a banned word.",
+                title=self.bot.translate("cogs.banned_words.enforcement.embed_title"),
+                description=self.bot.translate("cogs.banned_words.enforcement.embed_description", placeholders={"mention": message.author.mention}),
                 color=discord.Color.red()
             )
             embed.set_thumbnail(url=message.author.display_avatar.url)
@@ -301,32 +334,37 @@ class BannedWordsCog(commands.Cog):
             role=role,
             valid_actions=VALID_ACTION_VALUES,
             param=reason,
+            translator=self.bot.translate,
         )
         if action_str is None:
             return
 
-        msg = await manager.add_action(interaction.guild.id, action_str)
+        msg = await manager.add_action(interaction.guild.id, action_str, translator=self.bot.translate)
         await interaction.followup.send(msg, ephemeral=True)
 
     @bannedwords_group.command(name="remove_action", description="Remove a specific action from the list of punishments for banned words.")
     @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
     @app_commands.autocomplete(action=manager.autocomplete)
     async def remove_banned_action(self, interaction: Interaction, action: str):
-        msg = await manager.remove_action(interaction.guild.id, action)
+        msg = await manager.remove_action(interaction.guild.id, action, translator=self.bot.translate)
         await interaction.response.send_message(msg, ephemeral=True)
 
     @bannedwords_group.command(name="view_actions", description="Show all actions currently configured to trigger when banned words are used.")
     async def view_banned_actions(self, interaction: Interaction):
         actions = await manager.view_actions(interaction.guild.id)
         if not actions:
-            await interaction.response.send_message("No actions are currently set for banned words.", ephemeral=True)
+            await interaction.response.send_message(
+            self.bot.translate("cogs.banned_words.actions.none"),
+            ephemeral=True,
+        )
             return
 
         formatted = "\n".join(f"{i+1}. `{a}`" for i, a in enumerate(actions))
-        await interaction.response.send_message(
-            f"**Current banned words actions:**\n{formatted}",
-            ephemeral=True
+        header = self.bot.translate(
+            "cogs.banned_words.actions.header",
+            placeholders={"actions": formatted},
         )
+        await interaction.response.send_message(header, ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BannedWordsCog(bot))

@@ -104,12 +104,10 @@ class AggregatedModerationCog(commands.Cog):
             )
             if flagged:
                 try:
+                    nsfw_texts = self.bot.translate("cogs.aggregated_moderation.nsfw_detection", placeholders={"mention": message.author.mention})
                     embed = discord.Embed(
-                        title="NSFW Content Detected",
-                        description=(
-                            f"{message.author.mention}, your message was removed because it contained "
-                            "explicit or inappropriate content."
-                        ),
+                        title=nsfw_texts["title"],
+                        description=nsfw_texts["description"],
                         color=discord.Color.red()
                     )
                     embed.set_thumbnail(url=message.author.display_avatar.url)
@@ -309,7 +307,10 @@ class AggregatedModerationCog(commands.Cog):
                 )
                 if await mysql.get_settings(guild.id, "unmute-on-safe-pfp") and result is not None:
                     try:
-                        await member.edit(timed_out_until=None, reason="Profile picture updated to a safe image.")
+                        await member.edit(
+                            timed_out_until=None,
+                            reason=self.bot.translate("cogs.aggregated_moderation.pfp.safe_reason"),
+                        )
                         await mysql.execute_query(
                             "DELETE FROM timeouts WHERE user_id=%s AND guild_id=%s AND source='pfp'",
                             (member.id, guild.id)

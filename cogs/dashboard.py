@@ -1,5 +1,6 @@
-from discord.ext import commands
+﻿from discord.ext import commands
 from discord import Color, Embed, Interaction, app_commands
+
 
 class DashboardCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -15,13 +16,18 @@ class DashboardCog(commands.Cog):
 
         await interaction.response.defer(ephemeral=True, thinking=True)
 
-        # Return dashboard link
         embed = Embed(
-            title="Moderator Bot Dashboard",
-            description=f"[Click here to open the dashboard]({backend_url})",
+            title=self.bot.translate("cogs.dashboard.embed.title"),
+            description=self.bot.translate(
+                "cogs.dashboard.embed.description",
+                placeholders={"url": backend_url},
+            ),
             color=Color.blurple()
         )
-        embed.set_thumbnail(url=self.bot.user.display_avatar.url)
+        if self.bot.user:
+            embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         await interaction.followup.send(embed=embed, ephemeral=True)
+
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(DashboardCog(bot))

@@ -40,32 +40,31 @@ class ChannelConfigCog(commands.Cog):
 
         if type.value == "NSFW" and not channel.is_nsfw():
             await interaction.response.send_message(
-                f"{channel.mention} is not age-restricted. Please choose an NSFW channel.",
+                self.bot.translate("cogs.channel_config.nsfw_required", placeholders={"channel": channel.mention}),
                 ephemeral=True,
             )
             return
-        
-        # Check if bot has required permissions in the channel
+
         required_perms = [
-            "view_channel", 
-            "send_messages", 
-            "embed_links", 
-            "attach_files"
+            "view_channel",
+            "send_messages",
+            "embed_links",
+            "attach_files",
         ]
         perms = channel.permissions_for(interaction.guild.me)
 
         missing = [p for p in required_perms if not getattr(perms, p)]
         if missing:
+            perm_list = ", ".join(m.replace('_', ' ').title() for m in missing)
             await interaction.response.send_message(
-                f"I am missing the following permissions in {channel.mention}: "
-                + ", ".join(m.replace('_', ' ').title() for m in missing),
+                self.bot.translate("cogs.channel_config.missing_permissions", placeholders={"channel": channel.mention, "permissions": perm_list}),
                 ephemeral=True,
             )
             return
 
         await mysql.update_settings(interaction.guild.id, key, channel.id)
         await interaction.response.send_message(
-            f"{type.value} logs will be posted in {channel.mention}.",
+            self.bot.translate("cogs.channel_config.set_success", placeholders={"log_type": type.value, "channel": channel.mention}),
             ephemeral=True,
         )
 
@@ -78,12 +77,13 @@ class ChannelConfigCog(commands.Cog):
         key = LOG_CHANNEL_TYPES[type.value]
         await mysql.update_settings(interaction.guild.id, key, None)
         await interaction.response.send_message(
-            f"{type.value} log channel has been unset.",
+            self.bot.translate("cogs.channel_config.unset_success", placeholders={"log_type": type.value}),
             ephemeral=True,
         )
 
     @channels_group.command(name="show", description="Show current log channel settings.")
     async def show_channels(self, interaction: Interaction):
+        show_texts = self.bot.translate("cogs.channel_config.show")
         # Ensure guild ID is an int
         guild_id = interaction.guild.id
         if isinstance(guild_id, str):
@@ -91,7 +91,7 @@ class ChannelConfigCog(commands.Cog):
                 guild_id = int(guild_id)
             except ValueError:
                 await interaction.response.send_message(
-                    "Error: Invalid guild ID format.", ephemeral=True
+                    self.bot.translate("cogs.channel_config.invalid_guild"), ephemeral=True
                 )
                 return
 
@@ -108,13 +108,19 @@ class ChannelConfigCog(commands.Cog):
                 except ValueError:
                     cid = None
             ch = interaction.guild.get_channel(cid) if cid else None
-            return f"{name}: {ch.mention if ch else 'Not set'}"
+            value = ch.mention if ch else show_texts["not_set"]
+            return self.bot.translate(
+                "cogs.channel_config.show.entry",
+                placeholders={"name": name, "value": value},
+            )
 
         lines = [fmt(name, key) for name, key in LOG_CHANNEL_TYPES.items()]
         await interaction.response.send_message(
-            "**Log Channels:**\n" + "\n".join(lines),
+            show_texts["heading"] + "\n" + "\n".join(lines),
             ephemeral=True
         )
+
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ChannelConfigCog(bot))

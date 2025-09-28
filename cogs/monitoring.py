@@ -7,14 +7,18 @@ from modules.utils import mysql
 from discord.utils import format_dt, utcnow
 from discord import app_commands
 
+
 class MonitoringCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self._monitor_blocked_channels: set[int] = set()
 
+    def _texts(self, section: str):
+        return self.bot.translate(f"cogs.monitoring.{section}")
+
     async def get_monitor_channel(self, guild_id: int) -> Optional[int]:
-        id = await mysql.get_settings(guild_id, "monitor-channel")
-        return int(id) if id else None
+        channel_id = await mysql.get_settings(guild_id, "monitor-channel")
+        return int(channel_id) if channel_id else None
 
     async def is_event_enabled(self, guild_id: int, event_name: str) -> bool:
         settings = await mysql.get_settings(guild_id, "monitor-events") or {}
@@ -23,67 +27,64 @@ class MonitoringCog(commands.Cog):
     async def log_event(
         self,
         guild: discord.Guild,
-        message=None,
-        embed=None,
-        mention_user: bool = True
+        message: Optional[str] = None,
+        embed: Optional[discord.Embed] = None,
+        mention_user: bool = True,
     ):
         channel_id = await self.get_monitor_channel(guild.id)
-        if channel_id:
-            channel = guild.get_channel(channel_id)
-            if channel:
-                bot_user = self.bot.user
-                if not bot_user:
-                    print(f"Missing bot user when logging monitor event for guild {guild.id}")
-                    return
-                me = guild.me or guild.get_member(bot_user.id)
-                if not me:
-                    print(f"Missing guild member record for bot in guild {guild.id}")
-                    return
-                if hasattr(channel, "permissions_for"):
-                    perms = channel.permissions_for(me)
-                    if not perms.view_channel or not perms.send_messages:
-                        if channel.id not in self._monitor_blocked_channels:
-                            print(f"Missing access to send messages in channel ID {channel.id} for guild {guild.id}")
-                        self._monitor_blocked_channels.add(channel.id)
-                        return
-                try:
-                    allowed = discord.AllowedMentions.all() if mention_user else discord.AllowedMentions.none()
-                    # Set footer embed for non-accelerated users
-                    is_accelerated = await mysql.is_accelerated(guild_id=guild.id)
-                    if embed: 
-                        if not is_accelerated:
-                            embed.set_footer(
-                                text=(
-                                    f"Upgrade to Accelerated for faster NSFW & scam detection → /accelerated"
-                                )
-                            )
-                        else:
-                            embed.set_footer(text=f"Guild ID: {guild.id}")
+        if not channel_id:
+            return
 
+        channel = guild.get_channel(channel_id)
+        if channel is None:
+            return
 
-                    await channel.send(
-                        content=message if message else None,
-                        embed=embed,
-                        allowed_mentions=allowed
-                    )
-                    self._monitor_blocked_channels.discard(channel.id)
-                except discord.Forbidden:
-                    if channel.id not in self._monitor_blocked_channels:
-                        print(f"Missing access to send messages in channel ID {channel.id} for guild {guild.id}")
-                    self._monitor_blocked_channels.add(channel.id)
+        bot_user = self.bot.user
+        if bot_user is None:
+            print(f"Missing bot user when logging monitor event for guild {guild.id}")
+            return
+
+        me = guild.me or guild.get_member(bot_user.id)
+        if me is None:
+            print(f"Missing guild member record for bot in guild {guild.id}")
+            return
+
+        if hasattr(channel, "permissions_for"):
+            perms = channel.permissions_for(me)
+            if not perms.view_channel or not perms.send_messages:
+                if channel.id not in self._monitor_blocked_channels:
+                    print(f"Missing access to send messages in channel ID {channel.id} for guild {guild.id}")
+                self._monitor_blocked_channels.add(channel.id)
+                return
+
+        try:
+            allowed = discord.AllowedMentions.all() if mention_user else discord.AllowedMentions.none()
+            log_texts = self._texts("log_event")
+            if embed is not None:
+                is_accelerated = await mysql.is_accelerated(guild_id=guild.id)
+                if not is_accelerated:
+                    embed.set_footer(text=log_texts["upgrade_footer"])
+                else:
+                    embed.set_footer(text=log_texts["guild_footer"].format(guild_id=guild.id))
+
+            await channel.send(content=message, embed=embed, allowed_mentions=allowed)
+            self._monitor_blocked_channels.discard(channel.id)
+        except discord.Forbidden:
+            if channel.id not in self._monitor_blocked_channels:
+                print(f"Missing access to send messages in channel ID {channel.id} for guild {guild.id}")
+            self._monitor_blocked_channels.add(channel.id)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         guild = member.guild
-        gid = guild.id
-
-        if not await self.is_event_enabled(gid, "join"):
+        if not await self.is_event_enabled(guild.id, "join"):
             return
 
+        texts = self._texts("join")
         try:
             embed = Embed(
-                title="Member Joined",
-                description=f"{member.mention} ({member.name}) has joined the server.",
+                title=texts["title"],
+                description=texts["description"].format(mention=member.mention, name=member.name),
                 color=Color.green(),
             )
 
@@ -91,45 +92,54 @@ class MonitoringCog(commands.Cog):
             embed.set_thumbnail(url=avatar_url)
 
             embed.add_field(
-                name="Account Created",
+                name=texts["fields"]["account_created"],
                 value=format_dt(member.created_at or utcnow(), style="F"),
                 inline=True,
             )
-
             embed.add_field(
-                name="Joined At",
+                name=texts["fields"]["joined_at"],
                 value=format_dt(member.joined_at or utcnow(), style="F"),
                 inline=True,
             )
 
-            embed.set_footer(text="Bot account" if member.bot else "User account")
-            await self.log_event(member.guild, embed=embed)
-
-        except Exception as e:
-            print(f"[Join Log] Failed to send join embed for {member}: {e}")
+            footer_key = "bot" if member.bot else "user"
+            embed.set_footer(text=texts["footer"][footer_key])
+            await self.log_event(guild, embed=embed)
+        except Exception as exc:
+            print(f"[Join Log] Failed to send join embed for {member}: {exc}")
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.timed_out_until == after.timed_out_until:
-            return 
+            return
 
         guild = after.guild
-
         if not await self.is_event_enabled(guild.id, "timeout"):
             return
 
-        timed_out  = after.timed_out_until is not None
-        title      = "Member Timed-Out" if timed_out else "Timeout Removed"
-        colour     = discord.Color.dark_orange() if timed_out else discord.Color.green()
+        texts = self._texts("timeout")
+        timed_out = after.timed_out_until is not None
+        title = texts["title_applied"] if timed_out else texts["title_removed"]
+        description_template = texts["description_applied"] if timed_out else texts["description_removed"]
+        embed = Embed(
+            title=title,
+            description=description_template.format(mention=after.mention, name=after.name),
+            color=discord.Color.dark_orange() if timed_out else discord.Color.green(),
+        )
+        embed.set_thumbnail(url=after.display_avatar.url)
 
-        moderator  = reason = None
+        if timed_out and after.timed_out_until:
+            ts = int(after.timed_out_until.timestamp())
+            embed.add_field(name=texts["fields"]["ends"], value=f"<t:{ts}:F>  (<t:{ts}:R>)")
+
+        moderator = None
+        reason = None
         try:
-            async for entry in guild.audit_logs(limit=6,
-                                                action=discord.AuditLogAction.member_update):
+            async for entry in guild.audit_logs(limit=6, action=discord.AuditLogAction.member_update):
                 if entry.target.id != after.id:
                     continue
                 if (utcnow() - entry.created_at).total_seconds() > 60:
-                        break
+                    break
 
                 before_cd = getattr(entry.changes.before, "timed_out_until", None)
                 after_cd = getattr(entry.changes.after, "timed_out_until", None)
@@ -140,39 +150,30 @@ class MonitoringCog(commands.Cog):
                 if not timed_out and before_cd and after_cd is None:
                     moderator, reason = entry.user, entry.reason
                     break
-                
         except discord.Forbidden:
             pass
-        except Exception as e:
-            print(f"[Timeout Log] Audit-log lookup failed: {e}")
-
-        embed = Embed(
-            title=title,
-            description=f"{after.mention} ({after.name}) has "
-                        f"{'been placed in' if timed_out else 'had'} a timeout.",
-            color=colour
-        )
-
-        embed.set_thumbnail(url=after.display_avatar.url)
-
-        if timed_out:
-            ts = int(after.timed_out_until.timestamp())
-            embed.add_field(name="Ends", value=f"<t:{ts}:F>  (<t:{ts}:R>)")
+        except Exception as exc:
+            print(f"[Timeout Log] Audit-log lookup failed: {exc}")
 
         if moderator:
-            embed.add_field(name="Moderator",
-                            value=f"{moderator.mention} ({moderator.name})",
-                            inline=False)
+            embed.add_field(
+                name=texts["fields"]["moderator"],
+                value=f"{moderator.mention} ({moderator.name})",
+                inline=False,
+            )
         if reason:
-            embed.add_field(name="Reason", value=reason, inline=False)
+            embed.add_field(name=texts["fields"]["reason"], value=reason, inline=False)
 
-        embed.set_footer(text=f"User ID: {after.id}")
+        embed.set_footer(text=texts["footer"].format(user_id=after.id))
         await self.log_event(guild, embed=embed)
 
     @commands.Cog.listener()
     async def on_raw_member_remove(self, payload: discord.RawMemberRemoveEvent):
         try:
             guild = self.bot.get_guild(payload.guild_id)
+            if guild is None:
+                return
+
             user_id = payload.user.id
             user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
             kicked = False
@@ -188,104 +189,115 @@ class MonitoringCog(commands.Cog):
                         break
             except discord.Forbidden:
                 print("[Kick Log] Missing permissions to view audit logs.")
-            except Exception as e:
-                print(f"[Kick Log] Audit log lookup failed: {e}")
+            except Exception as exc:
+                print(f"[Kick Log] Audit log lookup failed: {exc}")
 
-            if kicked: 
-                if not await self.is_event_enabled(guild.id, "kick"):
-                    return
-            else:
-                if not await self.is_event_enabled(guild.id, "leave"):
-                    return
+            event_key = "kick" if kicked else "leave"
+            if not await self.is_event_enabled(guild.id, event_key):
+                return
 
-            embed = Embed(
-                title="Member Kicked" if kicked else "Member Left",
-                description=f"{user.mention} ({user.name}) has {'been kicked' if kicked else 'left'} the server.",
-                color=Color.red() if not kicked else Color.orange()
+            texts = self._texts("leave")
+            title = texts["title_kicked"] if kicked else texts["title_left"]
+            description = (texts["description_kicked"] if kicked else texts["description_left"]).format(
+                mention=user.mention,
+                name=user.name,
             )
-
+            embed = Embed(
+                title=title,
+                description=description,
+                color=Color.orange() if kicked else Color.red(),
+            )
             avatar_url = user.avatar.url if user.avatar else user.default_avatar.url
             embed.set_thumbnail(url=avatar_url)
 
             if kicked and kicker:
-                embed.add_field(name="Kicked By", value=f"{kicker.mention} ({kicker.name})", inline=False)
+                embed.add_field(
+                    name=texts["fields"]["kicked_by"],
+                    value=f"{kicker.mention} ({kicker.name})",
+                    inline=False,
+                )
                 if reason:
-                    embed.add_field(name="Reason", value=reason, inline=False)
+                    embed.add_field(name=texts["fields"]["reason"], value=reason, inline=False)
 
-            embed.set_footer(text="Bot account" if user.bot else "User account")
+            footer_key = "bot" if user.bot else "user"
+            embed.set_footer(text=texts["footer"][footer_key])
             await self.log_event(guild, embed=embed)
-
-        except Exception as e:
-            print(f"[Leave Log] Failed to log member removal: {e}")
+        except Exception as exc:
+            print(f"[Leave Log] Failed to log member removal: {exc}")
 
     async def handle_message_delete(self, cached_message: CachedMessage):
-        # Check if the event is enabled for this guild
-        cached_guild_id = cached_message.guild_id
-        if not await self.is_event_enabled(cached_guild_id, "message_delete"):
+        guild_id = cached_message.guild_id
+        if not await self.is_event_enabled(guild_id, "message_delete"):
             return
 
-        # Get cached message details
-        cached_message_content = cached_message.content
-        cached_user_id = cached_message.author_id
-        cached_user_mention = cached_message.author_mention
-        cached_user_name = cached_message.author_name
-        cached_embeds = cached_message.embeds
-        cached_attachments = cached_message.attachments
-        cached_stickers = cached_message.stickers 
+        texts = self._texts("message_delete")
         channel = self.bot.get_channel(cached_message.channel_id)
+        if channel is None:
+            return
 
-        deleter: str | None = None
+        deleter = None
         try:
             async for entry in channel.guild.audit_logs(
                 action=discord.AuditLogAction.message_delete,
-                limit=5
+                limit=5,
             ):
                 if (
-                    entry.extra.channel.id == channel.id and
-                    entry.target.id == cached_user_id and
-                    (utcnow() - entry.created_at).total_seconds() < 20
+                    entry.extra.channel.id == channel.id
+                    and entry.target.id == cached_message.author_id
+                    and (utcnow() - entry.created_at).total_seconds() < 20
                 ):
                     deleter = f"{entry.user.mention} ({entry.user.name})"
                     break
         except discord.Forbidden:
             pass
-        except Exception as e:
-            print(f"[Audit-log lookup] {e}")
+        except Exception as exc:
+            print(f"[Audit-log lookup] {exc}")
 
-        if cached_message and (cached_message_content or cached_embeds or cached_attachments or cached_stickers):
-            embed = Embed(
-                title="Message Deleted",
-                description=(
-                    f"**Author:** {cached_user_mention} ({cached_user_name})\n"
-                    f"**Channel:** {channel.mention}\n"
-                    + (f"**Deleted by:** {deleter}\n" if deleter else "")
-                    + f"**Content:**\n{cached_message_content or '[No Content]'}"
-                ),
-                color=Color.orange()
+        if any((cached_message.content, cached_message.embeds, cached_message.attachments, cached_message.stickers)):
+            description = texts["description_with_author"].format(
+                author_mention=cached_message.author_mention,
+                author_name=cached_message.author_name,
+                channel=channel.mention,
             )
-            embed.set_footer(text=f"User ID: {cached_user_id}")
+            if deleter:
+                description += texts["deleted_by"].format(deleter=deleter)
+            description += texts["content_label"].format(
+                content=cached_message.content or "[No Content]"
+            )
+            embed = Embed(
+                title=texts["title"],
+                description=description,
+                color=Color.orange(),
+            )
+            embed.set_footer(text=texts["footer"].format(user_id=cached_message.author_id))
 
-            # Add cached attachments
-            if cached_attachments:
-                links = [f"• [{a.filename}]({a.url})" for a in cached_attachments]
+            if cached_message.attachments:
+                links = [
+                    texts["attachment_item"].format(name=a.filename, url=a.url)
+                    for a in cached_message.attachments
+                ]
                 embed.add_field(
-                    name=f"Attachments ({len(links)})",
+                    name=texts["fields"]["attachments"].format(count=len(links)),
                     value="\n".join(links)[:1024],
-                    inline=False
+                    inline=False,
                 )
 
-            # Add cached embeds
-            if cached_embeds:
-                for i, rich_embed in enumerate(cached_embeds):
+            if cached_message.embeds:
+                for index, rich_embed in enumerate(cached_message.embeds, start=1):
                     try:
-                        parts = []
+                        parts: list[str] = []
                         if rich_embed.title:
                             parts.append(f"**{rich_embed.title}**")
                         if rich_embed.description:
                             parts.append(rich_embed.description)
                         if rich_embed.fields:
-                            for f in rich_embed.fields:
-                                parts.append(f"• **{f.name}**: {f.value}")
+                            for field in rich_embed.fields:
+                                parts.append(
+                                    texts["embed_bullet"].format(
+                                        name=field.name,
+                                        value=field.value,
+                                    )
+                                )
                         if rich_embed.url:
                             parts.append(f"[Link]({rich_embed.url})")
                         if rich_embed.author:
@@ -295,121 +307,127 @@ class MonitoringCog(commands.Cog):
 
                         summary = "\n".join(parts)[:1024]
                         embed.add_field(
-                            name=f"Embed {i+1}",
-                            value=summary or "*[Embed content unavailable]*",
-                            inline=False
+                            name=texts["fields"]["embeds"].format(index=index),
+                            value=summary or texts["embed_unavailable"],
+                            inline=False,
                         )
-                    except Exception as e:
-                        print(f"[Embed parse fail] {e}")
+                    except Exception as exc:
+                        print(f"[Embed parse fail] {exc}")
 
-            # Add cached stickers
-            if cached_stickers:
+            if cached_message.stickers:
                 try:
-                    links = []
-                    for sticker in cached_stickers:
-                        links.append(f"• [{sticker.name}]({sticker.url})")
-
+                    links = [
+                        texts["sticker_item"].format(name=sticker.name, url=sticker.url)
+                        for sticker in cached_message.stickers
+                    ]
                     embed.add_field(
-                        name=f"Stickers ({len(links)})",
+                        name=texts["fields"]["stickers"].format(count=len(links)),
                         value="\n".join(links)[:1024],
-                        inline=False
+                        inline=False,
                     )
-                except Exception as e:
-                    print(f"[Sticker image parse fail] {e}")
+                except Exception as exc:
+                    print(f"[Sticker image parse fail] {exc}")
         else:
+            description = texts["description_generic"].format(channel=channel.mention)
+            if deleter:
+                description += texts["description_deleted_by"].format(deleter=deleter)
             embed = Embed(
-                title="Message Deleted",
-                description=(
-                    f"A message was deleted in {channel.mention}."
-                    + (f"\n**Deleted by:** {deleter}" if deleter else "")
-                ),
-                color=Color.orange()
+                title=texts["title"],
+                description=description,
+                color=Color.orange(),
             )
-
         await self.log_event(channel.guild, embed=embed, mention_user=False)
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.User):
         if not await self.is_event_enabled(guild.id, "ban"):
             return
+        texts = self._texts("ban")
         try:
             embed = discord.Embed(
-                title="Member Banned",
-                description=f"{user.mention} ({user.name}) was banned.",
-                color=discord.Color.dark_red()
+                title=texts["title"],
+                description=texts["description"].format(mention=user.mention, name=user.name),
+                color=discord.Color.dark_red(),
             )
-
             avatar_url = user.avatar.url if user.avatar else user.default_avatar.url
             embed.set_thumbnail(url=avatar_url)
+            embed.set_footer(text=texts["footer"].format(user_id=user.id))
 
-            embed.set_footer(text=f"User ID: {user.id}")
-
-            # Attempt to find the moderator responsible via audit logs
             try:
                 async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.ban):
                     if entry.target.id == user.id and (discord.utils.utcnow() - entry.created_at).total_seconds() < 20:
-                        embed.add_field(name="Banned By", value=f"{entry.user.mention} ({entry.user.name})", inline=False)
+                        embed.add_field(
+                            name=texts["fields"]["moderator"],
+                            value=f"{entry.user.mention} ({entry.user.name})",
+                            inline=False,
+                        )
                         if entry.reason:
-                            embed.add_field(name="Reason", value=entry.reason, inline=False)
+                            embed.add_field(name=texts["fields"]["reason"], value=entry.reason, inline=False)
                         break
             except discord.Forbidden:
-                pass  # Bot lacks permission to view audit logs
+                pass
 
             await self.log_event(guild, embed=embed)
-
-        except Exception as e:
-            print(f"[Ban Log] Failed to log ban for {user}: {e}")
-
+        except Exception as exc:
+            print(f"[Ban Log] Failed to log ban for {user}: {exc}")
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
         if not await self.is_event_enabled(guild.id, "unban"):
             return
+        texts = self._texts("unban")
         try:
             embed = discord.Embed(
-                title="Member Unbanned",
-                description=f"{user.mention} ({user.name}) was unbanned.",
-                color=discord.Color.green()
+                title=texts["title"],
+                description=texts["description"].format(mention=user.mention, name=user.name),
+                color=discord.Color.green(),
             )
-
             avatar_url = user.avatar.url if user.avatar else user.default_avatar.url
             embed.set_thumbnail(url=avatar_url)
+            embed.set_footer(text=texts["footer"].format(user_id=user.id))
 
-            embed.set_footer(text=f"User ID: {user.id}")
-
-            # Attempt to find the moderator responsible via audit logs
             try:
                 async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.unban):
                     if entry.target.id == user.id and (discord.utils.utcnow() - entry.created_at).total_seconds() < 20:
-                        embed.add_field(name="Unbanned By", value=f"{entry.user.mention} ({entry.user.name})", inline=False)
+                        embed.add_field(
+                            name=texts["fields"]["moderator"],
+                            value=f"{entry.user.mention} ({entry.user.name})",
+                            inline=False,
+                        )
                         if entry.reason:
-                            embed.add_field(name="Reason", value=entry.reason, inline=False)
+                            embed.add_field(name=texts["fields"]["reason"], value=entry.reason, inline=False)
                         break
             except discord.Forbidden:
-                pass  # Bot lacks permission to view audit logs
+                pass
 
             await self.log_event(guild, embed=embed)
-
-        except Exception as e:
-            print(f"[Unban Log] Failed to log unban for {user}: {e}")
+        except Exception as exc:
+            print(f"[Unban Log] Failed to log unban for {user}: {exc}")
 
     async def handle_message_edit(self, cached_before: CachedMessage, after: discord.Message):
         if not await self.is_event_enabled(after.guild.id, "message_edit"):
             return
-
+        texts = self._texts("message_edit")
         embed = Embed(
-            title="Message Edited",
-            description=(
-                f"**Author:** {cached_before.author_mention} ({cached_before.author_name})\n"
-                f"**Channel:** {after.channel.mention}\n"
+            title=texts["title"],
+            description=texts["description"].format(
+                author_mention=cached_before.author_mention,
+                author_name=cached_before.author_name,
+                channel=after.channel.mention,
             ),
-            color=Color.gold()
+            color=Color.gold(),
         )
-
-        embed.add_field(name="Before", value=cached_before.content or "[No Content]", inline=False)
-        embed.add_field(name="After", value=after.content or "[No Content]", inline=False)
-        embed.set_footer(text=f"User ID: {after.author.id}")
-
+        embed.add_field(
+            name=texts["fields"]["before"],
+            value=cached_before.content or "[No Content]",
+            inline=False,
+        )
+        embed.add_field(
+            name=texts["fields"]["after"],
+            value=after.content or "[No Content]",
+            inline=False,
+        )
+        embed.set_footer(text=texts["footer"].format(user_id=after.author.id))
         await self.log_event(after.guild, embed=embed, mention_user=False)
 
     monitor_group = app_commands.Group(
@@ -422,52 +440,72 @@ class MonitoringCog(commands.Cog):
     @monitor_group.command(name="set", description="Set channel to output logs.")
     @app_commands.describe(channel="The channel to send logs to.")
     async def monitor_set(self, interaction: Interaction, channel: discord.TextChannel):
+        texts = self._texts("monitor_commands")
         await mysql.update_settings(interaction.guild.id, "monitor-channel", channel.id)
-        await interaction.response.send_message(f"Monitor channel set to {channel.mention}.", ephemeral=True)
+        await interaction.response.send_message(
+            texts["set"].format(channel=channel.mention),
+            ephemeral=True,
+        )
 
     @monitor_group.command(name="remove", description="Remove the monitor channel setting.")
     async def monitor_remove(self, interaction: Interaction):
+        texts = self._texts("monitor_commands")
         removed = await mysql.update_settings(interaction.guild.id, "monitor-channel", None)
         if removed:
-            await interaction.response.send_message("Monitor channel has been removed.", ephemeral=True)
+            await interaction.response.send_message(texts["removed"], ephemeral=True)
         else:
-            await interaction.response.send_message("No monitor channel was set.", ephemeral=True)
+            await interaction.response.send_message(texts["not_set"], ephemeral=True)
 
     @monitor_group.command(name="show", description="Show the current monitor channel.")
     async def monitor_show(self, interaction: Interaction):
+        texts = self._texts("monitor_commands")
         channel_id = await mysql.get_settings(interaction.guild.id, "monitor-channel")
         if channel_id:
             channel = interaction.guild.get_channel(channel_id)
             mention = channel.mention if channel else f"`#{channel_id}` (not found)"
-            await interaction.response.send_message(f"Current monitor channel: {mention}", ephemeral=True)
+            await interaction.response.send_message(
+                texts["current"].format(channel=mention),
+                ephemeral=True,
+            )
         else:
-            await interaction.response.send_message("No monitor channel is currently set.", ephemeral=True)
-            
+            await interaction.response.send_message(texts["none"], ephemeral=True)
+
     @monitor_group.command(name="toggle_event", description="Enable or disable a specific monitoring event.")
     @app_commands.describe(event="The event to toggle", enabled="Enable or disable logging for this event")
-    @app_commands.choices(event=[
-        app_commands.Choice(name="User Join", value="join"),
-        app_commands.Choice(name="User Leave", value="leave"),
-        app_commands.Choice(name="Ban", value="ban"),
-        app_commands.Choice(name="Unban", value="unban"),
-        app_commands.Choice(name="Timeout", value="timeout"),
-        app_commands.Choice(name="Message Deleted", value="message_delete"),
-        app_commands.Choice(name="Message Edited", value="message_edit"),
-    ])
+    @app_commands.choices(
+        event=[
+            app_commands.Choice(name="User Join", value="join"),
+            app_commands.Choice(name="User Leave", value="leave"),
+            app_commands.Choice(name="Ban", value="ban"),
+            app_commands.Choice(name="Unban", value="unban"),
+            app_commands.Choice(name="Timeout", value="timeout"),
+            app_commands.Choice(name="Message Deleted", value="message_delete"),
+            app_commands.Choice(name="Message Edited", value="message_edit"),
+        ]
+    )
     async def toggle_event(self, interaction: Interaction, event: app_commands.Choice[str], enabled: bool):
+        texts = self._texts("monitor_commands")
         settings = await mysql.get_settings(interaction.guild.id, "monitor-events") or {}
         settings[event.value] = enabled
         await mysql.update_settings(interaction.guild.id, "monitor-events", settings)
+        state = texts["state_enabled"] if enabled else texts["state_disabled"]
         await interaction.response.send_message(
-            f"Logging for `{event.name}` has been {'enabled' if enabled else 'disabled'}.", ephemeral=True
+            texts["toggle"].format(event=event.name, state=state),
+            ephemeral=True,
         )
 
     @monitor_group.command(name="list_events", description="List current monitor event settings.")
     async def list_events(self, interaction: Interaction):
+        texts = self._texts("monitor_commands")
         await interaction.response.defer(ephemeral=True)
         settings = await mysql.get_settings(interaction.guild.id, "monitor-events") or {}
-        lines = [f"- `{k}`: {'✅' if v else '❌'}" for k, v in settings.items()]
-        await interaction.followup.send("**Monitor Events:**\n" + "\n".join(lines), ephemeral=True)
+        lines = []
+        for key, value in settings.items():
+            state_symbol = texts["list_enabled"] if value else texts["list_disabled"]
+            lines.append(texts["list_item"].format(event=key, state=state_symbol))
+        body = texts["list_heading"] + "\n" + "\n".join(lines)
+        await interaction.followup.send(body, ephemeral=True)
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MonitoringCog(bot))

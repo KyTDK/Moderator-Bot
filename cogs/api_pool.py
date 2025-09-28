@@ -33,19 +33,8 @@ class ApiPoolCog(commands.Cog):
         description="Explain the API pool."
     )
     async def explain(self, interaction: Interaction):
-        explanation = (
-            "**What is the API Pool?**\n"
-            "The API Pool is a secure and anonymous collection of shared OpenAI API keys. "
-            "It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n"
-            "**How does it work?**\n"
-            "- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n"
-            "- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n"
-            "- Your API key remains confidential; no one, including the bot developers, can view it.\n"
-            "- You have full control and can remove your API key from the pool at any time.\n\n"
-            "**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. "
-            "Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. "
-            "You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\n"
-            "By contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        explanation = self.bot.translate(
+            "cogs.api_pool.explanation.body"
         )
         await interaction.response.send_message(explanation, ephemeral=True)
 
@@ -67,18 +56,28 @@ class ApiPoolCog(commands.Cog):
         try:
             await api.check_openai_api_key(api_key)
         except Exception as e:
-            await interaction.followup.send(str(e), ephemeral=True)
+            message = self.bot.translate(
+                "cogs.api_pool.add.invalid",
+                placeholders={"error": str(e)},
+            )
+            await interaction.followup.send(message, ephemeral=True)
             return
 
         if existing:
-            await interaction.followup.send("This API key already exists in the pool.", ephemeral=True)
+            await interaction.followup.send(
+                self.bot.translate("cogs.api_pool.add.duplicate"),
+                ephemeral=True,
+            )
         else:
             # Insert the hash into the database
             await execute_query(
                 "INSERT INTO api_pool (user_id, api_key, api_key_hash) VALUES (%s, %s, %s)",
                 (user_id, fernet.encrypt(api_key.encode()).decode(), api_key_hash)
             )
-            await interaction.followup.send("API key added to the pool.", ephemeral=True)
+            await interaction.followup.send(
+                self.bot.translate("cogs.api_pool.add.success"),
+                ephemeral=True,
+            )
 
     @api_pool_group.command(
         name="remove",
@@ -89,9 +88,15 @@ class ApiPoolCog(commands.Cog):
         query = "DELETE FROM api_pool WHERE user_id = %s AND api_key_hash = %s"
         _, affected_rows = await execute_query(query, (user_id, compute_api_key_hash(api_key)))
         if affected_rows > 0:
-            await interaction.response.send_message("API key removed from your pool.", ephemeral=True)
+            await interaction.response.send_message(
+                self.bot.translate("cogs.api_pool.remove.success"),
+                ephemeral=True,
+            )
         else:
-            await interaction.response.send_message("This API key was not found in your pool. Use /api_pool list to see your current api keys.", ephemeral=True)
+            await interaction.response.send_message(
+                self.bot.translate("cogs.api_pool.remove.missing"),
+                ephemeral=True,
+            )
 
     @api_pool_group.command(
         name="clear",
@@ -102,9 +107,15 @@ class ApiPoolCog(commands.Cog):
         query = "DELETE FROM api_pool WHERE user_id = %s"
         _, affected_rows = await execute_query(query, (user_id,))
         if affected_rows > 0:
-            await interaction.response.send_message("All API keys have been cleared from your pool.", ephemeral=True)
+            await interaction.response.send_message(
+                self.bot.translate("cogs.api_pool.clear.success"),
+                ephemeral=True,
+            )
         else:
-            await interaction.response.send_message("No API keys found to clear.", ephemeral=True)
+            await interaction.response.send_message(
+                self.bot.translate("cogs.api_pool.clear.empty"),
+                ephemeral=True,
+            )
 
     @api_pool_group.command(
         name="list",
@@ -117,9 +128,16 @@ class ApiPoolCog(commands.Cog):
         if result:
             api_keys = [row[0] for row in result]
             formatted_keys = '\n'.join(f"- {fernet.decrypt(key.encode()).decode()}" for key in api_keys)
-            await interaction.response.send_message(f"Your API Keys:\n{formatted_keys}", ephemeral=True)
+            header = self.bot.translate("cogs.api_pool.list.header")
+            await interaction.response.send_message(
+                f"{header}\n{formatted_keys}",
+                ephemeral=True,
+            )
         else:
-            await interaction.response.send_message("No API keys found in your pool.", ephemeral=True)
+            await interaction.response.send_message(
+                self.bot.translate("cogs.api_pool.list.empty"),
+                ephemeral=True,
+            )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ApiPoolCog(bot))

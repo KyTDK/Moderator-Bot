@@ -143,8 +143,18 @@ async def require_accelerated(interaction: Interaction):
     If not, respond with an error message.
     """
     if not await mysql.is_accelerated(guild_id=interaction.guild.id):
+        translator = getattr(interaction.client, "translate", None)
+        fallback = "This command is only available for Accelerated (Premium) servers. Use `/accelerated subscribe` to enable it."
+        message = (
+            translator(
+                "modules.utils.discord_utils.require_accelerated",
+                fallback=fallback,
+            )
+            if callable(translator)
+            else fallback
+        )
         await interaction.response.send_message(
-            "This command is only available for Accelerated (Premium) servers. Use `/accelerated subscribe` to enable it.",
+            message,
             ephemeral=True
         )
         return False

@@ -49,11 +49,12 @@ class NSFWCog(commands.Cog):
             role=role,
             valid_actions=VALID_ACTION_VALUES,
             param=reason,
+            translator=self.bot.translate,
         )
         if action_str is None:
             return
 
-        message = await manager.add_action(gid, action_str)
+        message = await manager.add_action(gid, action_str, translator=self.bot.translate)
         await interaction.followup.send(message, ephemeral=True)
 
     @nsfw_group.command(name="remove_action", description="Remove an action from the NSFW punishment list.")
@@ -62,7 +63,7 @@ class NSFWCog(commands.Cog):
     async def remove_nsfw_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
 
-        message = await manager.remove_action(gid, action)
+        message = await manager.remove_action(gid, action, translator=self.bot.translate)
         await interaction.response.send_message(message, ephemeral=True)
 
     @nsfw_group.command(name="view_actions", description="View the current list of NSFW punishment actions.")
@@ -97,7 +98,7 @@ class NSFWCog(commands.Cog):
             return
         # Continue with adding category
         gid = interaction.guild.id
-        message = await category_manager.add(gid, category)
+        message = await category_manager.add(gid, category, translator=self.bot.translate)
         await interaction.response.send_message(message, ephemeral=True)
 
     @nsfw_group.command(name="remove_category", description="Remove a category from NSFW detection.")
@@ -108,7 +109,7 @@ class NSFWCog(commands.Cog):
             return
         # Continue with adding category
         gid = interaction.guild.id
-        message = await category_manager.remove(gid, category)
+        message = await category_manager.remove(gid, category, translator=self.bot.translate)
         await interaction.response.send_message(message, ephemeral=True)
 
     @nsfw_group.command(name="view_categories", description="View NSFW detection categories.")
@@ -127,34 +128,33 @@ class NSFWCog(commands.Cog):
     @nsfw_group.command(name="set_threshold", description="Set the threshold for NSFW detection confidence.")
     @app_commands.describe(threshold="Confidence threshold (0.0 to 1.0)")
     async def set_threshold(self, interaction: Interaction, threshold: float):
+        threshold_texts = self.bot.translate("cogs.nsfw.threshold")
         if not (0.0 <= threshold <= 1.0):
             await interaction.response.send_message(
-                "Threshold must be between 0.0 and 1.0.",
-                ephemeral=True
+                threshold_texts["invalid"],
+                ephemeral=True,
             )
             return
 
         gid = interaction.guild.id
         await mysql.update_settings(gid, "threshold", threshold)
         await interaction.response.send_message(
-            f"NSFW detection threshold set to {threshold:.2f}.",
-            ephemeral=True
+            threshold_texts["set"].format(value=threshold),
+            ephemeral=True,
         )
 
     @nsfw_group.command(name="view_threshold", description="View the current NSFW detection threshold.")
     async def view_threshold(self, interaction: Interaction):
         gid = interaction.guild.id
         threshold = await mysql.get_settings(gid, "threshold")
+        texts = self.bot.translate("cogs.nsfw.threshold")
         if threshold is None:
-            await interaction.response.send_message(
-                "NSFW detection threshold is not set.",
-                ephemeral=True
-            )
+            await interaction.response.send_message(texts["unset"], ephemeral=True)
             return
 
         await interaction.response.send_message(
-            f"Current NSFW detection threshold: {threshold:.2f}",
-            ephemeral=True
+            texts["current"].format(value=threshold),
+            ephemeral=True,
         )
 
 async def setup(bot: commands.Bot):

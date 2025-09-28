@@ -1,42 +1,110 @@
-from modules.utils.mysql import get_settings, update_settings
+﻿from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
 from discord import app_commands, Interaction
+
+from modules.utils.mysql import get_settings, update_settings
+
+TranslateFn = Callable[..., Any]
+BASE_KEY = "modules.utils.action_manager"
+
 
 class ActionListManager:
     def __init__(self, setting_key: str):
         self.setting_key = setting_key
 
-    async def add_action(self, guild_id: int, new_action: str) -> str:
+    def _localize(
+        self,
+        translator: TranslateFn | None,
+        key: str,
+        *,
+        placeholders: dict[str, Any],
+        fallback: str,
+    ) -> str:
+        if translator is None:
+            return fallback.format(**placeholders)
+        return translator(
+            f"{BASE_KEY}.{key}",
+            placeholders=placeholders,
+            fallback=fallback.format(**placeholders),
+        )
+
+    async def add_action(
+        self,
+        guild_id: int,
+        new_action: str,
+        *,
+        translator: TranslateFn | None = None,
+    ) -> str:
         actions = await get_settings(guild_id, self.setting_key) or []
         if not isinstance(actions, list):
             actions = [actions]
 
         normalized = [a.split(":")[0] for a in actions]
         if new_action.split(":")[0] in normalized:
-            return f"`{new_action}` is already in the list."
+            return self._localize(
+                translator,
+                "add.duplicate",
+                placeholders={"action": new_action},
+                fallback="`{action}` is already in the list.",
+            )
 
         actions.append(new_action)
         await update_settings(guild_id, self.setting_key, actions)
-        return f"Added `{new_action}` to actions."
+        return self._localize(
+            translator,
+            "add.success",
+            placeholders={"action": new_action},
+            fallback="Added `{action}` to actions.",
+        )
 
-    async def remove_action(self, guild_id: int, action: str) -> str:
+    async def remove_action(
+        self,
+        guild_id: int,
+        action: str,
+        *,
+        translator: TranslateFn | None = None,
+    ) -> str:
         actions = await get_settings(guild_id, self.setting_key) or []
 
         # Exact match attempt
         if ":" in action:
             if action not in actions:
-                return f"Action `{action}` does not exist."
+                return self._localize(
+                    translator,
+                    "remove.specific_missing",
+                    placeholders={"action": action},
+                    fallback="Action `{action}` does not exist.",
+                )
             updated = [a for a in actions if a != action]
             await update_settings(guild_id, self.setting_key, updated)
-            return f"Removed specific action `{action}`."
+            return self._localize(
+                translator,
+                "remove.specific_success",
+                placeholders={"action": action},
+                fallback="Removed specific action `{action}`.",
+            )
 
         # General match (e.g., all `warn`)
         base = action
         matched = [a for a in actions if a.split(":")[0] == base]
         if not matched:
-            return f"No actions found for `{base}`."
+            return self._localize(
+                translator,
+                "remove.base_missing",
+                placeholders={"action": base},
+                fallback="No actions found for `{action}`.",
+            )
         updated = [a for a in actions if a.split(":")[0] != base]
         await update_settings(guild_id, self.setting_key, updated)
-        return f"Removed all `{base}` actions."
+        return self._localize(
+            translator,
+            "remove.base_success",
+            placeholders={"action": base},
+            fallback="Removed all `{action}` actions.",
+        )
 
     async def view_actions(self, guild_id: int) -> list:
         actions = await get_settings(guild_id, self.setting_key) or []

@@ -31,7 +31,7 @@ class DebugCog(commands.Cog):
         # Check if bot is in list of allowed user IDs
         if interaction.user.id not in ALLOWED_USER_IDS:
             await interaction.followup.send(
-                "You do not have permission to use this command.",
+                self.bot.translate("cogs.debug.permission_denied"),
                 ephemeral=True
             )
             return
@@ -80,7 +80,7 @@ class DebugCog(commands.Cog):
                 break
         
         if not top_allocations:
-            top_allocations.append("No project-related allocations found.")
+            top_allocations.append(self.bot.translate("cogs.debug.no_allocations"))
 
         chunks = []
         current_chunk = ""
@@ -94,47 +94,35 @@ class DebugCog(commands.Cog):
             chunks.append(current_chunk)
 
         # Build embed
+        debug_texts = self.bot.translate("cogs.debug.embed")
         embed = discord.Embed(
-            title="Bot Performance Stats",
+            title=debug_texts["title"],
             color=discord.Color.blurple()
         )
         embed.add_field(
-            name="Memory Usage",
-            value=(
-                f"**RSS (Actual):** {rss:.2f} MB\n"
-                f"**VMS (Virtual):** {vms:.2f} MB\n"
-                f"**Tracemalloc Current:** {current_mb:.2f} MB\n"
-                f"**Tracemalloc Peak:** {peak_mb:.2f} MB"
-            ),
+            name=debug_texts["memory_name"],
+            value=debug_texts["memory_value"].format(rss=rss, vms=vms, current_mb=current_mb, peak_mb=peak_mb),
             inline=False
         )
         embed.add_field(
-            name="CPU & Threads",
-            value=(
-                f"**CPU Usage:** {cpu_percent:.1f}%\n"
-                f"**Threads:** {threads}\n"
-                f"**Handles:** {handles}"
-            ),
+            name=debug_texts["cpu_name"],
+            value=debug_texts["cpu_value"].format(cpu_percent=cpu_percent, threads=threads, handles=handles),
             inline=False
         )
         embed.add_field(
-            name="Bot Stats",
-            value=(
-                f"**Guilds:** {len(self.bot.guilds)}\n"
-                f"**Users (cached):** {len(self.bot.users)}\n"
-                f"**Uptime:** {uptime_str}"
-            ),
+            name=debug_texts["bot_name"],
+            value=debug_texts["bot_value"].format(guilds=len(self.bot.guilds), users=len(self.bot.users), uptime=uptime_str),
             inline=False
         )
 
         for i, chunk in enumerate(chunks, 1):
             embed.add_field(
-                name=f"Top Memory Allocations {i}",
+                name=debug_texts["allocations_name"].format(index=i),
                 value=f"```{chunk}```",
                 inline=False
             )
 
-        embed.set_footer(text=f"Host: {platform.node()} | Python {platform.python_version()}")
+        embed.set_footer(text=debug_texts["footer"].format(host=platform.node(), python_version=platform.python_version()))
 
         # Worker queue backlogs and autoscale info
         try:
@@ -167,12 +155,12 @@ class DebugCog(commands.Cog):
 
             if queue_lines:
                 embed.add_field(
-                    name="Worker Queues",
+                    name=debug_texts["worker_name"],
                     value=f"```\n" + "\n".join(queue_lines) + "\n```",
                     inline=False,
                 )
         except Exception as e:
-            embed.add_field(name="Worker Queues", value=f"(error collecting metrics: {e})", inline=False)
+            embed.add_field(name=debug_texts["worker_name"], value=debug_texts["worker_error"].format(error=e), inline=False)
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 

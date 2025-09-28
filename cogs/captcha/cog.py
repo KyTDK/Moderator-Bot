@@ -71,9 +71,11 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
 
     @captcha_group.command(name="sync", description="Resend the captcha verification embed.")
     async def sync_embed_command(self, interaction: Interaction) -> None:
+        common_texts = self.bot.translate("cogs.captcha.common")
+        sync_texts = self.bot.translate("cogs.captcha.sync")
         if interaction.guild is None:
             await interaction.response.send_message(
-                "This command can only be used in a server.", ephemeral=True
+                common_texts["guild_only"], ephemeral=True
             )
             return
 
@@ -86,19 +88,19 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                 "Failed to synchronise captcha embed for guild %s via command", interaction.guild.id
             )
             await interaction.followup.send(
-                "An unexpected error occurred while updating the captcha embed.",
+                sync_texts["error"],
                 ephemeral=True,
             )
             return
 
         if updated:
             await interaction.followup.send(
-                "Captcha verification embed has been updated.",
+                sync_texts["updated"],
                 ephemeral=True,
             )
         else:
             await interaction.followup.send(
-                "Captcha embed delivery is not configured for this server.",
+                sync_texts["missing_delivery"],
                 ephemeral=True,
             )
 
@@ -109,21 +111,23 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
     async def request_verification_command(
         self, interaction: Interaction, member: discord.Member
     ) -> None:
+        common_texts = self.bot.translate("cogs.captcha.common")
+        request_texts = self.bot.translate("cogs.captcha.request")
         if interaction.guild is None:
             await interaction.response.send_message(
-                "This command can only be used in a server.", ephemeral=True
+                common_texts["guild_only"], ephemeral=True
             )
             return
 
         if member.guild is None or member.guild.id != interaction.guild.id:
             await interaction.response.send_message(
-                "Please choose a member from this server.", ephemeral=True
+                common_texts["wrong_guild"], ephemeral=True
             )
             return
 
         if member.bot:
             await interaction.response.send_message(
-                "Bots do not require captcha verification.", ephemeral=True
+                common_texts["is_bot"], ephemeral=True
             )
             return
 
@@ -132,12 +136,12 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         success, message = await self._initiate_verification(member)
         if success:
             await interaction.followup.send(
-                message or "Verification request sent.", ephemeral=True
+                message or request_texts["success"], ephemeral=True
             )
             return
 
         await interaction.followup.send(
-            message or "Unable to send verification instructions.", ephemeral=True
+            message or request_texts["failure"], ephemeral=True
         )
 
     async def cog_load(self) -> None:
@@ -192,8 +196,9 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
     async def _initiate_verification(
         self, member: discord.Member
     ) -> tuple[bool, str | None]:
+        texts = self.bot.translate("cogs.captcha.initiate")
         if member.guild is None:
-            return False, "This member is not part of a guild."
+            return False, texts["not_in_guild"]
 
         settings = await mysql.get_settings(
             member.guild.id,
@@ -208,13 +213,13 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         )
 
         if not settings.get("captcha-verification-enabled"):
-            return False, "Captcha verification is not enabled for this server."
+            return False, texts["not_enabled"]
 
         if not self._api_client.is_configured:
             _logger.debug(
                 "Captcha API not configured; skipping verification for guild %s", member.guild.id
             )
-            return False, "Captcha verification is not configured."
+            return False, texts["not_configured"]
 
         raw_pre_roles = settings.get("pre-captcha-roles") or []
         pre_roles = [
@@ -229,7 +234,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         ]
         if pre_roles:
             try:
-                await member.add_roles(*pre_roles, reason="Assigning pre-captcha roles")
+                await member.add_roles(*pre_roles, reason=self.bot.translate("cogs.captcha.roles.assign_reason"))
             except discord.Forbidden:
                 _logger.warning(
                     "Missing permissions to assign pre-captcha roles in guild %s",
@@ -289,7 +294,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                     member.id,
                     session.expires_at,
                 )
-                return True, "Verification instructions posted in the configured channel."
+                return True, texts["embed_success"]
 
         start_response = await self._handle_dm_delivery(
             member,
@@ -303,9 +308,9 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                 member.id,
                 start_response.expires_at if grace_delta is not None else None,
             )
-            return True, "Verification message sent to the member."
+            return True, texts["dm_success"]
 
-        return False, "Unable to send verification instructions; please check the configuration."
+        return False, texts["failure"]
     
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:
@@ -376,7 +381,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
             status="expired",
             success=False,
             state=session.state,
-            failure_reason="Captcha verification timed out.",
+            failure_reason=self.bot.translate("cogs.captcha.timeout.failure_reason"),
             metadata={"timeout": True, "reason": "expired"},
         )
 

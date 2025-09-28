@@ -2,16 +2,24 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
+from dataclasses import replace
+from pathlib import Path
+from typing import Any, Optional
 
 import discord
 from discord.ext import commands, tasks
 
 from modules.post_stats.topgg_poster import start_topgg_poster
 from modules.utils import mysql
+from modules.i18n import (
+    CrowdinConfigurationError,
+    CrowdinSettings,
+    CrowdinTranslationService,
+    LocaleRepository,
+    Translator,
+)
 
 _logger = logging.getLogger(__name__)
-
 
 class ModeratorBot(commands.Bot):
     def __init__(
@@ -57,6 +65,10 @@ class ModeratorBot(commands.Bot):
         self._instance_heartbeat_seconds = instance_heartbeat_seconds
         self._log_cog_loads = log_cog_loads
         self._standby_login_performed = False
+        self._crowdin_service: CrowdinTranslationService | None = None
+        self._locale_repository: LocaleRepository | None = None
+        self._translator: Translator | None = None
+        self._initialise_i18n()
 
         if self._heartbeat_seconds != 60:
             try:
@@ -73,6 +85,96 @@ class ModeratorBot(commands.Bot):
                 _logger.warning(
                     "Failed to adjust instance heartbeat interval; using default 5s"
                 )
+
+    def _initialise_i18n(self) -> None:
+        default_locale = os.getenv("I18N_DEFAULT_LOCALE", "en")
+        fallback_locale = os.getenv("I18N_FALLBACK_LOCALE") or default_locale
+        locales_override = os.getenv("I18N_LOCALES_DIR")
+
+        try:
+            settings = CrowdinSettings.from_env()
+        except CrowdinConfigurationError:
+            settings = None
+            _logger.info("Crowdin integration disabled; missing configuration.")
+        else:
+            if locales_override:
+                settings = replace(
+                    settings,
+                    locales_root=Path(locales_override).resolve(),
+                )
+            self._crowdin_service = CrowdinTranslationService(settings)
+
+        if self._crowdin_service is not None:
+            locales_root = self._crowdin_service.settings.locales_root
+        else:
+            base_root = locales_override or os.getenv("CROWDIN_LOCALES_DIR") or os.getenv("LOCALES_DIR") or "locales"
+            locales_root = Path(base_root).resolve()
+
+        self._locale_repository = LocaleRepository(
+            locales_root,
+            default_locale=default_locale,
+            fallback_locale=fallback_locale,
+        )
+
+        auto_sync = os.getenv("CROWDIN_SYNC_ON_STARTUP", "false").lower() in {"1", "true", "yes", "on"}
+        if auto_sync and self._crowdin_service is not None:
+            try:
+                self._locale_repository.refresh(self._crowdin_service)
+            except Exception:
+                _logger.exception("Failed to refresh translations from Crowdin on startup")
+                self._locale_repository.reload()
+        else:
+            self._locale_repository.ensure_loaded()
+
+        self._translator = Translator(self._locale_repository)
+
+    @property
+    def translator(self) -> Translator:
+        if self._translator is None:
+            raise RuntimeError("Translator has not been initialised")
+        return self._translator
+
+    @property
+    def locale_repository(self) -> LocaleRepository:
+        if self._locale_repository is None:
+            raise RuntimeError("Locale repository has not been initialised")
+        return self._locale_repository
+
+    @property
+    def crowdin_service(self) -> CrowdinTranslationService | None:
+        return self._crowdin_service
+
+    async def refresh_translations(self, *, fetch: bool = True) -> None:
+        if self._locale_repository is None:
+            _logger.warning("Translation refresh requested but no locale repository is configured")
+            return
+
+        if fetch and self._crowdin_service is not None:
+            await self._locale_repository.refresh_async(self._crowdin_service)
+            _logger.info("Translations refreshed from Crowdin")
+        else:
+            if fetch and self._crowdin_service is None:
+                _logger.warning("Crowdin service unavailable; reloading translations from disk")
+            await self._locale_repository.reload_async()
+            _logger.info("Translations reloaded from disk")
+
+    def translate(
+        self,
+        key: str,
+        *,
+        locale: str | None = None,
+        placeholders: dict[str, Any] | None = None,
+        fallback: str | None = None,
+    ) -> Any:
+        translator = self._translator
+        if translator is None:
+            return fallback if fallback is not None else key
+        return translator.translate(
+            key,
+            locale=locale,
+            placeholders=placeholders,
+            fallback=fallback,
+        )
 
     def set_shard_assignment(self, shard_assignment: mysql.ShardAssignment) -> None:
         """Attach a shard assignment to the bot (used for standby takeover)."""
@@ -175,26 +277,15 @@ class ModeratorBot(commands.Bot):
         await mysql.add_guild(guild.id, guild.name, guild.owner_id)
         dash_url = f"https://modbot.neomechanical.com/dashboard/{guild.id}"
 
-        welcome_message = f"""
-        👋 **Thanks for adding Moderator Bot!**
-
-        🛠️ **Dashboard:** [Open Dashboard]({dash_url})
-
-        **Quick start**
-        • Run **`/help`** to see commands (try `/help nsfw`, `/help strikes`)
-        • Use the **Dashboard** to configure thresholds, actions, and toggles
-
-        **Works out of the box**
-        AI moderation is enabled with sane defaults. You can fine-tune anything in the Dashboard.
-
-        **Need help?**
-        Open the Dashboard above, or run **`/help`** for details and the support link.
-        """
+        welcome_message = self.translate(
+            "bot.welcome.message",
+            placeholders={"dash_url": dash_url},
+        )
 
         view = discord.ui.View()
         view.add_item(
             discord.ui.Button(
-                label="Open Dashboard",
+                label=self.translate("bot.welcome.button_label"),
                 url=dash_url,
                 emoji="🛠️",
             )
