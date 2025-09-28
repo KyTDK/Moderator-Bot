@@ -115,7 +115,13 @@ class LocaleRepository:
     @staticmethod
     def _read_json(path: Path) -> Optional[dict[str, Any]]:
         try:
-            with path.open("r", encoding="utf-8") as handle:
+            # Use ``utf-8-sig`` so we transparently handle files that were saved
+            # with a UTF-8 BOM. Some of the translation assets bundled with the
+            # bot include this marker which previously caused ``json.load`` to
+            # raise ``JSONDecodeError`` and prevented the locale cache from
+            # being populated. Falling back to the translation key string then
+            # triggered ``TypeError`` at runtime when code expected a mapping.
+            with path.open("r", encoding="utf-8-sig") as handle:
                 data = json.load(handle)
         except FileNotFoundError:
             logger.warning("Translation file disappeared while reading: %s", path)
