@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "Ulepsz do przyspieszonego, aby szybciej wykrywać NSFW i oszustwa — /accelerated",
+        "guild_footer": "ID Gildii: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Członek Dołączył",
+        "description": "{mention} ({name}) dołączył(a) do serwera.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Konto Utworzone",
+          "joined_at": "Dołączył(a) O"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Konto bota",
+          "user": "Konto użytkownika"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Członek Zablokowany Czasowo",
+        "title_removed": "Blokada czasowa usunięta",
+        "description_applied": "{mention} ({name}) został(a) zablokowany czasowo.",
+        "description_removed": "{mention} ({name}) miał(a) blokadę czasową.",
         "fields": {
-          "ends": "Ends",
+          "ends": "Koniec",
           "moderator": "Moderator",
-          "reason": "Reason"
+          "reason": "Powód"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID Użytkownika: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Członek Usunięty",
+        "title_left": "Członek Opuścił",
+        "description_kicked": "{mention} ({name}) został(a) usunięty(a) z serwera.",
+        "description_left": "{mention} ({name}) opuścił(a) serwer.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Usunięty przez",
+          "reason": "Powód"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Konto bota",
+          "user": "Konto użytkownika"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Wiadomość usunięta",
+        "description_with_author": "**Autor:** {author_mention} ({author_name})\n**Kanał:** {channel}\n",
+        "deleted_by": "**Usunięte przez:** {deleter}\n",
+        "content_label": "**Zawartość:**\n{content}",
+        "description_generic": "Wiadomość została usunięta w {channel}.",
+        "description_deleted_by": "\n**Usunięte przez:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Załączniki ({count})",
+          "embeds": "Osadzenie {index}",
+          "stickers": "Naklejki ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Zawartość osadzenia niedostępna]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "ID Użytkownika: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Wiadomość edytowana",
+        "description": "**Autor:** {author_mention} ({author_name})\n**Kanał:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Przedtem",
+          "after": "Potem"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID Użytkownika: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Członek Zbanowany",
+        "description": "{mention} ({name}) został(a) zbanowany(a).",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Zbanowane przez",
+          "reason": "Powód"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID Użytkownika: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Członek Odblokowany",
+        "description": "{mention} ({name}) został(a) odblokowany(a).",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Odblokowane przez",
+          "reason": "Powód"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID Użytkownika: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Kanał monitorujący ustawiony na {channel}.",
+        "removed": "Kanał monitorujący został usunięty.",
+        "not_set": "Nie ustawiono kanału monitorującego.",
+        "current": "Aktualny kanał monitorujący: {channel}",
+        "none": "Obecnie nie ustawiono kanału monitorującego.",
+        "toggle": "Logowanie dla `{event}` zostało {state}.",
+        "state_enabled": "włączone",
+        "state_disabled": "wyłączone",
+        "list_heading": "**Monitoruj Zdarzenia:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
