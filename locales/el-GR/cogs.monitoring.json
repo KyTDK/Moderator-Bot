@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "Αναβαθμίστε στο Επιταχυμένο για ταχύτερη ανίχνευση NSFW & απάτης — /accelerated",
+        "guild_footer": "ID Guild: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Μέλος Εντάχθηκε",
+        "description": "{mention} ({name}) μόλις εισήλθε στο server.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Λογαριασμός Δημιουργήθηκε",
+          "joined_at": "Ημερομηνία Εισχώρησης"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Λογαριασμός Bot",
+          "user": "Λογαριασμός Χρήστη"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Μέλος Προς Χρονική Περίοδο",
+        "title_removed": "Χρονικό Όριο Καταργήθηκε",
+        "description_applied": "{mention} ({name}) τέθηκε σε χρονικό όριο.",
+        "description_removed": "{mention} ({name}) είχε ένα χρονικό όριο.",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "Λήγει",
+          "moderator": "Συντονιστής",
+          "reason": "Αιτία"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID Χρήστη: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Μέλος Απελάθηκε",
+        "title_left": "Μέλος Αποχώρησε",
+        "description_kicked": "{mention} ({name}) απελάθηκε από το server.",
+        "description_left": "{mention} ({name}) αποχώρησε από το server.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Απελάθηκε Από",
+          "reason": "Αιτία"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Λογαριασμός Bot",
+          "user": "Λογαριασμός Χρήστη"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Μήνυμα Διαγράφηκε",
+        "description_with_author": "**Συγγραφέας:** {author_mention} ({author_name})\n**Κανάλι:** {channel}\n",
+        "deleted_by": "**Διαγραφή από:** {deleter}\n",
+        "content_label": "**Περιεχόμενο:**\n{content}",
+        "description_generic": "Ένα μήνυμα διαγράφηκε στο {channel}.",
+        "description_deleted_by": "\n**Διαγραφή από:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Συνημμένα ({count})",
+          "embeds": "Ενσωμάτωση {index}",
+          "stickers": "Αυτοκόλλητα ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Περιεχόμενο Ενσωμάτωσης μη διαθέσιμο]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "ID Χρήστη: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Μήνυμα Επεξεργάστηκε",
+        "description": "**Συγγραφέας:** {author_mention} ({author_name})\n**Κανάλι:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Πριν",
+          "after": "Μετά"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID Χρήστη: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Μέλος Απαγορεύθηκε",
+        "description": "{mention} ({name}) απαγορεύθηκε.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Απαγορεύθηκε Από",
+          "reason": "Αιτία"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID Χρήστη: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Μέλος Επιτρέφθηκε Ξανά",
+        "description": "{mention} ({name}) επιτράπηκε ξανά.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Επιτράπηκε Ξανά Από",
+          "reason": "Αιτία"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID Χρήστη: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Κανάλι παρακολούθησης ρυθμίστηκε σε {channel}.",
+        "removed": "Το κανάλι παρακολούθησης έχει διαγραφεί.",
+        "not_set": "Δεν είχε ρυθμιστεί κανένα κανάλι παρακολούθησης.",
+        "current": "Τρέχον κανάλι παρακολούθησης: {channel}",
+        "none": "Αυτή τη στιγμή δεν έχει ρυθμιστεί κανένα κανάλι παρακολούθησης.",
+        "toggle": "Καταγραφή για `{event}` έχει {state}.",
+        "state_enabled": "ενεργοποιήθηκε",
+        "state_disabled": "απενεργοποιήθηκε",
+        "list_heading": "**Εκδηλώσεις παρακολούθησης:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
