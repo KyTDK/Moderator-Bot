@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "您已達到此伺服器禁止 URL 的限制數量：{limit}。\n使用 `/bannedurls remove` 或 `/bannedurls clear` 來空出空間。",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` 已被禁止。",
+        "success": "已將 `{url}` 添加到禁止列表。"
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` 不在禁止列表上。",
+        "success": "已從禁止列表中刪除 `{url}`。"
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "找不到任何禁止的 URL。",
+        "file_header": "禁止的 URL：",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "找不到任何要清理的禁止 URL。",
+        "success": "所有禁止的 URL 已被清除。"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "消息包含被禁止的 URL（{url}）",
+        "strike_source": "禁止 URL",
+        "embed_title": "檢測到禁止的 URL",
+        "embed_description": "{mention}，您的消息被移除，因為其中包含一個被禁止的 URL。"
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "目前沒有設置禁止 URL 的任何操作。",
+        "header": "**當前禁止 URL 的動作：**\n{actions}"
       }
     }
   }
