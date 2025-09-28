@@ -50,15 +50,7 @@
           "reason": "**Důvod:** {reason}",
           "expires": "**Vyprší:** {expiry}",
           "issued_by": "Vydáno od",
-          "expiry_never": "Nikdy",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Nikdy"
         },
         "errors": {
           "too_many_strikes": "Nemůžete udělit stejnému hráči více než 100 varování. Použijte `/strikes clear <user>` pro resetování jejich varování."
