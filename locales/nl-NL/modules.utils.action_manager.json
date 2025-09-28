@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` staat al in de lijst.",
+          "success": "`{action}` toegevoegd aan acties."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "Actie `{action}` bestaat niet.",
+          "specific_success": "Specifieke actie `{action}` verwijderd.",
+          "base_missing": "Geen acties gevonden voor `{action}`.",
+          "base_success": "Alle `{action}` acties verwijderd."
         }
       }
     }
