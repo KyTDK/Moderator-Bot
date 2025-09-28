@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Hiện tại không có hành động NSFW nào được thiết lập.",
+        "heading": "**Các hành động NSFW hiện tại:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Hiện tại không có danh mục nào được thiết lập.",
+        "heading": "**Các danh mục NSFW hiện tại:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "Ngưỡng phải nằm giữa 0.0 và 1.0.",
+        "set": "Ngưỡng phát hiện NSFW được đặt thành {value:.2f}.",
+        "unset": "Ngưỡng phát hiện NSFW chưa được thiết lập.",
+        "current": "Ngưỡng phát hiện NSFW hiện tại: {value:.2f}"
       }
     }
   }
