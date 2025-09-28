@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} není omezen věkem. Vyberte NSFW kanál.",
+      "missing_permissions": "Chybí mi následující oprávnění v {channel}: {permissions}",
+      "set_success": "{log_type} logy budou zveřejněny v {channel}.",
+      "unset_success": "Log kanál typu {log_type} byl odpojen.",
+      "invalid_guild": "Chyba: Neplatný formát ID serveru.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**Logovací kanály:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "Nenastaveno"
       }
     }
   }
