@@ -1,22 +1,101 @@
+from __future__ import annotations
+
 import logging
+from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
-from discord import Interaction, Member, Embed, Color, Message
 
 import discord
 from discord import Color, Embed, Interaction, Member, Message
 from discord.ext import commands
-from modules.utils.discord_utils import message_user
 
+from modules.utils import mod_logging, mysql
 from modules.utils.discord_utils import message_user, resolve_role_references
 from modules.utils.mysql import execute_query
-from datetime import datetime, timedelta, timezone
-from modules.utils import mod_logging
-from modules.utils import mysql
 from modules.utils.time import parse_duration
-import discord
+
 
 _logger = logging.getLogger(__name__)
+
+
+DISCIPLINARY_TEXTS_FALLBACK: dict[str, str] = {
+    "no_action": "No action taken.",
+    "bulk_delete": "{deleted}/{total} messages bulk deleted.",
+    "delete_summary": "{deleted}/{total} message(s) deleted.",
+    "delete_missing": "Delete requested, but no message was provided.",
+    "strike_issued": "Strike issued.",
+    "strike_issued_with_expiry": "Strike issued with expiry.",
+    "user_kicked": "User kicked.",
+    "user_banned": "User banned.",
+    "timeout_missing": "No timeout duration provided.",
+    "timeout_invalid": "Invalid timeout duration: '{value}'.",
+    "timeout_applied": "User timed out until <t:{timestamp}:R>.",
+    "give_role_missing": "No role specified to give.",
+    "give_role_not_found": "Role '{role}' not found.",
+    "give_role_success": "Role '{role}' given.",
+    "remove_role_missing": "No role specified to remove.",
+    "remove_role_not_found": "Role '{role}' not found.",
+    "remove_role_success": "Role '{role}' removed.",
+    "warn_dm": "User warned via DM.",
+    "warn_channel": "User warned via channel (DM failed).",
+    "warn_failed": "Warning failed (couldn't send DM or channel message).",
+    "broadcast_missing": "No broadcast message provided.",
+    "broadcast_sent": "Broadcast message sent.",
+    "broadcast_failed": "Broadcast failed.",
+    "broadcast_no_channel": "No valid channel found for broadcast.",
+    "unknown_action": "Unknown action: '{action}'.",
+    "action_failed": "Action failed: {action}.",
+}
+
+
+STRIKE_TEXTS_FALLBACK: dict[str, str] = {
+    "default_reason": "No reason provided",
+    "embed_title_user": "You have received a strike",
+    "embed_title_public": "{name} received a strike",
+    "actions_heading": "**Actions Taken:**",
+    "action_none": "**Action Taken:** No action applied",
+    "action_item": "- {action}",
+    "action_timeout": "Timeout (ends <t:{timestamp}:R>)",
+    "action_ban": "Ban",
+    "action_kick": "Kick",
+    "action_delete": "Delete Message",
+    "action_give_role": "Give Role {role}",
+    "action_remove_role": "Remove Role {role}",
+    "action_warn": "Warn: {message}",
+    "action_strike": "Strike",
+    "strike_count": "**Strike Count:** {count} strike(s).",
+    "strike_until_ban": "{remaining} more strike(s) before a permanent ban.",
+    "reason": "**Reason:** {reason}",
+    "expires": "**Expires:** {expiry}",
+    "issued_by": "Issued By",
+    "expiry_never": "Never",
+    "footer": "Server: {server}",
+}
+
+
+STRIKE_ERRORS_FALLBACK: dict[str, str] = {
+    "too_many_strikes": "You cannot give the same player more than 100 strikes. Use `/strikes clear <user>` to reset their strikes.",
+}
+
+
+WARN_EMBED_FALLBACK: dict[str, str] = {
+    "title": "⚠️ You Have Been Warned",
+    "description": "{mention}, {message}\n\n{reason_block}{reminder}",
+    "reason_block": "**Reason:** {reason}\n\n",
+    "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
+    "footer": "Server: {server}",
+}
+
+
+def _get_translation_dict(
+    bot: commands.Bot, key: str, fallback: dict[str, str]
+) -> dict[str, str]:
+    translator = getattr(bot, "translate", None)
+    if callable(translator):
+        value = translator(key)
+        if isinstance(value, Mapping):
+            return dict(value)
+    return fallback
 
 def get_ban_threshold(strike_settings):
     """
@@ -47,25 +126,32 @@ async def perform_disciplinary_action(
     action_string: Union[str, list[str]],
     reason: str = None,
     source: str = "generic",
-    message: Optional[Union[Message, list[Message]]] = None
+    message: Optional[Union[Message, list[Message]]] = None,
 ) -> Optional[str]:
     """Executes one or more configured action strings on a user."""
+
     now = datetime.now(timezone.utc)
-    results = []
+    results: list[str] = []
 
     actions = [action_string] if isinstance(action_string, str) else action_string
     messages = message if isinstance(message, list) else ([message] if message else [])
 
+    disciplinary_texts = _get_translation_dict(
+        bot, "modules.moderation.strike.disciplinary", DISCIPLINARY_TEXTS_FALLBACK
+    )
+
     for action in actions:
         try:
             base_action, _, param = action.partition(":")
+            base_action = base_action.strip()
+            normalized_action = base_action.lower()
             param = param.strip() if param else None
 
-            if base_action == "none":
-                results.append("No action taken.")
+            if normalized_action == "none":
+                results.append(disciplinary_texts["no_action"])
                 continue
 
-            if base_action == "delete":
+            if normalized_action == "delete":
                 if messages:
                     first = messages[0]
                     if all(msg.channel.id == first.channel.id for msg in messages):
@@ -73,51 +159,61 @@ async def perform_disciplinary_action(
                         try:
                             deleted = await first.channel.purge(
                                 check=lambda m: m.id in ids_to_delete,
-                                bulk=True
+                                bulk=True,
                             )
-                            results.append(f"{len(deleted)}/{len(messages)} messages bulk deleted.")
+                            results.append(
+                                disciplinary_texts["bulk_delete"].format(
+                                    deleted=len(deleted), total=len(messages)
+                                )
+                            )
                             continue
-                        except discord.HTTPException as e:
-                            print(f"[Bulk Delete] Failed: {e}")
+                        except discord.HTTPException as exc:
+                            print(f"[Bulk Delete] Failed: {exc}")
 
                     success = 0
                     for msg in messages:
                         try:
                             await msg.delete()
                             success += 1
-                        except Exception as e:
-                            print(f"[Delete] Failed for {msg.id}: {e}")
-                    results.append(f"{success}/{len(messages)} message(s) deleted.")
+                        except Exception as exc:  # pragma: no cover - network failure
+                            print(f"[Delete] Failed for {msg.id}: {exc}")
+                    results.append(
+                        disciplinary_texts["delete_summary"].format(
+                            deleted=success, total=len(messages)
+                        )
+                    )
                 else:
-                    results.append("Delete requested, but no message was provided.")
+                    results.append(disciplinary_texts["delete_missing"])
                 continue
 
-            if base_action == "strike":
+            if normalized_action == "strike":
                 await strike(user=user, bot=bot, reason=reason, expiry=param)
-                results.append(f"Strike issued{' with expiry' if param else ''}.")
+                key = "strike_issued_with_expiry" if param else "strike_issued"
+                results.append(disciplinary_texts[key])
                 continue
 
-            if base_action == "kick":
+            if normalized_action == "kick":
                 await user.kick(reason=reason)
-                results.append("User kicked.")
+                results.append(disciplinary_texts["user_kicked"])
                 continue
 
-            if base_action == "ban":
+            if normalized_action == "ban":
                 await user.ban(reason=reason)
-                results.append("User banned.")
+                results.append(disciplinary_texts["user_banned"])
                 continue
 
-            if base_action == "timeout":
+            if normalized_action == "timeout":
                 if not param:
-                    results.append("No timeout duration provided.")
+                    results.append(disciplinary_texts["timeout_missing"])
                     continue
                 delta = parse_duration(param)
                 if not delta:
-                    results.append(f"Invalid timeout duration: '{param}'")
+                    results.append(
+                        disciplinary_texts["timeout_invalid"].format(value=param)
+                    )
                     continue
                 until = now + delta
                 await user.timeout(until, reason=reason)
-                # Only log pfp timeouts to allow for unmute-on-safe-pfp.
                 if source == "pfp":
                     await execute_query(
                         """
@@ -125,74 +221,96 @@ async def perform_disciplinary_action(
                         VALUES (%s, %s, %s, %s, %s)
                         ON DUPLICATE KEY UPDATE timeout_until = VALUES(timeout_until), reason = VALUES(reason), source = VALUES(source)
                         """,
-                        (user.id, user.guild.id, until, reason, source)
+                        (user.id, user.guild.id, until, reason, source),
                     )
-                results.append(f"User timed out until <t:{int(until.timestamp())}:R>.")
+                results.append(
+                    disciplinary_texts["timeout_applied"].format(
+                        timestamp=int(until.timestamp())
+                    )
+                )
                 continue
 
-            if base_action == "give_role":
+            if normalized_action == "give_role":
                 if not param:
-                    results.append("No role specified to give.")
+                    results.append(disciplinary_texts["give_role_missing"])
                     continue
 
                 roles = resolve_role_references(user.guild, [param], logger=_logger)
                 role = roles[0] if roles else None
                 if role is None:
-                    results.append(f"Role '{param}' not found.")
+                    results.append(
+                        disciplinary_texts["give_role_not_found"].format(role=param)
+                    )
                     continue
 
                 await user.add_roles(role, reason=reason)
-                results.append(f"Role '{role.name}' given.")
+                results.append(
+                    disciplinary_texts["give_role_success"].format(role=role.name)
+                )
                 continue
 
-            if base_action == "take_role":
+            if normalized_action in {"take_role", "remove_role"}:
                 if not param:
-                    results.append("No role specified to remove.")
+                    results.append(disciplinary_texts["remove_role_missing"])
                     continue
 
                 roles = resolve_role_references(user.guild, [param], logger=_logger)
                 role = roles[0] if roles else None
                 if role is None:
-                    results.append(f"Role '{param}' not found.")
+                    results.append(
+                        disciplinary_texts["remove_role_not_found"].format(role=param)
+                    )
                     continue
 
                 await user.remove_roles(role, reason=reason)
-                results.append(f"Role '{role.name}' removed.")
+                results.append(
+                    disciplinary_texts["remove_role_success"].format(role=role.name)
+                )
                 continue
 
-            if base_action == "warn":
+            if normalized_action == "warn":
+                warn_texts = _get_translation_dict(
+                    bot, "modules.moderation.strike.warn_embed", WARN_EMBED_FALLBACK
+                )
+                reason_block = (
+                    warn_texts["reason_block"].format(reason=reason)
+                    if reason
+                    else ""
+                )
                 embed = Embed(
-                    title="⚠️ You Have Been Warned",
-                    description = (
-                        f"{user.mention}, {param}\n\n"
-                        + (f"**Reason:** {reason}\n\n" if reason else "")
-                        + "Please follow the server rules to avoid further action such as timeouts, strikes, or bans."
+                    title=warn_texts["title"],
+                    description=warn_texts["description"].format(
+                        mention=user.mention,
+                        message=param or "",
+                        reason_block=reason_block,
+                        reminder=warn_texts["reminder"],
                     ),
                     color=Color.red(),
-                    timestamp=now
+                    timestamp=now,
                 )
-                embed.set_footer(text=f"Server: {user.guild.name}", icon_url=user.guild.icon.url if user.guild.icon else None)
+                embed.set_footer(
+                    text=warn_texts["footer"].format(server=user.guild.name),
+                    icon_url=user.guild.icon.url if user.guild.icon else None,
+                )
 
-                # Pick the first message if message is a list
                 msg = messages[0] if messages else None
 
                 try:
                     await user.send(embed=embed)
-                    results.append("User warned via DM.")
+                    results.append(disciplinary_texts["warn_dm"])
                 except discord.Forbidden:
                     if msg and msg.channel.permissions_for(msg.guild.me).send_messages:
                         await msg.channel.send(content=user.mention, embed=embed)
-                        results.append("User warned via channel (DM failed).")
+                        results.append(disciplinary_texts["warn_channel"])
                     else:
-                        results.append("Warning failed (couldn't send DM or channel message).")
+                        results.append(disciplinary_texts["warn_failed"])
                 continue
 
-            if base_action == "broadcast":
+            if normalized_action == "broadcast":
                 if not param:
-                    results.append("No broadcast message provided.")
+                    results.append(disciplinary_texts["broadcast_missing"])
                     continue
 
-                # Find best broadcast target
                 target_channel = None
                 if messages:
                     target_channel = messages[0].channel
@@ -202,19 +320,23 @@ async def perform_disciplinary_action(
                 if target_channel and target_channel.permissions_for(user.guild.me).send_messages:
                     try:
                         await target_channel.send(param)
-                        results.append("Broadcast message sent.")
-                    except Exception as e:
-                        print(f"[Broadcast] Failed to send message: {e}")
-                        results.append("Broadcast failed.")
+                        results.append(disciplinary_texts["broadcast_sent"])
+                    except Exception as exc:  # pragma: no cover - network failure
+                        print(f"[Broadcast] Failed to send message: {exc}")
+                        results.append(disciplinary_texts["broadcast_failed"])
                 else:
-                    results.append("No valid channel found for broadcast.")
+                    results.append(disciplinary_texts["broadcast_no_channel"])
                 continue
 
-            results.append(f"Unknown action: '{action}'")
+            results.append(
+                disciplinary_texts["unknown_action"].format(action=action)
+            )
 
-        except Exception as e:
-            print(f"[Disciplinary Action Error] {user}: {e}")
-            results.append(f"Action failed: {action}")
+        except Exception as exc:  # pragma: no cover - defensive logging
+            print(f"[Disciplinary Action Error] {user}: {exc}")
+            results.append(
+                disciplinary_texts["action_failed"].format(action=action)
+            )
 
     return "\n".join(results) if results else None
 
@@ -224,7 +346,7 @@ async def strike(
     reason: str = "No reason provided",
     interaction: Optional[Interaction] = None,
     expiry: Optional[str] = None,
-    log_to_channel: bool = True
+    log_to_channel: bool = True,
 ) -> discord.Embed:
     if interaction:
         await interaction.response.defer(ephemeral=True)
@@ -232,11 +354,19 @@ async def strike(
     else:
         strike_by = bot.user
 
+    strike_texts = _get_translation_dict(
+        bot, "modules.moderation.strike.strike", STRIKE_TEXTS_FALLBACK
+    )
+    errors_texts = _get_translation_dict(
+        bot, "modules.moderation.strike.errors", STRIKE_ERRORS_FALLBACK
+    )
+
     guild_id = user.guild.id
     if not expiry:
         expiry = await mysql.get_settings(guild_id, "strike-expiry")
 
-    reason = reason or "No reason provided"
+    default_reason = strike_texts.get("default_reason", STRIKE_TEXTS_FALLBACK["default_reason"])
+    reason = reason or default_reason
 
     now = datetime.now(timezone.utc)
     expires_at = None
@@ -249,18 +379,24 @@ async def strike(
         INSERT INTO strikes (guild_id, user_id, reason, striked_by_id, timestamp, expires_at)
         VALUES (%s, %s, %s, %s, %s, %s)
     """
-    await execute_query(query, (
-        guild_id,
-        user.id,
-        reason,
-        strike_by.id,
-        now,
-        expires_at
-    ))
+    await execute_query(
+        query,
+        (
+            guild_id,
+            user.id,
+            reason,
+            strike_by.id,
+            now,
+            expires_at,
+        ),
+    )
 
     strike_count = await mysql.get_strike_count(user.id, guild_id)
     if interaction and strike_count > 100:
-        await interaction.followup.send("You cannot give the same player more than 100 strikes. Use `strikes clear <user>` to reset their strikes.")
+        await interaction.followup.send(
+            errors_texts["too_many_strikes"],
+            ephemeral=True,
+        )
         return None
 
     strike_settings = await mysql.get_settings(guild_id, "strike-actions")
@@ -269,7 +405,6 @@ async def strike(
 
     actions = strike_settings.get(str(strike_count), [])
 
-    # If no action is defined and cycling is enabled
     if not actions and cycle_settings:
         available_strike_values = [strike_settings[k] for k in available_strikes]
         index = (strike_count - 1) % len(available_strike_values)
@@ -278,7 +413,7 @@ async def strike(
     strikes_for_ban = get_ban_threshold(strike_settings)
     strikes_till_ban = strikes_for_ban - strike_count if strikes_for_ban is not None else None
 
-    action_desc_parts = []
+    action_desc_parts: list[str] = []
     for act in actions:
         base, _, param = act.partition(":")
         base = base.lower()
@@ -287,62 +422,82 @@ async def strike(
             if dur is None:
                 dur = timedelta(days=1)
             until = now + dur
-            action_desc_parts.append(f"Timeout (ends <t:{int(until.timestamp())}:R>)")
+            action_desc_parts.append(
+                strike_texts["action_timeout"].format(
+                    timestamp=int(until.timestamp())
+                )
+            )
         elif base == "ban":
-            action_desc_parts.append("Ban")
+            action_desc_parts.append(strike_texts["action_ban"])
         elif base == "kick":
-            action_desc_parts.append("Kick")
+            action_desc_parts.append(strike_texts["action_kick"])
         elif base == "delete":
-            action_desc_parts.append("Delete Message")
+            action_desc_parts.append(strike_texts["action_delete"])
         elif base == "give_role":
             role = user.guild.get_role(int(param)) if param and param.isdigit() else None
             name = role.name if role else param
-            action_desc_parts.append(f"Give Role {name}")
-        elif base == "take_role":
+            action_desc_parts.append(
+                strike_texts["action_give_role"].format(role=name)
+            )
+        elif base in {"take_role", "remove_role"}:
             role = user.guild.get_role(int(param)) if param and param.isdigit() else None
             name = role.name if role else param
-            action_desc_parts.append(f"Remove Role {name}")
+            action_desc_parts.append(
+                strike_texts["action_remove_role"].format(role=name)
+            )
         elif base == "warn":
-            action_desc_parts.append(f"Warn: {param}")
+            action_desc_parts.append(
+                strike_texts["action_warn"].format(message=param)
+            )
         elif base == "strike":
-            action_desc_parts.append("Strike")
+            action_desc_parts.append(strike_texts["action_strike"])
         else:
             print(f"[warn] Unrecognized action: {base}")
 
     if action_desc_parts:
-        action_description = "\n**Actions Taken:**\n" + "\n".join(f"- {d}" for d in action_desc_parts)
+        action_description = (
+            "\n"
+            + strike_texts["actions_heading"]
+            + "\n"
+            + "\n".join(
+                strike_texts["action_item"].format(action=desc)
+                for desc in action_desc_parts
+            )
+        )
     else:
-        action_description = "\n**Action Taken:** No action applied"
+        action_description = "\n" + strike_texts["action_none"]
 
-    if strike_count < len(available_strikes):
-        strike_info = f"\n**Strike Count:** {strike_count} strike(s)."
-        if strikes_till_ban:
-            strike_info += f" {strikes_till_ban} more strike(s) before a permanent ban."
-    else:
-        strike_info = f"\n**Strike Count:** {strike_count} strike(s)."
+    strike_info = "\n" + strike_texts["strike_count"].format(count=strike_count)
+    if strikes_till_ban:
+        strike_info += " " + strike_texts["strike_until_ban"].format(
+            remaining=strikes_till_ban
+        )
 
-    expiry_str = f"<t:{int(expires_at.timestamp())}:R>" if expires_at else "Never"
+    expiry_str = (
+        f"<t:{int(expires_at.timestamp())}:R>" if expires_at else strike_texts["expiry_never"]
+    )
     embed = Embed(
-        title="⚠️ You have received a strike",
+        title=strike_texts["embed_title_user"],
         description=(
-            f"**Reason:** {reason}"
-            f"{action_description}"
-            f"{strike_info}"
-            f"\n**Expires:** {expiry_str}"
+            strike_texts["reason"].format(reason=reason)
+            + action_description
+            + strike_info
+            + "\n"
+            + strike_texts["expires"].format(expiry=expiry_str)
         ),
         color=Color.red(),
-        timestamp=now
+        timestamp=now,
     )
-    
+
     embed.add_field(
-        name="Issued By",
+        name=strike_texts["issued_by"],
         value=f"{strike_by.mention} ({strike_by})",
-        inline=False
+        inline=False,
     )
     embed.set_footer(
-    text=f"Server: {user.guild.name}",
-    icon_url=user.guild.icon.url if user.guild.icon else None
-    ) 
+        text=strike_texts["footer"].format(server=user.guild.name),
+        icon_url=user.guild.icon.url if user.guild.icon else None,
+    )
 
     if await mysql.get_settings(user.guild.id, "dm-on-strike"):
         try:
@@ -357,12 +512,12 @@ async def strike(
             user=user,
             bot=bot,
             action_string=actions,
-            reason=reason
+            reason=reason,
         )
 
-    embed.title = f"{user.display_name} received a strike"
-    STRIKES_CHANNEL_ID = await mysql.get_settings(user.guild.id, "strike-channel")
-    if STRIKES_CHANNEL_ID is not None and log_to_channel:
-        await mod_logging.log_to_channel(embed, STRIKES_CHANNEL_ID, bot)
+    embed.title = strike_texts["embed_title_public"].format(name=user.display_name)
+    strikes_channel_id = await mysql.get_settings(user.guild.id, "strike-channel")
+    if strikes_channel_id is not None and log_to_channel:
+        await mod_logging.log_to_channel(embed, strikes_channel_id, bot)
 
     return embed
