@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "В данный момент действия NSFW не установлены.",
+        "heading": "**Текущие действия NSFW:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "В данный момент категории не установлены.",
+        "heading": "**Текущие категории NSFW:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "Порог должен быть в диапазоне от 0.0 до 1.0.",
+        "set": "Порог обнаружения NSFW установлен на {value:.2f}.",
+        "unset": "Порог обнаружения NSFW не установлен.",
+        "current": "Текущий порог обнаружения NSFW: {value:.2f}"
       }
     }
   }
