@@ -50,15 +50,7 @@
           "reason": "**Grund:** {reason}",
           "expires": "**Ablauf:** {expiry}",
           "issued_by": "Ausgestellt von",
-          "expiry_never": "Nie",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Nie"
         },
         "errors": {
           "too_many_strikes": "Du kannst einem Spieler nicht mehr als 100 Verwarnungen geben. Verwende \"/strikes clear <user>\" um ihre Verwarnungen zurückzusetzen."
