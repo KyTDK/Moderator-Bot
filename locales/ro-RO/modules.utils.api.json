@@ -2,7 +2,7 @@
   "modules": {
     "utils": {
       "api": {
-        "key_failed_notice": "**Warning:** Your OpenAI API key failed a moderation check.\n\nThis usually means your account does not have active billing or is temporarily rate-limited.\n\nPlease check your [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) to ensure your account has payment info and at least $5 in credits.\n\nOnce that is resolved, your key will automatically start working again - no need to re-add it."
+        "key_failed_notice": "**Avertisment:** Cheia ta API OpenAI nu a trecut de o verificare de moderare.\n\nDe obicei, acest lucru înseamnă că contul tău nu are facturare activă sau este temporar limitat în funcție de rată.\n\nTe rugăm să verifici [Panoul tău de Facturare OpenAI](https://platform.openai.com/account/billing/overview) pentru a te asigura că informațiile de plată sunt corecte și că ai cel puțin $5 în credite.\n\nOdată ce problema este rezolvată, cheia ta va începe să funcționeze din nou automat - nu este necesar să o adaugi din nou."
       }
     }
   }
