@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "רשימת הגסויות המובנית היא **{state}**.",
+        "updated": "רשימת הגסויות המובנית **{state}**.",
+        "state_enabled": "מאופשר",
+        "state_disabled": "מושבת"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "הגעת למכסה של {limit} מילים אסורות לשרת זה.\nהשתמש ב-`/bannedwords remove` או `/bannedwords clear` כדי לפנות מקום.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "המילה '{word}' כבר נאסרה.",
+        "success": "המילה '{word}' נוספה לרשימת המילים האסורות."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "המילה '{word}' אינה נאסרה.",
+        "success": "המילה '{word}' הוסרה מרשימת המילים האסורות."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "לא נמצאו מילים אסורות.",
+        "file_header": "מילים אסורות:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "לא נמצאו מילים אסורות לניקוי.",
+        "success": "כל המילים האסורות נוקו."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "לא מוגדרות כרגע פעולות עבור מילים אסורות.",
+        "header": "**פעולות נוכחיות למילים האסורות:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "ההודעה הכילה מילה אסורה",
+        "strike_source": "מילה אסורה",
+        "embed_title": "זוהתה מילה אסורה",
+        "embed_description": "{mention}, הודעתך הוסרה כי היא הכילה מילה אסורה."
       }
     }
   }
