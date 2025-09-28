@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**Què és l'API Pool?**\nL'API Pool és una col·lecció segura i anònima de claus API compartides d'OpenAI. Permet que el bot moderador continuï funcionant eficaçment, fins i tot quan els usuaris individuals es troben amb límits de taxa.\n\n**Com funciona?**\n- Quan afegeixes la teva clau API d'OpenAI a la piscina, aquesta s'encripta i s'emmagatzema de manera segura.\n- El bot utilitza aquestes claus exclusivament per accedir als models d'OpenAI per realitzar tasques de moderació.\n- La teva clau API es manté confidencial; ningú, inclosos els desenvolupadors del bot, pot veure-la.\n- Tens el control total i en qualsevol moment pots eliminar la teva clau API de la piscina.\n\n**Important:** Per contribuir amb la teva clau API, el teu compte d'OpenAI ha de tenir almenys 5 $ en crèdits prepagats. Tot i que el punt d'accés de moderació és gratuït, OpenAI requereix que els comptes tinguin dades de facturació i quota actives. Pots afegir crèdit al teu compte aquí: <https://platform.openai.com/account/billing/overview>\n\nContribuint amb la teva clau API, ajudes a garantir que el bot moderador segueixi sent receptiu i efectiu per a tots els usuaris."
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "Aquesta clau API ja existeix a la piscina.",
+        "success": "Clau API afegida a la piscina."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "Clau API eliminada de la teva piscina.",
+        "missing": "Aquesta clau API no es va trobar a la teva piscina. Utilitza /api_pool list per veure les teves claus API actuals."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Totes les claus API han estat esborrades de la teva piscina.",
+        "empty": "No es van trobar claus API per esborrar."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Les teves claus API:",
+        "empty": "No s'han trobat claus API a la teva piscina."
       }
     }
   }
