@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` è già nell'elenco.",
+          "success": "Aggiunto `{action}` alle azioni."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "L'azione `{action}` non esiste.",
+          "specific_success": "Rimossa l'azione specifica `{action}`.",
+          "base_missing": "Nessuna azione trovata per `{action}`.",
+          "base_success": "Rimosse tutte le azioni `{action}`."
         }
       }
     }
