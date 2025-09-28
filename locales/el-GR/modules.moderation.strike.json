@@ -50,15 +50,7 @@
           "reason": "**Λόγος:** {reason}",
           "expires": "**Λήγει:** {expiry}",
           "issued_by": "Εκδόθηκε από",
-          "expiry_never": "Ποτέ",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Ποτέ"
         },
         "errors": {
           "too_many_strikes": "Δεν μπορείτε να δώσετε στον ίδιο παίκτη περισσότερες από 100 προειδοποιήσεις. Χρησιμοποιήστε `/strikes clear <user>` για να επαναφέρετε τις προειδοποιήσεις τους."
