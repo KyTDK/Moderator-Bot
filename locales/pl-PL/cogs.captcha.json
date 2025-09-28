@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "To polecenie można używać tylko na serwerze.",
+        "wrong_guild": "Proszę wybrać członka z tego serwera.",
+        "is_bot": "Boty nie wymagają weryfikacji captcha."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Wystąpił nieoczekiwany błąd podczas aktualizacji osadzenia captcha.",
+        "updated": "Osadzenie weryfikacji captcha zostało zaktualizowane.",
+        "missing_delivery": "Dostarczenie osadzenia captcha nie jest skonfigurowane dla tego serwera."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Żądanie weryfikacji zostało wysłane.",
+        "failure": "Nie można wysłać instrukcji weryfikacyjnych.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Ten członek nie jest częścią żadnej gildii.",
+        "not_enabled": "Weryfikacja captcha nie jest włączona dla tego serwera.",
+        "not_configured": "Weryfikacja captcha nie jest skonfigurowana.",
+        "embed_success": "Instrukcje weryfikacyjne zostały zamieszczone w skonfigurowanym kanale.",
+        "dm_success": "Wiadomość weryfikacyjna wysłana do członka.",
+        "failure": "Nie można wysłać instrukcji weryfikacyjnych; proszę sprawdzić konfigurację."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Przydzielanie ról przed weryfikacją captcha."
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Czas weryfikacji captcha upłynął."
       }
     }
   }
