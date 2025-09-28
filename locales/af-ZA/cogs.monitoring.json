@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "Gradeer op na Accelerated vir vinniger NSFW & bedrogopsporing — /accelerated",
+        "guild_footer": "Gilde ID: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Lid Aangesluit",
+        "description": "{mention} ({name}) het by die bediener aangesluit.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Rekening Geskep",
+          "joined_at": "Aangesluit Op"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bot-rekening",
+          "user": "Gebruikersrekening"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Lid het Timeout ontvang",
+        "title_removed": "Timeout Verwyder",
+        "description_applied": "{mention} ({name}) is in 'n timeout geplaas.",
+        "description_removed": "{mention} ({name}) het 'n timeout gehad.",
         "fields": {
-          "ends": "Ends",
+          "ends": "Eindig",
           "moderator": "Moderator",
-          "reason": "Reason"
+          "reason": "Rede"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Gebruiker ID: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Lid Uitgeskop",
+        "title_left": "Lid Verlaat",
+        "description_kicked": "{mention} ({name}) is uit die bediener geskop.",
+        "description_left": "{mention} ({name}) het die bediener verlaat.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Uitgeskop Deur",
+          "reason": "Rede"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bot-rekening",
+          "user": "Gebruikersrekening"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Boodskap Verwyder",
+        "description_with_author": "**Skrywer:** {author_mention} ({author_name})\n**Kanaal:** {channel}\n",
+        "deleted_by": "**Verwyder deur:** {deleter}\n",
+        "content_label": "**Inhoud:**\n{content}",
+        "description_generic": "'n Boodskap is in {channel} verwyder.",
+        "description_deleted_by": "\n**Verwyder deur:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Aanhangsels ({count})",
+          "embeds": "Insluiting {index}",
+          "stickers": "Plakkers ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Insluit inhoud nie beskikbaar]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "Gebruiker ID: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Boodskap Gewysig",
+        "description": "**Skrywer:** {author_mention} ({author_name})\n**Kanaal:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Voorheen",
+          "after": "Daarna"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Gebruiker ID: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Lid Verbied",
+        "description": "{mention} ({name}) is verbied.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Verbied Deur",
+          "reason": "Rede"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Gebruiker ID: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Lid Onverbied",
+        "description": "{mention} ({name}) is onverbied.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Onverbied Deur",
+          "reason": "Rede"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Gebruiker ID: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Monitorkanaal ingestel op {channel}.",
+        "removed": "Monitorkanaal is verwyder.",
+        "not_set": "Geen monitorkanaal was ingestel nie.",
+        "current": "Huidige monitorkanaal: {channel}",
+        "none": "Geen monitorkanaal is tans ingestel nie.",
+        "toggle": "Logging vir `{event}` is {state}.",
+        "state_enabled": "geaktiveer",
+        "state_disabled": "gedeaktiveer",
+        "list_heading": "**Monitor Gebeure:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
