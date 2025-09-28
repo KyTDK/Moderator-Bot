@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "現在、NSFWのアクションは設定されていません。",
+        "heading": "**現在のNSFWアクション:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "現在、カテゴリーは設定されていません。",
+        "heading": "**現在のNSFWカテゴリー:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "閾値は0.0から1.0の間でなければなりません。",
+        "set": "NSFW検出の閾値が{value:.2f}に設定されました。",
+        "unset": "NSFW検出の閾値は設定されていません。",
+        "current": "現在のNSFW検出の閾値: {value:.2f}"
       }
     }
   }
