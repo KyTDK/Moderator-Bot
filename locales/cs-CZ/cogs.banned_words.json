@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "Vestavěný seznam vulgarit je **{state}**.",
+        "updated": "Vestavěný seznam vulgarit **{state}**.",
+        "state_enabled": "povoleno",
+        "state_disabled": "zakázáno"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Dosáhli jste limitu {limit} zakázaných slov pro tento server.\nPoužijte `/bannedwords remove` nebo `/bannedwords clear` k uvolnění místa.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "Slovo '{word}' je již zakázáno.",
+        "success": "Slovo '{word}' bylo přidáno do seznamu zakázaných slov."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "Slovo '{word}' není zakázáno.",
+        "success": "Slovo '{word}' bylo odstraněno ze seznamu zakázaných slov."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Žádná zakázaná slova nebyla nalezena.",
+        "file_header": "Zakázaná slova:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Nebyla nalezena žádná zakázaná slova ke smazání.",
+        "success": "Všechna zakázaná slova byla vymazána."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Žádné akce nejsou aktuálně nastaveny pro zakázaná slova.",
+        "header": "**Aktuální akce pro zakázaná slova:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Zpráva obsahovala zakázané slovo",
+        "strike_source": "zakázané slovo",
+        "embed_title": "Zjištěno zakázané slovo",
+        "embed_description": "{mention}, vaše zpráva byla odstraněna, protože obsahovala zakázané slovo."
       }
     }
   }
