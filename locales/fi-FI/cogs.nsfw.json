@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Ei NSFW-toimintoja ole tällä hetkellä asetettu.",
+        "heading": "**Nykyiset NSFW-toiminnot:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Ei kategorioita ole tällä hetkellä asetettu.",
+        "heading": "**Nykyiset NSFW-kategoriat:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "Kynnysarvon on oltava välillä 0,0 ja 1,0.",
+        "set": "NSFW-tunnistuksen kynnysarvo asetettu arvoon {value:.2f}.",
+        "unset": "NSFW-tunnistuksen kynnysarvoa ei ole asetettu.",
+        "current": "Nykyinen NSFW-tunnistuksen kynnysarvo: {value:.2f}"
       }
     }
   }
