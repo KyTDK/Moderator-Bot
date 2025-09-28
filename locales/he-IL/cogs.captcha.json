@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "פקודה זו ניתנת לשימוש רק בשרת.",
+        "wrong_guild": "אנא בחר חבר מהשרת הזה.",
+        "is_bot": "בוטים אינם דורשים אימות CAPTCHA."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "אירעה שגיאה לא צפויה בעת עדכון מוצג ה-Captcha.",
+        "updated": "מוצג אימות ה-Captcha עודכן.",
+        "missing_delivery": "אספקת מוצג ה-Captcha אינה מוגדרת עבור שרת זה."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "בקשת האימות נשלחה.",
+        "failure": "לא ניתן לשלוח הוראות אימות.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "חבר זה אינו חלק משרת.",
+        "not_enabled": "אימות Captcha אינו מופעל עבור שרת זה.",
+        "not_configured": "אימות ה-Captcha אינו מוגדר.",
+        "embed_success": "הוראות האימות נשלחו לערוץ המוגדר.",
+        "dm_success": "הודעת האימות נשלחה לחבר.",
+        "failure": "לא ניתן לשלוח הוראות אימות; אנא בדוק את ההגדרות."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "הקצאת תפקידי Pre-captcha"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "האימות בפלטפורמת Captcha פג תוקפו."
       }
     }
   }
