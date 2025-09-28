@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "이 서버에는 가속화 구독이 없습니다. 프리미엄 플랜을 시작하려면 \"/accelerated subscribe\"를 사용하세요."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "규칙이 업데이트되었습니다.",
+        "none": "설정된 중재 규칙이 없습니다.",
+        "heading": "**중재 규칙:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "먼저 \"/ai_mod rules_set\" 명령어로 중재 규칙을 설정하세요.",
+        "enabled": "자율 중재가 **활성화**되었습니다.",
+        "disabled": "자율 중재가 **비활성화**되었습니다.",
+        "mode_set": "모드가 **{mode}**로 설정되었습니다.",
+        "status": "자율 중재가 **{state}** 상태입니다.\n현재 모드는 **{mode}**입니다.",
+        "status_active": "\n활성 서브 모드: **{active}**",
+        "state_enabled": "활성화됨",
+        "state_disabled": "비활성화됨",
+        "state_unknown": "알 수 없음"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "현재 설정된 작업이 없습니다.",
+        "heading": "**현재 작업:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "이 이벤트 유형에는 역할이 필요합니다.",
+        "threshold_required": "이 이벤트 유형에는 임계값이 필요합니다.",
+        "threshold_range": "임계값은 0과 1 사이의 값이어야 합니다.",
+        "time_range_required": "이 이벤트 유형에는 시간 범위가 필요합니다 (예: 08:00-20:00).",
+        "error": "이벤트 설정 오류: {error}",
+        "cleared": "모든 적응형 이벤트가 지워졌습니다.",
+        "none": "설정된 적응형 이벤트가 없습니다.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[잘못된 역할: {value}]",
+        "detail_invalid": "[잘못된 값: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "적응형 중재 모드가 활성화되어 있지 않습니다. \"/ai_mod set_mode\"를 사용하여 활성화하세요."
     }
   }
 }
