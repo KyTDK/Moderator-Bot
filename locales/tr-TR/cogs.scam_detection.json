@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Dolandırıcılık Ayarları:**",
+        "actions": "- Dolandırıcılık eylemleri:\n{actions}",
+        "none": "*Eylem ayarlanmadı.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Dolandırıcılık mesajı tespit edildi",
+        "title": "Dolandırıcılık Mesajı Tespit Edildi",
+        "description": "{mention}, mesajınız dolandırıcılık olarak işaretlendi."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "{channel} kanalı dolandırıcılık tespitinden hariç tutuldu.",
+        "already": "{channel} kanalı zaten dolandırıcılık tespitinden hariç tutuldu.",
+        "not_excluded": "{channel} kanalı dolandırıcılık tespitinden hariç değil.",
+        "removed": "{channel} kanalı hariç tutma listesinden çıkarıldı.",
+        "list_empty": "Şu anda dolandırıcılık tespitinden hariç tutulan kanal yok.",
+        "invalid": "Geçerli hariç tutulan kanal bulunamadı.",
+        "list": "Hariç tutulan kanallar: {channels}"
       }
     }
   }
