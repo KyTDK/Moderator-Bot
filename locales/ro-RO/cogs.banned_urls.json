@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Ai atins limita de {limit} URL-uri interzise pentru acest server.\nFolosește `/bannedurls remove` sau `/bannedurls clear` pentru a elibera spațiu.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` este deja interzis.",
+        "success": "Am adăugat `{url}` la lista de URL-uri interzise."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` nu este în lista de URL-uri interzise.",
+        "success": "Am eliminat `{url}` din lista de URL-uri interzise."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "Niciun URL interzis găsit.",
+        "file_header": "URL-uri interzise:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "Nu s-au găsit URL-uri interzise de eliminat.",
+        "success": "Toate URL-urile interzise au fost eliminate."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "Mesajul conținea un URL interzis ({url})",
+        "strike_source": "url interzis",
+        "embed_title": "URL interzis detectat",
+        "embed_description": "{mention}, mesajul tău a fost eliminat deoarece conținea un URL interzis."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "Nicio acțiune nu este setată în prezent pentru URL-uri interzise.",
+        "header": "**Acțiunile curente pentru URL-uri interzise:**\n{actions}"
       }
     }
   }
