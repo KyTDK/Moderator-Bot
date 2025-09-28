@@ -50,7 +50,15 @@
           "reason": "**原因：**{reason}",
           "expires": "**到期：**{expiry}",
           "issued_by": "由以下人员发出",
-          "expiry_never": "永不"
+          "expiry_never": "永不",
+          "footer": "Server: {server}"
+        },
+        "warn_embed": {
+          "title": "⚠️ You Have Been Warned",
+          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
+          "reason_block": "**Reason:** {reason}\n\n",
+          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
+          "footer": "Server: {server}"
         },
         "errors": {
           "too_many_strikes": "您无法给同一玩家发超过100次警告。使用 `/strikes clear <user>` 重置他们的警告。"
