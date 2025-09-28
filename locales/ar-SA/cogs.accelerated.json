@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "إدارة الاشتراك المسارع (المميز) الخاص بك.",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "الحالة المسارعة",
+        "footer_base": "روبوت المشرف المسارع",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "فئة",
+          "status": "الحالة",
+          "next_billing": "الفوترة القادمة"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "لم يتم تسجيل هذا الخادم في **المسارع** حتى الآن. اشترك الآن باستخدام `/accelerated subscribe`.",
+          "tier_value": "`لا شيء`",
+          "status_value": "`غير مشترك`",
+          "next_billing_value": "ابدأ خطة مع `/accelerated subscribe`"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`لم يتم جدولة أي تجديد`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - دورة الفوترة القادمة",
+          "checked": "{base} - تم التحقق من الحالة"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "نشط",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "المسارع نشط."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "نشط - سيلغى قريبًا",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "سيظل المسارع نشطًا حتى نهاية دورة الفوترة الحالية."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "تم تعيين ميزات المسارع على التوقف المؤقت. ابدأ من جديد في أي وقت باستخدام `/accelerated subscribe`."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 نقابتك لديها بالفعل اشتراك **مسارع** نشط!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 ترقية إلى روبوت المشرف المسارع!",
+          "description": "**استمتع باكتشاف المحتوى الغير لائق والغش السريع، وأولوية في قوائم الانتظار، والوصول المبكر للميزات الجديدة!**\n\n بعد شهر مجاني، تابع فقط مقابل **5 دولارات شهريًا** لجعل خادمك أكثر أمانًا وسرعة.",
+          "footer": "روبوت المشرف 🚀 خطة المسارع",
+          "button_label": "🚀 اشتراك الآن"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "ميزات المسارع",
+        "description": "ترقية تجربتك مع روبوت المشرف المسارع:\n• الكشف التلقائي المدعوم بالذكاء الاصطناعي للتصرف على الرسائل المخالفة للقوانين تلقائيًا\n• مسح المزيد من الإطارات لكل فيديو للكشف العميق عن المحتوى الغير لائق\n• الأولوية في كشف المحتوى الغير لائق والغش\n• الوصول المبكر إلى الميزات الجديدة\n• دعم تطوير الروبوت"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "يمكنك إلغاء اشتراك PayPal الخاص بك في أي وقت عبر **حساب PayPal الخاص بك → الإعدادات → المدفوعات → إدارة المدفوعات التلقائية**.\n سيستمر الوصول المميز الخاص بك حتى نهاية دورة الفوترة."
       }
     }
   }
