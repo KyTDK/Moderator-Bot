@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "Δεν έχετε άδεια να χρησιμοποιήσετε αυτήν την εντολή.",
+      "no_allocations": "Δεν βρέθηκαν κατανομές που σχετίζονται με το έργο.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "Στατιστικά Απόδοσης Bot",
+        "memory_name": "Χρήση Μνήμης",
+        "memory_value": "**Χωρητικότητα (Πραγματική):** {rss:.2f} MB\n**Χωρητικότητα (Εικονική):** {vms:.2f} MB\n**Τρέχουσα Tracemalloc:** {current_mb:.2f} MB\n**Κορυφαία Tracemalloc:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU & Νήματα",
+        "cpu_value": "**Χρήση CPU:** {cpu_percent:.1f}%\n**Νήματα:** {threads}\n**Χειρισμοί:** {handles}",
+        "bot_name": "Στατιστικά Bot",
+        "bot_value": "**Συντεχνίες:** {guilds}\n**Χρήστες (cache):** {users}\n**Χρόνος Λειτουργίας:** {uptime}",
+        "allocations_name": "Κορυφαίες Κατανομές Μνήμης {index}",
+        "worker_name": "Ουρές Εργατών",
+        "worker_error": "(σφάλμα στη συλλογή μετρήσεων: {error})",
+        "footer": "Υπολογιστής Φιλοξενίας: {host} | Python {python_version}"
       }
     }
   }
