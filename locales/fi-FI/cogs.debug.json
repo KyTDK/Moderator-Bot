@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "Sinulla ei ole lupaa käyttää tätä komentoa.",
+      "no_allocations": "Projektikohtaisia kohdennuksia ei löytynyt.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "Botin suorituskykytiedot",
+        "memory_name": "Muistin käyttö",
+        "memory_value": "**RSS (Todellinen):** {rss:.2f} MB\n**VMS (Virtuaalinen):** {vms:.2f} MB\n**Tracemalloc Nykyinen:** {current_mb:.2f} MB\n**Tracemalloc Huippu:** {peak_mb:.2f} MB",
+        "cpu_name": "Suoritin & Säikeet",
+        "cpu_value": "**Suorittimen käyttö:** {cpu_percent:.1f}%\n**Säikeitä:** {threads}\n**Kahvoja:** {handles}",
+        "bot_name": "Bottilaskenta",
+        "bot_value": "**Kiltoja:** {guilds}\n**Käyttäjät (välimuisti):** {users}\n**Käyttöaika:** {uptime}",
+        "allocations_name": "Suurimmat muistinkohdennukset {index}",
+        "worker_name": "Työntekijäjonot",
+        "worker_error": "(virhe metriikoiden keruussa: {error})",
+        "footer": "Isäntä: {host} | Python {python_version}"
       }
     }
   }
