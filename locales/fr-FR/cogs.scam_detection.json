@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Paramètres d'arnaque :**",
+        "actions": "- Actions contre les arnaques :\n{actions}",
+        "none": "*Aucune action définie.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Message d'arnaque détecté",
+        "title": "Message d'Arnaque Détecté",
+        "description": "{mention}, votre message a été signalé comme une arnaque."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Le canal {channel} a été exclu de la détection d'arnaques.",
+        "already": "Le canal {channel} est déjà exclu de la détection d'arnaques.",
+        "not_excluded": "Le canal {channel} n'est pas exclu de la détection d'arnaques.",
+        "removed": "Le canal {channel} a été retiré de la liste des exclusions.",
+        "list_empty": "Aucun canal n'est actuellement exclu de la détection d'arnaques.",
+        "invalid": "Aucun canal exclu valide trouvé.",
+        "list": "Canaux exclus : {channels}"
       }
     }
   }
