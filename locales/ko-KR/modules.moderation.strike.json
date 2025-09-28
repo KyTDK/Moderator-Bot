@@ -50,15 +50,7 @@
           "reason": "**이유:** {reason}",
           "expires": "**만료:** {expiry}",
           "issued_by": "발행자",
-          "expiry_never": "없음",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "없음"
         },
         "errors": {
           "too_many_strikes": "같은 플레이어에게 100회 이상 경고를 부여할 수 없습니다. `/strikes clear <user>`를 사용하여 경고 횟수를 초기화하세요."
