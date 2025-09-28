@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "Обновитесь до Accelerated для более быстрого обнаружения NSFW и мошенничества — /accelerated",
+        "guild_footer": "ID гильдии: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Участник присоединился",
+        "description": "{mention} ({name}) присоединился к серверу.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Аккаунт создан",
+          "joined_at": "Присоединился в"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Аккаунт бота",
+          "user": "Аккаунт пользователя"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Участник в таймауте",
+        "title_removed": "Таймаут удалён",
+        "description_applied": "{mention} ({name}) помещён в таймаут.",
+        "description_removed": "{mention} ({name}) был в таймауте.",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "Заканчивается",
+          "moderator": "Модератор",
+          "reason": "Причина"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID пользователя: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Участник исключен из группы",
+        "title_left": "Участник покинул группу",
+        "description_kicked": "{mention} ({name}) был исключен с сервера.",
+        "description_left": "{mention} ({name}) покинул сервер.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Исключил",
+          "reason": "Причина"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Аккаунт бота",
+          "user": "Аккаунт пользователя"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Сообщение удалено",
+        "description_with_author": "**Автор:** {author_mention} ({author_name})\n**Канал:** {channel}\n",
+        "deleted_by": "**Удалено:** {deleter}\n",
+        "content_label": "**Содержание:**\n{content}",
+        "description_generic": "Сообщение было удалено в {channel}.",
+        "description_deleted_by": "\n**Удалено:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Вложения ({count})",
+          "embeds": "Встроенное содержимое {index}",
+          "stickers": "Стикеры ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Встроенное содержимое недоступно]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "ID пользователя: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Сообщение изменено",
+        "description": "**Автор:** {author_mention} ({author_name})\n**Канал:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "До",
+          "after": "После"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID пользователя: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Участник забанен",
+        "description": "{mention} ({name}) был забанен.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Забанил",
+          "reason": "Причина"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID пользователя: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Участник разбанен",
+        "description": "{mention} ({name}) был разбанен.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Разбанил",
+          "reason": "Причина"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID пользователя: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Канал отслеживания установлен на {channel}.",
+        "removed": "Канал отслеживания был удалён.",
+        "not_set": "Канал отслеживания не установлен.",
+        "current": "Текущий канал отслеживания: {channel}",
+        "none": "В настоящее время канал отслеживания не установлен.",
+        "toggle": "Логирование для `{event}` было {state}.",
+        "state_enabled": "включено",
+        "state_disabled": "выключено",
+        "list_heading": "**События мониторинга:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
