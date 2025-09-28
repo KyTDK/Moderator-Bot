@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "يجب أن تكون الإجراءات واحدة من: {options}",
+          "duration_not_allowed": "المدة غير مسموح بها لهذا الأمر.",
+          "duration_required": "يجب عليك توفير مدة زمنية (مثل `30m`, `1d`, `2w`).",
+          "duration_invalid": "صيغة المدة الزمنية غير صحيحة. استخدم `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "لا يمكنك إرفاق دور لعملية زمن التوقف.",
+          "role_required": "يجب عليك تحديد دور لـ `{action}`.",
+          "duration_not_supported": "`{action}` لا يدعم مدة زمنية.",
+          "role_not_supported": "`{action}` لا يستخدم دوراً.",
+          "warn_message_required": "يجب عليك تقديم رسالة تحذير.",
+          "warn_role_disallowed": "لا يمكنك إرفاق دور لعملية التحذير."
         }
       }
     }
