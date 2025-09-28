@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "NSFW 및 스캠 감지를 가속하려면 Accelerated로 업그레이드 하세요 — /accelerated",
+        "guild_footer": "길드 ID: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "멤버가 가입했습니다",
+        "description": "{mention} ({name}) 님이 서버에 가입했습니다.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "계정 생성",
+          "joined_at": "가입 날짜"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "봇 계정",
+          "user": "사용자 계정"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "멤버가 제한되었습니다",
+        "title_removed": "제한이 제거되었습니다",
+        "description_applied": "{mention} ({name}) 님이 제한되었습니다.",
+        "description_removed": "{mention} ({name}) 님의 제한이 해제되었습니다.",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "종료",
+          "moderator": "관리자",
+          "reason": "사유"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "사용자 ID: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "멤버가 추방되었습니다",
+        "title_left": "멤버가 탈퇴했습니다",
+        "description_kicked": "{mention} ({name}) 님이 서버에서 추방되었습니다.",
+        "description_left": "{mention} ({name}) 님이 서버를 떠났습니다.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "추방한 사람",
+          "reason": "사유"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "봇 계정",
+          "user": "사용자 계정"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "메시지가 삭제되었습니다",
+        "description_with_author": "**작성자:** {author_mention} ({author_name})\n**채널:** {channel}\n",
+        "deleted_by": "**삭제자:** {deleter}\n",
+        "content_label": "**내용:**\n{content}",
+        "description_generic": "{channel}에서 메시지가 삭제되었습니다.",
+        "description_deleted_by": "\n**삭제자:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "첨부 파일 ({count})",
+          "embeds": "임베드 {index}",
+          "stickers": "스티커 ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[임베드 내용 불가능]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "사용자 ID: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "메시지가 수정되었습니다",
+        "description": "**작성자:** {author_mention} ({author_name})\n**채널:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "이전",
+          "after": "이후"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "사용자 ID: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "멤버가 차단되었습니다",
+        "description": "{mention} ({name}) 님이 차단되었습니다.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "차단한 사람",
+          "reason": "사유"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "사용자 ID: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "멤버가 차단 해제되었습니다",
+        "description": "{mention} ({name}) 님이 차단 해제되었습니다.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "차단 해제한 사람",
+          "reason": "사유"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "사용자 ID: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "모니터링 채널이 {channel}로 설정되었습니다.",
+        "removed": "모니터링 채널이 제거되었습니다.",
+        "not_set": "설정된 모니터링 채널이 없습니다.",
+        "current": "현재 모니터링 채널: {channel}",
+        "none": "현재 설정된 모니터링 채널이 없습니다.",
+        "toggle": "`{event}`에 대한 로깅이 {state}되었습니다.",
+        "state_enabled": "활성화됨",
+        "state_disabled": "비활성화됨",
+        "list_heading": "**모니터링 이벤트:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
