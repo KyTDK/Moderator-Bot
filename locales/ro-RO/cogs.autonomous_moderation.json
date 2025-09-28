@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "Acest server nu are un abonament Accelerated. Folosește `/accelerated subscribe` pentru a începe planul tău premium."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "Regulile au fost actualizate.",
+        "none": "Nu au fost stabilite reguli de moderare.",
+        "heading": "**Reguli de Moderare:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "Setează mai întâi regulile de moderare cu `/ai_mod rules_set`.",
+        "enabled": "Moderarea autonomă a fost **activată**.",
+        "disabled": "Moderarea autonomă a fost **dezactivată**.",
+        "mode_set": "Modul a fost setat la **{mode}**.",
+        "status": "Moderarea autonomă este **{state}**.\nModul curent este **{mode}**.",
+        "status_active": "\nSubmod activ: **{active}**",
+        "state_enabled": "activat",
+        "state_disabled": "dezactivat",
+        "state_unknown": "necunoscut"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "În prezent, nu sunt setate acțiuni.",
+        "heading": "**Acțiuni curente:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "Acest tip de eveniment necesită un rol.",
+        "threshold_required": "Acest tip de eveniment necesită un prag.",
+        "threshold_range": "Pragul trebuie să fie o valoare între 0 și 1.",
+        "time_range_required": "Acest tip de eveniment necesită un interval de timp (de exemplu, 08:00-20:00).",
+        "error": "Eroare la setarea evenimentului: {error}",
+        "cleared": "Toate evenimentele adaptive au fost șterse.",
+        "none": "Nu sunt setate evenimente adaptive.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
+        "detail_invalid_role": "[rol invalid: {value}]",
         "detail_invalid": "[invalid: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "Modul de moderare adaptivă nu este activat. Folosește `/ai_mod set_mode` pentru a-l activa."
     }
   }
 }
