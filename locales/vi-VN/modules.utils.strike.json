@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "Hành động phải là một trong số: {options}",
+          "duration_not_allowed": "Thời lượng không được phép cho lệnh này.",
+          "duration_required": "Bạn phải cung cấp thời lượng (ví dụ: `30m`, `1d`, `2w`).",
+          "duration_invalid": "Định dạng thời lượng không hợp lệ. Sử dụng `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "Bạn không thể gắn vai trò cho hành động hết thời gian.",
+          "role_required": "Bạn phải chỉ định một vai trò cho `{action}`.",
+          "duration_not_supported": "`{action}` không hỗ trợ thời lượng.",
+          "role_not_supported": "`{action}` không sử dụng vai trò.",
+          "warn_message_required": "Bạn phải cung cấp một thông điệp cảnh báo.",
+          "warn_role_disallowed": "Bạn không thể gắn vai trò cho một hành động cảnh báo."
         }
       }
     }
