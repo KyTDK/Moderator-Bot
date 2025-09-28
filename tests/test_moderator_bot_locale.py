@@ -28,7 +28,6 @@ class DummyContext(SimpleNamespace):
 
 
 class DummyInteraction(SimpleNamespace):
-    guild_locale: str | None
     guild: DummyGuild | None
     locale: str | None
     guild_id: int | None
@@ -47,10 +46,9 @@ def bot() -> ModeratorBot:
     mysql.remove_settings_listener(bot._locale_settings_listener)
 
 
-def test_interaction_locale_normalises_discord_hint(bot: ModeratorBot) -> None:
-    guild = DummyGuild(id=123, preferred_locale=None)
+def test_interaction_locale_uses_preferred_locale(bot: ModeratorBot) -> None:
+    guild = DummyGuild(id=123, preferred_locale="en-US")
     interaction = DummyInteraction(
-        guild_locale="en-US",
         guild=guild,
         locale=None,
         guild_id=guild.id,
@@ -84,7 +82,6 @@ def test_guild_override_has_priority(
 
     guild = DummyGuild(id=789, preferred_locale="en-US")
     interaction = DummyInteraction(
-        guild_locale="de-DE",
         guild=guild,
         locale=None,
         guild_id=guild.id,

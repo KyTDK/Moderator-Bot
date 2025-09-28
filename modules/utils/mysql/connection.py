@@ -175,11 +175,27 @@ async def _ensure_database_exists() -> None:
                     guild_id BIGINT PRIMARY KEY,
                     name VARCHAR(255) NOT NULL,
                     owner_id BIGINT NOT NULL,
+                    locale VARCHAR(16) NULL,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE KEY (guild_id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await cur.execute(
+                """
+                SELECT 1
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE table_schema = DATABASE()
+                  AND table_name = 'guilds'
+                  AND column_name = 'locale'
+                LIMIT 1
+                """
+            )
+            locale_column = await cur.fetchone()
+            if not locale_column:
+                await cur.execute(
+                    "ALTER TABLE guilds ADD COLUMN locale VARCHAR(16) NULL DEFAULT NULL AFTER owner_id"
+                )
             await cur.execute(
                 """
                 CREATE TABLE IF NOT EXISTS captcha_embeds (
