@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Ez a parancs csak szerveren használható.",
+        "wrong_guild": "Kérjük, válasszon ki egy tagot ebből a szerverről.",
+        "is_bot": "A botok nem igényelnek captcha-ellenőrzést."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Váratlan hiba történt a captcha beágyazásának frissítése során.",
+        "updated": "A captcha ellenőrző beágyazása frissítve lett.",
+        "missing_delivery": "A captcha beágyazás kézbesítése nincs konfigurálva erre a szerverre."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Ellenőrzési kérelem elküldve.",
+        "failure": "Nem lehet elküldeni az ellenőrzési utasításokat.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Ez a tag nem része egyetlen szervernek sem.",
+        "not_enabled": "A captcha-ellenőrzés nincs engedélyezve ezen a szerveren.",
+        "not_configured": "A captcha-ellenőrzés nincs konfigurálva.",
+        "embed_success": "Az ellenőrzési utasítások közzétéve a konfigurált csatornában.",
+        "dm_success": "Az ellenőrzési üzenet elküldve a tagnak.",
+        "failure": "Nem lehet elküldeni az ellenőrzési utasításokat; kérjük, ellenőrizze a konfigurációt."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Elő-captcha szerepek hozzárendelése"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "A captcha-ellenőrzés időtúllépést szenvedett."
       }
     }
   }
