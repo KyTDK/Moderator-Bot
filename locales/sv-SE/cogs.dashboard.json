@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "Moderator Bot Instrumentpanel",
+        "description": "[Klicka här för att öppna instrumentpanelen]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "Genererar din instrumentpanelslänk..."
       }
     }
   }
