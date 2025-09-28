@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} is nie ouderdomsbeperk nie. Kies asseblief 'n NSFW-kanaal.",
+      "missing_permissions": "Ek het die volgende toestemmings in {channel} nodig: {permissions}",
+      "set_success": "{log_type} logs sal in {channel} gepos word.",
+      "unset_success": "{log_type} log-kanaal is uitgestel.",
+      "invalid_guild": "Fout: Ongeldige gilde-ID-formaat.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**Log Kanale:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "Nie gestel nie"
       }
     }
   }
