@@ -66,14 +66,23 @@ class Settings(commands.Cog):
 
     @settings_group.command(name="help", description="Get help on settings.")
     async def help_settings(self, interaction: Interaction):
-        help_message = "**Available Settings:**\n"
+        texts = self.bot.translate("cogs.settings.help")
+        header = texts["header"]
+        entry_template = texts["entry"]
+
+        entries: list[str] = []
         for setting in SETTINGS_SCHEMA.values():
             if getattr(setting, "hidden", False):
                 continue
-            help_message += (
-                f"**{setting.name}**: {setting.description} (Type: {setting.type.__name__})\n"
+            entries.append(
+                entry_template.format(
+                    name=setting.name,
+                    description=setting.description,
+                    type=setting.type.__name__,
+                )
             )
 
+        help_message = header + CHUNK_SEPARATOR.join(entries)
         chunks = paginate(help_message)
         await interaction.response.send_message(chunks[0], ephemeral=True)
         for chunk in chunks[1:]:
@@ -84,10 +93,9 @@ class Settings(commands.Cog):
         """Reset server settings."""
         await interaction.response.defer(ephemeral=True)
         _, rows = await mysql.execute_query("DELETE FROM settings WHERE guild_id = %s", (interaction.guild.id,))
-        if rows>0:
-            await interaction.followup.send("Reset all settings to defaults.")
-        else:
-            await interaction.followup.send("You are already using default settings.")
+        texts = self.bot.translate("cogs.settings.reset")
+        message = texts["done"] if rows > 0 else texts["already"]
+        await interaction.followup.send(message)
 
     @settings_group.command(name="set", description="Set a server setting.")
     @app_commands.autocomplete(value=value_autocomplete, name=name_autocomplete)
@@ -95,14 +103,15 @@ class Settings(commands.Cog):
         self,
         interaction: Interaction,
         name: str,
-        value: str = None,
+        value: str | None = None,
         channel: Optional[discord.TextChannel] = None,
         role: Optional[discord.Role] = None
     ):
         await interaction.response.defer(ephemeral=True)
+        texts = self.bot.translate("cogs.settings.set")
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
-            await interaction.followup.send("**Invalid setting name.**", ephemeral=True)
+            await interaction.followup.send(texts["invalid_name"], ephemeral=True)
             return
 
         expected = schema.type
@@ -112,36 +121,38 @@ class Settings(commands.Cog):
                 active_plan = await mysql.resolve_guild_plan(interaction.guild.id)
                 if active_plan not in required_plans:
                     requirement = describe_plan_requirements(required_plans)
-                    raise ValueError(
-                        f"This setting requires {requirement}. Use `/accelerated subscribe` to upgrade."
-                    )
+                    raise ValueError(texts["requires_plan"].format(requirement=requirement))
+
             # Validate required parameters for expected type
-            if expected == bool and value == None:
-                raise ValueError(f"**`{name}` expects a boolean. Use the `value` option.**")
-            if expected == int and value == None:
-                raise ValueError(f"**`{name}` expects an integer. Use the `value` option.**")
-            if expected == TimeString and value == None:
-                raise ValueError(f"**`{name}` expects a duration (e.g. 30m, 1d).**")
-            if expected == discord.TextChannel and channel == None:
-                raise ValueError(f"**`{name}` expects a channel. Use the `channel` option.**")
-            if expected == discord.Role and role == None:
-                raise ValueError(f"**`{name}` expects a role. Use the `role` option.**")
-            if expected == list[discord.TextChannel] and channel == None:
-                raise ValueError(f"**`{name}` expects a channel to add. Use the `channel` option.**")
-            if expected == list[discord.Role] and role == None:
-                raise ValueError(f"**`{name}` expects a role to add. Use the `role` option.**")
+            if expected == bool and value is None:
+                raise ValueError(texts["missing_boolean"].format(name=name))
+            if expected == int and value is None:
+                raise ValueError(texts["missing_integer"].format(name=name))
+            if expected == TimeString and value is None:
+                raise ValueError(texts["missing_duration"].format(name=name))
+            if expected == discord.TextChannel and channel is None:
+                raise ValueError(texts["missing_channel"].format(name=name))
+            if expected == discord.Role and role is None:
+                raise ValueError(texts["missing_role"].format(name=name))
+            if expected == list[discord.TextChannel] and channel is None:
+                raise ValueError(texts["missing_channel_add"].format(name=name))
+            if expected == list[discord.Role] and role is None:
+                raise ValueError(texts["missing_role_add"].format(name=name))
 
             # Type conversion
             if expected == int:
                 parsed = int(value)
             elif expected == bool:
                 low = str(value).lower()
-                if low in ("true", "1", "yes"):
+                boolean_values = texts.get("boolean_values", {})
+                true_values = {v.lower() for v in boolean_values.get("true", ("true", "1", "yes"))}
+                false_values = {v.lower() for v in boolean_values.get("false", ("false", "0", "no"))}
+                if low in true_values:
                     parsed = True
-                elif low in ("false", "0", "no"):
+                elif low in false_values:
                     parsed = False
                 else:
-                    raise ValueError(f"**`{name}` expects a boolean.**")
+                    raise ValueError(texts["boolean_only"].format(name=name))
             elif expected == TimeString:
                 parsed = TimeString(value)
             elif expected == discord.TextChannel:
@@ -159,12 +170,16 @@ class Settings(commands.Cog):
                     current.append(role.id)
                 parsed = current
             else:
-                print("Setting parsed as value as type isn't known")
+                print(texts["unknown_type"])
                 parsed = value
 
             await schema.validate(parsed)
             await mysql.update_settings(interaction.guild.id, name, parsed)
-            await interaction.followup.send(f"Updated `{name}` to `{parsed}`.", ephemeral=True)
+            value_repr = parsed if isinstance(parsed, str) else str(parsed)
+            await interaction.followup.send(
+                texts["success"].format(name=name, value=value_repr),
+                ephemeral=True,
+            )
 
         except ValueError as ve:
             await interaction.followup.send(str(ve), ephemeral=True)
@@ -172,7 +187,8 @@ class Settings(commands.Cog):
         except Exception as e:
             traceback.print_exc()
             await interaction.followup.send(
-                f"An unexpected error occurred: `{e}`", ephemeral=True
+                texts["unexpected"].format(error=e),
+                ephemeral=True,
             )
 
     def _chunk_lines(self, lines: list[str], limit: int = 1000) -> list[str]:
@@ -208,7 +224,12 @@ class Settings(commands.Cog):
                 None
             )
             if not group:
-                await interaction.followup.send(f"❌ No help found for `{command}`.", ephemeral=True)
+                message = self.bot.translate(
+                    "cogs.settings.help.not_found",
+                    placeholders={"command": command},
+                    fallback=f"No help found for `{command}`.",
+                )
+                await interaction.followup.send(message, ephemeral=True)
                 return
 
             embed = discord.Embed(
@@ -297,9 +318,10 @@ class Settings(commands.Cog):
         """Get the current value of a server setting."""
         await interaction.response.defer(ephemeral=True)
 
+        texts = self.bot.translate("cogs.settings.get")
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
-            await interaction.followup.send("Invalid setting name.", ephemeral=True)
+            await interaction.followup.send(texts["invalid_name"], ephemeral=True)
             return
 
         current_value = await mysql.get_settings(interaction.guild.id, name)
@@ -307,48 +329,54 @@ class Settings(commands.Cog):
 
         if current_value is None:
             await interaction.followup.send(
-                f"`{name}` is not set. Default: `{schema.default}`", ephemeral=True
+                texts["not_set"].format(name=name, default=schema.default),
+                ephemeral=True,
             )
             return
 
         if schema.private:
-            await interaction.followup.send(
-                "For privacy reasons, this setting is hidden.", ephemeral=True
-            )
+            await interaction.followup.send(texts["private"], ephemeral=True)
             return
 
         if expected_type == list[discord.TextChannel]:
             mentions = []
             for cid in current_value:
                 chan = interaction.guild.get_channel(cid)
-                mentions.append(chan.mention if chan else f"`#{cid}`")
+                mentions.append(
+                    chan.mention if chan else texts["list_channel_item"].format(id=cid)
+                )
             value_str = ", ".join(mentions)
 
         elif expected_type == list[discord.Role]:
             mentions = []
             for rid in current_value:
                 role = interaction.guild.get_role(rid)
-                mentions.append(role.mention if role else f"`@{rid}`")
+                mentions.append(
+                    role.mention if role else texts["list_role_item"].format(id=rid)
+                )
             value_str = ", ".join(mentions)
 
         elif expected_type == discord.TextChannel:
             chan = interaction.guild.get_channel(current_value)
-            value_str = chan.mention if chan else f"`#{current_value}`"
+            value_str = chan.mention if chan else texts["list_channel_item"].format(id=current_value)
 
         elif expected_type == discord.Role:
             role = interaction.guild.get_role(current_value)
-            value_str = role.mention if role else f"`@{current_value}`"
+            value_str = role.mention if role else texts["list_role_item"].format(id=current_value)
 
         elif expected_type == dict[str, list[str]]:
-            lines = [f"**{k}** → `{', '.join(v)}`" for k, v in current_value.items()]
+            lines: list[str] = []
+            for key, values in current_value.items():
+                values_str = ", ".join(values)
+                lines.append(texts["dict_item"].format(key=key, values=values_str))
             value_str = "\n".join(lines)
 
         else:
             value_str = str(current_value)
 
         await interaction.followup.send(
-            f"**`{name}` is currently set to:**\n{value_str}",
-            ephemeral=True
+            texts["current"].format(name=name, value=value_str),
+            ephemeral=True,
         )
 
     @settings_group.command(name="remove", description="Remove a server setting or an item from a list-type setting.")
@@ -361,47 +389,73 @@ class Settings(commands.Cog):
         role: Optional[discord.Role] = None
     ):
         await interaction.response.defer(ephemeral=True)
+        texts = self.bot.translate("cogs.settings.remove")
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
-            await interaction.followup.send("Invalid setting name.", ephemeral=True)
+            await interaction.followup.send(texts["invalid_name"], ephemeral=True)
             return
 
         current = await mysql.get_settings(interaction.guild.id, name)
         expected = schema.type
 
         if not current:
-            await interaction.followup.send(f"`{name}` is not set.", ephemeral=True)
+            await interaction.followup.send(
+                texts["not_set"].format(name=name),
+                ephemeral=True,
+            )
             return
 
         try:
             if expected == list[discord.TextChannel]:
                 if not channel:
-                    raise ValueError("You must specify a channel to remove.")
+                    raise ValueError(texts["channel_required"])
                 if channel.id not in current:
-                    raise ValueError(f"{channel.mention} is not in `{name}`.")
+                    raise ValueError(
+                        texts["channel_missing"].format(
+                            channel=channel.mention,
+                            name=name,
+                        )
+                    )
                 current.remove(channel.id)
                 await mysql.update_settings(interaction.guild.id, name, current)
-                await interaction.followup.send(f"Removed {channel.mention} from `{name}`.", ephemeral=True)
+                await interaction.followup.send(
+                    texts["removed_channel"].format(channel=channel.mention, name=name),
+                    ephemeral=True,
+                )
 
             elif expected == list[discord.Role]:
                 if not role:
-                    raise ValueError("You must specify a role to remove.")
+                    raise ValueError(texts["role_required"])
                 if role.id not in current:
-                    raise ValueError(f"{role.mention} is not in `{name}`.")
+                    raise ValueError(
+                        texts["role_missing"].format(
+                            role=role.mention,
+                            name=name,
+                        )
+                    )
                 current.remove(role.id)
                 await mysql.update_settings(interaction.guild.id, name, current)
-                await interaction.followup.send(f"Removed {role.mention} from `{name}`.", ephemeral=True)
+                await interaction.followup.send(
+                    texts["removed_role"].format(role=role.mention, name=name),
+                    ephemeral=True,
+                )
 
             else:
                 await mysql.update_settings(interaction.guild.id, name, None)
-                await interaction.followup.send(f"Removed setting `{name}`. Now using default.", ephemeral=True)
+                await interaction.followup.send(
+                    texts["removed_setting"].format(name=name),
+                    ephemeral=True,
+                )
 
         except ValueError as ve:
             await interaction.followup.send(str(ve), ephemeral=True)
 
         except Exception as e:
             traceback.print_exc()
-            await interaction.followup.send(f"An unexpected error occurred: `{e}`", ephemeral=True)
+            await interaction.followup.send(
+                texts["unexpected"].format(error=e),
+                ephemeral=True,
+            )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Settings(bot))

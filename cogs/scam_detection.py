@@ -329,17 +329,20 @@ class ScamDetectionCog(commands.Cog):
     async def settings_view(self, interaction: Interaction):
         gid = interaction.guild.id
         action_setting = await manager.view_actions(gid)
+        texts = self.bot.translate("cogs.scam_detection.settings")
 
         if not action_setting:
-            actions_formatted = "*No actions set.*"
+            actions_formatted = texts["none"]
         else:
             actions_formatted = "\n".join(f"  - `{a}`" for a in action_setting)
 
-        await interaction.response.send_message(
-            f"**Scam Settings:**\n"
-            f"- Scam actions:\n{actions_formatted}",
-            ephemeral=True
+        message = "\n".join(
+            [
+                texts["heading"],
+                texts["actions"].format(actions=actions_formatted),
+            ]
         )
+        await interaction.response.send_message(message, ephemeral=True)
 
     async def add_to_queue(self, coro, guild_id: int):
         """

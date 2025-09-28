@@ -354,9 +354,9 @@ class BannedWordsCog(commands.Cog):
         actions = await manager.view_actions(interaction.guild.id)
         if not actions:
             await interaction.response.send_message(
-            self.bot.translate("cogs.banned_words.actions.none"),
-            ephemeral=True,
-        )
+                self.bot.translate("cogs.banned_words.actions.none"),
+                ephemeral=True,
+            )
             return
 
         formatted = "\n".join(f"{i+1}. `{a}`" for i, a in enumerate(actions))

@@ -1,35 +1,16 @@
-﻿from __future__ import annotations
-
-from collections.abc import Callable
-from typing import Any
+from __future__ import annotations
 
 from discord import app_commands, Interaction
 
+from modules.utils.localization import TranslateFn, localize_message
 from modules.utils.mysql import get_settings, update_settings
 
-TranslateFn = Callable[..., Any]
 BASE_KEY = "modules.utils.action_manager"
 
 
 class ActionListManager:
     def __init__(self, setting_key: str):
         self.setting_key = setting_key
-
-    def _localize(
-        self,
-        translator: TranslateFn | None,
-        key: str,
-        *,
-        placeholders: dict[str, Any],
-        fallback: str,
-    ) -> str:
-        if translator is None:
-            return fallback.format(**placeholders)
-        return translator(
-            f"{BASE_KEY}.{key}",
-            placeholders=placeholders,
-            fallback=fallback.format(**placeholders),
-        )
 
     async def add_action(
         self,
@@ -44,8 +25,9 @@ class ActionListManager:
 
         normalized = [a.split(":")[0] for a in actions]
         if new_action.split(":")[0] in normalized:
-            return self._localize(
+            return localize_message(
                 translator,
+                BASE_KEY,
                 "add.duplicate",
                 placeholders={"action": new_action},
                 fallback="`{action}` is already in the list.",
@@ -53,8 +35,9 @@ class ActionListManager:
 
         actions.append(new_action)
         await update_settings(guild_id, self.setting_key, actions)
-        return self._localize(
+        return localize_message(
             translator,
+            BASE_KEY,
             "add.success",
             placeholders={"action": new_action},
             fallback="Added `{action}` to actions.",
@@ -72,16 +55,18 @@ class ActionListManager:
         # Exact match attempt
         if ":" in action:
             if action not in actions:
-                return self._localize(
+                return localize_message(
                     translator,
+                    BASE_KEY,
                     "remove.specific_missing",
                     placeholders={"action": action},
                     fallback="Action `{action}` does not exist.",
                 )
             updated = [a for a in actions if a != action]
             await update_settings(guild_id, self.setting_key, updated)
-            return self._localize(
+            return localize_message(
                 translator,
+                BASE_KEY,
                 "remove.specific_success",
                 placeholders={"action": action},
                 fallback="Removed specific action `{action}`.",
@@ -91,16 +76,18 @@ class ActionListManager:
         base = action
         matched = [a for a in actions if a.split(":")[0] == base]
         if not matched:
-            return self._localize(
+            return localize_message(
                 translator,
+                BASE_KEY,
                 "remove.base_missing",
                 placeholders={"action": base},
                 fallback="No actions found for `{action}`.",
             )
         updated = [a for a in actions if a.split(":")[0] != base]
         await update_settings(guild_id, self.setting_key, updated)
-        return self._localize(
+        return localize_message(
             translator,
+            BASE_KEY,
             "remove.base_success",
             placeholders={"action": base},
             fallback="Removed all `{action}` actions.",

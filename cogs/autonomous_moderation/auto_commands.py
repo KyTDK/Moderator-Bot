@@ -258,7 +258,7 @@ class AutonomousCommandsCog(commands.Cog):
             else:
                 event_key = event.value
 
-            msg = await EVENT_MANAGER.add_event(interaction.guild.id, event_key, action.value)
+            msg = await EVENT_MANAGER.add_event(interaction.guild.id, event_key, action.value, translator=self.bot.translate)
             await interaction.response.send_message(msg, ephemeral=True)
 
         except Exception as exc:
@@ -276,7 +276,7 @@ class AutonomousCommandsCog(commands.Cog):
             return
         if not await ensure_adaptive_mode(interaction):
             return
-        msg = await EVENT_MANAGER.remove_event_action(interaction.guild.id, event_key, action.value)
+        msg = await EVENT_MANAGER.remove_event_action(interaction.guild.id, event_key, action.value, translator=self.bot.translate)
         await interaction.response.send_message(msg, ephemeral=True)
 
     @ai_mod_group.command(name="clear_adaptive_events", description="Clear all adaptive event triggers.")

@@ -71,13 +71,14 @@ class NSFWCog(commands.Cog):
         gid = interaction.guild.id
 
         actions = await manager.view_actions(gid)
+        texts = self.bot.translate("cogs.nsfw.actions")
         if not actions:
-            await interaction.response.send_message("No NSFW actions are currently set.", ephemeral=True)
+            await interaction.response.send_message(texts["none"], ephemeral=True)
             return
 
         formatted = "\n".join(f"{i+1}. `{a}`" for i, a in enumerate(actions))
         await interaction.response.send_message(
-            f"**Current NSFW actions:**\n{formatted}",
+            texts["heading"].format(actions=formatted),
             ephemeral=True
         )
 
@@ -116,12 +117,13 @@ class NSFWCog(commands.Cog):
     async def view_categories(self, interaction: Interaction):
         gid = interaction.guild.id
         categories = await category_manager.view(gid)
+        texts = self.bot.translate("cogs.nsfw.categories")
         if not categories:
-            await interaction.response.send_message("No categories are currently set.", ephemeral=True)
+            await interaction.response.send_message(texts["none"], ephemeral=True)
             return
         formatted = "\n".join(f"{i+1}. `{c}`" for i, c in enumerate(categories))
         await interaction.response.send_message(
-            f"**Current NSFW categories:**\n{formatted}",
+            texts["heading"].format(categories=formatted),
             ephemeral=True
         )
 

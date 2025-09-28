@@ -117,14 +117,22 @@ async def set_api_key_not_working(api_key, bot=None):
             user = await safe_get_user(bot, user_id)
             if user:
                 try:
-                    await user.send(
+                    translator = getattr(bot, "translate", None)
+                    fallback = (
                         "**⚠️ Your OpenAI API key failed a moderation check.**\n\n"
                         "This usually means your account doesn't have active billing or is temporarily rate-limited.\n\n"
                         "Please check your [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) "
                         "to ensure your account has payment info and at least $5 in credits.\n\n"
-                        "Once that's resolved, your key will automatically start working again — no need to re-add it."
+                        "Once that's resolved, your key will automatically start working again - no need to re-add it."
                     )
+                    message = (
+                        translator("modules.utils.api.key_failed_notice", fallback=fallback)
+                        if callable(translator)
+                        else fallback
+                    )
+                    await user.send(message)
                 except Exception:
+                    pass  # User has DMs off or blocked the bot
                     pass  # User has DMs off or blocked the bot
 
     return affected_rows > 0
