@@ -50,15 +50,7 @@
           "reason": "**Sebep:** {reason}",
           "expires": "**Sona Eriş:** {expiry}",
           "issued_by": "Tarafından Verildi",
-          "expiry_never": "Hiçbir zaman",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Hiçbir zaman"
         },
         "errors": {
           "too_many_strikes": "Aynı oyuncuya 100'den fazla uyarı veremezsiniz. Uyarılarını sıfırlamak için `/strikes clear <user>` komutunu kullanın."
