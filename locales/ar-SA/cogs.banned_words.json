@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "القائمة المدمجة للمفردات المسيئة هي **{state}**.",
+        "updated": "القائمة المدمجة للمفردات المسيئة **{state}**.",
+        "state_enabled": "مُمَكَّن",
+        "state_disabled": "مُعَطَّل"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "لقد وصلت إلى الحد الأقصى لعدد {limit} من الكلمات المحظورة لهذا الخادم. \nاستخدم `/bannedwords remove` أو `/bannedwords clear` لتوفير مساحة.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "الكلمة '{word}' محظورة بالفعل.",
+        "success": "تمت إضافة الكلمة '{word}' إلى قائمة الكلمات المحظورة."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "الكلمة '{word}' غير محظورة.",
+        "success": "تمت إزالة الكلمة '{word}' من قائمة الكلمات المحظورة."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "لم يتم العثور على كلمات محظورة.",
+        "file_header": "الكلمات المحظورة:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "لم يتم العثور على كلمات محظورة لتنظيفها.",
+        "success": "تم تنظيف جميع الكلمات المحظورة."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "لا توجد إجراءات حاليا للكلمات المحظورة.",
+        "header": "**إجراءات الكلمات المحظورة الحالية:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "الرسالة تحتوي على كلمة محظورة",
+        "strike_source": "كلمة محظورة",
+        "embed_title": "تم اكتشاف كلمة محظورة",
+        "embed_description": "{mention}، تم حذف رسالتك لأنها تحتوي على كلمة محظورة."
       }
     }
   }
