@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "Denne serveren har ikke et Accelerated-abonnement. Bruk `/accelerated subscribe` for å starte ditt premium-abonnement."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "Regler oppdatert.",
+        "none": "Ingen modereringsregler er satt.",
+        "heading": "**Moderering Regler:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "Sett modereringsregler først med `/ai_mod rules_set`.",
+        "enabled": "Autonom moderering er **aktivert**.",
+        "disabled": "Autonom moderering er **deaktivert**.",
+        "mode_set": "Modus er satt til **{mode}**.",
+        "status": "Autonom moderering er **{state}**.\nNåværende modus er **{mode}**.",
+        "status_active": "\nAktiv under-modus: **{active}**",
+        "state_enabled": "aktivert",
+        "state_disabled": "deaktivert",
+        "state_unknown": "ukjent"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "Ingen handlinger er satt nå.",
+        "heading": "**Nåværende handlinger:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "Denne hendelsestypen krever en rolle.",
+        "threshold_required": "Denne hendelsestypen krever en terskelverdi.",
+        "threshold_range": "Terskelen må være en verdi mellom 0 og 1.",
+        "time_range_required": "Denne hendelsestypen krever et tidsrom (f.eks., 08:00-20:00).",
+        "error": "Feil ved innstilling av hendelse: {error}",
+        "cleared": "Alle adaptive hendelser er fjernet.",
+        "none": "Ingen adaptive hendelser satt.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[ugyldig rolle: {value}]",
+        "detail_invalid": "[ugyldig: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "Adaptiv modereringsmodus er ikke aktivert. Bruk `/ai_mod set_mode` for å aktivere den."
     }
   }
 }
