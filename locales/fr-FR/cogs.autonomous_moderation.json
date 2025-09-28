@@ -1,0 +1,48 @@
+﻿{
+  "cogs": {
+    "autonomous_moderation": {
+      "common": {
+        "subscription_required": "Ce serveur n'a pas d'abonnement Accéléré. Utilisez `/accelerated subscribe` pour démarrer votre plan premium."
+      },
+      "rules": {
+        "updated": "Règles mises à jour.",
+        "none": "Aucune règle de modération n'a été définie.",
+        "heading": "**Règles de modération :**\n```{rules}```",
+        "truncated_suffix": "…"
+      },
+      "toggle": {
+        "need_rules": "Définissez d'abord des règles de modération avec `/ai_mod rules_set`.",
+        "enabled": "La modération autonome a été **activée**.",
+        "disabled": "La modération autonome a été **désactivée**.",
+        "mode_set": "Le mode a été défini sur **{mode}**.",
+        "status": "La modération autonome est **{state}**.\nLe mode actuel est **{mode}**.",
+        "status_active": "\nSous-mode actif : **{active}**",
+        "state_enabled": "activé",
+        "state_disabled": "désactivé",
+        "state_unknown": "inconnu"
+      },
+      "actions": {
+        "none": "Aucune action n'est actuellement définie.",
+        "heading": "**Actions actuelles :**\n{actions}"
+      },
+      "adaptive": {
+        "role_required": "Ce type d'événement nécessite un rôle.",
+        "threshold_required": "Ce type d'événement nécessite un seuil.",
+        "threshold_range": "Le seuil doit être une valeur entre 0 et 1.",
+        "time_range_required": "Ce type d'événement nécessite une plage horaire (par exemple, 08:00-20:00).",
+        "error": "Erreur lors du paramétrage de l'événement : {error}",
+        "cleared": "Tous les événements adaptatifs ont été effacés.",
+        "none": "Aucun événement adaptatif défini.",
+        "section": "**{event}**",
+        "item": "• `{action}`{details}",
+        "detail_join": " — {details}",
+        "detail_role": "`role_id={id}`",
+        "detail_invalid_role": "[rôle invalide : {value}]",
+        "detail_invalid": "[invalide : {value}]",
+        "detail_time": "`{value}`",
+        "detail_threshold": "{display} — `{threshold}`"
+      },
+      "ensure_adaptive": "Le mode de modération adaptatif n'est pas activé. Utilisez `/ai_mod set_mode` pour l'activer."
+    }
+  }
+}

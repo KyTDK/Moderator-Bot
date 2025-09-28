@@ -1,0 +1,16 @@
+﻿{
+  "cogs": {
+    "channel_config": {
+      "nsfw_required": "{channel} no está restringido por edad. Por favor, elige un canal NSFW.",
+      "missing_permissions": "Me faltan los siguientes permisos en {channel}: {permissions}",
+      "set_success": "Los registros de {log_type} se publicarán en {channel}.",
+      "unset_success": "El canal de registro de {log_type} ha sido desconfigurado.",
+      "invalid_guild": "Error: Formato de ID de gremio no válido.",
+      "show": {
+        "heading": "**Canales de Registro:**",
+        "entry": "{name}: {value}",
+        "not_set": "No configurado"
+      }
+    }
+  }
+}

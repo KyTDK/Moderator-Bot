@@ -1,0 +1,35 @@
+﻿{
+  "cogs": {
+    "banned_urls": {
+      "limit_reached": "Du har nått gränsen på {limit} blockerade URL-adresser för den här servern.\nAnvänd `/bannedurls remove` eller `/bannedurls clear` för att frigöra utrymme.",
+      "add": {
+        "duplicate": "`{url}` är redan blockerad.",
+        "success": "`{url}` har lagts till i listan över blockerade adresser."
+      },
+      "remove": {
+        "missing": "`{url}` finns inte i listan över blockerade adresser.",
+        "success": "`{url}` har tagits bort från listan över blockerade adresser."
+      },
+      "list": {
+        "empty": "Inga blockerade URL-adresser hittades.",
+        "file_header": "Blockerade URL-adresser:",
+        "file_item": "- {url}",
+        "filename": "banned_urls_{guild_id}.txt"
+      },
+      "clear": {
+        "empty": "Inga blockerade URL-adresser hittades att rensa.",
+        "success": "Alla blockerade URL-adresser har tagits bort."
+      },
+      "enforcement": {
+        "strike_reason": "Meddelandet innehöll en blockerad URL ({url})",
+        "strike_source": "blockerad url",
+        "embed_title": "Blockerad URL Upptäckt",
+        "embed_description": "{mention}, ditt meddelande togs bort eftersom det innehöll en blockerad URL."
+      },
+      "actions": {
+        "none": "Inga åtgärder är för närvarande inställda för blockerade URL-adresser.",
+        "header": "**Aktuella åtgärder för blockerade URL-adresser:**\n{actions}"
+      }
+    }
+  }
+}

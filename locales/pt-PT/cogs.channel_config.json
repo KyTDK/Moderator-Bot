@@ -1,0 +1,16 @@
+﻿{
+  "cogs": {
+    "channel_config": {
+      "nsfw_required": "{channel} não é restrito por idade. Por favor, escolha um canal NSFW.",
+      "missing_permissions": "Estou sem as seguintes permissões em {channel}: {permissions}.",
+      "set_success": "{log_type} registros serão postados em {channel}.",
+      "unset_success": "Canal de log {log_type} foi desconfigurado.",
+      "invalid_guild": "Erro: Formato inválido de ID da guilda.",
+      "show": {
+        "heading": "**Canais de Log:**",
+        "entry": "{name}: {value}",
+        "not_set": "Não definido"
+      }
+    }
+  }
+}

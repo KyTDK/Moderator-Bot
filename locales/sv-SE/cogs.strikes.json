@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "strikes": {
+      "strike": {
+        "error": "Ett fel inträffade, försök igen. Om problemet kvarstår, vänligen gå med i supportservern (länk i `/hjälp`)."
+      },
+      "get": {
+        "title": "Förseelser för {name}",
+        "empty": "Inga förseelser hittades för denna användare.",
+        "file_notice": "Förseelselistan är för lång för att visas inline, skickas som en fil:"
+      },
+      "remove": {
+        "success": "Förseelse med ID `{id}` för {mention} har framgångsrikt tagits bort.",
+        "not_found": "Ingen förseelse med ID `{id}` hittades för {mention} i denna guild.\nAnvänd `/förseelser få <användare>` för att visa alla förseelser och deras ID."
+      },
+      "clear": {
+        "none": "Inga aktiva förseelser hittades för {mention}.",
+        "success": "Rensade {count} förseelse(r) för {mention}."
+      },
+      "actions": {
+        "exists": "Åtgärd `{action}` finns redan för `{key}` förseelser.",
+        "added": "Lagt till `{action}` till åtgärder för `{key}` förseelser.",
+        "missing": "Åtgärd `{action}` hittades inte för `{key}` förseelser.",
+        "removed": "Tog bort `{action}` från `{key}` förseelse åtgärder."
+      },
+      "view_actions": {
+        "none": "Inga förseelseåtgärder konfigurerade.",
+        "heading": "**Nuvarande förseelseåtgärder:**",
+        "item": "{key}: {actions}"
+      },
+      "intimidate": {
+        "user_title": "Sista varning för {name}",
+        "user_body": "{mention},\nDina handlingar närmar sig gränsen för vad som är accepterat inom denna server. Betrakta detta som din sista varning innan en förseelse registreras mot ditt konto. Om du fortsätter att ignorera gemenskapsriktlinjerna kommer det att resultera i omedelbara disciplinära åtgärder, vilket kan inkludera ytterligare straff eller avstängning från servern.\n\nDetta är inte en begäran — följ reglerna nu.",
+        "guild_title": "Officiellt Moderationsmeddelande",
+        "guild_body": "Observera att Moderator Bot aktivt övervakar all aktivitet i denna kanal. Eventuella överträdelser av gemenskapsriktlinjer kan leda till disciplinära åtgärder. Allvaret och typen av dessa åtgärder kommer att bero på omständigheterna i varje fall. Vi uppskattar din hjälp med att upprätthålla en respektfull och säker miljö.",
+        "confirm": "Meddelande skickat."
+      }
+    }
+  }
+}

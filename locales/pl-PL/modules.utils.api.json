@@ -1,0 +1,9 @@
+﻿{
+  "modules": {
+    "utils": {
+      "api": {
+        "key_failed_notice": "**Ostrzeżenie:** Twój klucz API OpenAI nie przeszedł sprawdzenia moderacyjnego.\n\nZwykle oznacza to, że twoje konto nie ma aktywnego rozliczania lub jest tymczasowo ograniczone.\n\nSprawdź swoją [Tablicę Rozliczeń OpenAI](https://platform.openai.com/account/billing/overview), aby upewnić się, że twoje konto ma dane płatności i co najmniej 5 USD w kredytach.\n\nPo rozwiązaniu tego problemu, twój klucz zacznie działać ponownie automatycznie - nie musisz go ponownie dodawać."
+      }
+    }
+  }
+}

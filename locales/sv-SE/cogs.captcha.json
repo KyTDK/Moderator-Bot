@@ -1,0 +1,35 @@
+﻿{
+  "cogs": {
+    "captcha": {
+      "common": {
+        "guild_only": "Det här kommandot kan endast användas på en server.",
+        "wrong_guild": "Vänligen välj en medlem från den här servern.",
+        "is_bot": "Botar kräver inte captcha-verifiering."
+      },
+      "sync": {
+        "error": "Ett oväntat fel inträffade vid uppdatering av captcha-insticksmodul.",
+        "updated": "Captcha-verifieringsinsticksmodulen har uppdaterats.",
+        "missing_delivery": "Leverans av captcha-insticksmodul är inte konfigurerad för denna server."
+      },
+      "request": {
+        "success": "Verifikationsförfrågan skickad.",
+        "failure": "Kunde inte skicka verifikationsinstruktioner.",
+        "status": "{message}"
+      },
+      "initiate": {
+        "not_in_guild": "Denna medlem är inte en del av en server.",
+        "not_enabled": "Captcha-verifiering är inte aktiverad för denna server.",
+        "not_configured": "Captcha-verifiering är inte konfigurerad.",
+        "embed_success": "Verifikationsinstruktioner publicerade i den konfigurerade kanalen.",
+        "dm_success": "Verifieringsmeddelande skickat till medlemmen.",
+        "failure": "Kunde inte skicka verifieringsinstruktioner; vänligen kontrollera konfigurationen."
+      },
+      "roles": {
+        "assign_reason": "Tilldelar pre-captcha roller"
+      },
+      "timeout": {
+        "failure_reason": "Captcha-verifiering avbröts på grund av timeout."
+      }
+    }
+  }
+}

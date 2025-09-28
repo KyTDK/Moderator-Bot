@@ -1,0 +1,9 @@
+﻿{
+  "modules": {
+    "utils": {
+      "discord_utils": {
+        "require_accelerated": "Hierdie opdrag is slegs beskikbaar vir Versnelde (Premium) bedieners. Gebruik `/accelerated subscribe` om dit te aktiveer."
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+﻿{
+  "modules": {
+    "utils": {
+      "list_manager": {
+        "add": {
+          "duplicate": "`{item}` finns redan i listan.",
+          "success": "Lade till `{item}` i listan."
+        },
+        "remove": {
+          "missing": "`{item}` finns inte i listan.",
+          "success": "Tog bort `{item}` från listan."
+        }
+      }
+    }
+  }
+}

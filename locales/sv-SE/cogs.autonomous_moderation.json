@@ -1,0 +1,48 @@
+﻿{
+  "cogs": {
+    "autonomous_moderation": {
+      "common": {
+        "subscription_required": "Den här servern har inte en Accelerated-prenumeration. Använd `/accelerated subscribe` för att starta din premiumplan."
+      },
+      "rules": {
+        "updated": "Regler uppdaterade.",
+        "none": "Inga modereringsregler har satts.",
+        "heading": "**Modereringsregler:**\n```{rules}```",
+        "truncated_suffix": "…"
+      },
+      "toggle": {
+        "need_rules": "Ange modereringsregler först med `/ai_mod rules_set`.",
+        "enabled": "Autonom moderering har **aktiverats**.",
+        "disabled": "Autonom moderering har **avaktiverats**.",
+        "mode_set": "Läget har ställts in på **{mode}**.",
+        "status": "Autonom moderering är **{state}**.\nNuvarande läge är **{mode}**.",
+        "status_active": "\nAktivt underläge: **{active}**",
+        "state_enabled": "aktiverad",
+        "state_disabled": "inaktiverad",
+        "state_unknown": "okänd"
+      },
+      "actions": {
+        "none": "Inga åtgärder är för närvarande inställda.",
+        "heading": "**Nuvarande åtgärder:**\n{actions}"
+      },
+      "adaptive": {
+        "role_required": "Denna händelsetyp kräver en roll.",
+        "threshold_required": "Denna händelsetyp kräver en tröskel.",
+        "threshold_range": "Tröskeln måste vara ett värde mellan 0 och 1.",
+        "time_range_required": "Denna händelsetyp kräver ett tidsintervall (t.ex. 08:00-20:00).",
+        "error": "Fel vid inställning av händelse: {error}",
+        "cleared": "Alla adaptiva händelser har raderats.",
+        "none": "Inga adaptiva händelser inställda.",
+        "section": "**{event}**",
+        "item": "• `{action}`{details}",
+        "detail_join": " — {details}",
+        "detail_role": "`role_id={id}`",
+        "detail_invalid_role": "[ogiltig roll: {value}]",
+        "detail_invalid": "[ogiltig: {value}]",
+        "detail_time": "`{value}`",
+        "detail_threshold": "{display} — `{threshold}`"
+      },
+      "ensure_adaptive": "Adaptivt modereringsläge är inte aktiverat. Använd `/ai_mod set_mode` för att aktivera det."
+    }
+  }
+}

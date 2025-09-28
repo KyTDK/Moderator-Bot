@@ -1,0 +1,35 @@
+﻿{
+  "cogs": {
+    "captcha": {
+      "common": {
+        "guild_only": "Este comando só pode ser usado em um servidor.",
+        "wrong_guild": "Por favor, escolha um membro deste servidor.",
+        "is_bot": "Bots não requerem verificação de captcha."
+      },
+      "sync": {
+        "error": "Ocorreu um erro inesperado ao atualizar o embed do captcha.",
+        "updated": "Embed de verificação do captcha foi atualizado.",
+        "missing_delivery": "A entrega do embed de captcha não está configurada para este servidor."
+      },
+      "request": {
+        "success": "Pedido de verificação enviado.",
+        "failure": "Incapaz de enviar instruções de verificação.",
+        "status": "{message}"
+      },
+      "initiate": {
+        "not_in_guild": "Esse membro não faz parte de uma guilda.",
+        "not_enabled": "Verificação de captcha não está habilitada para este servidor.",
+        "not_configured": "Verificação de captcha não está configurada.",
+        "embed_success": "Instruções de verificação postadas no canal configurado.",
+        "dm_success": "Mensagem de verificação enviada ao membro.",
+        "failure": "Incapaz de enviar instruções de verificação; por favor, verifique a configuração."
+      },
+      "roles": {
+        "assign_reason": "Atribuindo papéis pré-captcha"
+      },
+      "timeout": {
+        "failure_reason": "Tempo limite de verificação de captcha esgotado."
+      }
+    }
+  }
+}

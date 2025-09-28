@@ -1,0 +1,35 @@
+﻿{
+  "cogs": {
+    "captcha": {
+      "common": {
+        "guild_only": "To polecenie można używać tylko na serwerze.",
+        "wrong_guild": "Proszę wybrać członka z tego serwera.",
+        "is_bot": "Boty nie wymagają weryfikacji captcha."
+      },
+      "sync": {
+        "error": "Wystąpił nieoczekiwany błąd podczas aktualizacji osadzenia captcha.",
+        "updated": "Osadzenie weryfikacji captcha zostało zaktualizowane.",
+        "missing_delivery": "Dostarczenie osadzenia captcha nie jest skonfigurowane dla tego serwera."
+      },
+      "request": {
+        "success": "Żądanie weryfikacji zostało wysłane.",
+        "failure": "Nie można wysłać instrukcji weryfikacyjnych.",
+        "status": "{message}"
+      },
+      "initiate": {
+        "not_in_guild": "Ten członek nie jest częścią żadnej gildii.",
+        "not_enabled": "Weryfikacja captcha nie jest włączona dla tego serwera.",
+        "not_configured": "Weryfikacja captcha nie jest skonfigurowana.",
+        "embed_success": "Instrukcje weryfikacyjne zostały zamieszczone w skonfigurowanym kanale.",
+        "dm_success": "Wiadomość weryfikacyjna wysłana do członka.",
+        "failure": "Nie można wysłać instrukcji weryfikacyjnych; proszę sprawdzić konfigurację."
+      },
+      "roles": {
+        "assign_reason": "Przydzielanie ról przed weryfikacją captcha."
+      },
+      "timeout": {
+        "failure_reason": "Czas weryfikacji captcha upłynął."
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+﻿{
+  "cogs": {
+    "autonomous_moderation": {
+      "common": {
+        "subscription_required": "На этом сервере нет подписки Accelerated. Используйте `/accelerated subscribe`, чтобы начать ваш премиум-план."
+      },
+      "rules": {
+        "updated": "Правила обновлены.",
+        "none": "Правила модерации не установлены.",
+        "heading": "**Правила модерации:**\n```{rules}```",
+        "truncated_suffix": "…"
+      },
+      "toggle": {
+        "need_rules": "Сначала установите правила модерации с помощью `/ai_mod rules_set`.",
+        "enabled": "Автономная модерация была **включена**.",
+        "disabled": "Автономная модерация была **отключена**.",
+        "mode_set": "Режим установлен на **{mode}**.",
+        "status": "Автономная модерация **{state}**.\nТекущий режим: **{mode}**.",
+        "status_active": "\nАктивный подрежим: **{active}**",
+        "state_enabled": "включено",
+        "state_disabled": "отключено",
+        "state_unknown": "неизвестно"
+      },
+      "actions": {
+        "none": "Действия не установлены.",
+        "heading": "**Текущие действия:**\n{actions}"
+      },
+      "adaptive": {
+        "role_required": "Этому типу события требуется роль.",
+        "threshold_required": "Этому типу события требуется порог.",
+        "threshold_range": "Порог должен быть значением между 0 и 1.",
+        "time_range_required": "Этому типу события требуется временной диапазон (например, 08:00-20:00).",
+        "error": "Ошибка установки события: {error}",
+        "cleared": "Все адаптивные события были сброшены.",
+        "none": "Адаптивные события не установлены.",
+        "section": "**{event}**",
+        "item": "• `{action}`{details}",
+        "detail_join": " — {details}",
+        "detail_role": "`role_id={id}`",
+        "detail_invalid_role": "[неверная роль: {value}]",
+        "detail_invalid": "[некорректно: {value}]",
+        "detail_time": "`{value}`",
+        "detail_threshold": "{display} — `{threshold}`"
+      },
+      "ensure_adaptive": "Адаптивный режим модерации не включен. Используйте `/ai_mod set_mode`, чтобы его включить."
+    }
+  }
+}

@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "aggregated_moderation": {
+      "nsfw_detection": {
+        "title": "Wykryto treści NSFW",
+        "description": "{mention}, Twoja wiadomość została usunięta, ponieważ zawierała treści jawne lub nieodpowiednie."
+      },
+      "pfp": {
+        "safe_reason": "Obrazek profilowy zaktualizowany na bezpieczny obraz."
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "dashboard": {
+      "embed": {
+        "title": "Painel de Controle do Bot Moderador",
+        "description": "[Clique aqui para abrir o painel]({url})"
+      },
+      "message": {
+        "loading": "Gerando o link do seu painel..."
+      }
+    }
+  }
+}

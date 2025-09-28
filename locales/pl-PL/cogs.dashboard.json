@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "dashboard": {
+      "embed": {
+        "title": "Panel Moderatora Bota",
+        "description": "[Kliknij tutaj, aby otworzyć panel]({url})"
+      },
+      "message": {
+        "loading": "Generowanie linku do twojego panelu..."
+      }
+    }
+  }
+}

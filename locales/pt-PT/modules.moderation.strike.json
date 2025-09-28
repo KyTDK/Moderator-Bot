@@ -1,0 +1,61 @@
+﻿{
+  "modules": {
+    "moderation": {
+      "strike": {
+        "disciplinary": {
+          "no_action": "Nenhuma ação tomada.",
+          "bulk_delete": "{deleted}/{total} mensagens apagadas em bloco.",
+          "delete_summary": "{deleted}/{total} mensagem(ns) apagada(s).",
+          "delete_missing": "Exclusão solicitada, mas nenhuma mensagem foi provida.",
+          "strike_issued": "Advertência emitida.",
+          "strike_issued_with_expiry": "Advertência emitida com validade.",
+          "user_kicked": "Usuário expulso.",
+          "user_banned": "Usuário banido.",
+          "timeout_missing": "Nenhuma duração de tempo de espera foi fornecida.",
+          "timeout_invalid": "Duração de tempo de espera inválida: '{value}'.",
+          "timeout_applied": "Usuário em tempo de espera até <t:{timestamp}:R>.",
+          "give_role_missing": "Nenhum cargo especificado para oferecer.",
+          "give_role_not_found": "Cargo '{role}' não encontrado.",
+          "give_role_success": "Cargo '{role}' concedido.",
+          "remove_role_missing": "Nenhum cargo especificado para remover.",
+          "remove_role_not_found": "Cargo '{role}' não encontrado.",
+          "remove_role_success": "Cargo '{role}' removido.",
+          "warn_dm": "Usuário avisado via DM.",
+          "warn_channel": "Usuário avisado através do canal (DM falhou).",
+          "warn_failed": "Aviso falhou (falha ao enviar DM ou mensagem no canal).",
+          "broadcast_missing": "Nenhuma mensagem de transmissão fornecida.",
+          "broadcast_sent": "Mensagem de transmissão enviada.",
+          "broadcast_failed": "Falha na transmissão.",
+          "broadcast_no_channel": "Nenhum canal válido encontrado para transmissão.",
+          "unknown_action": "Ação desconhecida: '{action}'.",
+          "action_failed": "Falha na ação: {action}."
+        },
+        "strike": {
+          "default_reason": "Nenhuma razão fornecida",
+          "embed_title_user": "Você recebeu uma advertência",
+          "embed_title_public": "{name} recebeu uma advertência",
+          "actions_heading": "**Ações Tomadas:**",
+          "action_none": "**Ação Tomada:** Nenhuma ação aplicada",
+          "action_item": "- {action}",
+          "action_timeout": "Tempo de espera (termina <t:{timestamp}:R>)",
+          "action_ban": "Banimento",
+          "action_kick": "Expulsão",
+          "action_delete": "Excluir Mensagem",
+          "action_give_role": "Atribuir Cargo {role}",
+          "action_remove_role": "Remover Cargo {role}",
+          "action_warn": "Aviso: {message}",
+          "action_strike": "Advertência",
+          "strike_count": "**Contagem de Advertências:** {count} advertência(s).",
+          "strike_until_ban": "{remaining} mais advertência(s) antes de um banimento permanente.",
+          "reason": "**Razão:** {reason}",
+          "expires": "**Expira:** {expiry}",
+          "issued_by": "Emitido Por",
+          "expiry_never": "Nunca"
+        },
+        "errors": {
+          "too_many_strikes": "Você não pode dar ao mesmo jogador mais de 100 advertências. Use `/strikes clear <user>` para resetar suas advertências."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+﻿{
+  "modules": {
+    "utils": {
+      "discord_utils": {
+        "require_accelerated": "Ta komenda jest dostępna tylko na przyspieszonych (Premium) serwerach. Użyj `/accelerated subscribe`, aby ją włączyć."
+      }
+    }
+  }
+}

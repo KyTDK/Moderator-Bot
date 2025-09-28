@@ -1,0 +1,20 @@
+﻿{
+  "cogs": {
+    "nsfw": {
+      "actions": {
+        "none": "Hiện tại không có hành động NSFW nào được thiết lập.",
+        "heading": "**Các hành động NSFW hiện tại:**\n{actions}"
+      },
+      "categories": {
+        "none": "Hiện tại không có danh mục nào được thiết lập.",
+        "heading": "**Các danh mục NSFW hiện tại:**\n{categories}"
+      },
+      "threshold": {
+        "invalid": "Ngưỡng phải nằm giữa 0.0 và 1.0.",
+        "set": "Ngưỡng phát hiện NSFW được đặt thành {value:.2f}.",
+        "unset": "Ngưỡng phát hiện NSFW chưa được thiết lập.",
+        "current": "Ngưỡng phát hiện NSFW hiện tại: {value:.2f}"
+      }
+    }
+  }
+}

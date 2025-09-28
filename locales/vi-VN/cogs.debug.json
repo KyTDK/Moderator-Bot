@@ -1,0 +1,21 @@
+﻿{
+  "cogs": {
+    "debug": {
+      "permission_denied": "Bạn không có quyền sử dụng lệnh này.",
+      "no_allocations": "Không tìm thấy sự phân bổ liên quan đến dự án.",
+      "embed": {
+        "title": "Thống Kê Hiệu Suất Bot",
+        "memory_name": "Sử Dụng Bộ Nhớ",
+        "memory_value": "**RSS (Thực tế):** {rss:.2f} MB\n**VMS (Ảo):** {vms:.2f} MB\n**Tracemalloc Hiện Tại:** {current_mb:.2f} MB\n**Tracemalloc Đỉnh Điểm:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU & Luồng",
+        "cpu_value": "**Sử Dụng CPU:** {cpu_percent:.1f}%\n**Luồng:** {threads}\n**Handles:** {handles}",
+        "bot_name": "Thống Kê Bot",
+        "bot_value": "**Guilds:** {guilds}\n**Người Dùng (đã lưu):** {users}\n**Thời Gian Hoạt Động:** {uptime}",
+        "allocations_name": "Phân Bổ Bộ Nhớ Hàng Đầu {index}",
+        "worker_name": "Hàng Đợi Công Nhân",
+        "worker_error": "(lỗi thu thập thông số: {error})",
+        "footer": "Máy Chủ: {host} | Python {python_version}"
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+﻿{
+  "modules": {
+    "utils": {
+      "api": {
+        "key_failed_notice": "**警告：** 您的 OpenAI API 密钥未通过审核。\n\n这通常意味着您的账户没有激活计费或暂时被限速。\n\n请检查您的 [OpenAI 计费仪表板](https://platform.openai.com/account/billing/overview) 以确保您的账户有支付信息以及至少 $5 的余额。\n\n一旦解决后，您的密钥将自动恢复工作 - 无需重新添加。"
+      }
+    }
+  }
+}

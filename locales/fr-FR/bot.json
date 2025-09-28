@@ -1,0 +1,8 @@
+﻿{
+  "bot": {
+    "welcome": {
+      "message": "👋 **Merci d'avoir ajouté le Bot Modérateur !**\n\n🛠️ **Tableau de bord :** [Ouvrir le tableau de bord]({dash_url})\n\n**Prise en main rapide**\n• Exécutez **`/help`** pour voir les commandes (essayez `/help nsfw`, `/help strikes`)\n• Utilisez le **Tableau de bord** pour configurer les seuils, les actions et les bascules\n\n**Fonctionne dès l'installation**\nLa modération AI est activée avec des paramètres par défaut sensés. Vous pouvez tout ajuster dans le Tableau de bord.\n\n**Besoin d'aide ?**\nOuvrez le Tableau de bord ci-dessus ou exécutez **`/help`** pour les détails et le lien de support.",
+      "button_label": "Ouvrir le tableau de bord"
+    }
+  }
+}

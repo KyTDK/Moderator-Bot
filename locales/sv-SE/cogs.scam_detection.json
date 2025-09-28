@@ -1,0 +1,25 @@
+﻿{
+  "cogs": {
+    "scam_detection": {
+      "settings": {
+        "heading": "**Bedrägeriinställningar:**",
+        "actions": "- Bedrägerihandlingar:\n{actions}",
+        "none": "*Inga handlingar har satts.*"
+      },
+      "detection": {
+        "reason": "Bedrägerimeddelande upptäckt",
+        "title": "Bedrägerimeddelande Upptäckt",
+        "description": "{mention}, ditt meddelande flaggades som bedrägeri."
+      },
+      "exclude": {
+        "added": "Kanal {channel} har undantagits från bedrägeriupptäckning.",
+        "already": "Kanal {channel} är redan undantagen från bedrägeriupptäckning.",
+        "not_excluded": "Kanal {channel} är inte undantagen från bedrägeriupptäckning.",
+        "removed": "Kanal {channel} har tagits bort från undantagslistan.",
+        "list_empty": "Inga kanaler är för närvarande undantagna från bedrägeriupptäckning.",
+        "invalid": "Inga giltiga undantagna kanaler hits.",
+        "list": "Undantagna kanaler: {channels}"
+      }
+    }
+  }
+}

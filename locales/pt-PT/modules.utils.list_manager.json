@@ -1,0 +1,16 @@
+﻿{
+  "modules": {
+    "utils": {
+      "list_manager": {
+        "add": {
+          "duplicate": "`{item}` já está na lista.",
+          "success": "Adicionado `{item}` à lista."
+        },
+        "remove": {
+          "missing": "`{item}` não está na lista.",
+          "success": "Removido `{item}` da lista."
+        }
+      }
+    }
+  }
+}

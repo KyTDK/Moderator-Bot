@@ -1,0 +1,107 @@
+﻿{
+  "cogs": {
+    "monitoring": {
+      "log_event": {
+        "upgrade_footer": "Passez à Accelerated pour une détection plus rapide des NSFW et des escroqueries — /accelerated",
+        "guild_footer": "ID de la Guilde : {guild_id}"
+      },
+      "join": {
+        "title": "Membre a rejoint",
+        "description": "{mention} ({name}) a rejoint le serveur.",
+        "fields": {
+          "account_created": "Compte créé",
+          "joined_at": "Rejoint à"
+        },
+        "footer": {
+          "bot": "Compte de bot",
+          "user": "Compte d'utilisateur"
+        }
+      },
+      "timeout": {
+        "title_applied": "Membre placé en pause",
+        "title_removed": "Pause retirée",
+        "description_applied": "{mention} ({name}) a été mis en pause.",
+        "description_removed": "{mention} ({name}) a eu une pause.",
+        "fields": {
+          "ends": "Finit",
+          "moderator": "Modérateur",
+          "reason": "Raison"
+        },
+        "footer": "ID Utilisateur : {user_id}"
+      },
+      "leave": {
+        "title_kicked": "Membre expulsé",
+        "title_left": "Membre est parti",
+        "description_kicked": "{mention} ({name}) a été expulsé du serveur.",
+        "description_left": "{mention} ({name}) a quitté le serveur.",
+        "fields": {
+          "kicked_by": "Expulsé par",
+          "reason": "Raison"
+        },
+        "footer": {
+          "bot": "Compte de bot",
+          "user": "Compte d'utilisateur"
+        }
+      },
+      "message_delete": {
+        "title": "Message supprimé",
+        "description_with_author": "**Auteur :** {author_mention} ({author_name})\n**Canal :** {channel}\n",
+        "deleted_by": "**Supprimé par :** {deleter}\n",
+        "content_label": "**Contenu :**\n{content}",
+        "description_generic": "Un message a été supprimé dans {channel}.",
+        "description_deleted_by": "\n**Supprimé par :** {deleter}",
+        "fields": {
+          "attachments": "Pièces jointes ({count})",
+          "embeds": "Intégrer {index}",
+          "stickers": "Stickers ({count})"
+        },
+        "attachment_item": "• [{name}]({url})",
+        "embed_bullet": "• **{name}** : {value}",
+        "embed_unavailable": "*[Contenu intégré indisponible]*",
+        "sticker_item": "• [{name}]({url})",
+        "footer": "ID Utilisateur : {user_id}"
+      },
+      "message_edit": {
+        "title": "Message modifié",
+        "description": "**Auteur :** {author_mention} ({author_name})\n**Canal :** {channel}\n",
+        "fields": {
+          "before": "Avant",
+          "after": "Après"
+        },
+        "footer": "ID Utilisateur : {user_id}"
+      },
+      "ban": {
+        "title": "Membre banni",
+        "description": "{mention} ({name}) a été banni.",
+        "fields": {
+          "moderator": "Banni par",
+          "reason": "Raison"
+        },
+        "footer": "ID Utilisateur : {user_id}"
+      },
+      "unban": {
+        "title": "Membre débanni",
+        "description": "{mention} ({name}) a été débanni.",
+        "fields": {
+          "moderator": "Débanni par",
+          "reason": "Raison"
+        },
+        "footer": "ID Utilisateur : {user_id}"
+      },
+      "monitor_commands": {
+        "set": "Canal de surveillance défini sur {channel}.",
+        "removed": "Le canal de surveillance a été supprimé.",
+        "not_set": "Aucun canal de surveillance n'a été défini.",
+        "current": "Canal de surveillance actuel : {channel}",
+        "none": "Aucun canal de surveillance n'est défini pour le moment.",
+        "toggle": "La journalisation de `{event}` a été {state}.",
+        "state_enabled": "activé",
+        "state_disabled": "désactivé",
+        "list_heading": "**Événements de surveillance :**",
+        "list_item": "- `{event}` : {state}",
+        "list_enabled": "✅",
+        "list_disabled": "❌"
+      }
+    }
+  }
+}

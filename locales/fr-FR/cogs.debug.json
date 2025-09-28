@@ -1,0 +1,21 @@
+﻿{
+  "cogs": {
+    "debug": {
+      "permission_denied": "Vous n\\u0027avez pas la permission d\\u0027utiliser cette commande.",
+      "no_allocations": "Aucune allocation liée au projet trouvée.",
+      "embed": {
+        "title": "Statistiques de performance du bot",
+        "memory_name": "Utilisation de la mémoire",
+        "memory_value": "**RSS (Réel):** {rss:.2f} Mo\n**VMS (Virtuel):** {vms:.2f} Mo\n**Tracemalloc actuel :** {current_mb:.2f} Mo\n**Tracemalloc maximum :** {peak_mb:.2f} Mo",
+        "cpu_name": "CPU & Threads",
+        "cpu_value": "**Utilisation du CPU :** {cpu_percent:.1f}%\n**Threads :** {threads}\n**Handles :** {handles}",
+        "bot_name": "Statistiques du bot",
+        "bot_value": "**Guildes :** {guilds}\n**Utilisateurs (mémorisés en cache) :** {users}\n**Temps de fonctionnement :** {uptime}",
+        "allocations_name": "Principales allocations de mémoire {index}",
+        "worker_name": "Filières de travailleurs",
+        "worker_error": "(erreur lors de la collecte des métriques : {error})",
+        "footer": "Hôte : {host} | Python {python_version}"
+      }
+    }
+  }
+}

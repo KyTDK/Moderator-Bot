@@ -1,0 +1,107 @@
+﻿{
+  "cogs": {
+    "monitoring": {
+      "log_event": {
+        "upgrade_footer": "Ulepsz do przyspieszonego, aby szybciej wykrywać NSFW i oszustwa — /accelerated",
+        "guild_footer": "ID Gildii: {guild_id}"
+      },
+      "join": {
+        "title": "Członek Dołączył",
+        "description": "{mention} ({name}) dołączył(a) do serwera.",
+        "fields": {
+          "account_created": "Konto Utworzone",
+          "joined_at": "Dołączył(a) O"
+        },
+        "footer": {
+          "bot": "Konto bota",
+          "user": "Konto użytkownika"
+        }
+      },
+      "timeout": {
+        "title_applied": "Członek Zablokowany Czasowo",
+        "title_removed": "Blokada czasowa usunięta",
+        "description_applied": "{mention} ({name}) został(a) zablokowany czasowo.",
+        "description_removed": "{mention} ({name}) miał(a) blokadę czasową.",
+        "fields": {
+          "ends": "Koniec",
+          "moderator": "Moderator",
+          "reason": "Powód"
+        },
+        "footer": "ID Użytkownika: {user_id}"
+      },
+      "leave": {
+        "title_kicked": "Członek Usunięty",
+        "title_left": "Członek Opuścił",
+        "description_kicked": "{mention} ({name}) został(a) usunięty(a) z serwera.",
+        "description_left": "{mention} ({name}) opuścił(a) serwer.",
+        "fields": {
+          "kicked_by": "Usunięty przez",
+          "reason": "Powód"
+        },
+        "footer": {
+          "bot": "Konto bota",
+          "user": "Konto użytkownika"
+        }
+      },
+      "message_delete": {
+        "title": "Wiadomość usunięta",
+        "description_with_author": "**Autor:** {author_mention} ({author_name})\n**Kanał:** {channel}\n",
+        "deleted_by": "**Usunięte przez:** {deleter}\n",
+        "content_label": "**Zawartość:**\n{content}",
+        "description_generic": "Wiadomość została usunięta w {channel}.",
+        "description_deleted_by": "\n**Usunięte przez:** {deleter}",
+        "fields": {
+          "attachments": "Załączniki ({count})",
+          "embeds": "Osadzenie {index}",
+          "stickers": "Naklejki ({count})"
+        },
+        "attachment_item": "• [{name}]({url})",
+        "embed_bullet": "• **{name}**: {value}",
+        "embed_unavailable": "*[Zawartość osadzenia niedostępna]*",
+        "sticker_item": "• [{name}]({url})",
+        "footer": "ID Użytkownika: {user_id}"
+      },
+      "message_edit": {
+        "title": "Wiadomość edytowana",
+        "description": "**Autor:** {author_mention} ({author_name})\n**Kanał:** {channel}\n",
+        "fields": {
+          "before": "Przedtem",
+          "after": "Potem"
+        },
+        "footer": "ID Użytkownika: {user_id}"
+      },
+      "ban": {
+        "title": "Członek Zbanowany",
+        "description": "{mention} ({name}) został(a) zbanowany(a).",
+        "fields": {
+          "moderator": "Zbanowane przez",
+          "reason": "Powód"
+        },
+        "footer": "ID Użytkownika: {user_id}"
+      },
+      "unban": {
+        "title": "Członek Odblokowany",
+        "description": "{mention} ({name}) został(a) odblokowany(a).",
+        "fields": {
+          "moderator": "Odblokowane przez",
+          "reason": "Powód"
+        },
+        "footer": "ID Użytkownika: {user_id}"
+      },
+      "monitor_commands": {
+        "set": "Kanał monitorujący ustawiony na {channel}.",
+        "removed": "Kanał monitorujący został usunięty.",
+        "not_set": "Nie ustawiono kanału monitorującego.",
+        "current": "Aktualny kanał monitorujący: {channel}",
+        "none": "Obecnie nie ustawiono kanału monitorującego.",
+        "toggle": "Logowanie dla `{event}` zostało {state}.",
+        "state_enabled": "włączone",
+        "state_disabled": "wyłączone",
+        "list_heading": "**Monitoruj Zdarzenia:**",
+        "list_item": "- `{event}`: {state}",
+        "list_enabled": "✅",
+        "list_disabled": "❌"
+      }
+    }
+  }
+}

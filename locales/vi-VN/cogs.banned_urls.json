@@ -1,0 +1,35 @@
+﻿{
+  "cogs": {
+    "banned_urls": {
+      "limit_reached": "Bạn đã đạt đến giới hạn {limit} URL bị cấm cho máy chủ này.\nSử dụng `/bannedurls remove` hoặc `/bannedurls clear` để tạo không gian.",
+      "add": {
+        "duplicate": "`{url}` đã bị cấm.",
+        "success": "Đã thêm `{url}` vào danh sách bị cấm."
+      },
+      "remove": {
+        "missing": "`{url}` không có trong danh sách bị cấm.",
+        "success": "Đã xóa `{url}` khỏi danh sách bị cấm."
+      },
+      "list": {
+        "empty": "Không tìm thấy URL bị cấm nào.",
+        "file_header": "Các URL bị cấm:",
+        "file_item": "- {url}",
+        "filename": "banned_urls_{guild_id}.txt"
+      },
+      "clear": {
+        "empty": "Không tìm thấy URL bị cấm nào cần xóa.",
+        "success": "Tất cả các URL bị cấm đã được xóa."
+      },
+      "enforcement": {
+        "strike_reason": "Tin nhắn chứa URL bị cấm ({url})",
+        "strike_source": "URL bị cấm",
+        "embed_title": "Phát hiện URL bị cấm",
+        "embed_description": "{mention}, tin nhắn của bạn đã bị xóa vì chứa URL bị cấm."
+      },
+      "actions": {
+        "none": "Hiện không có hành động nào được thiết lập cho các URL bị cấm.",
+        "header": "**Các hành động URL bị cấm hiện tại:**\n{actions}"
+      }
+    }
+  }
+}

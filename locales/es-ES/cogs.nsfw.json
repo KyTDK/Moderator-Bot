@@ -1,0 +1,20 @@
+﻿{
+  "cogs": {
+    "nsfw": {
+      "actions": {
+        "none": "No se han establecido acciones NSFW actualmente.",
+        "heading": "**Acciones NSFW actuales:**\n{actions}"
+      },
+      "categories": {
+        "none": "No se han establecido categorías actualmente.",
+        "heading": "**Categorías NSFW actuales:**\n{categories}"
+      },
+      "threshold": {
+        "invalid": "Umbral debe estar entre 0.0 y 1.0.",
+        "set": "Umbral de detección NSFW establecido en {value:.2f}.",
+        "unset": "Umbral de detección NSFW no está establecido.",
+        "current": "Umbral de detección NSFW actual: {value:.2f}"
+      }
+    }
+  }
+}

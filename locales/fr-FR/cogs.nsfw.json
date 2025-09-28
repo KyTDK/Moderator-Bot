@@ -1,0 +1,20 @@
+﻿{
+  "cogs": {
+    "nsfw": {
+      "actions": {
+        "none": "Aucune action NSFW n'est actuellement définie.",
+        "heading": "**Actions NSFW actuelles :**\n{actions}"
+      },
+      "categories": {
+        "none": "Aucune catégorie n'est actuellement définie.",
+        "heading": "**Catégories NSFW actuelles :**\n{categories}"
+      },
+      "threshold": {
+        "invalid": "Le seuil doit être compris entre 0,0 et 1,0.",
+        "set": "Seuil de détection NSFW défini sur {value:.2f}.",
+        "unset": "Le seuil de détection NSFW n'est pas défini.",
+        "current": "Seuil de détection NSFW actuel : {value:.2f}"
+      }
+    }
+  }
+}

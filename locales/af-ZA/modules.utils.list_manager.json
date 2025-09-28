@@ -1,0 +1,16 @@
+﻿{
+  "modules": {
+    "utils": {
+      "list_manager": {
+        "add": {
+          "duplicate": "`{item}` is reeds in die lys.",
+          "success": "`{item}` is by die lys gevoeg."
+        },
+        "remove": {
+          "missing": "`{item}` is nie in die lys nie.",
+          "success": "`{item}` is uit die lys verwyder."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "banned_words": {
+      "defaults": {
+        "status": "La liste de vulgarités intégrée est **{state}**.",
+        "updated": "Liste de vulgarités intégrée **{state}**.",
+        "state_enabled": "activée",
+        "state_disabled": "désactivée"
+      },
+      "limit_reached": "Vous avez atteint la limite de {limit} mots interdits pour ce serveur.\nUtilisez `/bannedwords remove` ou `/bannedwords clear` pour libérer de l'espace.",
+      "add": {
+        "duplicate": "Le mot '{word}' est déjà interdit.",
+        "success": "Le mot '{word}' a été ajouté à la liste des mots interdits."
+      },
+      "remove": {
+        "missing": "Le mot '{word}' n'est pas interdit.",
+        "success": "Le mot '{word}' a été retiré de la liste des mots interdits."
+      },
+      "list": {
+        "empty": "Aucun mot interdit trouvé.",
+        "file_header": "Mots Interdits :",
+        "file_item": "- {word}"
+      },
+      "clear": {
+        "empty": "Aucun mot interdit trouvé à effacer.",
+        "success": "Tous les mots interdits ont été effacés."
+      },
+      "actions": {
+        "none": "Aucune action n'est actuellement définie pour les mots interdits.",
+        "header": "**Actions actuelles pour les mots interdits :**\n{actions}"
+      },
+      "enforcement": {
+        "strike_reason": "Message contenant un mot interdit",
+        "strike_source": "mot interdit",
+        "embed_title": "Mot Interdit Détecté",
+        "embed_description": "{mention}, votre message a été supprimé car il contenait un mot interdit."
+      }
+    }
+  }
+}

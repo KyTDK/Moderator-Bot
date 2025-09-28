@@ -1,0 +1,20 @@
+﻿{
+  "modules": {
+    "utils": {
+      "strike": {
+        "validation": {
+          "invalid_action": "Działanie musi być jednym z: {options}",
+          "duration_not_allowed": "Czas trwania nie jest dozwolony dla tej komendy.",
+          "duration_required": "Należy podać czas trwania (np. `30m`, `1d`, `2w`).",
+          "duration_invalid": "Nieprawidłowy format czasu trwania. Użyj `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "Nie można dołączyć roli do akcji czasowego wyłączenia.",
+          "role_required": "Należy określić rolę dla `{action}`.",
+          "duration_not_supported": "`{action}` nie obsługuje czasu trwania.",
+          "role_not_supported": "`{action}` nie korzysta z roli.",
+          "warn_message_required": "Należy podać wiadomość z ostrzeżeniem.",
+          "warn_role_disallowed": "Nie można dołączyć roli do akcji ostrzeżenia."
+        }
+      }
+    }
+  }
+}

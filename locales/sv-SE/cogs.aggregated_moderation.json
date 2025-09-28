@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "aggregated_moderation": {
+      "nsfw_detection": {
+        "title": "NSFW-innehåll upptäckt",
+        "description": "{mention}, ditt meddelande togs bort eftersom det innehöll explicitt eller olämpligt innehåll."
+      },
+      "pfp": {
+        "safe_reason": "Profilbilden uppdaterades till en säker bild."
+      }
+    }
+  }
+}

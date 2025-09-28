@@ -1,0 +1,21 @@
+﻿{
+  "cogs": {
+    "debug": {
+      "permission_denied": "У вас нет разрешения на использование этой команды.",
+      "no_allocations": "Не найдены проектно связанные распределения.",
+      "embed": {
+        "title": "Статистика производительности бота",
+        "memory_name": "Использование памяти",
+        "memory_value": "**RSS (Фактическое):** {rss:.2f} МБ\n**VMS (Виртуальное):** {vms:.2f} МБ\n**Tracemalloc Текущая:** {current_mb:.2f} МБ\n**Tracemalloc Пиковая:** {peak_mb:.2f} МБ",
+        "cpu_name": "Процессор и потоки",
+        "cpu_value": "**Использование процессора:** {cpu_percent:.1f}%\n**Потоки:** {threads}\n**Ручки:** {handles}",
+        "bot_name": "Статистика бота",
+        "bot_value": "**Гильдии:** {guilds}\n**Пользователи (в кеше):** {users}\n**Время работы:** {uptime}",
+        "allocations_name": "Топ распределений памяти {index}",
+        "worker_name": "Очереди рабочего процесса",
+        "worker_error": "(ошибка сбора метрик: {error})",
+        "footer": "Хост: {host} | Python {python_version}"
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+﻿{
+  "cogs": {
+    "accelerated": {
+      "group_description": "Hantera din Accelerated (Premium) prenumeration.",
+      "status": {
+        "embed_title": "Accelerated Status",
+        "footer_base": "Moderator Bot Accelerated",
+        "field_names": {
+          "tier": "Tier",
+          "status": "Status",
+          "next_billing": "Nästa fakturering"
+        },
+        "not_enrolled": {
+          "description": "Denna server är ännu inte registrerad i **Accelerated**. Prenumerera nu med `/accelerated subscribe`.",
+          "tier_value": "`Ingen`",
+          "status_value": "`Inte prenumererad`",
+          "next_billing_value": "Starta en plan med `/accelerated subscribe`"
+        },
+        "no_renewal": "`Ingen förnyelse planerad`",
+        "footers": {
+          "next": "{base} - Nästa faktureringscykel",
+          "checked": "{base} - Status kontrollerad"
+        },
+        "states": {
+          "active": {
+            "label": "Aktiv",
+            "emoji": ":green_circle:",
+            "description": "Accelerated är aktiv."
+          },
+          "cancelled": {
+            "label": "Aktiv - Avbokas snart",
+            "emoji": ":orange_circle:",
+            "description": "Accelerated kommer att förbli aktiv till slutet av denna faktureringscykel."
+          },
+          "paused": {
+            "label": "{status}",
+            "emoji": ":red_circle:",
+            "description": "Accelerated förmåner är pausade. Starta om när som helst med `/accelerated subscribe`."
+          }
+        }
+      },
+      "subscribe": {
+        "already_subscribed": "🚫 Din guild har redan en aktiv **Accelerated** prenumeration!",
+        "embed": {
+          "title": "🚀 Uppgradera till Moderator Bot Accelerated!",
+          "description": "**Njut av blixtsnabb NSFW & spamdetektion, prioritetsköer, och tidig tillgång till nya funktioner!**\n\nEfter din fria månad, fortsätt för bara **$5/månad** för att hålla din server säkrare, snabbare.",
+          "footer": "Moderator Bot 🚀 Accelerated Plan",
+          "button_label": "🚀 Prenumerera nu"
+        }
+      },
+      "perks": {
+        "title": "Accelerated Förmåner",
+        "description": "Uppgradera din upplevelse med Moderator Bot Accelerated:\n• AI-driven autonom moderationsscanning för att automatiskt upptäcka och agera på regelöverträdelser\n• Skanna fler bilder per video för djupare NSFW-detektion\n• Prioriterad NSFW & Scam-detektering\n• Tidig tillgång till nya funktioner\n• Stöder botens utveckling"
+      },
+      "cancel": {
+        "message": "Du kan närsomhelst avbryta ditt PayPal-abonnemang via ditt **PayPal-konto → Inställningar → Betalningar → Hantera automatisk betalningar**.\nDin premiumåtkomst kommer att vara till slutet av faktureringscykeln."
+      }
+    }
+  }
+}

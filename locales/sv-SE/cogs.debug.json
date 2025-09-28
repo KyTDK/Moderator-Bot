@@ -1,0 +1,21 @@
+﻿{
+  "cogs": {
+    "debug": {
+      "permission_denied": "Du har inte behörighet att använda detta kommando.",
+      "no_allocations": "Inga projektrelaterade resurser hittades.",
+      "embed": {
+        "title": "Botprestandastatistik",
+        "memory_name": "Minnesanvändning",
+        "memory_value": "**RSS (Verklig):** {rss:.2f} MB\n**VMS (Virtuell):** {vms:.2f} MB\n**Tracemalloc Nuvarande:** {current_mb:.2f} MB\n**Tracemalloc Topp:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU & Trådar",
+        "cpu_value": "**CPU-användning:** {cpu_percent:.1f}%\n**Trådar:** {threads}\n**Handtag:** {handles}",
+        "bot_name": "Botstatistik",
+        "bot_value": "**Gillen:** {guilds}\n**Användare (cachelagrade):** {users}\n**Drifttid:** {uptime}",
+        "allocations_name": "Toppminnesallokeringar {index}",
+        "worker_name": "Arbetarköer",
+        "worker_error": "(fel vid insamling av mätvärden: {error})",
+        "footer": "Värd: {host} | Python {python_version}"
+      }
+    }
+  }
+}

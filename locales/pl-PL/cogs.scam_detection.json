@@ -1,0 +1,25 @@
+﻿{
+  "cogs": {
+    "scam_detection": {
+      "settings": {
+        "heading": "**Ustawienia oszustwa:**",
+        "actions": "- Działania dotyczące oszustwa:\n{actions}",
+        "none": "*Nie ustawiono działań.*"
+      },
+      "detection": {
+        "reason": "Wykryto wiadomość oszusta",
+        "title": "Wykryto Wiadomość Oszusta",
+        "description": "{mention}, twoja wiadomość została oznaczona jako oszustwo."
+      },
+      "exclude": {
+        "added": "Kanał {channel} został wykluczony z wykrywania oszustw.",
+        "already": "Kanał {channel} jest już wykluczony z wykrywania oszustw.",
+        "not_excluded": "Kanał {channel} nie jest wykluczony z wykrywania oszustw.",
+        "removed": "Kanał {channel} został usunięty z listy wykluczonych.",
+        "list_empty": "Obecnie żadne kanały nie są wykluczone z wykrywania oszustw.",
+        "invalid": "Nie znaleziono żadnych prawidłowych wykluczonych kanałów.",
+        "list": "Wykluczone kanały: {channels}"
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+﻿{
+  "cogs": {
+    "channel_config": {
+      "nsfw_required": "{channel} nie jest ograniczony wiekowo. Proszę wybrać kanał NSFW.",
+      "missing_permissions": "Brakuję następujących uprawnień w {channel}: {permissions}",
+      "set_success": "Logi typu {log_type} będą publikowane w kanale {channel}.",
+      "unset_success": "Kanał logów typu {log_type} został usunięty.",
+      "invalid_guild": "Błąd: Nieprawidłowy format ID gildii.",
+      "show": {
+        "heading": "**Kanały logów:**",
+        "entry": "{name}: {value}",
+        "not_set": "Nie ustawiono"
+      }
+    }
+  }
+}

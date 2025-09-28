@@ -1,0 +1,9 @@
+﻿{
+  "modules": {
+    "utils": {
+      "api": {
+        "key_failed_notice": "**Avertissement :** Votre clé API OpenAI a échoué à un contrôle de modération.\n\nCela signifie généralement que votre compte n'a pas de facturation active ou est temporairement limité.\n\nVeuillez vérifier votre [Tableau de bord de facturation OpenAI](https://platform.openai.com/account/billing/overview) pour vous assurer que votre compte a des informations de paiement et au moins 5 $ en crédits.\n\nUne fois cela résolu, votre clé recommencera automatiquement à fonctionner - pas besoin de la réajouter."
+      }
+    }
+  }
+}

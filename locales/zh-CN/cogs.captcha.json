@@ -1,0 +1,35 @@
+﻿{
+  "cogs": {
+    "captcha": {
+      "common": {
+        "guild_only": "此指令仅可用于服务器内。",
+        "wrong_guild": "请选择此服务器中的一名成员。",
+        "is_bot": "机器人不需要验证码验证。"
+      },
+      "sync": {
+        "error": "更新验证码嵌入时发生意外错误。",
+        "updated": "验证码验证嵌入已更新。",
+        "missing_delivery": "此服务器未配置验证码嵌入的传递。"
+      },
+      "request": {
+        "success": "验证请求已发送。",
+        "failure": "无法发送验证说明。",
+        "status": "{message}"
+      },
+      "initiate": {
+        "not_in_guild": "此成员不属于任何公会。",
+        "not_enabled": "此服务器未启用验证码验证。",
+        "not_configured": "验证码验证未配置。",
+        "embed_success": "已在配置的频道中发布验证说明。",
+        "dm_success": "已将验证信息发送给成员。",
+        "failure": "无法发送验证说明；请检查配置。"
+      },
+      "roles": {
+        "assign_reason": "分配验证码前角色"
+      },
+      "timeout": {
+        "failure_reason": "验证码验证超时。"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "dashboard": {
+      "embed": {
+        "title": "Moderator Bot Dashboard",
+        "description": "[Click here to open the dashboard]({url})"
+      },
+      "message": {
+        "loading": "Generating your dashboard link..."
+      }
+    }
+  }
+}

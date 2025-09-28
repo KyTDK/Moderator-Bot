@@ -1,0 +1,107 @@
+﻿{
+  "cogs": {
+    "monitoring": {
+      "log_event": {
+        "upgrade_footer": "Nâng cấp lên Tăng tốc để phát hiện nhanh hơn NSFW & lừa đảo — /accelerated",
+        "guild_footer": "Guild ID: {guild_id}"
+      },
+      "join": {
+        "title": "Thành viên đã tham gia",
+        "description": "{mention} ({name}) đã tham gia máy chủ.",
+        "fields": {
+          "account_created": "Tài khoản đã được tạo",
+          "joined_at": "Tham gia vào lúc"
+        },
+        "footer": {
+          "bot": "Tài khoản bot",
+          "user": "Tài khoản người dùng"
+        }
+      },
+      "timeout": {
+        "title_applied": "Thành viên bị tạm dừng",
+        "title_removed": "Đã xóa Tạm Ngừng",
+        "description_applied": "{mention} ({name}) đã bị đặt vào chế độ tạm dừng.",
+        "description_removed": "{mention} ({name}) đã có một thời gian tạm dừng.",
+        "fields": {
+          "ends": "Kết thúc",
+          "moderator": "Người điều hành",
+          "reason": "Lý do"
+        },
+        "footer": "ID người dùng: {user_id}"
+      },
+      "leave": {
+        "title_kicked": "Thành viên bị đuổi",
+        "title_left": "Thành viên đã rời đi",
+        "description_kicked": "{mention} ({name}) đã bị đuổi khỏi máy chủ.",
+        "description_left": "{mention} ({name}) đã rời khỏi máy chủ.",
+        "fields": {
+          "kicked_by": "Bị đuổi bởi",
+          "reason": "Lý do"
+        },
+        "footer": {
+          "bot": "Tài khoản bot",
+          "user": "Tài khoản người dùng"
+        }
+      },
+      "message_delete": {
+        "title": "Tin nhắn đã xoá",
+        "description_with_author": "**Tác giả:** {author_mention} ({author_name})\n**Kênh:** {channel}\n",
+        "deleted_by": "**Người xoá:** {deleter}\n",
+        "content_label": "**Nội dung:**\n{content}",
+        "description_generic": "Một tin nhắn đã bị xoá trong {channel}.",
+        "description_deleted_by": "\n**Người xoá:** {deleter}",
+        "fields": {
+          "attachments": "Tệp đính kèm ({count})",
+          "embeds": "Đính kèm {index}",
+          "stickers": "Nhãn dán ({count})"
+        },
+        "attachment_item": "• [{name}]({url})",
+        "embed_bullet": "• **{name}**: {value}",
+        "embed_unavailable": "*[Nội dung nhúng không có sẵn]*",
+        "sticker_item": "• [{name}]({url})",
+        "footer": "ID người dùng: {user_id}"
+      },
+      "message_edit": {
+        "title": "Tin nhắn đã chỉnh sửa",
+        "description": "**Tác giả:** {author_mention} ({author_name})\n**Kênh:** {channel}\n",
+        "fields": {
+          "before": "Trước",
+          "after": "Sau"
+        },
+        "footer": "ID người dùng: {user_id}"
+      },
+      "ban": {
+        "title": "Thành viên đã bị cấm",
+        "description": "{mention} ({name}) đã bị cấm.",
+        "fields": {
+          "moderator": "Bị cấm bởi",
+          "reason": "Lý do"
+        },
+        "footer": "ID người dùng: {user_id}"
+      },
+      "unban": {
+        "title": "Thành viên đã được bỏ cấm",
+        "description": "{mention} ({name}) đã được bỏ cấm.",
+        "fields": {
+          "moderator": "Bỏ cấm bởi",
+          "reason": "Lý do"
+        },
+        "footer": "ID người dùng: {user_id}"
+      },
+      "monitor_commands": {
+        "set": "Kênh giám sát được thiết lập thành {channel}.",
+        "removed": "Kênh giám sát đã bị xoá.",
+        "not_set": "Không có kênh giám sát được thiết lập.",
+        "current": "Kênh giám sát hiện tại: {channel}",
+        "none": "Hiện không có kênh giám sát nào được thiết lập.",
+        "toggle": "Đang ghi nhật ký cho `{event}` đã được {state}.",
+        "state_enabled": "bật",
+        "state_disabled": "tắt",
+        "list_heading": "**Sự kiện giám sát:**",
+        "list_item": "- `{event}`: {state}",
+        "list_enabled": "✅",
+        "list_disabled": "❌"
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "cogs": {
+    "settings": {
+      "help": {
+        "header": "**Tillgängliga inställningar:**\\n",
+        "entry": "**{name}**: {description} (Typ: {type})",
+        "not_found": "Ingen hjälp hittades för `{command}`."
+      },
+      "reset": {
+        "done": "Återställ alla inställningar till standardvärden.",
+        "already": "Du använder redan standardinställningar."
+      },
+      "set": {
+        "invalid_name": "**Ogiltigt inställningsnamn.**",
+        "requires_plan": "Denna inställning kräver {requirement}. Använd `/accelerated subscribe` för att uppgradera.",
+        "missing_boolean": "**`{name}` förväntar sig ett boolean. Använd `värde`-alternativet.**",
+        "missing_integer": "**`{name}` förväntar sig ett heltal. Använd `värde`-alternativet.**",
+        "missing_duration": "**`{name}` förväntar sig en varaktighet (t.ex. 30m, 1d).**",
+        "missing_channel": "**`{name}` förväntar sig en kanal. Använd `kanal`-alternativet.**",
+        "missing_role": "**`{name}` förväntar sig en roll. Använd `roll`-alternativet.**",
+        "missing_channel_add": "**`{name}` förväntar sig en kanal att lägga till. Använd `kanal`-alternativet.**",
+        "missing_role_add": "**`{name}` förväntar sig en roll att lägga till. Använd `roll`-alternativet.**",
+        "boolean_values": {
+          "true": [
+            "sant",
+            "1",
+            "ja"
+          ],
+          "false": [
+            "falskt",
+            "0",
+            "nej"
+          ]
+        },
+        "boolean_only": "**`{name}` förväntar sig ett boolean.**",
+        "unknown_type": "Inställningen tolkades som värde eftersom typen inte är känd",
+        "success": "Uppdaterade `{name}` till `{value}`.",
+        "unexpected": "Ett oväntat fel inträffade: `{error}`"
+      },
+      "get": {
+        "invalid_name": "Ogiltigt inställningsnamn.",
+        "not_set": "`{name}` är inte inställt. Standard: `{default}`",
+        "private": "Av integritetsskäl är denna inställning dold.",
+        "list_channel_item": "`#{id}`",
+        "list_role_item": "`@{id}`",
+        "dict_item": "**{key}** — `{values}`",
+        "current": "**`{name}` är för närvarande inställt till:**\n{value}"
+      },
+      "remove": {
+        "invalid_name": "Ogiltigt inställningsnamn.",
+        "not_set": "`{name}` är inte inställt.",
+        "channel_required": "Du måste ange en kanal att ta bort.",
+        "channel_missing": "{channel} finns inte i `{name}`.",
+        "role_required": "Du måste ange en roll att ta bort.",
+        "role_missing": "{role} finns inte i `{name}`.",
+        "removed_channel": "Tog bort {channel} från `{name}`.",
+        "removed_role": "Tog bort {role} från `{name}`.",
+        "removed_setting": "Tog bort inställningen `{name}`. Använder nu standard.",
+        "unexpected": "Ett oväntat fel inträffade: `{error}`"
+      }
+    }
+  }
+}

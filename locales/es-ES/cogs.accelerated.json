@@ -1,0 +1,60 @@
+﻿{
+  "cogs": {
+    "accelerated": {
+      "group_description": "Administra tu suscripción Accelerated (Premium).",
+      "status": {
+        "embed_title": "Estado Acelerado",
+        "footer_base": "Moderador Bot Acelerado",
+        "field_names": {
+          "tier": "Nivel",
+          "status": "Estado",
+          "next_billing": "Próximo cobro"
+        },
+        "not_enrolled": {
+          "description": "Este servidor aún no está inscrito en **Accelerated**. Suscríbete ahora con `/accelerated subscribe`.",
+          "tier_value": "`Ninguno`",
+          "status_value": "`No Suscrito`",
+          "next_billing_value": "Inicia un plan con `/accelerated subscribe`"
+        },
+        "no_renewal": "`No se ha programado renovación`",
+        "footers": {
+          "next": "{base} - Próximo ciclo de facturación",
+          "checked": "{base} - Estado verificado"
+        },
+        "states": {
+          "active": {
+            "label": "Activo",
+            "emoji": ":green_circle:",
+            "description": "Accelerated está activo."
+          },
+          "cancelled": {
+            "label": "Activo - Se cancela pronto",
+            "emoji": ":orange_circle:",
+            "description": "Accelerated permanecerá activo hasta el fin de este ciclo de facturación."
+          },
+          "paused": {
+            "label": "{status}",
+            "emoji": ":red_circle:",
+            "description": "Los beneficios de Accelerated están pausados. Reinicia en cualquier momento con `/accelerated subscribe`."
+          }
+        }
+      },
+      "subscribe": {
+        "already_subscribed": "🚫 ¡Tu gremio ya tiene una suscripción **Accelerated** activa!",
+        "embed": {
+          "title": "🚀 ¡Actualiza a Moderador Bot Acelerado!",
+          "description": "**Disfruta de la detección de NSFW y estafas súper rápida, colas prioritarias y acceso temprano a nuevas funciones!**\n\nDespués de tu mes gratuito, continúa por solo **$5/mes** para mantener tu servidor más seguro y rápido.",
+          "footer": "Moderador Bot 🚀 Plan Acelerado",
+          "button_label": "🚀 Suscríbete Ahora"
+        }
+      },
+      "perks": {
+        "title": "Beneficios de Accelerated",
+        "description": "Mejora tu experiencia con Moderador Bot Accelerated:\n• Escaneo autónomo de moderación basado en IA para detectar y actuar sobre mensajes que rompen las reglas automáticamente\n• Escanear más cuadros por video para una detección NSFW más profunda\n• Detección prioritaria de NSFW y estafas\n• Acceso temprano a nuevas funciones\n• Apoya el desarrollo del bot"
+      },
+      "cancel": {
+        "message": "Puedes cancelar tu suscripción en cualquier momento a través de tu **cuenta de PayPal → Configuraciones → Pagos → Administrar Pagos Automáticos**.\nTu acceso premium durará hasta el final del ciclo de facturación."
+      }
+    }
+  }
+}

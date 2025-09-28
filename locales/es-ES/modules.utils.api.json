@@ -1,0 +1,9 @@
+﻿{
+  "modules": {
+    "utils": {
+      "api": {
+        "key_failed_notice": "**Advertencia:** Tu clave de API de OpenAI falló una verificación de moderación.\n\nEsto usualmente significa que tu cuenta no tiene facturación activa o está temporalmente limitada por cuota.\n\nPor favor, verifica tu [Panel de Facturación de OpenAI](https://platform.openai.com/account/billing/overview) para asegurarte de que tu cuenta tiene información de pago y al menos $5 en créditos.\n\nUna vez que esto se resuelva, tu clave volverá a funcionar automáticamente - no es necesario volver a añadirla."
+      }
+    }
+  }
+}

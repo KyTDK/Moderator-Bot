@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "aggregated_moderation": {
+      "nsfw_detection": {
+        "title": "检测到不当内容",
+        "description": "{mention}，您的消息因含有露骨或不当内容而被删除。"
+      },
+      "pfp": {
+        "safe_reason": "头像已更新为安全图片。"
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+﻿{
+  "cogs": {
+    "api_pool": {
+      "explanation": {
+        "body": "**Czym jest API Pool?**\nAPI Pool to bezpieczna i anonimowa kolekcja współdzielonych kluczy API OpenAI. Umożliwia Moderatorowi Botowi skuteczne działanie, nawet gdy poszczególni użytkownicy napotykają limity prędkości.\n\n**Jak to działa?**\n- Gdy dodasz swój klucz API OpenAI do puli, jest on szyfrowany i bezpiecznie przechowywany.\n- Bot używa tych kluczy wyłącznie do uzyskiwania dostępu do modeli OpenAI w celu wykonywania zadań moderacji.\n- Twój klucz API pozostaje poufny; nikt, w tym twórcy bota, nie może go zobaczyć.\n- Masz pełną kontrolę i możesz usunąć swój klucz API z puli w dowolnym momencie.\n\n**Ważne:** Aby dodać swój klucz API, twoje konto OpenAI musi mieć co najmniej 5 USD w przedpłatach. Chociaż punkt końcowy moderacji jest bezpłatny, OpenAI wymaga, aby konta miały aktywne dane rozliczeniowe i limit. Możesz dodać środki do swojego konta tutaj: <https://platform.openai.com/account/billing/overview>\n\nWnosząc swój klucz API, pomagasz zapewnić, że Bot Moderator pozostanie responsywny i skuteczny dla wszystkich użytkowników."
+      },
+      "add": {
+        "invalid": "{error}",
+        "duplicate": "Ten klucz API już istnieje w puli.",
+        "success": "Klucz API dodany do puli."
+      },
+      "remove": {
+        "success": "Klucz API usunięty z Twojej puli.",
+        "missing": "Nie znaleziono tego klucza API w Twojej puli. Użyj /api_pool list, aby zobaczyć swoje aktualne klucze API."
+      },
+      "clear": {
+        "success": "Wszystkie klucze API zostały usunięte z Twojej puli.",
+        "empty": "Nie znaleziono kluczy API do usunięcia."
+      },
+      "list": {
+        "header": "Twoje klucze API:",
+        "empty": "Nie znaleziono kluczy API w Twojej puli."
+      }
+    }
+  }
+}

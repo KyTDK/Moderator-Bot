@@ -1,0 +1,8 @@
+﻿{
+  "bot": {
+    "welcome": {
+      "message": "👋 **Dzięki za dodanie Moderator Bota!**\n\n🛠️ **Panel:** [Otwórz Panel]({dash_url})\n\n**Szybki Start**\n• Uruchom **`/help`** aby zobaczyć komendy (spróbuj `/help nsfw`, `/help strikes`)\n• Użyj **Panelu**, aby skonfigurować progi, akcje i przełączniki\n\n**Działa od razu**\nModeracja AI jest włączona z domyślnymi ustawieniami. Możesz dostosować wszystko w Panelu.\n\n**Potrzebujesz pomocy?**\nOtwórz Panel powyżej lub uruchom **`/help`** dla szczegółów i linku wsparcia.",
+      "button_label": "Otwórz Panel"
+    }
+  }
+}

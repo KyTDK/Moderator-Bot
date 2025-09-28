@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "banned_words": {
+      "defaults": {
+        "status": "La lista de palabras prohibidas incorporada está **{state}**.",
+        "updated": "Lista de palabras prohibidas incorporada **{state}**.",
+        "state_enabled": "habilitado",
+        "state_disabled": "deshabilitado"
+      },
+      "limit_reached": "Has alcanzado el límite de {limit} palabras prohibidas para este servidor.\nUsa `/bannedwords remove` o `/bannedwords clear` para hacer espacio.",
+      "add": {
+        "duplicate": "La palabra '{word}' ya está prohibida.",
+        "success": "La palabra '{word}' ha sido añadida a la lista de palabras prohibidas."
+      },
+      "remove": {
+        "missing": "La palabra '{word}' no está prohibida.",
+        "success": "La palabra '{word}' ha sido eliminada de la lista de palabras prohibidas."
+      },
+      "list": {
+        "empty": "No se encontraron palabras prohibidas.",
+        "file_header": "Palabras Prohibidas:",
+        "file_item": "- {word}"
+      },
+      "clear": {
+        "empty": "No se encontraron palabras prohibidas para eliminar.",
+        "success": "Todas las palabras prohibidas han sido eliminadas."
+      },
+      "actions": {
+        "none": "Actualmente no hay acciones establecidas para las palabras prohibidas.",
+        "header": "**Acciones actuales para palabras prohibidas:**\n{actions}"
+      },
+      "enforcement": {
+        "strike_reason": "Mensaje contenía palabra prohibida",
+        "strike_source": "palabra prohibida",
+        "embed_title": "Detección de Palabra Prohibida",
+        "embed_description": "{mention}, tu mensaje fue eliminado porque contenía una palabra prohibida."
+      }
+    }
+  }
+}

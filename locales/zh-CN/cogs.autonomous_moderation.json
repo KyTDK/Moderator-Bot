@@ -1,0 +1,48 @@
+﻿{
+  "cogs": {
+    "autonomous_moderation": {
+      "common": {
+        "subscription_required": "此服务器没有加速订阅。使用`/accelerated subscribe`开始您的高级计划。"
+      },
+      "rules": {
+        "updated": "规则已更新。",
+        "none": "尚未设置任何管理规则。",
+        "heading": "**管理规则：**\n```{rules}```",
+        "truncated_suffix": "…"
+      },
+      "toggle": {
+        "need_rules": "首先使用`/ai_mod rules_set`设置管理规则。",
+        "enabled": "自主管理已**启用**。",
+        "disabled": "自主管理已**禁用**。",
+        "mode_set": "模式已设置为**{mode}**。",
+        "status": "自主管理是**{state}**。\n当前模式是**{mode}**。",
+        "status_active": "\n活动子模式：**{active}**",
+        "state_enabled": "启用",
+        "state_disabled": "禁用",
+        "state_unknown": "未知"
+      },
+      "actions": {
+        "none": "当前没有设置任何操作。",
+        "heading": "**当前操作：**\n{actions}"
+      },
+      "adaptive": {
+        "role_required": "此事件类型需要一个角色。",
+        "threshold_required": "此事件类型需要一个阈值。",
+        "threshold_range": "阈值必须在0到1之间。",
+        "time_range_required": "此事件类型需要一个时间范围（例如，08:00-20:00）。",
+        "error": "设置事件错误：{error}",
+        "cleared": "所有自适应事件已被清除。",
+        "none": "未设置自适应事件。",
+        "section": "**{event}**",
+        "item": "• `{action}`{details}",
+        "detail_join": " — {details}",
+        "detail_role": "`role_id={id}`",
+        "detail_invalid_role": "[无效角色：{value}]",
+        "detail_invalid": "[无效：{value}]",
+        "detail_time": "`{value}`",
+        "detail_threshold": "{display} — `{threshold}`"
+      },
+      "ensure_adaptive": "自适应管理模式未启用。使用`/ai_mod set_mode`启用。"
+    }
+  }
+}

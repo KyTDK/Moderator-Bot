@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "dashboard": {
+      "embed": {
+        "title": "Moderator Bot Instrumentpanel",
+        "description": "[Klicka här för att öppna instrumentpanelen]({url})"
+      },
+      "message": {
+        "loading": "Genererar din instrumentpanelslänk..."
+      }
+    }
+  }
+}

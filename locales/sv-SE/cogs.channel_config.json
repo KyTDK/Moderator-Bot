@@ -1,0 +1,16 @@
+﻿{
+  "cogs": {
+    "channel_config": {
+      "nsfw_required": "{channel} är inte åldersbegränsad. Välj en NSFW-kanal.",
+      "missing_permissions": "Jag saknar följande behörigheter i {channel}: {permissions}",
+      "set_success": "{log_type} loggar kommer att publiceras i {channel}.",
+      "unset_success": "{log_type} loggkanal har avaktiverats.",
+      "invalid_guild": "Fel: Ogiltigt format för guild-ID.",
+      "show": {
+        "heading": "**Loggkanaler:**",
+        "entry": "{name}: {value}",
+        "not_set": "Inte inställd"
+      }
+    }
+  }
+}

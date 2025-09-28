@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "aggregated_moderation": {
+      "nsfw_detection": {
+        "title": "Contenu NSFW détecté",
+        "description": "{mention}, votre message a été supprimé car il contenait un contenu explicite ou inapproprié."
+      },
+      "pfp": {
+        "safe_reason": "Image de profil mise à jour avec une image sécurisée."
+      }
+    }
+  }
+}

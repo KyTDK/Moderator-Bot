@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "strikes": {
+      "strike": {
+        "error": "Đã xảy ra lỗi, vui lòng thử lại. Nếu sự cố vẫn tiếp diễn, xin tham gia máy chủ hỗ trợ (liên kết trong `/help`)."
+      },
+      "get": {
+        "title": "Các hình phạt cho {name}",
+        "empty": "Không tìm thấy hình phạt nào cho người dùng này.",
+        "file_notice": "Danh sách hình phạt quá dài để hiển thị trực tiếp, đang gửi dưới dạng tệp:"
+      },
+      "remove": {
+        "success": "Hình phạt với ID `{id}` cho {mention} đã được xóa thành công.",
+        "not_found": "Không tìm thấy hình phạt với ID `{id}` cho {mention} trong máy chủ này.\nSử dụng `/strikes get <user>` để hiển thị tất cả các hình phạt và ID của chúng."
+      },
+      "clear": {
+        "none": "Không tìm thấy hình phạt nào đang hoạt động cho {mention}.",
+        "success": "Đã xóa {count} hình phạt cho {mention}."
+      },
+      "actions": {
+        "exists": "Hành động `{action}` đã tồn tại cho hình phạt `{key}`.",
+        "added": "Đã thêm `{action}` vào các hành động cho hình phạt `{key}`.",
+        "missing": "Không tìm thấy hành động `{action}` cho hình phạt `{key}`.",
+        "removed": "Đã xóa `{action}` khỏi các hành động hình phạt `{key}`."
+      },
+      "view_actions": {
+        "none": "Chưa có hành động phạt nào được cấu hình.",
+        "heading": "**Các hành động phạt hiện tại:**",
+        "item": "{key}: {actions}"
+      },
+      "intimidate": {
+        "user_title": "Cảnh báo Cuối cùng cho {name}",
+        "user_body": "{mention},\nHành động của bạn đang vượt quá giới hạn chấp nhận trong máy chủ này. Hãy coi đây là cảnh báo cuối cùng của bạn trước khi bị áp dụng hình phạt. Tiếp tục không tuân thủ hướng dẫn cộng đồng sẽ dẫn đến hành động kỷ luật ngay lập tức, có thể bao gồm các hình phạt bổ sung hoặc loại bỏ khỏi máy chủ.\n\nĐây không phải là yêu cầu — tuân thủ quy tắc ngay bây giờ.",
+        "guild_title": "Thông Báo Điều Hành Chính Thức",
+        "guild_body": "Xin hãy chú ý rằng Bot Điều Hành đang giám sát mọi hoạt động trong kênh này. Bất kỳ sự vi phạm nào với các hướng dẫn cộng đồng có thể dẫn đến hành động kỷ luật. Mức độ nghiêm trọng và bản chất của các hành động này sẽ phụ thuộc vào từng tình huống cụ thể. Chúng tôi đánh giá cao sự hợp tác của bạn trong việc duy trì một môi trường tôn trọng và an toàn.",
+        "confirm": "Đã gửi tin nhắn."
+      }
+    }
+  }
+}

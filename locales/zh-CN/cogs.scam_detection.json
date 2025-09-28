@@ -1,0 +1,25 @@
+﻿{
+  "cogs": {
+    "scam_detection": {
+      "settings": {
+        "heading": "**诈骗设置：**",
+        "actions": "- 诈骗行为：\n{actions}",
+        "none": "*未设置行为。*"
+      },
+      "detection": {
+        "reason": "检测到诈骗信息",
+        "title": "检测到诈骗信息",
+        "description": "{mention}，您的信息被标记为诈骗。"
+      },
+      "exclude": {
+        "added": "频道 {channel} 已被排除在诈骗检测之外。",
+        "already": "频道 {channel} 已经被排除在诈骗检测之外。",
+        "not_excluded": "频道 {channel} 未被排除在诈骗检测之外。",
+        "removed": "频道 {channel} 已从排除列表中移除。",
+        "list_empty": "当前没有频道被排除在诈骗检测之外。",
+        "invalid": "没有找到有效的被排除频道。",
+        "list": "被排除的频道：{channels}"
+      }
+    }
+  }
+}

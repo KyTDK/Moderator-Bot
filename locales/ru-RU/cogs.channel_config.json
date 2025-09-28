@@ -1,0 +1,16 @@
+﻿{
+  "cogs": {
+    "channel_config": {
+      "nsfw_required": "{channel} не имеет возрастных ограничений. Пожалуйста, выберите канал NSFW.",
+      "missing_permissions": "Мне не хватает следующих разрешений в {channel}: {permissions}",
+      "set_success": "Логи {log_type} будут отправлены в {channel}.",
+      "unset_success": "Канал логирования {log_type} был сброшен.",
+      "invalid_guild": "Ошибка: Недействительный формат ID сервера.",
+      "show": {
+        "heading": "**Каналы для логов:**",
+        "entry": "{name}: {value}",
+        "not_set": "Не установлено"
+      }
+    }
+  }
+}

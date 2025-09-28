@@ -1,0 +1,21 @@
+﻿{
+  "cogs": {
+    "debug": {
+      "permission_denied": "您无权使用此命令。",
+      "no_allocations": "未找到项目相关分配。",
+      "embed": {
+        "title": "机器人性能统计",
+        "memory_name": "内存使用",
+        "memory_value": "**实际内存 (RSS):** {rss:.2f} MB\n**虚拟内存 (VMS):** {vms:.2f} MB\n**当前追踪内存:** {current_mb:.2f} MB\n**峰值追踪内存:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU与线程",
+        "cpu_value": "**CPU使用率:** {cpu_percent:.1f}%\n**线程:** {threads}\n**句柄:** {handles}",
+        "bot_name": "机器人统计",
+        "bot_value": "**服务器:** {guilds}\n**用户 (缓存):** {users}\n**运行时间:** {uptime}",
+        "allocations_name": "最高内存分配 {index}",
+        "worker_name": "工作队列",
+        "worker_error": "(收集指标时出错: {error})",
+        "footer": "主机: {host} | Python {python_version}"
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+﻿{
+  "modules": {
+    "utils": {
+      "api": {
+        "key_failed_notice": "**Aviso:** Sua chave de API do OpenAI falhou em uma verificação de moderação.\n\nIsso geralmente significa que sua conta não possui fatura ativa ou está temporariamente limitada por taxa.\n\nPor favor, verifique o seu [Painel de Faturamento do OpenAI](https://platform.openai.com/account/billing/overview) para garantir que sua conta possui informações de pagamento e pelo menos $5 em créditos.\n\nUma vez resolvido, sua chave começará a funcionar novamente automaticamente - não há necessidade de adicioná-la novamente."
+      }
+    }
+  }
+}

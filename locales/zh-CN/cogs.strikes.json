@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "strikes": {
+      "strike": {
+        "error": "发生错误，请重试。如果问题仍然存在，请加入支持服务器（在`/help`中找到链接）。"
+      },
+      "get": {
+        "title": "{name}的惩罚记录",
+        "empty": "未找到该用户的惩罚记录。",
+        "file_notice": "惩罚记录列表过长，无法直接显示，正在作为文件发送："
+      },
+      "remove": {
+        "success": "ID为`{id}`的惩罚记录已成功从{mention}中移除。",
+        "not_found": "在此公会中找不到ID为`{id}`的{mention}惩罚记录。\n使用`/strikes get <user>`显示所有惩罚记录及其ID。"
+      },
+      "clear": {
+        "none": "{mention}没有活跃的惩罚记录。",
+        "success": "已清除{mention}的{count}条惩罚记录。"
+      },
+      "actions": {
+        "exists": "操作`{action}`已存在于`{key}`惩罚记录中。",
+        "added": "已将`{action}`添加到`{key}`惩罚记录的操作中。",
+        "missing": "在`{key}`惩罚记录中找不到操作`{action}`。",
+        "removed": "已从`{key}`惩罚记录操作中移除`{action}`。"
+      },
+      "view_actions": {
+        "none": "未配置惩罚操作。",
+        "heading": "**当前惩罚操作：**",
+        "item": "{key}: {actions}"
+      },
+      "intimidate": {
+        "user_title": "给{name}的最后警告",
+        "user_body": "{mention},\n你的行为已经接近本服务器可接受的范围。请将此作为对你账户发出惩罚前的最后警告。如继续无视社区指导方针，将立即面临纪律处分，可能包括进一步的处罚或被移出服务器。\n\n这不是请求 — 现在就遵守规则。",
+        "guild_title": "官方的管理通知",
+        "guild_body": "请注意，Moderator Bot 正在积极监视此频道中的所有活动。违反社区指导方针的任何行为可能导致纪律处分。这些行为的严重性和性质将视情况而定。感谢您的合作，帮助维护一个尊重和安全的环境。",
+        "confirm": "消息已发送。"
+      }
+    }
+  }
+}

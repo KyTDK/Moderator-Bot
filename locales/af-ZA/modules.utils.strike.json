@@ -1,0 +1,20 @@
+﻿{
+  "modules": {
+    "utils": {
+      "strike": {
+        "validation": {
+          "invalid_action": "Aksie moet een van die volgende wees: {options}",
+          "duration_not_allowed": "Duur word nie toegelaat vir hierdie opdrag nie.",
+          "duration_required": "Jy moet 'n duur verstrek (bv. `30m`, `1d`, `2w`).",
+          "duration_invalid": "Ongeldige duur formaat. Gebruik `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "Jy kan nie 'n rol aan 'n tydsverloopaksie koppel nie.",
+          "role_required": "Jy moet 'n rol spesifiseer vir `{action}`.",
+          "duration_not_supported": "`{action}` ondersteun nie 'n duur nie.",
+          "role_not_supported": "`{action}` gebruik nie 'n rol nie.",
+          "warn_message_required": "Jy moet 'n waarskuwingsboodskap verskaf.",
+          "warn_role_disallowed": "Jy kan nie 'n rol aan 'n waarskuwingsaksie koppel nie."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "dashboard": {
+      "embed": {
+        "title": "Bảng Điều Khiển Bot Điều Hành",
+        "description": "[Nhấp vào đây để mở bảng điều khiển]({url})"
+      },
+      "message": {
+        "loading": "Đang tạo liên kết bảng điều khiển của bạn..."
+      }
+    }
+  }
+}

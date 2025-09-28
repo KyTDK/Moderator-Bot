@@ -1,0 +1,35 @@
+﻿{
+  "cogs": {
+    "banned_urls": {
+      "limit_reached": "Osiągnąłeś limit {limit} zbanowanych URLi dla tego serwera.\nUżyj `/bannedurls remove` lub `/bannedurls clear`, aby zrobić miejsce.",
+      "add": {
+        "duplicate": "`{url}` jest już zbanowany.",
+        "success": "Dodano `{url}` do listy zbanowanych."
+      },
+      "remove": {
+        "missing": "`{url}` nie znajduje się na liście zbanowanych.",
+        "success": "Usunięto `{url}` z listy zbanowanych."
+      },
+      "list": {
+        "empty": "Nie znaleziono zbanowanych URLi.",
+        "file_header": "Zbanowane URL-e:",
+        "file_item": "- {url}",
+        "filename": "banned_urls_{guild_id}.txt"
+      },
+      "clear": {
+        "empty": "Nie znaleziono zbanowanych URLi do wyczyszczenia.",
+        "success": "Wszystkie zbanowane URL-e zostały wyczyszczone."
+      },
+      "enforcement": {
+        "strike_reason": "Wiadomość zawierała zbanowany URL ({url})",
+        "strike_source": "zbanowany url",
+        "embed_title": "Wykryto zbanowany URL",
+        "embed_description": "{mention}, Twoja wiadomość została usunięta, ponieważ zawierała zbanowany URL."
+      },
+      "actions": {
+        "none": "Obecnie nie ma żadnych ustawionych działań dla zbanowanych URLi.",
+        "header": "**Aktualne działania dla zbanowanych URLi:**\n{actions}"
+      }
+    }
+  }
+}

@@ -1,0 +1,107 @@
+﻿{
+  "cogs": {
+    "monitoring": {
+      "log_event": {
+        "upgrade_footer": "升级至加速版以更快检测NSFW和骗局 — /accelerated",
+        "guild_footer": "公会 ID: {guild_id}"
+      },
+      "join": {
+        "title": "成员加入",
+        "description": "{mention} ({name}) 已加入服务器。",
+        "fields": {
+          "account_created": "帐户创建",
+          "joined_at": "加入时间"
+        },
+        "footer": {
+          "bot": "机器人账号",
+          "user": "用户账号"
+        }
+      },
+      "timeout": {
+        "title_applied": "成员被禁言",
+        "title_removed": "已解除禁言",
+        "description_applied": "{mention} ({name}) 被禁言。",
+        "description_removed": "{mention} ({name}) 的禁言已解除。",
+        "fields": {
+          "ends": "结束",
+          "moderator": "管理员",
+          "reason": "原因"
+        },
+        "footer": "用户 ID: {user_id}"
+      },
+      "leave": {
+        "title_kicked": "成员被踢出",
+        "title_left": "成员离开",
+        "description_kicked": "{mention} ({name}) 被踢出了服务器。",
+        "description_left": "{mention} ({name}) 离开了服务器。",
+        "fields": {
+          "kicked_by": "踢出者",
+          "reason": "原因"
+        },
+        "footer": {
+          "bot": "机器人账号",
+          "user": "用户账号"
+        }
+      },
+      "message_delete": {
+        "title": "消息已删除",
+        "description_with_author": "**作者:** {author_mention} ({author_name})\n**频道:** {channel}\n",
+        "deleted_by": "**删除者:** {deleter}\n",
+        "content_label": "**内容:**\n{content}",
+        "description_generic": "{channel} 中的消息已被删除。",
+        "description_deleted_by": "\n**删除者:** {deleter}",
+        "fields": {
+          "attachments": "附件 ({count})",
+          "embeds": "嵌入 {index}",
+          "stickers": "贴纸 ({count})"
+        },
+        "attachment_item": "• [{name}]({url})",
+        "embed_bullet": "• **{name}**: {value}",
+        "embed_unavailable": "*[嵌入内容不可用]*",
+        "sticker_item": "• [{name}]({url})",
+        "footer": "用户 ID: {user_id}"
+      },
+      "message_edit": {
+        "title": "消息已编辑",
+        "description": "**作者:** {author_mention} ({author_name})\n**频道:** {channel}\n",
+        "fields": {
+          "before": "之前",
+          "after": "之后"
+        },
+        "footer": "用户 ID: {user_id}"
+      },
+      "ban": {
+        "title": "成员已被封禁",
+        "description": "{mention} ({name}) 已被封禁。",
+        "fields": {
+          "moderator": "封禁者",
+          "reason": "原因"
+        },
+        "footer": "用户 ID: {user_id}"
+      },
+      "unban": {
+        "title": "成员取消封禁",
+        "description": "{mention} ({name}) 已取消封禁。",
+        "fields": {
+          "moderator": "取消封禁者",
+          "reason": "原因"
+        },
+        "footer": "用户 ID: {user_id}"
+      },
+      "monitor_commands": {
+        "set": "监控频道设置为 {channel}。",
+        "removed": "监控频道已移除。",
+        "not_set": "未设置监控频道。",
+        "current": "当前监控频道: {channel}",
+        "none": "当前没有设置监控频道。",
+        "toggle": "`{event}` 的日志记录已{state}。",
+        "state_enabled": "启用",
+        "state_disabled": "禁用",
+        "list_heading": "**监控事件:**",
+        "list_item": "- `{event}`: {state}",
+        "list_enabled": "✅",
+        "list_disabled": "❌"
+      }
+    }
+  }
+}

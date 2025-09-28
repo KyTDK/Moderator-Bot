@@ -1,0 +1,25 @@
+﻿{
+  "cogs": {
+    "scam_detection": {
+      "settings": {
+        "heading": "**Paramètres d'arnaque :**",
+        "actions": "- Actions contre les arnaques :\n{actions}",
+        "none": "*Aucune action définie.*"
+      },
+      "detection": {
+        "reason": "Message d'arnaque détecté",
+        "title": "Message d'Arnaque Détecté",
+        "description": "{mention}, votre message a été signalé comme une arnaque."
+      },
+      "exclude": {
+        "added": "Le canal {channel} a été exclu de la détection d'arnaques.",
+        "already": "Le canal {channel} est déjà exclu de la détection d'arnaques.",
+        "not_excluded": "Le canal {channel} n'est pas exclu de la détection d'arnaques.",
+        "removed": "Le canal {channel} a été retiré de la liste des exclusions.",
+        "list_empty": "Aucun canal n'est actuellement exclu de la détection d'arnaques.",
+        "invalid": "Aucun canal exclu valide trouvé.",
+        "list": "Canaux exclus : {channels}"
+      }
+    }
+  }
+}

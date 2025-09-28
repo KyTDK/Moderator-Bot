@@ -1,0 +1,48 @@
+﻿{
+  "cogs": {
+    "autonomous_moderation": {
+      "common": {
+        "subscription_required": "Ten serwer nie ma subskrypcji Przyspieszonej. Użyj `/accelerated subscribe`, aby rozpocząć swój plan premium."
+      },
+      "rules": {
+        "updated": "Zasady zaktualizowane.",
+        "none": "Nie ustawiono zasad moderacji.",
+        "heading": "**Zasady Moderacji:**\n```{rules}```",
+        "truncated_suffix": "…"
+      },
+      "toggle": {
+        "need_rules": "Najpierw ustaw zasady moderacji za pomocą `/ai_mod rules_set`.",
+        "enabled": "Autonomiczna moderacja została **włączona**.",
+        "disabled": "Autonomiczna moderacja została **wyłączona**.",
+        "mode_set": "Tryb został ustawiony na **{mode}**.",
+        "status": "Autonomiczna moderacja jest **{state}**.\nObecny tryb to **{mode}**.",
+        "status_active": "\nAktywny pod-tryb: **{active}**",
+        "state_enabled": "włączone",
+        "state_disabled": "wyłączone",
+        "state_unknown": "nieznane"
+      },
+      "actions": {
+        "none": "Nie ustawiono żadnych działań.",
+        "heading": "**Obecne działania:**\n{actions}"
+      },
+      "adaptive": {
+        "role_required": "Ten typ zdarzenia wymaga roli.",
+        "threshold_required": "Ten typ zdarzenia wymaga progu.",
+        "threshold_range": "Próg musi mieć wartość między 0 a 1.",
+        "time_range_required": "Ten typ zdarzenia wymaga zakresu czasu (np. 08:00-20:00).",
+        "error": "Błąd ustawiania zdarzenia: {error}",
+        "cleared": "Wszystkie adaptacyjne zdarzenia zostały wyczyszczone.",
+        "none": "Nie ustawiono żadnych adaptacyjnych zdarzeń.",
+        "section": "**{event}**",
+        "item": "• `{action}`{details}",
+        "detail_join": " — {details}",
+        "detail_role": "`role_id={id}`",
+        "detail_invalid_role": "[nieważna rola: {value}]",
+        "detail_invalid": "[nieważne: {value}]",
+        "detail_time": "`{value}`",
+        "detail_threshold": "{display} — `{threshold}`"
+      },
+      "ensure_adaptive": "Tryb moderacji adaptacyjnej nie jest włączony. Użyj `/ai_mod set_mode`, aby go włączyć."
+    }
+  }
+}

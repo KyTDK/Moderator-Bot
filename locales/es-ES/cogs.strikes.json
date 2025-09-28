@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "strikes": {
+      "strike": {
+        "error": "Se produjo un error, por favor intente de nuevo. Si el problema persiste, únase al servidor de soporte (enlace en `/ayuda`)."
+      },
+      "get": {
+        "title": "Sanciones para {name}",
+        "empty": "No se encontraron sanciones para este usuario.",
+        "file_notice": "La lista de sanciones es demasiado larga para mostrar en línea, se enviará como un archivo:"
+      },
+      "remove": {
+        "success": "La sanción con ID `{id}` para {mention} ha sido eliminada con éxito.",
+        "not_found": "No se encontró una sanción con ID `{id}` para {mention} en este servidor.\nUse `/sanciones obtener <usuario>` para mostrar todas las sanciones y sus IDs."
+      },
+      "clear": {
+        "none": "No se encontraron sanciones activas para {mention}.",
+        "success": "{count, plural, one {Eliminada} other {Eliminadas}} {count} sanción(es) para {mention}."
+      },
+      "actions": {
+        "exists": "La acción `{action}` ya existe para sanciones de `{key}`.",
+        "added": "Añadida `{action}` a las acciones para sanciones de `{key}`.",
+        "missing": "Acción `{action}` no encontrada para sanciones de `{key}`.",
+        "removed": "Eliminada `{action}` de las acciones de sanciones `{key}`."
+      },
+      "view_actions": {
+        "none": "No hay acciones de sanciones configuradas.",
+        "heading": "**Acciones de sanciones actuales:**",
+        "item": "{key}: {actions}"
+      },
+      "intimidate": {
+        "user_title": "Última advertencia para {name}",
+        "user_body": "{mention},\nTus acciones están sobrepasando los límites de lo aceptable dentro de este servidor. Considere esta su última advertencia antes de que se emita una sanción contra su cuenta. El desprecio continuo por las normas de la comunidad resultará en una acción disciplinaria inmediata, que puede incluir más sanciones o la expulsión del servidor.\n\nEsto no es una petición: cumpla con las reglas ahora.",
+        "guild_title": "Aviso oficial de moderación",
+        "guild_body": "Tenga en cuenta que el Bot Moderador está monitoreando activamente toda la actividad en este canal. Cualquier violación de las normas de la comunidad puede resultar en acciones disciplinarias. La severidad y naturaleza de estas acciones dependerán de las circunstancias de cada caso. Agradecemos su cooperación para ayudar a mantener un entorno respetuoso y seguro.",
+        "confirm": "Mensaje enviado."
+      }
+    }
+  }
+}

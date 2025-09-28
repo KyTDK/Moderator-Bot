@@ -1,0 +1,8 @@
+﻿{
+  "bot": {
+    "welcome": {
+      "message": "👋 **Tack för att du lade till Moderator Bot!**\n\n🛠️ **Instrumentpanel:** [Öppna Instrumentpanel]({dash_url})\n\n**Snabbstart**\n• Kör **`/help`** för att se kommandon (prova `/help nsfw`, `/help strikes`)\n• Använd **Instrumentpanelen** för att konfigurera trösklar, åtgärder och växlar\n\n**Fungerar direkt ur lådan**\nAI-moderering är aktiverad med rimliga standardinställningar. Du kan finjustera allt i Instrumentpanelen.\n\n**Behöver du hjälp?**\nÖppna instrumentpanelen ovan, eller kör **`/help`** för detaljer och supportlänken.",
+      "button_label": "Öppna Instrumentpanel"
+    }
+  }
+}

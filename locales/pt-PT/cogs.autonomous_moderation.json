@@ -1,0 +1,48 @@
+﻿{
+  "cogs": {
+    "autonomous_moderation": {
+      "common": {
+        "subscription_required": "Este servidor não possui uma assinatura Accelerated. Use `/accelerated subscribe` para iniciar seu plano premium."
+      },
+      "rules": {
+        "updated": "Regras atualizadas.",
+        "none": "Nenhuma regra de moderação foi definida.",
+        "heading": "**Regras de Moderação:**\n```{rules}```",
+        "truncated_suffix": "…"
+      },
+      "toggle": {
+        "need_rules": "Defina as regras de moderação primeiro com `/ai_mod rules_set`.",
+        "enabled": "A moderação autônoma foi **ativada**.",
+        "disabled": "A moderação autônoma foi **desativada**.",
+        "mode_set": "O modo foi definido como **{mode}**.",
+        "status": "A moderação autônoma está **{state}**.\nO modo atual é **{mode}**.",
+        "status_active": "\nSub modo ativo: **{active}**",
+        "state_enabled": "ativado",
+        "state_disabled": "desativado",
+        "state_unknown": "desconhecido"
+      },
+      "actions": {
+        "none": "Nenhuma ação está atualmente definida.",
+        "heading": "**Ações atuais:**\n{actions}"
+      },
+      "adaptive": {
+        "role_required": "Este tipo de evento requer uma função.",
+        "threshold_required": "Este tipo de evento requer um limite.",
+        "threshold_range": "O limite deve ser um valor entre 0 e 1.",
+        "time_range_required": "Este tipo de evento requer um intervalo de tempo (por exemplo, 08:00-20:00).",
+        "error": "Erro ao definir evento: {error}",
+        "cleared": "Todos os eventos adaptativos foram limpos.",
+        "none": "Nenhum evento adaptativo definido.",
+        "section": "**{event}**",
+        "item": "• `{action}`{details}",
+        "detail_join": " — {details}",
+        "detail_role": "`role_id={id}`",
+        "detail_invalid_role": "[função inválida: {value}]",
+        "detail_invalid": "[inválido: {value}]",
+        "detail_time": "`{value}`",
+        "detail_threshold": "{display} — `{threshold}`"
+      },
+      "ensure_adaptive": "O modo de moderação adaptativa não está ativado. Use `/ai_mod set_mode` para ativá-lo."
+    }
+  }
+}

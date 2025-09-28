@@ -1,0 +1,18 @@
+﻿{
+  "modules": {
+    "utils": {
+      "action_manager": {
+        "add": {
+          "duplicate": "`{action}` är redan i listan.",
+          "success": "Lade till `{action}` till åtgärder."
+        },
+        "remove": {
+          "specific_missing": "Åtgärden `{action}` finns inte.",
+          "specific_success": "Specifik åtgärd `{action}` har tagits bort.",
+          "base_missing": "Inga åtgärder hittades för `{action}`.",
+          "base_success": "Alla `{action}` åtgärder har tagits bort."
+        }
+      }
+    }
+  }
+}

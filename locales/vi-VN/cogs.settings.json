@@ -1,0 +1,63 @@
+{
+  "cogs": {
+    "settings": {
+      "help": {
+        "header": "**Cài đặt có sẵn:**\\n",
+        "entry": "**{name}**: {description} (Loại: {type})",
+        "not_found": "Không tìm thấy hướng dẫn cho `{command}`."
+      },
+      "reset": {
+        "done": "Đặt lại tất cả cài đặt về mặc định.",
+        "already": "Bạn đang sử dụng cài đặt mặc định."
+      },
+      "set": {
+        "invalid_name": "**Tên cài đặt không hợp lệ.**",
+        "requires_plan": "Cài đặt này yêu cầu {requirement}. Sử dụng `/accelerated subscribe` để nâng cấp.",
+        "missing_boolean": "**`{name}` cần một giá trị boolean. Sử dụng tùy chọn `value`.**",
+        "missing_integer": "**`{name}` cần một số nguyên. Sử dụng tùy chọn `value`.**",
+        "missing_duration": "**`{name}` cần khoảng thời gian (ví dụ: 30m, 1d).**",
+        "missing_channel": "**`{name}` cần một kênh. Sử dụng tùy chọn `channel`.**",
+        "missing_role": "**`{name}` cần một vai trò. Sử dụng tùy chọn `role`.**",
+        "missing_channel_add": "**`{name}` cần một kênh để thêm. Sử dụng tùy chọn `channel`.**",
+        "missing_role_add": "**`{name}` cần một vai trò để thêm. Sử dụng tùy chọn `role`.**",
+        "boolean_values": {
+          "true": [
+            "true",
+            "1",
+            "có"
+          ],
+          "false": [
+            "false",
+            "0",
+            "không"
+          ]
+        },
+        "boolean_only": "**`{name}` cần một giá trị boolean.**",
+        "unknown_type": "Cài đặt được phân tích dưới dạng giá trị vì loại không được biết",
+        "success": "Cập nhật `{name}` thành `{value}`.",
+        "unexpected": "Một lỗi không mong đợi đã xảy ra: `{error}`"
+      },
+      "get": {
+        "invalid_name": "Tên cài đặt không hợp lệ.",
+        "not_set": "`{name}` không được cài đặt. Mặc định: `{default}`",
+        "private": "Vì lí do bảo mật, cài đặt này bị ẩn.",
+        "list_channel_item": "`#{id}`",
+        "list_role_item": "`@{id}`",
+        "dict_item": "**{key}** — `{values}`",
+        "current": "**`{name}` hiện được cài đặt là:**\\n{value}"
+      },
+      "remove": {
+        "invalid_name": "Tên cài đặt không hợp lệ.",
+        "not_set": "`{name}` không được cài đặt.",
+        "channel_required": "Bạn phải chỉ định một kênh để xóa.",
+        "channel_missing": "{channel} không có trong `{name}`.",
+        "role_required": "Bạn phải chỉ định một vai trò để xóa.",
+        "role_missing": "{role} không có trong `{name}`.",
+        "removed_channel": "Đã xóa {channel} khỏi `{name}`.",
+        "removed_role": "Đã xóa {role} khỏi `{name}`.",
+        "removed_setting": "Đã xóa cài đặt `{name}`. Hiện đang sử dụng mặc định.",
+        "unexpected": "Một lỗi không mong đợi đã xảy ra: `{error}`"
+      }
+    }
+  }
+}

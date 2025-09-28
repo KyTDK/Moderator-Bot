@@ -1,0 +1,20 @@
+﻿{
+  "modules": {
+    "utils": {
+      "strike": {
+        "validation": {
+          "invalid_action": "Åtgärden måste vara en av: {options}",
+          "duration_not_allowed": "Varaktighet är inte tillåten för detta kommando.",
+          "duration_required": "Du måste ange en varaktighet (t.ex. `30m`, `1d`, `2w`).",
+          "duration_invalid": "Ogiltigt varaktighetsformat. Använd `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "Du kan inte tilldela en roll till en timeout-åtgärd.",
+          "role_required": "Du måste ange en roll för `{action}`.",
+          "duration_not_supported": "`{action}` stöder inte en varaktighet.",
+          "role_not_supported": "`{action}` använder inte en roll.",
+          "warn_message_required": "Du måste ange ett varningsmeddelande.",
+          "warn_role_disallowed": "Du kan inte tilldela en roll till en varningsåtgärd."
+        }
+      }
+    }
+  }
+}

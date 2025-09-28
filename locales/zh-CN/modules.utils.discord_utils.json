@@ -1,0 +1,9 @@
+﻿{
+  "modules": {
+    "utils": {
+      "discord_utils": {
+        "require_accelerated": "此指令仅适用于加速（高级）服务器。使用`/accelerated subscribe`启用此功能。"
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+﻿{
+  "cogs": {
+    "debug": {
+      "permission_denied": "Nie masz uprawnień do użycia tej komendy.",
+      "no_allocations": "Nie znaleziono projektowych przydziałów.",
+      "embed": {
+        "title": "Statystyki Wydajności Bota",
+        "memory_name": "Zużycie Pamięci",
+        "memory_value": "**RSS (Rzeczywista):** {rss:.2f} MB\n**VMS (Wirtualna):** {vms:.2f} MB\n**Tracemalloc Aktualne:** {current_mb:.2f} MB\n**Tracemalloc Szczyt:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU & Wątki",
+        "cpu_value": "**Zużycie CPU:** {cpu_percent:.1f}%\n**Wątki:** {threads}\n**Klamry:** {handles}",
+        "bot_name": "Statystyki Bota",
+        "bot_value": "**Gildie:** {guilds}\n**Użytkownicy (w pamięci):** {users}\n**Czas pracy:** {uptime}",
+        "allocations_name": "Największe Przydziały Pamięci {index}",
+        "worker_name": "Kolejki Pracowników",
+        "worker_error": "(błąd podczas zbierania metryk: {error})",
+        "footer": "Host: {host} | Python {python_version}"
+      }
+    }
+  }
+}

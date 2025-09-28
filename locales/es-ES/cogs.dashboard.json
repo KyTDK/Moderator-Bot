@@ -1,0 +1,13 @@
+﻿{
+  "cogs": {
+    "dashboard": {
+      "embed": {
+        "title": "Tablero del Moderador Bot",
+        "description": "[Haz clic aquí para abrir el tablero]({url})"
+      },
+      "message": {
+        "loading": "Generando tu enlace del tablero..."
+      }
+    }
+  }
+}

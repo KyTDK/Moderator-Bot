@@ -1,0 +1,18 @@
+﻿{
+  "modules": {
+    "utils": {
+      "action_manager": {
+        "add": {
+          "duplicate": "`{action}` est déjà dans la liste.",
+          "success": "Ajouté `{action}` aux actions."
+        },
+        "remove": {
+          "specific_missing": "L'action `{action}` n'existe pas.",
+          "specific_success": "Action spécifique `{action}` supprimée.",
+          "base_missing": "Aucune action trouvée pour `{action}`.",
+          "base_success": "Toutes les actions `{action}` supprimées."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "banned_words": {
+      "defaults": {
+        "status": "Wbudowana lista wulgarna jest **{state}**.",
+        "updated": "Wbudowana lista wulgarna **{state}**.",
+        "state_enabled": "włączona",
+        "state_disabled": "wyłączona"
+      },
+      "limit_reached": "Osiągnąłeś limit {limit} zbanowanych słów na tym serwerze.\nUżyj `/bannedwords remove` lub `/bannedwords clear`, aby zrobić miejsce.",
+      "add": {
+        "duplicate": "Słowo '{word}' jest już zbanowane.",
+        "success": "Słowo '{word}' zostało dodane do listy zbanowanych słów."
+      },
+      "remove": {
+        "missing": "Słowo '{word}' nie jest zbanowane.",
+        "success": "Słowo '{word}' zostało usunięte z listy zbanowanych słów."
+      },
+      "list": {
+        "empty": "Nie znaleziono zbanowanych słów.",
+        "file_header": "Zbanowane słowa:",
+        "file_item": "- {word}"
+      },
+      "clear": {
+        "empty": "Nie znaleziono zbanowanych słów do wyczyszczenia.",
+        "success": "Wszystkie zbanowane słowa zostały wyczyszczone."
+      },
+      "actions": {
+        "none": "Nie ustawiono żadnych akcji dla zbanowanych słów.",
+        "header": "**Aktualne akcje dla zbanowanych słów:**\n{actions}"
+      },
+      "enforcement": {
+        "strike_reason": "Wiadomość zawierała zbanowane słowo",
+        "strike_source": "zbanowane słowo",
+        "embed_title": "Wykryto zbanowane słowo",
+        "embed_description": "{mention}, twoja wiadomość została usunięta, ponieważ zawierała zbanowane słowo."
+      }
+    }
+  }
+}

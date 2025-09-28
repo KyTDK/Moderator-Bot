@@ -1,0 +1,26 @@
+﻿{
+  "cogs": {
+    "api_pool": {
+      "explanation": {
+        "body": "**Vad är API Poolen?**\nAPI Poolen är en säker och anonym samling av delade OpenAI API-nycklar. Den möjliggör att Moderator Bot kan fortsätta fungera effektivt, även när enskilda användare når hastighetsbegränsningar.\n\n**Hur fungerar det?**\n- När du lägger till din OpenAI API-nyckel i poolen, krypteras och lagras den säkert.\n- Bot använder dessa nycklar exklusivt för att få tillgång till OpenAI-modeller för att utföra modereringsuppgifter.\n- Din API-nyckel förblir konfidentiell; ingen, inklusive botutvecklarna, kan se den.\n- Du har full kontroll och kan ta bort din API-nyckel från poolen när som helst.\n\n**Viktigt:** För att bidra med din API-nyckel, måste ditt OpenAI-konto ha minst $5 i förskottsbetalda krediter. Även om modereringsendpunkten är fri att använda, kräver OpenAI att konton har aktiva faktureringsdetaljer och kvoter. Du kan lägga till kredit på ditt konto här: <https://platform.openai.com/account/billing/overview>\n\nGenom att bidra med din API-nyckel hjälper du till att säkerställa att Moderator Bot förblir responsiv och effektiv för alla användare."
+      },
+      "add": {
+        "invalid": "{error}",
+        "duplicate": "Denna API-nyckel finns redan i poolen.",
+        "success": "API-nyckel tillagd i poolen."
+      },
+      "remove": {
+        "success": "API-nyckel borttagen från din pool.",
+        "missing": "Denna API-nyckel hittades inte i din pool. Använd /api_pool list för att se dina nuvarande API-nycklar."
+      },
+      "clear": {
+        "success": "Alla API-nycklar har rensats från din pool.",
+        "empty": "Inga API-nycklar hittades att rensa."
+      },
+      "list": {
+        "header": "Dina API-nycklar:",
+        "empty": "Inga API-nycklar hittades i din pool."
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "cogs": {
+    "settings": {
+      "help": {
+        "header": "**Paramètres disponibles :**\\n",
+        "entry": "**{name}** : {description} (Type : {type})",
+        "not_found": "Aucune aide trouvée pour `{command}`."
+      },
+      "reset": {
+        "done": "Réinitialiser tous les paramètres par défaut.",
+        "already": "Vous utilisez déjà les paramètres par défaut."
+      },
+      "set": {
+        "invalid_name": "**Nom de paramètre invalide.**",
+        "requires_plan": "Ce paramètre requiert {requirement}. Utilisez `/accelerated subscribe` pour mettre à niveau.",
+        "missing_boolean": "**`{name}` attend un booléen. Utilisez l'option `valeur`.**",
+        "missing_integer": "**`{name}` attend un entier. Utilisez l'option `valeur`.**",
+        "missing_duration": "**`{name}` attend une durée (par exemple 30m, 1j).**",
+        "missing_channel": "**`{name}` attend un canal. Utilisez l'option `channel`.**",
+        "missing_role": "**`{name}` attend un rôle. Utilisez l'option `role`.**",
+        "missing_channel_add": "**`{name}` attend un canal à ajouter. Utilisez l'option `channel`.**",
+        "missing_role_add": "**`{name}` attend un rôle à ajouter. Utilisez l'option `role`.**",
+        "boolean_values": {
+          "true": [
+            "vrai",
+            "1",
+            "oui"
+          ],
+          "false": [
+            "faux",
+            "0",
+            "non"
+          ]
+        },
+        "boolean_only": "**`{name}` attend un booléen.**",
+        "unknown_type": "Paramètre analysé comme valeur car le type est inconnu",
+        "success": "Mis à jour `{name}` à `{value}`.",
+        "unexpected": "Une erreur inattendue s'est produite : `{error}`"
+      },
+      "get": {
+        "invalid_name": "Nom de paramètre invalide.",
+        "not_set": "`{name}` n'est pas défini. Par défaut : `{default}`",
+        "private": "Pour des raisons de confidentialité, ce paramètre est caché.",
+        "list_channel_item": "`#{id}`",
+        "list_role_item": "`@{id}`",
+        "dict_item": "**{key}** — `{values}`",
+        "current": "**`{name}` est actuellement défini sur :**\n{value}"
+      },
+      "remove": {
+        "invalid_name": "Nom de paramètre invalide.",
+        "not_set": "`{name}` n'est pas défini.",
+        "channel_required": "Vous devez spécifier un canal à supprimer.",
+        "channel_missing": "{channel} n'est pas dans `{name}`.",
+        "role_required": "Vous devez spécifier un rôle à supprimer.",
+        "role_missing": "{role} n'est pas dans `{name}`.",
+        "removed_channel": "Supprimé {channel} de `{name}`.",
+        "removed_role": "Supprimé {role} de `{name}`.",
+        "removed_setting": "Paramètre `{name}` supprimé. Utilisation du réglage par défaut.",
+        "unexpected": "Une erreur inattendue s'est produite : `{error}`"
+      }
+    }
+  }
+}

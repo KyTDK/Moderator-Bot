@@ -1,0 +1,26 @@
+﻿{
+  "cogs": {
+    "api_pool": {
+      "explanation": {
+        "body": "**¿Qué es el API Pool?**\nEl API Pool es una colección segura y anónima de claves API de OpenAI compartidas. Permite que el Moderador Bot siga operando eficazmente, incluso cuando los usuarios enfrentan límites de tasa.\n\n**¿Cómo funciona?**\n- Cuando añades tu clave API de OpenAI al pool, se cifra y almacena de manera segura.\n- El bot utiliza estas claves exclusivamente para acceder a los modelos de OpenAI y realizar tareas de moderación.\n- Tu clave API permanece confidencial; nadie, incluidos los desarrolladores del bot, puede verla.\n- Tienes control total y puedes eliminar tu clave API del pool en cualquier momento.\n\n**Importante:** Para contribuir tu clave API, tu cuenta de OpenAI debe tener al menos $5 en créditos prepagados. Aunque el punto de moderación es gratuito, OpenAI requiere que las cuentas tengan detalles de facturación activos y cuota. Puedes añadir crédito a tu cuenta aquí: <https://platform.openai.com/account/billing/overview>\n\nAl contribuir tu clave API, ayudas a asegurar que el Moderador Bot se mantenga receptivo y efectivo para todos los usuarios."
+      },
+      "add": {
+        "invalid": "{error}",
+        "duplicate": "Esta clave API ya existe en el pool.",
+        "success": "Clave API añadida al pool."
+      },
+      "remove": {
+        "success": "Clave API eliminada de tu pool.",
+        "missing": "No se encontró esta clave API en tu pool. Usa /api_pool list para ver tus claves API actuales."
+      },
+      "clear": {
+        "success": "Todas las claves API han sido borradas de tu pool.",
+        "empty": "No se encontraron claves API para borrar."
+      },
+      "list": {
+        "header": "Tus Claves API:",
+        "empty": "No se encontraron claves API en tu pool."
+      }
+    }
+  }
+}

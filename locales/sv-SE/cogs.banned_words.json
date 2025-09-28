@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "banned_words": {
+      "defaults": {
+        "status": "Den inbyggda listan över svordomar är **{state}**.",
+        "updated": "Inbyggd lista över svordomar **{state}**.",
+        "state_enabled": "aktiverad",
+        "state_disabled": "inaktiverad"
+      },
+      "limit_reached": "Du har nått gränsen på {limit} förbjudna ord för den här servern.\nAnvänd `/bannedwords remove` eller `/bannedwords clear` för att göra plats.",
+      "add": {
+        "duplicate": "Ordet '{word}' är redan förbjudet.",
+        "success": "Ordet '{word}' har lagts till i listan över förbjudna ord."
+      },
+      "remove": {
+        "missing": "Ordet '{word}' är inte förbjudet.",
+        "success": "Ordet '{word}' har tagits bort från listan med förbjudna ord."
+      },
+      "list": {
+        "empty": "Inga förbjudna ord hittades.",
+        "file_header": "Förbjudna ord:",
+        "file_item": "- {word}"
+      },
+      "clear": {
+        "empty": "Inga förbjudna ord hittade att rensa.",
+        "success": "Alla förbjudna ord har rensats."
+      },
+      "actions": {
+        "none": "Inga åtgärder är för närvarande inställda för förbjudna ord.",
+        "header": "**Nuvarande åtgärder för förbjudna ord:**\n{actions}"
+      },
+      "enforcement": {
+        "strike_reason": "Meddelandet innehöll förbjudet ord",
+        "strike_source": "förbjudet ord",
+        "embed_title": "Förbjudet ord upptäckt",
+        "embed_description": "{mention}, ditt meddelande togs bort eftersom det innehöll ett förbjudet ord."
+      }
+    }
+  }
+}

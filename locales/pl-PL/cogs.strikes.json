@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "strikes": {
+      "strike": {
+        "error": "Wystąpił błąd, spróbuj ponownie. Jeśli problem będzie się powtarzał, dołącz do serwera wsparcia (link w `/help`)."
+      },
+      "get": {
+        "title": "Uderzenia dla {name}",
+        "empty": "Nie znaleziono żadnych uderzeń dla tego użytkownika.",
+        "file_notice": "Lista uderzeń jest zbyt długa, aby wyświetlić w linii, przesłanie jako plik:"
+      },
+      "remove": {
+        "success": "Uderzenie z ID `{id}` dla {mention} zostało pomyślnie usunięte.",
+        "not_found": "Nie znaleziono uderzenia z ID `{id}` dla {mention} w tej gildii.\nUżyj `/strikes get <user>`, aby wyświetlić wszystkie uderzenia i ich ID."
+      },
+      "clear": {
+        "none": "Nie znaleziono aktywnych uderzeń dla {mention}.",
+        "success": "Wyczyszczono {count} uderzenie(a) dla {mention}."
+      },
+      "actions": {
+        "exists": "Akcja `{action}` już istnieje dla uderzeń `{key}`.",
+        "added": "Dodano `{action}` do akcji dla uderzeń `{key}`.",
+        "missing": "Nie znaleziono akcji `{action}` dla uderzeń `{key}`.",
+        "removed": "Usunięto `{action}` z akcji uderzeń `{key}`."
+      },
+      "view_actions": {
+        "none": "Nie skonfigurowano akcji uderzeń.",
+        "heading": "**Obecne akcje uderzeń:**",
+        "item": "{key}: {actions}"
+      },
+      "intimidate": {
+        "user_title": "Ostrzeżenie końcowe dla {name}",
+        "user_body": "{mention},\nTwoje działania zbliżają się do granicy akceptacji na tym serwerze. Potraktuj to jako ostatnie ostrzeżenie przed wystawieniem uderzenia przeciwko Twojemu kontu. Kontynuacja nieprzestrzegania zasad społeczności skutkować będzie natychmiastową akcją dyscyplinarną, która może obejmować dodatkowe kary lub usunięcie z serwera.\n\nTo nie jest prośba — przestrzegaj teraz zasad.",
+        "guild_title": "Oficjalne zawiadomienie moderacyjne",
+        "guild_body": "Pamiętaj, że Bot Moderatora aktywnie monitoruje wszelkie działania na tym kanale. Każde naruszenie zasad społeczności może skutkować działaniami dyscyplinarnymi. Ich nasilenie i charakter będą zależały od okoliczności każdego przypadku. Doceniamy Twoją współpracę w utrzymaniu szacunkowego i bezpiecznego środowiska.",
+        "confirm": "Wysłano wiadomość."
+      }
+    }
+  }
+}

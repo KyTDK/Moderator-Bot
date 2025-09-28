@@ -1,0 +1,26 @@
+﻿{
+  "cogs": {
+    "api_pool": {
+      "explanation": {
+        "body": "**API池是什么？**\nAPI池是一个安全匿名的共享OpenAI API密钥集合。它允许Moderator Bot在单个用户达到速率限制时继续有效运作。\n\n**它是如何工作的？**\n- 当您将OpenAI API密钥添加到池中时，它会被加密并安全存储。\n- 机器人独占使用这些密钥来访问OpenAI模型以执行审核任务。\n- 您的API密钥保密，包括机器人开发者在内的任何人均无法查看。\n- 您拥有完全控制权，可以随时从池中移除您的API密钥。\n\n**重要提示：** 要贡献您的API密钥，您的OpenAI账户必须至少有5美元的预付费用。即使审核端点是免费的，OpenAI仍然要求账户有有效的计费详细信息和配额。您可以在此处为您的账户添加金额：<https://platform.openai.com/account/billing/overview>\n\n通过贡献您的API密钥，您有助于确保Moderator Bot对所有用户保持响应和有效。"
+      },
+      "add": {
+        "invalid": "{error}",
+        "duplicate": "此API密钥已存在于池中。",
+        "success": "API密钥已添加到池中。"
+      },
+      "remove": {
+        "success": "API密钥已从您的池中移除。",
+        "missing": "在您的池中未找到此API密钥。使用 /api_pool list 查看您当前的API密钥。"
+      },
+      "clear": {
+        "success": "所有API密钥已从您的池中清除。",
+        "empty": "没有找到可清除的API密钥。"
+      },
+      "list": {
+        "header": "您的API密钥：",
+        "empty": "在您的池中未找到API密钥。"
+      }
+    }
+  }
+}

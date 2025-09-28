@@ -1,0 +1,61 @@
+﻿{
+  "modules": {
+    "moderation": {
+      "strike": {
+        "disciplinary": {
+          "no_action": "Никаких действий не предпринято.",
+          "bulk_delete": "{deleted}/{total} сообщений удалено массово.",
+          "delete_summary": "{deleted}/{total} сообщение(й) удалено.",
+          "delete_missing": "Удаление запрошено, но сообщение не предоставлено.",
+          "strike_issued": "Выдано предупреждение.",
+          "strike_issued_with_expiry": "Выдано предупреждение с истечением срока.",
+          "user_kicked": "Пользователь исключён.",
+          "user_banned": "Пользователь забанен.",
+          "timeout_missing": "Длительность тайм-аута не указана.",
+          "timeout_invalid": "Недопустимая длительность тайм-аута: '{value}'.",
+          "timeout_applied": "Пользователь временно заблокирован до <t:{timestamp}:R>.",
+          "give_role_missing": "Не указана роль для присвоения.",
+          "give_role_not_found": "Роль '{role}' не найдена.",
+          "give_role_success": "Роль '{role}' присвоена.",
+          "remove_role_missing": "Не указана роль для удаления.",
+          "remove_role_not_found": "Роль '{role}' не найдена.",
+          "remove_role_success": "Роль '{role}' удалена.",
+          "warn_dm": "Пользователю сделано предупреждение через ЛС.",
+          "warn_channel": "Пользователю сделано предупреждение через канал (ЛС не удалось).",
+          "warn_failed": "Предупреждение не удалось (не удалось отправить сообщение в ЛС или канал).",
+          "broadcast_missing": "Сообщение для трансляции не предоставлено.",
+          "broadcast_sent": "Сообщение трансляции отправлено.",
+          "broadcast_failed": "Трансляция не удалась.",
+          "broadcast_no_channel": "Канал для трансляции не найден.",
+          "unknown_action": "Неизвестное действие: '{action}'.",
+          "action_failed": "Действие не удалось: {action}."
+        },
+        "strike": {
+          "default_reason": "Причина не указана.",
+          "embed_title_user": "Вам вынесено предупреждение.",
+          "embed_title_public": "{name} получил предупреждение.",
+          "actions_heading": "**Принятые меры:**",
+          "action_none": "**Принятые меры:** Действия не применены",
+          "action_item": "- {action}",
+          "action_timeout": "Тайм-аут (закончится <t:{timestamp}:R>)",
+          "action_ban": "Бан",
+          "action_kick": "Исключение",
+          "action_delete": "Удалить сообщение",
+          "action_give_role": "Присвоить роль {role}",
+          "action_remove_role": "Удалить роль {role}",
+          "action_warn": "Предупреждение: {message}",
+          "action_strike": "Предупреждение",
+          "strike_count": "**Количество предупреждений:** {count} предупреждение(й).",
+          "strike_until_ban": "{remaining} ещё предупреждение(й) до постоянного бана.",
+          "reason": "**Причина:** {reason}",
+          "expires": "**Истекает:** {expiry}",
+          "issued_by": "Выдано",
+          "expiry_never": "Никогда"
+        },
+        "errors": {
+          "too_many_strikes": "Вы не можете дать одному игроку более 100 предупреждений. Используйте `/strikes clear <user>`, чтобы сбросить их количество."
+        }
+      }
+    }
+  }
+}

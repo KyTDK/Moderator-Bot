@@ -1,0 +1,60 @@
+﻿{
+  "cogs": {
+    "accelerated": {
+      "group_description": "Zarządzaj subskrypcją przyspieszoną (Premium).",
+      "status": {
+        "embed_title": "Status Przyspieszony",
+        "footer_base": "Moderator Bot Przyspieszony",
+        "field_names": {
+          "tier": "Poziom",
+          "status": "Status",
+          "next_billing": "Następne rozliczenie"
+        },
+        "not_enrolled": {
+          "description": "Ten serwer nie jest jeszcze zapisany do **Accelerated**. Zapisz się teraz, używając `/accelerated subscribe`.",
+          "tier_value": "`Brak`",
+          "status_value": "`Nie Zapisany`",
+          "next_billing_value": "Rozpocznij plan używając `/accelerated subscribe`"
+        },
+        "no_renewal": "`Brak zaplanowanych odnowień`",
+        "footers": {
+          "next": "{base} - Następny cykl rozliczeniowy",
+          "checked": "{base} - Sprawdzone status"
+        },
+        "states": {
+          "active": {
+            "label": "Aktywny",
+            "emoji": ":green_circle:",
+            "description": "Przyspieszony jest aktywny."
+          },
+          "cancelled": {
+            "label": "Aktywny - Wkrótce anulowany",
+            "emoji": ":orange_circle:",
+            "description": "Przyspieszony pozostanie aktywny do końca tego cyklu rozliczeniowego."
+          },
+          "paused": {
+            "label": "{status}",
+            "emoji": ":red_circle:",
+            "description": "Korzyści przyspieszone są wstrzymane. Wznów w każdej chwili za pomocą `/accelerated subscribe`."
+          }
+        }
+      },
+      "subscribe": {
+        "already_subscribed": "🚫 Twoja gildia już ma aktywną subskrypcję **Accelerated**!",
+        "embed": {
+          "title": "🚀 Zaktualizuj do Moderator Bot Przyspieszony!",
+          "description": "**Ciesz się błyskawicznym wykrywaniem NSFW i oszustw, priorytetowymi kolejkami oraz wcześniejszym dostępem do nowych funkcji!**\n\nPo twoim darmowym miesiącu, kontynuuj za jedyne **5$/miesiąc**, aby utrzymać swój serwer bardziej bezpieczny i szybki.",
+          "footer": "Moderator Bot 🚀 Plan Przyspieszony",
+          "button_label": "🚀 Subskrybuj Teraz"
+        }
+      },
+      "perks": {
+        "title": "Korzyści Przyspieszone",
+        "description": "Ulepsz swoje doświadczenie z Moderator Bot Przyspieszony:\n• Samodzielne moderowanie AI do automatycznego wykrywania i reagowania na wiadomości łamiące zasady\n• Prześwietlanie większej liczby klatek wideo dla dokładniejszego wykrywania NSFW\n• Priorytetowe wykrywanie NSFW i oszustw\n• Wczesny dostęp do nowych funkcji\n• Wspiera rozwój bota"
+      },
+      "cancel": {
+        "message": "Możesz anulować swoją subskrypcję PayPal w każdej chwili poprzez swoje **Konto PayPal → Ustawienia → Płatności → Zarządzaj Płatnościami Automatycznymi**.\nTwój dostęp premium będzie trwał do końca cyklu rozliczeniowego."
+      }
+    }
+  }
+}

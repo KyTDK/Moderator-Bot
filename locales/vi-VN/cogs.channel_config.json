@@ -1,0 +1,16 @@
+﻿{
+  "cogs": {
+    "channel_config": {
+      "nsfw_required": "{channel} không bị giới hạn độ tuổi. Vui lòng chọn kênh NSFW.",
+      "missing_permissions": "Tôi thiếu quyền sau trong {channel}: {permissions}",
+      "set_success": "{log_type} nhật ký sẽ được đăng trong {channel}.",
+      "unset_success": "Kênh ghi nhật ký {log_type} đã được bỏ cấu hình.",
+      "invalid_guild": "Lỗi: Định dạng ID guild không hợp lệ.",
+      "show": {
+        "heading": "**Kênh ghi nhật ký:**",
+        "entry": "{name}: {value}",
+        "not_set": "Chưa được cấu hình"
+      }
+    }
+  }
+}

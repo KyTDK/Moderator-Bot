@@ -1,0 +1,107 @@
+﻿{
+  "cogs": {
+    "monitoring": {
+      "log_event": {
+        "upgrade_footer": "Atualize para Accelerated para uma detecção de NSFW & scam mais rápida — /accelerated",
+        "guild_footer": "ID do Servidor: {guild_id}"
+      },
+      "join": {
+        "title": "Membro Entrou",
+        "description": "{mention} ({name}) entrou no servidor.",
+        "fields": {
+          "account_created": "Conta Criada",
+          "joined_at": "Entrou Em"
+        },
+        "footer": {
+          "bot": "Conta de Bot",
+          "user": "Conta de Usuário"
+        }
+      },
+      "timeout": {
+        "title_applied": "Membro Temporariamente Bloqueado",
+        "title_removed": "Bloqueio Temporário Removido",
+        "description_applied": "{mention} ({name}) foi colocado em um bloqueio temporário.",
+        "description_removed": "{mention} ({name}) teve um bloqueio temporário.",
+        "fields": {
+          "ends": "Termina",
+          "moderator": "Moderador",
+          "reason": "Motivo"
+        },
+        "footer": "ID do Usuário: {user_id}"
+      },
+      "leave": {
+        "title_kicked": "Membro Expulso",
+        "title_left": "Membro Saiu",
+        "description_kicked": "{mention} ({name}) foi expulso do servidor.",
+        "description_left": "{mention} ({name}) deixou o servidor.",
+        "fields": {
+          "kicked_by": "Expulso Por",
+          "reason": "Motivo"
+        },
+        "footer": {
+          "bot": "Conta de Bot",
+          "user": "Conta de Usuário"
+        }
+      },
+      "message_delete": {
+        "title": "Mensagem Excluída",
+        "description_with_author": "**Autor:** {author_mention} ({author_name})\n**Canal:** {channel}\n",
+        "deleted_by": "**Excluído por:** {deleter}\n",
+        "content_label": "**Conteúdo:**\n{content}",
+        "description_generic": "Uma mensagem foi excluída em {channel}.",
+        "description_deleted_by": "\n**Excluído por:** {deleter}",
+        "fields": {
+          "attachments": "Anexos ({count})",
+          "embeds": "Incorporação {index}",
+          "stickers": "Adesivos ({count})"
+        },
+        "attachment_item": "• [{name}]({url})",
+        "embed_bullet": "• **{name}**: {value}",
+        "embed_unavailable": "*[Conteúdo da incorporação indisponível]*",
+        "sticker_item": "• [{name}]({url})",
+        "footer": "ID do Usuário: {user_id}"
+      },
+      "message_edit": {
+        "title": "Mensagem Editada",
+        "description": "**Autor:** {author_mention} ({author_name})\n**Canal:** {channel}\n",
+        "fields": {
+          "before": "Antes",
+          "after": "Depois"
+        },
+        "footer": "ID do Usuário: {user_id}"
+      },
+      "ban": {
+        "title": "Membro Banido",
+        "description": "{mention} ({name}) foi banido.",
+        "fields": {
+          "moderator": "Banido Por",
+          "reason": "Motivo"
+        },
+        "footer": "ID do Usuário: {user_id}"
+      },
+      "unban": {
+        "title": "Membro Desbanido",
+        "description": "{mention} ({name}) foi desbanido.",
+        "fields": {
+          "moderator": "Desbanido Por",
+          "reason": "Motivo"
+        },
+        "footer": "ID do Usuário: {user_id}"
+      },
+      "monitor_commands": {
+        "set": "Canal de monitoramento configurado para {channel}.",
+        "removed": "O canal de monitoramento foi removido.",
+        "not_set": "Nenhum canal de monitoramento foi configurado.",
+        "current": "Canal de monitoramento atual: {channel}",
+        "none": "Nenhum canal de monitoramento está configurado atualmente.",
+        "toggle": "Registro para `{event}` foi {state}.",
+        "state_enabled": "ativado",
+        "state_disabled": "desativado",
+        "list_heading": "**Eventos Monitores:**",
+        "list_item": "- `{event}`: {state}",
+        "list_enabled": "✅",
+        "list_disabled": "❌"
+      }
+    }
+  }
+}

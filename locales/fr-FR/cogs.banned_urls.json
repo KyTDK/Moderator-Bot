@@ -1,0 +1,35 @@
+﻿{
+  "cogs": {
+    "banned_urls": {
+      "limit_reached": "Vous avez atteint la limite de {limit} URL bannies pour ce serveur.\nUtilisez `/bannedurls remove` ou `/bannedurls clear` pour faire de la place.",
+      "add": {
+        "duplicate": "`{url}` est déjà banni.",
+        "success": "Ajouté `{url}` à la liste des URL bannies."
+      },
+      "remove": {
+        "missing": "`{url}` n'est pas dans la liste des URL bannies.",
+        "success": "Retiré `{url}` de la liste des URL bannies."
+      },
+      "list": {
+        "empty": "Aucune URL bannie trouvée.",
+        "file_header": "URL bannies :",
+        "file_item": "- {url}",
+        "filename": "banned_urls_{guild_id}.txt"
+      },
+      "clear": {
+        "empty": "Aucune URL bannie trouvée à effacer.",
+        "success": "Toutes les URL bannies ont été effacées."
+      },
+      "enforcement": {
+        "strike_reason": "Message contenant une URL bannie ({url})",
+        "strike_source": "url bannie",
+        "embed_title": "URL Bannie Détectée",
+        "embed_description": "{mention}, votre message a été supprimé car il contenait une URL bannie."
+      },
+      "actions": {
+        "none": "Aucune action actuellement définie pour les URL bannies.",
+        "header": "**Actions actuelles pour les URL bannies :**\n{actions}"
+      }
+    }
+  }
+}

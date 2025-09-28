@@ -1,0 +1,9 @@
+﻿{
+  "modules": {
+    "utils": {
+      "discord_utils": {
+        "require_accelerated": "Эта команда доступна только для ускоренных (премиум) серверов. Используйте `/accelerated subscribe`, чтобы активировать её."
+      }
+    }
+  }
+}

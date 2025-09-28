@@ -1,0 +1,48 @@
+﻿{
+  "cogs": {
+    "autonomous_moderation": {
+      "common": {
+        "subscription_required": "Máy chủ này không có đăng ký Tăng Cấp. Sử dụng `/accelerated subscribe` để bắt đầu kế hoạch cao cấp của bạn."
+      },
+      "rules": {
+        "updated": "Quy tắc đã được cập nhật.",
+        "none": "Không có quy tắc kiểm duyệt nào được thiết lập.",
+        "heading": "**Quy tắc Kiểm duyệt:**\n```{rules}```",
+        "truncated_suffix": "…"
+      },
+      "toggle": {
+        "need_rules": "Đặt quy tắc kiểm duyệt trước bằng `/ai_mod rules_set`.",
+        "enabled": "Kiểm duyệt tự động đã được **bật**.",
+        "disabled": "Kiểm duyệt tự động đã được **tắt**.",
+        "mode_set": "Chế độ đã được đặt thành **{mode}**.",
+        "status": "Kiểm duyệt tự động là **{state}**.\nChế độ hiện tại là **{mode}**.",
+        "status_active": "\nChế độ phụ đang hoạt động: **{active}**",
+        "state_enabled": "bật",
+        "state_disabled": "tắt",
+        "state_unknown": "không xác định"
+      },
+      "actions": {
+        "none": "Hiện không có hành động nào được thiết lập.",
+        "heading": "**Hành động hiện tại:**\n{actions}"
+      },
+      "adaptive": {
+        "role_required": "Loại sự kiện này yêu cầu một vai trò.",
+        "threshold_required": "Loại sự kiện này yêu cầu một ngưỡng.",
+        "threshold_range": "Ngưỡng phải là một giá trị giữa 0 và 1.",
+        "time_range_required": "Loại sự kiện này yêu cầu một phạm vi thời gian (ví dụ, 08:00-20:00).",
+        "error": "Lỗi khi thiết lập sự kiện: {error}",
+        "cleared": "Tất cả sự kiện thích ứng đã được xóa.",
+        "none": "Không có sự kiện thích ứng nào được thiết lập.",
+        "section": "**{event}**",
+        "item": "• `{action}`{details}",
+        "detail_join": " — {details}",
+        "detail_role": "`role_id={id}`",
+        "detail_invalid_role": "[vai trò không hợp lệ: {value}]",
+        "detail_invalid": "[không hợp lệ: {value}]",
+        "detail_time": "`{value}`",
+        "detail_threshold": "{display} — `{threshold}`"
+      },
+      "ensure_adaptive": "Chế độ kiểm duyệt thích ứng chưa được bật. Sử dụng `/ai_mod set_mode` để bật."
+    }
+  }
+}

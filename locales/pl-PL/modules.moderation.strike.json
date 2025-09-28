@@ -1,0 +1,61 @@
+﻿{
+  "modules": {
+    "moderation": {
+      "strike": {
+        "disciplinary": {
+          "no_action": "Nie podjęto żadnej akcji.",
+          "bulk_delete": "Usunięto hurtowo {deleted}/{total} wiadomości.",
+          "delete_summary": "Usunięto {deleted}/{total} wiadomość(i).",
+          "delete_missing": "Zażądano usunięcia, ale nie podano wiadomości.",
+          "strike_issued": "Wystawiono ostrzeżenie.",
+          "strike_issued_with_expiry": "Wydano ostrzeżenie z terminem ważności.",
+          "user_kicked": "Użytkownik wyrzucony.",
+          "user_banned": "Użytkownik zbanowany.",
+          "timeout_missing": "Nie podano czasu wyciszenia.",
+          "timeout_invalid": "Nieprawidłowy czas wyciszenia: '{value}'.",
+          "timeout_applied": "Użytkownik wyciszony do <t:{timestamp}:R>.",
+          "give_role_missing": "Nie określono roli do nadania.",
+          "give_role_not_found": "Rola '{role}' nie znaleziona.",
+          "give_role_success": "Nadano rolę '{role}'.",
+          "remove_role_missing": "Nie określono roli do usunięcia.",
+          "remove_role_not_found": "Rola '{role}' nie znaleziona.",
+          "remove_role_success": "Usunięto rolę '{role}'.",
+          "warn_dm": "Użytkownik ostrzeżony przez DM.",
+          "warn_channel": "Użytkownik ostrzeżony przez kanał (DM nie powiodło się).",
+          "warn_failed": "Ostrzeżenie nieudane (nie można wysłać DM ani wiadomości na kanale).",
+          "broadcast_missing": "Nie podano wiadomości do nadania.",
+          "broadcast_sent": "Wiadomość nadania wysłana.",
+          "broadcast_failed": "Nadanie nie powiodło się.",
+          "broadcast_no_channel": "Nie znaleziono prawidłowego kanału do nadania.",
+          "unknown_action": "Nieznana akcja: '{action}'.",
+          "action_failed": "Akcja nie powiodła się: {action}."
+        },
+        "strike": {
+          "default_reason": "Nie podano powodu",
+          "embed_title_user": "Otrzymałeś ostrzeżenie",
+          "embed_title_public": "{name} otrzymał ostrzeżenie",
+          "actions_heading": "**Podjęte akcje:**",
+          "action_none": "**Podjęta akcja:** Nie zastosowano akcji",
+          "action_item": "- {action}",
+          "action_timeout": "Wyciszenie (kończy się <t:{timestamp}:R>)",
+          "action_ban": "Ban",
+          "action_kick": "Wyrzucenie",
+          "action_delete": "Usuń wiadomość",
+          "action_give_role": "Nadaj rolę {role}",
+          "action_remove_role": "Usuń rolę {role}",
+          "action_warn": "Ostrzeżenie: {message}",
+          "action_strike": "Ostrzeżenie",
+          "strike_count": "**Liczba ostrzeżeń:** {count} ostrzeżeń.",
+          "strike_until_ban": "Pozostało {remaining} ostrzeżeń do stałego bana.",
+          "reason": "**Powód:** {reason}",
+          "expires": "**Wygasa:** {expiry}",
+          "issued_by": "Wydane przez",
+          "expiry_never": "Nigdy"
+        },
+        "errors": {
+          "too_many_strikes": "Nie można przyznać więcej niż 100 ostrzeżeń jednemu graczowi. Użyj `/strikes clear <user>` aby zresetować ostrzeżenia."
+        }
+      }
+    }
+  }
+}

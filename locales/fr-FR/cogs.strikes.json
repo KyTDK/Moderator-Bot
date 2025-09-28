@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "strikes": {
+      "strike": {
+        "error": "Une erreur s'est produite, veuillez réessayer. Si le problème persiste, veuillez rejoindre le serveur de support (lien dans `/help`)."
+      },
+      "get": {
+        "title": "Infractions pour {name}",
+        "empty": "Aucune infraction trouvée pour cet utilisateur.",
+        "file_notice": "La liste des infractions est trop longue pour être affichée en ligne, elle est envoyée en tant que fichier :"
+      },
+      "remove": {
+        "success": "L'infraction avec l'ID `{id}` pour {mention} a été supprimée avec succès.",
+        "not_found": "Aucune infraction avec l'ID `{id}` trouvée pour {mention} dans cette guilde.\nUtilisez `/strikes get <user>` pour afficher toutes les infractions et leurs IDs."
+      },
+      "clear": {
+        "none": "Aucune infraction active trouvée pour {mention}.",
+        "success": "{count, plural, one {Effacé # infraction pour {mention}.} other {Effacé # infractions pour {mention}.}}"
+      },
+      "actions": {
+        "exists": "L'action `{action}` existe déjà pour les infractions `{key}`.",
+        "added": "Ajouté `{action}` aux actions pour les infractions `{key}`.",
+        "missing": "Action `{action}` non trouvée pour les infractions `{key}`.",
+        "removed": "Retiré `{action}` des actions des infractions `{key}`."
+      },
+      "view_actions": {
+        "none": "Aucune action d'infraction configurée.",
+        "heading": "**Actions d'infraction actuelles :**",
+        "item": "{key} : {actions}"
+      },
+      "intimidate": {
+        "user_title": "Avertissement final pour {name}",
+        "user_body": "{mention},\nVos actions sont à la limite de ce qui est acceptable sur ce serveur. Considérez ceci comme votre dernier avertissement avant qu'une infraction ne soit portée à votre compte. Le non-respect continu des règles de la communauté entraînera une action disciplinaire immédiate, pouvant inclure d'autres pénalités ou un retrait du serveur.\n\nCe n'est pas une demande — conformez-vous aux règles maintenant.",
+        "guild_title": "Avis officiel de modération",
+        "guild_body": "Veuillez noter que le Bot Modérateur surveille activement toutes les activités de ce canal. Toute violation des directives communautaires peut entraîner une action disciplinaire. La gravité et la nature de ces actions dépendront des circonstances de chaque cas. Nous apprécions votre coopération pour aider à maintenir un environnement respectueux et sécurisé.",
+        "confirm": "Message envoyé."
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+﻿{
+  "cogs": {
+    "banned_words": {
+      "defaults": {
+        "status": "Danh sách từ tục tĩu mặc định là **{state}**.",
+        "updated": "Danh sách từ tục tĩu mặc định **{state}**.",
+        "state_enabled": "đã kích hoạt",
+        "state_disabled": "đã vô hiệu hóa"
+      },
+      "limit_reached": "Bạn đã đạt giới hạn {limit} từ bị cấm cho máy chủ này.\nHãy dùng `/bannedwords remove` hoặc `/bannedwords clear` để giải phóng.",
+      "add": {
+        "duplicate": "Từ '{word}' đã bị cấm.",
+        "success": "Từ '{word}' đã được thêm vào danh sách các từ bị cấm."
+      },
+      "remove": {
+        "missing": "Từ '{word}' không bị cấm.",
+        "success": "Từ '{word}' đã bị xóa khỏi danh sách các từ bị cấm."
+      },
+      "list": {
+        "empty": "Không tìm thấy từ bị cấm nào.",
+        "file_header": "Các Từ Bị Cấm:",
+        "file_item": "- {word}"
+      },
+      "clear": {
+        "empty": "Không tìm thấy từ bị cấm nào để xóa.",
+        "success": "Tất cả từ bị cấm đã được xóa."
+      },
+      "actions": {
+        "none": "Hiện không có hành động nào được cài đặt cho từ bị cấm.",
+        "header": "**Hành động hiện tại với từ bị cấm:**\n{actions}"
+      },
+      "enforcement": {
+        "strike_reason": "Tin nhắn chứa từ bị cấm",
+        "strike_source": "từ bị cấm",
+        "embed_title": "Phát Hiện Từ Bị Cấm",
+        "embed_description": "{mention}, tin nhắn của bạn đã bị xóa vì có chứa từ bị cấm."
+      }
+    }
+  }
+}
