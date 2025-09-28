@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "ترقية إلى الخدمة المتسارعة لاكتشاف أسرع للمحتوى المثير والاحتيال — /accelerated",
+        "guild_footer": "معرف النقابة: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "عضو انضم",
+        "description": "{mention} ({name}) انضم إلى الخادم.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "تم إنشاء الحساب",
+          "joined_at": "انضم عند"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "حساب بوت",
+          "user": "حساب المستخدم"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "تم إيقاف العضو مؤقتًا",
+        "title_removed": "تمت إزالة الإيقاف المؤقت",
+        "description_applied": "تم وضع {mention} ({name}) في توقيف مؤقت.",
+        "description_removed": "تم إزالة التوقيف المؤقت عن {mention} ({name}).",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "ينتهي",
+          "moderator": "المشرف",
+          "reason": "السبب"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "معرف المستخدم: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "تم طرد العضو",
+        "title_left": "غادر العضو",
+        "description_kicked": "تم طرد {mention} ({name}) من الخادم.",
+        "description_left": "غادر {mention} ({name}) الخادم.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "تم الطرد بواسطة",
+          "reason": "السبب"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "حساب بوت",
+          "user": "حساب المستخدم"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "تم حذف الرسالة",
+        "description_with_author": "**المؤلف:** {author_mention} ({author_name})\n**القناة:** {channel}\n",
+        "deleted_by": "**تم الحذف بواسطة:** {deleter}\n",
+        "content_label": "**المحتوى:**\n{content}",
+        "description_generic": "تم حذف رسالة في {channel}.",
+        "description_deleted_by": "\n**تم الحذف بواسطة:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "المرفقات ({count})",
+          "embeds": "تضمين {index}",
+          "stickers": "الملصقات ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[محتوى التضمين غير متاح]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "معرف المستخدم: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "تم تحرير الرسالة",
+        "description": "**المؤلف:** {author_mention} ({author_name})\n**القناة:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "قبل",
+          "after": "بعد"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "معرف المستخدم: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "تم حظر العضو",
+        "description": "تم حظر {mention} ({name}).",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "محظور بواسطة",
+          "reason": "السبب"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "معرف المستخدم: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "تم رفع الحظر عن العضو",
+        "description": "تم رفع الحظر عن {mention} ({name}).",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "رفع الحظر بواسطة",
+          "reason": "السبب"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "معرف المستخدم: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "تم تعيين القناة المراقبة إلى {channel}.",
+        "removed": "تمت إزالة القناة المراقبة.",
+        "not_set": "لم يتم تعيين قناة مراقبة.",
+        "current": "القناة المراقبة الحالية: {channel}",
+        "none": "لا يوجد قناة مراقبة حاليًا.",
+        "toggle": "تم {state} تسجيل {event}.",
+        "state_enabled": "ممكّن",
+        "state_disabled": "معطّل",
+        "list_heading": "**أحداث المراقبة:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
