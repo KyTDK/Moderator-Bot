@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-from dataclasses import replace
 from pathlib import Path
 from typing import Any, Optional
 
@@ -11,13 +10,7 @@ from discord.ext import commands, tasks
 
 from modules.post_stats.topgg_poster import start_topgg_poster
 from modules.utils import mysql
-from modules.i18n import (
-    CrowdinConfigurationError,
-    CrowdinSettings,
-    CrowdinTranslationService,
-    LocaleRepository,
-    Translator,
-)
+from modules.i18n import LocaleRepository, Translator
 
 _logger = logging.getLogger(__name__)
 
@@ -65,7 +58,6 @@ class ModeratorBot(commands.Bot):
         self._instance_heartbeat_seconds = instance_heartbeat_seconds
         self._log_cog_loads = log_cog_loads
         self._standby_login_performed = False
-        self._crowdin_service: CrowdinTranslationService | None = None
         self._locale_repository: LocaleRepository | None = None
         self._translator: Translator | None = None
         self._initialise_i18n()
@@ -91,24 +83,8 @@ class ModeratorBot(commands.Bot):
         fallback_locale = os.getenv("I18N_FALLBACK_LOCALE") or default_locale
         locales_override = os.getenv("I18N_LOCALES_DIR")
 
-        try:
-            settings = CrowdinSettings.from_env()
-        except CrowdinConfigurationError:
-            settings = None
-            _logger.info("Crowdin integration disabled; missing configuration.")
-        else:
-            if locales_override:
-                settings = replace(
-                    settings,
-                    locales_root=Path(locales_override).resolve(),
-                )
-            self._crowdin_service = CrowdinTranslationService(settings)
-
-        if self._crowdin_service is not None:
-            locales_root = self._crowdin_service.settings.locales_root
-        else:
-            base_root = locales_override or os.getenv("CROWDIN_LOCALES_DIR") or os.getenv("LOCALES_DIR") or "locales"
-            locales_root = Path(base_root).resolve()
+        base_root = locales_override or os.getenv("LOCALES_DIR") or "locales"
+        locales_root = Path(base_root).resolve()
 
         self._locale_repository = LocaleRepository(
             locales_root,
@@ -116,15 +92,7 @@ class ModeratorBot(commands.Bot):
             fallback_locale=fallback_locale,
         )
 
-        auto_sync = os.getenv("CROWDIN_SYNC_ON_STARTUP", "false").lower() in {"1", "true", "yes", "on"}
-        if auto_sync and self._crowdin_service is not None:
-            try:
-                self._locale_repository.refresh(self._crowdin_service)
-            except Exception:
-                _logger.exception("Failed to refresh translations from Crowdin on startup")
-                self._locale_repository.reload()
-        else:
-            self._locale_repository.ensure_loaded()
+        self._locale_repository.ensure_loaded()
 
         self._translator = Translator(self._locale_repository)
 
@@ -140,23 +108,15 @@ class ModeratorBot(commands.Bot):
             raise RuntimeError("Locale repository has not been initialised")
         return self._locale_repository
 
-    @property
-    def crowdin_service(self) -> CrowdinTranslationService | None:
-        return self._crowdin_service
-
     async def refresh_translations(self, *, fetch: bool = True) -> None:
         if self._locale_repository is None:
             _logger.warning("Translation refresh requested but no locale repository is configured")
             return
 
-        if fetch and self._crowdin_service is not None:
-            await self._locale_repository.refresh_async(self._crowdin_service)
-            _logger.info("Translations refreshed from Crowdin")
-        else:
-            if fetch and self._crowdin_service is None:
-                _logger.warning("Crowdin service unavailable; reloading translations from disk")
-            await self._locale_repository.reload_async()
-            _logger.info("Translations reloaded from disk")
+        if fetch:
+            _logger.info("Crowdin integration has been removed; reloading translations from disk")
+        await self._locale_repository.reload_async()
+        _logger.info("Translations reloaded from disk")
 
     def translate(
         self,
