@@ -1,8 +1,8 @@
 ﻿{
   "bot": {
     "welcome": {
-      "message": "👋 **Thanks for adding Moderator Bot!**\n\n🛠️ **Dashboard:** [Open Dashboard]({dash_url})\n\n**Quick start**\n• Run **`/help`** to see commands (try `/help nsfw`, `/help strikes`)\n• Use the **Dashboard** to configure thresholds, actions, and toggles\n\n**Works out of the box**\nAI moderation is enabled with sane defaults. You can fine-tune anything in the Dashboard.\n\n**Need help?**\nOpen the Dashboard above, or run **`/help`** for details and the support link.",
-      "button_label": "Open Dashboard"
+      "message": "👋 **모더레이터 봇을 추가해 주셔서 감사합니다!**\n\n🛠️ **대시보드:** [대시보드 열기]({dash_url})\n\n**빠른 시작**\n• 명령어를 보려면 **`/help`**를 실행하십시오 (예: `/help nsfw`, `/help strikes`)\n• **대시보드**를 사용하여 임계값, 동작 및 토글을 구성하십시오\n\n**기본 설정으로 즉시 작동**\nAI 모더레이션은 기본 설정으로 활성화되어 있습니다. 대시보드에서 모든 것을 세부 조정할 수 있습니다.\n\n**도움이 필요하신가요?**\n위에서 대시보드를 열거나, **`/help`**를 실행하여 세부 정보 및 지원 링크를 확인하십시오.",
+      "button_label": "대시보드 열기"
     }
   }
 }
