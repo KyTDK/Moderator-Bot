@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "当前没有设置NSFW动作。",
+        "heading": "**当前NSFW动作：**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "目前没有设置任何分类。",
+        "heading": "**当前NSFW分类：**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "阈值必须在0.0和1.0之间。",
+        "set": "NSFW检测阈值设置为{value:.2f}。",
+        "unset": "NSFW检测阈值未设置。",
+        "current": "当前NSFW检测阈值：{value:.2f}"
       }
     }
   }
