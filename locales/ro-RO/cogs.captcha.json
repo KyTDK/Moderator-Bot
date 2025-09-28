@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Această comandă poate fi utilizată doar pe un server.",
+        "wrong_guild": "Vă rugăm să alegeți un membru din acest server.",
+        "is_bot": "Boții nu necesită verificare captcha."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "A apărut o eroare neașteptată în timpul actualizării încorporării captcha.",
+        "updated": "Verificarea captcha încorporată a fost actualizată.",
+        "missing_delivery": "Livrarea încorporată a captcha nu este configurată pentru acest server."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Cererea de verificare a fost trimisă.",
+        "failure": "Nu s-au putut trimite instrucțiunile de verificare.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Acest membru nu face parte dintr-o breaslă.",
+        "not_enabled": "Verificarea captcha nu este activată pentru acest server.",
+        "not_configured": "Verificarea captcha nu este configurată.",
+        "embed_success": "Instrucțiunile de verificare postate în canalul configurat.",
+        "dm_success": "Mesaj de verificare trimis membrului.",
+        "failure": "Nu s-au putut trimite instrucțiunile de verificare; vă rugăm să verificați configurația."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Atribuire roluri pre-captcha"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Verificarea captcha a expirat."
       }
     }
   }
