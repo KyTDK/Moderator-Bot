@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "Встроенный список запрещённых слов **{state}**.",
+        "updated": "Встроенный список запрещённых слов **{state}**.",
+        "state_enabled": "включён",
+        "state_disabled": "выключён"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Вы достигли лимита в {limit} запрещённых слов для этого сервера.\nИспользуйте `/bannedwords remove` или `/bannedwords clear`, чтобы освободить место.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "Слово '{word}' уже запрещено.",
+        "success": "Слово '{word}' добавлено в список запрещённых слов."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "Слово '{word}' не запрещено.",
+        "success": "Слово '{word}' удалено из списка запрещённых слов."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Запрещённые слова не найдены.",
+        "file_header": "Запрещённые слова:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Запрещённые слова для удаления не найдены.",
+        "success": "Все запрещённые слова были удалены."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Действия для запрещённых слов не установлены.",
+        "header": "**Текущие действия для запрещённых слов:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Сообщение содержало запрещённое слово",
+        "strike_source": "запрещённое слово",
+        "embed_title": "Обнаружено запрещённое слово",
+        "embed_description": "{mention}, ваше сообщение было удалено, так как содержало запрещённое слово."
       }
     }
   }
