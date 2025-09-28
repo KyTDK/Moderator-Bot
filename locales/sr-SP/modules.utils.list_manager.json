@@ -3,12 +3,12 @@
     "utils": {
       "list_manager": {
         "add": {
-          "duplicate": "`{item}` is already in the list.",
-          "success": "Added `{item}` to the list."
+          "duplicate": "`{item}` је већ на листи.",
+          "success": "`{item}` је додат на листу."
         },
         "remove": {
-          "missing": "`{item}` is not in the list.",
-          "success": "Removed `{item}` from the list."
+          "missing": "`{item}` није на листи.",
+          "success": "`{item}` је уклоњен са листе."
         }
       }
     }
