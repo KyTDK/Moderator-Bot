@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} nu are restricții de vârstă. Te rog să alegi un canal NSFW.",
+      "missing_permissions": "Îmi lipsesc următoarele permisiuni în {channel}: {permissions}",
+      "set_success": "Jurnalele de tip {log_type} vor fi postate în {channel}.",
+      "unset_success": "Canalul de jurnal {log_type} a fost dezactivat.",
+      "invalid_guild": "Eroare: Format invalid pentru ID-ul guild-ului.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**Canale de jurnal:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "Neconfigurat"
       }
     }
   }
