@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "Quản lý đăng ký Tăng tốc của bạn (Premium).",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "Trạng thái Tăng tốc",
+        "footer_base": "Bot Điều hành Tăng tốc",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "Cấp",
+          "status": "Trạng thái",
+          "next_billing": "Thanh toán tiếp theo"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "Máy chủ này chưa đăng ký **Tăng tốc**. Đăng ký ngay với `/accelerated subscribe`.",
+          "tier_value": "`Không có`",
+          "status_value": "`Chưa Đăng ký`",
+          "next_billing_value": "Bắt đầu với `/accelerated subscribe`"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`Không có gia hạn nào được lên lịch`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - Chu kỳ thanh toán tiếp theo",
+          "checked": "{base} - Trạng thái đã xác nhận"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "Hoạt động",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "Tăng tốc đang hoạt động."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "Hoạt động - Sắp hủy",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "Tăng tốc sẽ duy trì hoạt động cho đến hết chu kỳ thanh toán này."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "Các đặc quyền Tăng tốc đang tạm ngưng. Khởi động lại bất cứ lúc nào với `/accelerated subscribe`."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 Guild của bạn đã có một đăng ký **Tăng tốc** đang hoạt động!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 Nâng cấp lên Bot Điều hành Tăng tốc!",
+          "description": "**Tận hưởng phát hiện NSFW & lừa đảo nhanh chóng, hàng đợi ưu tiên, và quyền truy cập sớm vào các tính năng mới!**\n\nSau tháng miễn phí của bạn, tiếp tục chỉ với **5 đô la/tháng** để giữ cho máy chủ của bạn an toàn hơn, nhanh hơn.",
+          "footer": "Bot Điều hành 🚀 Gói Tăng tốc",
+          "button_label": "🚀 Đăng ký ngay"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "Các đặc quyền Tăng tốc",
+        "description": "Nâng cấp trải nghiệm của bạn với Bot Điều hành Tăng tốc:\n• Quét kiểm duyệt tự động được trang bị AI để phát hiện và hành động tự động trên các tin nhắn vi phạm quy tắc\n• Quét nhiều khung hình hơn mỗi video để phát hiện NSFW sâu hơn\n• Phát hiện nhanh chóng đối với NSFW & Lừa đảo\n• Quyền truy cập sớm vào các tính năng mới\n• Hỗ trợ sự phát triển của bot"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "Bạn có thể hủy đăng ký PayPal của mình bất kỳ lúc nào qua **Tài khoản PayPal → Cài Đặt → Thanh Toán → Quản lý Thanh Toán Tự động**.\nQuyền truy cập premium của bạn sẽ kéo dài cho đến hết chu kỳ thanh toán."
       }
     }
   }
