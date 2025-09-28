@@ -100,15 +100,20 @@ async def resolve_guild_plan(guild_id: int) -> str:
     plan = tier_to_plan(tier, default=PLAN_CORE)
     return plan or PLAN_CORE
 
-async def add_guild(guild_id: int, name: str, owner_id: int):
+async def add_guild(
+    guild_id: int, name: str, owner_id: int, locale: Optional[str]
+):
     """Add a new guild to the database."""
     await execute_query(
         """
-        INSERT INTO guilds (guild_id, name, owner_id)
-        VALUES (%s, %s, %s)
-        ON DUPLICATE KEY UPDATE name = VALUES(name), owner_id = VALUES(owner_id)
+        INSERT INTO guilds (guild_id, name, owner_id, locale)
+        VALUES (%s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            name = VALUES(name),
+            owner_id = VALUES(owner_id),
+            locale = VALUES(locale)
         """,
-        (guild_id, name, owner_id),
+        (guild_id, name, owner_id, locale),
     )
 
 

@@ -66,6 +66,7 @@ class ModeratorBot(commands.Bot):
         self._locale_repository: LocaleRepository | None = None
         self._translator: Translator | None = None
         self._guild_locale_overrides: dict[int, str | None] = {}
+        self._guild_locales: dict[int, str | None] = {}
         self._locale_settings_listener = self._handle_locale_setting_update
         self._initialise_i18n()
         mysql.add_settings_listener(self._locale_settings_listener)
@@ -201,15 +202,16 @@ class ModeratorBot(commands.Bot):
         if guild_override:
             return guild_override
 
-        guild_locale = getattr(interaction, "guild_locale", None)
-        normalized = self._normalise_locale(guild_locale)
-        if normalized:
-            return normalized
+        stored_locale = self._get_stored_guild_locale_from_candidate(interaction)
+        if stored_locale:
+            return stored_locale
 
         guild = getattr(interaction, "guild", None)
         if guild is not None:
             preferred = getattr(guild, "preferred_locale", None)
-            return self._normalise_locale(preferred)
+            stored = self._store_guild_locale(guild.id, preferred)
+            if stored:
+                return stored
 
         return self._normalise_locale(getattr(interaction, "locale", None))
 
@@ -220,12 +222,16 @@ class ModeratorBot(commands.Bot):
         if guild_override:
             return guild_override
 
+        stored_locale = self._get_stored_guild_locale_from_candidate(ctx)
+        if stored_locale:
+            return stored_locale
+
         guild = getattr(ctx, "guild", None)
         if guild is None:
             return None
 
         preferred = getattr(guild, "preferred_locale", None)
-        return self._normalise_locale(preferred)
+        return self._store_guild_locale(guild.id, preferred)
 
     def _infer_locale_from_event(
         self, _event_name: str, args: tuple[Any, ...], kwargs: dict[str, Any]
@@ -245,15 +251,14 @@ class ModeratorBot(commands.Bot):
         if override:
             return override
 
-        guild_locale = getattr(candidate, "guild_locale", None)
-        normalized = self._normalise_locale(guild_locale)
-        if normalized:
-            return normalized
+        stored_locale = self._get_stored_guild_locale_from_candidate(candidate)
+        if stored_locale:
+            return stored_locale
 
         guild = getattr(candidate, "guild", None)
         if guild is not None:
             preferred = getattr(guild, "preferred_locale", None)
-            normalized = self._normalise_locale(preferred)
+            normalized = self._store_guild_locale(guild.id, preferred)
             if normalized:
                 return normalized
 
@@ -289,6 +294,20 @@ class ModeratorBot(commands.Bot):
 
     def _normalise_locale(self, locale: Any) -> str | None:
         return normalise_locale(locale)
+
+    def _store_guild_locale(self, guild_id: int, locale: Any) -> str | None:
+        normalized = self._normalise_locale(locale)
+        self._guild_locales[guild_id] = normalized
+        return normalized
+
+    def _get_stored_guild_locale(self, guild_id: int) -> str | None:
+        return self._guild_locales.get(guild_id)
+
+    def _get_stored_guild_locale_from_candidate(self, candidate: Any) -> str | None:
+        guild_id = self._extract_guild_id(candidate)
+        if guild_id is None:
+            return None
+        return self._get_stored_guild_locale(guild_id)
 
     async def refresh_guild_locale_override(self, guild_id: int) -> None:
         try:
@@ -385,7 +404,11 @@ class ModeratorBot(commands.Bot):
 
         for guild in self.guilds:
             try:
-                await mysql.add_guild(guild.id, guild.name, guild.owner_id)
+                preferred = getattr(guild, "preferred_locale", None)
+                normalized_locale = self._store_guild_locale(guild.id, preferred)
+                await mysql.add_guild(
+                    guild.id, guild.name, guild.owner_id, normalized_locale
+                )
                 await self.refresh_guild_locale_override(guild.id)
             except Exception as exc:
                 print(f"[ERROR] Failed to sync guild {guild.id}: {exc}")
@@ -406,7 +429,9 @@ class ModeratorBot(commands.Bot):
         await self.push_status("connecting")
 
     async def on_guild_join(self, guild: discord.Guild) -> None:  # type: ignore[override]
-        await mysql.add_guild(guild.id, guild.name, guild.owner_id)
+        preferred = getattr(guild, "preferred_locale", None)
+        normalized_locale = self._store_guild_locale(guild.id, preferred)
+        await mysql.add_guild(guild.id, guild.name, guild.owner_id, normalized_locale)
         await self.refresh_guild_locale_override(guild.id)
         dash_url = f"https://modbot.neomechanical.com/dashboard/{guild.id}"
 
@@ -451,6 +476,7 @@ class ModeratorBot(commands.Bot):
 
     async def on_guild_remove(self, guild: discord.Guild) -> None:  # type: ignore[override]
         await mysql.remove_guild(guild.id)
+        self._guild_locales.pop(guild.id, None)
 
     async def _load_extensions(self) -> None:
         try:
