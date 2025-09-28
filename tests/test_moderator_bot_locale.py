@@ -14,6 +14,7 @@ os.environ.setdefault(
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from modules.config.settings_schema import SETTINGS_SCHEMA
+from modules.i18n.locale_utils import list_supported_locales
 from modules.core.moderator_bot import ModeratorBot, _current_locale
 from modules.utils import mysql
 
@@ -145,10 +146,20 @@ def test_locale_context_manager_restores_previous_locale(bot: ModeratorBot) -> N
     assert _current_locale.get() is None
 
 
-def test_locale_setting_validator_accepts_supported_locale() -> None:
-    asyncio.run(SETTINGS_SCHEMA["locale"].validate("fr-FR"))
+@pytest.mark.parametrize("candidate", ["fr-FR", "vi-VN"])
+def test_locale_setting_validator_accepts_supported_locale(candidate: str) -> None:
+    asyncio.run(SETTINGS_SCHEMA["locale"].validate(candidate))
 
 
 def test_locale_setting_validator_rejects_unknown_locale() -> None:
     with pytest.raises(ValueError):
         asyncio.run(SETTINGS_SCHEMA["locale"].validate("zz-ZZ"))
+
+
+def test_locale_setting_validator_rejects_alias_locales() -> None:
+    with pytest.raises(ValueError):
+        asyncio.run(SETTINGS_SCHEMA["locale"].validate("vi"))
+
+
+def test_locale_setting_choices_list_supported_locales() -> None:
+    assert SETTINGS_SCHEMA["locale"].choices == list_supported_locales()
