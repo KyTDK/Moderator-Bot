@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "內建髒話清單是 **{state}**。",
+        "updated": "內建髒話清單 **{state}**。",
+        "state_enabled": "啟用",
+        "state_disabled": "停用"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "您已達到此伺服器的髒話限制 {limit}。\n使用 `/bannedwords remove` 或 `/bannedwords clear` 來釋放空間。",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "字詞 '{word}' 已經被禁止。",
+        "success": "字詞 '{word}' 已被加入禁止字詞清單。"
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "字詞 '{word}' 沒有被禁止。",
+        "success": "字詞 '{word}' 已從禁止字詞清單移除。"
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "未找到禁止字詞。",
+        "file_header": "禁止字詞：",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "未找到可以清除的禁止字詞。",
+        "success": "所有禁止字詞已清除。"
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "目前沒有對禁止字詞設定任何操作。",
+        "header": "**目前的禁止字詞操作：**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "信息包含禁止字詞",
+        "strike_source": "禁止字詞",
+        "embed_title": "偵測到禁止字詞",
+        "embed_description": "{mention}，您的信息已被刪除，因為它包含禁止字詞。"
       }
     }
   }
