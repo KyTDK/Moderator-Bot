@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "Действие должно быть одним из: {options}",
+          "duration_not_allowed": "Продолжительность не разрешена для этой команды.",
+          "duration_required": "Вы должны указать длительность (например, `30m`, `1d`, `2w`).",
+          "duration_invalid": "Неправильный формат продолжительности. Используйте `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "Вы не можете прикрепить роль к действию с ограничением по времени.",
+          "role_required": "Необходимо указать роль для `{action}`.",
+          "duration_not_supported": "`{action}` не поддерживает продолжительность.",
+          "role_not_supported": "`{action}` не использует роль.",
+          "warn_message_required": "Вы должны предоставить предупреждающее сообщение.",
+          "warn_role_disallowed": "Вы не можете прикрепить роль к действию предупреждения."
         }
       }
     }
