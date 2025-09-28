@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "Управљање вашем убрзаном (премиум) претплатом.",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "Убрзани статус",
+        "footer_base": "Убрзани модераторски бот",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "Ниво",
+          "status": "Статус",
+          "next_billing": "Следеће наплате"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "Овај сервер још увек није пријављен у **Accelerated**. Претплатите се сада са `/accelerated subscribe`.",
+          "tier_value": "`Ништа`",
+          "status_value": "`Није претплаћен`",
+          "next_billing_value": "Почните план са `/accelerated subscribe`."
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`Није заказана наредна наплата`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - Наредни циклус наплате",
+          "checked": "{base} - Статус проверен"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "Активан",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "Убрзање је активно."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "Активан - Ускоро се отказује",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "Убрзање ће остати активно до краја овог циклуса наплате."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "Бенефиције убрзања су паузиране. Поново покрените било када са `/accelerated subscribe`."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 Ваша гилда већ има активну **Accelerated** претплату!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 Надоградите на Ubrzani модераторски бот!",
+          "description": "**Уживајте у муњевито брзој NSFW & детекцији превара, приоритетним редовима и раном приступу новим функцијама!**\\n\\nНакон вашег бесплатног месеца, наставите за само **$5/месечно** да ваш сервер буде безбеднији и бржи.",
+          "footer": "Модераторски бот 🚀 Убрзани план",
+          "button_label": "🚀 Претплатите се сада"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "Бенефиције убрзања",
+        "description": "Надоградите ваше искуство са модераторским ботом убрзања:\\n• Модерација на бази АИ за аутоматску детекцију и реаговање на поруке које крше правила\\n• Скен више фрејмова по видеу за детаљнију NSFW детекцију\\n• Приоритетна NSFW & детекција превара\\n• Рани приступ новим функцијама\\n• Подржава развој бота"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "Можете отказати вашу PayPal претплату било када путем вашег **PayPal налога → Поставке → Плаћања → Управљај аутоматским плаћањима**.\\nВаш премиум приступ ће трајати до краја циклуса наплате."
       }
     }
   }
