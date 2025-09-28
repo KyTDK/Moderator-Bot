@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
+        "upgrade_footer": "Nâng cấp lên Tăng tốc để phát hiện nhanh hơn NSFW & lừa đảo — /accelerated",
         "guild_footer": "Guild ID: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Thành viên đã tham gia",
+        "description": "{mention} ({name}) đã tham gia máy chủ.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Tài khoản đã được tạo",
+          "joined_at": "Tham gia vào lúc"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Tài khoản bot",
+          "user": "Tài khoản người dùng"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Thành viên bị tạm dừng",
+        "title_removed": "Đã xóa Tạm Ngừng",
+        "description_applied": "{mention} ({name}) đã bị đặt vào chế độ tạm dừng.",
+        "description_removed": "{mention} ({name}) đã có một thời gian tạm dừng.",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "Kết thúc",
+          "moderator": "Người điều hành",
+          "reason": "Lý do"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID người dùng: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Thành viên bị đuổi",
+        "title_left": "Thành viên đã rời đi",
+        "description_kicked": "{mention} ({name}) đã bị đuổi khỏi máy chủ.",
+        "description_left": "{mention} ({name}) đã rời khỏi máy chủ.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Bị đuổi bởi",
+          "reason": "Lý do"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Tài khoản bot",
+          "user": "Tài khoản người dùng"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Tin nhắn đã xoá",
+        "description_with_author": "**Tác giả:** {author_mention} ({author_name})\n**Kênh:** {channel}\n",
+        "deleted_by": "**Người xoá:** {deleter}\n",
+        "content_label": "**Nội dung:**\n{content}",
+        "description_generic": "Một tin nhắn đã bị xoá trong {channel}.",
+        "description_deleted_by": "\n**Người xoá:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Tệp đính kèm ({count})",
+          "embeds": "Đính kèm {index}",
+          "stickers": "Nhãn dán ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Nội dung nhúng không có sẵn]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "ID người dùng: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Tin nhắn đã chỉnh sửa",
+        "description": "**Tác giả:** {author_mention} ({author_name})\n**Kênh:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Trước",
+          "after": "Sau"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID người dùng: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Thành viên đã bị cấm",
+        "description": "{mention} ({name}) đã bị cấm.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Bị cấm bởi",
+          "reason": "Lý do"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID người dùng: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Thành viên đã được bỏ cấm",
+        "description": "{mention} ({name}) đã được bỏ cấm.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Bỏ cấm bởi",
+          "reason": "Lý do"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID người dùng: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Kênh giám sát được thiết lập thành {channel}.",
+        "removed": "Kênh giám sát đã bị xoá.",
+        "not_set": "Không có kênh giám sát được thiết lập.",
+        "current": "Kênh giám sát hiện tại: {channel}",
+        "none": "Hiện không có kênh giám sát nào được thiết lập.",
+        "toggle": "Đang ghi nhật ký cho `{event}` đã được {state}.",
+        "state_enabled": "bật",
+        "state_disabled": "tắt",
+        "list_heading": "**Sự kiện giám sát:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
