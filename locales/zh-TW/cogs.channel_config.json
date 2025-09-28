@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} 不是年齡限制的頻道。請選擇一個 NSFW 頻道。",
+      "missing_permissions": "在 {channel} 我缺少以下權限：{permissions}",
+      "set_success": "{log_type} 日誌將發佈在 {channel}。",
+      "unset_success": "{log_type} 日誌頻道已取消設定。",
+      "invalid_guild": "錯誤：無效的公會 ID 格式。",
       "show": {
-        "heading": "**Log Channels:**",
-        "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "heading": "**日誌頻道：**",
+        "entry": "{name}：{value}",
+        "not_set": "未設定"
       }
     }
   }
