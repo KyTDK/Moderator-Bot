@@ -3,15 +3,15 @@
     "utils": {
       "event_manager": {
         "add": {
-          "duplicate": "`{action}` is already set for `{event}`.",
-          "success": "Added `{action}` to `{event}`."
+          "duplicate": "`{action}` már be van állítva `{event}` számára.",
+          "success": "`{action}` hozzáadva `{event}` nevű eseményhez."
         },
         "remove": {
-          "missing": "`{action}` is not set for `{event}`.",
-          "success": "Removed `{action}` from `{event}`."
+          "missing": "`{action}` nincs beállítva `{event}` számára.",
+          "success": "`{action}` eltávolítva a `{event}` nevű eseményből."
         },
         "clear": {
-          "success": "All adaptive events have been cleared."
+          "success": "Az összes adaptív esemény törölve lett."
         }
       }
     }
