@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**可用设置：**\\n",
+        "entry": "**{name}**: {description} (类型：{type})",
+        "not_found": "找不到关于 `{command}` 的帮助。"
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "重置所有设置为默认值。",
+        "already": "您已经在使用默认设置。"
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**无效的设置名称。**",
+        "requires_plan": "此设置需要 {requirement}。使用 `/accelerated subscribe` 升级。",
+        "missing_boolean": "**`{name}` 需要布尔值。使用 `value` 选项。**",
+        "missing_integer": "**`{name}` 需要整数。使用 `value` 选项。**",
+        "missing_duration": "**`{name}` 需要持续时间（例如30m, 1d）。**",
+        "missing_channel": "**`{name}` 需要一个频道。使用 `channel` 选项。**",
+        "missing_role": "**`{name}` 需要一个角色。使用 `role` 选项。**",
+        "missing_channel_add": "**`{name}` 需要添加一个频道。使用 `channel` 选项。**",
+        "missing_role_add": "**`{name}` 需要添加一个角色。使用 `role` 选项。**",
         "boolean_values": {
           "true": [
-            "true",
+            "真",
             "1",
-            "yes"
+            "是"
           ],
           "false": [
-            "false",
+            "假",
             "0",
-            "no"
+            "否"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` 需要布尔值。**",
+        "unknown_type": "设置解析为值，因为类型未知",
+        "success": "已将 `{name}` 更新为 `{value}`。",
+        "unexpected": "发生意外错误：`{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "无效的设置名称。",
+        "not_set": "`{name}` 未设置。默认值：`{default}`",
+        "private": "出于隐私考虑，此设置被隐藏。",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` 当前设置为：**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "无效的设置名称。",
+        "not_set": "`{name}` 未设置。",
+        "channel_required": "您必须指定要移除的频道。",
+        "channel_missing": "{channel} 不在 `{name}` 中。",
+        "role_required": "您必须指定要移除的角色。",
+        "role_missing": "{role} 不在 `{name}` 中。",
+        "removed_channel": "已将 {channel} 从 `{name}` 移除。",
+        "removed_role": "已将 {role} 从 `{name}` 移除。",
+        "removed_setting": "已移除设置 `{name}`。现使用默认值。",
+        "unexpected": "发生意外错误：`{error}`"
       }
     }
   }
