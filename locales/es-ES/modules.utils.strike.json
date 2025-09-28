@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "La acción debe ser una de las siguientes: {options}",
+          "duration_not_allowed": "No se permite la duración para este comando.",
+          "duration_required": "Debe proporcionar una duración (p. ej., `30m`, `1d`, `2w`).",
+          "duration_invalid": "Formato de duración inválido. Utilice `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "No puede adjuntar un rol a una acción de tiempo de espera.",
+          "role_required": "Debe especificar un rol para `{action}`.",
+          "duration_not_supported": "`{action}` no admite una duración.",
+          "role_not_supported": "`{action}` no utiliza un rol.",
+          "warn_message_required": "Debe proporcionar un mensaje de advertencia.",
+          "warn_role_disallowed": "No puede adjuntar un rol a una acción de advertencia."
         }
       }
     }
