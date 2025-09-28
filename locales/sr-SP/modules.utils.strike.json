@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "Акција мора бити једна од: {options}",
+          "duration_not_allowed": "Трајање није дозвољено за ову команду.",
+          "duration_required": "Морате навести трајање (нпр. `30м`, `1д`, `2н`).",
+          "duration_invalid": "Неисправан формат трајања. Користите `20с`, `30м`, `2х`, `5д`, `2н`, `1мј`, `1г`.",
+          "timeout_role_disallowed": "Не можете доделити улогу акцији са временским ограничењем.",
+          "role_required": "Морате навести улогу за `{action}`.",
+          "duration_not_supported": "`{action}` не подржава трајање.",
+          "role_not_supported": "`{action}` не користи улогу.",
+          "warn_message_required": "Морате обезбедити поруку упозорења.",
+          "warn_role_disallowed": "Не можете доделити улогу акцији упозорења."
         }
       }
     }
