@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "Tällä palvelimella ei ole Accelerated-tilausta. Käytä `/accelerated subscribe` aloittaaksesi premium-suunnitelmasi."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "Säännöt päivitetty.",
+        "none": "Ei ole asetettu moderointisääntöjä.",
+        "heading": "**Moderointisäännöt:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "Aseta ensin moderointisäännöt komennolla `/ai_mod rules_set`.",
+        "enabled": "Autonominen moderointi on **otettu käyttöön**.",
+        "disabled": "Autonominen moderointi on **poistettu käytöstä**.",
+        "mode_set": "Tila on asetettu tilaan **{mode}**.",
+        "status": "Autonominen moderointi on **{state}**.\nNykyinen tila on **{mode}**.",
+        "status_active": "\nAktiivinen alitila: **{active}**",
+        "state_enabled": "käytössä",
+        "state_disabled": "poistettu käytöstä",
+        "state_unknown": "tuntematon"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "Ei ole asetettu toimintoja.",
+        "heading": "**Nykyiset toiminnot:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "Tämä tapahtumatyyppi vaatii roolin.",
+        "threshold_required": "Tämä tapahtumatyyppi vaatii kynnyksen.",
+        "threshold_range": "Kynnysarvon on oltava arvo väliltä 0 ja 1.",
+        "time_range_required": "Tämä tapahtumatyyppi vaatii aikavälin (esim. 08:00-20:00).",
+        "error": "Tapahtuman asettamisessa tapahtui virhe: {error}",
+        "cleared": "Kaikki adaptiiviset tapahtumat on poistettu.",
+        "none": "Ei ole asetettu adaptiivisia tapahtumia.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[virheellinen rooli: {value}]",
+        "detail_invalid": "[virheellinen: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "Adaptiivinen moderointitila ei ole käytössä. Käytä `/ai_mod set_mode` ottaaksesi sen käyttöön."
     }
   }
 }
