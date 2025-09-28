@@ -97,14 +97,35 @@ class LocaleRepository:
                 payload = self._read_json(entry)
                 if payload is not None:
                     cache[locale_code] = payload
+                    logger.debug(
+                        "Loaded translation file %s for locale %s with %d top-level keys",
+                        entry,
+                        locale_code,
+                        len(payload),
+                    )
             elif entry.is_dir():
                 locale_code = entry.name
                 locale_data: dict[str, Any] = {}
+                loaded_files: list[Path] = []
                 for json_path in sorted(entry.rglob("*.json")):
                     payload = self._read_json(json_path)
                     if payload is not None:
                         locale_data = self._deep_merge(locale_data, payload)
+                        loaded_files.append(json_path)
+                        logger.debug(
+                            "Merged translation file %s into locale %s with %d top-level keys",
+                            json_path,
+                            locale_code,
+                            len(payload),
+                        )
                 cache[locale_code] = locale_data
+                if loaded_files:
+                    logger.debug(
+                        "Locale %s aggregated from %d translation files: %s",
+                        locale_code,
+                        len(loaded_files),
+                        ", ".join(str(path) for path in loaded_files),
+                    )
 
         return cache
 
