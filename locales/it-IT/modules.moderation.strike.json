@@ -50,15 +50,7 @@
           "reason": "**Motivo:** {reason}",
           "expires": "**Scadenza:** {expiry}",
           "issued_by": "Rilasciato da",
-          "expiry_never": "Mai",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Mai"
         },
         "errors": {
           "too_many_strikes": "Non puoi assegnare a uno stesso giocatore più di 100 strike. Usa `/strikes clear <user>` per azzerare i loro strike."
