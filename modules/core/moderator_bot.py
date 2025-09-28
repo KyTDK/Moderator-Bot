@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 import os
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, Optional
 
@@ -11,6 +13,60 @@ from discord.ext import commands, tasks
 from modules.post_stats.topgg_poster import start_topgg_poster
 from modules.utils import mysql
 from modules.i18n import LocaleRepository, Translator
+
+_current_locale: ContextVar[str | None] = ContextVar("moderator_bot_locale", default=None)
+
+SUPPORTED_LOCALE_ALIASES: dict[str, str] = {
+    "bg": "bg",
+    "cs": "cs",
+    "da": "da",
+    "de": "de",
+    "de-de": "de",
+    "el": "el",
+    "es": "es",
+    "es-es": "es",
+    "es-419": "es",
+    "fi": "fi",
+    "fr": "fr",
+    "fr-fr": "fr",
+    "hi": "hi",
+    "hr": "hr",
+    "hu": "hu",
+    "id": "id",
+    "it": "it",
+    "ja": "ja",
+    "ko": "ko",
+    "lt": "lt",
+    "nl": "nl",
+    "no": "no",
+    "pl": "pl",
+    "pt": "pt",
+    "pt-pt": "pt",
+    "pt-br": "pt-BR",
+    "ro": "ro",
+    "ru": "ru",
+    "sk": "sk",
+    "sr": "sr",
+    "sv": "sv-SE",
+    "sv-se": "sv-SE",
+    "th": "th",
+    "tr": "tr",
+    "uk": "uk",
+    "vi": "vi",
+    "zh": "zh-CN",
+    "zh-cn": "zh-CN",
+    "zh-tw": "zh-TW",
+    "zh-hk": "zh-TW",
+    "en": "en",
+    "en-us": "en",
+    "en-gb": "en",
+    "en-ca": "en",
+    "en-au": "en",
+    "en-nz": "en",
+    "en-ie": "en",
+    "en-in": "en",
+    "en-za": "en",
+}
 
 _logger = logging.getLogger(__name__)
 
@@ -60,7 +116,10 @@ class ModeratorBot(commands.Bot):
         self._standby_login_performed = False
         self._locale_repository: LocaleRepository | None = None
         self._translator: Translator | None = None
+        self._guild_locale_overrides: dict[int, str | None] = {}
+        self._locale_settings_listener = self._handle_locale_setting_update
         self._initialise_i18n()
+        mysql.add_settings_listener(self._locale_settings_listener)
 
         if self._heartbeat_seconds != 60:
             try:
@@ -118,6 +177,14 @@ class ModeratorBot(commands.Bot):
         await self._locale_repository.reload_async()
         _logger.info("Translations reloaded from disk")
 
+    def dispatch(self, event_name: str, /, *args: Any, **kwargs: Any) -> None:
+        locale = self._infer_locale_from_event(event_name, args, kwargs)
+        token = _current_locale.set(locale)
+        try:
+            super().dispatch(event_name, *args, **kwargs)
+        finally:
+            _current_locale.reset(token)
+
     def translate(
         self,
         key: str,
@@ -129,12 +196,164 @@ class ModeratorBot(commands.Bot):
         translator = self._translator
         if translator is None:
             return fallback if fallback is not None else key
+        if locale is None:
+            locale = _current_locale.get()
+        else:
+            locale = self._normalise_locale(locale)
         return translator.translate(
             key,
             locale=locale,
             placeholders=placeholders,
             fallback=fallback,
         )
+
+    @contextmanager
+    def locale_context(self, locale: str | None):
+        normalized = self._normalise_locale(locale)
+        token = _current_locale.set(normalized)
+        try:
+            yield
+        finally:
+            _current_locale.reset(token)
+
+    async def on_interaction(self, interaction: discord.Interaction) -> None:
+        locale = self._extract_locale_from_interaction(interaction)
+        token = _current_locale.set(locale)
+        try:
+            await super().on_interaction(interaction)
+        finally:
+            _current_locale.reset(token)
+
+    async def invoke(self, ctx: commands.Context[Any]) -> None:  # type: ignore[override]
+        locale = self._extract_locale_from_context(ctx)
+        token = _current_locale.set(locale)
+        try:
+            await super().invoke(ctx)
+        finally:
+            _current_locale.reset(token)
+
+    def _extract_locale_from_interaction(
+        self, interaction: discord.Interaction
+    ) -> str | None:
+        guild_override = self._get_guild_locale_override_from_candidate(interaction)
+        if guild_override:
+            return guild_override
+
+        guild_locale = getattr(interaction, "guild_locale", None)
+        normalized = self._normalise_locale(guild_locale)
+        if normalized:
+            return normalized
+
+        guild = getattr(interaction, "guild", None)
+        if guild is not None:
+            preferred = getattr(guild, "preferred_locale", None)
+            return self._normalise_locale(preferred)
+
+        return self._normalise_locale(getattr(interaction, "locale", None))
+
+    def _extract_locale_from_context(
+        self, ctx: commands.Context[Any]
+    ) -> str | None:
+        guild_override = self._get_guild_locale_override_from_candidate(ctx)
+        if guild_override:
+            return guild_override
+
+        guild = getattr(ctx, "guild", None)
+        if guild is None:
+            return None
+
+        preferred = getattr(guild, "preferred_locale", None)
+        return self._normalise_locale(preferred)
+
+    def _infer_locale_from_event(
+        self, _event_name: str, args: tuple[Any, ...], kwargs: dict[str, Any]
+    ) -> str | None:
+        for candidate in (*args, *kwargs.values()):
+            locale = self._extract_locale_from_event_object(candidate)
+            if locale:
+                return locale
+
+        return None
+
+    def _extract_locale_from_event_object(self, candidate: Any) -> str | None:
+        if candidate is None:
+            return None
+
+        override = self._get_guild_locale_override_from_candidate(candidate)
+        if override:
+            return override
+
+        guild_locale = getattr(candidate, "guild_locale", None)
+        normalized = self._normalise_locale(guild_locale)
+        if normalized:
+            return normalized
+
+        guild = getattr(candidate, "guild", None)
+        if guild is not None:
+            preferred = getattr(guild, "preferred_locale", None)
+            normalized = self._normalise_locale(preferred)
+            if normalized:
+                return normalized
+
+        direct_locale = getattr(candidate, "locale", None)
+        return self._normalise_locale(direct_locale)
+
+    @staticmethod
+    def _extract_guild_id(candidate: Any) -> int | None:
+        guild = getattr(candidate, "guild", None)
+        if guild is not None:
+            guild_id = getattr(guild, "id", None)
+            if guild_id is not None:
+                try:
+                    return int(guild_id)
+                except (TypeError, ValueError):
+                    return None
+        guild_id = getattr(candidate, "guild_id", None)
+        if guild_id is not None:
+            try:
+                return int(guild_id)
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    def _get_guild_locale_override_from_candidate(self, candidate: Any) -> str | None:
+        guild_id = self._extract_guild_id(candidate)
+        if guild_id is None:
+            return None
+        override = self._guild_locale_overrides.get(guild_id)
+        if override:
+            return override
+        return None
+
+    def _normalise_locale(self, locale: Any) -> str | None:
+        if locale is None:
+            return None
+        if isinstance(locale, discord.Locale):
+            raw = locale.value
+        else:
+            raw = str(locale)
+        normalized = raw.strip().replace("_", "-")
+        if not normalized:
+            return None
+        mapped = SUPPORTED_LOCALE_ALIASES.get(normalized.lower())
+        return mapped
+
+    async def refresh_guild_locale_override(self, guild_id: int) -> None:
+        try:
+            override = await mysql.get_settings(guild_id, "locale")
+        except Exception:
+            _logger.exception("Failed to load locale override for guild %s", guild_id)
+            return
+        normalized = self._normalise_locale(override)
+        self._guild_locale_overrides[guild_id] = normalized
+
+    def _handle_locale_setting_update(
+        self, guild_id: int, key: str, value: Any
+    ) -> None:
+        if key != "locale":
+            return
+        normalized = self._normalise_locale(value)
+        self._guild_locale_overrides[guild_id] = normalized
 
     def set_shard_assignment(self, shard_assignment: mysql.ShardAssignment) -> None:
         """Attach a shard assignment to the bot (used for standby takeover)."""
@@ -215,6 +434,7 @@ class ModeratorBot(commands.Bot):
         for guild in self.guilds:
             try:
                 await mysql.add_guild(guild.id, guild.name, guild.owner_id)
+                await self.refresh_guild_locale_override(guild.id)
             except Exception as exc:
                 print(f"[ERROR] Failed to sync guild {guild.id}: {exc}")
         print(f"Synced {len(self.guilds)} guilds with the database.")
@@ -235,17 +455,28 @@ class ModeratorBot(commands.Bot):
 
     async def on_guild_join(self, guild: discord.Guild) -> None:  # type: ignore[override]
         await mysql.add_guild(guild.id, guild.name, guild.owner_id)
+        await self.refresh_guild_locale_override(guild.id)
         dash_url = f"https://modbot.neomechanical.com/dashboard/{guild.id}"
 
-        welcome_message = self.translate(
-            "bot.welcome.message",
-            placeholders={"dash_url": dash_url},
-        )
+        override = self._guild_locale_overrides.get(guild.id)
+        if override and override != _current_locale.get():
+            with self.locale_context(override):
+                welcome_message = self.translate(
+                    "bot.welcome.message",
+                    placeholders={"dash_url": dash_url},
+                )
+                button_label = self.translate("bot.welcome.button_label")
+        else:
+            welcome_message = self.translate(
+                "bot.welcome.message",
+                placeholders={"dash_url": dash_url},
+            )
+            button_label = self.translate("bot.welcome.button_label")
 
         view = discord.ui.View()
         view.add_item(
             discord.ui.Button(
-                label=self.translate("bot.welcome.button_label"),
+                label=button_label,
                 url=dash_url,
                 emoji="🛠️",
             )
@@ -311,4 +542,5 @@ class ModeratorBot(commands.Bot):
             _logger.exception("Failed to submit instance heartbeat")
 
     async def close(self) -> None:
+        mysql.remove_settings_listener(self._locale_settings_listener)
         await super().close()
