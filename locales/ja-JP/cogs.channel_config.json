@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel}は年齢制限がありません。NSFWチャンネルを選択してください。",
+      "missing_permissions": "以下の権限が{channel}で不足しています: {permissions}",
+      "set_success": "{log_type}ログは{channel}に投稿されます。",
+      "unset_success": "{log_type}ログチャンネルが未設定になりました。",
+      "invalid_guild": "エラー: 無効なギルドID形式。",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**ログチャンネル:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "未設定"
       }
     }
   }
