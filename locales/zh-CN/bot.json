@@ -1,8 +1,8 @@
 ﻿{
   "bot": {
     "welcome": {
-      "message": "👋 **Thanks for adding Moderator Bot!**\n\n🛠️ **Dashboard:** [Open Dashboard]({dash_url})\n\n**Quick start**\n• Run **`/help`** to see commands (try `/help nsfw`, `/help strikes`)\n• Use the **Dashboard** to configure thresholds, actions, and toggles\n\n**Works out of the box**\nAI moderation is enabled with sane defaults. You can fine-tune anything in the Dashboard.\n\n**Need help?**\nOpen the Dashboard above, or run **`/help`** for details and the support link.",
-      "button_label": "Open Dashboard"
+      "message": "👋 **感谢您添加 Moderator 机器人！**\n\n🛠️ **仪表板:** [打开仪表板]({dash_url})\n\n**快速开始**\n• 运行 **`/help`** 以查看命令（试试 `/help nsfw`，`/help strikes`）\n• 使用 **仪表板** 配置阈值、操作和开关\n\n**开箱即用**\nAI 审核默认启用。您可以在仪表板中微调设置。\n\n**需要帮助？**\n打开上面的仪表板，或运行 **`/help`** 以获取详细信息和支持链接。",
+      "button_label": "打开仪表板"
     }
   }
 }
