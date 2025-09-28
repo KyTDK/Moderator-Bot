@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` موجود بالفعل في القائمة.",
+          "success": "تم إضافة `{action}` إلى الإجراءات."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "الإجراء `{action}` غير موجود.",
+          "specific_success": "تمت إزالة الإجراء المحدد `{action}`.",
+          "base_missing": "لم يتم العثور على إجراءات لـ `{action}`.",
+          "base_success": "تمت إزالة جميع إجراءات `{action}`."
         }
       }
     }
