@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Bạn đã đạt đến giới hạn {limit} URL bị cấm cho máy chủ này.\nSử dụng `/bannedurls remove` hoặc `/bannedurls clear` để tạo không gian.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` đã bị cấm.",
+        "success": "Đã thêm `{url}` vào danh sách bị cấm."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` không có trong danh sách bị cấm.",
+        "success": "Đã xóa `{url}` khỏi danh sách bị cấm."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "Không tìm thấy URL bị cấm nào.",
+        "file_header": "Các URL bị cấm:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "Không tìm thấy URL bị cấm nào cần xóa.",
+        "success": "Tất cả các URL bị cấm đã được xóa."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "Tin nhắn chứa URL bị cấm ({url})",
+        "strike_source": "URL bị cấm",
+        "embed_title": "Phát hiện URL bị cấm",
+        "embed_description": "{mention}, tin nhắn của bạn đã bị xóa vì chứa URL bị cấm."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "Hiện không có hành động nào được thiết lập cho các URL bị cấm.",
+        "header": "**Các hành động URL bị cấm hiện tại:**\n{actions}"
       }
     }
   }
