@@ -50,15 +50,7 @@
           "reason": "**Grunn:** {reason}",
           "expires": "**Utløper:** {expiry}",
           "issued_by": "Utstedt Av",
-          "expiry_never": "Aldri",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Aldri"
         },
         "errors": {
           "too_many_strikes": "Du kan ikke gi den samme spilleren mer enn 100 advarsler. Bruk `/strikes clear <user>` for å tilbakestille advarslene deres."
