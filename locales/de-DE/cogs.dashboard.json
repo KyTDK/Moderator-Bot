@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "Moderator-Bot-Dashboard",
+        "description": "[Klicken Sie hier, um das Dashboard zu öffnen]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "Ihr Dashboard-Link wird generiert..."
       }
     }
   }
