@@ -66,7 +66,7 @@ def test_context_uses_guild_preference(bot: ModeratorBot) -> None:
 
     resolved = bot._infer_locale_from_event("command", (ctx,), {})
 
-    assert resolved == "es"
+    assert resolved == "es-ES"
 
 
 def test_guild_override_has_priority(
@@ -91,7 +91,7 @@ def test_guild_override_has_priority(
 
     resolved = bot._infer_locale_from_event("interaction", (interaction,), {})
 
-    assert resolved == "fr"
+    assert resolved == "fr-FR"
 
 
 def test_unsupported_locale_rejects_value(bot: ModeratorBot) -> None:
@@ -106,8 +106,42 @@ def test_translate_defaults_without_context(bot: ModeratorBot) -> None:
     assert result == "Open Dashboard"
 
 
+LOCALIZED_WELCOME_LABELS: dict[str, str] = {
+    "es-ES": "Abrir Panel de control",
+    "fr-FR": "Ouvrir le tableau de bord",
+    "pl-PL": "Otwórz Panel",
+    "pt-PT": "Abrir Painel de Controle",
+    "ru-RU": "Открыть панель управления",
+    "sv-SE": "Öppna Instrumentpanel",
+    "vi-VN": "Mở bảng điều khiển",
+    "zh-CN": "打开仪表板",
+}
+
+LOCALE_ALIAS_EXPECTATIONS = [
+    *[(canonical, label) for canonical, label in LOCALIZED_WELCOME_LABELS.items()],
+    ("es", LOCALIZED_WELCOME_LABELS["es-ES"]),
+    ("es-419", LOCALIZED_WELCOME_LABELS["es-ES"]),
+    ("fr", LOCALIZED_WELCOME_LABELS["fr-FR"]),
+    ("pl", LOCALIZED_WELCOME_LABELS["pl-PL"]),
+    ("pt", LOCALIZED_WELCOME_LABELS["pt-PT"]),
+    ("ru", LOCALIZED_WELCOME_LABELS["ru-RU"]),
+    ("sv", LOCALIZED_WELCOME_LABELS["sv-SE"]),
+    ("vi", LOCALIZED_WELCOME_LABELS["vi-VN"]),
+    ("zh", LOCALIZED_WELCOME_LABELS["zh-CN"]),
+]
+
+
+@pytest.mark.parametrize("locale_hint,expected", LOCALE_ALIAS_EXPECTATIONS)
+def test_locale_aliases_use_translated_welcome_button(
+    bot: ModeratorBot, locale_hint: str, expected: str
+) -> None:
+    result = bot.translate("bot.welcome.button_label", locale=locale_hint)
+
+    assert result == expected
+
+
 def test_locale_context_manager_restores_previous_locale(bot: ModeratorBot) -> None:
     with bot.locale_context("fr-FR"):
-        assert _current_locale.get() == "fr"
+        assert _current_locale.get() == "fr-FR"
 
     assert _current_locale.get() is None
