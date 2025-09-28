@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "版主机器人仪表板",
+        "description": "[点击此处打开仪表板]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "正在生成您的仪表板链接..."
       }
     }
   }
