@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
 
+from .locale_utils import normalise_locale
 from .locales import LocaleRepository
 
 logger = logging.getLogger(__name__)
@@ -66,11 +67,22 @@ class Translator:
     def _build_locale_chain(self, locale: str | None) -> list[str]:
         chain: list[str] = []
         if locale:
-            chain.append(locale)
-            normalized = locale.replace("_", "-")
+            sanitized = locale.replace("_", "-")
+
+            canonical = normalise_locale(sanitized)
+            if canonical:
+                chain.append(canonical)
+                normalized = canonical
+                if canonical.lower() != sanitized.lower():
+                    chain.append(sanitized)
+            else:
+                chain.append(sanitized)
+                normalized = sanitized
+
             if "-" in normalized:
                 base = normalized.split("-", 1)[0]
-                chain.append(base)
+                base_canonical = normalise_locale(base)
+                chain.append(base_canonical or base)
         chain.extend([self._default_locale, self._fallback_locale])
         # Ensure we only keep the first occurrence of each locale code
         seen: set[str] = set()
