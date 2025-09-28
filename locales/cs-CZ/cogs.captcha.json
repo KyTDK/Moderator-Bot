@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Tento příkaz lze použít pouze na serveru.",
+        "wrong_guild": "Vyberte prosím člena z tohoto serveru.",
+        "is_bot": "Boti nevyžadují ověření captcha."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Při aktualizaci vkladu captcha došlo k neočekávané chybě.",
+        "updated": "Vložení ověření captcha bylo aktualizováno.",
+        "missing_delivery": "Doručování vložení captcha není pro tento server nakonfigurované."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Požadavek na ověření odeslán.",
+        "failure": "Nelze odeslat pokyny pro ověření.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Tento člen není součástí žádného serveru.",
+        "not_enabled": "Ověření captcha není pro tento server povoleno.",
+        "not_configured": "Ověření captcha není nakonfigurováno.",
+        "embed_success": "Pokyny k ověření byly zveřejněny v nakonfigurovaném kanálu.",
+        "dm_success": "Ověřovací zpráva odeslána členovi.",
+        "failure": "Nelze odeslat pokyny pro ověření; prosím zkontrolujte konfiguraci."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Přiřazení rolí před ověřením captcha"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Časový limit ověření captcha vypršel."
       }
     }
   }
