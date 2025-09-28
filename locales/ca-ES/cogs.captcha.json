@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Aquest comandament només es pot utilitzar en un servidor.",
+        "wrong_guild": "Si us plau, tria un membre d'aquest servidor.",
+        "is_bot": "Els bots no requereixen verificació de captcha."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "S'ha produït un error inesperat en actualitzar el captcha embed.",
+        "updated": "S'ha actualitzat el captcha embed.",
+        "missing_delivery": "L'enviament del captcha embed no està configurat per a aquest servidor."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Sol·licitud de verificació enviada.",
+        "failure": "No es poden enviar les instruccions de verificació.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Aquest membre no forma part d'una comunitat.",
+        "not_enabled": "La verificació de captcha no està habilitada per a aquest servidor.",
+        "not_configured": "La verificació de captcha no està configurada.",
+        "embed_success": "Instruccions de verificació publicades al canal configurat.",
+        "dm_success": "Missatge de verificació enviat al membre.",
+        "failure": "No es poden enviar les instruccions de verificació; si us plau, comprova la configuració."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Assignant rols pre-captcha"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "La verificació de captcha ha caducat."
       }
     }
   }
