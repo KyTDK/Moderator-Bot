@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "Цей сервер не має підписки на пришвидшення. Використовуйте `/accelerated subscribe`, щоб розпочати свій преміальний план."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "Правила оновлено.",
+        "none": "Правила модерації не встановлені.",
+        "heading": "**Правила модерації:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "Спочатку встановіть правила модерації за допомогою `/ai_mod rules_set`.",
+        "enabled": "Автономна модерація була **включена**.",
+        "disabled": "Автономна модерація була **відключена**.",
+        "mode_set": "Режим встановлено на **{mode}**.",
+        "status": "Автономна модерація є **{state}**.\nПоточний режим - **{mode}**.",
+        "status_active": "\nАктивний підрежим: **{active}**",
+        "state_enabled": "включено",
+        "state_disabled": "відключено",
+        "state_unknown": "невідомо"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "Немає жодних запланованих дій.",
+        "heading": "**Поточні дії:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "Цей тип події вимагає ролі.",
+        "threshold_required": "Цей тип події вимагає порога.",
+        "threshold_range": "Поріг повинен бути значенням між 0 і 1.",
+        "time_range_required": "Цей тип події вимагає часовий інтервал (наприклад, 08:00-20:00).",
+        "error": "Помилка при налаштуванні події: {error}",
+        "cleared": "Всі адаптивні події були очищені.",
+        "none": "Адаптивні події не налаштовані.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[невірна роль: {value}]",
+        "detail_invalid": "[невірно: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "Адаптивний режим модерації не увімкнено. Використовуйте `/ai_mod set_mode`, щоб увімкнути його."
     }
   }
 }
