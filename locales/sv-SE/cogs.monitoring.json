@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
+        "upgrade_footer": "Uppgradera till Accelerated för snabbare NSFW och bedrägeriavkänning — /accelerated",
         "guild_footer": "Guild ID: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Medlem Gick med",
+        "description": "{mention} ({name}) har gått med i servern.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Konto Skapat",
+          "joined_at": "Gick med den"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Botkonto",
+          "user": "Användarkonto"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Medlem Time-Out",
+        "title_removed": "Time-Out Borttagen",
+        "description_applied": "{mention} ({name}) har blivit satt i en tidsbegränsning.",
+        "description_removed": "{mention} ({name}) har haft en tidsbegränsning.",
         "fields": {
-          "ends": "Ends",
+          "ends": "Slutdatum",
           "moderator": "Moderator",
-          "reason": "Reason"
+          "reason": "Anledning"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Användar-ID: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Medlem Sparkades",
+        "title_left": "Medlem Lämnade",
+        "description_kicked": "{mention} ({name}) har blivit sparkad från servern.",
+        "description_left": "{mention} ({name}) har lämnat servern.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Sparkad Av",
+          "reason": "Anledning"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Botkonto",
+          "user": "Användarkonto"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Meddelande Raderat",
+        "description_with_author": "**Författare:** {author_mention} ({author_name})\n**Kanal:** {channel}\n",
+        "deleted_by": "**Raderad av:** {deleter}\n",
+        "content_label": "**Innehåll:**\n{content}",
+        "description_generic": "Ett meddelande raderades i {channel}.",
+        "description_deleted_by": "\n**Raderat av:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Bilagor ({count})",
+          "embeds": "Inbäddning {index}",
+          "stickers": "Klistermärken ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Inbäddat innehåll ej tillgängligt]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "Användar-ID: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Meddelande Redigerat",
+        "description": "**Författare:** {author_mention} ({author_name})\n**Kanal:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Före",
+          "after": "Efter"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Användar-ID: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Medlem Bannad",
+        "description": "{mention} ({name}) blev bannlyst.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Bannad Av",
+          "reason": "Anledning"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Användar-ID: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Medlem Återhävd",
+        "description": "{mention} ({name}) blev återhävd.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Återhävd Av",
+          "reason": "Anledning"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Användar-ID: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Monitor kanal inställd på {channel}.",
+        "removed": "Monitor kanal har tagits bort.",
+        "not_set": "Ingen monitor kanal var inställd.",
+        "current": "Aktuell monitor kanal: {channel}",
+        "none": "Ingen monitor kanal är för närvarande inställd.",
+        "toggle": "Loggningen för `{event}` har blivit {state}.",
+        "state_enabled": "aktiverad",
+        "state_disabled": "inaktiverad",
+        "list_heading": "**Monitorn Händelser:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
