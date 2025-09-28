@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "Handlingen skal være en af: {options}",
+          "duration_not_allowed": "Varighed er ikke tilladt for denne kommando.",
+          "duration_required": "Du skal angive en varighed (fx `30m`, `1d`, `2w`).",
+          "duration_invalid": "Ugyldigt format for varighed. Brug `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "Du kan ikke tilføje en rolle til en timeout handling.",
+          "role_required": "Du skal angive en rolle for `{action}`.",
+          "duration_not_supported": "`{action}` understøtter ikke en varighed.",
+          "role_not_supported": "`{action}` bruger ikke en rolle.",
+          "warn_message_required": "Du skal angive en advarselsbesked.",
+          "warn_role_disallowed": "Du kan ikke tilføje en rolle til en advarsels handling."
         }
       }
     }
