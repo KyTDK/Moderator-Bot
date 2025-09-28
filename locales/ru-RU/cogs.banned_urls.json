@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Вы достигли лимита в {limit} заблокированных URL-адресов для этого сервера.\nИспользуйте `/bannedurls remove` или `/bannedurls clear`, чтобы освободить место.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` уже заблокирован.",
+        "success": "Добавлен `{url}` в список заблокированных."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` не находится в списке заблокированных.",
+        "success": "Удалён `{url}` из списка заблокированных."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "Заблокированных URL-адресов не найдено.",
+        "file_header": "Заблокированные URL-адреса:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "Не найдено URL-адресов для очистки из заблокированных.",
+        "success": "Все заблокированные URL-адреса были очищены."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "Сообщение содержало заблокированный URL ({url})",
+        "strike_source": "заблокированный URL",
+        "embed_title": "Обнаружен заблокированный URL",
+        "embed_description": "{mention}, ваше сообщение было удалено, так как оно содержало заблокированный URL."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "Действия для заблокированных URL-адресов не установлены.",
+        "header": "**Текущие действия для заблокированных URL-адресов:**\n{actions}"
       }
     }
   }
