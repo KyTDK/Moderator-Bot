@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Bu sunucu için {limit} yasaklı URL sınırına ulaştınız.\nYer açmak için `/bannedurls remove` veya `/bannedurls clear` kullanın.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` zaten yasaklı.",
+        "success": "`{url}` yasaklı listeye eklendi."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` yasaklı listede değil.",
+        "success": "`{url}` yasaklı listeden kaldırıldı."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "Yasaklı URL bulunamadı.",
+        "file_header": "Yasaklı URL'ler:",
         "file_item": "- {url}",
-        "filename": "banned_urls_{guild_id}.txt"
+        "filename": "yasaklı_url_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "Temizlenecek yasaklı URL bulunamadı.",
+        "success": "Tüm yasaklı URL'ler temizlendi."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "Mesaj gizli bir URL içeriyordu ({url})",
+        "strike_source": "gizli url",
+        "embed_title": "Gizli URL Tespit Edildi",
+        "embed_description": "{mention}, mesajınız yasaklı bir URL içerdiği için kaldırıldı."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "Şu anda yasaklı URL'ler için ayarlanmış bir işlem yok.",
+        "header": "**Mevcut yasaklı URL işlemleri:**\n{actions}"
       }
     }
   }
