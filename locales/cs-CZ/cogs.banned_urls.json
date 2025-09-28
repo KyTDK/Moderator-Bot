@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Dosáhli jste limitu {limit} zakázaných URL pro tento server.\nPoužijte `/bannedurls remove` nebo `/bannedurls clear` k uvolnění místa.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` je již zakázána.",
+        "success": "Přidána `{url}` do seznamu zakázaných."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` není v seznamu zakázaných.",
+        "success": "Odstraněna `{url}` ze seznamu zakázaných."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "Nebyla nalezena žádná zakázaná URL.",
+        "file_header": "Zakázané URL:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "Nebyla nalezena žádná zakázaná URL k vyčištění.",
+        "success": "Všechny zakázané URL byly vyčištěny."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "Zpráva obsahovala zakázanou URL ({url})",
+        "strike_source": "zakázaná URL",
+        "embed_title": "Zjištěna zakázaná URL",
+        "embed_description": "{mention}, vaše zpráva byla odstraněna, protože obsahovala zakázanou URL."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "Žádné akce nejsou aktuálně nastaveny pro zakázané URL.",
+        "header": "**Aktuální akce pro zakázané URL:**\n{actions}"
       }
     }
   }
