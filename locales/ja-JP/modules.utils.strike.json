@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "アクションは次のいずれかでなければなりません: {options}",
+          "duration_not_allowed": "このコマンドには期間は許可されていません。",
+          "duration_required": "期間を指定する必要があります（例：`30m`、`1d`、`2w`）。",
+          "duration_invalid": "無効な期間形式です。`20s`、`30m`、`2h`、`5d`、`2w`、`1mo`、`1y`を使用してください。",
+          "timeout_role_disallowed": "タイムアウトアクションにロールを追加することはできません。",
+          "role_required": "`{action}`のためにロールを指定する必要があります。",
+          "duration_not_supported": "`{action}`は期間をサポートしていません。",
+          "role_not_supported": "`{action}`はロールを使用しません。",
+          "warn_message_required": "警告メッセージを提供する必要があります。",
+          "warn_role_disallowed": "警告アクションにロールを追加することはできません。"
         }
       }
     }
