@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Ρυθμίσεις Απάτης:**",
+        "actions": "- Δράσεις Απάτης:\n{actions}",
+        "none": "*Δεν έχουν οριστεί δράσεις.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Μήνυμα απάτης εντοπίστηκε",
+        "title": "Μήνυμα Απάτης Εντοπίστηκε",
+        "description": "{mention}, το μήνυμά σας επισημάνθηκε ως απάτη."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Το κανάλι {channel} έχει εξαιρεθεί από τον εντοπισμό απάτης.",
+        "already": "Το κανάλι {channel} είναι ήδη εξαιρεμένο από τον εντοπισμό απάτης.",
+        "not_excluded": "Το κανάλι {channel} δεν είναι εξαιρεμένο από τον εντοπισμό απάτης.",
+        "removed": "Το κανάλι {channel} έχει αφαιρεθεί από τη λίστα εξαιρέσεων.",
+        "list_empty": "Κανένα κανάλι δεν είναι αυτή τη στιγμή εξαιρεμένο από τον εντοπισμό απάτης.",
+        "invalid": "Δε βρέθηκαν έγκυρα εξαιρεμένα κανάλια.",
+        "list": "Εξαιρεμένα κανάλια: {channels}"
       }
     }
   }
