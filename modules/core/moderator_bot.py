@@ -13,64 +13,9 @@ from discord.ext import commands, tasks
 from modules.post_stats.topgg_poster import start_topgg_poster
 from modules.utils import mysql
 from modules.i18n import LocaleRepository, Translator
+from modules.i18n.locale_utils import SUPPORTED_LOCALE_ALIASES, normalise_locale
 
 _current_locale: ContextVar[str | None] = ContextVar("moderator_bot_locale", default=None)
-
-def _build_locale_aliases() -> dict[str, str]:
-    mapping: dict[str, str] = {}
-
-    def register(canonical: str, *aliases: str) -> None:
-        normalized_canonical = canonical.strip().replace("_", "-")
-        if not normalized_canonical:
-            return
-        for candidate in (canonical, *aliases):
-            normalized = candidate.strip().replace("_", "-")
-            if not normalized:
-                continue
-            mapping[normalized.lower()] = normalized_canonical
-
-    register("af-ZA", "af")
-    register("ar-SA", "ar")
-    register("bg")
-    register("ca-ES", "ca")
-    register("cs-CZ", "cs")
-    register("da-DK", "da")
-    register("de-DE", "de")
-    register("el-GR", "el")
-    register("en", "en-US", "en-GB", "en-CA", "en-AU", "en-NZ", "en-IE", "en-IN", "en-ZA")
-    register("es-ES", "es", "es-419")
-    register("fi-FI", "fi")
-    register("fr-FR", "fr")
-    register("he-IL", "he")
-    register("hi")
-    register("hr")
-    register("hu-HU", "hu")
-    register("id")
-    register("it-IT", "it")
-    register("ja-JP", "ja")
-    register("ko-KR", "ko")
-    register("lt")
-    register("nl-NL", "nl")
-    register("no-NO", "no")
-    register("pl-PL", "pl")
-    register("pt-PT", "pt")
-    register("pt-BR")
-    register("ro-RO", "ro")
-    register("ru-RU", "ru")
-    register("sk")
-    register("sr-SP", "sr")
-    register("sv-SE", "sv")
-    register("th")
-    register("tr-TR", "tr")
-    register("uk-UA", "uk")
-    register("vi-VN", "vi")
-    register("zh-CN", "zh")
-    register("zh-TW", "zh-HK")
-
-    return mapping
-
-
-SUPPORTED_LOCALE_ALIASES: dict[str, str] = _build_locale_aliases()
 
 _logger = logging.getLogger(__name__)
 
@@ -343,17 +288,7 @@ class ModeratorBot(commands.Bot):
         return None
 
     def _normalise_locale(self, locale: Any) -> str | None:
-        if locale is None:
-            return None
-        if isinstance(locale, discord.Locale):
-            raw = locale.value
-        else:
-            raw = str(locale)
-        normalized = raw.strip().replace("_", "-")
-        if not normalized:
-            return None
-        mapped = SUPPORTED_LOCALE_ALIASES.get(normalized.lower())
-        return mapped
+        return normalise_locale(locale)
 
     async def refresh_guild_locale_override(self, guild_id: int) -> None:
         try:

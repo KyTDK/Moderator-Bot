@@ -2,6 +2,7 @@ from typing import Any, Callable, Optional
 from collections.abc import Iterable
 import discord
 from modules.config.premium_plans import PLAN_CORE, PLAN_PRO, PLAN_ULTRA, resolve_required_plans
+from modules.i18n.locale_utils import list_supported_locales, normalise_locale
 from modules.variables.TimeString import TimeString
 
 class Setting:
@@ -35,6 +36,19 @@ class Setting:
     async def validate(self, value: Any):
         if self.validator:
             await self.validator(value)
+
+
+async def _validate_locale(value: Any) -> None:
+    if value is None:
+        return
+
+    normalized = normalise_locale(value)
+    if not normalized:
+        supported = ", ".join(list_supported_locales())
+        raise ValueError(
+            "Invalid locale. Supported locales: "
+            f"{supported}"
+        )
 
 SETTINGS_SCHEMA = {
     "strike-channel": Setting(
@@ -85,6 +99,13 @@ SETTINGS_SCHEMA = {
             "message_edit": True,
             },
         hidden=True
+    ),
+    "locale": Setting(
+        name="locale",
+        description="Override automatic locale detection with a specific locale code.",
+        setting_type=str,
+        default=None,
+        validator=_validate_locale,
     ),
     "nsfw-detection-action": Setting(
         name="nsfw-detection-action",
