@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "Die ingeboude vloeklys is **{state}**.",
+        "updated": "Ingeboude vloeklys **{state}**.",
+        "state_enabled": "geaktiveer",
+        "state_disabled": "gedeaktiveer"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Jy het die limiet van {limit} verbode woorde vir hierdie bediener bereik.\nGebruik `/bannedwords remove` of `/bannedwords clear` om plek te maak.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "Die woord '{word}' is reeds verbode.",
+        "success": "Die woord '{word}' is by die verbode woorde lys gevoeg."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "Die woord '{word}' is nie verbode nie.",
+        "success": "Die woord '{word}' is van die verbode woorde lys verwyder."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Geen verbode woorde gevind nie.",
+        "file_header": "Verbode Woorde:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Geen verbode woorde gevind om uit te wis nie.",
+        "success": "Alle verbode woorde is uitgevee."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Geen aksies is tans vir verbode woorde ingestel nie.",
+        "header": "**Huidige verbode woorde aksies:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Boodskap bevat verbode woord",
+        "strike_source": "verbode woord",
+        "embed_title": "Verbode Woord Opsporing",
+        "embed_description": "{mention}, jou boodskap is verwyder omdat dit 'n verbode woord bevat het."
       }
     }
   }
