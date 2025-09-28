@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "Η ενσωματωμένη λίστα βωμολοχιών είναι **{state}**.",
+        "updated": "Η ενσωματωμένη λίστα βωμολοχιών **{state}**.",
+        "state_enabled": "ενεργό",
+        "state_disabled": "ανενεργό"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Έχετε φτάσει το όριο των {limit} απαγορευμένων λέξεων για αυτόν τον διακομιστή.\nΧρησιμοποιήστε το `/bannedwords remove` ή `/bannedwords clear` για να δημιουργήσετε χώρο.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "Η λέξη '{word}' είναι ήδη απαγορευμένη.",
+        "success": "Η λέξη '{word}' έχει προστεθεί στη λίστα απαγορευμένων λέξεων."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "Η λέξη '{word}' δεν είναι απαγορευμένη.",
+        "success": "Η λέξη '{word}' έχει αφαιρεθεί από τη λίστα των απαγορευμένων λέξεων."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Δεν βρέθηκαν απαγορευμένες λέξεις.",
+        "file_header": "Απαγορευμένες Λέξεις:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Δεν βρέθηκαν απαγορευμένες λέξεις για διαγραφή.",
+        "success": "Όλες οι απαγορευμένες λέξεις έχουν διαγραφεί."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Δεν έχουν καθοριστεί ενέργειες για απαγορευμένες λέξεις.",
+        "header": "**Τρέχουσες ενέργειες για απαγορευμένες λέξεις:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Το μήνυμα περιείχε απαγορευμένη λέξη.",
+        "strike_source": "απαγορευμένη λέξη",
+        "embed_title": "Εντοπίστηκε Απαγορευμένη Λέξη",
+        "embed_description": "{mention}, το μήνυμά σας διαγράφηκε επειδή περιείχε απαγορευμένη λέξη."
       }
     }
   }
