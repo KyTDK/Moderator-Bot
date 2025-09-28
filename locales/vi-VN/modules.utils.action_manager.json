@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` đã có trong danh sách.",
+          "success": "Đã thêm `{action}` vào danh sách các hành động."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "Hành động `{action}` không tồn tại.",
+          "specific_success": "Đã xóa hành động `{action}`.",
+          "base_missing": "Không tìm thấy hành động nào cho `{action}`.",
+          "base_success": "Đã xóa tất cả các hành động `{action}`."
         }
       }
     }
