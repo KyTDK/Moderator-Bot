@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "Moderátor Bot Irányítópult",
+        "description": "[Kattintson ide az irányítópult megnyitásához]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "Az irányítópult linkjének generálása..."
       }
     }
   }
