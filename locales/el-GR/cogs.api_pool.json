@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**Τι είναι το API Pool?**\nΤο API Pool είναι μια ασφαλής και ανώνυμη συλλογή κοινών κλειδιών API του OpenAI. Επιτρέπει στο Moderator Bot να συνεχίσει να λειτουργεί αποτελεσματικά, ακόμα και όταν οι μεμονωμένοι χρήστες αντιμετωπίζουν όρια ρυθμού.\n\n**Πώς λειτουργεί;**\n- Όταν προσθέτετε το κλειδί API του OpenAI στο pool, κρυπτογραφείται και αποθηκεύεται με ασφάλεια.\n- Το bot χρησιμοποιεί αυτά τα κλειδιά αποκλειστικά για την πρόσβαση σε μοντέλα OpenAI για την εκτέλεση εργασιών μέτριας.\n- Το κλειδί API σας παραμένει εμπιστευτικό, κανείς, συμπεριλαμβανομένων των προγραμματιστών bot, δεν μπορεί να το δει.\n- Έχετε πλήρη έλεγχο και μπορείτε να αφαιρέσετε το κλειδί API από το pool ανά πάσα στιγμή.\n\n**Σημαντικό:** Για να συνεισφέρετε το κλειδί API σας, ο λογαριασμός σας OpenAI πρέπει να έχει τουλάχιστον 5$ σε προπληρωμένες μονάδες. Αν και το σημείο τερματικού moderation είναι δωρεάν για χρήση, το OpenAI απαιτεί λογαριασμούς με ενεργές λεπτομέρειες χρέωσης και όριο χρήσης. Μπορείτε να προσθέσετε μονάδες στον λογαριασμό σας εδώ: <https://platform.openai.com/account/billing/overview>\n\nΣυνεισφέροντας το κλειδί API σας, βοηθάτε να παραμείνει ο Moderator Bot ευέλικτος και αποτελεσματικός για όλους τους χρήστες."
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "Αυτό το κλειδί API υπάρχει ήδη στο pool.",
+        "success": "Το κλειδί API προστέθηκε στο pool."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "Το κλειδί API αφαιρέθηκε από το pool σας.",
+        "missing": "Δεν βρέθηκε το κλειδί API στο pool σας. Χρησιμοποιήστε το /api_pool list για να δείτε τα τρέχοντα κλειδιά API σας."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Όλα τα κλειδιά API έχουν διαγραφεί από το pool σας.",
+        "empty": "Δεν βρέθηκαν κλειδιά API για διαγραφή."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Τα κλειδιά API σας:",
+        "empty": "Δεν βρέθηκαν κλειδιά API στο pool σας."
       }
     }
   }
