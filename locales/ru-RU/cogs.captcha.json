@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Эта команда может быть использована только на сервере.",
+        "wrong_guild": "Пожалуйста, выберите участника из этого сервера.",
+        "is_bot": "Ботам не требуется прохождение капчи."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Произошла непредвиденная ошибка при обновлении встраивания капчи.",
+        "updated": "Встраивание капчи обновлено.",
+        "missing_delivery": "Доставка встраивания капчи не настроена для этого сервера."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Запрос на верификацию отправлен.",
+        "failure": "Невозможно отправить инструкции по верификации.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Этот участник не является частью гильдии.",
+        "not_enabled": "Проверка капчи не включена для этого сервера.",
+        "not_configured": "Проверка капчи не настроена.",
+        "embed_success": "Инструкции по верификации размещены в настроенном канале.",
+        "dm_success": "Сообщение о верификации отправлено участнику.",
+        "failure": "Невозможно отправить инструкции по верификации; пожалуйста, проверьте настройки."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Назначение ролей перед капчей"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Время для прохождения капчи истекло."
       }
     }
   }
