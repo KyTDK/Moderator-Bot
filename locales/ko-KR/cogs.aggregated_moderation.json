@@ -2,11 +2,11 @@
   "cogs": {
     "aggregated_moderation": {
       "nsfw_detection": {
-        "title": "NSFW Content Detected",
-        "description": "{mention}, your message was removed because it contained explicit or inappropriate content."
+        "title": "NSFW 콘텐츠 감지됨",
+        "description": "{mention}, 메시지가 명시적 또는 부적절한 콘텐츠를 포함하고 있어 삭제되었습니다."
       },
       "pfp": {
-        "safe_reason": "Profile picture updated to a safe image."
+        "safe_reason": "프로필 사진이 안전한 이미지로 업데이트되었습니다."
       }
     }
   }
