@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "현재 설정된 NSFW 작업이 없습니다.",
+        "heading": "**현재 NSFW 작업:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "현재 설정된 카테고리가 없습니다.",
+        "heading": "**현재 NSFW 카테고리:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "임계값은 0.0에서 1.0 사이여야 합니다.",
+        "set": "NSFW 탐지 임계값이 {value:.2f}으로 설정되었습니다.",
+        "unset": "NSFW 탐지 임계값이 설정되지 않았습니다.",
+        "current": "현재 NSFW 탐지 임계값: {value:.2f}"
       }
     }
   }
