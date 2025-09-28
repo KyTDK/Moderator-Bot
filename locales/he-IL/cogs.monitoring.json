@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "שדרג ל-Accelerated לזיהוי מהיר יותר של NSFW והונאות — /accelerated",
+        "guild_footer": "מזהה גילדה: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "משתמש הצטרף",
+        "description": "{mention} ({name}) הצטרף לשרת.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "חשבון נוצר",
+          "joined_at": "הצטרף בתאריך"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "חשבון בוט",
+          "user": "חשבון משתמש"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "משתמש הושבת",
+        "title_removed": "השהייה הוסרה",
+        "description_applied": "{mention} ({name}) הושם בהשהייה.",
+        "description_removed": "{mention} ({name}) היה בהשהייה.",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "מסתיים",
+          "moderator": "מנחה",
+          "reason": "סיבה"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "מזהה משתמש: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "משתמש נבעט",
+        "title_left": "משתמש עזב",
+        "description_kicked": "{mention} ({name}) נבעט מהשרת.",
+        "description_left": "{mention} ({name}) עזב את השרת.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "נבעט ע\"י",
+          "reason": "סיבה"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "חשבון בוט",
+          "user": "חשבון משתמש"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "הודעה נמחקה",
+        "description_with_author": "**כותב:** {author_mention} ({author_name})\n**ערוץ:** {channel}\n",
+        "deleted_by": "**נמחק על ידי:** {deleter}\n",
+        "content_label": "**תוכן:**\n{content}",
+        "description_generic": "הודעה נמחקה בערוץ {channel}.",
+        "description_deleted_by": "\n**נמחק על ידי:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "קבצים מצורפים ({count})",
+          "embeds": "משולב {index}",
+          "stickers": "מדבקות ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[תוכן משולב לא זמין]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "מזהה משתמש: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "הודעה נערכה",
+        "description": "**כותב:** {author_mention} ({author_name})\n**ערוץ:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "לפני",
+          "after": "אחרי"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "מזהה משתמש: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "משתמש נחסם",
+        "description": "{mention} ({name}) נחסם.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "נחסם על ידי",
+          "reason": "סיבה"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "מזהה משתמש: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "משתמש הוסר חסימה",
+        "description": "{mention} ({name}) הוסר חסימה.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "הוסר חסימה על ידי",
+          "reason": "סיבה"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "מזהה משתמש: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "ערוץ ניטור הוגדר כ-{channel}.",
+        "removed": "ערוץ ניטור הוסר.",
+        "not_set": "לא הוגדר ערוץ ניטור.",
+        "current": "ערוץ ניטור נוכחי: {channel}",
+        "none": "לא מוגדר ערוץ ניטור כרגע.",
+        "toggle": "הפעלת הרישום עבור `{event}` הייתה {state}.",
+        "state_enabled": "מאופשר",
+        "state_disabled": "מושבת",
+        "list_heading": "**אירועי ניטור:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
