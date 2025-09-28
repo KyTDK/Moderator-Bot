@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "操作必须是下列之一：{options}",
+          "duration_not_allowed": "此命令不允许设置时长。",
+          "duration_required": "您必须提供一个时长（例如：`30m`，`1d`，`2w`）。",
+          "duration_invalid": "时长格式无效。使用 `20s`，`30m`，`2h`，`5d`，`2w`，`1mo`，`1y`。",
+          "timeout_role_disallowed": "您不能将角色附加到超时操作。",
+          "role_required": "您必须为“{action}”指定一个角色。",
+          "duration_not_supported": "“{action}”不支持时长。",
+          "role_not_supported": "“{action}”不使用角色。",
+          "warn_message_required": "您必须提供警告信息。",
+          "warn_role_disallowed": "您不能将角色附加到警告操作。"
         }
       }
     }
