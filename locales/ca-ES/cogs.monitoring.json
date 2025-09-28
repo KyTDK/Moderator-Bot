@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "Millora a Accelerated per a una detecció de NSFW i estafes més ràpida — /accelerated",
+        "guild_footer": "ID del Gremi: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Membre ha ingressat",
+        "description": "{mention} ({name}) s'ha unit al servidor.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Compte Creat",
+          "joined_at": "Va ingressar en"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Compte de bot",
+          "user": "Compte d'usuari"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Membre en temps d'espera",
+        "title_removed": "Temps d'espera eliminat",
+        "description_applied": "{mention} ({name}) s'ha posat en temps d'espera.",
+        "description_removed": "{mention} ({name}) ha estat en temps d'espera.",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "Acaba",
+          "moderator": "Moderador",
+          "reason": "Raó"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID d'Usuari: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Membre Expulsat",
+        "title_left": "Membre va marxar",
+        "description_kicked": "{mention} ({name}) ha estat expulsat del servidor.",
+        "description_left": "{mention} ({name}) ha marxat del servidor.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Expulsat Per",
+          "reason": "Raó"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Compte de bot",
+          "user": "Compte d'usuari"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Missatge Esborrat",
+        "description_with_author": "**Autor:** {author_mention} ({author_name})\n**Canal:** {channel}\n",
+        "deleted_by": "**Esborrat per:** {deleter}\n",
+        "content_label": "**Contingut:**\n{content}",
+        "description_generic": "Un missatge ha estat esborrat en {channel}.",
+        "description_deleted_by": "\n**Esborrat per:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Adjuncions ({count})",
+          "embeds": "Incrustar {index}",
+          "stickers": "Adhesius ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Contingut incrustat no disponible]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "ID d'Usuari: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Missatge Editat",
+        "description": "**Autor:** {author_mention} ({author_name})\n**Canal:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Abans",
+          "after": "Després"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID d'Usuari: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Membre Prohibit",
+        "description": "{mention} ({name}) ha estat prohibit.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Prohibit Per",
+          "reason": "Raó"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID d'Usuari: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Membre Desprohibit",
+        "description": "{mention} ({name}) ha estat desprohibit.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Desprohibit Per",
+          "reason": "Raó"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "ID d'Usuari: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Canal de Monitoratge establert a {channel}.",
+        "removed": "El canal de monitoratge ha estat eliminat.",
+        "not_set": "No s'ha establert cap canal de monitoratge.",
+        "current": "Canal de monitoratge actual: {channel}",
+        "none": "Actualment no s'ha establert cap canal de monitoratge.",
+        "toggle": "El registre per a `{event}` ha estat {state}.",
+        "state_enabled": "activat",
+        "state_disabled": "desactivat",
+        "list_heading": "**Esdeveniments del Monitor:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
