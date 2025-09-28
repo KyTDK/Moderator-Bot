@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**Beskikbare Instellings:**\\n",
+        "entry": "**{name}**: {description} (Tipe: {type})",
+        "not_found": "Geen hulp vir `{command}` gevind nie."
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "Herstel alle instellings na verstek.",
+        "already": "Jy gebruik reeds die verstekinstellings."
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**Ongeldige instelling naam.**",
+        "requires_plan": "Hierdie instelling vereis {requirement}. Gebruik `/versnelde-subskripsie` om op te gradeer.",
+        "missing_boolean": "**`{name}` verwag 'n booleaan. Gebruik die `waarde` opsie.**",
+        "missing_integer": "**`{name}` verwag 'n heelgetal. Gebruik die `waarde` opsie.**",
+        "missing_duration": "**`{name}` verwag 'n duur (bv. 30m, 1d).**",
+        "missing_channel": "**`{name}` verwag 'n kanaal. Gebruik die `kanaal` opsie.**",
+        "missing_role": "**`{name}` verwag 'n rol. Gebruik die `rol` opsie.**",
+        "missing_channel_add": "**`{name}` verwag 'n kanaal om by te voeg. Gebruik die `kanaal` opsie.**",
+        "missing_role_add": "**`{name}` verwag 'n rol om by te voeg. Gebruik die `rol` opsie.**",
         "boolean_values": {
           "true": [
-            "true",
+            "waar",
             "1",
-            "yes"
+            "ja"
           ],
           "false": [
-            "false",
+            "onwaar",
             "0",
-            "no"
+            "nee"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` verwag 'n booleaan.**",
+        "unknown_type": "Instelling ontleed as waarde aangesien tipe onbekend is",
+        "success": "Opgedateer `{name}` na `{value}`.",
+        "unexpected": "'n Onverwagte fout het voorgekom: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "Ongeldige instelling naam.",
+        "not_set": "`{name}` is nie ingestel nie. Verstek: `{default}`",
+        "private": "Om privaatheid redes is hierdie instelling versteek.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` is tans ingestel op:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "Ongeldige instelling naam.",
+        "not_set": "`{name}` is nie ingestel nie.",
+        "channel_required": "Jy moet 'n kanaal spesifiseer om te verwyder.",
+        "channel_missing": "{channel} is nie in `{name}` nie.",
+        "role_required": "Jy moet 'n rol spesifiseer om te verwyder.",
+        "role_missing": "{role} is nie in `{name}` nie.",
+        "removed_channel": "{channel} vanaf `{name}` verwyder.",
+        "removed_role": "{role} vanaf `{name}` verwyder.",
+        "removed_setting": "Instelling `{name}` verwyder. Gebruik nou verstek.",
+        "unexpected": "'n Onverwagte fout het voorgekom: `{error}`"
       }
     }
   }
