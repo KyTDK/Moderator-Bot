@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**Шта је API базен?**\nAPI базен је сигурна и анонимна колекција OpenAI API кључева. Омогућава Moderator Bot-у да настави са радом ефикасно, чак и када појединачни корисници наиђу на ограничења брзине.\n\n**Како функционише?**\n- Када додате свој OpenAI API кључ у базен, он се шифрује и безбедно чува.\n- Бот користи ове кључеве искључиво за приступ OpenAI моделима ради обављања задатака модерације.\n- Ваш API кључ остаје поверан; нико, укључујући програмере бота, не може да види.\n- Имате потпуну контролу и можете у било ком тренутку уклонити свој API кључ из базена.\n\n**Важно:** Да бисте допринели својим API кључем, ваш OpenAI налог мора да има најмање 5 долара у унапред плаћеном кредиту. Иако је модерацијски крајњи скуп бесплатан за употребу, OpenAI захтева да налози имају активне податке о наплати и квоту.\n\nДодавањем свог API кључа, помажете да Moderator Bot остане одговоран и ефикасан за све кориснике."
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "Овај API кључ већ постоји у базену.",
+        "success": "API кључ додат у базен."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "API кључ је уклоњен из вашег базена.",
+        "missing": "Овај API кључ није пронађен у вашем базену. Користите /api_pool list да видите ваше тренутне API кључеве."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Сви API кључеви су очишћени из вашег базена.",
+        "empty": "Није пронађен ниједан API кључ за чишћење."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Ваши API кључеви:",
+        "empty": "Није пронађен ниједан API кључ у вашем базену."
       }
     }
   }
