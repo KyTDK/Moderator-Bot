@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Lệnh này chỉ có thể được sử dụng trong một máy chủ.",
+        "wrong_guild": "Vui lòng chọn một thành viên từ máy chủ này.",
+        "is_bot": "Bot không cần xác minh captcha."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Đã xảy ra lỗi không mong muốn khi cập nhật thông điệp xác thực captcha.",
+        "updated": "Đã cập nhật thông báo xác minh captcha.",
+        "missing_delivery": "Thông báo captcha chưa được cấu hình cho máy chủ này."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Yêu cầu xác minh đã được gửi.",
+        "failure": "Không thể gửi hướng dẫn xác minh.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Thành viên này không thuộc về một nhóm.",
+        "not_enabled": "Xác minh captcha chưa được bật cho máy chủ này.",
+        "not_configured": "Xác minh captcha chưa được cấu hình.",
+        "embed_success": "Hướng dẫn xác minh được đăng trong kênh đã cấu hình.",
+        "dm_success": "Đã gửi tin nhắn xác minh cho thành viên.",
+        "failure": "Không thể gửi hướng dẫn xác minh; vui lòng kiểm tra cấu hình."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Gán vai trò trước khi xác minh captcha"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Xác minh captcha bị hết thời gian."
       }
     }
   }
