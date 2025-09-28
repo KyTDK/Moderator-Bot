@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "이 명령어를 사용할 권한이 없습니다.",
+      "no_allocations": "프로젝트 관련 할당이 없습니다.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "봇 성능 통계",
+        "memory_name": "메모리 사용량",
+        "memory_value": "**RSS (실제):** {rss:.2f} MB\n**VMS (가상):** {vms:.2f} MB\n**Tracemalloc 현재:** {current_mb:.2f} MB\n**Tracemalloc 최고:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU 및 스레드",
+        "cpu_value": "**CPU 사용량:** {cpu_percent:.1f}%\n**스레드:** {threads}\n**핸들:** {handles}",
+        "bot_name": "봇 통계",
+        "bot_value": "**길드:** {guilds}\n**사용자 (캐시됨):** {users}\n**업타임:** {uptime}",
+        "allocations_name": "최고 메모리 할당 {index}",
+        "worker_name": "작업자 대기열",
+        "worker_error": "(메트릭 수집 오류: {error})",
+        "footer": "호스트: {host} | Python {python_version}"
       }
     }
   }
