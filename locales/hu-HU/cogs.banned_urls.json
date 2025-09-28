@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Elérte a {limit} tiltott URL limitet ezen a szerveren.\nHasználja a `/bannedurls remove` vagy `/bannedurls clear` parancsot, hogy helyet szabadítson fel.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "A(z) `{url}` már tiltva van.",
+        "success": "A(z) `{url}` hozzá lett adva a tiltott listához."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "A(z) `{url}` nincs benne a tiltott listában.",
+        "success": "A(z) `{url}` eltávolítva a tiltott listáról."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "Nincsenek tiltott URL-ek.",
+        "file_header": "Tiltott URL-ek:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "Nincsenek törölhető tiltott URL-ek.",
+        "success": "Az összes tiltott URL törölve."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "Az üzenet tartalmazott egy tiltott URL-t ({url})",
+        "strike_source": "tiltott URL",
+        "embed_title": "Tiltott URL észlelve",
+        "embed_description": "{mention}, az üzeneted törölve lett, mert tiltott URL-t tartalmazott."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "Jelenleg nincsenek beállítva műveletek a tiltott URL-ekhez.",
+        "header": "**Jelenlegi tiltott URL-ek műveletei:**\n{actions}"
       }
     }
   }
