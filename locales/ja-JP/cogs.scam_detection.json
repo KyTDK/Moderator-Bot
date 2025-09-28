@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**詐欺設定:**",
+        "actions": "- 詐欺アクション:\n{actions}",
+        "none": "*アクションが設定されていません。*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "詐欺メッセージが検出されました",
+        "title": "詐欺メッセージが検出されました",
+        "description": "{mention}さんのメッセージが詐欺としてフラグされました。"
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "チャンネル {channel} は詐欺検出から除外されました。",
+        "already": "チャンネル {channel} はすでに詐欺検出から除外されています。",
+        "not_excluded": "チャンネル {channel} は詐欺検出から除外されていません。",
+        "removed": "チャンネル {channel} は除外リストから削除されました。",
+        "list_empty": "現在、詐欺検出から除外されているチャンネルはありません。",
+        "invalid": "有効な除外チャンネルは見つかりませんでした。",
+        "list": "除外されたチャンネル: {channels}"
       }
     }
   }
