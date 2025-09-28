@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Налаштування захисту від шахрайства:**",
+        "actions": "- Дії щодо шахрайства:\n{actions}",
+        "none": "*Дії не встановлені.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Виявлено шахрайське повідомлення",
+        "title": "Виявлено Шахрайське Повідомлення",
+        "description": "{mention}, ваше повідомлення було позначено як шахрайське."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Канал {channel} був виключений із захисту від шахрайства.",
+        "already": "Канал {channel} вже виключений із захисту від шахрайства.",
+        "not_excluded": "Канал {channel} не виключено із захисту від шахрайства.",
+        "removed": "Канал {channel} було вилучено з переліку виключень.",
+        "list_empty": "Наразі жоден канал не виключено із захисту від шахрайства.",
+        "invalid": "Не знайдено жодного дійсного виключеного каналу.",
+        "list": "Виключені канали: {channels}"
       }
     }
   }
