@@ -242,6 +242,13 @@ class ModeratorBot(commands.Bot):
         finally:
             _current_locale.reset(token)
 
+    def resolve_locale_for_interaction(
+        self, interaction: discord.Interaction
+    ) -> str | None:
+        """Return the locale resolved for *interaction* using translation logic."""
+
+        return self._extract_locale_from_interaction(interaction)
+
     def _extract_locale_from_interaction(
         self, interaction: discord.Interaction
     ) -> str | None:

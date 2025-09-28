@@ -217,6 +217,13 @@ class Settings(commands.Cog):
 
         avatar = interaction.client.user.display_avatar.url if interaction.client.user else None
 
+        locale = self.bot.resolve_locale_for_interaction(interaction)
+        translator = self.bot.translator
+        if locale:
+            locale_display = f"`{locale}`"
+        else:
+            locale_display = f"Using default `{translator.default_locale}`"
+
         if command:
             group = next(
                 (cmd for cmd in self.bot.tree.walk_commands()
@@ -247,6 +254,12 @@ class Settings(commands.Cog):
             for i, chunk in enumerate(self._chunk_lines(lines), start=1):
                 name = "Subcommands" if len(lines) <= 12 else f"Subcommands (page {i})"
                 embed.add_field(name=name, value=chunk, inline=False)
+
+            embed.add_field(
+                name="Locale Detection",
+                value=locale_display,
+                inline=False,
+            )
 
             await interaction.followup.send(embed=embed, ephemeral=True, view=view)
             return
@@ -293,12 +306,18 @@ class Settings(commands.Cog):
             ),
             inline=False,
         )
-        
+
         embed.add_field(
             name="Trusted Developers",
             value=(
                 "<@362421457759764481> (fork_prongs - 362421457759764481)"
             ),
+            inline=False,
+        )
+
+        embed.add_field(
+            name="Locale Detection",
+            value=locale_display,
             inline=False,
         )
 
