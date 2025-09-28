@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Dieser Befehl kann nur auf einem Server verwendet werden.",
+        "wrong_guild": "Bitte wähle ein Mitglied von diesem Server.",
+        "is_bot": "Bots benötigen keine Captcha-Überprüfung."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Ein unerwarteter Fehler ist bei der Aktualisierung des Captcha-Embed aufgetreten.",
+        "updated": "Das Captcha-Überprüfungs-Embed wurde aktualisiert.",
+        "missing_delivery": "Die Zustellung des Captcha-Embeds ist für diesen Server nicht konfiguriert."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Bestätigungsanfrage gesendet.",
+        "failure": "Versenden der Anweisungen zur Verifizierung nicht möglich.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Dieses Mitglied gehört nicht zu einer Gilde.",
+        "not_enabled": "Captcha-Überprüfung ist für diesen Server nicht aktiviert.",
+        "not_configured": "Captcha-Überprüfung ist nicht konfiguriert.",
+        "embed_success": "Anweisungen zur Verifizierung im konfigurierten Kanal veröffentlicht.",
+        "dm_success": "Nachricht zur Verifizierung an das Mitglied gesendet.",
+        "failure": "Versenden der Anweisungen zur Verifizierung nicht möglich; bitte die Konfiguration überprüfen."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Zuweisung von Pre-Captcha-Rollen"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Captcha-Überprüfung abgelaufen."
       }
     }
   }
