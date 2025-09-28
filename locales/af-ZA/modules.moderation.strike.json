@@ -50,15 +50,7 @@
           "reason": "**Rede:** {reason}",
           "expires": "**Vervaldatum:** {expiry}",
           "issued_by": "Uitgereik Deur",
-          "expiry_never": "Nooit",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Nooit"
         },
         "errors": {
           "too_many_strikes": "Jy kan nie dieselfde speler meer as 100 stakings gee nie. Gebruik `/strikes clear <user>` om hul stakings terug te stel."

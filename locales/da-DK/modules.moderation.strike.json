@@ -50,15 +50,7 @@
           "reason": "**Årsag:** {reason}",
           "expires": "**Udløber:** {expiry}",
           "issued_by": "Udstedt Af",
-          "expiry_never": "Aldrig",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Aldrig"
         },
         "errors": {
           "too_many_strikes": "Du kan ikke give den samme spiller mere end 100 strike. Brug `/strikes clear <user>` for at nulstille deres strikes."

@@ -3,15 +3,15 @@
     "utils": {
       "event_manager": {
         "add": {
-          "duplicate": "`{action}` is already set for `{event}`.",
-          "success": "Added `{action}` to `{event}`."
+          "duplicate": "`{action}` כבר מוגדר עבור `{event}`.",
+          "success": "`{action}` נוסף ל-`{event}`."
         },
         "remove": {
-          "missing": "`{action}` is not set for `{event}`.",
-          "success": "Removed `{action}` from `{event}`."
+          "missing": "`{action}` לא מוגדר עבור `{event}`.",
+          "success": "`{action}` הוסר מ-`{event}`."
         },
         "clear": {
-          "success": "All adaptive events have been cleared."
+          "success": "כל האירועים המותאמים למחיקה הוסרו."
         }
       }
     }

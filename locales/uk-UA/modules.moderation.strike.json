@@ -46,19 +46,11 @@
           "action_warn": "Попередження: {message}",
           "action_strike": "Зауваження",
           "strike_count": "**Кількість зауважень:** {count} зауваження.",
-          "strike_until_ban": "{remaining} more strike(s) before a permanent ban.",
+          "strike_until_ban": "Ще {remaining} удар(и) перед постійною забороною.",
           "reason": "**Причина:** {reason}",
           "expires": "**Закінчується:** {expiry}",
           "issued_by": "Видано",
-          "expiry_never": "Ніколи",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Ніколи"
         },
         "errors": {
           "too_many_strikes": "Ви не можете дати одному гравцю більше ніж 100 зауважень. Використовуйте `/strikes clear <user>`, щоб скинути їх види."

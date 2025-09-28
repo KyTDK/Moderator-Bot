@@ -50,15 +50,7 @@
           "reason": "**Разлог:** {reason}",
           "expires": "**Истиче:** {expiry}",
           "issued_by": "Издао",
-          "expiry_never": "Никад",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Никад"
         },
         "errors": {
           "too_many_strikes": "Не можете дати истом играчу више од 100 уписа. Користите `/strikes clear <user>` за ресетовање уписа."

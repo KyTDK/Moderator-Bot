@@ -50,15 +50,7 @@
           "reason": "**Motiu:** {reason}",
           "expires": "**Caduca:** {expiry}",
           "issued_by": "Emès per",
-          "expiry_never": "Mai",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Mai"
         },
         "errors": {
           "too_many_strikes": "No pots donar el mateix jugador més de 100 avisos. Utilitza `/strikes clear <user>` per restablir els seus avisos."

@@ -3,15 +3,15 @@
     "utils": {
       "event_manager": {
         "add": {
-          "duplicate": "`{action}` is already set for `{event}`.",
-          "success": "Added `{action}` to `{event}`."
+          "duplicate": "`{action}`이(가) 이미 `{event}`에 설정되어 있습니다.",
+          "success": "`{action}`이(가) `{event}`에 추가되었습니다."
         },
         "remove": {
-          "missing": "`{action}` is not set for `{event}`.",
-          "success": "Removed `{action}` from `{event}`."
+          "missing": "`{action}`이(가) `{event}`에 설정되어 있지 않습니다.",
+          "success": "`{action}`이(가) `{event}`에서 제거되었습니다."
         },
         "clear": {
-          "success": "All adaptive events have been cleared."
+          "success": "모든 적응형 이벤트가 지워졌습니다."
         }
       }
     }

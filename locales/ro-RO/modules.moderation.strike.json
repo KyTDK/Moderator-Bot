@@ -50,15 +50,7 @@
           "reason": "**Motiv:** {reason}",
           "expires": "**Expiră:** {expiry}",
           "issued_by": "Emis De",
-          "expiry_never": "Niciodată",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Niciodată"
         },
         "errors": {
           "too_many_strikes": "Nu poți acorda aceluiași jucător mai mult de 100 de avertismente. Folosește `/strikes clear <user>` pentru a-i reseta avertismentele."

@@ -50,15 +50,7 @@
           "reason": "**Lý do:** {reason}",
           "expires": "**Hết hạn:** {expiry}",
           "issued_by": "Người Phát Hành",
-          "expiry_never": "Không bao giờ",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "Không bao giờ"
         },
         "errors": {
           "too_many_strikes": "Bạn không thể trao cho cùng một người chơi nhiều hơn 100 cảnh cáo. Hãy sử dụng `/strikes clear <user>` để đặt lại cảnh cáo."

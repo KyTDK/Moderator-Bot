@@ -3,15 +3,15 @@
     "utils": {
       "event_manager": {
         "add": {
-          "duplicate": "`{action}` is already set for `{event}`.",
-          "success": "Added `{action}` to `{event}`."
+          "duplicate": "`{action}` đã được cài đặt cho `{event}`.",
+          "success": "Đã thêm `{action}` vào `{event}`."
         },
         "remove": {
-          "missing": "`{action}` is not set for `{event}`.",
-          "success": "Removed `{action}` from `{event}`."
+          "missing": "`{action}` chưa được cài đặt cho `{event}`.",
+          "success": "Đã gỡ bỏ `{action}` khỏi `{event}`."
         },
         "clear": {
-          "success": "All adaptive events have been cleared."
+          "success": "Đã xóa tất cả sự kiện thích ứng."
         }
       }
     }

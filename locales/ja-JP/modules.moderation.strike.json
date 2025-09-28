@@ -50,15 +50,7 @@
           "reason": "**理由:** {reason}",
           "expires": "**有効期限:** {expiry}",
           "issued_by": "発行者",
-          "expiry_never": "なし",
-          "footer": "Server: {server}"
-        },
-        "warn_embed": {
-          "title": "⚠️ You Have Been Warned",
-          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
-          "reason_block": "**Reason:** {reason}\n\n",
-          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
-          "footer": "Server: {server}"
+          "expiry_never": "なし"
         },
         "errors": {
           "too_many_strikes": "同じプレイヤーに100以上のストライクを与えることはできません。`/strikes clear <user>` を使用してストライクをリセットしてください。"
