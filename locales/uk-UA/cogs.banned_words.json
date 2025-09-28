@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "Вбудований список ненормативної лексики **{state}**.",
+        "updated": "Вбудований список ненормативної лексики **{state}**.",
+        "state_enabled": "увімкнено",
+        "state_disabled": "вимкнено"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Ви досягли ліміту у {limit} заборонених слів для цього сервера.\nВикористовуйте `/bannedwords remove` або `/bannedwords clear`, щоб звільнити місце.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "Слово '{word}' вже заборонено.",
+        "success": "Слово '{word}' було додано до списку заборонених слів."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "Слово '{word}' не заборонено.",
+        "success": "Слово '{word}' було видалено зі списку заборонених слів."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Заборонених слів не знайдено.",
+        "file_header": "Заборонені слова:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Заборонених слів для очищення не знайдено.",
+        "success": "Усі заборонені слова було очищено."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Дії для заборонених слів наразі не встановлені.",
+        "header": "**Поточні дії для заборонених слів:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Повідомлення містило заборонене слово",
+        "strike_source": "заборонене слово",
+        "embed_title": "Виявлено заборонене слово",
+        "embed_description": "{mention}, ваше повідомлення було видалено, оскільки воно містило заборонене слово."
       }
     }
   }
