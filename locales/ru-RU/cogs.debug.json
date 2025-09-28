@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "У вас нет разрешения на использование этой команды.",
+      "no_allocations": "Не найдены проектно связанные распределения.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "Статистика производительности бота",
+        "memory_name": "Использование памяти",
+        "memory_value": "**RSS (Фактическое):** {rss:.2f} МБ\n**VMS (Виртуальное):** {vms:.2f} МБ\n**Tracemalloc Текущая:** {current_mb:.2f} МБ\n**Tracemalloc Пиковая:** {peak_mb:.2f} МБ",
+        "cpu_name": "Процессор и потоки",
+        "cpu_value": "**Использование процессора:** {cpu_percent:.1f}%\n**Потоки:** {threads}\n**Ручки:** {handles}",
+        "bot_name": "Статистика бота",
+        "bot_value": "**Гильдии:** {guilds}\n**Пользователи (в кеше):** {users}\n**Время работы:** {uptime}",
+        "allocations_name": "Топ распределений памяти {index}",
+        "worker_name": "Очереди рабочего процесса",
+        "worker_error": "(ошибка сбора метрик: {error})",
+        "footer": "Хост: {host} | Python {python_version}"
       }
     }
   }
