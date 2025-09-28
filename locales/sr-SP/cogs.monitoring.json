@@ -2,103 +2,103 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "Надоградите на убрзану верзију за бржу детекцију NSFW & превара — /accelerated",
+        "guild_footer": "ID цеха: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Члан се придружио",
+        "description": "{mention} ({name}) се придружио серверу.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Налог је креиран",
+          "joined_at": "Придружио се"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Налог бота",
+          "user": "Кориснички налог"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Члан је са временским ограничењем",
+        "title_removed": "Ограничење је уклоњено",
+        "description_applied": "{mention} ({name}) је стављен на временско ограничење.",
+        "description_removed": "{mention} ({name}) је имала/имало временско ограничење.",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "Завршава се",
+          "moderator": "Модератор",
+          "reason": "Разлог"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Кориснички ID: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Члан је избачен",
+        "title_left": "Члан је напустио",
+        "description_kicked": "{mention} ({name}) је избачен са сервера.",
+        "description_left": "{mention} ({name}) је напустио сервер.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Избачен од стране",
+          "reason": "Разлог"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Налог бота",
+          "user": "Кориснички налог"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Порука је избрисана",
+        "description_with_author": "**Аутор:** {author_mention} ({author_name})\n**Канал:** {channel}\n",
+        "deleted_by": "**Избрисао(ла):** {deleter}\n",
+        "content_label": "**Садржај:**\n{content}",
+        "description_generic": "Порука је избрисана у {channel}.",
+        "description_deleted_by": "\n**Избрисао(ла):** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Прилози ({count})",
+          "embeds": "Уградити {index}",
+          "stickers": "Стикери ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Садржај уградње није доступан]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "Кориснички ID: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Порука је измењена",
+        "description": "**Аутор:** {author_mention} ({author_name})\n**Канал:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Пре",
+          "after": "После"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Кориснички ID: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Члан је банован",
+        "description": "{mention} ({name}) је банован/банована.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Банован од стране",
+          "reason": "Разлог"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Кориснички ID: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Члан је дебанован",
+        "description": "{mention} ({name}) је дебанован/дебанована.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Дебанован од стране",
+          "reason": "Разлог"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Кориснички ID: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
-        "list_item": "- `{event}`: {state}",
+        "set": "Канал за надгледање је подешен на {channel}.",
+        "removed": "Канал за надгледање је уклоњен.",
+        "not_set": "Није подешен ниједан канал за надгледање.",
+        "current": "Тренутни канал за надгледање: {channel}",
+        "none": "Тренутно није подешен ниједан канал за надгледање.",
+        "toggle": "Записивање догађаја \"{event}\" је {state}.",
+        "state_enabled": "омогућено",
+        "state_disabled": "онемогућено",
+        "list_heading": "**Надгледање догађаја:**",
+        "list_item": "- \"{event}\": {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
       }
