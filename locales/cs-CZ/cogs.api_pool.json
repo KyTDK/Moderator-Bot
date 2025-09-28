@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**Co je API Pool?**\nAPI Pool je bezpečná a anonymní sbírka sdílených OpenAI API klíčů. Umožňuje Moderátor Botovi pokračovat v efektivním provozu, i když jednotliví uživatelé čelí omezením rychlosti.\n\n**Jak to funguje?**\n- Když přidáte svůj OpenAI API klíč do poolu, je šifrovaný a bezpečně uložen.\n- Bot tyto klíče využívá výhradně k přístupu k OpenAI modelům pro provádění moderátorských úkolů.\n- Váš API klíč zůstává důvěrný; nikdo, včetně vývojářů botu, jej nemůže zobrazit.\n- Máte plnou kontrolu a můžete kdykoli odstranit svůj API klíč z poolu.\n\n**Důležité:** Abyste mohli přispět svým API klíčem, váš OpenAI účet musí mít alespoň $5 v předplacených kreditech. I když je použití moderátorského rozhraní zdarma, OpenAI vyžaduje účty s aktivními fakturačními detaily a kvótou. Kredit na svůj účet můžete přidat zde: <https://platform.openai.com/account/billing/overview>\n\nPřispěním svého API klíče přispíváte k zajištění, že Moderátor Bot zůstane schopný ihned reagovat a efektivní pro všechny uživatele."
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "Tento API klíč již existuje v poolu.",
+        "success": "API klíč přidán do poolu."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "API klíč odstraněn z vašeho poolu.",
+        "missing": "Tento API klíč nebyl nalezen ve vašem poolu. Použijte /api_pool list, abyste viděli vaše aktuální API klíče."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Všechny API klíče byly z vašeho poolu odstraněny.",
+        "empty": "Nebyly nalezeny žádné API klíče k odstranění."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Vaše API klíče:",
+        "empty": "Ve vašem poolu nebyly nalezeny žádné API klíče."
       }
     }
   }
