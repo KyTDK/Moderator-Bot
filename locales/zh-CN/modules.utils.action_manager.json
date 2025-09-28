@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` 已经在列表中。",
+          "success": "已将 `{action}` 添加到动作。"
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "动作 `{action}` 不存在。",
+          "specific_success": "已移除特定动作 `{action}`。",
+          "base_missing": "找不到与 `{action}` 相关的动作。",
+          "base_success": "已移除所有 `{action}` 动作。"
         }
       }
     }
