@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
+        "upgrade_footer": "Opgrader til Accelerated for hurtigere NSFW- & scamdetektering — /accelerated",
         "guild_footer": "Guild ID: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Medlem Tilsluttet",
+        "description": "{mention} ({name}) er tilsluttet serveren.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Konto Oprettet",
+          "joined_at": "Tilsluttet På"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bot-konto",
+          "user": "Brugerkonto"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Medlem Timeout",
+        "title_removed": "Timeout Fjernet",
+        "description_applied": "{mention} ({name}) er sat i timeout.",
+        "description_removed": "{mention} ({name}) har haft en timeout.",
         "fields": {
-          "ends": "Ends",
+          "ends": "Slutter",
           "moderator": "Moderator",
-          "reason": "Reason"
+          "reason": "Årsag"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Bruger ID: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Medlem Sparket",
+        "title_left": "Medlem Forladt",
+        "description_kicked": "{mention} ({name}) er blevet sparket fra serveren.",
+        "description_left": "{mention} ({name}) har forladt serveren.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Sparket Af",
+          "reason": "Årsag"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bot-konto",
+          "user": "Brugerkonto"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Besked Slettet",
+        "description_with_author": "**Forfatter:** {author_mention} ({author_name})\n**Kanal:** {channel}\n",
+        "deleted_by": "**Slettet af:** {deleter}\n",
+        "content_label": "**Indhold:**\n{content}",
+        "description_generic": "En besked blev slettet i {channel}.",
+        "description_deleted_by": "\n**Slettet af:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Vedhæftninger ({count})",
+          "embeds": "Indlejring {index}",
+          "stickers": "Klistermærker ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Indlejret indhold utilgængeligt]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "Bruger ID: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Besked Redigeret",
+        "description": "**Forfatter:** {author_mention} ({author_name})\n**Kanal:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Før",
+          "after": "Efter"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Bruger ID: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Medlem Bannlyst",
+        "description": "{mention} ({name}) blev bannlyst.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Bannlyst Af",
+          "reason": "Årsag"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Bruger ID: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Medlem Afbannlyst",
+        "description": "{mention} ({name}) blev afbannlyst.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Afbannlyst Af",
+          "reason": "Årsag"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Bruger ID: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Overvågningskanal sat til {channel}.",
+        "removed": "Overvågningskanal er blevet fjernet.",
+        "not_set": "Ingen overvågningskanal var indstillet.",
+        "current": "Nuværende overvågningskanal: {channel}",
+        "none": "Ingen overvågningskanal er i øjeblikket indstillet.",
+        "toggle": "Logning for `{event}` er blevet {state}.",
+        "state_enabled": "aktiveret",
+        "state_disabled": "deaktiveret",
+        "list_heading": "**Overvåg Hændelser:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"
