@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "此伺服器沒有加速訂閱。使用 `/accelerated subscribe` 開始您的高級方案。"
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "規則已更新。",
+        "none": "尚未設定任何管理規則。",
+        "heading": "**管理規則：**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "首先使用 `/ai_mod rules_set` 設定管理規則。",
+        "enabled": "自主管理已**啟用**。",
+        "disabled": "自主管理已**停用**。",
+        "mode_set": "模式已設置為**{mode}**。",
+        "status": "自主管理是**{state}**。\n當前模式是**{mode}**。",
+        "status_active": "\n活動子模式: **{active}**",
+        "state_enabled": "啟用",
+        "state_disabled": "停用",
+        "state_unknown": "未知"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "當前未設置任何動作。",
+        "heading": "**當前動作：**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "此事件類型需要角色。",
+        "threshold_required": "此事件類型需要門檻值。",
+        "threshold_range": "門檻值必須介於 0 到 1 之間。",
+        "time_range_required": "此事件類型需要時間範圍（例如，08:00-20:00）。",
+        "error": "設置事件時出錯：{error}",
+        "cleared": "所有自動調節事件已清除。",
+        "none": "未設置自動調節事件。",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[無效角色：{value}]",
+        "detail_invalid": "[無效：{value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "自動調節模式未啟用。使用 `/ai_mod set_mode` 以啟用。"
     }
   }
 }
