@@ -9,8 +9,6 @@ from pathlib import Path
 from threading import RLock
 from typing import Any, Dict, Optional
 
-from .crowdin_service import CrowdinTranslationService
-
 logger = logging.getLogger(__name__)
 
 class LocaleRepository:
@@ -56,13 +54,11 @@ class LocaleRepository:
     async def reload_async(self) -> None:
         await asyncio.to_thread(self.reload)
 
-    def refresh(self, crowdin_service: Optional[CrowdinTranslationService] = None) -> None:
-        if crowdin_service is not None:
-            crowdin_service.refresh_locales(self._locales_root)
+    def refresh(self) -> None:
         self.reload()
 
-    async def refresh_async(self, crowdin_service: Optional[CrowdinTranslationService] = None) -> None:
-        await asyncio.to_thread(self.refresh, crowdin_service)
+    async def refresh_async(self) -> None:
+        await asyncio.to_thread(self.refresh)
 
     def list_locales(self) -> list[str]:
         self.ensure_loaded()
