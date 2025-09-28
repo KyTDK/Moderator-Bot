@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "Yerleşik küfür listesi **{state}**.",
+        "updated": "Yerleşik küfür listesi **{state}**.",
+        "state_enabled": "etkin",
+        "state_disabled": "devre dışı"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Bu sunucu için {limit} yasaklı kelime sınırına ulaştınız.\nYer açmak için `/bannedwords remove` veya `/bannedwords clear` kullanın.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "Kelime '{word}' zaten yasaklı.",
+        "success": "Kelime '{word}' yasaklı kelimeler listesine eklendi."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "Kelime '{word}' yasaklı değil.",
+        "success": "Kelime '{word}' yasaklı kelimeler listesinden kaldırıldı."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Yasaklı kelime bulunamadı.",
+        "file_header": "Yasaklı Kelimeler:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Temizlenecek yasaklı kelime bulunamadı.",
+        "success": "Tüm yasaklı kelimeler temizlendi."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Yasaklı kelimeler için şu an belirlenmiş bir eylem yok.",
+        "header": "**Mevcut yasaklı kelimeler eylemleri:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Mesaj yasaklı kelime içeriyordu",
+        "strike_source": "yasaklı kelime",
+        "embed_title": "Yasaklı Kelime Tespit Edildi",
+        "embed_description": "{mention}, mesajınız yasaklı kelime içerdiği için kaldırıldı."
       }
     }
   }

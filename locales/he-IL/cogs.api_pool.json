@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**מהו API Pool?**\nה-API Pool הוא אוסף מאובטח ואנונימי של מפתחות API משותפים של OpenAI. הוא מאפשר לבוט המנחה להמשיך לפעול ביעילות, אפילו כשמשתמשים בודדים נתקלים במגבלות שימוש.\n\n**איך זה עובד?**\n- כשאתה מוסיף את מפתח ה-API שלך לבריכה, הוא מוצפן ונשמר בצורה מאובטחת.\n- הבוט משתמש במפתחות אלה אך ורק לצורך גישה למודלים של OpenAI לצורכי הנחייה.\n- מפתח ה-API שלך נשאר חסוי; אף אחד, כולל מפתחי הבוט, לא יכול לראות אותו.\n- יש לך שליטה מלאה ואתה יכול להסיר את מפתח ה-API שלך מהבריכה בכל עת.\n\n**חשוב:** כדי לתרום את מפתח ה-API שלך, חשבון OpenAI שלך חייב להכיל לפחות 5$ בקדמות. אף על פי שהנקודת ההנחייה חופשית לשימוש, OpenAI דורש מחשבונות להחזיק בפרטי חשבונית פעילים ומכסה. ניתן להוסיף קרדיט לחשבון כאן: <https://platform.openai.com/account/billing/overview>\n\nעל ידי תרומה של מפתח ה-API שלך, אתה עוזר להבטיח שהבוט המנחה יישאר מגיב ויעיל עבור כל המשתמשים."
       },
       "add": {
-        "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "invalid": "{שגיאה}",
+        "duplicate": "מפתח ה-API הזה כבר קיים בבריכה.",
+        "success": "מפתח ה-API נוסף לבריכה."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "מפתח ה-API הוסר מהבריכה שלך.",
+        "missing": "מפתח ה-API הזה לא נמצא בבריכה שלך. השתמש ב-/api_pool list כדי לראות את מפתחות ה-API הנוכחיים שלך."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "כל מפתחות ה-API נוקו מהבריכה שלך.",
+        "empty": "לא נמצאו מפתחות API לניקוי."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "מפתחות ה-API שלך:",
+        "empty": "לא נמצאו מפתחות API בבריכה שלך."
       }
     }
   }

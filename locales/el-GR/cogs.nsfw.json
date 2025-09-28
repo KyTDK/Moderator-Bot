@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Δεν έχουν οριστεί αυτήν τη στιγμή ενέργειες NSFW.",
+        "heading": "**Τρέχουσες Ενέργειες NSFW:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Δεν έχουν οριστεί αυτήν τη στιγμή κατηγορίες.",
+        "heading": "**Τρέχουσες Κατηγορίες NSFW:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "Το όριο πρέπει να είναι μεταξύ 0.0 και 1.0.",
+        "set": "Το όριο ανίχνευσης NSFW ρυθμίστηκε σε {value:.2f}.",
+        "unset": "Το όριο ανίχνευσης NSFW δεν έχει οριστεί.",
+        "current": "Τρέχον όριο ανίχνευσης NSFW: {value:.2f}"
       }
     }
   }

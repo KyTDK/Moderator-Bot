@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Has arribat al límit de {limit} URL bloquejades per aquest servidor.\nUtilitza `/bannedurls remove` o `/bannedurls clear` per alliberar espai.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` ja està bloquejada.",
+        "success": "S'ha afegit `{url}` a la llista de bloquejades."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` no és a la llista de bloquejades.",
+        "success": "S'ha eliminat `{url}` de la llista de bloquejades."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "No s'ha trobat cap URL bloquejada.",
+        "file_header": "URLs bloquejades:",
         "file_item": "- {url}",
-        "filename": "banned_urls_{guild_id}.txt"
+        "filename": "urls_bloquejades_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "No s'ha trobat cap URL bloquejada per eliminar.",
+        "success": "S'han eliminat totes les URL bloquejades."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "El missatge contenia una URL bloquejada ({url})",
+        "strike_source": "URL bloquejada",
+        "embed_title": "URL Bloquejada Detectada",
+        "embed_description": "{mention}, el teu missatge ha estat eliminat perquè contenia una URL bloquejada."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "No hi ha accions establertes actualment per a les URL bloquejades.",
+        "header": "**Accions actuals per a les URL bloquejades:**\n{actions}"
       }
     }
   }

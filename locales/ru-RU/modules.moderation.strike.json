@@ -50,7 +50,15 @@
           "reason": "**Причина:** {reason}",
           "expires": "**Истекает:** {expiry}",
           "issued_by": "Выдано",
-          "expiry_never": "Никогда"
+          "expiry_never": "Никогда",
+          "footer": "Server: {server}"
+        },
+        "warn_embed": {
+          "title": "⚠️ You Have Been Warned",
+          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
+          "reason_block": "**Reason:** {reason}\n\n",
+          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
+          "footer": "Server: {server}"
         },
         "errors": {
           "too_many_strikes": "Вы не можете дать одному игроку более 100 предупреждений. Используйте `/strikes clear <user>`, чтобы сбросить их количество."

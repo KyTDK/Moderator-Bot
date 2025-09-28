@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Huijausasetukset:**",
+        "actions": "- Huijaustoimet:\n{actions}",
+        "none": "*Ei asetettuja toimia.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Huijausviesti havaittu",
+        "title": "Huijausviesti havaittu",
+        "description": "{mention}, viestisi on merkitty huijaukseksi."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Kanava {channel} on poistettu huijausvalvonnasta.",
+        "already": "Kanava {channel} on jo poistettu huijausvalvonnasta.",
+        "not_excluded": "Kanava {channel} ei ole poistettu huijausvalvonnasta.",
+        "removed": "Kanava {channel} on poistettu poikkeusluettelosta.",
+        "list_empty": "Mitään kanavia ei ole tällä hetkellä poistettu huijausvalvonnasta.",
+        "invalid": "Yhtään voimassa olevaa poistettua kanavaa ei löytynyt.",
+        "list": "Poistetut kanavat: {channels}"
       }
     }
   }

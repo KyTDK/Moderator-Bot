@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**Що таке пул API?**\nПул API — це безпечна та анонімна колекція спільних ключів API OpenAI. Це дозволяє Боту-модератору ефективно працювати навіть тоді, коли окремі користувачі стикаються з обмеженнями швидкості.\n\n**Як це працює?**\n- Коли ви додаєте свій ключ OpenAI API до пулу, він шифрується і зберігається безпечно.\n- Бот використовує ці ключі виключно для доступу до моделей OpenAI для виконання модераційних завдань.\n- Ваш ключ API залишається конфіденційним; ніхто, включаючи розробників бота, не може його переглянути.\n- Ви маєте повний контроль і можете в будь-який час видалити свій ключ API з пулу.\n\n**Важливо:** Щоб внести свій ключ API, ваш обліковий запис OpenAI повинен мати принаймні $5 на рахунку. Хоча модераційна кінцева точка безкоштовна для використання, OpenAI вимагає, щоб облікові записи мали активні платіжні дані та квоту. Ви можете поповнити свій рахунок тут: <https://platform.openai.com/account/billing/overview>\n\nВносячи свій ключ API, ви допомагаєте забезпечити, що Бот-модератор залишається чутливим та ефективним для всіх користувачів."
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "Цей ключ API вже існує в пулі.",
+        "success": "Ключ API додано до пулу."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "Ключ API видалено з вашого пулу.",
+        "missing": "Цей ключ API не знайдено в вашому пулі. Використовуйте /api_pool list, щоб переглянути ваші поточні ключі API."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Всі ключі API були очищені з вашого пулу.",
+        "empty": "Не знайдено ключів API для очищення."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Ваші ключі API:",
+        "empty": "У вашому пулі не знайдено ключів API."
       }
     }
   }

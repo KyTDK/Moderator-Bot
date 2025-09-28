@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**詐騙設定：**",
+        "actions": "- 詐騙操作:\n{actions}",
+        "none": "*未設定操作。*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "已檢測到詐騙信息",
+        "title": "已檢測到詐騙信息",
+        "description": "{mention}, 你的信息被標記為詐騙。"
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "頻道 {channel} 已從詐騙檢測中排除。",
+        "already": "頻道 {channel} 已經從詐騙檢測中排除。",
+        "not_excluded": "頻道 {channel} 並未從詐騙檢測中排除。",
+        "removed": "頻道 {channel} 已從排除列表中刪除。",
+        "list_empty": "目前沒有頻道被排除於詐騙檢測。",
+        "invalid": "找不到有效的已排除頻道。",
+        "list": "已排除的頻道: {channels}"
       }
     }
   }

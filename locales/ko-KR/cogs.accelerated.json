@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "가속화된 (프리미엄) 구독을 관리하세요.",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "가속화 상태",
+        "footer_base": "Moderator Bot 가속화",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "계층",
+          "status": "상태",
+          "next_billing": "다음 청구"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "이 서버는 아직 **가속화**에 등록되지 않았습니다. `/accelerated subscribe`로 지금 구독하세요.",
+          "tier_value": "`없음`",
+          "status_value": "`구독하지 않음`",
+          "next_billing_value": "`/accelerated subscribe`로 플랜을 시작하세요."
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`갱신 일정 없음`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - 다음 청구 주기",
+          "checked": "{base} - 상태 확인"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "활성",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "가속화가 활성화되었습니다."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "활성 - 곧 취소됨",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "가속화는 이번 청구 주기 끝까지 활성 상태로 유지됩니다."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "가속화 혜택이 일시 중지되었습니다. 언제든지 `/accelerated subscribe`로 다시 시작하세요."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 귀하의 길드는 이미 활성화된 **가속화** 구독을 가지고 있습니다!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 Moderator Bot 가속화로 업그레이드하세요!",
+          "description": "**빠르고 안전한 NSFW 및 사기 검출, 우선 대기열 및 새로운 기능에 대한 조기 액세스!**\n\n무료 한 달 후, 서버를 더 안전하고 빠르게 유지하기 위해 **월 $5**로 계속하세요.",
+          "footer": "Moderator Bot 🚀 가속화 플랜",
+          "button_label": "🚀 지금 구독"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "가속화 혜택",
+        "description": "Moderator Bot 가속화로 경험을 업그레이드하세요:\n• AI 기반 자율 모더레이션 스캔으로 규칙 위반 메시지를 자동으로 탐지 및 조치\n• 더 깊은 NSFW 검출을 위해 비디오의 더 많은 프레임 스캔\n• 우선 NSFW 및 사기 검출\n• 새로운 기능에 대한 조기 액세스\n• 봇 개발 지원"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "언제든지 **PayPal 계정 → 설정 → 결제 → 자동 결제 관리**를 통해 PayPal 구독을 취소할 수 있습니다.\n프리미엄 액세스는 청구 주기가 끝날 때까지 유지됩니다."
       }
     }
   }

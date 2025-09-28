@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Ова команда може се користити само на серверу.",
+        "wrong_guild": "Молимо одаберите члана са овог сервера.",
+        "is_bot": "Ботови не захтевају верификацију captcha-ом."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Дошло је до неочекиване грешке приликом ажурирања captcha-ом.",
+        "updated": "Верификација captcha-ом је ажурирана.",
+        "missing_delivery": "Достава captcha-ом није конфигурисана за овај сервер."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Захтев за верификацијом је послат.",
+        "failure": "Немогуће је послати упутства за верификацију.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Овај члан није део никог удружења.",
+        "not_enabled": "Верификација captcha-ом није омогућена за овај сервер.",
+        "not_configured": "Верификација captcha-ом није конфигурисана.",
+        "embed_success": "Упутства за верификацију су објављена у конфигурисаном каналу.",
+        "dm_success": "Порука за верификацију послата је члану.",
+        "failure": "Није могуће послати упутства за верификацију; проверите конфигурацију."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Додељивање улога пре captcha-ом"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Истекло је време за верификацију captcha-ом."
       }
     }
   }

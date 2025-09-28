@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "Kezeld Gyorsított (Prémium) előfizetésed.",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "Gyorsított Állapot",
+        "footer_base": "Moderátor Bot Gyorsított",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "Szint",
+          "status": "Státusz",
+          "next_billing": "Következő Számlázás"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "Ez a szerver még nincs beiratkozva **Gyorsított** szolgáltatásra. Iratkozz fel most a `/accelerated subscribe` paranccsal.",
+          "tier_value": "`Nincs`",
+          "status_value": "`Nincs előfizetve`",
+          "next_billing_value": "Indíts tervet a `/accelerated subscribe` paranccsal"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`Nincs ütemezett megújítás`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - Következő számlázási ciklus",
+          "checked": "{base} - Ellenőrzött státusz"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "Aktív",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "A Gyorsított aktiválva van."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "Aktív - Hamarosan megszűnik",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "A Gyorsított aktív marad a számlázási ciklus végéig."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "A Gyorsított kedvezmények szünetelnek. Bármikor újraindíthatod a `/accelerated subscribe` paranccsal."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 A céh már rendelkezik aktív **Gyorsított** előfizetéssel!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 Frissíts Moderátor Bot Gyorsított verzióra!",
+          "description": "**Élvezz villámgyors NSFW és átverés detektálást, prioritásos sorokat, és korai hozzáférést új funkciókhoz!**\n\nAz ingyenes hónap után folytasd csupán **5 USD/hó** áron, hogy a szervered biztonságosabb és gyorsabb maradjon.",
+          "footer": "Moderátor Bot 🚀 Gyorsított Terv",
+          "button_label": "🚀 Iratkozz Fel Most"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "Gyorsított Előnyök",
+        "description": "Frissítsd tapasztalataidat a Moderátor Bot Gyorsított verzióval:\n• AI-vezérelt autonóm moderáció skannálás a szabályszegő üzenetek automatikus észlelésére és kezelésére\n• Több képkocka szkennelése videónként a mélyebb NSFW észlelésért\n• Priorizált NSFW és Átverés detektálás\n• Korai hozzáférés az új funkciókhoz\n• Támogatja a bot fejlesztését"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "Bármikor lemondhatod a PayPal előfizetésed a **PayPal fiókod → Beállítások → Fizetések → Automatikus kifizetések kezelése** menüpontban.\nA prémium hozzáférés a számlázási ciklus végéig tart."
       }
     }
   }

@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "لقد وصلت إلى الحد الأقصى من {limit} عناوين URL المحظورة لهذا الخادم.\nاستخدم `/bannedurls remove` أو `/bannedurls clear` لتوفير مساحة.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` محظور بالفعل.",
+        "success": "تم إضافة `{url}` إلى قائمة الحظر."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` غير موجود في قائمة الحظر.",
+        "success": "تم إزالة `{url}` من قائمة الحظر."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "لم يتم العثور على عناوين URL محظورة.",
+        "file_header": "عناوين URL المحظورة:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "لم يتم العثور على عناوين URL محظورة للتنظيف.",
+        "success": "تمت إزالة جميع عناوين URL المحظورة."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "الرسالة تحتوي على عنوان URL محظور ({url})",
+        "strike_source": "عنوان URL محظور",
+        "embed_title": "تم اكتشاف عنوان URL محظور",
+        "embed_description": "{mention}، تمت إزالة رسالتك لأنها تحتوي على عنوان URL محظور."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "لا توجد أي إجراءات محددة حالياً لعناوين URL المحظورة.",
+        "header": "**الإجراءات الحالية لعناوين URL المحظورة:**\n{actions}"
       }
     }
   }

@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Αυτή η εντολή μπορεί να χρησιμοποιηθεί μόνο σε έναν server.",
+        "wrong_guild": "Παρακαλώ επιλέξτε ένα μέλος από αυτόν τον server.",
+        "is_bot": "Τα bots δεν απαιτούν επαλήθευση captcha."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Προέκυψε ένα απροσδόκητο σφάλμα κατά την ενημέρωση του captcha embed.",
+        "updated": "Η captcha verification ανανεώθηκε.",
+        "missing_delivery": "Η αποστολή του captcha embed δεν είναι διαμορφωμένη για αυτόν τον server."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Το αίτημα επαλήθευσης εστάλη.",
+        "failure": "Αδυναμία αποστολής οδηγιών επαλήθευσης.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Αυτό το μέλος δεν είναι μέρος κάποιου guild.",
+        "not_enabled": "Η επαλήθευση captcha δεν είναι ενεργοποιημένη για αυτόν τον server.",
+        "not_configured": "Η επαλήθευση captcha δεν είναι διαμορφωμένη.",
+        "embed_success": "Οι οδηγίες επαλήθευσης δημοσιεύτηκαν στο διαμορφωμένο κανάλι.",
+        "dm_success": "Το μήνυμα επαλήθευσης στάλθηκε στο μέλος.",
+        "failure": "Αδυναμία αποστολής οδηγιών επαλήθευσης· παρακαλώ ελέγξτε τη διαμόρφωση."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Ανάθεση ρόλων πριν το captcha"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Ο έλεγχος επαλήθευσης captcha έληξε."
       }
     }
   }

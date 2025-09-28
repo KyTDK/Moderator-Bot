@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` је већ на листи.",
+          "success": "Додато `{action}` у акције."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "Акција `{action}` не постоји.",
+          "specific_success": "Уклоњена одређена акција `{action}`.",
+          "base_missing": "Нису пронађене акције за `{action}`.",
+          "base_success": "Уклоњене све акције `{action}`."
         }
       }
     }

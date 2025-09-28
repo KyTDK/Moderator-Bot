@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "Овај сервер нема убрзану претплату. Користите `/accelerated subscribe` да започнете свој премиум план."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "Правила су ажурирана.",
+        "none": "Нису постављена правила за модерацију.",
+        "heading": "**Правила модерације:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "Прво поставите правила за модерацију помоћу `/ai_mod rules_set`.",
+        "enabled": "Аутономна модерација је **омогућена**.",
+        "disabled": "Аутономна модерација је **онемогућена**.",
+        "mode_set": "Режим је подешен на **{mode}**.",
+        "status": "Аутономна модерација је **{state}**.\nТренутни режим је **{mode}**.",
+        "status_active": "\nАктиван подрежим: **{active}**",
+        "state_enabled": "омогућен",
+        "state_disabled": "онемогућен",
+        "state_unknown": "непознат"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "Тренутно нису постављене акције.",
+        "heading": "**Тренутне акције:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "Овај тип догађаја захтева улогу.",
+        "threshold_required": "Овај тип догађаја захтева праг.",
+        "threshold_range": "Праг мора бити вредност између 0 и 1.",
+        "time_range_required": "Овај тип догађаја захтева временски опсег (нпр. 08:00-20:00).",
+        "error": "Грешка при подешавању догађаја: {error}",
+        "cleared": "Сви адаптивни догађаји су очишћени.",
+        "none": "Није постављен ниједан адаптивни догађај.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[неважећа улога: {value}]",
+        "detail_invalid": "[неважност: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "Адаптивни режим модерације није омогућен. Користите `/ai_mod set_mode` да га омогућите."
     }
   }
 }

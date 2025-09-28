@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Svindelinnstillinger:**",
+        "actions": "- Svindeltiltak:\n{actions}",
+        "none": "*Ingen tiltak satt.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Svindel melding oppdaget",
+        "title": "Svindel Melding Oppdaget",
+        "description": "{mention}, meldingen din ble merket som svindel."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Kanal {channel} er ekskludert fra svindeldeteksjon.",
+        "already": "Kanal {channel} er allerede ekskludert fra svindeldeteksjon.",
+        "not_excluded": "Kanal {channel} er ikke ekskludert fra svindeldeteksjon.",
+        "removed": "Kanal {channel} er fjernet fra eksklusjonslisten.",
+        "list_empty": "Ingen kanaler er for øyeblikket ekskludert fra svindeldeteksjon.",
+        "invalid": "Ingen gyldige ekskluderte kanaler funnet.",
+        "list": "Ekskluderte kanaler: {channels}"
       }
     }
   }

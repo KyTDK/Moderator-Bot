@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Žádné akce NSFW nejsou aktuálně nastaveny.",
+        "heading": "**Aktuální akce NSFW:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Žádné kategorie nejsou aktuálně nastaveny.",
+        "heading": "**Aktuální kategorie NSFW:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "Práh musí být mezi 0,0 a 1,0.",
+        "set": "NSFW prah detekce nastaven na {value:.2f}.",
+        "unset": "Práh detekce NSFW není nastaven.",
+        "current": "Aktuální NSFW detekční práh: {value:.2f}"
       }
     }
   }

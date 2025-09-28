@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "升級至Accelerated 以加速 NSFW 和詐騙檢測— /accelerated",
+        "guild_footer": "公會ID: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "成員已加入",
+        "description": "{mention} ({name}) 已加入伺服器。",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "建立帳號",
+          "joined_at": "加入於"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "機器人帳戶",
+          "user": "使用者帳戶"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "成員已被暫時停用",
+        "title_removed": "暫停已取消",
+        "description_applied": "{mention} ({name}) 已被暫時停用。",
+        "description_removed": "{mention} ({name}) 已取消暫時停用。",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "結束於",
+          "moderator": "管理員",
+          "reason": "原因"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "使用者ID: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "成員已被踢出",
+        "title_left": "成員已離開",
+        "description_kicked": "{mention} ({name}) 已被踢出伺服器。",
+        "description_left": "{mention} ({name}) 已離開伺服器。",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "踢出者",
+          "reason": "原因"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "機器人帳戶",
+          "user": "使用者帳戶"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "訊息已刪除",
+        "description_with_author": "**作者：** {author_mention} ({author_name})\n**頻道：** {channel}\n",
+        "deleted_by": "**刪除者：** {deleter}\n",
+        "content_label": "**內容：**\n{content}",
+        "description_generic": "訊息已在 {channel} 中被刪除。",
+        "description_deleted_by": "\n**刪除者：** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "附件 ({count})",
+          "embeds": "嵌入 {index}",
+          "stickers": "貼紙 ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[嵌入內容不可用]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "使用者ID: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "訊息已編輯",
+        "description": "**作者：** {author_mention} ({author_name})\n**頻道：** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "之前",
+          "after": "之後"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "使用者ID: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "成員已被封禁",
+        "description": "{mention} ({name}) 已被封禁。",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "禁用者",
+          "reason": "原因"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "使用者ID: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "成員已被解禁",
+        "description": "{mention} ({name}) 已被解禁。",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "解禁者",
+          "reason": "原因"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "使用者ID: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "監視頻道已設定為 {channel}。",
+        "removed": "監視頻道已被移除。",
+        "not_set": "未設置監視頻道。",
+        "current": "目前的監視頻道：{channel}",
+        "none": "目前未設置監視頻道。",
+        "toggle": "`{event}` 的記錄已被 {state}。",
+        "state_enabled": "已啟用",
+        "state_disabled": "已禁用",
+        "list_heading": "**監視事件：**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"

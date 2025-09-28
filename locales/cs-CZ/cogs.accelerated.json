@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "Spravujte své předplatné Zrychlené (Premium).",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "Zrychlený stav",
+        "footer_base": "Zrychlený Moderátor Bot",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "Úroveň",
+          "status": "Stav",
+          "next_billing": "Další účtování"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "Tento server ještě není zapsán v **Zrychlené**. Přihlaste se nyní pomocí `/accelerated subscribe`.",
+          "tier_value": "`Žádný`",
+          "status_value": "`Nepřihlášeno`",
+          "next_billing_value": "Spusťte plán pomocí `/accelerated subscribe`"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`Žádná obnovení naplánováno`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - Další fakturační cyklus",
+          "checked": "{base} - Stav zkontrolován"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "Aktivní",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "Zrychlení je aktivní."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "Aktivní - Brzy zrušení",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "Zrychlené bude aktivní do konce tohoto fakturačního cyklu."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "Výhody Zrychleného jsou pozastaveny. Znovu spusťte kdykoliv pomocí `/accelerated subscribe`."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 Vaše guilda již má aktivní **Zrychlené** předplatné!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 Vylepšete na Moderátor Bot Zrychlené!",
+          "description": "**Užívejte si bleskově rychlé detekce NSFW a podvodů, prioritní fronty a předběžný přístup k novým funkcím!**\n\nPo vašem volném měsíci pokračujte pouze za **5 $/měsíc**, aby váš server byl bezpečnější a rychlejší.",
+          "footer": "Moderátor Bot 🚀 Zrychlený plán",
+          "button_label": "🚀 Přihlásit se nyní"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "Zrychlené Výhody",
+        "description": "Vylepšete svůj zážitek s Moderátor Bot Zrychlené:\n• AI-podporované autonomní moderování skenováním k automatickému odhálení a jednání s porušujícími zprávami\n• Skenování více snímků za video pro hlubší detekci NSFW\n• Prioritní detekce NSFW & podvodů\n• Předběžný přístup k novým funkcím\n• Podporuje vývoj bota"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "Můžete kdykoliv zrušit své PayPal předplatné přes svůj **PayPal účet → Nastavení → Platby → Správa automatických plateb**.\nVáš prémiový přístup bude trvat až do konce fakturačního cyklu."
       }
     }
   }

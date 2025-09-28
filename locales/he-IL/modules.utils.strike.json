@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "הפעולה חייבת להיות אחת מ: {options}",
+          "duration_not_allowed": "משך הזמן אינו מותר לפקודה זו.",
+          "duration_required": "עליך לספק משך זמן (לדוגמה: `30m`, `1d`, `2w`).",
+          "duration_invalid": "פורמט משך הזמן אינו תקין. השתמש ב- `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "אינך יכול לצרף תפקיד לפעולת השהייה.",
+          "role_required": "עליך לציין תפקיד עבור `{action}`.",
+          "duration_not_supported": "`{action}` אינו תומך במשך זמן.",
+          "role_not_supported": "`{action}` אינו משתמש בתפקיד.",
+          "warn_message_required": "עליך לספק הודעת אזהרה.",
+          "warn_role_disallowed": "אינך יכול לצרף תפקיד לפעולת אזהרה."
         }
       }
     }

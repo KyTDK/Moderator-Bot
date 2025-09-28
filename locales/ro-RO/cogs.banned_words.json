@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "Lista implicită de obscenități este **{state}**.",
+        "updated": "Lista implicită de obscenități **{state}**.",
+        "state_enabled": "activat",
+        "state_disabled": "dezactivat"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Ați atins limita de {limit} cuvinte interzise pentru acest server.\nFolosiți `/bannedwords remove` sau `/bannedwords clear` pentru a elibera spațiu.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "Cuvântul '{word}' este deja interzis.",
+        "success": "Cuvântul '{word}' a fost adăugat pe lista cuvintelor interzise."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "Cuvântul '{word}' nu este interzis.",
+        "success": "Cuvântul '{word}' a fost eliminat din lista cuvintelor interzise."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Nu au fost găsite cuvinte interzise.",
+        "file_header": "Cuvinte interzise:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Nu au fost găsite cuvinte interzise de șters.",
+        "success": "Toate cuvintele interzise au fost șterse."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Nu sunt setate acțiuni momentan pentru cuvinte interzise.",
+        "header": "**Acțiunile curente pentru cuvinte interzise:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Mesajul conținea un cuvânt interzis",
+        "strike_source": "cuvânt interzis",
+        "embed_title": "Cuvânt interzis detectat",
+        "embed_description": "{mention}, mesajul tău a fost eliminat deoarece conținea un cuvânt interzis."
       }
     }
   }

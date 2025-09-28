@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Actualment no hi ha accions NSFW configurades.",
+        "heading": "**Accions NSFW actuals:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Actualment no hi ha categories configurades.",
+        "heading": "**Categories NSFW actuals:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "El llindar ha d'estar entre 0,0 i 1,0.",
+        "set": "Llindar de detecció NSFW establert en {value: .2f}.",
+        "unset": "El llindar de detecció NSFW no està establert.",
+        "current": "Llindar de detecció NSFW actual: {value: .2f}"
       }
     }
   }

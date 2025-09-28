@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} ليست مقيدة بالعمر. يرجى اختيار قناة NSFW.",
+      "missing_permissions": "أفتقد الأذونات التالية في {channel}: {permissions}",
+      "set_success": "سيتم نشر سجلات {log_type} في {channel}.",
+      "unset_success": "تم إلغاء تعيين قناة تسجيل {log_type}.",
+      "invalid_guild": "خطأ: تنسيق معرف النقابة غير صالح.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**قنوات التسجيل:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "غير محدد"
       }
     }
   }

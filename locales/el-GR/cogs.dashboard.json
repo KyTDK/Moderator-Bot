@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "Πίνακας Ελέγχου του Δημιουργού Συντονιστών Bot",
+        "description": "[Κάντε κλικ εδώ για να ανοίξετε τον πίνακα ελέγχου]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "Γίνεται δημιουργία του συνδέσμου προς τον πίνακα ελέγχου σας..."
       }
     }
   }

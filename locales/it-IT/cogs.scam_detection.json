@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Impostazioni Antifrode:**",
+        "actions": "- Azioni antiscam:\n{actions}",
+        "none": "*Nessuna azione impostata.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Messaggio di frode rilevato",
+        "title": "Messaggio di Frode Rilevato",
+        "description": "{mention}, il tuo messaggio è stato contrassegnato come frode."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Il canale {channel} è stato escluso dalla rilevazione di frode.",
+        "already": "Il canale {channel} è già escluso dalla rilevazione di frode.",
+        "not_excluded": "Il canale {channel} non è escluso dalla rilevazione di frode.",
+        "removed": "Il canale {channel} è stato rimosso dalla lista di esclusione.",
+        "list_empty": "Attualmente nessun canale è escluso dalla rilevazione di frode.",
+        "invalid": "Nessun canale escluso valido trovato.",
+        "list": "Canali esclusi: {channels}"
       }
     }
   }

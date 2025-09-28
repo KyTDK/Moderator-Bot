@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Ця команда може використовуватися тільки на сервері.",
+        "wrong_guild": "Будь ласка, виберіть учасника з цього сервера.",
+        "is_bot": "Боти не потребують перевірки captcha."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Виникла неочікувана помилка при оновленні вбудови captcha.",
+        "updated": "Вбудова перевірки captcha оновлена.",
+        "missing_delivery": "Доставка вбудови captcha не налаштована для цього сервера."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Запит на перевірку надіслано.",
+        "failure": "Не вдалося надіслати інструкції з перевірки.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Цей учасник не є частиною гільдії.",
+        "not_enabled": "Перевірка captcha не ввімкнена для цього сервера.",
+        "not_configured": "Перевірка captcha не налаштована.",
+        "embed_success": "Інструкції з перевірки розміщені в налаштованому каналі.",
+        "dm_success": "Повідомлення з перевіркою надіслано учаснику.",
+        "failure": "Не вдалося надіслати інструкції з перевірки; будь ласка, перевірте налаштування."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Призначення ролей до перевірки captcha"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Час на перевірку captcha вичерпаний."
       }
     }
   }

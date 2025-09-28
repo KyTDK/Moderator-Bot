@@ -3,12 +3,12 @@
     "utils": {
       "list_manager": {
         "add": {
-          "duplicate": "`{item}` is already in the list.",
-          "success": "Added `{item}` to the list."
+          "duplicate": "`{item}` on jo listassa.",
+          "success": "Lisätty `{item}` listaan."
         },
         "remove": {
-          "missing": "`{item}` is not in the list.",
-          "success": "Removed `{item}` from the list."
+          "missing": "`{item}` ei ole listassa.",
+          "success": "Poistettu `{item}` listasta."
         }
       }
     }

@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "Aquest servidor no té una subscripció Accel·lerada. Utilitza `/accelerated subscribe` per començar el teu pla premium."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "Normes actualitzades.",
+        "none": "No s'han establert normes de moderació.",
+        "heading": "**Normes de Moderació:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "Primer estableix les normes de moderació amb `/ai_mod rules_set`.",
+        "enabled": "La moderació autònoma ha estat **activada**.",
+        "disabled": "La moderació autònoma ha estat **desactivada**.",
+        "mode_set": "El mode s'ha establert com a **{mode}**.",
+        "status": "La moderació autònoma està **{state}**.\nEl mode actual és **{mode}**.",
+        "status_active": "\nSub-mode actiu: **{active}**",
+        "state_enabled": "activat",
+        "state_disabled": "desactivat",
+        "state_unknown": "desconegut"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "Actualment no hi ha accions establertes.",
+        "heading": "**Accions actuals:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "Aquest tipus d'esdeveniment requereix un rol.",
+        "threshold_required": "Aquest tipus d'esdeveniment requereix un llindar.",
+        "threshold_range": "El llindar ha de ser un valor entre 0 i 1.",
+        "time_range_required": "Aquest tipus d'esdeveniment requereix un interval de temps (per exemple, 08:00-20:00).",
+        "error": "Error en establir l'esdeveniment: {error}",
+        "cleared": "Tots els esdeveniments adaptatius han estat esborrats.",
+        "none": "No hi ha esdeveniments adaptatius establerts.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[rol invàlid: {value}]",
+        "detail_invalid": "[invàlid: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "El mode de moderació adaptativa no està activat. Utilitzeu `/ai_mod set_mode` per activar-lo."
     }
   }
 }

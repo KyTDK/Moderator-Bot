@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "Deze server heeft geen Versnelde abonnementsplan. Gebruik `/accelerated subscribe` om je premium plan te starten."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "Regels bijgewerkt.",
+        "none": "Er zijn nog geen moderatieregels ingesteld.",
+        "heading": "**Moderatieregels:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "Stel eerst moderatieregels in met `/ai_mod rules_set`.",
+        "enabled": "Autonome moderatie is **ingeschakeld**.",
+        "disabled": "Autonome moderatie is **uitgeschakeld**.",
+        "mode_set": "Modus is ingesteld op **{mode}**.",
+        "status": "Autonome moderatie is **{state}**.\nHuidige modus is **{mode}**.",
+        "status_active": "\nActieve sub-modus: **{active}**",
+        "state_enabled": "ingeschakeld",
+        "state_disabled": "uitgeschakeld",
+        "state_unknown": "onbekend"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "Er zijn momenteel geen acties ingesteld.",
+        "heading": "**Huidige acties:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "Dit evenementtype vereist een rol.",
+        "threshold_required": "Dit evenementtype vereist een drempelwaarde.",
+        "threshold_range": "De drempelwaarde moet een waarde tussen 0 en 1 zijn.",
+        "time_range_required": "Dit evenementtype vereist een tijdsbereik (bijv. 08:00-20:00).",
+        "error": "Fout bij het instellen van evenement: {error}",
+        "cleared": "Alle adaptieve evenementen zijn gewist.",
+        "none": "Er zijn geen adaptieve evenementen ingesteld.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[ongeldige rol: {value}]",
+        "detail_invalid": "[ongeldig: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "Adaptieve moderatiemodus is niet ingeschakeld. Gebruik `/ai_mod set_mode` om het in te schakelen."
     }
   }
 }

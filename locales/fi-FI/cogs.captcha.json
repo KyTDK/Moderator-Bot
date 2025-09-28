@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Tätä komentoa voi käyttää vain palvelimella.",
+        "wrong_guild": "Valitse palvelimelta jäsen.",
+        "is_bot": "Boteille ei vaadita captcha-vahvistusta."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "Tuntematon virhe tapahtui päivittäessä captcha-upotetta.",
+        "updated": "Captcha-vahvistusupotetta on päivitetty.",
+        "missing_delivery": "Captcha-upotteen toimitusta ei ole määritetty tälle palvelimelle."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Vahvistuspyyntö lähetetty.",
+        "failure": "Ei voitu lähettää vahvistusohjeita.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Tämä jäsen ei ole osana kiltaa.",
+        "not_enabled": "Captcha-vahvistusta ei ole otettu käyttöön tälle palvelimelle.",
+        "not_configured": "Captcha-vahvistusta ei ole määritetty.",
+        "embed_success": "Vahvistusohjeet julkaistu määritettyyn kanavaan.",
+        "dm_success": "Vahvistusviesti lähetetty jäsenelle.",
+        "failure": "Ei voitu lähettää vahvistusohjeita; tarkista määritykset."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Annetaan esicaptcha-rooleja"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Captcha-vahvistuksen aikaraja umpeutui."
       }
     }
   }

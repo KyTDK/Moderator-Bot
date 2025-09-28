@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "Du har ikke tillatelse til å bruke denne kommandoen.",
+      "no_allocations": "Ingen prosjektrelaterte tildelinger funnet.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "Bot-ytelsesstatistikk",
+        "memory_name": "Minnebruk",
+        "memory_value": "**RSS (Faktisk):** {rss:.2f} MB\n**VMS (Virtuell):** {vms:.2f} MB\n**Tracemalloc nåværende:** {current_mb:.2f} MB\n**Tracemalloc topp:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU & Tråder",
+        "cpu_value": "**CPU-bruk:** {cpu_percent:.1f}%\n**Tråder:** {threads}\n**Håndtak:** {handles}",
+        "bot_name": "Bot-statistikk",
+        "bot_value": "**Guilds:** {guilds}\n**Brukere (bufret):** {users}\n**Oppetid:** {uptime}",
+        "allocations_name": "Topp minneallokeringer {index}",
+        "worker_name": "Arbeiderkøer",
+        "worker_error": "(feil ved innsamling av data: {error})",
+        "footer": "Vert: {host} | Python {python_version}"
       }
     }
   }

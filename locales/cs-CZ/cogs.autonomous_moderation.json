@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "Tento server nemá zrychlené předplatné. Použijte `/accelerated subscribe` pro zahájení vašeho prémiového plánu."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "Pravidla byla aktualizována.",
+        "none": "Žádná pravidla moderování nebyla nastavena.",
+        "heading": "**Pravidla pro moderování:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "Nejprve nastavte pravidla moderování pomocí `/ai_mod rules_set`.",
+        "enabled": "Autonomní moderování bylo **povoleno**.",
+        "disabled": "Autonomní moderování bylo **zakázáno**.",
+        "mode_set": "Režim byl nastaven na **{mode}**.",
+        "status": "Autonomní moderování je **{state}**.\nAktuální režim je **{mode}**.",
+        "status_active": "\nAktivní podrežim: **{active}**",
+        "state_enabled": "povoleno",
+        "state_disabled": "zakázáno",
+        "state_unknown": "neznámý"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "Žádné akce nejsou momentálně nastaveny.",
+        "heading": "**Aktuální akce:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "Tento typ události vyžaduje roli.",
+        "threshold_required": "Tento typ události vyžaduje prahovou hodnotu.",
+        "threshold_range": "Prahová hodnota musí být mezi 0 a 1.",
+        "time_range_required": "Tento typ události vyžaduje časové rozmezí (např., 08:00-20:00).",
+        "error": "Chyba při nastavování události: {error}",
+        "cleared": "Všechny adaptivní události byly vymazány.",
+        "none": "Žádné adaptivní události nejsou nastaveny.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[neplatná role: {value}]",
+        "detail_invalid": "[neplatné: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "Režim adaptivní moderace není povolen. Použijte `/ai_mod set_mode` k jeho povolení."
     }
   }
 }

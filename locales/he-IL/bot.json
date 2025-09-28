@@ -1,8 +1,8 @@
 ﻿{
   "bot": {
     "welcome": {
-      "message": "👋 **Thanks for adding Moderator Bot!**\n\n🛠️ **Dashboard:** [Open Dashboard]({dash_url})\n\n**Quick start**\n• Run **`/help`** to see commands (try `/help nsfw`, `/help strikes`)\n• Use the **Dashboard** to configure thresholds, actions, and toggles\n\n**Works out of the box**\nAI moderation is enabled with sane defaults. You can fine-tune anything in the Dashboard.\n\n**Need help?**\nOpen the Dashboard above, or run **`/help`** for details and the support link.",
-      "button_label": "Open Dashboard"
+      "message": "👋 **תודה שהוספתם את הבוט למודרטור!**\n\n🛠️ **לוח מחוונים**: [פתחו לוח מחוונים]({dash_url})\n\n**התחלה מהירה**\n• הריץ **`/help`** כדי לראות פקודות (נסו `/help nsfw`, `/help strikes`)\n• השתמש בלוח המחוונים כדי להגדיר ספים, פעולות וכיבויים\n\n**עובד ברירת מחדל**\nהמודרציה על ידי AI מופעלת עם הגדרות ברירות מחדל הגיוניות. ניתן להתאים כמעט הכל בלוח המחוונים.\n\n**זקוקים לעזרה?**\nפתחו את לוח המחוונים הנ\"ל, או הריץ **`/help`** לפרטים ולקישור תמיכה.",
+      "button_label": "פתחו לוח מחוונים"
     }
   }
 }

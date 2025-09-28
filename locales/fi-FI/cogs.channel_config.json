@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} ei ole ikärajoitettu. Valitse NSFW-kanava.",
+      "missing_permissions": "Minulta puuttuvat seuraavat oikeudet kanavassa {channel}: {permissions}",
+      "set_success": "{log_type} lokit julkaistaan kanavassa {channel}.",
+      "unset_success": "{log_type} lokikanava on poistettu käytöstä.",
+      "invalid_guild": "Virhe: Virheellinen kilta ID-muoto.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**Lokikanavat:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "Ei asetettu"
       }
     }
   }

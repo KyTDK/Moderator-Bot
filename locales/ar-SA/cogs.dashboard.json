@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "لوحة تحكم روبوت المشرف",
+        "description": "[اضغط هنا لفتح لوحة التحكم]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "جارٍ جلب رابط لوحة التحكم الخاصة بك..."
       }
     }
   }

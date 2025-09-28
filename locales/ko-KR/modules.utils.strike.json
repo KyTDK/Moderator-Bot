@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "행동은 다음 중 하나여야 합니다: {options}",
+          "duration_not_allowed": "이 명령에 대해 기간이 허용되지 않습니다.",
+          "duration_required": "기간을 입력해야 합니다 (예: `30m`, `1d`, `2w`).",
+          "duration_invalid": "잘못된 기간 형식입니다. `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`를 사용하세요.",
+          "timeout_role_disallowed": "역할을 타임아웃 행동에 첨부할 수 없습니다.",
+          "role_required": "`{action}`에 대한 역할을 지정해야 합니다.",
+          "duration_not_supported": "`{action}`은 기간을 지원하지 않습니다.",
+          "role_not_supported": "`{action}`은 역할을 사용하지 않습니다.",
+          "warn_message_required": "경고 메시지를 제공해야 합니다.",
+          "warn_role_disallowed": "역할을 경고 행동에 첨부할 수 없습니다."
         }
       }
     }

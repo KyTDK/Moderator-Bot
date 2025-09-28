@@ -3,16 +3,16 @@
     "utils": {
       "strike": {
         "validation": {
-          "invalid_action": "Action must be one of: {options}",
-          "duration_not_allowed": "Duration is not allowed for this command.",
-          "duration_required": "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
-          "duration_invalid": "Invalid duration format. Use `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
-          "timeout_role_disallowed": "You cannot attach a role to a timeout action.",
-          "role_required": "You must specify a role for `{action}`.",
-          "duration_not_supported": "`{action}` does not support a duration.",
-          "role_not_supported": "`{action}` does not use a role.",
-          "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "invalid_action": "Az akciónak az alábbiak egyikének kell lennie: {options}",
+          "duration_not_allowed": "A kommandhoz nem megengedett az időtartam.",
+          "duration_required": "Meg kell adnia egy időtartamot (pl. `30m`, `1d`, `2w`).",
+          "duration_invalid": "Érvénytelen időtartam formátum. Használja a következőt: `20s`, `30m`, `2h`, `5d`, `2w`, `1mo`, `1y`.",
+          "timeout_role_disallowed": "Nem csatolhat szerepet az időkorlát akcióhoz.",
+          "role_required": "Meg kell adnia egy szerepet a következőhöz: `{action}`.",
+          "duration_not_supported": "A `{action}` nem támogat időtartamot.",
+          "role_not_supported": "A `{action}` nem használ szerepet.",
+          "warn_message_required": "Meg kell adnia egy figyelmeztető üzenetet.",
+          "warn_role_disallowed": "Nem csatolhat szerepet egy figyelmeztető akcióhoz."
         }
       }
     }

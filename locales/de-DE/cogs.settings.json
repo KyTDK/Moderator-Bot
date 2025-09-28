@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**Verfügbare Einstellungen:**\\n",
+        "entry": "**{name}**: {description} (Typ: {type})",
+        "not_found": "Keine Hilfe für `{command}` gefunden."
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "Alle Einstellungen auf die Standardeinstellungen zurücksetzen.",
+        "already": "Du nutzt bereits die Standardeinstellungen."
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**Ungültiger Einstellungsname.**",
+        "requires_plan": "Diese Einstellung erfordert {requirement}. Nutze `/accelerated subscribe`, um ein Upgrade durchzuführen.",
+        "missing_boolean": "**`{name}` erwartet einen booleschen Wert. Nutze die `Wert`-Option.**",
+        "missing_integer": "**`{name}` erwartet eine ganze Zahl. Nutze die `Wert`-Option.**",
+        "missing_duration": "**`{name}` erwartet eine Dauer (z.B. 30m, 1d).**",
+        "missing_channel": "**`{name}` erwartet einen Kanal. Nutze die `Kanal`-Option.**",
+        "missing_role": "**`{name}` erwartet eine Rolle. Nutze die `Rolle`-Option.**",
+        "missing_channel_add": "**`{name}` erwartet einen hinzuzufügenden Kanal. Nutze die `Kanal`-Option.**",
+        "missing_role_add": "**`{name}` erwartet eine hinzuzufügende Rolle. Nutze die `Rolle`-Option.**",
         "boolean_values": {
           "true": [
             "true",
             "1",
-            "yes"
+            "ja"
           ],
           "false": [
             "false",
             "0",
-            "no"
+            "nein"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` erwartet einen booleschen Wert.**",
+        "unknown_type": "Einstellung als Wert geparst, da der Typ nicht bekannt ist.",
+        "success": "`{name}` auf `{value}` aktualisiert.",
+        "unexpected": "Ein unerwarteter Fehler ist aufgetreten: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "Ungültiger Einstellungsname.",
+        "not_set": "`{name}` ist nicht eingestellt. Standard: `{default}`",
+        "private": "Aus Datenschutzgründen ist diese Einstellung verborgen.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` ist derzeit auf folgendes eingestellt:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "Ungültiger Einstellungsname.",
+        "not_set": "`{name}` ist nicht eingestellt.",
+        "channel_required": "Du musst einen zu entfernenden Kanal angeben.",
+        "channel_missing": "{channel} ist nicht in `{name}`.",
+        "role_required": "Du musst eine zu entfernende Rolle angeben.",
+        "role_missing": "{role} ist nicht in `{name}`.",
+        "removed_channel": "{channel} aus `{name}` entfernt.",
+        "removed_role": "{role} aus `{name}` entfernt.",
+        "removed_setting": "Einstellung `{name}` entfernt. Jetzt wird der Standard genutzt.",
+        "unexpected": "Ein unerwarteter Fehler ist aufgetreten: `{error}`"
       }
     }
   }

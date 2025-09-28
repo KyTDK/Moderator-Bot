@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` вже у списку.",
+          "success": "Додано `{action}` до дій."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "Дія `{action}` не існує.",
+          "specific_success": "Вилучено конкретну дію `{action}`.",
+          "base_missing": "Не знайдено дій для `{action}`.",
+          "base_success": "Вилучено всі дії `{action}`."
         }
       }
     }

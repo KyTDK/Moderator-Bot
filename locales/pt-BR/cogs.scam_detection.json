@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Configurações de Golpes:**",
+        "actions": "- Ações de Golpes:\n{actions}",
+        "none": "*Nenhuma ação definida.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Mensagem de golpe detectada",
+        "title": "Mensagem de Golpe Detectada",
+        "description": "{mention}, sua mensagem foi marcada como golpe."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "O canal {channel} foi excluído da detecção de golpes.",
+        "already": "O canal {channel} já está excluído da detecção de golpes.",
+        "not_excluded": "O canal {channel} não está excluído da detecção de golpes.",
+        "removed": "O canal {channel} foi removido da lista de exclusão.",
+        "list_empty": "Atualmente, nenhum canal está excluído da detecção de golpes.",
+        "invalid": "Nenhum canal excluído válido encontrado.",
+        "list": "Canais excluídos: {channels}"
       }
     }
   }

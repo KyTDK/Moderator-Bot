@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**Διαθέσιμες Ρυθμίσεις:**\\n",
+        "entry": "**{name}**: {description} (Τύπος: {type})",
+        "not_found": "Δεν βρέθηκε βοήθεια για `{command}`."
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "Επαναφορά όλων των ρυθμίσεων στις προεπιλεγμένες.",
+        "already": "Χρησιμοποιείτε ήδη τις προεπιλεγμένες ρυθμίσεις."
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**Μη έγκυρο όνομα ρύθμισης.**",
+        "requires_plan": "Η ρύθμιση αυτή απαιτεί {requirement}. Χρησιμοποιήστε το `/accelerated subscribe` για αναβάθμιση.",
+        "missing_boolean": "**`{name}` αναμένει ένα boolean. Χρησιμοποιήστε την επιλογή `value`.**",
+        "missing_integer": "**`{name}` αναμένει έναν ακέραιο. Χρησιμοποιήστε την επιλογή `value`.**",
+        "missing_duration": "**`{name}` αναμένει διάρκεια (π.χ. 30m, 1d).**",
+        "missing_channel": "**`{name}` αναμένει ένα κανάλι. Χρησιμοποιήστε την επιλογή `channel`.**",
+        "missing_role": "**`{name}` αναμένει έναν ρόλο. Χρησιμοποιήστε την επιλογή `role`.**",
+        "missing_channel_add": "**`{name}` αναμένει ένα κανάλι για προσθήκη. Χρησιμοποιήστε την επιλογή `channel`.**",
+        "missing_role_add": "**`{name}` αναμένει έναν ρόλο για προσθήκη. Χρησιμοποιήστε την επιλογή `role`.**",
         "boolean_values": {
           "true": [
-            "true",
+            "αληθές",
             "1",
-            "yes"
+            "ναι"
           ],
           "false": [
-            "false",
+            "ψευδές",
             "0",
-            "no"
+            "όχι"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` αναμένει ένα boolean.**",
+        "unknown_type": "Η ρύθμιση αναλύθηκε ως τιμή επειδή ο τύπος δεν είναι γνωστός.",
+        "success": "Ενημερώθηκε το `{name}` σε `{value}`.",
+        "unexpected": "Παρουσιάστηκε ένα μη αναμενόμενο σφάλμα: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "Μη έγκυρο όνομα ρύθμισης.",
+        "not_set": "`{name}` δεν έχει οριστεί. Προεπιλογή: `{default}`",
+        "private": "Για λόγους απορρήτου, αυτή η ρύθμιση είναι κρυφή.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` έχει οριστεί προς το παρόν ως:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "Μη έγκυρο όνομα ρύθμισης.",
+        "not_set": "`{name}` δεν έχει οριστεί.",
+        "channel_required": "Πρέπει να καθορίσετε ένα κανάλι για αφαίρεση.",
+        "channel_missing": "{channel} δεν είναι στο `{name}`.",
+        "role_required": "Πρέπει να καθορίσετε έναν ρόλο για αφαίρεση.",
+        "role_missing": "{role} δεν είναι στο `{name}`.",
+        "removed_channel": "Αφαιρέθηκε το {channel} από το `{name}`.",
+        "removed_role": "Αφαιρέθηκε ο {role} από το `{name}`.",
+        "removed_setting": "Αφαιρέθηκε η ρύθμιση `{name}`. Τώρα χρησιμοποιείται η προεπιλογή.",
+        "unexpected": "Παρουσιάστηκε ένα μη αναμενόμενο σφάλμα: `{error}`"
       }
     }
   }

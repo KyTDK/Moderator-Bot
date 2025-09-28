@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "ﻟﻢ ﺗﺘﻢ ﺗﻌﻴﻴﻦ أﻱ أﻓﻌﺎﻝ ذات ﻣﺤﺘﻮى ﻟﺎئﻖ ﺣﺘﻰ اﻵن.",
+        "heading": "**الأفعال الحالية ذات المحتوى اللائق:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "ﻟﻢ ﺗﺘﻢ ﺗﻌﻴﻴﻦ أﻱ ﻓﺌﺎت ﺣﺘﻰ اﻵن.",
+        "heading": "**الفئات الحالية ذات المحتوى اللائق:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "ﻳﺠﺐ أن ﻳﻜﻮن اﻟﻌﺘﺒﺔ ﺑﻴﻦ 0.0 و 1.0.",
+        "set": "ﺗﻢ ﺗﻌﻴﻴﻦ ﻋﺘﺒﺔ اﻛﺘﺸﺎف المحتوى اللاﺋﻖ إﻟﻰ {value:.2f}.",
+        "unset": "ﻟﻢ ﻳﺘﻢ ﺗﻌﻴﻴﻦ عتبة اﻛﺘﺸﺎف المحتوى اللاﺋﻖ.",
+        "current": "عتبة اﻛﺘﺸﺎف المحتوى اللاﺋﻖ الحالية: {value:.2f}"
       }
     }
   }

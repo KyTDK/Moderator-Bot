@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**APIプールとは？**\nAPIプールは安全で匿名の共有OpenAI APIキーのコレクションです。各ユーザーがレート制限に直面してもモデレーターボットが効果的に運用を継続できるようにします。\n\n**仕組みは？**\n- APIキーをプールに追加すると、暗号化され安全に保存されます。\n- ボットはこれらのキーを専らOpenAIモデルにアクセスしてモデレーションタスクを行うために使用します。\n- あなたのAPIキーは機密に保たれ、開発者を含む誰も見ることはできません。\n- プールからAPIキーをいつでも削除する完全なコントロール権があります。\n\n**重要:** APIキーを提供するためには、あなたのOpenAIアカウントに少なくとも$5のプリペイドクレジットが必要です。モデレーションエンドポイントの使用は無料ですが、OpenAIはアカウントに有効な請求情報やクオータを求めます。 <https://platform.openai.com/account/billing/overview> でクレジットを追加できます。\n\nAPIキーを提供することで、モデレーター・ボットが全てのユーザーに対して応答性と効果を持ち続けるのを支援できます。"
       },
       "add": {
         "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "duplicate": "このAPIキーはすでにプールに存在します。",
+        "success": "APIキーがプールに追加されました。"
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "APIキーがあなたのプールから削除されました。",
+        "missing": "このAPIキーはあなたのプールで見つかりませんでした。現在のAPIキーは/api_pool listで確認できます。"
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "全てのAPIキーがプールからクリアされました。",
+        "empty": "クリアするAPIキーが見つかりません。"
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "あなたのAPIキー:",
+        "empty": "プールでAPIキーが見つかりませんでした。"
       }
     }
   }

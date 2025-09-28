@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}` este deja în listă.",
+          "success": "S-a adăugat `{action}` la acțiuni."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "Acțiunea `{action}` nu există.",
+          "specific_success": "Acțiunea specifică `{action}` a fost eliminată.",
+          "base_missing": "Nu s-au găsit acțiuni pentru `{action}`.",
+          "base_success": "Toate acțiunile `{action}` au fost eliminate."
         }
       }
     }

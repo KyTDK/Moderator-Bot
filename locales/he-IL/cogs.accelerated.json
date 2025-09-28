@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "נהל את המנוי המואץ (פרמיום) שלך.",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "סטטוס מואץ",
+        "footer_base": "בוט מואץ",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "מדרגה",
+          "status": "סטטוס",
+          "next_billing": "חיוב הבא"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "שרת זה אינו רשום ב**מואץ** עדיין. הירשם עכשיו עם `/accelerated subscribe`.",
+          "tier_value": "`אין`",
+          "status_value": "`לא נרשם`",
+          "next_billing_value": "התחל תוכנית עם `/accelerated subscribe`"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`אין חידוש מתוכנן`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - מחזור החיוב הבא",
+          "checked": "{base} - הסטטוס נבדק"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "פעיל",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "מואץ פעיל."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "פעיל - מבוטל בקרוב",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "מואץ יישאר פעיל עד סוף מחזור החיוב הנוכחי."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "ההטבות המואצות מושהות. הפעל מחדש בכל זמן עם `/accelerated subscribe`."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 הגילדה שלך כבר ברשימה עם מנוי **מואץ** פעיל!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 שדרג למודרטור בוט מואץ!",
+          "description": "**תיהנה מזיהוי NSFW והונאות מהיר ביותר, תורים מועדפים וגישה מוקדמת לתכונות חדשות!**\n\nלאחר החודש החינמי שלך, המשך עבור **$5 לחודש** בלבד כדי לשמור על השרת שלך בטוח ומהיר יותר.",
+          "footer": "בוט מודרטור 🚀 תוכנית מואצת",
+          "button_label": "🚀 הירשם עכשיו"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "הטבות מואצות",
+        "description": "שדרג את החוויה שלך עם מודרטור בוט מואץ:\n• סריקה אוטונומית המונעת על ידי AI לזיהוי פעולה אוטומטית על הודעות מפרות כללים\n• סרוק יותר פריימים בכל וידאו לזיהוי NSFW מעמיק\n• זיהוי NSFW והונאות מועדפים\n• גישה מוקדמת לתכונות חדשות\n• תומך בפיתוח הבוט"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "ניתן לבטל את המנוי שלך ב-PayPal בכל עת דרך **חשבון PayPal שלך → הגדרות → תשלומים → ניהול תשלומים אוטומטיים**.\nהגישה שלך לפרימיום תימשך עד סוף מחזור החיוב."
       }
     }
   }

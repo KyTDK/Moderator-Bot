@@ -3,10 +3,10 @@
     "dashboard": {
       "embed": {
         "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "description": "[Klik her for at åbne dashboardet]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "Genererer dit dashboard-link..."
       }
     }
   }

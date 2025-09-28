@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "管理您的加速（高級）訂閱。",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "加速狀態",
+        "footer_base": "Moderator Bot 加速",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "層級",
+          "status": "狀態",
+          "next_billing": "下一次帳單"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "此伺服器尚未參加**加速**。立即訂閱，輸入`/accelerated subscribe`。",
+          "tier_value": "`無`",
+          "status_value": "`未訂閱`",
+          "next_billing_value": "輸入`/accelerated subscribe`開始計劃"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`沒有排定續約`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - 下一次帳單周期",
+          "checked": "{base} - 狀態已檢查"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "活躍中",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "加速已啟動。"
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "活躍中 - 即將取消",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "加速將持續到本次帳單周期結束。"
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "加速優惠暫停。隨時可重新啟動，輸入`/accelerated subscribe`。"
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 您的工會已經有活躍的**加速**訂閱！",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 升級至 Moderator Bot 加速！",
+          "description": "**享受超快速的 NSFW & 詐騙檢測、優先排隊，並提前獲得新功能！**\n\n在您免費試用一個月後，只需 **$5/月** 即可繼續保持伺服器的安全和速度。",
+          "footer": "Moderator Bot 🚀 加速計劃",
+          "button_label": "🚀 立即訂閱"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "加速優惠",
+        "description": "通過 Moderator Bot 加速升級您的體驗：\n• AI 驅動的自主調解掃描，能自動檢測並處理違規消息\n• 每段視頻掃描更多幀，以更深入檢測 NSFW\n• 優先處理 NSFW & 詐騙檢測\n• 提前訪問新功能\n• 支持機器人開發"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "您可以隨時通過您的 **PayPal 帳戶 → 設定 → 付款 → 管理自動付款** 取消您的 PayPal 訂閱。\n您的高級訪問權將持續至帳單周期結束。"
       }
     }
   }

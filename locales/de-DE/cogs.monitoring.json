@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "Upgrade auf Beschleunigt zur schnelleren NSFW- und Betrugserkennung — /accelerated",
+        "guild_footer": "Server-ID: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Mitglied beigetreten",
+        "description": "{mention} ({name}) ist dem Server beigetreten.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Konto erstellt",
+          "joined_at": "Beigetreten am"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bot-Konto",
+          "user": "Nutzerkonto"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Mitglied in die Auszeit versetzt",
+        "title_removed": "Auszeit entfernt",
+        "description_applied": "{mention} ({name}) wurde in eine Auszeit versetzt.",
+        "description_removed": "{mention} ({name}) wurde eine Auszeit aufgehoben.",
         "fields": {
-          "ends": "Ends",
+          "ends": "Endet",
           "moderator": "Moderator",
-          "reason": "Reason"
+          "reason": "Grund"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Benutzer-ID: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Mitglied hinausgeworfen",
+        "title_left": "Mitglied hat den Server verlassen",
+        "description_kicked": "{mention} ({name}) wurde vom Server entfernt.",
+        "description_left": "{mention} ({name}) hat den Server verlassen.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Rausgeworfen von",
+          "reason": "Grund"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bot-Konto",
+          "user": "Nutzerkonto"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Nachricht gelöscht",
+        "description_with_author": "**Autor:** {author_mention} ({author_name})\n**Kanal:** {channel}\n",
+        "deleted_by": "**Gelöscht von:** {deleter}\n",
+        "content_label": "**Inhalt:**\n{content}",
+        "description_generic": "Eine Nachricht wurde in {channel} gelöscht.",
+        "description_deleted_by": "\n**Gelöscht von:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Anhänge ({count})",
+          "embeds": "Einbettung {index}",
+          "stickers": "Sticker ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Einbettungsinhalt nicht verfügbar]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "Benutzer-ID: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Nachricht bearbeitet",
+        "description": "**Autor:** {author_mention} ({author_name})\n**Kanal:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Vorher",
+          "after": "Nachher"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Benutzer-ID: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Mitglied gesperrt",
+        "description": "{mention} ({name}) wurde gesperrt.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Gesperrt von",
+          "reason": "Grund"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Benutzer-ID: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Mitglied entsperrt",
+        "description": "{mention} ({name}) wurde entsperrt.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Entsperrt von",
+          "reason": "Grund"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Benutzer-ID: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "Überwachungskanal eingestellt auf {channel}.",
+        "removed": "Überwachungskanal wurde entfernt.",
+        "not_set": "Kein Überwachungskanal wurde eingestellt.",
+        "current": "Aktueller Überwachungskanal: {channel}",
+        "none": "Kein Überwachungskanal ist derzeit eingestellt.",
+        "toggle": "Protokollierung für `{event}` wurde {state}.",
+        "state_enabled": "aktiviert",
+        "state_disabled": "deaktiviert",
+        "list_heading": "**Überwachungsereignisse:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"

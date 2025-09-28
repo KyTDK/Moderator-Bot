@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**Saatavilla olevat asetukset:**\\n",
+        "entry": "**{name}**: {description} (Tyyppi: {type})",
+        "not_found": "Käskylle `{command}` ei löytynyt apua."
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "Palauta kaikki asetukset oletuksiin.",
+        "already": "Käytät jo oletusasetuksia."
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**Virheellinen asetuksen nimi.**",
+        "requires_plan": "Tämä asetus vaatii {requirement}. Päivitä tasoa käyttämällä `/accelerated subscribe`.",
+        "missing_boolean": "**`{name}` edellyttää totuusarvoa. Käytä `arvo`-vaihtoehtoa.**",
+        "missing_integer": "**`{name}` edellyttää kokonaislukua. Käytä `arvo`-vaihtoehtoa.**",
+        "missing_duration": "**`{name}` edellyttää kestoa (esim. 30m, 1d).**",
+        "missing_channel": "**`{name}` edellyttää kanavaa. Käytä `kanava`-vaihtoehtoa.**",
+        "missing_role": "**`{name}` edellyttää roolia. Käytä `rooli`-vaihtoehtoa.**",
+        "missing_channel_add": "**`{name}` odottaa lisättävää kanavaa. Käytä `kanava`-vaihtoehtoa.**",
+        "missing_role_add": "**`{name}` odottaa lisättävää roolia. Käytä `rooli`-vaihtoehtoa.**",
         "boolean_values": {
           "true": [
-            "true",
+            "totta",
             "1",
-            "yes"
+            "kyllä"
           ],
           "false": [
-            "false",
+            "epätosi",
             "0",
-            "no"
+            "ei"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` odottaa totuusarvoa.**",
+        "unknown_type": "Asetus tulkittiin arvoksi, koska tyyppiä ei tunneta",
+        "success": "Päivitetty `{name}` arvoon `{value}`.",
+        "unexpected": "Tapahtui odottamaton virhe: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "Virheellinen asetuksen nimi.",
+        "not_set": "`{name}` ei ole asetettu. Oletusarvo: `{default}`",
+        "private": "Tietosuojasyistä tämä asetus on piilotettu.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` on tällä hetkellä asetettu arvoksi:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "Virheellinen asetuksen nimi.",
+        "not_set": "`{name}` ei ole asetettu.",
+        "channel_required": "Sinun täytyy määrittää poistettava kanava.",
+        "channel_missing": "{channel} ei ole määritteessä `{name}`.",
+        "role_required": "Sinun täytyy määrittää poistettava rooli.",
+        "role_missing": "{role} ei ole määritteessä `{name}`.",
+        "removed_channel": "Poistettu {channel} määritteestä `{name}`.",
+        "removed_role": "Poistettu {role} määritteestä `{name}`.",
+        "removed_setting": "Poistettu asetus `{name}`. Käytetään nyt oletusarvoa.",
+        "unexpected": "Tapahtui odottamaton virhe: `{error}`"
       }
     }
   }

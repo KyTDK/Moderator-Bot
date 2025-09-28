@@ -3,12 +3,12 @@
     "utils": {
       "list_manager": {
         "add": {
-          "duplicate": "`{item}` is already in the list.",
-          "success": "Added `{item}` to the list."
+          "duplicate": "Το `{item}` είναι ήδη στη λίστα.",
+          "success": "Προστέθηκε το `{item}` στη λίστα."
         },
         "remove": {
-          "missing": "`{item}` is not in the list.",
-          "success": "Removed `{item}` from the list."
+          "missing": "Το `{item}` δεν είναι στη λίστα.",
+          "success": "Αφαιρέθηκε το `{item}` από τη λίστα."
         }
       }
     }

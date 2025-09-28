@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "모더레이터 봇 대시보드",
+        "description": "[대시보드를 열려면 클릭하세요]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "대시보드 링크를 생성 중입니다..."
       }
     }
   }

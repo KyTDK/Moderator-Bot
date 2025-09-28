@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**הגדרות תרמית:**",
+        "actions": "- פעולות תרמית:\n{actions}",
+        "none": "*אין פעולות שנקבעו.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "הודעה חשודה לאימות אותרה",
+        "title": "הודעה חשודה לאימות",
+        "description": "{mention}, ההודעה שלך סומנה כהונאה."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "ערוץ {channel} הוסר מהבדלנות לגילוי תרמית.",
+        "already": "ערוץ {channel} כבר נמצא ברשימת החריגים מגילוי תרמית.",
+        "not_excluded": "ערוץ {channel} לא נמצא ברשימת החריגים מגילוי תרמית.",
+        "removed": "ערוץ {channel} הוסר מהרשימה החריגה.",
+        "list_empty": "אין ערוצים שהורחקו מגילוי תרמית כרגע.",
+        "invalid": "לא נמצאו ערוצים שהוצאו כשרים.",
+        "list": "ערוצים שהוצאו: {channels}"
       }
     }
   }

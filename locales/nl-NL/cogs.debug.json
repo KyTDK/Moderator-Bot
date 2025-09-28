@@ -1,19 +1,19 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "U heeft geen toestemming om dit commando te gebruiken.",
+      "no_allocations": "Geen projectgerelateerde allocaties gevonden.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
+        "title": "Bot Prestaties Statistieken",
+        "memory_name": "Geheugengebruik",
+        "memory_value": "**RSS (Werkelijk):** {rss:.2f} MB\n**VMS (Virtueel):** {vms:.2f} MB\n**Tracemalloc Huidig:** {current_mb:.2f} MB\n**Tracemalloc Piek:** {peak_mb:.2f} MB",
         "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
+        "cpu_value": "**CPU-gebruik:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
+        "bot_name": "Bot Statistieken",
+        "bot_value": "**Guilds:** {guilds}\n**Gebruikers (gecachte):** {users}\n**Uptime:** {uptime}",
+        "allocations_name": "Top Geheugen Allocaties {index}",
+        "worker_name": "Werkerwachtrijen",
+        "worker_error": "(fout bij het verzamelen van statistieken: {error})",
         "footer": "Host: {host} | Python {python_version}"
       }
     }

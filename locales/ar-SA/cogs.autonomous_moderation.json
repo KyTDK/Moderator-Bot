@@ -2,47 +2,47 @@
   "cogs": {
     "autonomous_moderation": {
       "common": {
-        "subscription_required": "This server doesn't have an Accelerated subscription. Use `/accelerated subscribe` to start your premium plan."
+        "subscription_required": "هذا الخادم لا يحتوي على اشتراك متميز. استخدم `/accelerated subscribe` لبدء خطتك المتميزة."
       },
       "rules": {
-        "updated": "Rules updated.",
-        "none": "No moderation rules have been set.",
-        "heading": "**Moderation Rules:**\n```{rules}```",
+        "updated": "تم تحديث القواعد.",
+        "none": "لم يتم ضبط أي قواعد توزيع.",
+        "heading": "**قواعد التوزيع:**\n```{rules}```",
         "truncated_suffix": "…"
       },
       "toggle": {
-        "need_rules": "Set moderation rules first with `/ai_mod rules_set`.",
-        "enabled": "Autonomous moderation has been **enabled**.",
-        "disabled": "Autonomous moderation has been **disabled**.",
-        "mode_set": "Mode has been set to **{mode}**.",
-        "status": "Autonomous moderation is **{state}**.\nCurrent mode is **{mode}**.",
-        "status_active": "\nActive sub-mode: **{active}**",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "state_unknown": "unknown"
+        "need_rules": "قم بتعيين قواعد التوزيع أولاً باستخدام `/ai_mod rules_set`.",
+        "enabled": "تم **تفعيل** التوزيع الذاتي.",
+        "disabled": "تم **تعطيل** التوزيع الذاتي.",
+        "mode_set": "تم ضبط الوضع على **{mode}**.",
+        "status": "التوزيع الذاتي هو **{state}**.\nالوضع الحالي هو **{mode}**.",
+        "status_active": "الوضع النشط: **{active}**",
+        "state_enabled": "مفعل",
+        "state_disabled": "معطل",
+        "state_unknown": "غير معروف"
       },
       "actions": {
-        "none": "No actions are currently set.",
-        "heading": "**Current actions:**\n{actions}"
+        "none": "لم يتم تحديد أي إجراءات حالياً.",
+        "heading": "**الإجراءات الحالية:**\n{actions}"
       },
       "adaptive": {
-        "role_required": "This event type requires a role.",
-        "threshold_required": "This event type requires a threshold.",
-        "threshold_range": "Threshold must be a value between 0 and 1.",
-        "time_range_required": "This event type requires a time range (e.g., 08:00-20:00).",
-        "error": "Error setting event: {error}",
-        "cleared": "All adaptive events have been cleared.",
-        "none": "No adaptive events set.",
+        "role_required": "هذا النوع من الأحداث يتطلب دورًا.",
+        "threshold_required": "هذا النوع من الأحداث يتطلب حدًا معيناً.",
+        "threshold_range": "يجب أن يكون الحد قيمة بين 0 و 1.",
+        "time_range_required": "هذا النوع من الأحداث يتطلب نطاقاً زمنياً (مثال: 08:00-20:00).",
+        "error": "حدث خطأ عند ضبط الحدث: {error}",
+        "cleared": "تم مسح جميع الأحداث التكيفية.",
+        "none": "لم يتم تحديد أي أحداث تكيفية.",
         "section": "**{event}**",
         "item": "• `{action}`{details}",
         "detail_join": " — {details}",
         "detail_role": "`role_id={id}`",
-        "detail_invalid_role": "[invalid role: {value}]",
-        "detail_invalid": "[invalid: {value}]",
+        "detail_invalid_role": "[دور غير صالح: {value}]",
+        "detail_invalid": "[غير صالح: {value}]",
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
-      "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
+      "ensure_adaptive": "لم يتم تفعيل وضع التوزيع التكيفي. استخدم `/ai_mod set_mode` لتفعيله."
     }
   }
 }

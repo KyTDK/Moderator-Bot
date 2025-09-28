@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "A beépített trágársági lista **{state}**.",
+        "updated": "Beépített trágársági lista **{state}**.",
+        "state_enabled": "engedélyezett",
+        "state_disabled": "letiltott"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Elérted az ennek a szervernek a {limit} tiltott szavának korlátját.\nHasználd a `/bannedwords remove` vagy a `/bannedwords clear` parancsot a hely felszabadításához.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "A(z) '{word}' szó már tiltva van.",
+        "success": "A(z) '{word}' szó hozzá lett adva a tiltott szavak listájához."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "A(z) '{word}' szó nincs tiltva.",
+        "success": "A(z) '{word}' szó eltávolítva a tiltott szavak listájáról."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Nincsenek tiltott szavak.",
+        "file_header": "Tiltott Szavak:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Nincsenek törölhető tiltott szavak.",
+        "success": "Minden tiltott szó törölve lett."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Jelenleg nincsenek beállított műveletek tiltott szavakra.",
+        "header": "**Jelenlegi tiltott szavakra vonatkozó műveletek:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Az üzenet tiltott szót tartalmazott",
+        "strike_source": "tiltott szó",
+        "embed_title": "Tiltott szó észlelve",
+        "embed_description": "{mention}, az üzeneted törölve lett, mert tiltott szót tartalmazott."
       }
     }
   }

@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "이 명령은 서버에서만 사용할 수 있습니다.",
+        "wrong_guild": "이 서버에서 멤버를 선택하세요.",
+        "is_bot": "봇은 캡챠 인증이 필요하지 않습니다."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "캡챠 임베드 업데이트 중 예기치 않은 오류가 발생했습니다.",
+        "updated": "캡챠 인증 임베드가 업데이트되었습니다.",
+        "missing_delivery": "이 서버에는 캡챠 임베드 전달이 설정되어 있지 않습니다."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "인증 요청이 전송되었습니다.",
+        "failure": "인증 지시사항을 보낼 수 없습니다.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "이 멤버는 길드의 일부가 아닙니다.",
+        "not_enabled": "이 서버에서는 캡챠 인증이 활성화되어 있지 않습니다.",
+        "not_configured": "캡챠 인증이 설정되어 있지 않습니다.",
+        "embed_success": "설정된 채널에 인증 지시사항 게시됨.",
+        "dm_success": "멤버에게 인증 메시지 전송됨.",
+        "failure": "인증 지시사항을 보낼 수 없습니다; 설정을 확인하세요."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "프리 캡챠 역할 할당 중"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "캡챠 인증 시간이 초과되었습니다."
       }
     }
   }

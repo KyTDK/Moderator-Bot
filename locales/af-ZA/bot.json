@@ -1,7 +1,7 @@
 ﻿{
   "bot": {
     "welcome": {
-      "message": "👋 **Thanks for adding Moderator Bot!**\n\n🛠️ **Dashboard:** [Open Dashboard]({dash_url})\n\n**Quick start**\n• Run **`/help`** to see commands (try `/help nsfw`, `/help strikes`)\n• Use the **Dashboard** to configure thresholds, actions, and toggles\n\n**Works out of the box**\nAI moderation is enabled with sane defaults. You can fine-tune anything in the Dashboard.\n\n**Need help?**\nOpen the Dashboard above, or run **`/help`** for details and the support link.",
+      "message": "👋 **Dankie dat jy Moderator-bot bygevoeg het!**\n\n🛠️ **Dashboard:** [Open Dashboard]({dash_url})\n\n**Vinnig van start gaan**\n• Voer **`/help`** uit om opdragte te sien (probeer `/help nsfw`, `/help strikes`)\n• Gebruik die **Dashboard** om drumpels, aksies, en skakelaars te konfigureer\n\n**Werk reg uit die boks uit**\nKI-moderering is met verstandige standaarde geaktiveer. Jy kan alles in die Dashboard verfyn na jou smaak.\n\n**Benodig hulp?**\nOpen die Dashboard hierbo, of voer **`/help`** uit vir besonderhede en die ondersteuningskakel.",
       "button_label": "Open Dashboard"
     }
   }

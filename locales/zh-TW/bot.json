@@ -1,8 +1,8 @@
 ﻿{
   "bot": {
     "welcome": {
-      "message": "👋 **Thanks for adding Moderator Bot!**\n\n🛠️ **Dashboard:** [Open Dashboard]({dash_url})\n\n**Quick start**\n• Run **`/help`** to see commands (try `/help nsfw`, `/help strikes`)\n• Use the **Dashboard** to configure thresholds, actions, and toggles\n\n**Works out of the box**\nAI moderation is enabled with sane defaults. You can fine-tune anything in the Dashboard.\n\n**Need help?**\nOpen the Dashboard above, or run **`/help`** for details and the support link.",
-      "button_label": "Open Dashboard"
+      "message": "👋 **感謝您添加管理員機器人！**\n\n🛠️ **儀表板：** [打開儀表板]({dash_url})\n\n**快速入門**\n• 运行 **`/help`** 查看命令 (嘗試 `/help nsfw`，`/help strikes`)\n• 使用 **儀表板** 配置閾值、行動和切換\n\n**開箱即用**\nAI 管理默認啟用。您可以在儀表板中微調任何設定。\n\n**需要幫忙嗎？**\n打開上方的儀表板，或運行 **`/help`** 獲取詳情和支援連結。",
+      "button_label": "打開儀表板"
     }
   }
 }

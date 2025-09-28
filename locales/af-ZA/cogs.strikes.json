@@ -2,38 +2,38 @@
   "cogs": {
     "strikes": {
       "strike": {
-        "error": "An error occurred, please try again. If the issue persists, please join the support server (link in `/help`)."
+        "error": "\u0002Een fout het voorgekom, probeer asseblief weer. As die probleem voortduur, sluit aan by die ondersteuningsbediener (skakel in `/help`)."
       },
       "get": {
-        "title": "Strikes for {name}",
-        "empty": "No strikes found for this user.",
-        "file_notice": "Strike list is too long to display inline, sending as a file:"
+        "title": "Strafpunte vir {name}",
+        "empty": "Geen strafpunte vir hierdie gebruiker gevind nie.",
+        "file_notice": "Die lys van strafpunte is te lank om inlyn te vertoon, stuur as 'n lêer:"
       },
       "remove": {
-        "success": "Strike with ID `{id}` for {mention} has been successfully removed.",
-        "not_found": "No strike with ID `{id}` found for {mention} in this guild.\nUse `/strikes get <user>` to display all strikes and their IDs."
+        "success": "Strafpunt met ID `{id}` vir {mention} is suksesvol verwyder.",
+        "not_found": "Geen strafpunt met ID `{id}` is vir {mention} in hierdie groep gevind nie.\nGebruik `/strikes get <user>` om alle strafpunte en hul ID'e te vertoon."
       },
       "clear": {
-        "none": "No active strikes found for {mention}.",
-        "success": "Cleared {count} strike(s) for {mention}."
+        "none": "Geen aktiewe strafpunte vir {mention} gevind nie.",
+        "success": "{count} strafpunt(e) vir {mention} skoongemaak."
       },
       "actions": {
-        "exists": "Action `{action}` already exists for `{key}` strikes.",
-        "added": "Added `{action}` to actions for `{key}` strikes.",
-        "missing": "Action `{action}` not found for `{key}` strikes.",
-        "removed": "Removed `{action}` from `{key}` strike actions."
+        "exists": "Aksie `{action}` bestaan reeds vir `{key}`-strafpunte.",
+        "added": "`{action}` by aksies vir `{key}`-strafpunte gevoeg.",
+        "missing": "Aksie `{action}` nie gevind vir `{key}`-strafpunte nie.",
+        "removed": "`{action}` van `{key}`-strafpunte verwyder."
       },
       "view_actions": {
-        "none": "No strike actions configured.",
-        "heading": "**Current strike actions:**",
+        "none": "Geen strafpuntaksies gekonfigureer nie.",
+        "heading": "**Huidige strafpuntaksies:**",
         "item": "{key}: {actions}"
       },
       "intimidate": {
-        "user_title": "Final Warning for {name}",
-        "user_body": "{mention},\nYour actions are pushing the limits of what is acceptable within this server. Consider this your final warning before a strike is issued against your account. Continued disregard for the community guidelines will result in immediate disciplinary action, which may include further penalties or removal from the server.\n\nThis is not a request — comply with the rules now.",
-        "guild_title": "Official Moderation Notice",
-        "guild_body": "Please be advised that Moderator Bot is actively monitoring all activity in this channel. Any violations of community guidelines may result in disciplinary action. The severity and nature of these actions will depend on the circumstances of each case. We appreciate your cooperation in helping maintain a respectful and safe environment.",
-        "confirm": "Sent message."
+        "user_title": "Finale Waarskuwing vir {name}",
+        "user_body": "{mention},\nJou aksies stoot die perke van wat aanvaarbaar is binne hierdie bediener. Beskou dit as jou finale waarskuwing voordat 'n strafpunt teen jou rekening gegee word. Voortgesette verontagsaming van die gemeenskap se riglyne sal lei tot onmiddellike dissiplinêre aksie, wat verdere strawwe of verwydering van die bediener mag insluit.\n\nDit is nie 'n versoek nie – voldoen nou aan die reëls.",
+        "guild_title": "Amptelike Modereringskennisgewing",
+        "guild_body": "Neem kennis dat die Moderator Bot aktief alle aktiwiteit in hierdie kanaal monitor. Enige oortredings van die gemeenskap se riglyne mag lei tot dissiplinêre aksie. Die erns en aard van hierdie aksies sal afhang van die omstandighede van elke geval. Ons waardeer u samewerking om 'n respekvolle en veilige omgewing te handhaaf.",
+        "confirm": "Boodskap gestuur."
       }
     }
   }

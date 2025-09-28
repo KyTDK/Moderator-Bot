@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**O que é o API Pool?**\nO API Pool é uma coleção segura e anônima de chaves de API da OpenAI compartilhadas. Ele permite que o Bot Moderador continue operando efetivamente, mesmo quando os usuários individuais enfrentam limites de taxa.\n\n**Como funciona?**\n- Quando você adiciona sua chave de API da OpenAI ao pool, ela é criptografada e armazenada com segurança.\n- O bot usa essas chaves exclusivamente para acessar os modelos da OpenAI e realizar tarefas de moderação.\n- Sua chave de API permanece confidencial; ninguém, incluindo os desenvolvedores do bot, pode visualizá-la.\n- Você tem controle total e pode remover sua chave de API do pool a qualquer momento.\n\n**Importante:** Para contribuir com sua chave de API, sua conta OpenAI deve ter pelo menos $5 em créditos pré-pagos. Embora o terminal de moderação seja gratuito, a OpenAI exige que as contas tenham detalhes de cobrança ativos e cota. Você pode adicionar crédito à sua conta aqui: <https://platform.openai.com/account/billing/overview>\n\nAo contribuir com sua chave de API, você ajuda a garantir que o Bot Moderador permaneça responsivo e eficaz para todos os usuários."
       },
       "add": {
-        "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "invalid": "{erro}",
+        "duplicate": "Esta chave de API já existe no pool.",
+        "success": "Chave de API adicionada ao pool."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "Chave de API removida do seu pool.",
+        "missing": "Esta chave de API não foi encontrada no seu pool. Use /api_pool list para ver suas chaves de API atuais."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Todas as chaves de API foram limpas do seu pool.",
+        "empty": "Nenhuma chave de API encontrada para limpar."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Suas Chaves de API:",
+        "empty": "Nenhuma chave de API encontrada no seu pool."
       }
     }
   }

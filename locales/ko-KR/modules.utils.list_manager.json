@@ -3,12 +3,12 @@
     "utils": {
       "list_manager": {
         "add": {
-          "duplicate": "`{item}` is already in the list.",
-          "success": "Added `{item}` to the list."
+          "duplicate": "`{item}`은 이미 목록에 포함되어 있습니다.",
+          "success": "`{item}`을(를) 목록에 추가했습니다."
         },
         "remove": {
-          "missing": "`{item}` is not in the list.",
-          "success": "Removed `{item}` from the list."
+          "missing": "`{item}`은 목록에 없습니다.",
+          "success": "`{item}`을(를) 목록에서 제거했습니다."
         }
       }
     }

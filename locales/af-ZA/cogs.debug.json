@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "Jy het nie toestemming om hierdie opdrag te gebruik nie.",
+      "no_allocations": "Geen projek-verwante toewysings gevind nie.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "Bot Prestasie Stats",
+        "memory_name": "Geheue Gebruik",
+        "memory_value": "**RSS (Werklik):** {rss:.2f} MB\n**VMS (Virtueel):** {vms:.2f} MB\n**Tracemalloc Huidig:** {current_mb:.2f} MB\n**Tracemalloc Hoogtepunt:** {peak_mb:.2f} MB",
+        "cpu_name": "SVE & Drade",
+        "cpu_value": "**SVE Gebruik:** {cpu_percent:.1f}%\n**Drade:** {threads}\n**Hanteerders:** {handles}",
+        "bot_name": "Bot Statistieke",
+        "bot_value": "**Gildes:** {guilds}\n**Gebruikers (kas):** {users}\n**Uptyd:** {uptime}",
+        "allocations_name": "Top Geheue Toewysings {index}",
+        "worker_name": "Werker Toues",
+        "worker_error": "(fout by die versameling van statistieke: {error})",
+        "footer": "Gasheer: {host} | Python {python_version}"
       }
     }
   }

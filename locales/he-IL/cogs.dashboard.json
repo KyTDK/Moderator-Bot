@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "לוח המחוונים של בוט המודרטור",
+        "description": "[לחץ כאן כדי לפתוח את לוח המחוונים]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "יוצר את הקישור ללוח המחוונים שלך..."
       }
     }
   }

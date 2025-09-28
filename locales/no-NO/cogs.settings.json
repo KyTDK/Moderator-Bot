@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
+        "header": "**Tilgjengelige Innstillinger:**\\n",
         "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "not_found": "Ingen hjelp funnet for `{command}`."
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "Tilbakestill alle innstillinger til standard.",
+        "already": "Du bruker allerede standardinnstillinger."
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**Ugyldig innstillingsnavn.**",
+        "requires_plan": "Denne innstillingen krever {requirement}. Bruk `/accelerated subscribe` for å oppgradere.",
+        "missing_boolean": "**`{name}` forventer en boolean. Bruk `value` alternativet.**",
+        "missing_integer": "**`{name}` forventer et heltall. Bruk `value` alternativet.**",
+        "missing_duration": "**`{name}` forventer en varighet (f.eks. 30m, 1d).**",
+        "missing_channel": "**`{name}` forventer en kanal. Bruk `channel` alternativet.**",
+        "missing_role": "**`{name}` forventer en rolle. Bruk `role` alternativet.**",
+        "missing_channel_add": "**`{name}` forventer en kanal å legge til. Bruk `channel` alternativet.**",
+        "missing_role_add": "**`{name}` forventer en rolle å legge til. Bruk `role` alternativet.**",
         "boolean_values": {
           "true": [
-            "true",
+            "sant",
             "1",
-            "yes"
+            "ja"
           ],
           "false": [
-            "false",
+            "falsk",
             "0",
-            "no"
+            "nei"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` forventer en boolean.**",
+        "unknown_type": "Innstilling tolket som verdi ettersom typen ikke er kjent",
+        "success": "Oppdatert `{name}` til `{value}`.",
+        "unexpected": "En uventet feil oppsto: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "Ugyldig innstillingsnavn.",
+        "not_set": "`{name}` er ikke satt. Standard: `{default}`",
+        "private": "Av personvernhensyn er denne innstillingen skjult.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` er for øyeblikket satt til:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "Ugyldig innstillingsnavn.",
+        "not_set": "`{name}` er ikke satt.",
+        "channel_required": "Du må spesifisere en kanal å fjerne.",
+        "channel_missing": "{channel} er ikke i `{name}`.",
+        "role_required": "Du må spesifisere en rolle å fjerne.",
+        "role_missing": "{role} er ikke i `{name}`.",
+        "removed_channel": "Fjernet {channel} fra `{name}`.",
+        "removed_role": "Fjernet {role} fra `{name}`.",
+        "removed_setting": "Fjernet innstilling `{name}`. Bruker nå standard.",
+        "unexpected": "En uventet feil oppsto: `{error}`"
       }
     }
   }

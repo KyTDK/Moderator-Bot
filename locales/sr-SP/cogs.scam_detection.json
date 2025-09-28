@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Подешавања преваре:**",
+        "actions": "- Акције преваре:\n{actions}",
+        "none": "*Нису подешене акције.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Откривена порука о превари",
+        "title": "Откривена порука о превари",
+        "description": "{mention}, ваша порука је означена као превара."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "Канал {channel} је изузет из детекције преваре.",
+        "already": "Канал {channel} је већ изузет из детекције преваре.",
+        "not_excluded": "Канал {channel} није изузет из детекције преваре.",
+        "removed": "Канал {channel} је уклоњен са листе изузетака.",
+        "list_empty": "Тренутно нема канала изузетих из детекције преваре.",
+        "invalid": "Нема важећих изузетих канала пронађених.",
+        "list": "Изузети канали: {channels}"
       }
     }
   }

@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "Den innebygde listen over upassende ord er **{state}**.",
+        "updated": "Innebygd liste over upassende ord **{state}**.",
+        "state_enabled": "aktivert",
+        "state_disabled": "deaktivert"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "Du har nådd grensen på {limit} forbudte ord for denne serveren.\nBruk `/bannedwords remove` eller `/bannedwords clear` for å frigjøre plass.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "Ordet '{word}' er allerede forbudt.",
+        "success": "Ordet '{word}' er blitt lagt til på listen over forbudte ord."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "Ordet '{word}' er ikke forbudt.",
+        "success": "Ordet '{word}' er blitt fjernet fra listen over forbudte ord."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "Ingen forbudte ord funnet.",
+        "file_header": "Forbudte ord:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "Ingen forbudte ord funnet å slette.",
+        "success": "Alle forbudte ord er slettet."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "Ingen handlinger er satt for tiden for forbudte ord.",
+        "header": "**Nåværende handlinger for forbudte ord:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "Meldingen inneholdt et forbudt ord",
+        "strike_source": "forbudt ord",
+        "embed_title": "Forbudt ord oppdaget",
+        "embed_description": "{mention}, meldingen din ble fjernet fordi den inneholdt et forbudt ord."
       }
     }
   }

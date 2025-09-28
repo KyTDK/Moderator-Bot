@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "このコマンドはサーバー内でのみ使用できます。",
+        "wrong_guild": "このサーバーからメンバーを選んでください。",
+        "is_bot": "ボットにはキャプチャ確認は必要ありません。"
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "キャプチャの埋め込みを更新中に予期せぬエラーが発生しました。",
+        "updated": "キャプチャ確認の埋め込みが更新されました。",
+        "missing_delivery": "このサーバーにはキャプチャ埋め込みの配信が設定されていません。"
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "認証リクエストが送信されました。",
+        "failure": "認証指示を送信できません。",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "このメンバーはギルドの一員ではありません。",
+        "not_enabled": "このサーバーにはキャプチャ確認が有効になっていません。",
+        "not_configured": "キャプチャ確認が設定されていません。",
+        "embed_success": "設定されたチャネルに認証指示が投稿されました。",
+        "dm_success": "メンバーに認証メッセージが送信されました。",
+        "failure": "認証指示を送信できません。設定を確認してください。"
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "プレキャプチャ役割を割り当て中"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "キャプチャ確認がタイムアウトしました。"
       }
     }
   }

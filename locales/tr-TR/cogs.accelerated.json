@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "Hızlandırılmış (Premium) aboneliğinizi yönetin.",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "Hızlandırılmış Durum",
+        "footer_base": "Moderatör Bot Hızlandırıldı",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "Seviye",
+          "status": "Durum",
+          "next_billing": "Bir Sonraki Fatura"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "Bu sunucu **Hızlandırılmış** kaydı yapılmamış. Şimdi '/hızlandırılmış abone ol' ile abone ol.",
+          "tier_value": "`Hiçbiri`",
+          "status_value": "`Abone Değil`",
+          "next_billing_value": "'/hızlandırılmış abone ol' ile bir plan başlatın"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`Yenileme planlanmadı`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - Bir sonraki fatura dönemi",
+          "checked": "{base} - Durum kontrol edildi"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "Aktif",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "Hızlandırılmış aktif."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "Aktif - Yakında İptal Olacak",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "Hızlandırılmış, bu fatura dönemi sonuna kadar etkin kalacak."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "Hızlandırılmış avantajları duraklatıldı. İstediğiniz zaman '/hızlandırılmış abone ol' ile yeniden başlatın."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 Sunucunuzda zaten aktif bir **Hızlandırılmış** aboneliğiniz var!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 Moderatör Bot Hızlandırılmış'a Yükseltin!",
+          "description": "**Hızlı NSFW & dolandırıcılık tespiti, öncelikli kuyruklar ve yeni özelliklere erken erişim!**\n\nÜcretsiz ayınızdan sonra, sunucunuzu daha güvende ve daha hızlı tutmak için sadece **$5/ay** devam edin.",
+          "footer": "Moderatör Bot 🚀 Hızlandırılmış Planı",
+          "button_label": "🚀 Şimdi Abone Ol"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "Hızlandırılmış Avantajlar",
+        "description": "Moderatör Bot Hızlandırılmış ile deneyiminizi yükseltin:\n• Kural ihlali mesajlarının otomatik tespiti ve işlem yapılması için AI destekli özerk moderasyon taraması\n• Daha derin NSFW tespiti için videolar başına daha fazla kare tarayın\n• Öncelikli NSFW & Dolandırıcılık tespiti\n• Yeni özelliklere erken erişim\n• Bot'un gelişimini destekler"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "**PayPal hesabınızda → Ayarlar → Ödemeler → Otomatik Ödemeleri Yönet** seçeneğiyle PayPal aboneliğinizi istediğiniz zaman iptal edebilirsiniz.\nPremium erişiminiz fatura dönemi sonuna kadar devam eder."
       }
     }
   }

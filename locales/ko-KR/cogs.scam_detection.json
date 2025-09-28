@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**사기 설정:**",
+        "actions": "- 사기 조치:\n{actions}",
+        "none": "*설정된 조치 없음.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "사기 메시지 감지됨",
+        "title": "사기 메시지 감지",
+        "description": "{mention}, 귀하의 메시지가 사기로 표시되었습니다."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "채널 {channel}이 사기 탐지에서 제외되었습니다.",
+        "already": "채널 {channel}은 이미 사기 탐지에서 제외되어 있습니다.",
+        "not_excluded": "채널 {channel}은 사기 탐지에서 제외되지 않았습니다.",
+        "removed": "채널 {channel}이 제외 목록에서 제거되었습니다.",
+        "list_empty": "현재 사기 탐지에서 제외된 채널이 없습니다.",
+        "invalid": "유효한 제외 채널을 찾을 수 없습니다.",
+        "list": "제외된 채널: {channels}"
       }
     }
   }

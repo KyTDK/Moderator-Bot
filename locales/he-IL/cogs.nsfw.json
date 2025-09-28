@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "אין כרגע פעולות NSFW מוגדרות.",
+        "heading": "**פעולות NSFW נוכחיות:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "אין כרגע קטגוריות מוגדרות.",
+        "heading": "**קטגוריות NSFW נוכחיות:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "רמת סף חייבת להיות בין 0.0 ל-1.0.",
+        "set": "רמת סף גילוי NSFW מוגדרת ל-{value:.2f}.",
+        "unset": "רמת סף גילוי NSFW לא מוגדרת.",
+        "current": "רמת סף גילוי NSFW נוכחית: {value:.2f}"
       }
     }
   }

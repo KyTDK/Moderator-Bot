@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Nici o acțiune NSFW nu este setată în prezent.",
+        "heading": "**Acțiuni NSFW curente:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Nici o categorie nu este setată în prezent.",
+        "heading": "**Categorii NSFW curente:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "Pragul trebuie să fie între 0,0 și 1,0.",
+        "set": "Pragul de detectare NSFW setat la {value:.2f}.",
+        "unset": "Pragul de detectare NSFW nu este setat.",
+        "current": "Pragul curent de detectare NSFW: {value:.2f}"
       }
     }
   }

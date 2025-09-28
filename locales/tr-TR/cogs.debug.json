@@ -1,20 +1,20 @@
 ﻿{
   "cogs": {
     "debug": {
-      "permission_denied": "You do not have permission to use this command.",
-      "no_allocations": "No project-related allocations found.",
+      "permission_denied": "Bu komutu kullanma izniniz yok.",
+      "no_allocations": "Proje ile ilgili tahsisat bulunamadı.",
       "embed": {
-        "title": "Bot Performance Stats",
-        "memory_name": "Memory Usage",
-        "memory_value": "**RSS (Actual):** {rss:.2f} MB\n**VMS (Virtual):** {vms:.2f} MB\n**Tracemalloc Current:** {current_mb:.2f} MB\n**Tracemalloc Peak:** {peak_mb:.2f} MB",
-        "cpu_name": "CPU & Threads",
-        "cpu_value": "**CPU Usage:** {cpu_percent:.1f}%\n**Threads:** {threads}\n**Handles:** {handles}",
-        "bot_name": "Bot Stats",
-        "bot_value": "**Guilds:** {guilds}\n**Users (cached):** {users}\n**Uptime:** {uptime}",
-        "allocations_name": "Top Memory Allocations {index}",
-        "worker_name": "Worker Queues",
-        "worker_error": "(error collecting metrics: {error})",
-        "footer": "Host: {host} | Python {python_version}"
+        "title": "Bot Performans İstatistikleri",
+        "memory_name": "Bellek Kullanımı",
+        "memory_value": "**RSS (Gerçek):** {rss:.2f} MB\n**VMS (Sanal):** {vms:.2f} MB\n**Tracemalloc Mevcut:** {current_mb:.2f} MB\n**Tracemalloc Zirve:** {peak_mb:.2f} MB",
+        "cpu_name": "CPU & İplikler",
+        "cpu_value": "**CPU Kullanımı:** {cpu_percent:.1f}%\n**İplikler:** {threads}\n**Kollar:** {handles}",
+        "bot_name": "Bot İstatistikleri",
+        "bot_value": "**Sunucular:** {guilds}\n**Kullanıcılar (önbelleğe alınmış):** {users}\n**Çalışma Süresi:** {uptime}",
+        "allocations_name": "Üst Bellek Tahsisatları {index}",
+        "worker_name": "Çalışan Kuyrukları",
+        "worker_error": "(metrikler toplanırken hata oluştu: {error})",
+        "footer": "Ev sahibi: {host} | Python {python_version}"
       }
     }
   }

@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**Mevcut Ayarlar:**\\n",
+        "entry": "**{name}**: {description} (Tür: {type})",
+        "not_found": "`{command}` için yardım bulunamadı."
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "Tüm ayarları varsayılana sıfırla.",
+        "already": "Zaten varsayılan ayarları kullanıyorsunuz."
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**Geçersiz ayar adı.**",
+        "requires_plan": "Bu ayar {requirement} gerektiriyor. Yükseltmek için `/accelerated subscribe` kullanın.",
+        "missing_boolean": "**`{name}` bir boolean bekliyor. `değer` seçeneğini kullanın.**",
+        "missing_integer": "**`{name}` bir tam sayı bekliyor. `değer` seçeneğini kullanın.**",
+        "missing_duration": "**`{name}` bir süre bekliyor (örn. 30d, 1g).**",
+        "missing_channel": "**`{name}` bir kanal bekliyor. `kanal` seçeneğini kullanın.**",
+        "missing_role": "**`{name}` bir rol bekliyor. `rol` seçeneğini kullanın.**",
+        "missing_channel_add": "**`{name}` eklemek için bir kanal bekliyor. `kanal` seçeneğini kullanın.**",
+        "missing_role_add": "**`{name}` eklemek için bir rol bekliyor. `rol` seçeneğini kullanın.**",
         "boolean_values": {
           "true": [
-            "true",
+            "doğru",
             "1",
-            "yes"
+            "evet"
           ],
           "false": [
-            "false",
+            "yanlış",
             "0",
-            "no"
+            "hayır"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` bir boolean bekliyor.**",
+        "unknown_type": "Ayar değeri olarak ayrıştırıldı çünkü tür bilinmiyor",
+        "success": "`{name}` güncellendi. Yeni değer: `{value}`.",
+        "unexpected": "Beklenmeyen bir hata oluştu: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "Geçersiz ayar adı.",
+        "not_set": "`{name}` ayarlanmadı. Varsayılan: `{default}`",
+        "private": "Gizlilik nedenleriyle, bu ayar gizlidir.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` şu anda şöyle ayarlanmış:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "Geçersiz ayar adı.",
+        "not_set": "`{name}` ayarlanmadı.",
+        "channel_required": "Kaldırmak için bir kanal belirtmelisiniz.",
+        "channel_missing": "{channel} `{name}` içinde değil.",
+        "role_required": "Kaldırmak için bir rol belirtmelisiniz.",
+        "role_missing": "{role} `{name}` içinde değil.",
+        "removed_channel": "{channel}, `{name}`'den kaldırıldı.",
+        "removed_role": "{role}, `{name}`'den kaldırıldı.",
+        "removed_setting": "Ayar `{name}` kaldırıldı. Şimdi varsayılan kullanılıyor.",
+        "unexpected": "Beklenmeyen bir hata oluştu: `{error}`"
       }
     }
   }

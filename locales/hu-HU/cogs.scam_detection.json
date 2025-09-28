@@ -2,23 +2,23 @@
   "cogs": {
     "scam_detection": {
       "settings": {
-        "heading": "**Scam Settings:**",
-        "actions": "- Scam actions:\n{actions}",
-        "none": "*No actions set.*"
+        "heading": "**Csalás Beállítások:**",
+        "actions": "- Csalás ellenes műveletek:\n{actions}",
+        "none": "*Nincsenek beállított műveletek.*"
       },
       "detection": {
-        "reason": "Scam message detected",
-        "title": "Scam Message Detected",
-        "description": "{mention}, your message was flagged as scam."
+        "reason": "Csalás üzenet észlelve",
+        "title": "Csalás üzenet észlelve",
+        "description": "{mention}, az üzeneted csalásként lett megjelölve."
       },
       "exclude": {
-        "added": "Channel {channel} has been excluded from scam detection.",
-        "already": "Channel {channel} is already excluded from scam detection.",
-        "not_excluded": "Channel {channel} is not excluded from scam detection.",
-        "removed": "Channel {channel} has been removed from the exclusion list.",
-        "list_empty": "No channels are currently excluded from scam detection.",
-        "invalid": "No valid excluded channels found.",
-        "list": "Excluded channels: {channels}"
+        "added": "A(z) {channel} csatorna ki lett zárva a csalás észlelésből.",
+        "already": "A(z) {channel} csatorna már ki van zárva a csalás észlelésből.",
+        "not_excluded": "A(z) {channel} csatorna nincs kizárva a csalás észlelésből.",
+        "removed": "A(z) {channel} csatorna el lett távolítva a kizárási listáról.",
+        "list_empty": "Jelenleg nincsenek csatornák kizárva a csalás észlelésből.",
+        "invalid": "Nincsenek érvényes kizárt csatornák.",
+        "list": "Kizárt csatornák: {channels}"
       }
     }
   }

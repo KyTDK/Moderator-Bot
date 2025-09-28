@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**Доступна подешавања:**\\n",
+        "entry": "**{name}**: {description} (Тип: {type})",
+        "not_found": "Нема помоћи за `{command}`."
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "Ресетуј сва подешавања на подразумеване вредности.",
+        "already": "Већ користите подразумевана подешавања."
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**Неисправно име подешавања.**",
+        "requires_plan": "Ово подешавање захтева {requirement}. Користите `/accelerated subscribe` за надоградњу.",
+        "missing_boolean": "**`{name}` очекује буловску вредност. Користите `value` опцију.**",
+        "missing_integer": "**`{name}` очекује целобројну вредност. Користите `value` опцију.**",
+        "missing_duration": "**`{name}` очекује трајање (нпр. 30m, 1d).**",
+        "missing_channel": "**`{name}` очекује канал. Користите `channel` опцију.**",
+        "missing_role": "**`{name}` очекује улогу. Користите `role` опцију.**",
+        "missing_channel_add": "**`{name}` очекује додавање канала. Користите `channel` опцију.**",
+        "missing_role_add": "**`{name}` очекује додавање улоге. Користите `role` опцију.**",
         "boolean_values": {
           "true": [
-            "true",
+            "тачно",
             "1",
-            "yes"
+            "да"
           ],
           "false": [
-            "false",
+            "нетачно",
             "0",
-            "no"
+            "не"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` очекује буловску вредност.**",
+        "unknown_type": "Подешавање је протумачено као вредност јер тип није познат",
+        "success": "Ажурирано `{name}` на `{value}`.",
+        "unexpected": "Догодила се неочекивана грешка: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "Неисправно име подешавања.",
+        "not_set": "`{name}` није подешено. Подразумевано: `{default}`",
+        "private": "Из приватних разлога, ово подешавање је скривено.",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` тренутно је подешен на:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "Неисправно име подешавања.",
+        "not_set": "`{name}` није подешено.",
+        "channel_required": "Морате навести канал за уклањање.",
+        "channel_missing": "{channel} није у `{name}`.",
+        "role_required": "Морате навести улогу за уклањање.",
+        "role_missing": "{role} није у `{name}`.",
+        "removed_channel": "Уклоњен {channel} из `{name}`.",
+        "removed_role": "Уклоњена улога {role} из `{name}`.",
+        "removed_setting": "Уклоњено подешавање `{name}`. Сада се користи подразумевано.",
+        "unexpected": "Догодила се неочекивана грешка: `{error}`"
       }
     }
   }

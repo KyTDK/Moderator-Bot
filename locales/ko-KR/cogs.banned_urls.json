@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "현재 이 서버에 등록할 수 있는 금지된 URL({limit}개)의 한도에 도달했습니다.\n`/bannedurls remove` 또는 `/bannedurls clear` 명령어를 사용하여 자리를 만드십시오.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}`은(는) 이미 금지된 URL입니다.",
+        "success": "`{url}`을(를) 금지된 목록에 추가했습니다."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}`은(는) 금지된 목록에 없습니다.",
+        "success": "`{url}`을(를) 금지된 목록에서 제거했습니다."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "금지된 URL을 찾을 수 없습니다.",
+        "file_header": "금지된 URL:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "지울 준비가 된 금지된 URL을 찾을 수 없습니다.",
+        "success": "모든 금지된 URL이 삭제되었습니다."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "메시지에 금지된 URL이 포함되어 있습니다 ({url})",
+        "strike_source": "금지된 URL",
+        "embed_title": "금지된 URL 감지",
+        "embed_description": "{mention}, 금지된 URL이 포함되어 있어 귀하의 메시지가 삭제되었습니다."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "현재 설정된 금지된 URL 조치가 없습니다.",
+        "header": "**현재 금지된 URL 조치들:**\n{actions}"
       }
     }
   }

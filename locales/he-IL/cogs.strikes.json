@@ -2,38 +2,38 @@
   "cogs": {
     "strikes": {
       "strike": {
-        "error": "An error occurred, please try again. If the issue persists, please join the support server (link in `/help`)."
+        "error": "אירעה שגיאה, אנא נסה שוב. אם הבעיה נמשכת, הצטרף אל שרת התמיכה (קישור ב-`/help`)."
       },
       "get": {
-        "title": "Strikes for {name}",
-        "empty": "No strikes found for this user.",
-        "file_notice": "Strike list is too long to display inline, sending as a file:"
+        "title": "עונשים עבור {name}",
+        "empty": "לא נמצאו עונשים עבור משתמש זה.",
+        "file_notice": "רשימת העונשים ארוכה מדי להציג בתור קובץ, נשלח כקובץ:"
       },
       "remove": {
-        "success": "Strike with ID `{id}` for {mention} has been successfully removed.",
-        "not_found": "No strike with ID `{id}` found for {mention} in this guild.\nUse `/strikes get <user>` to display all strikes and their IDs."
+        "success": "עונש עם מזהה `{id}` עבור {mention} הוסר בהצלחה.",
+        "not_found": "לא נמצא עונש עם מזהה `{id}` עבור {mention} בשרת הזה.\nהשתמש ב-/strikes get <user> כדי להציג את כל העונשים ואת מזהיהם."
       },
       "clear": {
-        "none": "No active strikes found for {mention}.",
-        "success": "Cleared {count} strike(s) for {mention}."
+        "none": "לא נמצאו עונשים פעילים עבור {mention}.",
+        "success": "נקה {count} עונש(ים) עבור {mention}."
       },
       "actions": {
-        "exists": "Action `{action}` already exists for `{key}` strikes.",
-        "added": "Added `{action}` to actions for `{key}` strikes.",
-        "missing": "Action `{action}` not found for `{key}` strikes.",
-        "removed": "Removed `{action}` from `{key}` strike actions."
+        "exists": "הפעולה `{action}` כבר קיימת עבור עונשים של `{key}`.",
+        "added": "הוספה לפעולה `{action}` עבור עונשים של `{key}`.",
+        "missing": "לא נמצאה פעולה `{action}` עבור עונשים של `{key}`.",
+        "removed": "הוסרה `{action}` מפעולות העונש של `{key}`."
       },
       "view_actions": {
-        "none": "No strike actions configured.",
-        "heading": "**Current strike actions:**",
+        "none": "לא הוגדרו פעולות עונש.",
+        "heading": "**פעולות עונש נוכחיות:**",
         "item": "{key}: {actions}"
       },
       "intimidate": {
-        "user_title": "Final Warning for {name}",
-        "user_body": "{mention},\nYour actions are pushing the limits of what is acceptable within this server. Consider this your final warning before a strike is issued against your account. Continued disregard for the community guidelines will result in immediate disciplinary action, which may include further penalties or removal from the server.\n\nThis is not a request — comply with the rules now.",
-        "guild_title": "Official Moderation Notice",
-        "guild_body": "Please be advised that Moderator Bot is actively monitoring all activity in this channel. Any violations of community guidelines may result in disciplinary action. The severity and nature of these actions will depend on the circumstances of each case. We appreciate your cooperation in helping maintain a respectful and safe environment.",
-        "confirm": "Sent message."
+        "user_title": "אזהרה סופית עבור {name}",
+        "user_body": "{mention},\nהפעולות שלך דוחפות את גבולות מה שמקובל בשרת זה. שקול זאת כהאזהרה הסופית שלך לפני שיוטל עונש נגד חשבונך. המשך הזיהוי על כללי הקהילה יגרום לפעולה משמעתית מיידית, שיכולה לכלול עונשים נוספים או הסרה מהשרת.\n\nזה לא בקשה — התאם כעת את החוקים.",
+        "guild_title": "הודעת אזהרה רשמית",
+        "guild_body": "אנא שימו לב כי ה-Bot המודרטורי עוקב באופן פעיל אחר כל פעילות בערוץ זה. כל הפרות של כלליי הקהילה עשויות לגרור תגובה משמעתית. חומרת וטיב התגובה יהיו תלויים בנסיבות כל מקרה. אנו מעריכים את שיתוף הפעולה שלכם במאמץ לשמור על סביבה מכבדת ובטוחה.",
+        "confirm": "ההודעה נשלחה."
       }
     }
   }

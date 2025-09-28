@@ -2,102 +2,102 @@
   "cogs": {
     "monitoring": {
       "log_event": {
-        "upgrade_footer": "Upgrade to Accelerated for faster NSFW & scam detection — /accelerated",
-        "guild_footer": "Guild ID: {guild_id}"
+        "upgrade_footer": "Hızlı NSFW & dolandırıcılık tespiti için Hızlandırılana yükseltin — /hizlandirilmis",
+        "guild_footer": "Lonca Kimliği: {guild_id}"
       },
       "join": {
-        "title": "Member Joined",
-        "description": "{mention} ({name}) has joined the server.",
+        "title": "Üye Katıldı",
+        "description": "{mention} ({name}) sunucuya katıldı.",
         "fields": {
-          "account_created": "Account Created",
-          "joined_at": "Joined At"
+          "account_created": "Hesap Oluşturuldu",
+          "joined_at": "Katılım Tarihi"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bot hesabı",
+          "user": "Kullanıcı hesabı"
         }
       },
       "timeout": {
-        "title_applied": "Member Timed-Out",
-        "title_removed": "Timeout Removed",
-        "description_applied": "{mention} ({name}) has been placed in a timeout.",
-        "description_removed": "{mention} ({name}) has had a timeout.",
+        "title_applied": "Üye Zaman Aşımına Uğradı",
+        "title_removed": "Zaman Aşımı Kaldırıldı",
+        "description_applied": "{mention} ({name}) zaman aşımına alındı.",
+        "description_removed": "{mention} ({name}) zaman aşımını tamamladı.",
         "fields": {
-          "ends": "Ends",
-          "moderator": "Moderator",
-          "reason": "Reason"
+          "ends": "Biter",
+          "moderator": "Moderatör",
+          "reason": "Sebep"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Kullanıcı Kimliği: {user_id}"
       },
       "leave": {
-        "title_kicked": "Member Kicked",
-        "title_left": "Member Left",
-        "description_kicked": "{mention} ({name}) has been kicked from the server.",
-        "description_left": "{mention} ({name}) has left the server.",
+        "title_kicked": "Üye Atıldı",
+        "title_left": "Üye Ayrıldı",
+        "description_kicked": "{mention} ({name}) sunucudan atıldı.",
+        "description_left": "{mention} ({name}) sunucudan ayrıldı.",
         "fields": {
-          "kicked_by": "Kicked By",
-          "reason": "Reason"
+          "kicked_by": "Atan Kişi",
+          "reason": "Sebep"
         },
         "footer": {
-          "bot": "Bot account",
-          "user": "User account"
+          "bot": "Bot hesabı",
+          "user": "Kullanıcı hesabı"
         }
       },
       "message_delete": {
-        "title": "Message Deleted",
-        "description_with_author": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
-        "deleted_by": "**Deleted by:** {deleter}\n",
-        "content_label": "**Content:**\n{content}",
-        "description_generic": "A message was deleted in {channel}.",
-        "description_deleted_by": "\n**Deleted by:** {deleter}",
+        "title": "Mesaj Silindi",
+        "description_with_author": "**Yazar:** {author_mention} ({author_name})\n**Kanal:** {channel}\n",
+        "deleted_by": "**Silen Kişi:** {deleter}\n",
+        "content_label": "**İçerik:**\n{content}",
+        "description_generic": "Bir mesaj {channel} kanalında silindi.",
+        "description_deleted_by": "\n**Silen Kişi:** {deleter}",
         "fields": {
-          "attachments": "Attachments ({count})",
-          "embeds": "Embed {index}",
-          "stickers": "Stickers ({count})"
+          "attachments": "Ekler ({count})",
+          "embeds": "Yerleştir {index}",
+          "stickers": "Çıkartmalar ({count})"
         },
         "attachment_item": "• [{name}]({url})",
         "embed_bullet": "• **{name}**: {value}",
-        "embed_unavailable": "*[Embed content unavailable]*",
+        "embed_unavailable": "*[Yerleştirme içeriği mevcut değil]*",
         "sticker_item": "• [{name}]({url})",
-        "footer": "User ID: {user_id}"
+        "footer": "Kullanıcı Kimliği: {user_id}"
       },
       "message_edit": {
-        "title": "Message Edited",
-        "description": "**Author:** {author_mention} ({author_name})\n**Channel:** {channel}\n",
+        "title": "Mesaj Düzenlendi",
+        "description": "**Yazar:** {author_mention} ({author_name})\n**Kanal:** {channel}\n",
         "fields": {
-          "before": "Before",
-          "after": "After"
+          "before": "Önce",
+          "after": "Sonra"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Kullanıcı Kimliği: {user_id}"
       },
       "ban": {
-        "title": "Member Banned",
-        "description": "{mention} ({name}) was banned.",
+        "title": "Üye Yasaklandı",
+        "description": "{mention} ({name}) yasaklandı.",
         "fields": {
-          "moderator": "Banned By",
-          "reason": "Reason"
+          "moderator": "Yasaklayan Kişi",
+          "reason": "Sebep"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Kullanıcı Kimliği: {user_id}"
       },
       "unban": {
-        "title": "Member Unbanned",
-        "description": "{mention} ({name}) was unbanned.",
+        "title": "Üye Yasağı Kaldırıldı",
+        "description": "{mention} ({name}) yasağı kaldırıldı.",
         "fields": {
-          "moderator": "Unbanned By",
-          "reason": "Reason"
+          "moderator": "Yasağı Kaldıran Kişi",
+          "reason": "Sebep"
         },
-        "footer": "User ID: {user_id}"
+        "footer": "Kullanıcı Kimliği: {user_id}"
       },
       "monitor_commands": {
-        "set": "Monitor channel set to {channel}.",
-        "removed": "Monitor channel has been removed.",
-        "not_set": "No monitor channel was set.",
-        "current": "Current monitor channel: {channel}",
-        "none": "No monitor channel is currently set.",
-        "toggle": "Logging for `{event}` has been {state}.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled",
-        "list_heading": "**Monitor Events:**",
+        "set": "İzleme kanalı {channel} olarak ayarlandı.",
+        "removed": "İzleme kanalı kaldırıldı.",
+        "not_set": "İzleme kanalı ayarlanmadı.",
+        "current": "Mevcut izleme kanalı: {channel}",
+        "none": "Şu anda bir izleme kanalı ayarlanmadı.",
+        "toggle": "`{event}` için kaydetme {state} edildi.",
+        "state_enabled": "etkin",
+        "state_disabled": "devre dışı",
+        "list_heading": "**İzleme Olayları:**",
         "list_item": "- `{event}`: {state}",
         "list_enabled": "✅",
         "list_disabled": "❌"

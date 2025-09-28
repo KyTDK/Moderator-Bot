@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**API Havuzu nedir?**\nAPI Havuzu, paylaşılan OpenAI API anahtarlarının güvenli ve anonim bir koleksiyonudur. Bireysel kullanıcılar oran sınırlamalarıyla karşılaştığında bile Moderator Bot'un etkili bir şekilde çalışmaya devam etmesini sağlar.\n\n**Nasıl çalışır?**\n- OpenAI API anahtarınızı havuza eklediğinizde, şifrelenir ve güvenli bir şekilde saklanır.\n- Bot, bu anahtarları yalnızca OpenAI modellerine erişip moderasyon görevlerini gerçekleştirmek için kullanır.\n- API anahtarınız gizli kalır; bot geliştiricileri dahil kimse onu göremez.\n- Tam kontrol sizdedir ve istediğiniz zaman API anahtarınızı havuzdan kaldırabilirsiniz.\n\n**Önemli:** API anahtarınızı katkıda bulunmak için OpenAI hesabınızda en az $5 ön ödemeli kredi bulunmalıdır. Moderasyon uç noktası ücretsiz kullanılsa bile, OpenAI aktif fatura detayları ve kota gerektirir. Hesabınıza kredi ekleyebilirsiniz: <https://platform.openai.com/account/billing/overview>\n\nAPI anahtarınızı katkıda bulunarak, Moderator Bot'un tüm kullanıcılar için duyarlı ve etkili kalmasını sağlamaya yardımcı olursunuz."
       },
       "add": {
-        "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "invalid": "{hata}",
+        "duplicate": "Bu API anahtarı zaten havuzda mevcut.",
+        "success": "API anahtarı havuza eklendi."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "API anahtarı havuzunuzdan kaldırıldı.",
+        "missing": "Bu API anahtarı havuzunuzda bulunamadı. Mevcut API anahtarlarınızı görmek için /api_pool list komutunu kullanın."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Tüm API anahtarları havuzunuzdan temizlendi.",
+        "empty": "Temizlenecek API anahtarı bulunamadı."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "API Anahtarlarınız:",
+        "empty": "Havuzunuzda API anahtarı bulunamadı."
       }
     }
   }

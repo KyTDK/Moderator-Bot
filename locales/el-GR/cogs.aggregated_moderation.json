@@ -2,11 +2,11 @@
   "cogs": {
     "aggregated_moderation": {
       "nsfw_detection": {
-        "title": "NSFW Content Detected",
-        "description": "{mention}, your message was removed because it contained explicit or inappropriate content."
+        "title": "Ακατάλληλο Περιεχόμενο Εντοπίστηκε",
+        "description": "{mention}, το μήνυμά σας αφαιρέθηκε λόγω περιεχόμενου που περιείχε ρητό ή ακατάλληλο υλικό."
       },
       "pfp": {
-        "safe_reason": "Profile picture updated to a safe image."
+        "safe_reason": "Η εικόνα προφίλ ενημερώθηκε σε μια ασφαλή εικόνα."
       }
     }
   }

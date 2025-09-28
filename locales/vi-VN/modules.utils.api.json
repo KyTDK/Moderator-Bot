@@ -2,7 +2,7 @@
   "modules": {
     "utils": {
       "api": {
-        "key_failed_notice": "**Cảnh báo:** Khóa API OpenAI của bạn không vượt qua bài kiểm tra kiểm duyệt.\n\nĐiều này thường có nghĩa là tài khoản của bạn không có thanh toán đang hoạt động hoặc bị giới hạn tốc độ tạm thời.\n\nVui lòng kiểm tra [Trang quản lý thanh toán OpenAI](https://platform.openai.com/account/billing/overview) để đảm bảo tài khoản của bạn có thông tin thanh toán và ít nhất $5 trong số dư tài khoản.\n\nSau khi vấn đề được giải quyết, khóa của bạn sẽ tự động bắt đầu hoạt động trở lại mà không cần thêm lại."
+        "key_failed_notice": "**⚠️ Your OpenAI API key failed a moderation check.**\n\nThis usually means your account does not have active billing or is temporarily rate-limited.\n\nPlease check your [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) to ensure your account has payment info and at least $5 in credits.\n\nOnce that is resolved, your key will automatically start working again - no need to re-add it."
       }
     }
   }

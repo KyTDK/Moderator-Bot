@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "此指令只能在伺服器中使用。",
+        "wrong_guild": "請選擇伺服器中的一位成員。",
+        "is_bot": "機器人不需要驗證碼驗證。"
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "更新驗證碼嵌入時發生意外錯誤。",
+        "updated": "驗證碼驗證嵌入已更新。",
+        "missing_delivery": "驗證碼嵌入發送未針對此伺服器配置。"
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "驗證請求已發送。",
+        "failure": "無法發送驗證說明。",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "此成員未加入公會。",
+        "not_enabled": "此伺服器未啟用驗證碼驗證。",
+        "not_configured": "驗證碼驗證未配置。",
+        "embed_success": "已在配置的頻道中發佈驗證說明。",
+        "dm_success": "驗證消息已發送給成員。",
+        "failure": "無法發送驗證說明，請檢查配置。"
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "分配驗證前角色"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "驗證碼驗證已超時。"
       }
     }
   }

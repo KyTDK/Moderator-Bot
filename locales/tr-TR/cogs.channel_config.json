@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} yaş kısıtlaması yoktur. Lütfen bir NSFW kanalı seçin.",
+      "missing_permissions": "{channel} kanalı için aşağıdaki izinler eksik: {permissions}",
+      "set_success": "{log_type} kayıtları {channel} kanalına gönderilecektir.",
+      "unset_success": "{log_type} log kanalı kaldırıldı.",
+      "invalid_guild": "Hata: Geçersiz guild ID formatı.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**Kayıt Kanalları:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "Belirtilmedi"
       }
     }
   }

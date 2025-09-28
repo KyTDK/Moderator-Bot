@@ -2,11 +2,11 @@
   "cogs": {
     "dashboard": {
       "embed": {
-        "title": "Moderator Bot Dashboard",
-        "description": "[Click here to open the dashboard]({url})"
+        "title": "Moderator Bot Koppelvlak",
+        "description": "[Klik hier om die koppelvlak te open]({url})"
       },
       "message": {
-        "loading": "Generating your dashboard link..."
+        "loading": "Jou koppelvlak skakel word gegenereer..."
       }
     }
   }

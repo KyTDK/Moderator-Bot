@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} nem korhatáros. Kérjük, válasszon ki egy NSFW csatornát.",
+      "missing_permissions": "Hiányoznak a következő jogosultságok a(z) {channel} csatornán: {permissions}",
+      "set_success": "A(z) {log_type} naplók a(z) {channel} csatornára lesznek küldve.",
+      "unset_success": "A(z) {log_type} napló csatorna törlésre került.",
+      "invalid_guild": "Hiba: Érvénytelen céh azonosító formátum.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**Napló csatornák:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "Nincs beállítva"
       }
     }
   }

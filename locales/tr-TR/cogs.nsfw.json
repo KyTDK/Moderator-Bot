@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Şu anda NSFW eylemleri ayarlanmamış.",
+        "heading": "**Mevcut NSFW eylemleri:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Şu anda kategoriler ayarlanmamış.",
+        "heading": "**Mevcut NSFW kategorileri:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "Eşik değeri 0.0 ile 1.0 arasında olmalıdır.",
+        "set": "NSFW tespit eşiği {value:.2f} olarak ayarlandı.",
+        "unset": "NSFW tespit eşiği ayarlanmamış.",
+        "current": "Mevcut NSFW tespit eşiği: {value:.2f}"
       }
     }
   }

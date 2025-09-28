@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Olet saavuttanut tämän palvelimen estettyjen URL-osoitteiden (raja {limit}) rajan.\nPoista URL-osoitteita komennolla `/bannedurls remove` tai tyhjennä lista komennolla `/bannedurls clear`.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` on jo estetty.",
+        "success": "Lisätty `{url}` estolistaan."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` ei ole estolistalla.",
+        "success": "Poistettiin `{url}` estolistalta."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "Estettyjä URL-osoitteita ei löytynyt.",
+        "file_header": "Estetyt URL-osoitteet:",
         "file_item": "- {url}",
-        "filename": "banned_urls_{guild_id}.txt"
+        "filename": "estetyt_url:t_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "Tyhjennettäviä estettyjä URL-osoitteita ei löytynyt.",
+        "success": "Kaikki estetyt URL-osoitteet on tyhjennetty."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "Viesti sisälsi estetyn URL-osoitteen ({url})",
+        "strike_source": "estetty URL",
+        "embed_title": "Estetty URL havaittu",
+        "embed_description": "{mention}, viestisi poistettiin, koska se sisälsi estetyn URL-osoitteen."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "Estetyille URL-osoitteille ei ole tällä hetkellä asetettu toimintoja.",
+        "header": "**Nykyiset estetyt URL-toiminnot:**\n{actions}"
       }
     }
   }

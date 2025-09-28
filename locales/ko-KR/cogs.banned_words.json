@@ -2,38 +2,38 @@
   "cogs": {
     "banned_words": {
       "defaults": {
-        "status": "The built-in profanity list is **{state}**.",
-        "updated": "Built-in profanity list **{state}**.",
-        "state_enabled": "enabled",
-        "state_disabled": "disabled"
+        "status": "내장된 비속어 목록은 **{state}** 입니다.",
+        "updated": "내장된 비속어 목록 **{state}**.",
+        "state_enabled": "활성화됨",
+        "state_disabled": "비활성화됨"
       },
-      "limit_reached": "You've reached the limit of {limit} banned words for this server.\nUse `/bannedwords remove` or `/bannedwords clear` to make space.",
+      "limit_reached": "이 서버의 비속어 제한은 {limit}에 도달했습니다.\n공간을 확보하려면 `/bannedwords remove` 또는 `/bannedwords clear`를 사용하세요.",
       "add": {
-        "duplicate": "The word '{word}' is already banned.",
-        "success": "The word '{word}' has been added to the banned words list."
+        "duplicate": "단어 '{word}'는 이미 금지되어 있습니다.",
+        "success": "단어 '{word}'가 금지된 단어 목록에 추가되었습니다."
       },
       "remove": {
-        "missing": "The word '{word}' is not banned.",
-        "success": "The word '{word}' has been removed from the banned words list."
+        "missing": "단어 '{word}'는 금지되어 있지 않습니다.",
+        "success": "단어 '{word}'가 금지된 단어 목록에서 제거되었습니다."
       },
       "list": {
-        "empty": "No banned words found.",
-        "file_header": "Banned Words:",
+        "empty": "금지된 단어가 없습니다.",
+        "file_header": "금지된 단어:",
         "file_item": "- {word}"
       },
       "clear": {
-        "empty": "No banned words found to clear.",
-        "success": "All banned words have been cleared."
+        "empty": "삭제할 금지된 단어를 찾을 수 없습니다.",
+        "success": "모든 금지된 단어가 삭제되었습니다."
       },
       "actions": {
-        "none": "No actions are currently set for banned words.",
-        "header": "**Current banned words actions:**\n{actions}"
+        "none": "현재 금지된 단어에 대한 조치가 설정되어 있지 않습니다.",
+        "header": "**현재 금지된 단어의 조치:**\n{actions}"
       },
       "enforcement": {
-        "strike_reason": "Message contained banned word",
-        "strike_source": "banned word",
-        "embed_title": "Banned Word Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned word."
+        "strike_reason": "메시지에 금지된 단어가 포함되어 있음",
+        "strike_source": "금지된 단어",
+        "embed_title": "금지된 단어 감지",
+        "embed_description": "{mention}, 당신의 메시지는 금지된 단어가 포함되어 있어 삭제되었습니다."
       }
     }
   }

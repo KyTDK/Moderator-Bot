@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "Διαχειριστείτε τη συνδρομή σας στο Accelerator (Premium).",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "Κατάσταση Acceleration",
+        "footer_base": "Moderator Bot Ανάπτυξη",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "Επίπεδο",
+          "status": "Κατάσταση",
+          "next_billing": "Επόμενη Χρέωση"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "Αυτός ο διακομιστής δεν έχει εγγραφεί ακόμη στο **Accelerator**. Εγγραφείτε τώρα με `/accelerated subscribe`.",
+          "tier_value": "`Κανένα`",
+          "status_value": "`Όχι Εγγεγραμμένος`",
+          "next_billing_value": "Ξεκινήστε ένα πλάνο με `/accelerated subscribe`"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`Δεν έχει προγραμματιστεί ανανέωση`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - Επόμενος κύκλος χρέωσης",
+          "checked": "{base} - Έλεγχος κατάστασης"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "Ενεργό",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "Το Accelerator είναι ενεργό."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "Ενεργό - Κοντά στην Ακύρωση",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "Το Accelerator θα παραμείνει ενεργό μέχρι το τέλος αυτού του κύκλου χρέωσης."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "Οι παροχές του Accelerator έχουν σταματήσει. Ξεκινήστε ξανά ανά πάσα στιγμή με `/accelerated subscribe`."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 Η συντεχνία σας έχει ήδη ενεργή συνδρομή **Accelerator**!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 Ανάβαθμιση σε Moderator Bot Accelerator!",
+          "description": "**Απολαύστε απίστευτα γρήγορη ανίχνευση NSFW & απάτης, ουρές προτεραιότητας και πρώιμη πρόσβαση σε νέα χαρακτηριστικά!**\n\nΜετά τον δωρεάν μήνα σας, συνεχίστε με μόλις **$5/μήνα** για να διατηρήσετε τον διακομιστή σας ασφαλέστερο, πιο γρήγορο.",
+          "footer": "Moderator Bot 🚀 Σχέδιο Accelerator",
+          "button_label": "🚀 Εγγραφείτε Τώρα"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "Προνόμια του Accelerator",
+        "description": "Αναβαθμίστε την εμπειρία σας με το Moderator Bot Accelerator:\n• Σάρωση αυτοματισμού που βασίζεται σε AI για ανίχνευση και αυτόματη δράση σε μηνύματα που παραβιάζουν τους κανόνες\n• Σάρωση περισσότερων καρέ ανά βίντεο για βαθύτερη ανίχνευση NSFW\n• Προτεραιότητα στην ανίχνευση NSFW και απάτης\n• Πρόωρη πρόσβαση σε νέα χαρακτηριστικά\n• Υποστήριξη της ανάπτυξης του bot"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "Μπορείτε να ακυρώσετε τη συνδρομή σας στο PayPal οποιαδήποτε στιγμή μέσω του **PayPal λογαριασμού σας → Ρυθμίσεις → Πληρωμές → Διαχείριση Αυτόματων Πληρωμών**.\nΗ premium πρόσβασή σας θα διαρκέσει έως το τέλος του κύκλου χρέωσης."
       }
     }
   }

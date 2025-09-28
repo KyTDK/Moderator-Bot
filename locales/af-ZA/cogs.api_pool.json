@@ -2,24 +2,24 @@
   "cogs": {
     "api_pool": {
       "explanation": {
-        "body": "**What is the API Pool?**\nThe API Pool is a secure and anonymous collection of shared OpenAI API keys. It enables Moderator Bot to continue operating effectively, even when individual users face rate limits.\n\n**How does it work?**\n- When you add your OpenAI API key to the pool, it's encrypted and stored securely.\n- The bot uses these keys exclusively for accessing OpenAI models to perform moderation tasks.\n- Your API key remains confidential; no one, including the bot developers, can view it.\n- You have full control and can remove your API key from the pool at any time.\n\n**Important:** To contribute your API key, your OpenAI account must have at least $5 in prepaid credits. Even though the moderation endpoint is free to use, OpenAI requires accounts to have active billing details and quota. You can add credit to your account here: <https://platform.openai.com/account/billing/overview>\n\nBy contributing your API key, you help ensure that Moderator Bot remains responsive and effective for all users."
+        "body": "**Wat is die API-poel?**\nDie API-poel is 'n veilige en anonieme versameling van gedeelde OpenAI API-sleutels. Dit stel Moderator Bot in staat om doeltreffend te bly funksioneer, selfs wanneer individuele gebruikers teikengrenze bereik.\n\n**Hoe werk dit?**\n- Wanneer jy jou OpenAI API-sleutel by die poel voeg, word dit geïnkripteer en veilig gestoor.\n- Die bot gebruik hierdie sleutels eksklusief vir toegang tot OpenAI-modelle om moderasietake uit te voer.\n- Jou API-sleutel bly vertroulik; niemand, insluitend die bot-ontwikkelaars, kan dit sien nie.\n- Jy het volle beheer en kan jou API-sleutel te enige tyd uit die poel verwyder.\n\n**Belangrik:** Om jou API-sleutel by te dra, moet jou OpenAI rekening ten minste $5 in vooruitbetaalde krediete hê. Selfs al is die moderasie-eindpunt gratis om te gebruik, vereis OpenAI dat rekeninge aktiewe faktuurdetails en kwota het. Jy kan krediet by jou rekening voeg hier: <https://platform.openai.com/account/billing/overview>\n\nDeur jou API-sleutel by te dra, help jy om te verseker dat Moderator Bot responsief en effektief bly vir alle gebruikers."
       },
       "add": {
-        "invalid": "{error}",
-        "duplicate": "This API key already exists in the pool.",
-        "success": "API key added to the pool."
+        "invalid": "{fout}",
+        "duplicate": "Hierdie API-sleutel bestaan reeds in die poel.",
+        "success": "API-sleutel by die poel gevoeg."
       },
       "remove": {
-        "success": "API key removed from your pool.",
-        "missing": "This API key was not found in your pool. Use /api_pool list to see your current API keys."
+        "success": "API-sleutel uit jou poel verwyder.",
+        "missing": "Hierdie API-sleutel is nie in jou poel gevind nie. Gebruik /api_pool list om jou huidige API-sleutels te sien."
       },
       "clear": {
-        "success": "All API keys have been cleared from your pool.",
-        "empty": "No API keys found to clear."
+        "success": "Alle API-sleutels is uit jou poel uitgevee.",
+        "empty": "Geen API-sleutels gevind om te vee nie."
       },
       "list": {
-        "header": "Your API Keys:",
-        "empty": "No API keys found in your pool."
+        "header": "Jou API-sleutels:",
+        "empty": "Geen API-sleutels in jou poel gevind nie."
       }
     }
   }
