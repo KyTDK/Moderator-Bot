@@ -1,34 +1,34 @@
 ﻿{
   "cogs": {
     "banned_urls": {
-      "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",
+      "limit_reached": "Έχετε φτάσει το όριο από {limit} αποκλεισμένες διευθύνσεις URL για αυτόν τον διακομιστή.\nΧρησιμοποιήστε `/bannedurls remove` ή `/bannedurls clear` για να κάνετε χώρο.",
       "add": {
-        "duplicate": "`{url}` is already banned.",
-        "success": "Added `{url}` to the banned list."
+        "duplicate": "`{url}` είναι ήδη αποκλεισμένη διεύθυνση.",
+        "success": "Προστέθηκε η `{url}` στη λίστα αποκλεισμένων."
       },
       "remove": {
-        "missing": "`{url}` is not in the banned list.",
-        "success": "Removed `{url}` from the banned list."
+        "missing": "`{url}` δεν υπάρχει στη λίστα αποκλεισμένων.",
+        "success": "Αφαιρέθηκε η `{url}` από τη λίστα αποκλεισμένων."
       },
       "list": {
-        "empty": "No banned URLs found.",
-        "file_header": "Banned URLs:",
+        "empty": "Δεν βρέθηκαν αποκλεισμένες διευθύνσεις URL.",
+        "file_header": "Αποκλεισμένες διευθύνσεις URL:",
         "file_item": "- {url}",
         "filename": "banned_urls_{guild_id}.txt"
       },
       "clear": {
-        "empty": "No banned URLs found to clear.",
-        "success": "All banned URLs have been cleared."
+        "empty": "Δεν βρέθηκαν αποκλεισμένες διευθύνσεις URL για διαγραφή.",
+        "success": "Όλες οι αποκλεισμένες διευθύνσεις URL έχουν διαγραφεί."
       },
       "enforcement": {
-        "strike_reason": "Message contained banned URL ({url})",
-        "strike_source": "banned url",
-        "embed_title": "Banned URL Detected",
-        "embed_description": "{mention}, your message was removed because it contained a banned URL."
+        "strike_reason": "Το μήνυμα περιείχε αποκλεισμένη διεύθυνση URL ({url})",
+        "strike_source": "αποκλεισμένη διεύθυνση url",
+        "embed_title": "Ανιχνεύθηκε αποκλεισμένη διεύθυνση URL",
+        "embed_description": "{mention}, το μήνυμά σας αφαιρέθηκε επειδή περιείχε αποκλεισμένη διεύθυνση URL."
       },
       "actions": {
-        "none": "No actions are currently set for banned URLs.",
-        "header": "**Current banned URLs actions:**\n{actions}"
+        "none": "Δεν έχουν οριστεί ενέργειες προς το παρόν για αποκλεισμένες διευθύνσεις URL.",
+        "header": "**Τρέχουσες ενέργειες αποκλεισμένων διευθύνσεων URL:**\n{actions}"
       }
     }
   }
