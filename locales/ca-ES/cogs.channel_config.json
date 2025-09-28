@@ -1,15 +1,15 @@
 ﻿{
   "cogs": {
     "channel_config": {
-      "nsfw_required": "{channel} is not age-restricted. Please choose an NSFW channel.",
-      "missing_permissions": "I am missing the following permissions in {channel}: {permissions}",
-      "set_success": "{log_type} logs will be posted in {channel}.",
-      "unset_success": "{log_type} log channel has been unset.",
-      "invalid_guild": "Error: Invalid guild ID format.",
+      "nsfw_required": "{channel} no està restringida per edat. Si us plau, escull un canal NSFW.",
+      "missing_permissions": "Em falten els següents permisos a {channel}: {permissions}",
+      "set_success": "Els registres de {log_type} es publicaran a {channel}.",
+      "unset_success": "El canal de registre de {log_type} ha estat desconfigurat.",
+      "invalid_guild": "Error: Format de l'ID del gremi no vàlid.",
       "show": {
-        "heading": "**Log Channels:**",
+        "heading": "**Canals de registre:**",
         "entry": "{name}: {value}",
-        "not_set": "Not set"
+        "not_set": "No configurat"
       }
     }
   }
