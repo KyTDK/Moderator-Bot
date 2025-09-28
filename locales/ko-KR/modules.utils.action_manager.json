@@ -3,14 +3,14 @@
     "utils": {
       "action_manager": {
         "add": {
-          "duplicate": "`{action}` is already in the list.",
-          "success": "Added `{action}` to actions."
+          "duplicate": "`{action}`이 목록에 이미 있습니다.",
+          "success": "`{action}`을(를) 작업에 추가했습니다."
         },
         "remove": {
-          "specific_missing": "Action `{action}` does not exist.",
-          "specific_success": "Removed specific action `{action}`.",
-          "base_missing": "No actions found for `{action}`.",
-          "base_success": "Removed all `{action}` actions."
+          "specific_missing": "작업 `{action}`이(가) 존재하지 않습니다.",
+          "specific_success": "특정 작업 `{action}`을(를) 제거했습니다.",
+          "base_missing": "`{action}`에 대한 작업을 찾을 수 없습니다.",
+          "base_success": "모든 `{action}` 작업을 제거했습니다."
         }
       }
     }
