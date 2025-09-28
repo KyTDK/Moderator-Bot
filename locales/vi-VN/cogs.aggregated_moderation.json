@@ -2,11 +2,11 @@
   "cogs": {
     "aggregated_moderation": {
       "nsfw_detection": {
-        "title": "NSFW Content Detected",
-        "description": "{mention}, your message was removed because it contained explicit or inappropriate content."
+        "title": "Phát hiện nội dung không phù hợp với trẻ em",
+        "description": "{mention}, tin nhắn của bạn đã bị xóa vì chứa nội dung khiêu dâm hoặc không phù hợp."
       },
       "pfp": {
-        "safe_reason": "Profile picture updated to a safe image."
+        "safe_reason": "Ảnh hồ sơ đã được cập nhật thành ảnh an toàn."
       }
     }
   }
