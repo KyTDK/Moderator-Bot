@@ -2,33 +2,33 @@
   "cogs": {
     "captcha": {
       "common": {
-        "guild_only": "This command can only be used in a server.",
-        "wrong_guild": "Please choose a member from this server.",
-        "is_bot": "Bots do not require captcha verification."
+        "guild_only": "Denne kommandoen kan kun brukes på en server.",
+        "wrong_guild": "Vennligst velg et medlem fra denne serveren.",
+        "is_bot": "Boter trenger ikke captcha-verifisering."
       },
       "sync": {
-        "error": "An unexpected error occurred while updating the captcha embed.",
-        "updated": "Captcha verification embed has been updated.",
-        "missing_delivery": "Captcha embed delivery is not configured for this server."
+        "error": "En uventet feil oppstod under oppdatering av captcha innebygging.",
+        "updated": "Captcha-verifisering innebygging har blitt oppdatert.",
+        "missing_delivery": "Captcha innebygging levering er ikke konfigurert for denne serveren."
       },
       "request": {
-        "success": "Verification request sent.",
-        "failure": "Unable to send verification instructions.",
+        "success": "Verifiseringsforespørsel sendt.",
+        "failure": "Kunne ikke sende verifiseringsinstruksjoner.",
         "status": "{message}"
       },
       "initiate": {
-        "not_in_guild": "This member is not part of a guild.",
-        "not_enabled": "Captcha verification is not enabled for this server.",
-        "not_configured": "Captcha verification is not configured.",
-        "embed_success": "Verification instructions posted in the configured channel.",
-        "dm_success": "Verification message sent to the member.",
-        "failure": "Unable to send verification instructions; please check the configuration."
+        "not_in_guild": "Dette medlemmet er ikke en del av en gruppe.",
+        "not_enabled": "Captcha-verifisering er ikke aktivert for denne serveren.",
+        "not_configured": "Captcha-verifisering er ikke konfigurert.",
+        "embed_success": "Verifiseringsinstruksjoner lagt ut i den konfigurerte kanalen.",
+        "dm_success": "Verifiseringsmelding sendt til medlemmet.",
+        "failure": "Kan ikke sende verifiseringsinstruksjoner; vennligst sjekk konfigurasjonen."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Tildeler pre-captcha roller"
       },
       "timeout": {
-        "failure_reason": "Captcha verification timed out."
+        "failure_reason": "Captcha-verifisering utløpte."
       }
     }
   }
