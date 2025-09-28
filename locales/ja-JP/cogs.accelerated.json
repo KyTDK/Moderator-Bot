@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "アクセラレーテッド（プレミアム）サブスクリプションを管理します。",
       "status": {
-        "embed_title": "Accelerated Status",
-        "footer_base": "Moderator Bot Accelerated",
+        "embed_title": "アクセラレーテッドステータス",
+        "footer_base": "モデレーターボット アクセラレーテッド",
         "field_names": {
-          "tier": "Tier",
-          "status": "Status",
-          "next_billing": "Next Billing"
+          "tier": "ティア",
+          "status": "ステータス",
+          "next_billing": "次回請求"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "このサーバーはまだ**アクセラレーテッド**に登録されていません。 `/accelerated subscribe`で今すぐサブスクライブしてください。",
+          "tier_value": "`なし`",
+          "status_value": "`未登録`",
+          "next_billing_value": "`/accelerated subscribe`でプランを開始してください"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`更新予定なし`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - 次の請求サイクル",
+          "checked": "{base} - ステータスを確認しました"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "アクティブ",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "アクセラレーテッドはアクティブです。"
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "アクティブ - もうすぐキャンセル",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "この請求サイクルの終了までアクセラレーテッドはアクティブのままです。"
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "アクセラレーテッド特典が一時停止しています。いつでも`/accelerated subscribe`で再開できます。"
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 あなたのギルドには既にアクティブな**アクセラレーテッド**サブスクリプションがあります！",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
-          "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "title": "🚀 モデレーターボット アクセラレーテッドにアップグレード！",
+          "description": "**超高速のNSFW＆詐欺検出、優先キュー、新機能への早期アクセスをお楽しみください！**\n\n無料月後は、サーバーをより安全・高速に保つためにたった**5ドル/月**で続行できます。",
+          "footer": "モデレーターボット 🚀 アクセラレーテッドプラン",
+          "button_label": "🚀 今すぐサブスクライブ"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "アクセラレーテッド特典",
+        "description": "モデレーターボットアクセラレーテッドで体験をアップグレードしましょう：\n• ルール違反メッセージを自動で検出して対処するAI搭載の自律モデレーションスキャン\n• より詳細なNSFW検出のためにビデオのフレームを多くスキャン\n• 優先NSFW＆詐欺検出\n• 新機能への早期アクセス\n• ボットの開発をサポート"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "いつでも**PayPalアカウント → 設定 → 支払い → 自動支払いの管理**からPayPalサブスクリプションをキャンセルできます。プレミアムアクセスは請求サイクルの終了まで続きます。"
       }
     }
   }
