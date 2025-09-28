@@ -2,18 +2,18 @@
   "cogs": {
     "nsfw": {
       "actions": {
-        "none": "No NSFW actions are currently set.",
-        "heading": "**Current NSFW actions:**\n{actions}"
+        "none": "Наразі немає налаштованих дій NSFW.",
+        "heading": "**Поточні дії NSFW:**\n{actions}"
       },
       "categories": {
-        "none": "No categories are currently set.",
-        "heading": "**Current NSFW categories:**\n{categories}"
+        "none": "Наразі відсутні установлення категорій.",
+        "heading": "**Поточні категорії NSFW:**\n{categories}"
       },
       "threshold": {
-        "invalid": "Threshold must be between 0.0 and 1.0.",
-        "set": "NSFW detection threshold set to {value:.2f}.",
-        "unset": "NSFW detection threshold is not set.",
-        "current": "Current NSFW detection threshold: {value:.2f}"
+        "invalid": "Порогове значення має бути між 0.0 та 1.0.",
+        "set": "Поріг виявлення NSFW встановлено на {value:.2f}.",
+        "unset": "Поріг виявлення NSFW не встановлено.",
+        "current": "Поточний поріг виявлення NSFW: {value:.2f}"
       }
     }
   }
