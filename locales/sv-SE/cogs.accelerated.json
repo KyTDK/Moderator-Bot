@@ -1,59 +1,59 @@
 ﻿{
   "cogs": {
     "accelerated": {
-      "group_description": "Manage your Accelerated (Premium) subscription.",
+      "group_description": "Hantera din Accelerated (Premium) prenumeration.",
       "status": {
         "embed_title": "Accelerated Status",
         "footer_base": "Moderator Bot Accelerated",
         "field_names": {
           "tier": "Tier",
           "status": "Status",
-          "next_billing": "Next Billing"
+          "next_billing": "Nästa fakturering"
         },
         "not_enrolled": {
-          "description": "This server is not enrolled in **Accelerated** yet. Subscribe now with `/accelerated subscribe`.",
-          "tier_value": "`None`",
-          "status_value": "`Not Subscribed`",
-          "next_billing_value": "Start a plan with `/accelerated subscribe`"
+          "description": "Denna server är ännu inte registrerad i **Accelerated**. Prenumerera nu med `/accelerated subscribe`.",
+          "tier_value": "`Ingen`",
+          "status_value": "`Inte prenumererad`",
+          "next_billing_value": "Starta en plan med `/accelerated subscribe`"
         },
-        "no_renewal": "`No renewal scheduled`",
+        "no_renewal": "`Ingen förnyelse planerad`",
         "footers": {
-          "next": "{base} - Next billing cycle",
-          "checked": "{base} - Status checked"
+          "next": "{base} - Nästa faktureringscykel",
+          "checked": "{base} - Status kontrollerad"
         },
         "states": {
           "active": {
-            "label": "Active",
+            "label": "Aktiv",
             "emoji": ":green_circle:",
-            "description": "Accelerated is active."
+            "description": "Accelerated är aktiv."
           },
           "cancelled": {
-            "label": "Active - Cancels Soon",
+            "label": "Aktiv - Avbokas snart",
             "emoji": ":orange_circle:",
-            "description": "Accelerated will remain active until the end of this billing cycle."
+            "description": "Accelerated kommer att förbli aktiv till slutet av denna faktureringscykel."
           },
           "paused": {
             "label": "{status}",
             "emoji": ":red_circle:",
-            "description": "Accelerated perks are paused. Restart anytime with `/accelerated subscribe`."
+            "description": "Accelerated förmåner är pausade. Starta om när som helst med `/accelerated subscribe`."
           }
         }
       },
       "subscribe": {
-        "already_subscribed": "🚫 Your guild already has an active **Accelerated** subscription!",
+        "already_subscribed": "🚫 Din guild har redan en aktiv **Accelerated** prenumeration!",
         "embed": {
-          "title": "🚀 Upgrade to Moderator Bot Accelerated!",
-          "description": "**Enjoy blazing-fast NSFW & scam detection, priority queues, and early access to new features!**\n\nAfter your free month, continue for just **$5/month** to keep your server safer, faster.",
+          "title": "🚀 Uppgradera till Moderator Bot Accelerated!",
+          "description": "**Njut av blixtsnabb NSFW & spamdetektion, prioritetsköer, och tidig tillgång till nya funktioner!**\n\nEfter din fria månad, fortsätt för bara **$5/månad** för att hålla din server säkrare, snabbare.",
           "footer": "Moderator Bot 🚀 Accelerated Plan",
-          "button_label": "🚀 Subscribe Now"
+          "button_label": "🚀 Prenumerera nu"
         }
       },
       "perks": {
-        "title": "Accelerated Perks",
-        "description": "Upgrade your experience with Moderator Bot Accelerated:\n• AI-powered autonomous moderation scanning to detect and act on rule-breaking messages automatically\n• Scan more frames per video for deeper NSFW detection\n• Priority NSFW & Scam detection\n• Early access to new features\n• Supports the bot's development"
+        "title": "Accelerated Förmåner",
+        "description": "Uppgradera din upplevelse med Moderator Bot Accelerated:\n• AI-driven autonom moderationsscanning för att automatiskt upptäcka och agera på regelöverträdelser\n• Skanna fler bilder per video för djupare NSFW-detektion\n• Prioriterad NSFW & Scam-detektering\n• Tidig tillgång till nya funktioner\n• Stöder botens utveckling"
       },
       "cancel": {
-        "message": "You can cancel your PayPal subscription anytime via your **PayPal account → Settings → Payments → Manage Automatic Payments**.\nYour premium access will last until the end of the billing cycle."
+        "message": "Du kan närsomhelst avbryta ditt PayPal-abonnemang via ditt **PayPal-konto → Inställningar → Betalningar → Hantera automatisk betalningar**.\nDin premiumåtkomst kommer att vara till slutet av faktureringscykeln."
       }
     }
   }
