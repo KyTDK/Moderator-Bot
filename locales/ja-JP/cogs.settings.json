@@ -2,61 +2,61 @@
   "cogs": {
     "settings": {
       "help": {
-        "header": "**Available Settings:**\\n",
-        "entry": "**{name}**: {description} (Type: {type})",
-        "not_found": "No help found for `{command}`."
+        "header": "**利用可能な設定:**\\n",
+        "entry": "**{name}**: {description} (タイプ: {type})",
+        "not_found": "`{command}` のヘルプは見つかりませんでした。"
       },
       "reset": {
-        "done": "Reset all settings to defaults.",
-        "already": "You are already using default settings."
+        "done": "すべての設定をデフォルトにリセットします。",
+        "already": "既にデフォルト設定を使用しています。"
       },
       "set": {
-        "invalid_name": "**Invalid setting name.**",
-        "requires_plan": "This setting requires {requirement}. Use `/accelerated subscribe` to upgrade.",
-        "missing_boolean": "**`{name}` expects a boolean. Use the `value` option.**",
-        "missing_integer": "**`{name}` expects an integer. Use the `value` option.**",
-        "missing_duration": "**`{name}` expects a duration (e.g. 30m, 1d).**",
-        "missing_channel": "**`{name}` expects a channel. Use the `channel` option.**",
-        "missing_role": "**`{name}` expects a role. Use the `role` option.**",
-        "missing_channel_add": "**`{name}` expects a channel to add. Use the `channel` option.**",
-        "missing_role_add": "**`{name}` expects a role to add. Use the `role` option.**",
+        "invalid_name": "**無効な設定名です。**",
+        "requires_plan": "この設定には {requirement} が必要です。アップグレードするには `/accelerated subscribe` を使用してください。",
+        "missing_boolean": "**`{name}` はブール値を期待しています。`value` オプションを使用してください。**",
+        "missing_integer": "**`{name}` は整数を期待しています。`value` オプションを使用してください。**",
+        "missing_duration": "**`{name}` は継続時間 (例: 30m, 1d) を期待しています。**",
+        "missing_channel": "**`{name}` はチャンネルを期待しています。`channel` オプションを使用してください。**",
+        "missing_role": "**`{name}` はロールを期待しています。`role` オプションを使用してください。**",
+        "missing_channel_add": "**`{name}` は追加するチャンネルを期待しています。`channel` オプションを使用してください。**",
+        "missing_role_add": "**`{name}` は追加するロールを期待しています。`role` オプションを使用してください。**",
         "boolean_values": {
           "true": [
             "true",
             "1",
-            "yes"
+            "はい"
           ],
           "false": [
             "false",
             "0",
-            "no"
+            "いいえ"
           ]
         },
-        "boolean_only": "**`{name}` expects a boolean.**",
-        "unknown_type": "Setting parsed as value as type isn't known",
-        "success": "Updated `{name}` to `{value}`.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "boolean_only": "**`{name}` はブール値を期待しています。**",
+        "unknown_type": "設定が値として解析されましたが、タイプは不明です。",
+        "success": "`{name}` を `{value}` に更新しました。",
+        "unexpected": "予期しないエラーが発生しました: `{error}`"
       },
       "get": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set. Default: `{default}`",
-        "private": "For privacy reasons, this setting is hidden.",
+        "invalid_name": "無効な設定名です。",
+        "not_set": "`{name}` は設定されていません。デフォルト: `{default}`",
+        "private": "プライバシーの理由から、この設定は非表示です。",
         "list_channel_item": "`#{id}`",
         "list_role_item": "`@{id}`",
         "dict_item": "**{key}** — `{values}`",
-        "current": "**`{name}` is currently set to:**\n{value}"
+        "current": "**`{name}` の現在の設定:**\n{value}"
       },
       "remove": {
-        "invalid_name": "Invalid setting name.",
-        "not_set": "`{name}` is not set.",
-        "channel_required": "You must specify a channel to remove.",
-        "channel_missing": "{channel} is not in `{name}`.",
-        "role_required": "You must specify a role to remove.",
-        "role_missing": "{role} is not in `{name}`.",
-        "removed_channel": "Removed {channel} from `{name}`.",
-        "removed_role": "Removed {role} from `{name}`.",
-        "removed_setting": "Removed setting `{name}`. Now using default.",
-        "unexpected": "An unexpected error occurred: `{error}`"
+        "invalid_name": "無効な設定名です。",
+        "not_set": "`{name}` は設定されていません。",
+        "channel_required": "削除するチャンネルを指定する必要があります。",
+        "channel_missing": "{channel} は `{name}` にありません。",
+        "role_required": "削除するロールを指定する必要があります。",
+        "role_missing": "{role} は `{name}` にありません。",
+        "removed_channel": "{channel} を `{name}` から削除しました。",
+        "removed_role": "{role} を `{name}` から削除しました。",
+        "removed_setting": "設定 `{name}` が削除されました。現在はデフォルトを使用しています。",
+        "unexpected": "予期しないエラーが発生しました: `{error}`"
       }
     }
   }
