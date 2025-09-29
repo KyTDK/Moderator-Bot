@@ -93,7 +93,7 @@ class ModeratorBot(commands.Bot):
         fallback_locale = os.getenv("I18N_FALLBACK_LOCALE") or default_locale
         configured_root = os.getenv("I18N_LOCALES_DIR") or os.getenv("LOCALES_DIR")
 
-        _logger.info(
+        _logger.warning(
             "Initialising i18n with env defaults: I18N_DEFAULT_LOCALE=%r, "
             "I18N_FALLBACK_LOCALE=%r, I18N_LOCALES_DIR=%r, LOCALES_DIR=%r",
             os.getenv("I18N_DEFAULT_LOCALE"),
@@ -104,13 +104,6 @@ class ModeratorBot(commands.Bot):
 
         repo_root = Path(__file__).resolve().parents[2]
         locales_root, missing_configured = resolve_locales_root(configured_root, repo_root)
-
-        _logger.info(
-            "Resolved locales root: repo_root=%s -> locales_root=%s (configured=%s)",
-            repo_root,
-            locales_root,
-            configured_root,
-        )
 
         if configured_root and missing_configured:
             _logger.warning(
@@ -125,7 +118,7 @@ class ModeratorBot(commands.Bot):
                 locales_root,
             )
 
-        _logger.info(
+        _logger.warning(
             "Initialising locale repository (root=%s, default=%s, fallback=%s)",
             locales_root,
             default_locale,
@@ -138,27 +131,27 @@ class ModeratorBot(commands.Bot):
             fallback_locale=fallback_locale,
         )
 
-        _logger.info("Ensuring locale repository is loaded")
+        _logger.warning("Ensuring locale repository is loaded")
         self._locale_repository.ensure_loaded()
         try:
             available_locales = self._locale_repository.list_locales()
         except Exception:  # pragma: no cover - defensive logging
             _logger.exception("Failed to list locales after loading repository")
         else:
-            _logger.info(
+            _logger.warning(
                 "Locale repository ready with %d locales: %s",
                 len(available_locales),
                 available_locales,
             )
 
         self._translator = Translator(self._locale_repository)
-        _logger.info(
+        _logger.warning(
             "Translator initialised (default=%s, fallback=%s)",
             self._translator.default_locale,
             self._translator.fallback_locale,
         )
         self._translation_service = TranslationService(self._translator)
-        _logger.info("Translation service ready; preparing Discord translator")
+        _logger.warning("Translation service ready; preparing Discord translator")
         self._command_tree_translator = DiscordAppCommandTranslator(
             self._translation_service
         )
@@ -181,21 +174,21 @@ class ModeratorBot(commands.Bot):
             return
 
         if fetch:
-            _logger.info("Crowdin integration has been removed; reloading translations from disk")
+            _logger.warning("Crowdin integration has been removed; reloading translations from disk")
         await self._locale_repository.reload_async()
-        _logger.info("Translations reloaded from disk")
+        _logger.warning("Translations reloaded from disk")
 
     def dispatch(self, event_name: str, /, *args: Any, **kwargs: Any) -> None:
         service = self._translation_service
         locale = self._guild_locales.resolve_from_candidates((*args, *kwargs.values()))
         token = service.push_locale(locale) if service else None
         try:
-            _logger.info("Dispatching event '%s' with locale=%s", event_name, locale)
+            _logger.warning("Dispatching event '%s' with locale=%s", event_name, locale)
             super().dispatch(event_name, *args, **kwargs)
         finally:
             if service and token is not None:
                 service.reset_locale(token)
-                _logger.info("Locale context reset after dispatch (event=%s)", event_name)
+                _logger.warning("Locale context reset after dispatch (event=%s)", event_name)
 
     def translate(
         self,
@@ -211,13 +204,6 @@ class ModeratorBot(commands.Bot):
                 "Translation requested but translator has not been initialised"
             )
             return fallback if fallback is not None else key
-        _logger.info(
-            "translate called (key=%s, locale=%s, placeholders=%s, fallback=%s)",
-            key,
-            locale,
-            placeholders,
-            fallback,
-        )
         return service.translate(
             key,
             locale=locale,
@@ -239,12 +225,12 @@ class ModeratorBot(commands.Bot):
         locale = self._guild_locales.resolve(ctx)
         token = service.push_locale(locale) if service else None
         try:
-            _logger.info("Invoking command with locale=%s", locale)
+            _logger.warning("Invoking command with locale=%s", locale)
             await super().invoke(ctx)
         finally:
             if service and token is not None:
                 service.reset_locale(token)
-                _logger.info("Locale context reset after command invocation")
+                _logger.warning("Locale context reset after command invocation")
 
     def resolve_locale_for_interaction(
         self, interaction: discord.Interaction
@@ -257,7 +243,7 @@ class ModeratorBot(commands.Bot):
         """Normalise and cache a guild's preferred locale."""
 
         normalized = self._guild_locales.store(guild_id, locale)
-        _logger.info(
+        _logger.warning(
             "Cached preferred locale for guild %s: %r -> %s",
             guild_id,
             locale,
@@ -324,7 +310,7 @@ class ModeratorBot(commands.Bot):
                     "Failed to load guild locale fallback for guild %s", guild_id
                 )
         else:
-            _logger.info(
+            _logger.warning(
                 "Loaded locale override for guild %s: %r", guild_id, override
             )
 
@@ -375,7 +361,7 @@ class ModeratorBot(commands.Bot):
 
     async def setup_hook(self) -> None:  # type: ignore[override]
         if self._command_tree_translator is not None:
-            _logger.info("Setting Discord command tree translator")
+            _logger.warning("Setting Discord command tree translator")
             await self.tree.set_translator(self._command_tree_translator)
 
         try:
