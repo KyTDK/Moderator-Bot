@@ -15,6 +15,7 @@ from modules.i18n import LocaleRepository, Translator
 from modules.i18n.discord_translator import DiscordAppCommandTranslator
 from modules.i18n.config import resolve_locales_root
 from modules.i18n.guild_cache import GuildLocaleCache
+from modules.i18n.locale_utils import normalise_locale
 from modules.i18n.service import TranslationService
 
 _logger = logging.getLogger(__name__)
@@ -232,18 +233,6 @@ class ModeratorBot(commands.Bot):
                 service.reset_locale(token)
                 _logger.warning("Locale context reset after command invocation")
 
-    def _store_guild_locale(self, guild_id: int, locale: Any) -> Optional[str]:
-        """Normalise and cache a guild's preferred locale."""
-
-        normalized = self._guild_locales.store(guild_id, locale)
-        _logger.warning(
-            "Cached preferred locale for guild %s: %r -> %s",
-            guild_id,
-            locale,
-            normalized,
-        )
-        return normalized
-
     async def _preload_guild_locale_cache(self) -> None:
         """Warm the in-memory guild locale cache from the database."""
 
@@ -289,25 +278,30 @@ class ModeratorBot(commands.Bot):
 
     async def refresh_guild_locale_override(self, guild_id: int) -> None:
         override: Any | None = None
+        fallback: Any | None = None
 
         try:
             override = await mysql.get_settings(guild_id, "locale")
         except Exception:
             _logger.exception("Failed to load locale override for guild %s", guild_id)
 
-        if override is None:
-            try:
-                override = await mysql.get_guild_locale(guild_id)
-            except Exception:
-                _logger.exception(
-                    "Failed to load guild locale fallback for guild %s", guild_id
-                )
-        else:
+        if override is not None:
             _logger.warning(
                 "Loaded locale override for guild %s: %r", guild_id, override
             )
+            self._guild_locales.set_override(guild_id, override)
+            return
 
-        self._guild_locales.set_override(guild_id, override)
+        try:
+            fallback = await mysql.get_guild_locale(guild_id)
+        except Exception:
+            _logger.exception(
+                "Failed to load guild locale fallback for guild %s", guild_id
+            )
+            fallback = None
+
+        self._guild_locales.set_override(guild_id, None)
+        self._guild_locales.store(guild_id, fallback)
 
     def _handle_locale_setting_update(
         self, guild_id: int, key: str, value: Any
@@ -401,7 +395,13 @@ class ModeratorBot(commands.Bot):
         for guild in self.guilds:
             try:
                 preferred = getattr(guild, "preferred_locale", None)
-                normalized_locale = self._store_guild_locale(guild.id, preferred)
+                normalized_locale = normalise_locale(preferred)
+                _logger.warning(
+                    "Normalised preferred locale for guild %s: %r -> %s",
+                    guild.id,
+                    preferred,
+                    normalized_locale,
+                )
                 owner_id = await self._resolve_guild_owner_id(guild)
                 if owner_id is None:
                     _logger.warning(
@@ -432,7 +432,13 @@ class ModeratorBot(commands.Bot):
 
     async def on_guild_join(self, guild: discord.Guild) -> None:  # type: ignore[override]
         preferred = getattr(guild, "preferred_locale", None)
-        normalized_locale = self._store_guild_locale(guild.id, preferred)
+        normalized_locale = normalise_locale(preferred)
+        _logger.warning(
+            "Normalised preferred locale for joined guild %s: %r -> %s",
+            guild.id,
+            preferred,
+            normalized_locale,
+        )
         owner_id = await self._resolve_guild_owner_id(guild)
         if owner_id is None:
             _logger.warning(
