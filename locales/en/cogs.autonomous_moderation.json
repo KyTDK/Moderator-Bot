@@ -42,6 +42,13 @@
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
+      "moderator": {
+        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reset_time": "{time}",
+        "budget_reset_next": "the next cycle",
+        "thanks_no_violation": "Thanks for the report. No violations were found.",
+        "thanks_action": "Thanks for the report. Action was taken."
+      },
       "ensure_adaptive": "Adaptive moderation mode is not enabled. Use `/ai_mod set_mode` to enable it."
     }
   }
