@@ -1,6 +1,36 @@
 ﻿{
   "cogs": {
     "monitoring": {
+      "meta": {
+        "group_description": "Monitoring configuration",
+        "set": {
+          "description": "Set channel to output logs.",
+          "channel": "The channel to send logs to."
+        },
+        "remove": {
+          "description": "Remove the monitor channel setting."
+        },
+        "show": {
+          "description": "Show the current monitor channel."
+        },
+        "toggle_event": {
+          "description": "Enable or disable a specific monitoring event.",
+          "event": "The event to toggle",
+          "enabled": "Enable or disable logging for this event",
+          "choices": {
+            "join": "User Join",
+            "leave": "User Leave",
+            "ban": "Ban",
+            "unban": "Unban",
+            "timeout": "Timeout",
+            "message_delete": "Message Deleted",
+            "message_edit": "Message Edited"
+          }
+        },
+        "list_events": {
+          "description": "List current monitor event settings."
+        }
+      },
       "log_event": {
         "upgrade_footer": "升級至Accelerated 以加速 NSFW 和詐騙檢測— /accelerated",
         "guild_footer": "公會ID: {guild_id}"
@@ -50,6 +80,7 @@
         "content_label": "**內容：**\n{content}",
         "description_generic": "訊息已在 {channel} 中被刪除。",
         "description_deleted_by": "\n**刪除者：** {deleter}",
+        "no_content": "[No Content]",
         "fields": {
           "attachments": "附件 ({count})",
           "embeds": "嵌入 {index}",
@@ -68,6 +99,7 @@
           "before": "之前",
           "after": "之後"
         },
+        "no_content": "[No Content]",
         "footer": "使用者ID: {user_id}"
       },
       "ban": {
