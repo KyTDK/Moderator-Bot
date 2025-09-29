@@ -213,6 +213,107 @@ def test_locale_aliases_use_translated_welcome_button(
 
     assert result == expected
 
+
+def _spanish_settings_header() -> str:
+    return "**Configuraciones Disponibles:**"
+
+
+def test_settings_override_uses_spanish_translations(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    guild = DummyGuild(id=555, preferred_locale="en-US")
+    interaction = DummyInteraction(guild=guild, locale="en-US", guild_id=guild.id)
+
+    async def fake_get_settings(guild_id: int, key: str) -> str:
+        assert guild_id == guild.id
+        assert key == "locale"
+        return "es-ES"
+
+    async def fake_get_guild_locale(_: int) -> str | None:
+        return None
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(guild.id))
+
+    resolved = bot.resolve_locale(interaction)
+    assert resolved == "es-ES"
+
+    with bot.locale_context(resolved):
+        texts = bot.translate("cogs.settings.help")
+
+    assert isinstance(texts, dict)
+    header = texts["header"]
+    assert isinstance(header, str)
+    assert header.startswith(_spanish_settings_header())
+    assert "Available Settings" not in header
+
+
+def test_settings_alias_override_normalises_to_spanish(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    guild = DummyGuild(id=556, preferred_locale="en-US")
+    interaction = DummyInteraction(guild=guild, locale="en-US", guild_id=guild.id)
+
+    async def fake_get_settings(guild_id: int, key: str) -> str:
+        assert guild_id == guild.id
+        assert key == "locale"
+        return "es"
+
+    async def fake_get_guild_locale(_: int) -> str | None:
+        return None
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(guild.id))
+
+    resolved = bot.resolve_locale(interaction)
+    assert resolved == "es-ES"
+
+    with bot.locale_context(resolved):
+        texts = bot.translate("cogs.settings.help")
+
+    assert isinstance(texts, dict)
+    header = texts["header"]
+    assert isinstance(header, str)
+    assert header.startswith(_spanish_settings_header())
+    assert "Available Settings" not in header
+
+
+def test_invalid_override_falls_back_to_stored_locale(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    guild = DummyGuild(id=557, preferred_locale="en-US")
+    interaction = DummyInteraction(guild=guild, locale="en-US", guild_id=guild.id)
+
+    async def fake_get_settings(guild_id: int, key: str) -> str:
+        assert guild_id == guild.id
+        assert key == "locale"
+        return "zz-ZZ"
+
+    async def fake_get_guild_locale(guild_id: int) -> str:
+        assert guild_id == guild.id
+        return "fr-FR"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(guild.id))
+
+    resolved = bot.resolve_locale(interaction)
+    assert resolved == "fr-FR"
+
+    with bot.locale_context(resolved):
+        texts = bot.translate("cogs.settings.help")
+
+    assert isinstance(texts, dict)
+    header = texts["header"]
+    assert isinstance(header, str)
+    assert header.startswith("**Paramètres disponibles :**")
+    assert "Available Settings" not in header
+
 def test_locale_context_manager_restores_previous_locale(bot: ModeratorBot) -> None:
     service = bot._translation_service
     assert service is not None

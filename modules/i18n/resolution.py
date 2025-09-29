@@ -95,25 +95,35 @@ class LocaleResolver:
             if candidate is None:
                 continue
 
-            guild_id = extract_guild_id(candidate)
-            if guild_id is not None:
-                if resolution.override is None:
-                    resolution.override = self._cache.get_override(guild_id)
-                if resolution.stored is None:
-                    resolution.stored = self._cache.get(guild_id)
+            self._apply_guild_locale_overrides(candidate, resolution)
+            self._apply_detected_locale(candidate, resolution)
 
-                if resolution.override:
-                    detected = detect_locale(candidate)
-                    if resolution.detected is None and detected:
-                        resolution.detected = detected
-                    break
-
-            if resolution.detected is None:
-                detected = detect_locale(candidate)
-                if detected:
-                    resolution.detected = detected
+            if resolution.override and resolution.detected:
+                break
 
         return resolution
+
+    def _apply_guild_locale_overrides(
+        self, candidate: Any, resolution: LocaleResolution
+    ) -> bool:
+        guild_id = extract_guild_id(candidate)
+        if guild_id is None:
+            return False
+
+        if resolution.override is None:
+            resolution.override = self._cache.get_override(guild_id)
+        if resolution.stored is None:
+            resolution.stored = self._cache.get(guild_id)
+
+        return bool(resolution.override)
+
+    def _apply_detected_locale(self, candidate: Any, resolution: LocaleResolution) -> None:
+        if resolution.detected is not None:
+            return
+
+        detected = detect_locale(candidate)
+        if detected:
+            resolution.detected = detected
 
 
 __all__ = [
