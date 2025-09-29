@@ -37,7 +37,10 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
 
     captcha_group = app_commands.Group(
         name="captcha",
-        description="Manage captcha verification.",
+        description=app_commands.locale_str(
+            "Manage captcha verification.",
+            key="cogs.captcha.meta.group_description",
+        ),
         guild_only=True,
         default_permissions=discord.Permissions(manage_guild=True),
     )
@@ -71,7 +74,13 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                 "CAPTCHA_API_TOKEN or API base URL missing; captcha verification will be disabled."
             )
 
-    @captcha_group.command(name="sync", description="Resend the captcha verification embed.")
+    @captcha_group.command(
+        name="sync",
+        description=app_commands.locale_str(
+            "Resend the captcha verification embed.",
+            key="cogs.captcha.meta.sync.description",
+        ),
+    )
     async def sync_embed_command(self, interaction: Interaction) -> None:
         guild_id = interaction.guild.id
         common_texts = self.bot.translate("cogs.captcha.common",
@@ -110,9 +119,18 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
             )
 
     @captcha_group.command(
-        name="request", description="Send a captcha verification request to a member."
+        name="request",
+        description=app_commands.locale_str(
+            "Send a captcha verification request to a member.",
+            key="cogs.captcha.meta.request.description",
+        ),
     )
-    @app_commands.describe(member="The member who should complete verification")
+    @app_commands.describe(
+        member=app_commands.locale_str(
+            "The member who should complete verification",
+            key="cogs.captcha.meta.request.member",
+        )
+    )
     async def request_verification_command(
         self, interaction: Interaction, member: discord.Member
     ) -> None:

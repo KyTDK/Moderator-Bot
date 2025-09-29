@@ -29,12 +29,21 @@ class BannedURLsCog(commands.Cog):
     
     bannedurls_group = app_commands.Group(
         name="bannedurls",
-        description="Banned URLs management commands.",
+        description=app_commands.locale_str(
+            "Banned URLs management commands.",
+            key="cogs.banned_urls.meta.group_description",
+        ),
         default_permissions=discord.Permissions(manage_messages=True),
         guild_only=True
     )
 
-    @bannedurls_group.command(name="add", description="Add a URL or domain to the banned list.")
+    @bannedurls_group.command(
+        name="add",
+        description=app_commands.locale_str(
+            "Add a URL or domain to the banned list.",
+            key="cogs.banned_urls.meta.add.description",
+        ),
+    )
     async def add_banned_urls(self, interaction: Interaction, url: str):
         guild_id = interaction.guild.id
 
@@ -77,7 +86,13 @@ class BannedURLsCog(commands.Cog):
             ephemeral=True,
         )
 
-    @bannedurls_group.command(name="remove", description="Remove a URL or domain from the banned list.")
+    @bannedurls_group.command(
+        name="remove",
+        description=app_commands.locale_str(
+            "Remove a URL or domain from the banned list.",
+            key="cogs.banned_urls.meta.remove.description",
+        ),
+    )
     async def remove_banned_urls(self, interaction: Interaction, url: str):
         guild_id = interaction.guild.id
 
@@ -110,7 +125,13 @@ class BannedURLsCog(commands.Cog):
         filtered = [u for u in all_urls if current.lower() in u.lower()]
         return [app_commands.Choice(name=u, value=u) for u in filtered[:25]]
 
-    @bannedurls_group.command(name="list", description="List all banned URLs.")
+    @bannedurls_group.command(
+        name="list",
+        description=app_commands.locale_str(
+            "List all banned URLs.",
+            key="cogs.banned_urls.meta.list.description",
+        ),
+    )
     async def list_banned_urls(self, interaction: Interaction):
         guild_id = interaction.guild.id
         rows, _ = await execute_query(
@@ -136,7 +157,13 @@ class BannedURLsCog(commands.Cog):
         file = discord.File(buf, filename=filename)
         await interaction.response.send_message(file=file, ephemeral=True)
 
-    @bannedurls_group.command(name="clear", description="Clear all banned URLs.")
+    @bannedurls_group.command(
+        name="clear",
+        description=app_commands.locale_str(
+            "Clear all banned URLs.",
+            key="cogs.banned_urls.meta.clear.description",
+        ),
+    )
     async def clear_banned_urls(self, interaction: Interaction):
         guild_id = interaction.guild.id
         _, affected = await execute_query("DELETE FROM banned_urls WHERE guild_id = %s", (guild_id,))

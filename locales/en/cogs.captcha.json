@@ -1,6 +1,16 @@
 ﻿{
   "cogs": {
     "captcha": {
+      "meta": {
+        "group_description": "Manage captcha verification.",
+        "sync": {
+          "description": "Resend the captcha verification embed."
+        },
+        "request": {
+          "description": "Send a captcha verification request to a member.",
+          "member": "The member who should complete verification"
+        }
+      },
       "common": {
         "guild_only": "This command can only be used in a server.",
         "wrong_guild": "Please choose a member from this server.",

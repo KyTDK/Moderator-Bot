@@ -269,7 +269,7 @@ class MonitoringCog(commands.Cog):
             if deleter:
                 description += texts["deleted_by"].format(deleter=deleter)
             description += texts["content_label"].format(
-                content=cached_message.content or "[No Content]"
+                content=cached_message.content or texts["no_content"]
             )
             embed = Embed(
                 title=texts["title"],
@@ -427,14 +427,15 @@ class MonitoringCog(commands.Cog):
             ),
             color=Color.gold(),
         )
+        no_content = texts["no_content"]
         embed.add_field(
             name=texts["fields"]["before"],
-            value=cached_before.content or "[No Content]",
+            value=cached_before.content or no_content,
             inline=False,
         )
         embed.add_field(
             name=texts["fields"]["after"],
-            value=after.content or "[No Content]",
+            value=after.content or no_content,
             inline=False,
         )
         embed.set_footer(text=texts["footer"].format(user_id=after.author.id))
@@ -442,13 +443,27 @@ class MonitoringCog(commands.Cog):
 
     monitor_group = app_commands.Group(
         name="monitor",
-        description="Monitoring configuration",
+        description=app_commands.locale_str(
+            "Monitoring configuration",
+            key="cogs.monitoring.meta.group_description",
+        ),
         guild_only=True,
         default_permissions=discord.Permissions(manage_messages=True),
     )
 
-    @monitor_group.command(name="set", description="Set channel to output logs.")
-    @app_commands.describe(channel="The channel to send logs to.")
+    @monitor_group.command(
+        name="set",
+        description=app_commands.locale_str(
+            "Set channel to output logs.",
+            key="cogs.monitoring.meta.set.description",
+        ),
+    )
+    @app_commands.describe(
+        channel=app_commands.locale_str(
+            "The channel to send logs to.",
+            key="cogs.monitoring.meta.set.channel",
+        )
+    )
     async def monitor_set(self, interaction: Interaction, channel: discord.TextChannel):
         guild_id = interaction.guild.id
         texts = self._texts("monitor_commands",
@@ -459,7 +474,13 @@ class MonitoringCog(commands.Cog):
             ephemeral=True,
         )
 
-    @monitor_group.command(name="remove", description="Remove the monitor channel setting.")
+    @monitor_group.command(
+        name="remove",
+        description=app_commands.locale_str(
+            "Remove the monitor channel setting.",
+            key="cogs.monitoring.meta.remove.description",
+        ),
+    )
     async def monitor_remove(self, interaction: Interaction):
         guild_id = interaction.guild.id
         texts = self._texts("monitor_commands",
@@ -470,7 +491,13 @@ class MonitoringCog(commands.Cog):
         else:
             await interaction.response.send_message(texts["not_set"], ephemeral=True)
 
-    @monitor_group.command(name="show", description="Show the current monitor channel.")
+    @monitor_group.command(
+        name="show",
+        description=app_commands.locale_str(
+            "Show the current monitor channel.",
+            key="cogs.monitoring.meta.show.description",
+        ),
+    )
     async def monitor_show(self, interaction: Interaction):
         guild_id = interaction.guild.id
         texts = self._texts("monitor_commands",
@@ -486,17 +513,74 @@ class MonitoringCog(commands.Cog):
         else:
             await interaction.response.send_message(texts["none"], ephemeral=True)
 
-    @monitor_group.command(name="toggle_event", description="Enable or disable a specific monitoring event.")
-    @app_commands.describe(event="The event to toggle", enabled="Enable or disable logging for this event")
+    @monitor_group.command(
+        name="toggle_event",
+        description=app_commands.locale_str(
+            "Enable or disable a specific monitoring event.",
+            key="cogs.monitoring.meta.toggle_event.description",
+        ),
+    )
+    @app_commands.describe(
+        event=app_commands.locale_str(
+            "The event to toggle",
+            key="cogs.monitoring.meta.toggle_event.event",
+        ),
+        enabled=app_commands.locale_str(
+            "Enable or disable logging for this event",
+            key="cogs.monitoring.meta.toggle_event.enabled",
+        ),
+    )
     @app_commands.choices(
         event=[
-            app_commands.Choice(name="User Join", value="join"),
-            app_commands.Choice(name="User Leave", value="leave"),
-            app_commands.Choice(name="Ban", value="ban"),
-            app_commands.Choice(name="Unban", value="unban"),
-            app_commands.Choice(name="Timeout", value="timeout"),
-            app_commands.Choice(name="Message Deleted", value="message_delete"),
-            app_commands.Choice(name="Message Edited", value="message_edit"),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "User Join",
+                    key="cogs.monitoring.meta.toggle_event.choices.join",
+                ),
+                value="join",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "User Leave",
+                    key="cogs.monitoring.meta.toggle_event.choices.leave",
+                ),
+                value="leave",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Ban",
+                    key="cogs.monitoring.meta.toggle_event.choices.ban",
+                ),
+                value="ban",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Unban",
+                    key="cogs.monitoring.meta.toggle_event.choices.unban",
+                ),
+                value="unban",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Timeout",
+                    key="cogs.monitoring.meta.toggle_event.choices.timeout",
+                ),
+                value="timeout",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Message Deleted",
+                    key="cogs.monitoring.meta.toggle_event.choices.message_delete",
+                ),
+                value="message_delete",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Message Edited",
+                    key="cogs.monitoring.meta.toggle_event.choices.message_edit",
+                ),
+                value="message_edit",
+            ),
         ]
     )
     async def toggle_event(self, interaction: Interaction, event: app_commands.Choice[str], enabled: bool):
@@ -512,7 +596,13 @@ class MonitoringCog(commands.Cog):
             ephemeral=True,
         )
 
-    @monitor_group.command(name="list_events", description="List current monitor event settings.")
+    @monitor_group.command(
+        name="list_events",
+        description=app_commands.locale_str(
+            "List current monitor event settings.",
+            key="cogs.monitoring.meta.list_events.description",
+        ),
+    )
     async def list_events(self, interaction: Interaction):
         guild_id = interaction.guild.id
         texts = self._texts("monitor_commands",

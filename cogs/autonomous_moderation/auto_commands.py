@@ -14,22 +14,23 @@ AIMOD_ACTION_SETTING = "aimod-detection-action"
 ACTION_MANAGER = ActionListManager(AIMOD_ACTION_SETTING)
 
 ADAPTIVE_EVENTS = [
-    ("Role Online", "role_online"),
-    ("Role Offline", "role_offline"),
-    ("Mass Join", "mass_join"),
-    ("Mass Leave", "mass_leave"),
-    ("Server Inactivity", "guild_inactive"),
-    ("Role Online %", "role_online_percent"),
-    ("Time Range", "time_range"),
-    ("Server Spike", "server_spike"),
+    ("Role Online", "role_online", "cogs.autonomous_moderation.meta.adaptive.events.role_online"),
+    ("Role Offline", "role_offline", "cogs.autonomous_moderation.meta.adaptive.events.role_offline"),
+    ("Mass Join", "mass_join", "cogs.autonomous_moderation.meta.adaptive.events.mass_join"),
+    ("Mass Leave", "mass_leave", "cogs.autonomous_moderation.meta.adaptive.events.mass_leave"),
+    ("Server Inactivity", "guild_inactive", "cogs.autonomous_moderation.meta.adaptive.events.guild_inactive"),
+    ("Role Online %", "role_online_percent", "cogs.autonomous_moderation.meta.adaptive.events.role_online_percent"),
+    ("Time Range", "time_range", "cogs.autonomous_moderation.meta.adaptive.events.time_range"),
+    ("Server Spike", "server_spike", "cogs.autonomous_moderation.meta.adaptive.events.server_spike"),
 ]
-VALID_ADAPTIVE_EVENTS = {value: label for label, value in ADAPTIVE_EVENTS}
+VALID_ADAPTIVE_EVENTS = {value: key for _, value, key in ADAPTIVE_EVENTS}
 ACTIONS = [
-    ("Enable Interval Mode", "enable_interval"),
-    ("Disable Interval Mode", "disable_interval"),
-    ("Enable Report Mode", "enable_report"),
-    ("Disable Report Mode", "disable_report"),
+    ("Enable Interval Mode", "enable_interval", "cogs.autonomous_moderation.meta.actions.enable_interval"),
+    ("Disable Interval Mode", "disable_interval", "cogs.autonomous_moderation.meta.actions.disable_interval"),
+    ("Enable Report Mode", "enable_report", "cogs.autonomous_moderation.meta.actions.enable_report"),
+    ("Disable Report Mode", "disable_report", "cogs.autonomous_moderation.meta.actions.disable_report"),
 ]
+ACTION_LABEL_KEYS = {value: key for _, value, key in ACTIONS}
 
 AIMOD_EVENT_SETTING = "aimod-adaptive-events"
 EVENT_MANAGER = EventListManager(AIMOD_EVENT_SETTING)
@@ -62,12 +63,21 @@ class AutonomousCommandsCog(commands.Cog):
 
     ai_mod_group = app_commands.Group(
         name="ai_mod",
-        description="Manage AI moderation features.",
+        description=app_commands.locale_str(
+            "Manage AI moderation features.",
+            key="cogs.autonomous_moderation.meta.group_description",
+        ),
         default_permissions=discord.Permissions(manage_messages=True),
         guild_only=True,
     )
 
-    @ai_mod_group.command(name="rules_set", description="Set server rules")
+    @ai_mod_group.command(
+        name="rules_set",
+        description=app_commands.locale_str(
+            "Set server rules",
+            key="cogs.autonomous_moderation.meta.rules_set.description",
+        ),
+    )
     @app_commands.default_permissions(manage_guild=True)
     async def set_rules(self, interaction: Interaction, *, rules: str):
         if not await can_run(interaction):
@@ -78,7 +88,13 @@ class AutonomousCommandsCog(commands.Cog):
                                    guild_id=guild_id)
         await interaction.response.send_message(texts["updated"], ephemeral=True)
 
-    @ai_mod_group.command(name="rules_show", description="Show the currently configured moderation rules.")
+    @ai_mod_group.command(
+        name="rules_show",
+        description=app_commands.locale_str(
+            "Show the currently configured moderation rules.",
+            key="cogs.autonomous_moderation.meta.rules_show.description",
+        ),
+    )
     async def show_rules(self, interaction: Interaction):
         if not await can_run(interaction):
             return
@@ -98,7 +114,13 @@ class AutonomousCommandsCog(commands.Cog):
             ephemeral=True,
         )
 
-    @ai_mod_group.command(name="add_action", description="Add enforcement actions")
+    @ai_mod_group.command(
+        name="add_action",
+        description=app_commands.locale_str(
+            "Add enforcement actions",
+            key="cogs.autonomous_moderation.meta.add_action.description",
+        ),
+    )
     @app_commands.default_permissions(manage_guild=True)
     @app_commands.choices(action=action_choices(include=[("Auto", "auto")]))
     async def add_action(
@@ -128,8 +150,19 @@ class AutonomousCommandsCog(commands.Cog):
         msg = await ACTION_MANAGER.add_action(interaction.guild.id, action_str, translator=self.bot.translate)
         await interaction.followup.send(msg, ephemeral=True)
 
-    @ai_mod_group.command(name="remove_action", description="Remove a specific action from the list of punishments.")
-    @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
+    @ai_mod_group.command(
+        name="remove_action",
+        description=app_commands.locale_str(
+            "Remove a specific action from the list of punishments.",
+            key="cogs.autonomous_moderation.meta.remove_action.description",
+        ),
+    )
+    @app_commands.describe(
+        action=app_commands.locale_str(
+            "Exact action string to remove (e.g. timeout, delete)",
+            key="cogs.autonomous_moderation.meta.remove_action.action",
+        )
+    )
     @app_commands.autocomplete(action=ACTION_MANAGER.autocomplete)
     async def remove_action(self, interaction: Interaction, action: str):
         if not await can_run(interaction):
@@ -137,21 +170,69 @@ class AutonomousCommandsCog(commands.Cog):
         msg = await ACTION_MANAGER.remove_action(interaction.guild.id, action, translator=self.bot.translate)
         await interaction.response.send_message(msg, ephemeral=True)
 
-    @ai_mod_group.command(name="toggle", description="Enable/disable moderation, view status, or set mode.")
+    @ai_mod_group.command(
+        name="toggle",
+        description=app_commands.locale_str(
+            "Enable/disable moderation, view status, or set mode.",
+            key="cogs.autonomous_moderation.meta.toggle.description",
+        ),
+    )
     @app_commands.describe(
-        enable="Turn autonomous moderation on or off.",
-        mode="Optional: set report / interval / adaptive mode."
+        enable=app_commands.locale_str(
+            "Turn autonomous moderation on or off.",
+            key="cogs.autonomous_moderation.meta.toggle.enable",
+        ),
+        mode=app_commands.locale_str(
+            "Optional: set report / interval / adaptive mode.",
+            key="cogs.autonomous_moderation.meta.toggle.mode",
+        ),
     )
     @app_commands.choices(
         enable=[
-            app_commands.Choice(name="Enable", value="enable"),
-            app_commands.Choice(name="Disable", value="disable"),
-            app_commands.Choice(name="Status", value="status"),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Enable",
+                    key="cogs.autonomous_moderation.meta.toggle.enable_choice",
+                ),
+                value="enable",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Disable",
+                    key="cogs.autonomous_moderation.meta.toggle.disable_choice",
+                ),
+                value="disable",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Status",
+                    key="cogs.autonomous_moderation.meta.toggle.status_choice",
+                ),
+                value="status",
+            ),
         ],
         mode=[
-            app_commands.Choice(name="Report", value="report"),
-            app_commands.Choice(name="Interval", value="interval"),
-            app_commands.Choice(name="Adaptive", value="adaptive"),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Report",
+                    key="cogs.autonomous_moderation.meta.toggle.mode_choices.report",
+                ),
+                value="report",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Interval",
+                    key="cogs.autonomous_moderation.meta.toggle.mode_choices.interval",
+                ),
+                value="interval",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "Adaptive",
+                    key="cogs.autonomous_moderation.meta.toggle.mode_choices.adaptive",
+                ),
+                value="adaptive",
+            ),
         ],
     )
     async def toggle(self, interaction: Interaction, enable: app_commands.Choice[str], mode: app_commands.Choice[str] | None = None):
@@ -165,11 +246,13 @@ class AutonomousCommandsCog(commands.Cog):
             enabled = await mysql.get_settings(gid, "autonomous-mod")
             current_mode = await mysql.get_settings(gid, "aimod-mode") or "report"
             state_label = toggle_texts["state_enabled"] if enabled else toggle_texts["state_disabled"]
-            msg = toggle_texts["status"].format(state=state_label, mode=current_mode)
+            mode_label = toggle_texts.get("modes", {}).get(current_mode, current_mode)
+            msg = toggle_texts["status"].format(state=state_label, mode=mode_label)
 
             if current_mode == "adaptive":
                 active = await mysql.get_settings(gid, "aimod-active-mode") or "report"
-                msg += toggle_texts["status_active"].format(active=active)
+                active_label = toggle_texts.get("modes", {}).get(active, active)
+                msg += toggle_texts["status_active"].format(active=active_label)
 
             await interaction.response.send_message(msg, ephemeral=True)
             return
@@ -187,11 +270,18 @@ class AutonomousCommandsCog(commands.Cog):
 
         if mode:
             await mysql.update_settings(gid, "aimod-mode", mode.value)
-            status_msg += "\n" + toggle_texts["mode_set"].format(mode=mode.value)
+            mode_label = toggle_texts.get("modes", {}).get(mode.value, mode.value)
+            status_msg += "\n" + toggle_texts["mode_set"].format(mode=mode_label)
 
         await interaction.response.send_message(status_msg, ephemeral=True)
 
-    @ai_mod_group.command(name="view_actions", description="Show all actions currently configured to trigger when the AI detects a violation.")
+    @ai_mod_group.command(
+        name="view_actions",
+        description=app_commands.locale_str(
+            "Show all actions currently configured to trigger when the AI detects a violation.",
+            key="cogs.autonomous_moderation.meta.view_actions.description",
+        ),
+    )
     async def view_actions(self, interaction: Interaction):
         if not await can_run(interaction):
             return
@@ -209,16 +299,46 @@ class AutonomousCommandsCog(commands.Cog):
             ephemeral=True,
         )
 
-    @ai_mod_group.command(name="add_adaptive_event", description="Link a trigger event to one or more moderation mode actions.")
+    @ai_mod_group.command(
+        name="add_adaptive_event",
+        description=app_commands.locale_str(
+            "Link a trigger event to one or more moderation mode actions.",
+            key="cogs.autonomous_moderation.meta.add_adaptive_event.description",
+        ),
+    )
     @app_commands.describe(
-        role="Which roles to monitor (if applicable)",
-        channel="Which channel to monitor (for spike events)",
-        time_range="Time range in HH:MM-HH:MM for time-based triggers",
-        threshold="Threshold for role online percent (0 to 1, optional)"
+        role=app_commands.locale_str(
+            "Which roles to monitor (if applicable)",
+            key="cogs.autonomous_moderation.meta.add_adaptive_event.role",
+        ),
+        channel=app_commands.locale_str(
+            "Which channel to monitor (for spike events)",
+            key="cogs.autonomous_moderation.meta.add_adaptive_event.channel",
+        ),
+        time_range=app_commands.locale_str(
+            "Time range in HH:MM-HH:MM for time-based triggers",
+            key="cogs.autonomous_moderation.meta.add_adaptive_event.time_range",
+        ),
+        threshold=app_commands.locale_str(
+            "Threshold for role online percent (0 to 1, optional)",
+            key="cogs.autonomous_moderation.meta.add_adaptive_event.threshold",
+        ),
     )
     @app_commands.choices(
-        event=[app_commands.Choice(name=label, value=value) for label, value in ADAPTIVE_EVENTS],
-        action=[app_commands.Choice(name=label, value=value) for label, value in ACTIONS]
+        event=[
+            app_commands.Choice(
+                name=app_commands.locale_str(label, key=key),
+                value=value,
+            )
+            for label, value, key in ADAPTIVE_EVENTS
+        ],
+        action=[
+            app_commands.Choice(
+                name=app_commands.locale_str(label, key=key),
+                value=value,
+            )
+            for label, value, key in ACTIONS
+        ]
     )
     async def add_adaptive_event(
         self,
@@ -276,10 +396,33 @@ class AutonomousCommandsCog(commands.Cog):
                 ephemeral=True,
             )
 
-    @ai_mod_group.command(name="remove_adaptive_event", description="Remove a specific action from a configured event.")
-    @app_commands.describe(event_key="Adaptive event key (autocompletes)", action="Action to remove from this event")
+    @ai_mod_group.command(
+        name="remove_adaptive_event",
+        description=app_commands.locale_str(
+            "Remove a specific action from a configured event.",
+            key="cogs.autonomous_moderation.meta.remove_adaptive_event.description",
+        ),
+    )
+    @app_commands.describe(
+        event_key=app_commands.locale_str(
+            "Adaptive event key (autocompletes)",
+            key="cogs.autonomous_moderation.meta.remove_adaptive_event.event_key",
+        ),
+        action=app_commands.locale_str(
+            "Action to remove from this event",
+            key="cogs.autonomous_moderation.meta.remove_adaptive_event.action",
+        ),
+    )
     @app_commands.autocomplete(event_key=EVENT_MANAGER.autocomplete_event)
-    @app_commands.choices(action=[app_commands.Choice(name=label, value=value) for label, value in ACTIONS])
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(
+                name=app_commands.locale_str(label, key=key),
+                value=value,
+            )
+            for label, value, key in ACTIONS
+        ]
+    )
     async def remove_adaptive_event(self, interaction: Interaction, event_key: str, action: app_commands.Choice[str]):
         if not await can_run(interaction):
             return
@@ -288,7 +431,13 @@ class AutonomousCommandsCog(commands.Cog):
         msg = await EVENT_MANAGER.remove_event_action(interaction.guild.id, event_key, action.value, translator=self.bot.translate)
         await interaction.response.send_message(msg, ephemeral=True)
 
-    @ai_mod_group.command(name="clear_adaptive_events", description="Clear all adaptive event triggers.")
+    @ai_mod_group.command(
+        name="clear_adaptive_events",
+        description=app_commands.locale_str(
+            "Clear all adaptive event triggers.",
+            key="cogs.autonomous_moderation.meta.clear_adaptive_events.description",
+        ),
+    )
     async def clear_adaptive_events(self, interaction: Interaction):
         if not await can_run(interaction):
             return
@@ -300,7 +449,13 @@ class AutonomousCommandsCog(commands.Cog):
         await mysql.update_settings(interaction.guild.id, AIMOD_EVENT_SETTING, {})
         await interaction.response.send_message(adaptive_texts["cleared"], ephemeral=True)
 
-    @ai_mod_group.command(name="view_adaptive_events", description="Show current adaptive moderation triggers.")
+    @ai_mod_group.command(
+        name="view_adaptive_events",
+        description=app_commands.locale_str(
+            "Show current adaptive moderation triggers.",
+            key="cogs.autonomous_moderation.meta.view_adaptive_events.description",
+        ),
+    )
     async def view_adaptive_events(self, interaction: Interaction):
         if not await can_run(interaction):
             return
@@ -325,7 +480,11 @@ class AutonomousCommandsCog(commands.Cog):
 
         lines: list[str] = []
         for event, action_map in grouped.items():
-            event_label = VALID_ADAPTIVE_EVENTS.get(event, event)
+            event_key = VALID_ADAPTIVE_EVENTS.get(event)
+            if event_key:
+                event_label = self.bot.translate(event_key, guild_id=guild_id)
+            else:
+                event_label = event
             lines.append(adaptive_texts["section"].format(event=event_label))
             for action, details in action_map.items():
                 detail_strings: list[str] = []
@@ -353,7 +512,13 @@ class AutonomousCommandsCog(commands.Cog):
                     details_suffix = adaptive_texts["detail_join"].format(details=detail_text)
                 else:
                     details_suffix = ""
-                lines.append(adaptive_texts["item"].format(action=action, details=details_suffix))
+                action_key = ACTION_LABEL_KEYS.get(action)
+                action_label = (
+                    self.bot.translate(action_key, guild_id=guild_id)
+                    if action_key
+                    else action
+                )
+                lines.append(adaptive_texts["item"].format(action=action_label, details=details_suffix))
 
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 

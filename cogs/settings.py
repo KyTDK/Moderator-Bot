@@ -60,12 +60,21 @@ class Settings(commands.Cog):
 
     settings_group = app_commands.Group(
         name="settings",
-        description="Manage server settings.",
+        description=app_commands.locale_str(
+            "Manage server settings.",
+            key="cogs.settings.meta.group_description",
+        ),
         guild_only=True,
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
-    @settings_group.command(name="help", description="Get help on settings.")
+    @settings_group.command(
+        name="help",
+        description=app_commands.locale_str(
+            "Get help on settings.",
+            key="cogs.settings.meta.help.description",
+        ),
+    )
     async def help_settings(self, interaction: Interaction):
         """Get help on settings."""
         guid_id = interaction.guild.id
@@ -92,7 +101,13 @@ class Settings(commands.Cog):
         for chunk in chunks[1:]:
             await interaction.followup.send(chunk, ephemeral=True)
 
-    @settings_group.command(name="reset", description="Wipe all settings and start with defaults. This can't be undone")
+    @settings_group.command(
+        name="reset",
+        description=app_commands.locale_str(
+            "Wipe all settings and start with defaults. This can't be undone",
+            key="cogs.settings.meta.reset.description",
+        ),
+    )
     async def reset(self, interaction: Interaction):
         """Reset server settings."""
         await interaction.response.defer(ephemeral=True)
@@ -103,7 +118,13 @@ class Settings(commands.Cog):
         message = texts["done"] if rows > 0 else texts["already"]
         await interaction.followup.send(message)
 
-    @settings_group.command(name="set", description="Set a server setting.")
+    @settings_group.command(
+        name="set",
+        description=app_commands.locale_str(
+            "Set a server setting.",
+            key="cogs.settings.meta.set.description",
+        ),
+    )
     @app_commands.autocomplete(value=value_autocomplete, name=name_autocomplete)
     async def set_setting(
         self,
@@ -340,7 +361,13 @@ class Settings(commands.Cog):
             if isinstance(cmd, app_commands.Group) and current.lower() in cmd.name.lower()
         ][:25]
 
-    @settings_group.command(name="get", description="Get the current value of a server setting.")
+    @settings_group.command(
+        name="get",
+        description=app_commands.locale_str(
+            "Get the current value of a server setting.",
+            key="cogs.settings.meta.get.description",
+        ),
+    )
     @app_commands.autocomplete(name=name_autocomplete)
     async def get_setting(self, interaction: Interaction, name: str):
         """Get the current value of a server setting."""
@@ -408,7 +435,13 @@ class Settings(commands.Cog):
             ephemeral=True,
         )
 
-    @settings_group.command(name="remove", description="Remove a server setting or an item from a list-type setting.")
+    @settings_group.command(
+        name="remove",
+        description=app_commands.locale_str(
+            "Remove a server setting or an item from a list-type setting.",
+            key="cogs.settings.meta.remove.description",
+        ),
+    )
     @app_commands.autocomplete(name=name_autocomplete)
     async def remove_setting(
         self,
