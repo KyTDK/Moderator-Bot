@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Moderaattoribotin hallintapaneeli",
         "description": "[Napsauta tästä avataksesi hallintapaneelin]({url})"
