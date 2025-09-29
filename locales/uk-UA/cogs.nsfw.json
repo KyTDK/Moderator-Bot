@@ -1,6 +1,51 @@
 ﻿{
   "cogs": {
     "nsfw": {
+      "meta": {
+        "group_description": "Manage NSFW content detection.",
+        "add_action": {
+          "description": "Add an action to the NSFW punishment list.",
+          "params": {
+            "action": "Action to perform",
+            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          }
+        },
+        "remove_action": {
+          "description": "Remove an action from the NSFW punishment list.",
+          "params": {
+            "action": "Exact action string to remove (e.g. timeout, delete)"
+          }
+        },
+        "view_actions": {
+          "description": "View the current list of NSFW punishment actions."
+        },
+        "add_category": {
+          "description": "Add a category to NSFW detection."
+        },
+        "categories": {
+          "violence_graphic": "Violence Graphic",
+          "violence": "Violence",
+          "sexual": "Sexual",
+          "self_harm_instructions": "Self Harm Instructions",
+          "self_harm_intent": "Self Harm Intent",
+          "self_harm": "Self Harm"
+        },
+        "remove_category": {
+          "description": "Remove a category from NSFW detection."
+        },
+        "view_categories": {
+          "description": "View NSFW detection categories."
+        },
+        "set_threshold": {
+          "description": "Set the threshold for NSFW detection confidence.",
+          "params": {
+            "threshold": "Confidence threshold (0.0 to 1.0)"
+          }
+        },
+        "view_threshold": {
+          "description": "View the current NSFW detection threshold."
+        }
+      },
       "actions": {
         "none": "Наразі немає налаштованих дій NSFW.",
         "heading": "**Поточні дії NSFW:**\n{actions}"

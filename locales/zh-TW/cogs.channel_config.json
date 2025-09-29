@@ -1,6 +1,33 @@
 ﻿{
   "cogs": {
     "channel_config": {
+      "meta": {
+        "group_description": "Configure log channels.",
+        "set": {
+          "description": "Set a log channel.",
+          "params": {
+            "channel": "The channel to use for logging.",
+            "type": "Which type of log this channel is for."
+          }
+        },
+        "unset": {
+          "description": "Unset a log channel.",
+          "params": {
+            "type": "Which log type to disable."
+          }
+        },
+        "show": {
+          "description": "Show current log channel settings."
+        },
+        "types": {
+          "strike": "Strike",
+          "nsfw": "NSFW",
+          "ai": "AI",
+          "monitor": "Monitor",
+          "captcha": "Captcha",
+          "vc_transcript": "VC Transcript"
+        }
+      },
       "nsfw_required": "{channel} 不是年齡限制的頻道。請選擇一個 NSFW 頻道。",
       "missing_permissions": "在 {channel} 我缺少以下權限：{permissions}",
       "set_success": "{log_type} 日誌將發佈在 {channel}。",

@@ -1,6 +1,51 @@
 ﻿{
   "cogs": {
     "strikes": {
+      "meta": {
+        "group_description": "Strike management commands.",
+        "strike": {
+          "description": "Strike a specific user.",
+          "params": {
+            "user": "The member to strike.",
+            "reason": "The reason for the strike.",
+            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+          }
+        },
+        "get": {
+          "description": "Get strikes of a specific user."
+        },
+        "clear": {
+          "description": "Clear all strikes of a specific user.",
+          "params": {
+            "user": "The user whose strikes will be cleared."
+          }
+        },
+        "add_action": {
+          "description": "Add an additional action for a strike level.",
+          "params": {
+            "number_of_strikes": "Number of strikes required to trigger the action.",
+            "action": "Action to add.",
+            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+          }
+        },
+        "remove_action": {
+          "description": "Remove an action from a strike level.",
+          "params": {
+            "number_of_strikes": "Number of strikes associated with the action.",
+            "action": "Exact action string to remove."
+          }
+        },
+        "view_actions": {
+          "description": "View all configured strike actions."
+        },
+        "intimidate": {
+          "description": "Intimidate the channel, or a specific user.",
+          "params": {
+            "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
+            "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
+          }
+        }
+      },
       "strike": {
         "error": "發生錯誤，請再試一次。如果問題仍然存在，請加入支持伺服器（連結在`/help`）。"
       },

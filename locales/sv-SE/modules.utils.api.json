@@ -2,7 +2,10 @@
   "modules": {
     "utils": {
       "api": {
-        "key_failed_notice": "**Varning:** Din OpenAI API-nyckel misslyckades med en modereringskontroll.\n\nDetta innebär vanligtvis att ditt konto inte har aktiv fakturering eller är tillfälligt begränsat.\n\nVänligen kontrollera din [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) för att säkerställa att ditt konto har betalningsinformation och minst $5 i krediter.\n\nNär detta är löst kommer din nyckel automatiskt att börja fungera igen - ingen omnyckel behövs."
+        "key_failed_notice": "**Varning:** Din OpenAI API-nyckel misslyckades med en modereringskontroll.\n\nDetta innebär vanligtvis att ditt konto inte har aktiv fakturering eller är tillfälligt begränsat.\n\nVänligen kontrollera din [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) för att säkerställa att ditt konto har betalningsinformation och minst $5 i krediter.\n\nNär detta är löst kommer din nyckel automatiskt att börja fungera igen - ingen omnyckel behövs.",
+        "key_validation": {
+          "billing_required": "Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly."
+        }
       }
     }
   }

@@ -1,6 +1,45 @@
 ﻿{
   "cogs": {
     "banned_words": {
+      "meta": {
+        "group_description": "Banned words management commands.",
+        "defaults": {
+          "description": "Enable or disable the built-in profanity list.",
+          "choices": {
+            "enable": "enable",
+            "disable": "disable",
+            "status": "status"
+          }
+        },
+        "add": {
+          "description": "Add a word to the banned words list."
+        },
+        "remove": {
+          "description": "Remove a word from the banned words list."
+        },
+        "list": {
+          "description": "List all banned words."
+        },
+        "clear": {
+          "description": "Clear all banned words."
+        },
+        "add_action": {
+          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "params": {
+            "action": "Action to perform",
+            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          }
+        },
+        "remove_action": {
+          "description": "Remove a specific action from the list of punishments for banned words.",
+          "params": {
+            "action": "Exact action string to remove (e.g. timeout, delete)"
+          }
+        },
+        "view_actions": {
+          "description": "Show all actions currently configured to trigger when banned words are used."
+        }
+      },
       "defaults": {
         "status": "La lista de palabras prohibidas incorporada está **{state}**.",
         "updated": "Lista de palabras prohibidas incorporada **{state}**.",
