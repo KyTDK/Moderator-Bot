@@ -1,6 +1,15 @@
-﻿{
+{
   "cogs": {
     "debug": {
+      "meta": {
+        "stats": {
+          "description": "Get memory and performance stats",
+          "show_all": "Include allocations from all libraries (not just project)"
+        },
+        "locale": {
+          "description": "Show the locale currently bound to this command context"
+        }
+      },
       "permission_denied": "Jy het nie toestemming om hierdie opdrag te gebruik nie.",
       "no_allocations": "Geen projek-verwante toewysings gevind nie.",
       "embed": {
@@ -15,6 +24,9 @@
         "worker_name": "Werker Toues",
         "worker_error": "(fout by die versameling van statistieke: {error})",
         "footer": "Gasheer: {host} | Python {python_version}"
+      },
+      "locale": {
+        "current": "Current locale: {locale}"
       }
     }
   }
