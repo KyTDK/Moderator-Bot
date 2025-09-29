@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from pathlib import Path
 from threading import RLock
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class LocaleRepository:
         locales_root: Path,
         *,
         default_locale: str = "en",
-        fallback_locale: Optional[str] = None,
+        fallback_locale: str | None = None,
     ) -> None:
         self._locales_root = Path(locales_root).resolve()
         self._default_locale = default_locale
@@ -54,11 +54,10 @@ class LocaleRepository:
     async def reload_async(self) -> None:
         await asyncio.to_thread(self.reload)
 
-    def refresh(self) -> None:
-        self.reload()
+    refresh = reload
 
     async def refresh_async(self) -> None:
-        await asyncio.to_thread(self.refresh)
+        await self.reload_async()
 
     def list_locales(self) -> list[str]:
         self.ensure_loaded()
@@ -68,8 +67,7 @@ class LocaleRepository:
     def get_locale_snapshot(self, locale: str) -> dict[str, Any]:
         self.ensure_loaded()
         with self._lock:
-            data = self._cache.get(locale, {})
-            return deepcopy(data)
+            return deepcopy(self._cache.get(locale, {}))
 
     def get_value(self, locale: str, key: str) -> Any:
         self.ensure_loaded()
@@ -77,67 +75,26 @@ class LocaleRepository:
             data = self._cache.get(locale)
         return self._resolve_key(data, key)
 
-    def get_raw_locale(self, locale: str) -> dict[str, Any] | None:
-        self.ensure_loaded()
-        with self._lock:
-            return self._cache.get(locale)
-
     def _load_from_disk(self) -> dict[str, dict[str, Any]]:
-        cache: Dict[str, dict[str, Any]] = {}
+        cache: dict[str, dict[str, Any]] = {}
         root = self._locales_root
         if not root.exists():
             logger.warning("Locales directory %s does not exist; cache cleared", root)
             return {}
 
-        for entry in root.iterdir():
-            if entry.name.startswith("."):
+        for path in sorted(root.rglob("*.json")):
+            if any(part.startswith(".") for part in path.relative_to(root).parts):
                 continue
-            if entry.is_file() and entry.suffix.lower() == ".json":
-                locale_code = entry.stem
-                payload = self._read_json(entry)
-                if payload is not None:
-                    cache[locale_code] = payload
-                    logger.debug(
-                        "Loaded translation file %s for locale %s with %d top-level keys",
-                        entry,
-                        locale_code,
-                        len(payload),
-                    )
-            elif entry.is_dir():
-                locale_code = entry.name
-                locale_data: dict[str, Any] = {}
-                loaded_files: list[Path] = []
-                for json_path in sorted(entry.rglob("*.json")):
-                    payload = self._read_json(json_path)
-                    if payload is not None:
-                        locale_data = self._deep_merge(locale_data, payload)
-                        loaded_files.append(json_path)
-                        logger.debug(
-                            "Merged translation file %s into locale %s with %d top-level keys",
-                            json_path,
-                            locale_code,
-                            len(payload),
-                        )
-                cache[locale_code] = locale_data
-                if loaded_files:
-                    logger.debug(
-                        "Locale %s aggregated from %d translation files: %s",
-                        locale_code,
-                        len(loaded_files),
-                        ", ".join(str(path) for path in loaded_files),
-                    )
-
+            payload = self._read_json(path)
+            if payload is None:
+                continue
+            locale = path.stem if path.parent == root else path.relative_to(root).parts[0]
+            cache[locale] = self._deep_merge(cache.get(locale, {}), payload)
         return cache
 
     @staticmethod
-    def _read_json(path: Path) -> Optional[dict[str, Any]]:
+    def _read_json(path: Path) -> dict[str, Any] | None:
         try:
-            # Use ``utf-8-sig`` so we transparently handle files that were saved
-            # with a UTF-8 BOM. Some of the translation assets bundled with the
-            # bot include this marker which previously caused ``json.load`` to
-            # raise ``JSONDecodeError`` and prevented the locale cache from
-            # being populated. Falling back to the translation key string then
-            # triggered ``TypeError`` at runtime when code expected a mapping.
             with path.open("r", encoding="utf-8-sig") as handle:
                 data = json.load(handle)
         except FileNotFoundError:
@@ -162,7 +119,7 @@ class LocaleRepository:
         return merged
 
     @staticmethod
-    def _resolve_key(data: Optional[dict[str, Any]], key: str) -> Any:
+    def _resolve_key(data: dict[str, Any] | None, key: str) -> Any:
         if data is None:
             return None
         cursor: Any = data

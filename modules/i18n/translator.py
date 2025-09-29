@@ -47,35 +47,29 @@ class Translator:
         """Return the translated value for *key* with optional formatting."""
 
         placeholders = placeholders or {}
-        locales_to_try = self._build_locale_chain(locale)
+        chain = self._build_locale_chain(locale)
 
         logger.debug(
             "Translating key '%s' using locale '%s' (chain=%s)",
             key,
             locale or self._default_locale,
-            locales_to_try,
+            chain,
         )
 
-        for locale_code in locales_to_try:
-            value = self._repository.get_value(locale_code, key)
+        for code in chain:
+            value = self._repository.get_value(code, key)
             if value is not None:
-                if locale_code != locales_to_try[0]:
-                    logger.debug(
-                        "Translation for key '%s' satisfied by locale '%s'", key, locale_code
-                    )
+                if code != chain[0]:
+                    logger.debug("Translation for key '%s' satisfied by locale '%s'", key, code)
                 return self._format_value(value, placeholders)
 
         if fallback is not None:
             logger.debug(
-                "Translation for key '%s' missing; using explicit fallback '%s'",
-                key,
-                fallback,
+                "Translation for key '%s' missing; using explicit fallback '%s'", key, fallback
             )
             return self._apply_format(fallback, placeholders)
 
-        logger.debug(
-            "Translation for key '%s' missing; falling back to key with placeholders", key
-        )
+        logger.debug("Translation for key '%s' missing; falling back to key with placeholders", key)
         return self._apply_format(key, placeholders)
 
     def get_locale_snapshot(self, locale: str) -> dict[str, Any]:
@@ -84,33 +78,28 @@ class Translator:
         return self._repository.get_locale_snapshot(locale)
 
     def _build_locale_chain(self, locale: str | None) -> list[str]:
-        chain: list[str] = []
-        if locale:
-            sanitized = locale.replace("_", "-")
-
-            canonical = normalise_locale(sanitized)
-            if canonical:
-                chain.append(canonical)
-                normalized = canonical
-                if canonical.lower() != sanitized.lower():
-                    chain.append(sanitized)
-            else:
-                chain.append(sanitized)
-                normalized = sanitized
-
-            if "-" in normalized:
-                base = normalized.split("-", 1)[0]
-                base_canonical = normalise_locale(base)
-                chain.append(base_canonical or base)
-        chain.extend([self._default_locale, self._fallback_locale])
-        # Ensure we only keep the first occurrence of each locale code
         seen: set[str] = set()
-        unique_chain: list[str] = []
-        for code in chain:
-            if code not in seen:
-                unique_chain.append(code)
-                seen.add(code)
-        return unique_chain
+        ordered: list[str] = []
+
+        def push(candidate: str | None) -> None:
+            if candidate and candidate not in seen:
+                ordered.append(candidate)
+                seen.add(candidate)
+
+        if locale:
+            preferred = locale.replace("_", "-")
+            canonical = normalise_locale(preferred)
+            primary = canonical or preferred
+            push(primary)
+            if canonical and canonical.lower() != preferred.lower():
+                push(preferred)
+            if "-" in primary:
+                base = primary.split("-", 1)[0]
+                push(normalise_locale(base) or base)
+
+        push(self._default_locale)
+        push(self._fallback_locale)
+        return ordered
 
     def _format_value(self, value: Any, placeholders: Mapping[str, Any]) -> Any:
         if isinstance(value, str):
