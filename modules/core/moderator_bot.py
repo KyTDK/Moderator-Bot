@@ -12,6 +12,7 @@ from discord.ext import commands, tasks
 from modules.post_stats.topgg_poster import start_topgg_poster
 from modules.utils import mysql
 from modules.i18n import LocaleRepository, Translator
+from modules.i18n.discord_translator import DiscordAppCommandTranslator
 from modules.i18n.config import resolve_locales_root
 from modules.i18n.guild_cache import GuildLocaleCache
 from modules.i18n.service import TranslationService
@@ -124,6 +125,7 @@ class ModeratorBot(commands.Bot):
 
         self._translator = Translator(self._locale_repository)
         self._translation_service = TranslationService(self._translator)
+        self.tree.set_translator(DiscordAppCommandTranslator(self._translation_service))
 
     @property
     def translator(self) -> Translator:
