@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Optional
 
@@ -212,27 +211,6 @@ class ModeratorBot(commands.Bot):
             placeholders=placeholders,
             fallback=fallback,
         )
-
-    @contextmanager
-    def locale_context(self, locale: str | None):
-        service = self._translation_service
-        if service is None:
-            yield
-            return
-        with service.use_locale(locale):
-            yield
-
-    async def invoke(self, ctx: commands.Context[Any]) -> None:  # type: ignore[override]
-        service = self._translation_service
-        resolution = self._infer_locale_from_event(ctx)
-        locale = resolution.resolved()
-        token = service.push_locale(locale) if service else None
-        try:
-            _logger.warning("Invoking command with locale=%s", locale)
-            await super().invoke(ctx)
-        finally:
-            if service and token is not None:
-                service.reset_locale(token)
 
     def infer_locale(self, *candidates: Any) -> LocaleResolution:
         """Infer the locale for the provided *candidates*."""
@@ -478,21 +456,16 @@ class ModeratorBot(commands.Bot):
         await self.refresh_guild_locale_override(guild.id)
         dash_url = f"https://modbot.neomechanical.com/dashboard/{guild.id}"
 
-        service = self._translation_service
         override = self._guild_locales.get_override(guild.id)
-        if service and override and override != service.current_locale():
-            with self.locale_context(override):
-                welcome_message = self.translate(
-                    "bot.welcome.message",
-                    placeholders={"dash_url": dash_url},
-                )
-                button_label = self.translate("bot.welcome.button_label")
-        else:
-            welcome_message = self.translate(
-                "bot.welcome.message",
-                placeholders={"dash_url": dash_url},
-            )
-            button_label = self.translate("bot.welcome.button_label")
+        welcome_message = self.translate(
+            "bot.welcome.message",
+            locale=override,
+            placeholders={"dash_url": dash_url},
+        )
+        button_label = self.translate(
+            "bot.welcome.button_label",
+            locale=override,
+        )
 
         view = discord.ui.View()
         view.add_item(

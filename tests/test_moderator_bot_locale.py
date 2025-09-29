@@ -240,8 +240,7 @@ def test_settings_override_uses_spanish_translations(
     resolved = bot.resolve_locale(interaction)
     assert resolved == "es-ES"
 
-    with bot.locale_context(resolved):
-        texts = bot.translate("cogs.settings.help")
+    texts = bot.translate("cogs.settings.help", locale=resolved)
 
     assert isinstance(texts, dict)
     header = texts["header"]
@@ -272,8 +271,7 @@ def test_settings_alias_override_normalises_to_spanish(
     resolved = bot.resolve_locale(interaction)
     assert resolved == "es-ES"
 
-    with bot.locale_context(resolved):
-        texts = bot.translate("cogs.settings.help")
+    texts = bot.translate("cogs.settings.help", locale=resolved)
 
     assert isinstance(texts, dict)
     header = texts["header"]
@@ -305,24 +303,13 @@ def test_invalid_override_falls_back_to_stored_locale(
     resolved = bot.resolve_locale(interaction)
     assert resolved == "fr-FR"
 
-    with bot.locale_context(resolved):
-        texts = bot.translate("cogs.settings.help")
+    texts = bot.translate("cogs.settings.help", locale=resolved)
 
     assert isinstance(texts, dict)
     header = texts["header"]
     assert isinstance(header, str)
     assert header.startswith("**Paramètres disponibles :**")
     assert "Available Settings" not in header
-
-def test_locale_context_manager_restores_previous_locale(bot: ModeratorBot) -> None:
-    service = bot._translation_service
-    assert service is not None
-
-    with bot.locale_context("fr-FR"):
-        assert service.current_locale() == "fr-FR"
-
-    assert service.current_locale() is None
-
 
 def test_settings_override_precedes_interaction_locale(
     bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
@@ -350,11 +337,9 @@ def test_settings_override_precedes_interaction_locale(
     assert resolution.resolved() == "es-ES"
     assert resolution.source() == "override"
 
-    service = bot._translation_service
-    assert service is not None
-
-    with bot.locale_context(resolution.resolved()):
-        translated = bot.translate("bot.welcome.button_label")
+    translated = bot.translate(
+        "bot.welcome.button_label", locale=resolution.resolved()
+    )
 
     assert translated == "Abrir Panel de control"
 
