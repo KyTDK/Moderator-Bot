@@ -1,6 +1,15 @@
-﻿{
+{
   "cogs": {
     "debug": {
+      "meta": {
+        "stats": {
+          "description": "Get memory and performance stats",
+          "show_all": "Include allocations from all libraries (not just project)"
+        },
+        "locale": {
+          "description": "Show the locale currently bound to this command context"
+        }
+      },
       "permission_denied": "Nincs engedélyed a parancs használatához.",
       "no_allocations": "Nem található projekt-kapcsolatos allokáció.",
       "embed": {
@@ -15,6 +24,9 @@
         "worker_name": "Dolgozó sorok",
         "worker_error": "(hiba a metrikák gyűjtésénél: {error})",
         "footer": "Hoszt: {host} | Python {python_version}"
+      },
+      "locale": {
+        "current": "Current locale: {locale}"
       }
     }
   }
