@@ -113,7 +113,7 @@ def _translate_helper(
     placeholders: dict[str, Any] | None = None,
     fallback: str,
 ) -> str:
-    locale = bot._guild_locales.resolve(guild) if guild else None
+    locale = bot.resolve_locale(guild) if guild else None
     key = f"{HELPERS_BASE}.{suffix}" if suffix else HELPERS_BASE
     return bot.translate(
         key,

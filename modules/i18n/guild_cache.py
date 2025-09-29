@@ -3,7 +3,7 @@ from __future__ import annotations
 """Helpers for resolving guild locales from stored metadata."""
 
 import logging
-from typing import Any, Dict, Iterable, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional
 
 from .locale_utils import normalise_locale
 
@@ -81,31 +81,6 @@ class GuildLocaleCache:
 
     def get_override(self, guild_id: int) -> Optional[str]:
         return self._overrides.get(guild_id)
-
-    def resolve(self, candidate: Any) -> Optional[str]:
-        guild_id = extract_guild_id(candidate)
-        if guild_id is None:
-            return None
-
-        override = self._overrides.get(guild_id)
-        if override:
-            logger.info("Resolved locale via override (guild_id=%s): %s", guild_id, override)
-            return override
-
-        stored = self._stored.get(guild_id)
-        if stored:
-            logger.info("Resolved locale via stored cache (guild_id=%s): %s", guild_id, stored)
-            return stored
-
-        logger.warning("No locale found for guild_id=%s", guild_id)
-        return None
-
-    def resolve_from_candidates(self, candidates: Iterable[Any]) -> Optional[str]:
-        for candidate in candidates:
-            locale = self.resolve(candidate)
-            if locale:
-                return locale
-        return None
 
     def drop(self, guild_id: int) -> None:
         self._stored.pop(guild_id, None)
