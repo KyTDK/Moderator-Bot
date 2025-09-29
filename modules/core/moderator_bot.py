@@ -319,6 +319,10 @@ class ModeratorBot(commands.Bot):
                 _logger.exception(
                     "Failed to load guild locale fallback for guild %s", guild_id
                 )
+        else:
+            _logger.debug(
+                "Loaded locale override for guild %s: %r", guild_id, override
+            )
 
         self._guild_locales.set_override(guild_id, override)
 
