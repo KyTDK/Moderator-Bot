@@ -57,7 +57,7 @@ class CaptchaCallbackProcessor:
         self._synchronise_session(session, payload)
 
         if not settings.get("captcha-verification-enabled"):
-            _logger.debug(
+            _logger.info(
                 "Captcha callback ignored because captcha verification is disabled for guild %s",
                 guild.id,
             )
@@ -86,7 +86,7 @@ class CaptchaCallbackProcessor:
             )
             exhausted, remaining = self._has_exhausted_attempts(payload, settings)
             if timeout_failure and not exhausted:
-                _logger.debug(
+                _logger.info(
                     "Treating captcha timeout as verification failure for user %s in guild %s.",
                     member.id,
                     guild.id,
@@ -101,14 +101,14 @@ class CaptchaCallbackProcessor:
                 attempts_remaining=remaining,
             )
             if exhausted:
-                _logger.debug(
+                _logger.info(
                     "Clearing captcha session for guild %s user %s after attempts were exhausted.",
                     guild.id,
                     member.id,
                 )
                 await self._sessions.remove(payload.guild_id, payload.user_id)
             else:
-                _logger.debug(
+                _logger.info(
                     "Captcha session retained for guild %s user %s; attempts remaining: %s",
                     guild.id,
                     member.id,
@@ -162,7 +162,7 @@ class CaptchaCallbackProcessor:
             member = await self._resolve_member(guild, payload.user_id)
         except CaptchaProcessingError as exc:
             if not payload.success and exc.code in {"member_not_found", "member_fetch_failed"}:
-                _logger.debug(
+                _logger.info(
                     "Member %s missing when processing failed captcha for guild %s; continuing with partial context.",
                     payload.user_id,
                     payload.guild_id,
@@ -216,7 +216,7 @@ class CaptchaCallbackProcessor:
             delivery_method="embed",
         )
         await self._sessions.put(embed_session)
-        _logger.debug(
+        _logger.info(
             "Reconstructed embed captcha session for guild %s user %s from callback",
             payload.guild_id,
             payload.user_id,
@@ -334,7 +334,7 @@ class CaptchaCallbackProcessor:
 
         for action in actions:
             if action.action == "log":
-                _logger.debug(
+                _logger.info(
                     "Ignoring deprecated captcha failure action 'log' for guild %s",
                     member.guild.id,
                 )
@@ -357,7 +357,7 @@ class CaptchaCallbackProcessor:
                     skip_note = (
                         f"Failure actions deferred; {attempts_remaining} {plural} remaining."
                     )
-                _logger.debug(
+                _logger.info(
                     "Deferring captcha failure actions for guild %s user %s; attempts remaining: %s",
                     member.guild.id,
                     member.id,
@@ -489,7 +489,7 @@ class CaptchaCallbackProcessor:
     ) -> None:
         channel_id = _coerce_int(settings.get("captcha-log-channel"))
         if not channel_id:
-            _logger.debug(
+            _logger.info(
                 "Captcha failure logging skipped for guild %s; no log channel configured.",
                 member.guild.id,
             )
@@ -772,7 +772,7 @@ def _extract_attempt_counts(
         computed = max_attempts - attempts_remaining
         if computed >= 0:
             attempts = computed
-            _logger.debug(
+            _logger.info(
                 "Inferred attempts used (%s) from max attempts (%s) and attempts remaining (%s)",
                 attempts,
                 max_attempts,
@@ -791,7 +791,7 @@ def _extract_attempt_counts(
         computed_total = attempts + attempts_remaining
         if computed_total >= attempts:
             max_attempts = computed_total
-            _logger.debug(
+            _logger.info(
                 "Inferred max attempts (%s) from attempts used (%s) and attempts remaining (%s)",
                 max_attempts,
                 attempts,

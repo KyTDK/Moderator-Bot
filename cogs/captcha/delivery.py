@@ -169,9 +169,9 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
             await member.send(embed=embed, view=view)
             return
         except discord.Forbidden:
-            _logger.debug("Could not DM captcha instructions to user %s", member.id)
+            _logger.info("Could not DM captcha instructions to user %s", member.id)
         except discord.HTTPException:
-            _logger.debug("Failed to DM captcha instructions to user %s", member.id)
+            _logger.info("Failed to DM captcha instructions to user %s", member.id)
 
         channel = self._find_fallback_channel(member.guild)
         if channel is None:
@@ -185,7 +185,7 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
                 allowed_mentions=discord.AllowedMentions(users=True),
             )
         except discord.HTTPException:
-            _logger.debug(
+            _logger.info(
                 "Failed to post captcha instructions in guild %s for user %s",
                 member.guild.id,
                 member.id,
@@ -216,4 +216,4 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         try:
             await member.send(embed=embed, view=view)
         except (discord.Forbidden, discord.HTTPException):
-            _logger.debug("Failed to DM captcha embed instructions to user %s", member.id)
+            _logger.info("Failed to DM captcha embed instructions to user %s", member.id)

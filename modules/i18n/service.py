@@ -20,7 +20,7 @@ class TranslationService:
 
     def __init__(self, translator: Translator) -> None:
         self._translator = translator
-        logger.debug(
+        logger.info(
             "TranslationService created with translator default=%s fallback=%s",
             translator.default_locale,
             translator.fallback_locale,
@@ -39,7 +39,7 @@ class TranslationService:
         fallback: str | None = None,
     ) -> Any:
         resolved_locale = self._prepare_locale(locale)
-        logger.debug(
+        logger.info(
             "TranslationService.translate called (key=%s, requested_locale=%s, resolved_locale=%s, placeholders=%s, fallback=%s)",
             key,
             locale,
@@ -60,7 +60,7 @@ class TranslationService:
             return current
 
         default_locale = self._translator.default_locale
-        logger.debug(
+        logger.info(
             "No locale currently bound to context; using translator default '%s'",
             default_locale,
         )
@@ -69,7 +69,7 @@ class TranslationService:
     def _prepare_locale(self, locale: Any | None) -> str:
         if locale is None:
             context_locale = self._resolve_context_locale()
-            logger.debug(
+            logger.info(
                 "Translation requested without explicit locale; using context locale '%s'",
                 context_locale,
             )
@@ -85,7 +85,7 @@ class TranslationService:
             )
             return context_locale
 
-        logger.debug(
+        logger.info(
             "Locale prepared successfully (input=%r, normalized=%s)",
             locale,
             normalized,
@@ -101,26 +101,26 @@ class TranslationService:
                 self._translator.default_locale,
             )
         resolved = normalized or self._translator.default_locale
-        logger.debug("Pushing locale onto context: %r -> %s", locale, resolved)
+        logger.info("Pushing locale onto context: %r -> %s", locale, resolved)
         return _current_locale.set(resolved)
 
     def reset_locale(self, token: Token[str | None]) -> None:
-        logger.debug("Resetting locale context to previous value")
+        logger.info("Resetting locale context to previous value")
         _current_locale.reset(token)
 
     @contextmanager
     def use_locale(self, locale: Any | None):
-        logger.debug("Entering locale context manager with locale=%s", locale)
+        logger.info("Entering locale context manager with locale=%s", locale)
         token = self.push_locale(locale)
         try:
             yield
         finally:
             self.reset_locale(token)
-            logger.debug("Exited locale context manager (locale=%s)", locale)
+            logger.info("Exited locale context manager (locale=%s)", locale)
 
     def current_locale(self) -> str | None:
         value = _current_locale.get()
-        logger.debug("Current locale resolved to %s", value)
+        logger.info("Current locale resolved to %s", value)
         return value
 
 

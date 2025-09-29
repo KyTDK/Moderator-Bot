@@ -93,7 +93,7 @@ class ModeratorBot(commands.Bot):
         fallback_locale = os.getenv("I18N_FALLBACK_LOCALE") or default_locale
         configured_root = os.getenv("I18N_LOCALES_DIR") or os.getenv("LOCALES_DIR")
 
-        _logger.debug(
+        _logger.info(
             "Initialising i18n with env defaults: I18N_DEFAULT_LOCALE=%r, "
             "I18N_FALLBACK_LOCALE=%r, I18N_LOCALES_DIR=%r, LOCALES_DIR=%r",
             os.getenv("I18N_DEFAULT_LOCALE"),
@@ -105,7 +105,7 @@ class ModeratorBot(commands.Bot):
         repo_root = Path(__file__).resolve().parents[2]
         locales_root, missing_configured = resolve_locales_root(configured_root, repo_root)
 
-        _logger.debug(
+        _logger.info(
             "Resolved locales root: repo_root=%s -> locales_root=%s (configured=%s)",
             repo_root,
             locales_root,
@@ -138,7 +138,7 @@ class ModeratorBot(commands.Bot):
             fallback_locale=fallback_locale,
         )
 
-        _logger.debug("Ensuring locale repository is loaded")
+        _logger.info("Ensuring locale repository is loaded")
         self._locale_repository.ensure_loaded()
         try:
             available_locales = self._locale_repository.list_locales()
@@ -190,12 +190,12 @@ class ModeratorBot(commands.Bot):
         locale = self._guild_locales.resolve_from_candidates((*args, *kwargs.values()))
         token = service.push_locale(locale) if service else None
         try:
-            _logger.debug("Dispatching event '%s' with locale=%s", event_name, locale)
+            _logger.info("Dispatching event '%s' with locale=%s", event_name, locale)
             super().dispatch(event_name, *args, **kwargs)
         finally:
             if service and token is not None:
                 service.reset_locale(token)
-                _logger.debug("Locale context reset after dispatch (event=%s)", event_name)
+                _logger.info("Locale context reset after dispatch (event=%s)", event_name)
 
     def translate(
         self,
@@ -211,7 +211,7 @@ class ModeratorBot(commands.Bot):
                 "Translation requested but translator has not been initialised"
             )
             return fallback if fallback is not None else key
-        _logger.debug(
+        _logger.info(
             "translate called (key=%s, locale=%s, placeholders=%s, fallback=%s)",
             key,
             locale,
@@ -239,12 +239,12 @@ class ModeratorBot(commands.Bot):
         locale = self._guild_locales.resolve(ctx)
         token = service.push_locale(locale) if service else None
         try:
-            _logger.debug("Invoking command with locale=%s", locale)
+            _logger.info("Invoking command with locale=%s", locale)
             await super().invoke(ctx)
         finally:
             if service and token is not None:
                 service.reset_locale(token)
-                _logger.debug("Locale context reset after command invocation")
+                _logger.info("Locale context reset after command invocation")
 
     def resolve_locale_for_interaction(
         self, interaction: discord.Interaction
@@ -257,7 +257,7 @@ class ModeratorBot(commands.Bot):
         """Normalise and cache a guild's preferred locale."""
 
         normalized = self._guild_locales.store(guild_id, locale)
-        _logger.debug(
+        _logger.info(
             "Cached preferred locale for guild %s: %r -> %s",
             guild_id,
             locale,
@@ -324,7 +324,7 @@ class ModeratorBot(commands.Bot):
                     "Failed to load guild locale fallback for guild %s", guild_id
                 )
         else:
-            _logger.debug(
+            _logger.info(
                 "Loaded locale override for guild %s: %r", guild_id, override
             )
 

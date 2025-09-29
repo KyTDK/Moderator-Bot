@@ -207,7 +207,7 @@ def resolve_role_references(
             text = str(reference).strip()
             if not text:
                 if logger is not None:
-                    logger.debug(
+                    logger.info(
                         "Ignoring blank role reference for guild %s", guild.id
                     )
                 continue
@@ -225,20 +225,20 @@ def resolve_role_references(
             elif allow_names:
                 role = discord.utils.get(guild.roles, name=text)
                 if role is None and logger is not None:
-                    logger.debug(
+                    logger.info(
                         "Role with name '%s' not found in guild %s", text, guild.id
                     )
 
         if role is None and role_id is not None:
             role = guild.get_role(role_id)
             if role is None and logger is not None:
-                logger.debug(
+                logger.info(
                     "Role with ID %s not found in guild %s", role_id, guild.id
                 )
 
         if role is None:
             if logger is not None and role_id is None:
-                logger.debug(
+                logger.info(
                     "Ignoring invalid role reference for guild %s: %r", guild.id, reference
                 )
             continue

@@ -181,7 +181,7 @@ class CaptchaEmbedMixin(CaptchaBaseMixin):
                 try:
                     await message.delete()
                 except discord.HTTPException:
-                    _logger.debug(
+                    _logger.info(
                         "Failed to delete existing captcha embed message in guild %s",
                         guild.id,
                     )
@@ -222,7 +222,7 @@ class CaptchaEmbedMixin(CaptchaBaseMixin):
         try:
             config = await self._api_client.fetch_guild_config(guild_id)
         except (CaptchaApiError, CaptchaNotAvailableError) as exc:
-            _logger.debug(
+            _logger.info(
                 "Failed to fetch captcha configuration for guild %s: %s",
                 guild_id,
                 exc,

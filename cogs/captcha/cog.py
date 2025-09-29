@@ -216,7 +216,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
             return False, texts["not_enabled"]
 
         if not self._api_client.is_configured:
-            _logger.debug(
+            _logger.info(
                 "Captcha API not configured; skipping verification for guild %s", member.guild.id
             )
             return False, texts["not_configured"]
@@ -267,7 +267,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
             parsed_grace = parse_duration(grace_setting) if grace_setting else None
             if parsed_grace is None:
                 if grace_setting:
-                    _logger.debug("Invalid captcha grace period %r for guild %s; using default window.",
+                    _logger.info("Invalid captcha grace period %r for guild %s; using default window.",
                                   grace_setting,
                                   member.guild.id,)
                 grace_delta = timedelta(minutes=10)

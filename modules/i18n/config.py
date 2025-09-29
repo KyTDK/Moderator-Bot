@@ -37,7 +37,7 @@ def resolve_locales_root(configured_root: str | None, repo_root: Path) -> tuple[
 
     unique_candidates = _unique(candidates)
 
-    logger.debug(
+    logger.info(
         "Resolving locales root (configured=%s, repo_root=%s, candidates=%s)",
         configured_root,
         repo_root,
@@ -46,11 +46,11 @@ def resolve_locales_root(configured_root: str | None, repo_root: Path) -> tuple[
 
     for candidate in unique_candidates:
         if candidate.exists():
-            logger.debug("Locales root resolved to %s (exists=%s)", candidate, candidate.exists())
+            logger.info("Locales root resolved to %s (exists=%s)", candidate, candidate.exists())
             return candidate, bool(configured_root) and candidate != raw.resolve()
 
     fallback = unique_candidates[0]
-    logger.debug("Falling back to locales root %s (configured missing=%s)", fallback, bool(configured_root))
+    logger.info("Falling back to locales root %s (configured missing=%s)", fallback, bool(configured_root))
     return fallback, bool(configured_root)
 
 

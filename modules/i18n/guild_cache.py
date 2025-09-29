@@ -37,7 +37,7 @@ class GuildLocaleCache:
     def store(self, guild_id: int, locale: Any) -> Optional[str]:
         normalized = normalise_locale(locale)
         self._stored[guild_id] = normalized
-        logger.debug(
+        logger.info(
             "Stored guild locale (guild_id=%s): input=%r normalized=%s",
             guild_id,
             locale,
@@ -48,7 +48,7 @@ class GuildLocaleCache:
     def set_override(self, guild_id: int, locale: Any) -> Optional[str]:
         normalized = normalise_locale(locale)
         self._overrides[guild_id] = normalized
-        logger.debug(
+        logger.info(
             "Updated guild locale override (guild_id=%s): %r -> %s",
             guild_id,
             locale,
@@ -65,20 +65,20 @@ class GuildLocaleCache:
     def resolve(self, candidate: Any) -> Optional[str]:
         guild_id = extract_guild_id(candidate)
         if guild_id is None:
-            logger.debug("Could not resolve guild id from candidate %r", candidate)
+            logger.info("Could not resolve guild id from candidate %r", candidate)
             return None
 
         override = self._overrides.get(guild_id)
         if override:
-            logger.debug("Resolved locale via override (guild_id=%s): %s", guild_id, override)
+            logger.info("Resolved locale via override (guild_id=%s): %s", guild_id, override)
             return override
 
         stored = self._stored.get(guild_id)
         if stored:
-            logger.debug("Resolved locale via stored cache (guild_id=%s): %s", guild_id, stored)
+            logger.info("Resolved locale via stored cache (guild_id=%s): %s", guild_id, stored)
             return stored
 
-        logger.debug("No locale found for guild_id=%s", guild_id)
+        logger.info("No locale found for guild_id=%s", guild_id)
         return None
 
     def resolve_from_candidates(self, candidates: Iterable[Any]) -> Optional[str]:
@@ -86,7 +86,7 @@ class GuildLocaleCache:
             locale = self.resolve(candidate)
             if locale:
                 return locale
-        logger.debug("Failed to resolve locale from provided candidates")
+        logger.info("Failed to resolve locale from provided candidates")
         return None
 
     def drop(self, guild_id: int) -> None:

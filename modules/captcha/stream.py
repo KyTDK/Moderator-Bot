@@ -172,7 +172,7 @@ class CaptchaStreamListener:
         except ResponseError as exc:
             if "BUSYGROUP" not in str(exc):
                 raise
-            _logger.debug(
+            _logger.info(
                 "Captcha consumer group %s already exists for stream %s",
                 self._config.group,
                 self._config.stream,
@@ -444,7 +444,7 @@ class CaptchaStreamListener:
             "captcha.verification.completed",
             "captcha.verification.failed",
         }:
-            _logger.debug("Ignoring unknown captcha event type %s", event_type)
+            _logger.info("Ignoring unknown captcha event type %s", event_type)
             return True
 
         return await self._handle_verification_event(message_id, payload_dict, fields)
@@ -463,7 +463,7 @@ class CaptchaStreamListener:
 
         guild = self._bot.get_guild(payload.guild_id)
         if guild is None:
-            _logger.debug(
+            _logger.info(
                 "Skipping captcha callback %s for guild %s; not managed by this instance",
                 message_id,
                 payload.guild_id,
@@ -473,7 +473,7 @@ class CaptchaStreamListener:
 
         try:
             await self._processor.process(payload)
-            _logger.debug(
+            _logger.info(
                 "Processed captcha callback for guild %s user %s (message %s)",
                 payload.guild_id,
                 payload.user_id,
@@ -502,7 +502,7 @@ class CaptchaStreamListener:
         payload_dict: dict[str, Any],
     ) -> bool:
         if self._settings_callback is None:
-            _logger.debug(
+            _logger.info(
                 "No settings update callback configured; acknowledging message %s",
                 message_id,
             )
@@ -558,7 +558,7 @@ class CaptchaStreamListener:
         new_fields["delivery_attempts"] = str(attempts + 1)
         try:
             await self._redis.xadd(self._config.stream, new_fields)
-            _logger.debug("Requeued captcha callback for guild %s", new_fields.get("guildId") or new_fields.get("guild_id"))
+            _logger.info("Requeued captcha callback for guild %s", new_fields.get("guildId") or new_fields.get("guild_id"))
         except Exception:
             _logger.exception("Failed to requeue captcha callback for other consumers")
 
