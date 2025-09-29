@@ -1,6 +1,15 @@
-﻿{
+{
   "cogs": {
     "debug": {
+      "meta": {
+        "stats": {
+          "description": "Get memory and performance stats",
+          "show_all": "Include allocations from all libraries (not just project)"
+        },
+        "locale": {
+          "description": "Show the locale currently bound to this command context"
+        }
+      },
       "permission_denied": " ليس لديك إذن لاستخدام هذا الأمر.",
       "no_allocations": "لم يتم العثور على تخصيصات متعلقة بالمشروع.",
       "embed": {
@@ -15,6 +24,9 @@
         "worker_name": "صفوف العمل",
         "worker_error": "(خطأ في جمع المقاييس: {error})",
         "footer": "المضيف: {host} | بايثون {python_version}"
+      },
+      "locale": {
+        "current": "Current locale: {locale}"
       }
     }
   }
