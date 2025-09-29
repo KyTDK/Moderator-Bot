@@ -15,14 +15,8 @@ from .settings import (
 from .strikes import cleanup_expired_strikes, get_strike_count, get_strikes
 from .usage import add_aimod_usage, add_vcmod_usage, get_aimod_usage, get_vcmod_usage
 from .cleanup import cleanup_orphaned_guilds
-from .premium import (
-    add_guild,
-    get_guild_locale,
-    get_premium_status,
-    is_accelerated,
-    remove_guild,
-    resolve_guild_plan,
-)
+from .premium import get_premium_status, is_accelerated, resolve_guild_plan
+from .guilds import add_guild, get_guild_locale, remove_guild
 from .instances import (
     clear_instance_heartbeat,
     update_instance_heartbeat,
