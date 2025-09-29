@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Tableau de bord de modération",
         "description": "[Cliquez ici pour ouvrir le tableau de bord]({url})"
