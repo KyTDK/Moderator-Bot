@@ -41,8 +41,8 @@
         "intimidate": {
           "description": "Intimidate the channel, or a specific user.",
           "params": {
-            "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
-            "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
+            "user": "User to intimidate. Leave empty to address the whole channel.",
+            "channel": "Send the warning in the channel instead of a direct message."
           }
         }
       },

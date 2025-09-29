@@ -66,6 +66,7 @@ class ModeratorBot(commands.Bot):
         self._locale_repository: LocaleRepository | None = None
         self._translator: Translator | None = None
         self._translation_service: TranslationService | None = None
+        self._command_tree_translator: DiscordAppCommandTranslator | None = None
         self._guild_locales = GuildLocaleCache()
         self._locale_settings_listener = self._handle_locale_setting_update
         self._initialise_i18n()
@@ -153,8 +154,10 @@ class ModeratorBot(commands.Bot):
             self._translator.fallback_locale,
         )
         self._translation_service = TranslationService(self._translator)
-        _logger.debug("Translation service ready; installing Discord translator")
-        self.tree.set_translator(DiscordAppCommandTranslator(self._translation_service))
+        _logger.debug("Translation service ready; preparing Discord translator")
+        self._command_tree_translator = DiscordAppCommandTranslator(
+            self._translation_service
+        )
 
     @property
     def translator(self) -> Translator:
@@ -245,6 +248,18 @@ class ModeratorBot(commands.Bot):
         """Return the locale resolved for *interaction* using translation logic."""
 
         return self._guild_locales.resolve(interaction)
+
+    def _store_guild_locale(self, guild_id: int, locale: Any) -> Optional[str]:
+        """Normalise and cache a guild's preferred locale."""
+
+        normalized = self._guild_locales.store(guild_id, locale)
+        _logger.debug(
+            "Cached preferred locale for guild %s: %r -> %s",
+            guild_id,
+            locale,
+            normalized,
+        )
+        return normalized
 
     async def _preload_guild_locale_cache(self) -> None:
         """Warm the in-memory guild locale cache from the database."""
@@ -351,6 +366,9 @@ class ModeratorBot(commands.Bot):
             _logger.exception("Failed to update shard status (%s)", status)
 
     async def setup_hook(self) -> None:  # type: ignore[override]
+        if self._command_tree_translator is not None:
+            await self.tree.set_translator(self._command_tree_translator)
+
         try:
             await mysql.initialise_and_get_pool()
         except Exception as exc:
@@ -426,7 +444,7 @@ class ModeratorBot(commands.Bot):
 
     async def on_guild_join(self, guild: discord.Guild) -> None:  # type: ignore[override]
         preferred = getattr(guild, "preferred_locale", None)
-        normalized_locale = self._guild_locales.store(guild.id, preferred)
+        normalized_locale = self._store_guild_locale(guild.id, preferred)
         owner_id = await self._resolve_guild_owner_id(guild)
         if owner_id is None:
             _logger.warning(
