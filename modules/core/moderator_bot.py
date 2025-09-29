@@ -189,16 +189,27 @@ class ModeratorBot(commands.Bot):
         _logger.warning("Translations reloaded from disk")
 
     def dispatch(self, event_name: str, /, *args: Any, **kwargs: Any) -> None:
+        super().dispatch(event_name, *args, **kwargs)
+
+    def _schedule_event(
+        self,
+        coro: Any,
+        event_name: str,
+        *args: Any,
+        **kwargs: Any,
+    ):
         service = self._translation_service
         if service is None:
-            super().dispatch(event_name, *args, **kwargs)
-            return
+            return super()._schedule_event(coro, event_name, *args, **kwargs)
 
         resolution = self._infer_locale_from_event(*args, *kwargs.values())
         locale = resolution.resolved()
 
-        with service.use_locale(locale):
-            super().dispatch(event_name, *args, **kwargs)
+        async def run_with_locale(*a: Any, **kw: Any):
+            with service.use_locale(locale):
+                return await coro(*a, **kw)
+
+        return super()._schedule_event(run_with_locale, event_name, *args, **kwargs)
 
     def translate(
         self,
