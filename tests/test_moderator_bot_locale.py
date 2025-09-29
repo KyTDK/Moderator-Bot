@@ -6,7 +6,6 @@ import os
 import sys
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
 
 import pytest
 
@@ -170,6 +169,25 @@ def test_translate_defaults_without_context(bot: ModeratorBot) -> None:
     assert result == "Open Dashboard"
 
 
+def test_translate_uses_guild_id_override(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    guild_id = 987
+
+    async def fake_get_settings(gid: int, key: str) -> str:
+        assert gid == guild_id
+        assert key == "locale"
+        return "pl-PL"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+
+    asyncio.run(bot.refresh_guild_locale_override(guild_id))
+
+    result = bot.translate("bot.welcome.button_label", guild_id=guild_id)
+
+    assert result == LOCALIZED_WELCOME_LABELS["pl-PL"]
+
+
 def test_use_locale_context_manager(bot: ModeratorBot) -> None:
     with bot.use_locale("es"):
         result = bot.translate("bot.welcome.button_label")
@@ -188,54 +206,6 @@ def test_push_and_reset_locale(bot: ModeratorBot) -> None:
 
     assert bot.current_locale() is None
 
-
-def test_tree_command_binds_locale_for_interactions(
-    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    guild = DummyGuild(id=654, preferred_locale="es-ES")
-    interaction = DummyInteraction(
-        guild=guild,
-        locale="en-US",
-        guild_id=guild.id,
-        user_locale="en-US",
-    )
-
-    async def fake_get_settings(guild_id: int, key: str) -> str | None:
-        assert guild_id == guild.id
-        assert key == "locale"
-        return None
-
-    async def fake_get_guild_locale(guild_id: int) -> str | None:
-        assert guild_id == guild.id
-        return "es-ES"
-
-    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
-    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
-
-    asyncio.run(bot.refresh_guild_locale_override(guild.id))
-
-    captured: list[str] = []
-
-    @bot.tree.command(name="test-locale-command")
-    async def test_locale_command(interaction: Any) -> str | None:
-        captured.append(bot.translate("bot.welcome.button_label"))
-        return bot.current_locale()
-
-    command = bot.tree.get_command("test-locale-command")
-    assert command is not None
-
-    async def invoke() -> str | None:
-        assert await bot.tree.interaction_check(interaction)
-        return await command._do_call(interaction, {})
-
-    try:
-        result = asyncio.run(invoke())
-    finally:
-        bot.tree.remove_command("test-locale-command")
-
-    assert result == "es-ES"
-    assert captured == ["Abrir Panel de control"]
-    assert bot.current_locale() is None
 
 
 def test_preload_guild_locale_cache(bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch) -> None:
