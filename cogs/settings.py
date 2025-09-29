@@ -87,10 +87,18 @@ class Settings(commands.Cog):
         for setting in SETTINGS_SCHEMA.values():
             if getattr(setting, "hidden", False):
                 continue
+            description = setting.description
+            description_key = getattr(setting, "description_key", None)
+            if description_key:
+                description = self.bot.translate(
+                    description_key,
+                    guild_id=guid_id,
+                    fallback=description,
+                )
             entries.append(
                 entry_template.format(
                     name=setting.name,
-                    description=setting.description,
+                    description=description,
                     type=setting.type.__name__,
                 )
             )

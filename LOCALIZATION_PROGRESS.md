@@ -23,6 +23,8 @@
 - [x] cogs/captcha/base.py — Localized captcha embed scaffolding, duration text, and default button labels.
 - [x] cogs/captcha/delivery.py — Localized DM prompts, embed helpers, and verification call-to-action labels.
 - [x] cogs/captcha/embed.py — Localized verification embed title, body copy, footer, and button label.
+- [x] modules/config/settings_schema.py — Moved setting descriptions onto locale-backed strings and added translation keys for help output.
 
 ## To Do
 - [ ] Audit remaining modules for embedded message strings and prompts.
+- [ ] modules/config/settings_schema.py — Localize validator errors and default message content (e.g., nsfw-pfp-message, rules, vcmod-rules).
