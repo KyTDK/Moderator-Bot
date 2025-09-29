@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import sys
 from pathlib import Path
@@ -255,6 +256,44 @@ def test_initialises_with_bundled_locales_when_config_missing(
     try:
         expected_root = Path(__file__).resolve().parents[1] / "locales"
         assert bot.locale_repository.locales_root == expected_root.resolve()
+    finally:
+        mysql.remove_settings_listener(bot._locale_settings_listener)
+        monkeypatch.delenv("I18N_LOCALES_DIR", raising=False)
+
+
+def test_translate_prefers_base_locale_before_default(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    locales_root = tmp_path / "custom_locales"
+    (locales_root / "en").mkdir(parents=True)
+    (locales_root / "es").mkdir(parents=True)
+    (locales_root / "es-ES").mkdir(parents=True)
+
+    (locales_root / "en/messages.json").write_text(
+        json.dumps({"label": "Dashboard"}),
+        encoding="utf-8",
+    )
+    (locales_root / "es/messages.json").write_text(
+        json.dumps({"label": "Panel"}),
+        encoding="utf-8",
+    )
+    (locales_root / "es-ES/messages.json").write_text(
+        json.dumps({"welcome": "Hola"}),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("I18N_LOCALES_DIR", str(locales_root))
+
+    bot = ModeratorBot(
+        instance_id="test",
+        heartbeat_seconds=60,
+        instance_heartbeat_seconds=5,
+        log_cog_loads=False,
+        total_shards=1,
+    )
+
+    try:
+        assert bot.translate("label", locale="es-ES") == "Panel"
     finally:
         mysql.remove_settings_listener(bot._locale_settings_listener)
         monkeypatch.delenv("I18N_LOCALES_DIR", raising=False)

@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
 
-from .locale_utils import normalise_locale
+from .locale_utils import build_locale_chain
 from .locales import LocaleRepository
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,11 @@ class Translator:
         """Return the translated value for *key* with optional formatting."""
 
         placeholders = placeholders or {}
-        chain = self._build_locale_chain(locale)
+        chain = build_locale_chain(
+            locale,
+            default_locale=self._default_locale,
+            fallback_locale=self._fallback_locale,
+        )
 
         logger.info(
             "Translating key '%s' using locale '%s' (chain=%s)",
@@ -84,30 +88,6 @@ class Translator:
         """Return a deep copy of the cached dictionary for *locale*."""
 
         return self._repository.get_locale_snapshot(locale)
-
-    def _build_locale_chain(self, locale: str | None) -> list[str]:
-        seen: set[str] = set()
-        ordered: list[str] = []
-
-        def push(candidate: str | None) -> None:
-            if candidate and candidate not in seen:
-                ordered.append(candidate)
-                seen.add(candidate)
-
-        if locale:
-            preferred = locale.replace("_", "-")
-            canonical = normalise_locale(preferred)
-            primary = canonical or preferred
-            push(primary)
-            if canonical and canonical.lower() != preferred.lower():
-                push(preferred)
-            if "-" in primary:
-                base = primary.split("-", 1)[0]
-                push(normalise_locale(base) or base)
-
-        push(self._default_locale)
-        push(self._fallback_locale)
-        return ordered
 
     def _format_value(self, value: Any, placeholders: Mapping[str, Any]) -> Any:
         if isinstance(value, str):

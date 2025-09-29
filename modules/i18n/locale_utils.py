@@ -74,23 +74,82 @@ def _build_locale_aliases() -> dict[str, str]:
 SUPPORTED_LOCALE_ALIASES: dict[str, str] = _build_locale_aliases()
 
 
+def _normalise_input(value: Any) -> str | None:
+    """Return a normalised representation of *value* suitable for lookups."""
+
+    if value is None:
+        return None
+
+    if isinstance(value, discord.Locale):
+        raw = value.value
+    else:
+        raw = str(value)
+
+    normalised = raw.strip().replace("_", "-")
+    return normalised or None
+
+
+def _push_unique(values: list[str], seen: set[str], candidate: Any) -> None:
+    normalised = _normalise_input(candidate)
+    if not normalised:
+        return
+
+    key = normalised.lower()
+    if key in seen:
+        return
+
+    values.append(normalised)
+    seen.add(key)
+
+
 def normalise_locale(locale: Any) -> str | None:
     """Return the canonical locale for *locale* or ``None`` if unsupported."""
 
-    if locale is None:
+    normalised = _normalise_input(locale)
+    if not normalised:
         return None
 
-    if isinstance(locale, discord.Locale):
-        raw = locale.value
-    else:
-        raw = str(locale)
+    return SUPPORTED_LOCALE_ALIASES.get(normalised.lower())
 
-    normalized = raw.strip().replace("_", "-")
-    if not normalized:
-        return None
 
-    mapped = SUPPORTED_LOCALE_ALIASES.get(normalized.lower())
-    return mapped
+def build_locale_chain(
+    locale: Any | None,
+    *,
+    default_locale: str,
+    fallback_locale: str,
+) -> list[str]:
+    """Return the ordered lookup chain for *locale*.
+
+    The resulting chain always includes ``default_locale`` and ``fallback_locale``
+    (if different) and ensures base language fallbacks (``xx-XX`` → ``xx``)
+    are attempted before falling back to English.
+    """
+
+    ordered: list[str] = []
+    seen: set[str] = set()
+
+    normalised = _normalise_input(locale)
+    canonical = normalise_locale(normalised) if normalised else None
+
+    if canonical:
+        _push_unique(ordered, seen, canonical)
+
+    if normalised and (canonical is None or normalised.lower() != canonical.lower()):
+        _push_unique(ordered, seen, normalised)
+
+    reference = canonical or normalised
+    if reference and "-" in reference:
+        base = reference.split("-", 1)[0]
+        _push_unique(ordered, seen, base)
+
+        base_canonical = normalise_locale(base)
+        if base_canonical:
+            _push_unique(ordered, seen, base_canonical)
+
+    _push_unique(ordered, seen, default_locale)
+    _push_unique(ordered, seen, fallback_locale)
+
+    return ordered
 
 
 def list_supported_locales() -> list[str]:
@@ -102,5 +161,6 @@ def list_supported_locales() -> list[str]:
 __all__ = [
     "SUPPORTED_LOCALE_ALIASES",
     "normalise_locale",
+    "build_locale_chain",
     "list_supported_locales",
 ]
