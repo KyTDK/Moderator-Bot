@@ -256,7 +256,7 @@ class ModeratorBot(commands.Bot):
             _current_locale.reset(token)
 
     async def on_interaction(self, interaction: discord.Interaction) -> None:
-        locale = self._extract_locale_from_interaction(interaction)
+        locale = self._resolve_locale_from_candidate(interaction)
         token = _current_locale.set(locale)
         try:
             try:
@@ -270,7 +270,7 @@ class ModeratorBot(commands.Bot):
             _current_locale.reset(token)
 
     async def invoke(self, ctx: commands.Context[Any]) -> None:  # type: ignore[override]
-        locale = self._extract_locale_from_context(ctx)
+        locale = self._resolve_locale_from_candidate(ctx)
         token = _current_locale.set(locale)
         try:
             await super().invoke(ctx)
@@ -282,116 +282,39 @@ class ModeratorBot(commands.Bot):
     ) -> str | None:
         """Return the locale resolved for *interaction* using translation logic."""
 
-        return self._extract_locale_from_interaction(interaction)
-
-    def _extract_locale_from_interaction(
-        self, interaction: discord.Interaction
-    ) -> str | None:
-        guild_override = self._get_guild_locale_override_from_candidate(interaction)
-        if guild_override:
-            _logger.debug(
-                "Resolved locale for interaction via override: %s", guild_override
-            )
-            return guild_override
-
-        stored_locale = self._get_stored_guild_locale_from_candidate(interaction)
-        if stored_locale:
-            _logger.debug("Resolved locale for interaction via stored cache: %s", stored_locale)
-            return stored_locale
-
-        guild = getattr(interaction, "guild", None)
-        if guild is not None:
-            preferred = getattr(guild, "preferred_locale", None)
-            stored = self._store_guild_locale(guild.id, preferred)
-            if stored:
-                _logger.debug(
-                    "Resolved locale for interaction via guild preferred locale %r -> %s",
-                    preferred,
-                    stored,
-                )
-                return stored
-
-        direct_locale = getattr(interaction, "locale", None)
-        normalized = self._normalise_locale(direct_locale)
-        _logger.debug(
-            "Resolved locale for interaction via direct locale %r -> %s",
-            direct_locale,
-            normalized,
-        )
-        return normalized
-
-    def _extract_locale_from_context(
-        self, ctx: commands.Context[Any]
-    ) -> str | None:
-        guild_override = self._get_guild_locale_override_from_candidate(ctx)
-        if guild_override:
-            _logger.debug("Resolved locale for context via override: %s", guild_override)
-            return guild_override
-
-        stored_locale = self._get_stored_guild_locale_from_candidate(ctx)
-        if stored_locale:
-            _logger.debug("Resolved locale for context via stored cache: %s", stored_locale)
-            return stored_locale
-
-        guild = getattr(ctx, "guild", None)
-        if guild is None:
-            return None
-
-        preferred = getattr(guild, "preferred_locale", None)
-        resolved = self._store_guild_locale(guild.id, preferred)
-        _logger.debug(
-            "Resolved locale for context via guild preferred locale %r -> %s",
-            preferred,
-            resolved,
-        )
-        return resolved
+        return self._resolve_locale_from_candidate(interaction)
 
     def _infer_locale_from_event(
         self, _event_name: str, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> str | None:
         for candidate in (*args, *kwargs.values()):
-            locale = self._extract_locale_from_event_object(candidate)
+            locale = self._resolve_locale_from_candidate(candidate)
             if locale:
                 return locale
 
         return None
 
-    def _extract_locale_from_event_object(self, candidate: Any) -> str | None:
+    def _resolve_locale_from_candidate(self, candidate: Any) -> str | None:
         if candidate is None:
             return None
 
         override = self._get_guild_locale_override_from_candidate(candidate)
         if override:
-            _logger.debug("Resolved locale for event object via override: %s", override)
+            _logger.debug(
+                "Resolved locale for candidate via override: %s",
+                override,
+            )
             return override
 
         stored_locale = self._get_stored_guild_locale_from_candidate(candidate)
         if stored_locale:
             _logger.debug(
-                "Resolved locale for event object via stored cache: %s", stored_locale
+                "Resolved locale for candidate via stored cache: %s",
+                stored_locale,
             )
             return stored_locale
 
-        guild = getattr(candidate, "guild", None)
-        if guild is not None:
-            preferred = getattr(guild, "preferred_locale", None)
-            normalized = self._store_guild_locale(guild.id, preferred)
-            if normalized:
-                _logger.debug(
-                    "Resolved locale for event object via guild preferred locale %r -> %s",
-                    preferred,
-                    normalized,
-                )
-                return normalized
-
-        direct_locale = getattr(candidate, "locale", None)
-        normalized = self._normalise_locale(direct_locale)
-        _logger.debug(
-            "Resolved locale for event object via direct locale %r -> %s",
-            direct_locale,
-            normalized,
-        )
-        return normalized
+        return None
 
     @staticmethod
     def _extract_guild_id(candidate: Any) -> int | None:
