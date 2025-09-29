@@ -1,6 +1,36 @@
 ﻿{
   "cogs": {
     "monitoring": {
+      "meta": {
+        "group_description": "Monitoring configuration",
+        "set": {
+          "description": "Set channel to output logs.",
+          "channel": "The channel to send logs to."
+        },
+        "remove": {
+          "description": "Remove the monitor channel setting."
+        },
+        "show": {
+          "description": "Show the current monitor channel."
+        },
+        "toggle_event": {
+          "description": "Enable or disable a specific monitoring event.",
+          "event": "The event to toggle",
+          "enabled": "Enable or disable logging for this event",
+          "choices": {
+            "join": "User Join",
+            "leave": "User Leave",
+            "ban": "Ban",
+            "unban": "Unban",
+            "timeout": "Timeout",
+            "message_delete": "Message Deleted",
+            "message_edit": "Message Edited"
+          }
+        },
+        "list_events": {
+          "description": "List current monitor event settings."
+        }
+      },
       "log_event": {
         "upgrade_footer": "NSFW 및 스캠 감지를 가속하려면 Accelerated로 업그레이드 하세요 — /accelerated",
         "guild_footer": "길드 ID: {guild_id}"
@@ -50,6 +80,7 @@
         "content_label": "**내용:**\n{content}",
         "description_generic": "{channel}에서 메시지가 삭제되었습니다.",
         "description_deleted_by": "\n**삭제자:** {deleter}",
+        "no_content": "[No Content]",
         "fields": {
           "attachments": "첨부 파일 ({count})",
           "embeds": "임베드 {index}",
@@ -68,6 +99,7 @@
           "before": "이전",
           "after": "이후"
         },
+        "no_content": "[No Content]",
         "footer": "사용자 ID: {user_id}"
       },
       "ban": {
