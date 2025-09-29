@@ -1,6 +1,24 @@
 {
   "cogs": {
     "settings": {
+      "meta": {
+        "group_description": "Manage server settings.",
+        "help": {
+          "description": "Get help on settings."
+        },
+        "reset": {
+          "description": "Wipe all settings and start with defaults. This can't be undone"
+        },
+        "set": {
+          "description": "Set a server setting."
+        },
+        "get": {
+          "description": "Get the current value of a server setting."
+        },
+        "remove": {
+          "description": "Remove a server setting or an item from a list-type setting."
+        }
+      },
       "help": {
         "header": "**Available Settings:**\\n",
         "entry": "**{name}**: {description} (Type: {type})",

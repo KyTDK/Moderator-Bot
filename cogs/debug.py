@@ -22,9 +22,20 @@ class DebugCog(commands.Cog):
         self.process = psutil.Process()
         self.start_time = time.time()
 
-    @app_commands.command(name="stats", description="Get memory and performance stats")
+    @app_commands.command(
+        name="stats",
+        description=app_commands.locale_str(
+            "Get memory and performance stats",
+            key="cogs.debug.meta.stats.description",
+        ),
+    )
     @app_commands.guilds(discord.Object(id=GUILD_ID))
-    @app_commands.describe(show_all="Include allocations from all libraries (not just project)")
+    @app_commands.describe(
+        show_all=app_commands.locale_str(
+            "Include allocations from all libraries (not just project)",
+            key="cogs.debug.meta.stats.show_all",
+        )
+    )
     @app_commands.checks.has_permissions(administrator=True)
     async def stats(self, interaction: discord.Interaction, show_all: bool = True):
         await interaction.response.defer(ephemeral=True)
@@ -171,12 +182,19 @@ class DebugCog(commands.Cog):
 
     @app_commands.command(
         name="locale",
-        description="Show the locale currently bound to this command context",
+        description=app_commands.locale_str(
+            "Show the locale currently bound to this command context",
+            key="cogs.debug.meta.locale.description",
+        ),
     )
     async def current_locale(self, interaction: discord.Interaction):
         current = self.bot.current_locale()
         fallback = self.bot.translator.default_locale
-        message = f"Current locale: {current or fallback}"
+        locale_texts = self.bot.translate(
+            "cogs.debug.locale",
+            guild_id=interaction.guild.id if interaction.guild else None,
+        )
+        message = locale_texts["current"].format(locale=current or fallback)
         await interaction.response.send_message(message, ephemeral=True)
 
 async def setup(bot: commands.Bot):

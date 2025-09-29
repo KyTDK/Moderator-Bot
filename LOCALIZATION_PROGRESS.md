@@ -8,15 +8,20 @@
 - [x] cogs/banned_words.py — Localized command descriptions, parameter prompts, and action choices.
 - [x] cogs/strikes.py — Localized command metadata and parameter descriptions for moderation utilities.
 - [x] cogs/channel_config.py — Localized channel configuration metadata and translated choice labels.
+- [x] cogs/settings.py — Localized group metadata and command descriptions.
+- [x] cogs/dashboard.py — Moved slash command description into locale files.
+- [x] cogs/scam_detection.py — Localized command metadata, parameter prompts, and link-checking responses.
+- [x] cogs/monitoring.py — Localized command metadata, choice labels, and empty-content placeholders.
+- [x] cogs/captcha/cog.py — Localized slash command metadata.
+- [x] cogs/banned_urls.py — Localized command metadata.
+- [x] cogs/debug.py — Localized command metadata and locale summary message.
+- [x] cogs/autonomous_moderation/auto_commands.py — Localized command metadata, choice labels, and mode status output.
+- [x] cogs/voice_moderation/voice_moderator.py — Localized transcript embeds and budget notifications.
 
 ## To Do
-- [ ] cogs/settings.py — Help command embeds and slash metadata still contain hard-coded English strings.
-- [ ] cogs/dashboard.py — Slash command description remains inline.
-- [ ] cogs/scam_detection.py — Multiple command descriptions and parameter labels remain hard-coded.
-- [ ] cogs/monitoring.py — Slash command descriptions and parameter labels require localization.
-- [ ] cogs/captcha/cog.py — Slash command metadata still needs to be moved into locale files.
-- [ ] cogs/banned_urls.py — Command metadata remains hard-coded.
-- [ ] cogs/debug.py — Stats command description is not localized.
-- [ ] cogs/autonomous_moderation/auto_commands.py — Command descriptions and parameter labels require localization.
-- [ ] cogs/autonomous_moderation/voice_moderator.py — User-facing log message strings should be migrated to locales.
+- [ ] modules/utils/actions.py — Choice labels produced for moderation actions remain hard-coded.
+- [ ] cogs/captcha/base.py — Captcha embeds and button labels still contain inline English strings.
+- [ ] cogs/captcha/delivery.py — Help text and verification prompts need localization.
+- [ ] cogs/captcha/embed.py — Verification embed titles and descriptions remain hard-coded.
+- [ ] Review remaining modules for embedded message strings and prompts.
 - [ ] Expand audit to remaining modules for embedded message strings and prompts.

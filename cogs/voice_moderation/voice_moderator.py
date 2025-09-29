@@ -272,8 +272,17 @@ class VoiceModeratorCog(commands.Cog):
         if not utterances:
             return
 
+        transcript_texts = self.bot.translate(
+            "cogs.voice_moderation.transcript",
+            guild_id=guild.id,
+        )
+
         # Build transcript text for AI in chronological order (segment-level)
         lines: list[str] = []
+        author_label = transcript_texts["author_label"]
+        utterance_label = transcript_texts["utterance_label"]
+        divider = transcript_texts["divider"]
+        unknown_speaker = transcript_texts["unknown_speaker"]
         for uid, text, _ts in sorted(utterances, key=lambda x: x[2]):
             # Treat uid==0 as unmapped speaker; avoid showing id 0
             if uid and uid > 0:
@@ -283,10 +292,12 @@ class VoiceModeratorCog(commands.Cog):
                     mention = member.mention
                     author_str = f"{mention} ({name}, id = {uid})"
                 else:
-                    author_str = f"<@{uid}> (id = {uid})"
+                    author_str = transcript_texts["user_fallback"].format(id=uid)
             else:
-                author_str = "Unknown speaker"
-            lines.append(f"AUTHOR: {author_str}\nUTTERANCE: {text}\n---")
+                author_str = unknown_speaker
+            lines.append(
+                f"{author_label}: {author_str}\n{utterance_label}: {text}\n{divider}"
+            )
 
         transcript = "\n".join(lines)
 
@@ -322,33 +333,52 @@ class VoiceModeratorCog(commands.Cog):
                             who = member.display_name
                             who_prefix = member.mention
                         else:
-                            who = f"User {uid}"
+                            who = transcript_texts["user_fallback"].format(id=uid)
                             who_prefix = f"<@{uid}>"
                     else:
-                        who = "Unknown speaker"
-                        who_prefix = "Unknown"
-                    pretty_lines.append(f"[{stamp}] {who_prefix} ({who}): {text}")
+                        who = unknown_speaker
+                        who_prefix = transcript_texts["unknown_prefix"]
+                    pretty_lines.append(
+                        transcript_texts["line"].format(
+                            timestamp=stamp,
+                            prefix=who_prefix,
+                            name=who,
+                            text=text,
+                        )
+                    )
                 embed_transcript = "\n".join(pretty_lines)
 
                 chunks = _chunk_text(embed_transcript, limit=3900)  # margin under 4096
                 total = len(chunks)
                 # Post each chunk as its own embed
                 transcript_mode = (
-                    "High accuracy transcript"
+                    transcript_texts["footer_high"]
                     if high_quality_transcription
-                    else "Normal accuracy transcript"
+                    else transcript_texts["footer_normal"]
                 )
 
                 for idx, part in enumerate(chunks, start=1):
-                    title = "VC Transcript" if total == 1 else f"VC Transcript (part {idx}/{total})"
+                    title = (
+                        transcript_texts["title_single"]
+                        if total == 1
+                        else transcript_texts["title_part"].format(index=idx, total=total)
+                    )
                     embed = discord.Embed(
                         title=title,
                         description=part,
                         colour=discord.Colour.blurple(),
                         timestamp=discord.utils.utcnow(),
                     )
-                    embed.add_field(name="Channel", value=channel.mention, inline=True)
-                    embed.add_field(name="Utterances", value=str(len(utterances)), inline=True)
+                    embed.add_field(
+                        name=transcript_texts["field_channel"],
+                        value=channel.mention,
+                        inline=True,
+                    )
+                    embed.add_field(
+                        name=transcript_texts["field_utterances"],
+                        value=str(len(utterances)),
+                        inline=True,
+                    )
                     embed.set_footer(text=transcript_mode)
                     await mod_logging.log_to_channel(embed, transcript_channel_id, self.bot)
 
@@ -385,9 +415,13 @@ class VoiceModeratorCog(commands.Cog):
         if not report:
             # budget reached notification (debug only)
             if status == "budget" and aimod_debug and log_channel:
+                budget_texts = self.bot.translate(
+                    "cogs.voice_moderation.budget",
+                    guild_id=guild.id,
+                )
                 embed = discord.Embed(
-                    title="VC Moderation Budget Reached",
-                    description="Skipping analysis for this cycle due to budget limit.",
+                    title=budget_texts["title"],
+                    description=budget_texts["description"],
                     colour=discord.Colour.orange(),
                 )
                 await mod_logging.log_to_channel(embed, log_channel, self.bot)

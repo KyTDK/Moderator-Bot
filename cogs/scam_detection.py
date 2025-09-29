@@ -200,13 +200,27 @@ class ScamDetectionCog(commands.Cog):
 
     scam_group = app_commands.Group(
         name="scam",
-        description="Scam-detection configuration and pattern management.",
+        description=app_commands.locale_str(
+            "Scam-detection configuration and pattern management.",
+            key="cogs.scam_detection.meta.group_description",
+        ),
         guild_only=True,
         default_permissions=discord.Permissions(manage_messages=True),
     )
 
-    @scam_group.command(name="exclude_channel_add", description="Exclude a channel from scam detection.")
-    @app_commands.describe(channel="The channel to exclude")
+    @scam_group.command(
+        name="exclude_channel_add",
+        description=app_commands.locale_str(
+            "Exclude a channel from scam detection.",
+            key="cogs.scam_detection.meta.exclude_channel_add.description",
+        ),
+    )
+    @app_commands.describe(
+        channel=app_commands.locale_str(
+            "The channel to exclude",
+            key="cogs.scam_detection.meta.exclude_channel_add.channel",
+        )
+    )
     async def exclude_channel_add(self, interaction: Interaction, channel: discord.TextChannel):
         gid = interaction.guild.id
         texts = self.bot.translate("cogs.scam_detection.exclude",
@@ -225,8 +239,19 @@ class ScamDetectionCog(commands.Cog):
             ephemeral=True,
         )
 
-    @scam_group.command(name="exclude_channel_remove", description="Remove a channel from the exclusion list.")
-    @app_commands.describe(channel="The channel to remove from exclusion")
+    @scam_group.command(
+        name="exclude_channel_remove",
+        description=app_commands.locale_str(
+            "Remove a channel from the exclusion list.",
+            key="cogs.scam_detection.meta.exclude_channel_remove.description",
+        ),
+    )
+    @app_commands.describe(
+        channel=app_commands.locale_str(
+            "The channel to remove from exclusion",
+            key="cogs.scam_detection.meta.exclude_channel_remove.channel",
+        )
+    )
     async def exclude_channel_remove(self, interaction: Interaction, channel: discord.TextChannel):
         gid = interaction.guild.id
         texts = self.bot.translate("cogs.scam_detection.exclude",
@@ -245,7 +270,13 @@ class ScamDetectionCog(commands.Cog):
             ephemeral=True,
         )
 
-    @scam_group.command(name="exclude_channel_list", description="List all excluded channels.")
+    @scam_group.command(
+        name="exclude_channel_list",
+        description=app_commands.locale_str(
+            "List all excluded channels.",
+            key="cogs.scam_detection.meta.exclude_channel_list.description",
+        ),
+    )
     async def exclude_channel_list(self, interaction: Interaction):
         gid = interaction.guild.id
         texts = self.bot.translate("cogs.scam_detection.exclude",
@@ -263,36 +294,84 @@ class ScamDetectionCog(commands.Cog):
             texts["list"].format(channels=channel_mentions),
             ephemeral=True,
         )
-
-
-    @scam_group.command(name="check_links", description="Toggle or view link checking.")
-    @app_commands.describe(action="enable | disable | status")
+    @scam_group.command(
+        name="check_links",
+        description=app_commands.locale_str(
+            "Toggle or view link checking.",
+            key="cogs.scam_detection.meta.check_links.description",
+        ),
+    )
+    @app_commands.describe(
+        action=app_commands.locale_str(
+            "enable | disable | status",
+            key="cogs.scam_detection.meta.check_links.action_description",
+        )
+    )
     @app_commands.choices(
         action=[
-            app_commands.Choice(name="enable",  value="enable"),
-            app_commands.Choice(name="disable", value="disable"),
-            app_commands.Choice(name="status",  value="status"),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "enable",
+                    key="cogs.scam_detection.meta.check_links.choices.enable",
+                ),
+                value="enable",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "disable",
+                    key="cogs.scam_detection.meta.check_links.choices.disable",
+                ),
+                value="disable",
+            ),
+            app_commands.Choice(
+                name=app_commands.locale_str(
+                    "status",
+                    key="cogs.scam_detection.meta.check_links.choices.status",
+                ),
+                value="status",
+            ),
         ]
     )
     async def setting_check_links(self, interaction: Interaction,
                                   action: app_commands.Choice[str]):
         """Toggle or view link checking setting."""
         gid = interaction.guild.id
+        texts = self.bot.translate("cogs.scam_detection.check_links",
+                                    guild_id=gid)
         if action.value == "status":
             flag = await get_settings(gid, CHECK_LINKS_SETTING)
             await interaction.response.send_message(
-                f"Link checking is **{'enabled' if flag else 'disabled'}**.", ephemeral=True
+                texts["status"].format(
+                    state=texts["state"]["enabled" if flag else "disabled"],
+                ),
+                ephemeral=True,
             )
             return
-        await update_settings(gid, CHECK_LINKS_SETTING, action.value == "enable")
+        enabled = action.value == "enable"
+        await update_settings(gid, CHECK_LINKS_SETTING, enabled)
         await interaction.response.send_message(
-            f"Link checking **{action.value}d**.", ephemeral=True
+            texts["updated"].format(
+                state=texts["state"]["enabled" if enabled else "disabled"],
+            ),
+            ephemeral=True,
         )
 
-    @scam_group.command(name="add_action", description="Add an action to the scam punishment list.")
+    @scam_group.command(
+        name="add_action",
+        description=app_commands.locale_str(
+            "Add an action to the scam punishment list.",
+            key="cogs.scam_detection.meta.add_action.description",
+        ),
+    )
     @app_commands.describe(
-        action="Action to perform",
-        duration="Only required for timeout (e.g. 10m, 1h, 3d)"
+        action=app_commands.locale_str(
+            "Action to perform",
+            key="cogs.scam_detection.meta.add_action.action",
+        ),
+        duration=app_commands.locale_str(
+            "Only required for timeout (e.g. 10m, 1h, 3d)",
+            key="cogs.scam_detection.meta.add_action.duration",
+        ),
     )
     @app_commands.choices(action=action_choices())
     async def scam_add_action(
@@ -321,15 +400,32 @@ class ScamDetectionCog(commands.Cog):
         msg = await manager.add_action(gid, action_str, translator=self.bot.translate)
         await interaction.followup.send(msg, ephemeral=True)
 
-    @scam_group.command(name="remove_action", description="Remove an action from the scam punishment list.")
-    @app_commands.describe(action="Exact action string to remove (e.g. timeout:1d, delete)")
+    @scam_group.command(
+        name="remove_action",
+        description=app_commands.locale_str(
+            "Remove an action from the scam punishment list.",
+            key="cogs.scam_detection.meta.remove_action.description",
+        ),
+    )
+    @app_commands.describe(
+        action=app_commands.locale_str(
+            "Exact action string to remove (e.g. timeout:1d, delete)",
+            key="cogs.scam_detection.meta.remove_action.action",
+        )
+    )
     @app_commands.autocomplete(action=manager.autocomplete)
     async def scam_remove_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
         msg = await manager.remove_action(gid, action, translator=self.bot.translate)
         await interaction.response.send_message(msg, ephemeral=True)
 
-    @scam_group.command(name="view", description="View current scam settings.")
+    @scam_group.command(
+        name="view",
+        description=app_commands.locale_str(
+            "View current scam settings.",
+            key="cogs.scam_detection.meta.view.description",
+        ),
+    )
     async def settings_view(self, interaction: Interaction):
         gid = interaction.guild.id
         action_setting = await manager.view_actions(gid)
