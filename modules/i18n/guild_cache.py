@@ -9,13 +9,11 @@ from .locale_utils import normalise_locale
 
 logger = logging.getLogger(__name__)
 
-
 def _coerce_int(value: Any) -> int | None:
     try:
         return int(value)  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return None
-
 
 def extract_guild_id(candidate: Any) -> int | None:
     guild_id: Any | None = None
@@ -46,7 +44,6 @@ def extract_guild_id(candidate: Any) -> int | None:
                 guild_id = candidate_id
 
     return _coerce_int(guild_id)
-
 
 class GuildLocaleCache:
     def __init__(self) -> None:
@@ -88,7 +85,6 @@ class GuildLocaleCache:
     def resolve(self, candidate: Any) -> Optional[str]:
         guild_id = extract_guild_id(candidate)
         if guild_id is None:
-            logger.warning("Could not resolve guild id from candidate %r", candidate)
             return None
 
         override = self._overrides.get(guild_id)
@@ -109,13 +105,10 @@ class GuildLocaleCache:
             locale = self.resolve(candidate)
             if locale:
                 return locale
-        logger.warning("Failed to resolve locale from provided candidates")
         return None
 
     def drop(self, guild_id: int) -> None:
         self._stored.pop(guild_id, None)
         self._overrides.pop(guild_id, None)
 
-
 __all__ = ["GuildLocaleCache", "extract_guild_id"]
-
