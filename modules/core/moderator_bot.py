@@ -145,16 +145,20 @@ class ModeratorBot(commands.Bot):
         except Exception:  # pragma: no cover - defensive logging
             _logger.exception("Failed to list locales after loading repository")
         else:
-            _logger.debug("Locale repository ready with locales: %s", available_locales)
+            _logger.info(
+                "Locale repository ready with %d locales: %s",
+                len(available_locales),
+                available_locales,
+            )
 
         self._translator = Translator(self._locale_repository)
-        _logger.debug(
+        _logger.info(
             "Translator initialised (default=%s, fallback=%s)",
             self._translator.default_locale,
             self._translator.fallback_locale,
         )
         self._translation_service = TranslationService(self._translator)
-        _logger.debug("Translation service ready; preparing Discord translator")
+        _logger.info("Translation service ready; preparing Discord translator")
         self._command_tree_translator = DiscordAppCommandTranslator(
             self._translation_service
         )
@@ -371,6 +375,7 @@ class ModeratorBot(commands.Bot):
 
     async def setup_hook(self) -> None:  # type: ignore[override]
         if self._command_tree_translator is not None:
+            _logger.info("Setting Discord command tree translator")
             await self.tree.set_translator(self._command_tree_translator)
 
         try:
