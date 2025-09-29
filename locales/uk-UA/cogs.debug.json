@@ -1,6 +1,15 @@
-﻿{
+{
   "cogs": {
     "debug": {
+      "meta": {
+        "stats": {
+          "description": "Get memory and performance stats",
+          "show_all": "Include allocations from all libraries (not just project)"
+        },
+        "locale": {
+          "description": "Show the locale currently bound to this command context"
+        }
+      },
       "permission_denied": "Ви не маєте дозволу використовувати цю команду.",
       "no_allocations": "Проектно-залежні виділення не знайдено.",
       "embed": {
@@ -15,6 +24,9 @@
         "worker_name": "Черги робітників",
         "worker_error": "(помилка збору метрик: {error})",
         "footer": "Хост: {host} | Python {python_version}"
+      },
+      "locale": {
+        "current": "Current locale: {locale}"
       }
     }
   }
