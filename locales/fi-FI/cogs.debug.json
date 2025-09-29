@@ -1,6 +1,15 @@
-﻿{
+{
   "cogs": {
     "debug": {
+      "meta": {
+        "stats": {
+          "description": "Get memory and performance stats",
+          "show_all": "Include allocations from all libraries (not just project)"
+        },
+        "locale": {
+          "description": "Show the locale currently bound to this command context"
+        }
+      },
       "permission_denied": "Sinulla ei ole lupaa käyttää tätä komentoa.",
       "no_allocations": "Projektikohtaisia kohdennuksia ei löytynyt.",
       "embed": {
@@ -15,6 +24,9 @@
         "worker_name": "Työntekijäjonot",
         "worker_error": "(virhe metriikoiden keruussa: {error})",
         "footer": "Isäntä: {host} | Python {python_version}"
+      },
+      "locale": {
+        "current": "Current locale: {locale}"
       }
     }
   }
