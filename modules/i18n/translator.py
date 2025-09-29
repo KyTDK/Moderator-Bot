@@ -49,14 +49,33 @@ class Translator:
         placeholders = placeholders or {}
         locales_to_try = self._build_locale_chain(locale)
 
+        logger.debug(
+            "Translating key '%s' using locale '%s' (chain=%s)",
+            key,
+            locale or self._default_locale,
+            locales_to_try,
+        )
+
         for locale_code in locales_to_try:
             value = self._repository.get_value(locale_code, key)
             if value is not None:
+                if locale_code != locales_to_try[0]:
+                    logger.debug(
+                        "Translation for key '%s' satisfied by locale '%s'", key, locale_code
+                    )
                 return self._format_value(value, placeholders)
 
         if fallback is not None:
+            logger.debug(
+                "Translation for key '%s' missing; using explicit fallback '%s'",
+                key,
+                fallback,
+            )
             return self._apply_format(fallback, placeholders)
 
+        logger.debug(
+            "Translation for key '%s' missing; falling back to key with placeholders", key
+        )
         return self._apply_format(key, placeholders)
 
     def get_locale_snapshot(self, locale: str) -> dict[str, Any]:

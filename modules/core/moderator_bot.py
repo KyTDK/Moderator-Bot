@@ -95,6 +95,13 @@ class ModeratorBot(commands.Bot):
         base_root = locales_override or os.getenv("LOCALES_DIR") or "locales"
         locales_root = Path(base_root).resolve()
 
+        _logger.info(
+            "Initialising locale repository (root=%s, default=%s, fallback=%s)",
+            locales_root,
+            default_locale,
+            fallback_locale,
+        )
+
         self._locale_repository = LocaleRepository(
             locales_root,
             default_locale=default_locale,
@@ -200,10 +207,14 @@ class ModeratorBot(commands.Bot):
     ) -> str | None:
         guild_override = self._get_guild_locale_override_from_candidate(interaction)
         if guild_override:
+            _logger.debug(
+                "Resolved locale for interaction via override: %s", guild_override
+            )
             return guild_override
 
         stored_locale = self._get_stored_guild_locale_from_candidate(interaction)
         if stored_locale:
+            _logger.debug("Resolved locale for interaction via stored cache: %s", stored_locale)
             return stored_locale
 
         guild = getattr(interaction, "guild", None)
@@ -211,19 +222,33 @@ class ModeratorBot(commands.Bot):
             preferred = getattr(guild, "preferred_locale", None)
             stored = self._store_guild_locale(guild.id, preferred)
             if stored:
+                _logger.debug(
+                    "Resolved locale for interaction via guild preferred locale %r -> %s",
+                    preferred,
+                    stored,
+                )
                 return stored
 
-        return self._normalise_locale(getattr(interaction, "locale", None))
+        direct_locale = getattr(interaction, "locale", None)
+        normalized = self._normalise_locale(direct_locale)
+        _logger.debug(
+            "Resolved locale for interaction via direct locale %r -> %s",
+            direct_locale,
+            normalized,
+        )
+        return normalized
 
     def _extract_locale_from_context(
         self, ctx: commands.Context[Any]
     ) -> str | None:
         guild_override = self._get_guild_locale_override_from_candidate(ctx)
         if guild_override:
+            _logger.debug("Resolved locale for context via override: %s", guild_override)
             return guild_override
 
         stored_locale = self._get_stored_guild_locale_from_candidate(ctx)
         if stored_locale:
+            _logger.debug("Resolved locale for context via stored cache: %s", stored_locale)
             return stored_locale
 
         guild = getattr(ctx, "guild", None)
@@ -231,7 +256,13 @@ class ModeratorBot(commands.Bot):
             return None
 
         preferred = getattr(guild, "preferred_locale", None)
-        return self._store_guild_locale(guild.id, preferred)
+        resolved = self._store_guild_locale(guild.id, preferred)
+        _logger.debug(
+            "Resolved locale for context via guild preferred locale %r -> %s",
+            preferred,
+            resolved,
+        )
+        return resolved
 
     def _infer_locale_from_event(
         self, _event_name: str, args: tuple[Any, ...], kwargs: dict[str, Any]
@@ -249,10 +280,14 @@ class ModeratorBot(commands.Bot):
 
         override = self._get_guild_locale_override_from_candidate(candidate)
         if override:
+            _logger.debug("Resolved locale for event object via override: %s", override)
             return override
 
         stored_locale = self._get_stored_guild_locale_from_candidate(candidate)
         if stored_locale:
+            _logger.debug(
+                "Resolved locale for event object via stored cache: %s", stored_locale
+            )
             return stored_locale
 
         guild = getattr(candidate, "guild", None)
@@ -260,10 +295,21 @@ class ModeratorBot(commands.Bot):
             preferred = getattr(guild, "preferred_locale", None)
             normalized = self._store_guild_locale(guild.id, preferred)
             if normalized:
+                _logger.debug(
+                    "Resolved locale for event object via guild preferred locale %r -> %s",
+                    preferred,
+                    normalized,
+                )
                 return normalized
 
         direct_locale = getattr(candidate, "locale", None)
-        return self._normalise_locale(direct_locale)
+        normalized = self._normalise_locale(direct_locale)
+        _logger.debug(
+            "Resolved locale for event object via direct locale %r -> %s",
+            direct_locale,
+            normalized,
+        )
+        return normalized
 
     @staticmethod
     def _extract_guild_id(candidate: Any) -> int | None:
@@ -289,15 +335,27 @@ class ModeratorBot(commands.Bot):
             return None
         override = self._guild_locale_overrides.get(guild_id)
         if override:
+            _logger.debug("Loaded guild locale override (guild_id=%s): %s", guild_id, override)
             return override
         return None
 
     def _normalise_locale(self, locale: Any) -> str | None:
-        return normalise_locale(locale)
+        normalized = normalise_locale(locale)
+        if locale and normalized is None:
+            _logger.debug("Failed to normalise locale %r", locale)
+        elif locale:
+            _logger.debug("Normalised locale %r -> %s", locale, normalized)
+        return normalized
 
     def _store_guild_locale(self, guild_id: int, locale: Any) -> str | None:
         normalized = self._normalise_locale(locale)
         self._guild_locales[guild_id] = normalized
+        _logger.debug(
+            "Stored guild locale (guild_id=%s): input=%r normalized=%s",
+            guild_id,
+            locale,
+            normalized,
+        )
         return normalized
 
     def _get_stored_guild_locale(self, guild_id: int) -> str | None:
@@ -317,6 +375,12 @@ class ModeratorBot(commands.Bot):
             return
         normalized = self._normalise_locale(override)
         self._guild_locale_overrides[guild_id] = normalized
+        _logger.debug(
+            "Refreshed guild locale override (guild_id=%s): %r -> %s",
+            guild_id,
+            override,
+            normalized,
+        )
 
     def _handle_locale_setting_update(
         self, guild_id: int, key: str, value: Any
@@ -325,6 +389,12 @@ class ModeratorBot(commands.Bot):
             return
         normalized = self._normalise_locale(value)
         self._guild_locale_overrides[guild_id] = normalized
+        _logger.debug(
+            "Updated guild locale override via settings (guild_id=%s): %r -> %s",
+            guild_id,
+            value,
+            normalized,
+        )
 
     def set_shard_assignment(self, shard_assignment: mysql.ShardAssignment) -> None:
         """Attach a shard assignment to the bot (used for standby takeover)."""
