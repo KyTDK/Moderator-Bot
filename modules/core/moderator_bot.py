@@ -216,7 +216,8 @@ class ModeratorBot(commands.Bot):
         try:
             locale = self.resolve_locale(interaction)
         except Exception:
-            self.push_locale(locale)
+            locale = None
+        self.push_locale(locale)
         return True
 
     def translate(
