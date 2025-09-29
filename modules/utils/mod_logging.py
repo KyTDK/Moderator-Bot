@@ -24,9 +24,20 @@ async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=
         is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
 
         if embed and not is_accelerated:
-            embed.set_footer(
-                text="Upgrade to Accelerated for faster NSFW & scam detection → /accelerated"
+            translator = getattr(bot, "translate", None)
+            fallback = (
+                "Upgrade to Accelerated for faster NSFW & scam detection → /accelerated"
             )
+            footer_text = (
+                translator(
+                    "modules.utils.mod_logging.promo_footer",
+                    guild_id=guild_id,
+                    fallback=fallback,
+                )
+                if callable(translator)
+                else fallback
+            )
+            embed.set_footer(text=footer_text)
 
         if file:
             await channel.send(embed=embed, files=[file])
