@@ -1,7 +1,10 @@
 import asyncio
 import random
 import time
+from typing import Mapping
+
 from openai import AsyncOpenAI
+
 from modules.utils import mysql
 from cryptography.fernet import Fernet
 import os
@@ -15,6 +18,24 @@ _working_keys = []
 _non_working_keys = []
 _quarantine: dict[str, float] = {}
 _clients = {}
+
+
+class APIKeyValidationError(Exception):
+    """Error raised when an API key fails the validation check."""
+
+    __slots__ = ("translation_key", "fallback", "placeholders")
+
+    def __init__(
+        self,
+        *,
+        translation_key: str,
+        fallback: str,
+        placeholders: Mapping[str, object] | None = None,
+    ) -> None:
+        super().__init__(fallback)
+        self.translation_key = translation_key
+        self.fallback = fallback
+        self.placeholders = placeholders or {}
 
 FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
 fernet = Fernet(FERNET_KEY)
@@ -34,14 +55,17 @@ async def check_openai_api_key(api_key):
             ]
         )
     except Exception as exc:
-        raise Exception(
-            "Your API key didn't work. This is likely because your organization"
-            " hasn't added any credit to its OpenAI account. Even though the "
-            "moderation model is free, OpenAI requires accounts to have valid "
-            "payment details on file. To add credit, visit the [OpenAI Billing "
-            "Overview](https://platform.openai.com/account/billing/overview) "
-            "page and purchase at least $5 in credits. Once you've added a "
-            "payment method and credits, your API key should function correctly."
+        raise APIKeyValidationError(
+            translation_key="modules.utils.api.key_validation.billing_required",
+            fallback=(
+                "Your API key didn't work. This is likely because your organization "
+                "hasn't added any credit to its OpenAI account. Even though the "
+                "moderation model is free, OpenAI requires accounts to have valid "
+                "payment details on file. To add credit, visit the [OpenAI Billing "
+                "Overview](https://platform.openai.com/account/billing/overview) "
+                "page and purchase at least $5 in credits. Once you've added a "
+                "payment method and credits, your API key should function correctly."
+            ),
         ) from exc
 
 _lock = asyncio.Lock()
