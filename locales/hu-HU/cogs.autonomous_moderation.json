@@ -42,6 +42,53 @@
         "detail_time": "`{value}`",
         "detail_threshold": "{display} — `{threshold}`"
       },
+      "moderator": {
+        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reset_time": "{time}",
+        "budget_reset_next": "the next cycle",
+        "thanks_no_violation": "Thanks for the report. No violations were found.",
+        "thanks_action": "Thanks for the report. Action was taken."
+      },
+      "helpers": {
+        "embed": {
+          "title": "AI-Flagged Violation",
+          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "fields": {
+            "fanout": {
+              "name": "Fan-out",
+              "value": "Multiple authors detected; applied per-author actions."
+            },
+            "ai_decision": {
+              "name": "AI Decision",
+              "none": "None",
+              "unknown": "Unknown"
+            },
+            "applied_actions": {
+              "name": "Applied Actions",
+              "none": "None"
+            },
+            "flagged_messages": {
+              "name": "Flagged Message(s)",
+              "no_content": "[no text content]",
+              "entry": "• ID {id}: {content}"
+            }
+          }
+        },
+        "no_violations": {
+          "title": "AI Moderation Scan (Debug)",
+          "description": "No violations were found in the latest scan.",
+          "fields": {
+            "scanned_messages": "Scanned Messages",
+            "mode": "Mode"
+          }
+        },
+        "summary": {
+          "reason_default": "Violation detected",
+          "reason_multiple": "Multiple violations: {reasons}",
+          "rule_default": "Rule violation",
+          "rule_multiple": "Multiple rules: {rules}"
+        }
+      },
       "ensure_adaptive": "Az adaptív moderációs mód nincs engedélyezve. Használja az `/ai_mod set_mode` parancsot annak engedélyezéséhez."
     }
   }
