@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Moderator Bot Koppelvlak",
         "description": "[Klik hier om die koppelvlak te open]({url})"
