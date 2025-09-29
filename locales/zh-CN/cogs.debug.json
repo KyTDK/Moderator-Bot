@@ -1,6 +1,15 @@
-﻿{
+{
   "cogs": {
     "debug": {
+      "meta": {
+        "stats": {
+          "description": "Get memory and performance stats",
+          "show_all": "Include allocations from all libraries (not just project)"
+        },
+        "locale": {
+          "description": "Show the locale currently bound to this command context"
+        }
+      },
       "permission_denied": "您无权使用此命令。",
       "no_allocations": "未找到项目相关分配。",
       "embed": {
@@ -15,6 +24,9 @@
         "worker_name": "工作队列",
         "worker_error": "(收集指标时出错: {error})",
         "footer": "主机: {host} | Python {python_version}"
+      },
+      "locale": {
+        "current": "Current locale: {locale}"
       }
     }
   }
