@@ -9,7 +9,6 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from discord.ext import commands
 
 os.environ.setdefault(
     "FERNET_SECRET_KEY", "DeJ3sXDDTTbikeRSJzRgg8r_Ch61_NbE8D3LWnLOJO4="
@@ -190,11 +189,16 @@ def test_push_and_reset_locale(bot: ModeratorBot) -> None:
     assert bot.current_locale() is None
 
 
-def test_dispatch_binds_locale_for_command_handlers(
+def test_tree_command_binds_locale_for_interactions(
     bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     guild = DummyGuild(id=654, preferred_locale="es-ES")
-    ctx = DummyContext(guild=guild)
+    interaction = DummyInteraction(
+        guild=guild,
+        locale="en-US",
+        guild_id=guild.id,
+        user_locale="en-US",
+    )
 
     async def fake_get_settings(guild_id: int, key: str) -> str | None:
         assert guild_id == guild.id
@@ -212,17 +216,26 @@ def test_dispatch_binds_locale_for_command_handlers(
 
     captured: list[str] = []
 
-    def fake_super_dispatch(self: ModeratorBot, event_name: str, *args: Any, **kwargs: Any) -> None:
-        assert event_name == "command"
-        captured.append(self.translate("bot.welcome.button_label"))
+    @bot.tree.command(name="test-locale-command")
+    async def test_locale_command(interaction: Any) -> str | None:
+        captured.append(bot.translate("bot.welcome.button_label"))
+        return bot.current_locale()
 
-    monkeypatch.setattr(commands.Bot, "dispatch", fake_super_dispatch)
+    command = bot.tree.get_command("test-locale-command")
+    assert command is not None
 
-    bot.dispatch("command", ctx)
+    async def invoke() -> str | None:
+        assert await bot.tree.interaction_check(interaction)
+        return await command._do_call(interaction, {})
 
+    try:
+        result = asyncio.run(invoke())
+    finally:
+        bot.tree.remove_command("test-locale-command")
+
+    assert result == "es-ES"
     assert captured == ["Abrir Panel de control"]
     assert bot.current_locale() is None
-    assert bot.translate("bot.welcome.button_label") == "Open Dashboard"
 
 
 def test_preload_guild_locale_cache(bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -55,6 +55,10 @@ class LocaleRepository:
             self._loaded = True
         logger.info("Locale cache reloaded (%d locales)", len(new_cache))
 
+    def refresh(self) -> None:
+        logger.info("LocaleRepository.refresh delegating to reload")
+        self.reload()
+
     async def reload_async(self) -> None:
         await asyncio.to_thread(self.reload)
 

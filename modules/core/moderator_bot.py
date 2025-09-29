@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from contextlib import AbstractContextManager
 from contextvars import Token
+from types import MethodType
 from typing import Any, Optional
 
 import discord
@@ -74,6 +75,7 @@ class ModeratorBot(commands.Bot):
         self._locale_resolver = LocaleResolver(self._guild_locales)
         self._locale_settings_listener = self._handle_locale_setting_update
         self._initialise_i18n()
+        self._install_tree_locale_binding()
         mysql.add_settings_listener(self._locale_settings_listener)
 
         if self._heartbeat_seconds != 60:
@@ -188,28 +190,6 @@ class ModeratorBot(commands.Bot):
         await self._locale_repository.reload_async()
         _logger.warning("Translations reloaded from disk")
 
-    def dispatch(self, event_name: str, /, *args: Any, **kwargs: Any) -> None:
-        super().dispatch(event_name, *args, **kwargs)
-
-    def _schedule_event(self, coro, event_name, *args, **kwargs):
-        return super()._schedule_event(coro, event_name, *args, **kwargs)
-
-    async def on_interaction(self, interaction: discord.Interaction):
-        token = None
-        try:
-            locale = self.resolve_locale(interaction)
-            if locale:
-                token = self.push_locale(locale)
-
-            await self.process_application_commands(interaction)
-
-        except Exception as e:
-            _logger.warning("Failed to handle interaction %s: %s", interaction.id, e)
-
-        finally:
-            if token is not None:
-                self.reset_locale(token)
-
     def translate(
         self,
         key: str,
@@ -259,6 +239,26 @@ class ModeratorBot(commands.Bot):
 
         return self.infer_locale(*candidates).resolved()
 
+    def _install_tree_locale_binding(self) -> None:
+        tree = self.tree
+        original_check = tree.interaction_check
+
+        async def locale_binding_check(_: Any, interaction: discord.Interaction) -> bool:
+            if not await original_check(interaction):
+                return False
+            return await self._bind_locale_check(interaction)
+
+        tree.interaction_check = MethodType(locale_binding_check, tree)
+
+    async def _bind_locale_check(self, interaction: discord.Interaction) -> bool:
+        service = self._translation_service
+        if service is None:
+            return True
+
+        locale = self.resolve_locale(interaction)
+        self.push_locale(locale)
+        return True
+
     def get_guild_locale(self, guild: Any) -> str | None:
         guild_id = extract_guild_id(guild)
         if guild_id is None:
@@ -274,11 +274,6 @@ class ModeratorBot(commands.Bot):
             return override
 
         return self._guild_locales.get(guild_id)
-
-    def _infer_locale_from_event(self, *candidates: Any) -> LocaleResolution:
-        """Resolve locales for arbitrary event candidates."""
-
-        return self._locale_resolver.infer(*candidates)
 
     async def _preload_guild_locale_cache(self) -> None:
         """Warm the in-memory guild locale cache from the database."""

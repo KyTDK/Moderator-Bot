@@ -164,6 +164,16 @@ class DebugCog(commands.Cog):
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
+    @app_commands.command(
+        name="locale",
+        description="Show the locale currently bound to this command context",
+    )
+    async def current_locale(self, interaction: discord.Interaction):
+        current = self.bot.current_locale()
+        fallback = self.bot.translator.default_locale
+        message = f"Current locale: {current or fallback}"
+        await interaction.response.send_message(message, ephemeral=True)
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(DebugCog(bot))
     if GUILD_ID:
