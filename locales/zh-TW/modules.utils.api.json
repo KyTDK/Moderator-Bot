@@ -2,7 +2,7 @@
   "modules": {
     "utils": {
       "api": {
-        "key_failed_notice": "**Warning:** Your OpenAI API key failed a moderation check.\n\nThis usually means your account does not have active billing or is temporarily rate-limited.\n\nPlease check your [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) to ensure your account has payment info and at least $5 in credits.\n\nOnce that is resolved, your key will automatically start working again - no need to re-add it."
+        "key_failed_notice": "**警告：** 您的 OpenAI API 金鑰未通過審核。\n\n這通常表示您的帳戶沒有啟用計費或暫時受限。\n\n請檢查您的 [OpenAI 計費儀表板](https://platform.openai.com/account/billing/overview)，以確保您的帳戶含有付款信息並至少有 $5 的額度。\n\n一旦解決此問題，您的金鑰將自動恢復作用 - 無需重新添加。"
       }
     }
   }

@@ -2,7 +2,7 @@
   "modules": {
     "utils": {
       "api": {
-        "key_failed_notice": "**Warning:** Your OpenAI API key failed a moderation check.\n\nThis usually means your account does not have active billing or is temporarily rate-limited.\n\nPlease check your [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) to ensure your account has payment info and at least $5 in credits.\n\nOnce that is resolved, your key will automatically start working again - no need to re-add it."
+        "key_failed_notice": "**Упозорење:** Ваш OpenAI API кључ није положио проверу модерације.\n\nОво обично значи да ваш налог нема активну наплату или да је привремено ограничен на основу броја захтева.\n\nМолимо проверите ваш [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) да бисте били сигурни да ваш налог има информације о плаћању и најмање $5 у кредитима.\n\nКада то буде решено, ваш кључ ће аутоматски поново почети да ради - нема потребе да га поново додајете."
       }
     }
   }
