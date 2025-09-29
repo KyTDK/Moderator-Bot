@@ -1,6 +1,36 @@
 ﻿{
   "cogs": {
     "monitoring": {
+      "meta": {
+        "group_description": "Monitoring configuration",
+        "set": {
+          "description": "Set channel to output logs.",
+          "channel": "The channel to send logs to."
+        },
+        "remove": {
+          "description": "Remove the monitor channel setting."
+        },
+        "show": {
+          "description": "Show the current monitor channel."
+        },
+        "toggle_event": {
+          "description": "Enable or disable a specific monitoring event.",
+          "event": "The event to toggle",
+          "enabled": "Enable or disable logging for this event",
+          "choices": {
+            "join": "User Join",
+            "leave": "User Leave",
+            "ban": "Ban",
+            "unban": "Unban",
+            "timeout": "Timeout",
+            "message_delete": "Message Deleted",
+            "message_edit": "Message Edited"
+          }
+        },
+        "list_events": {
+          "description": "List current monitor event settings."
+        }
+      },
       "log_event": {
         "upgrade_footer": "Nâng cấp lên Tăng tốc để phát hiện nhanh hơn NSFW & lừa đảo — /accelerated",
         "guild_footer": "Guild ID: {guild_id}"
@@ -50,6 +80,7 @@
         "content_label": "**Nội dung:**\n{content}",
         "description_generic": "Một tin nhắn đã bị xoá trong {channel}.",
         "description_deleted_by": "\n**Người xoá:** {deleter}",
+        "no_content": "[No Content]",
         "fields": {
           "attachments": "Tệp đính kèm ({count})",
           "embeds": "Đính kèm {index}",
@@ -68,6 +99,7 @@
           "before": "Trước",
           "after": "Sau"
         },
+        "no_content": "[No Content]",
         "footer": "ID người dùng: {user_id}"
       },
       "ban": {
