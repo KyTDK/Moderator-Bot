@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Πίνακας Ελέγχου του Δημιουργού Συντονιστών Bot",
         "description": "[Κάντε κλικ εδώ για να ανοίξετε τον πίνακα ελέγχου]({url})"
