@@ -191,25 +191,8 @@ class ModeratorBot(commands.Bot):
     def dispatch(self, event_name: str, /, *args: Any, **kwargs: Any) -> None:
         super().dispatch(event_name, *args, **kwargs)
 
-    def _schedule_event(
-        self,
-        coro: Any,
-        event_name: str,
-        *args: Any,
-        **kwargs: Any,
-    ):
-        service = self._translation_service
-        if service is None:
-            return super()._schedule_event(coro, event_name, *args, **kwargs)
-
-        resolution = self._infer_locale_from_event(*args, *kwargs.values())
-        locale = resolution.resolved()
-
-        async def run_with_locale(*a: Any, **kw: Any):
-            with service.use_locale(locale):
-                return await coro(*a, **kw)
-
-        return super()._schedule_event(run_with_locale, event_name, *args, **kwargs)
+    def _schedule_event(self, coro, event_name, *args, **kwargs):
+        return super()._schedule_event(coro, event_name, *args, **kwargs)
 
     async def on_interaction(self, interaction: discord.Interaction):
         token = None
@@ -217,11 +200,12 @@ class ModeratorBot(commands.Bot):
             locale = self.resolve_locale(interaction)
             if locale:
                 token = self.push_locale(locale)
-        except Exception as e:
-            _logger.warning("Failed to bind locale for interaction %s: %s", interaction.id, e)
 
-        try:
-            await super().on_interaction(interaction)
+            await self.process_application_commands(interaction)
+
+        except Exception as e:
+            _logger.warning("Failed to handle interaction %s: %s", interaction.id, e)
+
         finally:
             if token is not None:
                 self.reset_locale(token)
