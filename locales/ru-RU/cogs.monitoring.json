@@ -1,6 +1,36 @@
 ﻿{
   "cogs": {
     "monitoring": {
+      "meta": {
+        "group_description": "Monitoring configuration",
+        "set": {
+          "description": "Set channel to output logs.",
+          "channel": "The channel to send logs to."
+        },
+        "remove": {
+          "description": "Remove the monitor channel setting."
+        },
+        "show": {
+          "description": "Show the current monitor channel."
+        },
+        "toggle_event": {
+          "description": "Enable or disable a specific monitoring event.",
+          "event": "The event to toggle",
+          "enabled": "Enable or disable logging for this event",
+          "choices": {
+            "join": "User Join",
+            "leave": "User Leave",
+            "ban": "Ban",
+            "unban": "Unban",
+            "timeout": "Timeout",
+            "message_delete": "Message Deleted",
+            "message_edit": "Message Edited"
+          }
+        },
+        "list_events": {
+          "description": "List current monitor event settings."
+        }
+      },
       "log_event": {
         "upgrade_footer": "Обновитесь до Accelerated для более быстрого обнаружения NSFW и мошенничества — /accelerated",
         "guild_footer": "ID гильдии: {guild_id}"
@@ -50,6 +80,7 @@
         "content_label": "**Содержание:**\n{content}",
         "description_generic": "Сообщение было удалено в {channel}.",
         "description_deleted_by": "\n**Удалено:** {deleter}",
+        "no_content": "[No Content]",
         "fields": {
           "attachments": "Вложения ({count})",
           "embeds": "Встроенное содержимое {index}",
@@ -68,6 +99,7 @@
           "before": "До",
           "after": "После"
         },
+        "no_content": "[No Content]",
         "footer": "ID пользователя: {user_id}"
       },
       "ban": {
