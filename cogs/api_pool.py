@@ -2,6 +2,7 @@ from discord import app_commands, Interaction
 from discord.ext import commands
 from modules.utils.mysql import execute_query
 from modules.utils import api
+from modules.utils.api import APIKeyValidationError
 from cryptography.fernet import Fernet
 import os
 from dotenv import load_dotenv
@@ -55,10 +56,22 @@ class ApiPoolCog(commands.Cog):
 
         try:
             await api.check_openai_api_key(api_key)
-        except Exception as e:
+        except APIKeyValidationError as exc:
+            error_text = self.bot.translate(
+                exc.translation_key,
+                placeholders=dict(exc.placeholders),
+                fallback=exc.fallback,
+            )
             message = self.bot.translate(
                 "cogs.api_pool.add.invalid",
-                placeholders={"error": str(e)},
+                placeholders={"error": error_text},
+            )
+            await interaction.followup.send(message, ephemeral=True)
+            return
+        except Exception as exc:  # pragma: no cover - safeguard for unexpected errors
+            message = self.bot.translate(
+                "cogs.api_pool.add.invalid",
+                placeholders={"error": str(exc)},
             )
             await interaction.followup.send(message, ephemeral=True)
             return
