@@ -358,6 +358,35 @@ class ModeratorBot(commands.Bot):
         )
         return normalized
 
+    async def _resolve_guild_owner_id(self, guild: discord.Guild) -> int | None:
+        owner_id = getattr(guild, "owner_id", None)
+        if owner_id is not None:
+            return int(owner_id)
+
+        owner = getattr(guild, "owner", None)
+        if owner is not None:
+            return owner.id
+
+        try:
+            fetched = await self.fetch_guild(guild.id)
+        except discord.HTTPException as exc:
+            _logger.warning(
+                "Unable to resolve owner for guild %s (%s): %s",
+                guild.id,
+                guild.name,
+                exc,
+            )
+            return None
+
+        fetched_owner_id = getattr(fetched, "owner_id", None)
+        if fetched_owner_id is None:
+            _logger.warning(
+                "Fetched guild %s (%s) but no owner ID was provided", guild.id, guild.name
+            )
+            return None
+
+        return int(fetched_owner_id)
+
     def _get_stored_guild_locale(self, guild_id: int) -> str | None:
         return self._guild_locales.get(guild_id)
 
@@ -476,9 +505,15 @@ class ModeratorBot(commands.Bot):
             try:
                 preferred = getattr(guild, "preferred_locale", None)
                 normalized_locale = self._store_guild_locale(guild.id, preferred)
-                await mysql.add_guild(
-                    guild.id, guild.name, guild.owner_id, normalized_locale
-                )
+                owner_id = await self._resolve_guild_owner_id(guild)
+                if owner_id is None:
+                    _logger.warning(
+                        "Skipping guild sync for %s (%s); owner ID unavailable",
+                        guild.id,
+                        guild.name,
+                    )
+                    continue
+                await mysql.add_guild(guild.id, guild.name, owner_id, normalized_locale)
                 await self.refresh_guild_locale_override(guild.id)
             except Exception as exc:
                 print(f"[ERROR] Failed to sync guild {guild.id}: {exc}")
@@ -501,7 +536,15 @@ class ModeratorBot(commands.Bot):
     async def on_guild_join(self, guild: discord.Guild) -> None:  # type: ignore[override]
         preferred = getattr(guild, "preferred_locale", None)
         normalized_locale = self._store_guild_locale(guild.id, preferred)
-        await mysql.add_guild(guild.id, guild.name, guild.owner_id, normalized_locale)
+        owner_id = await self._resolve_guild_owner_id(guild)
+        if owner_id is None:
+            _logger.warning(
+                "Skipping guild join sync for %s (%s); owner ID unavailable",
+                guild.id,
+                guild.name,
+            )
+            return
+        await mysql.add_guild(guild.id, guild.name, owner_id, normalized_locale)
         await self.refresh_guild_locale_override(guild.id)
         dash_url = f"https://modbot.neomechanical.com/dashboard/{guild.id}"
 
