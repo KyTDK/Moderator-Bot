@@ -1,6 +1,33 @@
 ﻿{
   "cogs": {
     "channel_config": {
+      "meta": {
+        "group_description": "Configure log channels.",
+        "set": {
+          "description": "Set a log channel.",
+          "params": {
+            "channel": "The channel to use for logging.",
+            "type": "Which type of log this channel is for."
+          }
+        },
+        "unset": {
+          "description": "Unset a log channel.",
+          "params": {
+            "type": "Which log type to disable."
+          }
+        },
+        "show": {
+          "description": "Show current log channel settings."
+        },
+        "types": {
+          "strike": "Strike",
+          "nsfw": "NSFW",
+          "ai": "AI",
+          "monitor": "Monitor",
+          "captcha": "Captcha",
+          "vc_transcript": "VC Transcript"
+        }
+      },
       "nsfw_required": "{channel} 不是年龄限制频道。请选择一个 NSFW 频道。",
       "missing_permissions": "我在 {channel} 缺少以下权限：{permissions}",
       "set_success": "{log_type} 日志将发布在 {channel}。",

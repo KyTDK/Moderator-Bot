@@ -2,7 +2,10 @@
   "modules": {
     "utils": {
       "api": {
-        "key_failed_notice": "**Cảnh báo:** Khóa API OpenAI của bạn không vượt qua bài kiểm tra kiểm duyệt.\n\nĐiều này thường có nghĩa là tài khoản của bạn không có thanh toán đang hoạt động hoặc bị giới hạn tốc độ tạm thời.\n\nVui lòng kiểm tra [Trang quản lý thanh toán OpenAI](https://platform.openai.com/account/billing/overview) để đảm bảo tài khoản của bạn có thông tin thanh toán và ít nhất $5 trong số dư tài khoản.\n\nSau khi vấn đề được giải quyết, khóa của bạn sẽ tự động bắt đầu hoạt động trở lại mà không cần thêm lại."
+        "key_failed_notice": "**Cảnh báo:** Khóa API OpenAI của bạn không vượt qua bài kiểm tra kiểm duyệt.\n\nĐiều này thường có nghĩa là tài khoản của bạn không có thanh toán đang hoạt động hoặc bị giới hạn tốc độ tạm thời.\n\nVui lòng kiểm tra [Trang quản lý thanh toán OpenAI](https://platform.openai.com/account/billing/overview) để đảm bảo tài khoản của bạn có thông tin thanh toán và ít nhất $5 trong số dư tài khoản.\n\nSau khi vấn đề được giải quyết, khóa của bạn sẽ tự động bắt đầu hoạt động trở lại mà không cần thêm lại.",
+        "key_validation": {
+          "billing_required": "Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly."
+        }
       }
     }
   }
