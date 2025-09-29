@@ -232,13 +232,6 @@ class ModeratorBot(commands.Bot):
                 service.reset_locale(token)
                 _logger.warning("Locale context reset after command invocation")
 
-    def resolve_locale_for_interaction(
-        self, interaction: discord.Interaction
-    ) -> str | None:
-        """Return the locale resolved for *interaction* using translation logic."""
-
-        return self._guild_locales.resolve(interaction)
-
     def _store_guild_locale(self, guild_id: int, locale: Any) -> Optional[str]:
         """Normalise and cache a guild's preferred locale."""
 
