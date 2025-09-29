@@ -52,7 +52,9 @@ def bot(monkeypatch: pytest.MonkeyPatch) -> ModeratorBot:
     mysql.remove_settings_listener(bot._locale_settings_listener)
 
 
-def test_interaction_locale_uses_preferred_locale(bot: ModeratorBot) -> None:
+def test_interaction_locale_uses_preferred_locale(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
     guild = DummyGuild(id=123, preferred_locale="en-US")
     interaction = DummyInteraction(
         guild=guild,
@@ -60,14 +62,44 @@ def test_interaction_locale_uses_preferred_locale(bot: ModeratorBot) -> None:
         guild_id=guild.id,
     )
 
+    async def fake_get_settings(guild_id: int, key: str) -> str | None:
+        assert guild_id == guild.id
+        assert key == "locale"
+        return None
+
+    async def fake_get_guild_locale(guild_id: int) -> str | None:
+        assert guild_id == guild.id
+        return "en-US"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(guild.id))
+
     resolved = bot._infer_locale_from_event("interaction_create", (interaction,), {})
 
     assert resolved == "en"
 
 
-def test_context_uses_guild_preference(bot: ModeratorBot) -> None:
+def test_context_uses_guild_preference(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
     guild = DummyGuild(id=456, preferred_locale="es-ES")
     ctx = DummyContext(guild=guild)
+
+    async def fake_get_settings(guild_id: int, key: str) -> str | None:
+        assert guild_id == guild.id
+        assert key == "locale"
+        return None
+
+    async def fake_get_guild_locale(guild_id: int) -> str | None:
+        assert guild_id == guild.id
+        return "es-ES"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(guild.id))
 
     resolved = bot._infer_locale_from_event("command", (ctx,), {})
 
