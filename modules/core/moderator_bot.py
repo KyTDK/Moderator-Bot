@@ -305,8 +305,19 @@ class ModeratorBot(commands.Bot):
             _logger.warning(
                 "Loaded locale override for guild %s: %r", guild_id, override
             )
-            self._guild_locales.set_override(guild_id, override)
-            return
+            normalized = self._guild_locales.set_override(guild_id, override)
+            if normalized:
+                _logger.debug(
+                    "Using saved override for guild %s -> %s", guild_id, normalized
+                )
+                return
+
+            _logger.warning(
+                "Stored override for guild %s (%r) is not a supported locale; "
+                "falling back to guild preference",
+                guild_id,
+                override,
+            )
 
         try:
             fallback = await mysql.get_guild_locale(guild_id)
