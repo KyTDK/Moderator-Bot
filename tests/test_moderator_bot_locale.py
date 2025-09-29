@@ -35,7 +35,12 @@ class DummyInteraction(SimpleNamespace):
 
 
 @pytest.fixture
-def bot() -> ModeratorBot:
+def bot(monkeypatch: pytest.MonkeyPatch) -> ModeratorBot:
+    async def fake_get_guild_locale(_: int) -> str | None:
+        return None
+
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
     bot = ModeratorBot(
         instance_id="test",
         heartbeat_seconds=60,
@@ -92,18 +97,43 @@ def test_guild_override_has_priority(
 
     assert resolved == "fr-FR"
 
+def test_falls_back_to_guild_table_locale(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def fake_get_settings(guild_id: int, key: str) -> str | None:
+        assert guild_id == 321
+        assert key == "locale"
+        return None
+
+    async def fake_get_guild_locale(guild_id: int) -> str | None:
+        assert guild_id == 321
+        return "pt-BR"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(321))
+
+    guild = DummyGuild(id=321, preferred_locale="en-US")
+    interaction = DummyInteraction(
+        guild=guild,
+        locale=None,
+        guild_id=guild.id,
+    )
+
+    resolved = bot._infer_locale_from_event("interaction", (interaction,), {})
+
+    assert resolved == "pt-BR"
 
 def test_unsupported_locale_rejects_value(bot: ModeratorBot) -> None:
     result = bot.translate("bot.welcome.button_label", locale="zz-ZZ")
 
     assert result == "Open Dashboard"
 
-
 def test_translate_defaults_without_context(bot: ModeratorBot) -> None:
     result = bot.translate("bot.welcome.button_label")
 
     assert result == "Open Dashboard"
-
 
 LOCALIZED_WELCOME_LABELS: dict[str, str] = {
     "es-ES": "Abrir Panel de control",
@@ -129,7 +159,6 @@ LOCALE_ALIAS_EXPECTATIONS = [
     ("zh", LOCALIZED_WELCOME_LABELS["zh-CN"]),
 ]
 
-
 @pytest.mark.parametrize("locale_hint,expected", LOCALE_ALIAS_EXPECTATIONS)
 def test_locale_aliases_use_translated_welcome_button(
     bot: ModeratorBot, locale_hint: str, expected: str
@@ -138,13 +167,11 @@ def test_locale_aliases_use_translated_welcome_button(
 
     assert result == expected
 
-
 def test_locale_context_manager_restores_previous_locale(bot: ModeratorBot) -> None:
     with bot.locale_context("fr-FR"):
         assert _current_locale.get() == "fr-FR"
 
     assert _current_locale.get() is None
-
 
 @pytest.mark.parametrize("candidate", ["fr-FR", "vi-VN"])
 def test_locale_setting_validator_accepts_supported_locale(candidate: str) -> None:

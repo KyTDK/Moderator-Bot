@@ -100,6 +100,21 @@ async def resolve_guild_plan(guild_id: int) -> str:
     plan = tier_to_plan(tier, default=PLAN_CORE)
     return plan or PLAN_CORE
 
+async def get_guild_locale(guild_id: int) -> Optional[str]:
+    """Return the stored locale override for *guild_id* if one exists."""
+
+    row, _ = await execute_query(
+        "SELECT locale FROM guilds WHERE guild_id = %s LIMIT 1",
+        (guild_id,),
+        fetch_one=True,
+    )
+
+    if not row:
+        return None
+
+    locale = row[0]
+    return str(locale) if locale is not None else None
+
 async def add_guild(
     guild_id: int, name: str, owner_id: int, locale: Optional[str]
 ):

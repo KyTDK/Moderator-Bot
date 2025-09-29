@@ -479,11 +479,21 @@ class ModeratorBot(commands.Bot):
         return self._get_stored_guild_locale(guild_id)
 
     async def refresh_guild_locale_override(self, guild_id: int) -> None:
+        override: Any | None = None
+
         try:
             override = await mysql.get_settings(guild_id, "locale")
         except Exception:
             _logger.exception("Failed to load locale override for guild %s", guild_id)
-            return
+
+        if override is None:
+            try:
+                override = await mysql.get_guild_locale(guild_id)
+            except Exception:
+                _logger.exception(
+                    "Failed to load guild locale fallback for guild %s", guild_id
+                )
+
         normalized = self._normalise_locale(override)
         self._guild_locale_overrides[guild_id] = normalized
         _logger.debug(

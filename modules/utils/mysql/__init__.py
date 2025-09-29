@@ -17,6 +17,7 @@ from .usage import add_aimod_usage, add_vcmod_usage, get_aimod_usage, get_vcmod_
 from .cleanup import cleanup_orphaned_guilds
 from .premium import (
     add_guild,
+    get_guild_locale,
     get_premium_status,
     is_accelerated,
     remove_guild,
@@ -66,6 +67,7 @@ __all__ = [
     "is_accelerated",
     "get_premium_status",
     "resolve_guild_plan",
+    "get_guild_locale",
     "add_guild",
     "remove_guild",
     "update_instance_heartbeat",
