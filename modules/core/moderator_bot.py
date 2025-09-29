@@ -192,6 +192,7 @@ class ModeratorBot(commands.Bot):
         self,
         key: str,
         *,
+        guild_id: int | None = None,
         locale: str | None = None,
         placeholders: dict[str, Any] | None = None,
         fallback: str | None = None,
@@ -202,25 +203,23 @@ class ModeratorBot(commands.Bot):
                 "Translation requested but translator has not been initialised"
             )
             return fallback if fallback is not None else key
+
+        resolved_locale = locale
+        if resolved_locale is None and guild_id is not None:
+            try:
+                resolved_locale = self.get_guild_locale(guild_id)
+            except ValueError:
+                _logger.warning(
+                    "Unable to determine guild locale from guild_id=%s; using defaults",
+                    guild_id,
+                )
+
         return service.translate(
             key,
-            locale=locale,
+            locale=resolved_locale,
             placeholders=placeholders,
             fallback=fallback,
         )
-
-    def _infer_locale_from_event(self, *candidates: Any) -> LocaleResolution:
-        return self._locale_resolver.infer(*candidates)
-    
-    async def on_interaction(self, interaction: discord.Interaction):
-        token: Token[str | None] | None = None
-        try:
-            locale = self.resolve_locale(interaction)
-            if locale is not None:
-                token = self.push_locale(locale)
-        finally:
-            if token is not None:
-                self.reset_locale(token)
 
     @property
     def translation_service(self) -> TranslationService:
@@ -249,23 +248,6 @@ class ModeratorBot(commands.Bot):
         """Convenience wrapper returning the resolved locale string."""
 
         return self.infer_locale(*candidates).resolved()
-
-    def _schedule_event(self, coro, event_name, *args, **kwargs):
-        service = self._translation_service
-        if service is None:
-            return super()._schedule_event(coro, event_name, *args, **kwargs)
-
-        resolution = self._infer_locale_from_event(*args, *kwargs.values())
-        locale = resolution.resolved()
-
-        if service.current_locale() is not None:
-            return super()._schedule_event(coro, event_name, *args, **kwargs)
-
-        async def run_with_locale(*a, **kw):
-            with service.use_locale(locale):
-                return await coro(*a, **kw)
-
-        return super()._schedule_event(run_with_locale, event_name, *args, **kwargs)
 
     def get_guild_locale(self, guild: Any) -> str | None:
         guild_id = extract_guild_id(guild)
