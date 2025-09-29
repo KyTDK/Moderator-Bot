@@ -243,7 +243,9 @@ class AutonomousModeratorCog(commands.Cog):
                 # Always log to AI violations channel when debug is enabled
                 if aimod_debug and debug_log_channel:
                     mode_str = await get_active_mode(gid)
-                    embed = am_helpers.build_no_violations_embed(len(batch), mode_str)
+                    embed = am_helpers.build_no_violations_embed(
+                        self.bot, guild, len(batch), mode_str
+                    )
                     await mod_logging.log_to_channel(embed, debug_log_channel, self.bot)
                 continue
 
@@ -264,7 +266,7 @@ class AutonomousModeratorCog(commands.Cog):
                 )
 
                 out_reason, out_rule = am_helpers.summarize_reason_rule(
-                    data.get("reasons"), data.get("rules")
+                    self.bot, guild, data.get("reasons"), data.get("rules")
                 )
 
                 await am_helpers.apply_actions_and_log(
