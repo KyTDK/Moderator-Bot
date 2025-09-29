@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 from contextlib import AbstractContextManager
 from contextvars import Token
-from types import MethodType
 from typing import Any, Optional
 
 import discord
@@ -75,7 +74,6 @@ class ModeratorBot(commands.Bot):
         self._locale_resolver = LocaleResolver(self._guild_locales)
         self._locale_settings_listener = self._handle_locale_setting_update
         self._initialise_i18n()
-        self._install_tree_locale_binding()
         mysql.add_settings_listener(self._locale_settings_listener)
 
         if self._heartbeat_seconds != 60:
@@ -211,6 +209,20 @@ class ModeratorBot(commands.Bot):
             fallback=fallback,
         )
 
+    def _infer_locale_from_event(self, *candidates: Any) -> LocaleResolution:
+        return self._locale_resolver.infer(*candidates)
+    
+    async def on_interaction(self, interaction: discord.Interaction):
+        token: Token[str | None] | None = None
+        try:
+            locale = self.resolve_locale(interaction)
+            if locale is not None:
+                token = self.push_locale(locale)
+            await super().on_interaction(interaction)
+        finally:
+            if token is not None:
+                self.reset_locale(token)
+
     @property
     def translation_service(self) -> TranslationService:
         if self._translation_service is None:
@@ -239,25 +251,22 @@ class ModeratorBot(commands.Bot):
 
         return self.infer_locale(*candidates).resolved()
 
-    def _install_tree_locale_binding(self) -> None:
-        tree = self.tree
-        original_check = tree.interaction_check
-
-        async def locale_binding_check(_: Any, interaction: discord.Interaction) -> bool:
-            if not await original_check(interaction):
-                return False
-            return await self._bind_locale_check(interaction)
-
-        tree.interaction_check = MethodType(locale_binding_check, tree)
-
-    async def _bind_locale_check(self, interaction: discord.Interaction) -> bool:
+    def _schedule_event(self, coro, event_name, *args, **kwargs):
         service = self._translation_service
         if service is None:
-            return True
+            return super()._schedule_event(coro, event_name, *args, **kwargs)
 
-        locale = self.resolve_locale(interaction)
-        self.push_locale(locale)
-        return True
+        resolution = self._infer_locale_from_event(*args, *kwargs.values())
+        locale = resolution.resolved()
+
+        if service.current_locale() is not None:
+            return super()._schedule_event(coro, event_name, *args, **kwargs)
+
+        async def run_with_locale(*a, **kw):
+            with service.use_locale(locale):
+                return await coro(*a, **kw)
+
+        return super()._schedule_event(run_with_locale, event_name, *args, **kwargs)
 
     def get_guild_locale(self, guild: Any) -> str | None:
         guild_id = extract_guild_id(guild)
