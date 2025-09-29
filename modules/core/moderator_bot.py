@@ -222,11 +222,23 @@ class ModeratorBot(commands.Bot):
     ) -> Any:
         translator = self._translator
         if translator is None:
+            logging.warning(
+                "Translation requested but translator has not been initialised"
+            )
             return fallback if fallback is not None else key
         if locale is None:
+            logging.warning(
+                "Translation requested but no locale was provided; using current context locale"
+                )
             locale = _current_locale.get()
         else:
             locale = self._normalise_locale(locale)
+            if locale is None:
+                logging.warning(
+                    "Translation requested but provided locale %r could not be normalised; using current context locale",
+                    locale,
+                )
+                locale = _current_locale.get()
         return translator.translate(
             key,
             locale=locale,
