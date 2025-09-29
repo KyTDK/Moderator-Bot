@@ -6,7 +6,7 @@ import logging
 from collections.abc import Mapping
 from copy import deepcopy
 from pathlib import Path
-from threading import RLock
+from threading import Lock
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class LocaleRepository:
         self._default_locale = default_locale
         self._fallback_locale = fallback_locale or default_locale
         self._cache: dict[str, dict[str, Any]] = {}
-        self._lock = RLock()
+        self._lock = Lock()
         self._loaded = False
 
     @property
@@ -57,11 +57,6 @@ class LocaleRepository:
 
     async def reload_async(self) -> None:
         await asyncio.to_thread(self.reload)
-
-    refresh = reload
-
-    async def refresh_async(self) -> None:
-        await self.reload_async()
 
     def list_locales(self) -> list[str]:
         self.ensure_loaded()

@@ -68,7 +68,9 @@ class Translator:
             if value is not None:
                 if code != chain[0]:
                     logger.info("Translation for key '%s' satisfied by locale '%s'", key, code)
-                return self._format_value(value, placeholders)
+                if isinstance(value, str):
+                    return self._apply_format(value, placeholders)
+                return deepcopy(value)
 
         if fallback is not None:
             logger.warning(
@@ -88,15 +90,6 @@ class Translator:
         """Return a deep copy of the cached dictionary for *locale*."""
 
         return self._repository.get_locale_snapshot(locale)
-
-    def _format_value(self, value: Any, placeholders: Mapping[str, Any]) -> Any:
-        if isinstance(value, str):
-            return self._apply_format(value, placeholders)
-        if isinstance(value, Mapping):
-            return {key: self._format_value(val, placeholders) for key, val in value.items()}
-        if isinstance(value, list):
-            return [self._format_value(item, placeholders) for item in value]
-        return deepcopy(value)
 
     @staticmethod
     def _apply_format(template: str, placeholders: Mapping[str, Any]) -> str:

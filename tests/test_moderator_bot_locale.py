@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import json
-import asyncio
 import os
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
+from discord.ext import commands
 
 os.environ.setdefault(
     "FERNET_SECRET_KEY", "DeJ3sXDDTTbikeRSJzRgg8r_Ch61_NbE8D3LWnLOJO4="
@@ -168,6 +169,60 @@ def test_translate_defaults_without_context(bot: ModeratorBot) -> None:
     result = bot.translate("bot.welcome.button_label")
 
     assert result == "Open Dashboard"
+
+
+def test_use_locale_context_manager(bot: ModeratorBot) -> None:
+    with bot.use_locale("es"):
+        result = bot.translate("bot.welcome.button_label")
+
+    assert result == "Abrir Panel de control"
+    assert bot.translate("bot.welcome.button_label") == "Open Dashboard"
+
+
+def test_push_and_reset_locale(bot: ModeratorBot) -> None:
+    token = bot.push_locale("fr")
+    try:
+        assert bot.current_locale() == "fr-FR"
+        assert bot.translate("bot.welcome.button_label") == "Ouvrir le tableau de bord"
+    finally:
+        bot.reset_locale(token)
+
+    assert bot.current_locale() is None
+
+
+def test_dispatch_binds_locale_for_command_handlers(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    guild = DummyGuild(id=654, preferred_locale="es-ES")
+    ctx = DummyContext(guild=guild)
+
+    async def fake_get_settings(guild_id: int, key: str) -> str | None:
+        assert guild_id == guild.id
+        assert key == "locale"
+        return None
+
+    async def fake_get_guild_locale(guild_id: int) -> str | None:
+        assert guild_id == guild.id
+        return "es-ES"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(guild.id))
+
+    captured: list[str] = []
+
+    def fake_super_dispatch(self: ModeratorBot, event_name: str, *args: Any, **kwargs: Any) -> None:
+        assert event_name == "command"
+        captured.append(self.translate("bot.welcome.button_label"))
+
+    monkeypatch.setattr(commands.Bot, "dispatch", fake_super_dispatch)
+
+    bot.dispatch("command", ctx)
+
+    assert captured == ["Abrir Panel de control"]
+    assert bot.current_locale() is None
+    assert bot.translate("bot.welcome.button_label") == "Open Dashboard"
 
 
 def test_preload_guild_locale_cache(bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -386,6 +441,44 @@ def test_infer_locale_falls_back_to_stored_when_available(
     assert resolution.override is None
     assert resolution.stored == "pt-BR"
     assert resolution.resolved() == "pt-BR"
+
+
+def test_get_guild_locale_returns_override(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def fake_get_settings(guild_id: int, key: str) -> str:
+        assert guild_id == 999
+        assert key == "locale"
+        return "es-ES"
+
+    async def fake_get_guild_locale(_: int) -> str | None:
+        return "fr-FR"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(999))
+
+    assert bot.get_guild_locale(999) == "es-ES"
+
+
+def test_get_guild_locale_falls_back_to_stored(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def fake_get_settings(guild_id: int, key: str) -> str | None:
+        assert guild_id == 1000
+        assert key == "locale"
+        return None
+
+    async def fake_get_guild_locale(_: int) -> str | None:
+        return "pt-BR"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(1000))
+
+    assert bot.get_guild_locale(1000) == "pt-BR"
 
 @pytest.mark.parametrize("candidate", ["fr-FR", "vi-VN"])
 def test_locale_setting_validator_accepts_supported_locale(candidate: str) -> None:

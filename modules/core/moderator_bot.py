@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
+from contextlib import AbstractContextManager
+from contextvars import Token
 from typing import Any, Optional
 
 import discord
@@ -13,7 +15,7 @@ from modules.utils import mysql
 from modules.i18n import LocaleRepository, Translator
 from modules.i18n.discord_translator import DiscordAppCommandTranslator
 from modules.i18n.config import resolve_locales_root
-from modules.i18n.guild_cache import GuildLocaleCache
+from modules.i18n.guild_cache import GuildLocaleCache, extract_guild_id
 from modules.i18n.locale_utils import normalise_locale
 from modules.i18n.service import TranslationService
 from modules.i18n.resolution import LocaleResolver, LocaleResolution
@@ -93,15 +95,21 @@ class ModeratorBot(commands.Bot):
     def _initialise_i18n(self) -> None:
         default_locale = os.getenv("I18N_DEFAULT_LOCALE", "en")
         fallback_locale = os.getenv("I18N_FALLBACK_LOCALE") or default_locale
-        configured_root = os.getenv("I18N_LOCALES_DIR") or os.getenv("LOCALES_DIR")
+
+        configured_root = os.getenv("I18N_LOCALES_DIR")
+        legacy_root = os.getenv("LOCALES_DIR")
+        if not configured_root and legacy_root:
+            _logger.warning(
+                "Environment variable LOCALES_DIR is deprecated; please migrate to "
+                "I18N_LOCALES_DIR. Using legacy value for now.",
+            )
+            configured_root = legacy_root
 
         _logger.warning(
-            "Initialising i18n with env defaults: I18N_DEFAULT_LOCALE=%r, "
-            "I18N_FALLBACK_LOCALE=%r, I18N_LOCALES_DIR=%r, LOCALES_DIR=%r",
+            "Initialising i18n (default=%r, fallback=%r, locales_dir=%r)",
             os.getenv("I18N_DEFAULT_LOCALE"),
             os.getenv("I18N_FALLBACK_LOCALE"),
-            os.getenv("I18N_LOCALES_DIR"),
-            os.getenv("LOCALES_DIR"),
+            configured_root,
         )
 
         repo_root = Path(__file__).resolve().parents[2]
@@ -182,14 +190,15 @@ class ModeratorBot(commands.Bot):
 
     def dispatch(self, event_name: str, /, *args: Any, **kwargs: Any) -> None:
         service = self._translation_service
+        if service is None:
+            super().dispatch(event_name, *args, **kwargs)
+            return
+
         resolution = self._infer_locale_from_event(*args, *kwargs.values())
         locale = resolution.resolved()
-        token = service.push_locale(locale) if service else None
-        try:
+
+        with service.use_locale(locale):
             super().dispatch(event_name, *args, **kwargs)
-        finally:
-            if service and token is not None:
-                service.reset_locale(token)
 
     def translate(
         self,
@@ -212,6 +221,24 @@ class ModeratorBot(commands.Bot):
             fallback=fallback,
         )
 
+    @property
+    def translation_service(self) -> TranslationService:
+        if self._translation_service is None:
+            raise RuntimeError("Translation service has not been initialised")
+        return self._translation_service
+
+    def push_locale(self, locale: Any | None) -> Token[str | None]:
+        return self.translation_service.push_locale(locale)
+
+    def reset_locale(self, token: Token[str | None]) -> None:
+        self.translation_service.reset_locale(token)
+
+    def use_locale(self, locale: Any | None) -> AbstractContextManager[None]:
+        return self.translation_service.use_locale(locale)
+
+    def current_locale(self) -> str | None:
+        return self.translation_service.current_locale()
+
     def infer_locale(self, *candidates: Any) -> LocaleResolution:
         """Infer the locale for the provided *candidates*."""
 
@@ -221,6 +248,22 @@ class ModeratorBot(commands.Bot):
         """Convenience wrapper returning the resolved locale string."""
 
         return self.infer_locale(*candidates).resolved()
+
+    def get_guild_locale(self, guild: Any) -> str | None:
+        guild_id = extract_guild_id(guild)
+        if guild_id is None:
+            try:
+                guild_id = int(guild)  # type: ignore[arg-type]
+            except (TypeError, ValueError):
+                guild_id = None
+        if guild_id is None:
+            raise ValueError("Unable to determine guild ID from candidate")
+
+        override = self._guild_locales.get_override(guild_id)
+        if override:
+            return override
+
+        return self._guild_locales.get(guild_id)
 
     def _infer_locale_from_event(self, *candidates: Any) -> LocaleResolution:
         """Resolve locales for arbitrary event candidates."""
