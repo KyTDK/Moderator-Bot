@@ -50,7 +50,11 @@ def resolve_locales_root(configured_root: str | None, repo_root: Path) -> tuple[
             return candidate, bool(configured_root) and candidate != raw.resolve()
 
     fallback = unique_candidates[0]
-    logger.info("Falling back to locales root %s (configured missing=%s)", fallback, bool(configured_root))
+    logger.warning(
+        "Falling back to locales root %s (configured missing=%s)",
+        fallback,
+        bool(configured_root),
+    )
     return fallback, bool(configured_root)
 
 
