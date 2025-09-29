@@ -14,10 +14,19 @@ class AcceleratedCog(commands.Cog):
 
     accelerated_group = app_commands.Group(
         name="accelerated",
-        description="Manage your Accelerated (Premium) subscription.",
+        description=app_commands.locale_str(
+            "Manage your Accelerated (Premium) subscription.",
+            key="cogs.accelerated.meta.group_description",
+        ),
     )
 
-    @accelerated_group.command(name="status")
+    @accelerated_group.command(
+        name="status",
+        description=app_commands.locale_str(
+            "Check if you currently have an Accelerated subscription.",
+            key="cogs.accelerated.meta.status.description",
+        ),
+    )
     async def status(self, interaction: Interaction):
         """Check if you currently have an Accelerated subscription."""
         await interaction.response.defer(ephemeral=True, thinking=True)
@@ -102,7 +111,13 @@ class AcceleratedCog(commands.Cog):
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @accelerated_group.command(name="subscribe")
+    @accelerated_group.command(
+        name="subscribe",
+        description=app_commands.locale_str(
+            "Generate your unique PayPal subscription link.",
+            key="cogs.accelerated.meta.subscribe.description",
+        ),
+    )
     async def subscribe(self, interaction: Interaction):
         """Generate your unique PayPal subscription link."""
         user_id = interaction.user.id
@@ -135,7 +150,13 @@ class AcceleratedCog(commands.Cog):
 
         await interaction.followup.send(embed=embed, view=view, ephemeral=True)
 
-    @accelerated_group.command(name="perks")
+    @accelerated_group.command(
+        name="perks",
+        description=app_commands.locale_str(
+            "Show the benefits of Accelerated subscription.",
+            key="cogs.accelerated.meta.perks.description",
+        ),
+    )
     async def perks(self, interaction: Interaction):
         """Show the benefits of Accelerated subscription."""
         texts = self.bot.translate("cogs.accelerated.perks")
@@ -146,7 +167,13 @@ class AcceleratedCog(commands.Cog):
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @accelerated_group.command(name="cancel")
+    @accelerated_group.command(
+        name="cancel",
+        description=app_commands.locale_str(
+            "Explain how to cancel your subscription.",
+            key="cogs.accelerated.meta.cancel.description",
+        ),
+    )
     async def cancel(self, interaction: Interaction):
         """Explain how to cancel your subscription."""
         message = self.bot.translate("cogs.accelerated.cancel.message")

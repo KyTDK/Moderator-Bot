@@ -1,6 +1,7 @@
 # Localization Progress
 
 ## Completed
+- [x] cogs/accelerated.py — Localized slash command group and command descriptions for premium management.
 - [x] modules/utils/api.py — Added a structured validation error for OpenAI API keys with locale-backed messaging.
 - [x] cogs/api_pool.py — Localized API key validation responses using the new translator-aware error details.
 - [x] cogs/nsfw.py — Moved slash-command metadata and category choices into locale-driven strings.
@@ -14,7 +15,6 @@
 - [ ] cogs/scam_detection.py — Multiple command descriptions and parameter labels remain hard-coded.
 - [ ] cogs/monitoring.py — Slash command descriptions and parameter labels require localization.
 - [ ] cogs/captcha/cog.py — Slash command metadata still needs to be moved into locale files.
-- [ ] cogs/accelerated.py — Slash group description is hard-coded.
 - [ ] cogs/banned_urls.py — Command metadata remains hard-coded.
 - [ ] cogs/debug.py — Stats command description is not localized.
 - [ ] cogs/autonomous_moderation/auto_commands.py — Command descriptions and parameter labels require localization.
