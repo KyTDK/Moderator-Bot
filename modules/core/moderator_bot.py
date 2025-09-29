@@ -90,10 +90,80 @@ class ModeratorBot(commands.Bot):
     def _initialise_i18n(self) -> None:
         default_locale = os.getenv("I18N_DEFAULT_LOCALE", "en")
         fallback_locale = os.getenv("I18N_FALLBACK_LOCALE") or default_locale
-        locales_override = os.getenv("I18N_LOCALES_DIR")
+        configured_root = os.getenv("I18N_LOCALES_DIR") or os.getenv("LOCALES_DIR")
 
-        base_root = locales_override or os.getenv("LOCALES_DIR") or "locales"
-        locales_root = Path(base_root).resolve()
+        repo_root = Path(__file__).resolve().parents[2]
+        candidate_paths: dict[Path, str] = {}
+
+        def register_candidate(path: Path, source: str) -> None:
+            resolved = path.expanduser()
+            if resolved in candidate_paths:
+                return
+            candidate_paths[resolved] = source
+
+        if configured_root:
+            register_candidate(Path(configured_root), "configured")
+        else:
+            register_candidate(Path("locales"), "default")
+
+        # When a relative path is provided we try both the current working
+        # directory and the repository root so translations work regardless of
+        # how the bot is launched.
+        additional_candidates: list[tuple[Path, str]] = []
+        for base_path, source in list(candidate_paths.items()):
+            if base_path.is_absolute():
+                continue
+            additional_candidates.append((Path.cwd() / base_path, f"{source}:cwd"))
+            additional_candidates.append((repo_root / base_path, f"{source}:repo"))
+
+        for path, source in additional_candidates:
+            register_candidate(path, source)
+
+        # Always register the locales bundled with the repository as a final
+        # fallback so translations remain available even if configuration is
+        # misconfigured or the bot is launched from an unexpected directory.
+        register_candidate(repo_root / "locales", "bundled-default")
+
+        locales_root: Path | None = None
+        selected_source: str | None = None
+        for candidate, source in candidate_paths.items():
+            resolved = candidate.resolve()
+            if resolved.exists():
+                locales_root = resolved
+                selected_source = source
+                break
+
+        if locales_root is None:
+            # ``Path.resolve`` with ``strict=False`` (the default) does not raise
+            # even if the directory is missing, so we can still report the path
+            # we attempted to use in the warning below.
+            first_candidate = next(iter(candidate_paths))
+            locales_root = first_candidate.resolve()
+            _logger.warning(
+                "Locales directory %s does not exist; translations will fall back to keys",
+                locales_root,
+            )
+        elif configured_root:
+            configured_path = Path(configured_root).expanduser()
+            configured_resolved = (
+                (Path.cwd() / configured_path).resolve()
+                if not configured_path.is_absolute()
+                else configured_path.resolve()
+            )
+            if locales_root != configured_resolved:
+                _logger.warning(
+                    "Configured locales directory %s not found; using %s instead",
+                    configured_resolved,
+                    locales_root,
+                )
+        elif selected_source and (
+            selected_source.endswith(":repo") or selected_source == "bundled-default"
+        ):
+            _logger.info(
+                "Locales directory %s not found relative to CWD; using bundled path %s",
+                next(iter(candidate_paths)).resolve(),
+                locales_root,
+            )
 
         _logger.info(
             "Initialising locale repository (root=%s, default=%s, fallback=%s)",

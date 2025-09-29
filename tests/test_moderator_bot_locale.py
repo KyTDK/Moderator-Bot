@@ -163,3 +163,24 @@ def test_locale_setting_validator_rejects_alias_locales() -> None:
 
 def test_locale_setting_choices_list_supported_locales() -> None:
     assert SETTINGS_SCHEMA["locale"].choices == list_supported_locales()
+
+
+def test_initialises_with_bundled_locales_when_config_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("I18N_LOCALES_DIR", "missing_locales")
+
+    bot = ModeratorBot(
+        instance_id="test",
+        heartbeat_seconds=60,
+        instance_heartbeat_seconds=5,
+        log_cog_loads=False,
+        total_shards=1,
+    )
+
+    try:
+        expected_root = Path(__file__).resolve().parents[1] / "locales"
+        assert bot.locale_repository.locales_root == expected_root.resolve()
+    finally:
+        mysql.remove_settings_listener(bot._locale_settings_listener)
+        monkeypatch.delenv("I18N_LOCALES_DIR", raising=False)
