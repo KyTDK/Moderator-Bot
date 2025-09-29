@@ -1,6 +1,21 @@
 ﻿{
   "cogs": {
     "banned_urls": {
+      "meta": {
+        "group_description": "Banned URLs management commands.",
+        "add": {
+          "description": "Add a URL or domain to the banned list."
+        },
+        "remove": {
+          "description": "Remove a URL or domain from the banned list."
+        },
+        "list": {
+          "description": "List all banned URLs."
+        },
+        "clear": {
+          "description": "Clear all banned URLs."
+        }
+      },
       "limit_reached": "Je hebt de limiet van {limit} verboden URL's voor deze server bereikt.\nGebruik `/bannedurls remove` of `/bannedurls clear` om ruimte te maken.",
       "add": {
         "duplicate": "`{url}` is al verboden.",
