@@ -92,8 +92,24 @@ class ModeratorBot(commands.Bot):
         fallback_locale = os.getenv("I18N_FALLBACK_LOCALE") or default_locale
         configured_root = os.getenv("I18N_LOCALES_DIR") or os.getenv("LOCALES_DIR")
 
+        _logger.debug(
+            "Initialising i18n with env defaults: I18N_DEFAULT_LOCALE=%r, "
+            "I18N_FALLBACK_LOCALE=%r, I18N_LOCALES_DIR=%r, LOCALES_DIR=%r",
+            os.getenv("I18N_DEFAULT_LOCALE"),
+            os.getenv("I18N_FALLBACK_LOCALE"),
+            os.getenv("I18N_LOCALES_DIR"),
+            os.getenv("LOCALES_DIR"),
+        )
+
         repo_root = Path(__file__).resolve().parents[2]
         locales_root, missing_configured = resolve_locales_root(configured_root, repo_root)
+
+        _logger.debug(
+            "Resolved locales root: repo_root=%s -> locales_root=%s (configured=%s)",
+            repo_root,
+            locales_root,
+            configured_root,
+        )
 
         if configured_root and missing_configured:
             _logger.warning(
@@ -121,10 +137,23 @@ class ModeratorBot(commands.Bot):
             fallback_locale=fallback_locale,
         )
 
+        _logger.debug("Ensuring locale repository is loaded")
         self._locale_repository.ensure_loaded()
+        try:
+            available_locales = self._locale_repository.list_locales()
+        except Exception:  # pragma: no cover - defensive logging
+            _logger.exception("Failed to list locales after loading repository")
+        else:
+            _logger.debug("Locale repository ready with locales: %s", available_locales)
 
         self._translator = Translator(self._locale_repository)
+        _logger.debug(
+            "Translator initialised (default=%s, fallback=%s)",
+            self._translator.default_locale,
+            self._translator.fallback_locale,
+        )
         self._translation_service = TranslationService(self._translator)
+        _logger.debug("Translation service ready; installing Discord translator")
         self.tree.set_translator(DiscordAppCommandTranslator(self._translation_service))
 
     @property
@@ -154,10 +183,12 @@ class ModeratorBot(commands.Bot):
         locale = self._guild_locales.resolve_from_candidates((*args, *kwargs.values()))
         token = service.push_locale(locale) if service else None
         try:
+            _logger.debug("Dispatching event '%s' with locale=%s", event_name, locale)
             super().dispatch(event_name, *args, **kwargs)
         finally:
             if service and token is not None:
                 service.reset_locale(token)
+                _logger.debug("Locale context reset after dispatch (event=%s)", event_name)
 
     def translate(
         self,
@@ -173,6 +204,13 @@ class ModeratorBot(commands.Bot):
                 "Translation requested but translator has not been initialised"
             )
             return fallback if fallback is not None else key
+        _logger.debug(
+            "translate called (key=%s, locale=%s, placeholders=%s, fallback=%s)",
+            key,
+            locale,
+            placeholders,
+            fallback,
+        )
         return service.translate(
             key,
             locale=locale,
@@ -194,10 +232,12 @@ class ModeratorBot(commands.Bot):
         locale = self._guild_locales.resolve(ctx)
         token = service.push_locale(locale) if service else None
         try:
+            _logger.debug("Invoking command with locale=%s", locale)
             await super().invoke(ctx)
         finally:
             if service and token is not None:
                 service.reset_locale(token)
+                _logger.debug("Locale context reset after command invocation")
 
     def resolve_locale_for_interaction(
         self, interaction: discord.Interaction

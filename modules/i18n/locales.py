@@ -42,9 +42,13 @@ class LocaleRepository:
 
     def ensure_loaded(self) -> None:
         if not self._loaded:
+            logger.debug("LocaleRepository.ensure_loaded triggering reload")
             self.reload()
+        else:
+            logger.debug("LocaleRepository.ensure_loaded found cache already loaded")
 
     def reload(self) -> None:
+        logger.debug("Reloading locale repository from disk (root=%s)", self._locales_root)
         new_cache = self._load_from_disk()
         with self._lock:
             self._cache = new_cache
@@ -73,6 +77,8 @@ class LocaleRepository:
         self.ensure_loaded()
         with self._lock:
             data = self._cache.get(locale)
+        if data is None:
+            logger.debug("Requested locale %s missing from cache", locale)
         return self._resolve_key(data, key)
 
     def _load_from_disk(self) -> dict[str, dict[str, Any]]:
@@ -85,10 +91,17 @@ class LocaleRepository:
         for path in sorted(root.rglob("*.json")):
             if any(part.startswith(".") for part in path.relative_to(root).parts):
                 continue
+            logger.debug("Loading translation file %s", path)
             payload = self._read_json(path)
             if payload is None:
                 continue
             locale = path.stem if path.parent == root else path.relative_to(root).parts[0]
+            logger.debug(
+                "Merging payload for locale %s from file %s (keys=%d)",
+                locale,
+                path,
+                len(payload),
+            )
             cache[locale] = self._deep_merge(cache.get(locale, {}), payload)
         return cache
 
@@ -104,6 +117,7 @@ class LocaleRepository:
             logger.error("Failed to parse translation file %s: %s", path, exc)
             return None
         if isinstance(data, Mapping):
+            logger.debug("Successfully parsed translation file %s", path)
             return dict(data)
         logger.warning("Ignoring translation file %s with non-object root", path)
         return None
@@ -127,6 +141,12 @@ class LocaleRepository:
             if isinstance(cursor, Mapping) and part in cursor:
                 cursor = cursor[part]
             else:
+                logger.debug(
+                    "Key %s missing while traversing part %s (locale data available=%s)",
+                    key,
+                    part,
+                    cursor is not None,
+                )
                 return None
         return cursor
 
