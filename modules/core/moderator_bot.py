@@ -227,10 +227,11 @@ class ModeratorBot(commands.Bot):
             )
             return fallback if fallback is not None else key
         if locale is None:
-            logging.warning(
-                "Translation requested but no locale was provided; using current context locale"
-                )
             locale = _current_locale.get()
+            logging.warning(
+                "Translation requested but no locale was provided; using current context locale %r",
+                locale,
+                )
         else:
             locale = self._normalise_locale(locale)
             if locale is None:
