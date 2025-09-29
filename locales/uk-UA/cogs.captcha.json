@@ -1,6 +1,16 @@
 ﻿{
   "cogs": {
     "captcha": {
+      "meta": {
+        "group_description": "Manage captcha verification.",
+        "sync": {
+          "description": "Resend the captcha verification embed."
+        },
+        "request": {
+          "description": "Send a captcha verification request to a member.",
+          "member": "The member who should complete verification"
+        }
+      },
       "common": {
         "guild_only": "Ця команда може використовуватися тільки на сервері.",
         "wrong_guild": "Будь ласка, виберіть учасника з цього сервера.",
@@ -29,6 +39,63 @@
       },
       "timeout": {
         "failure_reason": "Час на перевірку captcha вичерпаний."
+      },
+      "base": {
+        "duration": {
+          "few_minutes": "a few minutes",
+          "joiner": ", ",
+          "seconds": {
+            "one": "{count} second",
+            "other": "{count} seconds"
+          },
+          "minutes": {
+            "one": "{count} minute",
+            "other": "{count} minutes"
+          },
+          "hours": {
+            "one": "{count} hour",
+            "other": "{count} hours"
+          },
+          "days": {
+            "one": "{count} day",
+            "other": "{count} days"
+          }
+        },
+        "description": {
+          "greeting": "Hi {member}! To finish joining **{guild}**, ",
+          "grace": "please {instruction} within **{grace}**.",
+          "no_grace": "please {instruction} when you're ready.",
+          "instruction_default": "complete the captcha",
+          "attempts": {
+            "one": " You have **{count}** attempt.",
+            "other": " You have **{count}** attempts."
+          }
+        },
+        "embed": {
+          "title": "Captcha Verification Required",
+          "footer": "Powered by Moderator Bot"
+        },
+        "button": {
+          "label": "Verify now"
+        }
+      },
+      "delivery": {
+        "dm": {
+          "button_label": "Click here to verify"
+        },
+        "embed": {
+          "location": "visit {channel} and complete the captcha",
+          "help_title": "Need help?",
+          "help_value": "Click the button below to open the verification page.",
+          "button_label": "Open verification page"
+        }
+      },
+      "embed_message": {
+        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
+        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
+        "title": "Complete Captcha Verification",
+        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
+        "button_label": "Verify now"
       }
     }
   }
