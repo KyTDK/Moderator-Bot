@@ -396,7 +396,9 @@ class VoiceModeratorCog(commands.Cog):
 
         if not getattr(report, "violations", None):
             if aimod_debug and log_channel:
-                embed = am_helpers.build_no_violations_embed(len(utterances), "vc")
+                embed = am_helpers.build_no_violations_embed(
+                    self.bot, guild, len(utterances), "vc"
+                )
                 await mod_logging.log_to_channel(embed, log_channel, self.bot)
             await asyncio.sleep(idle_delta.total_seconds())
             return
@@ -434,7 +436,7 @@ class VoiceModeratorCog(commands.Cog):
             )
 
             out_reason, out_rule = am_helpers.summarize_reason_rule(
-                data.get("reasons"), data.get("rules")
+                self.bot, guild, data.get("reasons"), data.get("rules")
             )
 
             await am_helpers.apply_actions_and_log(

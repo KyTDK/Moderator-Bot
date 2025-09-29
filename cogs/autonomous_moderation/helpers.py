@@ -4,8 +4,11 @@ from datetime import timedelta
 from modules.utils.discord_utils import safe_get_member
 from modules.utils import mod_logging
 from modules.moderation import strike
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, TYPE_CHECKING, Any
 from modules.ai.token_utils import estimate_tokens as _estimate_tokens
+
+if TYPE_CHECKING:
+    from modules.core.moderator_bot import ModeratorBot
 
 IMAGE_EXT = re.compile(r"\.(?:png|jpe?g|webp|bmp|tiff?)$", re.I)
 GIF_EXT = re.compile(r"\.(?:gif|apng)$", re.I)
@@ -99,9 +102,30 @@ async def build_transcript(
     transcript = "\n".join(lines)
     return transcript, total_tokens, trimmed_batch
 
+HELPERS_BASE = "cogs.autonomous_moderation.helpers"
+
+
+def _translate_helper(
+    bot: "ModeratorBot",
+    guild: discord.Guild | None,
+    suffix: str,
+    *,
+    placeholders: dict[str, Any] | None = None,
+    fallback: str,
+) -> str:
+    locale = bot._guild_locales.resolve(guild) if guild else None
+    key = f"{HELPERS_BASE}.{suffix}" if suffix else HELPERS_BASE
+    return bot.translate(
+        key,
+        locale=locale,
+        placeholders=placeholders,
+        fallback=fallback,
+    )
+
+
 async def apply_actions_and_log(
     *,
-    bot,
+    bot: "ModeratorBot",
     member: discord.Member,
     configured_actions: list[str],
     reason: str,
@@ -129,13 +153,39 @@ async def apply_actions_and_log(
         violation_cache[member.id].append((rule, ", ".join(configured_actions)))
 
     # Build embed
+    guild = member.guild if hasattr(member, "guild") else None
+    user_display = member.mention if member else getattr(member, "id", "Unknown")
+    joined_actions = ", ".join(configured_actions)
+    actions_none = _translate_helper(
+        bot,
+        guild,
+        "embed.fields.applied_actions.none",
+        fallback="None",
+    )
+    actions_display = joined_actions or actions_none
     embed = discord.Embed(
-        title="AI-Flagged Violation",
-        description=(
-            f"User: {member.mention if member else member.id}\n"
-            f"Rule Broken: {rule}\n"
-            f"Reason: {reason}\n"
-            f"Actions: {', '.join(configured_actions)}"
+        title=_translate_helper(
+            bot,
+            guild,
+            "embed.title",
+            fallback="AI-Flagged Violation",
+        ),
+        description=_translate_helper(
+            bot,
+            guild,
+            "embed.description",
+            placeholders={
+                "user": user_display,
+                "rule": rule,
+                "reason": reason,
+                "actions": actions_display,
+            },
+            fallback=(
+                f"User: {user_display}\n"
+                f"Rule Broken: {rule}\n"
+                f"Reason: {reason}\n"
+                f"Actions: {actions_display}"
+            ),
         ),
         colour=discord.Colour.red(),
     )
@@ -143,18 +193,59 @@ async def apply_actions_and_log(
     if aimod_debug:
         if fanout:
             embed.add_field(
-                name="Fan-out",
-                value="Multiple authors detected; applied per-author actions.",
+                name=_translate_helper(
+                    bot,
+                    guild,
+                    "embed.fields.fanout.name",
+                    fallback="Fan-out",
+                ),
+                value=_translate_helper(
+                    bot,
+                    guild,
+                    "embed.fields.fanout.value",
+                    fallback="Multiple authors detected; applied per-author actions.",
+                ),
                 inline=False,
             )
         try:
-            ai_decision = ", ".join(ai_actions) if ai_actions else "None"
+            ai_decision_value = ", ".join(ai_actions) if ai_actions else ""
         except Exception:
-            ai_decision = "Unknown"
-        embed.add_field(name="AI Decision", value=ai_decision or "None", inline=False)
+            ai_decision_value = ""
+            ai_decision = _translate_helper(
+                bot,
+                guild,
+                "embed.fields.ai_decision.unknown",
+                fallback="Unknown",
+            )
+        else:
+            ai_decision = (
+                ai_decision_value
+                if ai_decision_value
+                else _translate_helper(
+                    bot,
+                    guild,
+                    "embed.fields.ai_decision.none",
+                    fallback="None",
+                )
+            )
         embed.add_field(
-            name="Applied Actions",
-            value=", ".join(configured_actions) or "None",
+            name=_translate_helper(
+                bot,
+                guild,
+                "embed.fields.ai_decision.name",
+                fallback="AI Decision",
+            ),
+            value=ai_decision,
+            inline=False,
+        )
+        embed.add_field(
+            name=_translate_helper(
+                bot,
+                guild,
+                "embed.fields.applied_actions.name",
+                fallback="Applied Actions",
+            ),
+            value=actions_display,
             inline=False,
         )
 
@@ -165,11 +256,34 @@ async def apply_actions_and_log(
                 return s if len(s) <= n else s[:n] + "…"
 
             flagged_lines = []
+            entry_template = _translate_helper(
+                bot,
+                guild,
+                "embed.fields.flagged_messages.entry",
+                fallback="• ID {id}: {content}",
+            )
+            no_content = _translate_helper(
+                bot,
+                guild,
+                "embed.fields.flagged_messages.no_content",
+                fallback="[no text content]",
+            )
             for m in messages:
-                content = m.content or "[no text content]"
-                flagged_lines.append(f"• ID {m.id}: {_trim(content)}")
+                content = m.content or no_content
+                flagged_lines.append(
+                    entry_template.format(id=m.id, content=_trim(content))
+                )
             flagged_blob = "\n".join(flagged_lines)
-            embed.add_field(name="Flagged Message(s)", value=flagged_blob[:1000], inline=False)
+            embed.add_field(
+                name=_translate_helper(
+                    bot,
+                    guild,
+                    "embed.fields.flagged_messages.name",
+                    fallback="Flagged Message(s)",
+                ),
+                value=flagged_blob[:1000],
+                inline=False,
+            )
 
     log_channel = ai_channel_id or monitor_channel_id
     if log_channel:
@@ -181,16 +295,44 @@ def resolve_configured_actions(settings: dict, ai_actions: list[str], setting_ke
         return ai_actions
     return configured
 
-def build_no_violations_embed(scanned_count: int, mode: str) -> discord.Embed:
+def build_no_violations_embed(
+    bot: "ModeratorBot", guild: discord.Guild | None, scanned_count: int, mode: str
+) -> discord.Embed:
     embed = discord.Embed(
-        title="AI Moderation Scan (Debug)",
-        description=(
-            "No violations were found in the latest scan."
+        title=_translate_helper(
+            bot,
+            guild,
+            "no_violations.title",
+            fallback="AI Moderation Scan (Debug)",
+        ),
+        description=_translate_helper(
+            bot,
+            guild,
+            "no_violations.description",
+            fallback="No violations were found in the latest scan.",
         ),
         colour=discord.Colour.dark_grey(),
     )
-    embed.add_field(name="Scanned Messages", value=str(scanned_count), inline=True)
-    embed.add_field(name="Mode", value=mode, inline=True)
+    embed.add_field(
+        name=_translate_helper(
+            bot,
+            guild,
+            "no_violations.fields.scanned_messages",
+            fallback="Scanned Messages",
+        ),
+        value=str(scanned_count),
+        inline=True,
+    )
+    embed.add_field(
+        name=_translate_helper(
+            bot,
+            guild,
+            "no_violations.fields.mode",
+            fallback="Mode",
+        ),
+        value=mode,
+        inline=True,
+    )
     return embed
 
 async def prepare_report_batch(trigger_msg: discord.Message) -> list[tuple[str, str, discord.Message]]:
@@ -306,7 +448,12 @@ def aggregate_violations(
 
     return aggregated, fanout_authors
 
-def summarize_reason_rule(reasons: list[str] | None, rules: set[str] | list[str] | None) -> tuple[str, str]:
+def summarize_reason_rule(
+    bot: "ModeratorBot",
+    guild: discord.Guild | None,
+    reasons: list[str] | None,
+    rules: set[str] | list[str] | None,
+) -> tuple[str, str]:
     """Create user-facing reason and rule strings from collections.
 
     - Reasons: prefer single entry; otherwise combine with semicolons; default fallback.
@@ -316,17 +463,41 @@ def summarize_reason_rule(reasons: list[str] | None, rules: set[str] | list[str]
     rules_list = list(rules or [])
 
     if not reasons:
-        out_reason = "Violation detected"
+        out_reason = _translate_helper(
+            bot,
+            guild,
+            "summary.reason_default",
+            fallback="Violation detected",
+        )
     elif len(reasons) == 1:
         out_reason = reasons[0]
     else:
-        out_reason = "Multiple violations: " + "; ".join(reasons)
+        joined = "; ".join(reasons)
+        out_reason = _translate_helper(
+            bot,
+            guild,
+            "summary.reason_multiple",
+            placeholders={"reasons": joined},
+            fallback=f"Multiple violations: {joined}",
+        )
 
     if not rules_list:
-        out_rule = "Rule violation"
+        out_rule = _translate_helper(
+            bot,
+            guild,
+            "summary.rule_default",
+            fallback="Rule violation",
+        )
     elif len(rules_list) == 1:
         out_rule = rules_list[0]
     else:
-        out_rule = "Multiple rules: " + ", ".join(rules_list)
+        joined_rules = ", ".join(rules_list)
+        out_rule = _translate_helper(
+            bot,
+            guild,
+            "summary.rule_multiple",
+            placeholders={"rules": joined_rules},
+            fallback=f"Multiple rules: {joined_rules}",
+        )
 
     return out_reason, out_rule
