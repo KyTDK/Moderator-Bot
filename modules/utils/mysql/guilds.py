@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Dict, Optional
 
 from .connection import execute_query
 
@@ -19,6 +19,29 @@ async def get_guild_locale(guild_id: int) -> Optional[str]:
 
     locale = row[0]
     return str(locale) if locale is not None else None
+
+
+async def get_all_guild_locales() -> Dict[int, Optional[str]]:
+    """Return a mapping of guild IDs to their stored locale values."""
+
+    rows, _ = await execute_query(
+        "SELECT guild_id, locale FROM guilds",
+        fetch_all=True,
+    )
+
+    if not rows:
+        return {}
+
+    result: Dict[int, Optional[str]] = {}
+    for guild_id, locale in rows:
+        normalized_locale = str(locale) if locale is not None else None
+        try:
+            result[int(guild_id)] = normalized_locale
+        except (TypeError, ValueError):
+            # Skip rows with malformed guild IDs but continue processing others.
+            continue
+
+    return result
 
 
 async def add_guild(guild_id: int, name: str, owner_id: int, locale: Optional[str]):

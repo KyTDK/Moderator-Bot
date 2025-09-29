@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 from contextlib import contextmanager
-from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, Optional
 
@@ -13,9 +12,9 @@ from discord.ext import commands, tasks
 from modules.post_stats.topgg_poster import start_topgg_poster
 from modules.utils import mysql
 from modules.i18n import LocaleRepository, Translator
-from modules.i18n.locale_utils import SUPPORTED_LOCALE_ALIASES, normalise_locale
-
-_current_locale: ContextVar[str | None] = ContextVar("moderator_bot_locale", default=None)
+from modules.i18n.config import resolve_locales_root
+from modules.i18n.guild_cache import GuildLocaleCache
+from modules.i18n.service import TranslationService
 
 _logger = logging.getLogger(__name__)
 
@@ -65,8 +64,8 @@ class ModeratorBot(commands.Bot):
         self._standby_login_performed = False
         self._locale_repository: LocaleRepository | None = None
         self._translator: Translator | None = None
-        self._guild_locale_overrides: dict[int, str | None] = {}
-        self._guild_locales: dict[int, str | None] = {}
+        self._translation_service: TranslationService | None = None
+        self._guild_locales = GuildLocaleCache()
         self._locale_settings_listener = self._handle_locale_setting_update
         self._initialise_i18n()
         mysql.add_settings_listener(self._locale_settings_listener)
@@ -93,75 +92,18 @@ class ModeratorBot(commands.Bot):
         configured_root = os.getenv("I18N_LOCALES_DIR") or os.getenv("LOCALES_DIR")
 
         repo_root = Path(__file__).resolve().parents[2]
-        candidate_paths: dict[Path, str] = {}
+        locales_root, missing_configured = resolve_locales_root(configured_root, repo_root)
 
-        def register_candidate(path: Path, source: str) -> None:
-            resolved = path.expanduser()
-            if resolved in candidate_paths:
-                return
-            candidate_paths[resolved] = source
-
-        if configured_root:
-            register_candidate(Path(configured_root), "configured")
-        else:
-            register_candidate(Path("locales"), "default")
-
-        # When a relative path is provided we try both the current working
-        # directory and the repository root so translations work regardless of
-        # how the bot is launched.
-        additional_candidates: list[tuple[Path, str]] = []
-        for base_path, source in list(candidate_paths.items()):
-            if base_path.is_absolute():
-                continue
-            additional_candidates.append((Path.cwd() / base_path, f"{source}:cwd"))
-            additional_candidates.append((repo_root / base_path, f"{source}:repo"))
-
-        for path, source in additional_candidates:
-            register_candidate(path, source)
-
-        # Always register the locales bundled with the repository as a final
-        # fallback so translations remain available even if configuration is
-        # misconfigured or the bot is launched from an unexpected directory.
-        register_candidate(repo_root / "locales", "bundled-default")
-
-        locales_root: Path | None = None
-        selected_source: str | None = None
-        for candidate, source in candidate_paths.items():
-            resolved = candidate.resolve()
-            if resolved.exists():
-                locales_root = resolved
-                selected_source = source
-                break
-
-        if locales_root is None:
-            # ``Path.resolve`` with ``strict=False`` (the default) does not raise
-            # even if the directory is missing, so we can still report the path
-            # we attempted to use in the warning below.
-            first_candidate = next(iter(candidate_paths))
-            locales_root = first_candidate.resolve()
+        if configured_root and missing_configured:
             _logger.warning(
-                "Locales directory %s does not exist; translations will fall back to keys",
+                "Configured locales directory %s not found; using %s instead",
+                Path(configured_root).expanduser().resolve(),
                 locales_root,
             )
-        elif configured_root:
-            configured_path = Path(configured_root).expanduser()
-            configured_resolved = (
-                (Path.cwd() / configured_path).resolve()
-                if not configured_path.is_absolute()
-                else configured_path.resolve()
-            )
-            if locales_root != configured_resolved:
-                _logger.warning(
-                    "Configured locales directory %s not found; using %s instead",
-                    configured_resolved,
-                    locales_root,
-                )
-        elif selected_source and (
-            selected_source.endswith(":repo") or selected_source == "bundled-default"
-        ):
-            _logger.info(
-                "Locales directory %s not found relative to CWD; using bundled path %s",
-                next(iter(candidate_paths)).resolve(),
+
+        if not locales_root.exists():
+            _logger.warning(
+                "Locales directory %s does not exist; translations will fall back to keys",
                 locales_root,
             )
 
@@ -181,6 +123,7 @@ class ModeratorBot(commands.Bot):
         self._locale_repository.ensure_loaded()
 
         self._translator = Translator(self._locale_repository)
+        self._translation_service = TranslationService(self._translator)
 
     @property
     def translator(self) -> Translator:
@@ -205,12 +148,14 @@ class ModeratorBot(commands.Bot):
         _logger.info("Translations reloaded from disk")
 
     def dispatch(self, event_name: str, /, *args: Any, **kwargs: Any) -> None:
-        locale = self._infer_locale_from_event(event_name, args, kwargs)
-        token = _current_locale.set(locale)
+        service = self._translation_service
+        locale = self._guild_locales.resolve_from_candidates((*args, *kwargs.values()))
+        token = service.push_locale(locale) if service else None
         try:
             super().dispatch(event_name, *args, **kwargs)
         finally:
-            _current_locale.reset(token)
+            if service and token is not None:
+                service.reset_locale(token)
 
     def translate(
         self,
@@ -220,27 +165,13 @@ class ModeratorBot(commands.Bot):
         placeholders: dict[str, Any] | None = None,
         fallback: str | None = None,
     ) -> Any:
-        translator = self._translator
-        if translator is None:
+        service = self._translation_service
+        if service is None:
             logging.warning(
                 "Translation requested but translator has not been initialised"
             )
             return fallback if fallback is not None else key
-        if locale is None:
-            locale = _current_locale.get()
-            logging.warning(
-                "Translation requested but no locale was provided; using current context locale %r",
-                locale,
-                )
-        else:
-            locale = self._normalise_locale(locale)
-            if locale is None:
-                logging.warning(
-                    "Translation requested but provided locale %r could not be normalised; using current context locale",
-                    locale,
-                )
-                locale = _current_locale.get()
-        return translator.translate(
+        return service.translate(
             key,
             locale=locale,
             placeholders=placeholders,
@@ -249,106 +180,43 @@ class ModeratorBot(commands.Bot):
 
     @contextmanager
     def locale_context(self, locale: str | None):
-        normalized = self._normalise_locale(locale)
-        token = _current_locale.set(normalized)
-        try:
+        service = self._translation_service
+        if service is None:
             yield
-        finally:
-            _current_locale.reset(token)
+            return
+        with service.use_locale(locale):
+            yield
 
     async def invoke(self, ctx: commands.Context[Any]) -> None:  # type: ignore[override]
-        locale = self._resolve_locale_from_candidate(ctx)
-        token = _current_locale.set(locale)
+        service = self._translation_service
+        locale = self._guild_locales.resolve(ctx)
+        token = service.push_locale(locale) if service else None
         try:
             await super().invoke(ctx)
         finally:
-            _current_locale.reset(token)
+            if service and token is not None:
+                service.reset_locale(token)
 
     def resolve_locale_for_interaction(
         self, interaction: discord.Interaction
     ) -> str | None:
         """Return the locale resolved for *interaction* using translation logic."""
 
-        return self._resolve_locale_from_candidate(interaction)
+        return self._guild_locales.resolve(interaction)
 
-    def _infer_locale_from_event(
-        self, _event_name: str, args: tuple[Any, ...], kwargs: dict[str, Any]
-    ) -> str | None:
-        for candidate in (*args, *kwargs.values()):
-            locale = self._resolve_locale_from_candidate(candidate)
-            if locale:
-                return locale
+    async def _preload_guild_locale_cache(self) -> None:
+        """Warm the in-memory guild locale cache from the database."""
 
-        return None
+        try:
+            stored_locales = await mysql.get_all_guild_locales()
+        except Exception:
+            _logger.exception("Failed to preload guild locales from database")
+            return
 
-    def _resolve_locale_from_candidate(self, candidate: Any) -> str | None:
-        if candidate is None:
-            return None
+        if not stored_locales:
+            return
 
-        override = self._get_guild_locale_override_from_candidate(candidate)
-        if override:
-            _logger.debug(
-                "Resolved locale for candidate via override: %s",
-                override,
-            )
-            return override
-
-        stored_locale = self._get_stored_guild_locale_from_candidate(candidate)
-        if stored_locale:
-            _logger.debug(
-                "Resolved locale for candidate via stored cache: %s",
-                stored_locale,
-            )
-            return stored_locale
-
-        return None
-
-    @staticmethod
-    def _extract_guild_id(candidate: Any) -> int | None:
-        guild = getattr(candidate, "guild", None)
-        if guild is not None:
-            guild_id = getattr(guild, "id", None)
-            if guild_id is not None:
-                try:
-                    return int(guild_id)
-                except (TypeError, ValueError):
-                    return None
-        guild_id = getattr(candidate, "guild_id", None)
-        if guild_id is not None:
-            try:
-                return int(guild_id)
-            except (TypeError, ValueError):
-                return None
-        return None
-
-    def _get_guild_locale_override_from_candidate(self, candidate: Any) -> str | None:
-        guild_id = self._extract_guild_id(candidate)
-        if guild_id is None:
-            return None
-        override = self._guild_locale_overrides.get(guild_id)
-        if override:
-            _logger.debug("Loaded guild locale override (guild_id=%s): %s", guild_id, override)
-            return override
-        return None
-
-    def _normalise_locale(self, locale: Any) -> str | None:
-        normalized = normalise_locale(locale)
-        if locale and normalized is None:
-            _logger.debug("Failed to normalise locale %r", locale)
-        elif locale:
-            _logger.debug("Normalised locale %r -> %s", locale, normalized)
-        return normalized
-
-    def _store_guild_locale(self, guild_id: int, locale: Any) -> str | None:
-        normalized = self._normalise_locale(locale)
-        self._guild_locales[guild_id] = normalized
-        _logger.debug(
-            "Stored guild locale (guild_id=%s): input=%r normalized=%s",
-            guild_id,
-            locale,
-            normalized,
-        )
-        return normalized
+        self._guild_locales.preload(stored_locales)
 
     async def _resolve_guild_owner_id(self, guild: discord.Guild) -> int | None:
         owner_id = getattr(guild, "owner_id", None)
@@ -379,15 +247,6 @@ class ModeratorBot(commands.Bot):
 
         return int(fetched_owner_id)
 
-    def _get_stored_guild_locale(self, guild_id: int) -> str | None:
-        return self._guild_locales.get(guild_id)
-
-    def _get_stored_guild_locale_from_candidate(self, candidate: Any) -> str | None:
-        guild_id = self._extract_guild_id(candidate)
-        if guild_id is None:
-            return None
-        return self._get_stored_guild_locale(guild_id)
-
     async def refresh_guild_locale_override(self, guild_id: int) -> None:
         override: Any | None = None
 
@@ -404,28 +263,14 @@ class ModeratorBot(commands.Bot):
                     "Failed to load guild locale fallback for guild %s", guild_id
                 )
 
-        normalized = self._normalise_locale(override)
-        self._guild_locale_overrides[guild_id] = normalized
-        _logger.debug(
-            "Refreshed guild locale override (guild_id=%s): %r -> %s",
-            guild_id,
-            override,
-            normalized,
-        )
+        self._guild_locales.set_override(guild_id, override)
 
     def _handle_locale_setting_update(
         self, guild_id: int, key: str, value: Any
     ) -> None:
         if key != "locale":
             return
-        normalized = self._normalise_locale(value)
-        self._guild_locale_overrides[guild_id] = normalized
-        _logger.debug(
-            "Updated guild locale override via settings (guild_id=%s): %r -> %s",
-            guild_id,
-            value,
-            normalized,
-        )
+        self._guild_locales.set_override(guild_id, value)
 
     def set_shard_assignment(self, shard_assignment: mysql.ShardAssignment) -> None:
         """Attach a shard assignment to the bot (used for standby takeover)."""
@@ -469,6 +314,8 @@ class ModeratorBot(commands.Bot):
         except Exception as exc:
             print(f"[FATAL] MySQL init failed: {exc}")
             raise
+
+        await self._preload_guild_locale_cache()
 
         await mysql.update_instance_heartbeat(self._instance_id)
 
@@ -537,7 +384,7 @@ class ModeratorBot(commands.Bot):
 
     async def on_guild_join(self, guild: discord.Guild) -> None:  # type: ignore[override]
         preferred = getattr(guild, "preferred_locale", None)
-        normalized_locale = self._store_guild_locale(guild.id, preferred)
+        normalized_locale = self._guild_locales.store(guild.id, preferred)
         owner_id = await self._resolve_guild_owner_id(guild)
         if owner_id is None:
             _logger.warning(
@@ -550,8 +397,9 @@ class ModeratorBot(commands.Bot):
         await self.refresh_guild_locale_override(guild.id)
         dash_url = f"https://modbot.neomechanical.com/dashboard/{guild.id}"
 
-        override = self._guild_locale_overrides.get(guild.id)
-        if override and override != _current_locale.get():
+        service = self._translation_service
+        override = self._guild_locales.get_override(guild.id)
+        if service and override and override != service.current_locale():
             with self.locale_context(override):
                 welcome_message = self.translate(
                     "bot.welcome.message",
@@ -591,7 +439,7 @@ class ModeratorBot(commands.Bot):
 
     async def on_guild_remove(self, guild: discord.Guild) -> None:  # type: ignore[override]
         await mysql.remove_guild(guild.id)
-        self._guild_locales.pop(guild.id, None)
+        self._guild_locales.drop(guild.id)
 
     async def _load_extensions(self) -> None:
         try:
