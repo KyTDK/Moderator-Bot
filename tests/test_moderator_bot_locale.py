@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import asyncio
 import os
 import sys
 from pathlib import Path
@@ -77,7 +78,7 @@ def test_interaction_locale_uses_preferred_locale(
 
     asyncio.run(bot.refresh_guild_locale_override(guild.id))
 
-    resolved = bot._guild_locales.resolve(interaction)
+    resolved = bot.resolve_locale(interaction)
 
     assert resolved == "en"
 
@@ -102,7 +103,7 @@ def test_context_uses_guild_preference(
 
     asyncio.run(bot.refresh_guild_locale_override(guild.id))
 
-    resolved = bot._guild_locales.resolve(ctx)
+    resolved = bot.resolve_locale(ctx)
 
     assert resolved == "es-ES"
 
@@ -126,7 +127,7 @@ def test_guild_override_has_priority(
         guild_id=guild.id,
     )
 
-    resolved = bot._guild_locales.resolve(interaction)
+    resolved = bot.resolve_locale(interaction)
 
     assert resolved == "fr-FR"
 
@@ -154,7 +155,7 @@ def test_falls_back_to_guild_table_locale(
         guild_id=guild.id,
     )
 
-    resolved = bot._guild_locales.resolve(interaction)
+    resolved = bot.resolve_locale(interaction)
 
     assert resolved == "pt-BR"
 
@@ -220,6 +221,85 @@ def test_locale_context_manager_restores_previous_locale(bot: ModeratorBot) -> N
         assert service.current_locale() == "fr-FR"
 
     assert service.current_locale() is None
+
+
+def test_settings_override_precedes_interaction_locale(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    guild = DummyGuild(id=654, preferred_locale="en-US")
+    interaction = DummyInteraction(
+        guild=guild,
+        locale="en-US",
+        guild_id=guild.id,
+        user_locale="en-US",
+    )
+
+    async def fake_get_settings(guild_id: int, key: str) -> str:
+        assert guild_id == guild.id
+        assert key == "locale"
+        return "es"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+
+    asyncio.run(bot.refresh_guild_locale_override(guild.id))
+
+    resolution = bot.infer_locale(interaction)
+
+    assert resolution.override == "es-ES"
+    assert resolution.resolved() == "es-ES"
+    assert resolution.source() == "override"
+
+    service = bot._translation_service
+    assert service is not None
+
+    with bot.locale_context(resolution.resolved()):
+        translated = bot.translate("bot.welcome.button_label")
+
+    assert translated == "Abrir Panel de control"
+
+
+def test_infer_locale_detects_from_interaction_when_no_override(bot: ModeratorBot) -> None:
+    guild = DummyGuild(id=987, preferred_locale="en-US")
+    interaction = DummyInteraction(
+        guild=guild,
+        locale="fr",
+        guild_id=guild.id,
+        user_locale="fr",
+    )
+
+    resolution = bot.infer_locale(interaction)
+
+    assert resolution.override is None
+    assert resolution.stored is None
+    assert resolution.detected == "fr-FR"
+    assert resolution.resolved() == "fr-FR"
+
+
+def test_infer_locale_falls_back_to_stored_when_available(
+    bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    guild = DummyGuild(id=3210, preferred_locale="en-US")
+    ctx = DummyContext(guild=guild)
+
+    async def fake_get_settings(guild_id: int, key: str) -> str | None:
+        assert guild_id == guild.id
+        assert key == "locale"
+        return None
+
+    async def fake_get_guild_locale(guild_id: int) -> str | None:
+        assert guild_id == guild.id
+        return "pt-BR"
+
+    monkeypatch.setattr(mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(mysql, "get_guild_locale", fake_get_guild_locale)
+
+    asyncio.run(bot.refresh_guild_locale_override(guild.id))
+
+    resolution = bot.infer_locale(ctx)
+
+    assert resolution.override is None
+    assert resolution.stored == "pt-BR"
+    assert resolution.resolved() == "pt-BR"
 
 @pytest.mark.parametrize("candidate", ["fr-FR", "vi-VN"])
 def test_locale_setting_validator_accepts_supported_locale(candidate: str) -> None:

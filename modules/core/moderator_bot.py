@@ -17,6 +17,7 @@ from modules.i18n.config import resolve_locales_root
 from modules.i18n.guild_cache import GuildLocaleCache
 from modules.i18n.locale_utils import normalise_locale
 from modules.i18n.service import TranslationService
+from modules.i18n.resolution import LocaleResolver, LocaleResolution
 
 _logger = logging.getLogger(__name__)
 
@@ -69,6 +70,7 @@ class ModeratorBot(commands.Bot):
         self._translation_service: TranslationService | None = None
         self._command_tree_translator: DiscordAppCommandTranslator | None = None
         self._guild_locales = GuildLocaleCache()
+        self._locale_resolver = LocaleResolver(self._guild_locales)
         self._locale_settings_listener = self._handle_locale_setting_update
         self._initialise_i18n()
         mysql.add_settings_listener(self._locale_settings_listener)
@@ -181,7 +183,8 @@ class ModeratorBot(commands.Bot):
 
     def dispatch(self, event_name: str, /, *args: Any, **kwargs: Any) -> None:
         service = self._translation_service
-        locale = self._guild_locales.resolve_from_candidates((*args, *kwargs.values()))
+        resolution = self._infer_locale_from_event(*args, *kwargs.values())
+        locale = resolution.resolved()
         token = service.push_locale(locale) if service else None
         try:
             super().dispatch(event_name, *args, **kwargs)
@@ -221,7 +224,8 @@ class ModeratorBot(commands.Bot):
 
     async def invoke(self, ctx: commands.Context[Any]) -> None:  # type: ignore[override]
         service = self._translation_service
-        locale = self._guild_locales.resolve(ctx)
+        resolution = self._infer_locale_from_event(ctx)
+        locale = resolution.resolved()
         token = service.push_locale(locale) if service else None
         try:
             _logger.warning("Invoking command with locale=%s", locale)
@@ -229,6 +233,21 @@ class ModeratorBot(commands.Bot):
         finally:
             if service and token is not None:
                 service.reset_locale(token)
+
+    def infer_locale(self, *candidates: Any) -> LocaleResolution:
+        """Infer the locale for the provided *candidates*."""
+
+        return self._locale_resolver.infer(*candidates)
+
+    def resolve_locale(self, *candidates: Any) -> str | None:
+        """Convenience wrapper returning the resolved locale string."""
+
+        return self.infer_locale(*candidates).resolved()
+
+    def _infer_locale_from_event(self, *candidates: Any) -> LocaleResolution:
+        """Resolve locales for arbitrary event candidates."""
+
+        return self._locale_resolver.infer(*candidates)
 
     async def _preload_guild_locale_cache(self) -> None:
         """Warm the in-memory guild locale cache from the database."""

@@ -217,7 +217,7 @@ class Settings(commands.Cog):
 
         avatar = interaction.client.user.display_avatar.url if interaction.client.user else None
 
-        locale = self.bot._guild_locales.resolve(interaction)
+        locale = self.bot.resolve_locale(interaction)
         translator = self.bot.translator
         if locale:
             locale_display = f"`{locale}`"
