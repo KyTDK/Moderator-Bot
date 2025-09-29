@@ -1,6 +1,15 @@
-﻿{
+{
   "cogs": {
     "debug": {
+      "meta": {
+        "stats": {
+          "description": "Get memory and performance stats",
+          "show_all": "Include allocations from all libraries (not just project)"
+        },
+        "locale": {
+          "description": "Show the locale currently bound to this command context"
+        }
+      },
       "permission_denied": "Δεν έχετε άδεια να χρησιμοποιήσετε αυτήν την εντολή.",
       "no_allocations": "Δεν βρέθηκαν κατανομές που σχετίζονται με το έργο.",
       "embed": {
@@ -15,6 +24,9 @@
         "worker_name": "Ουρές Εργατών",
         "worker_error": "(σφάλμα στη συλλογή μετρήσεων: {error})",
         "footer": "Υπολογιστής Φιλοξενίας: {host} | Python {python_version}"
+      },
+      "locale": {
+        "current": "Current locale: {locale}"
       }
     }
   }
