@@ -94,8 +94,10 @@ def _get_translation_dict(
     if callable(translator):
         value = translator(key)
         if isinstance(value, Mapping):
-            return dict(value)
-    return fallback
+            merged = fallback.copy()
+            merged.update(value)
+            return merged
+    return fallback.copy()
 
 def get_ban_threshold(strike_settings):
     """
