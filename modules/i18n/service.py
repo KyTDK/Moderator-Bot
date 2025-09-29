@@ -118,8 +118,8 @@ class TranslationService:
             self.reset_locale(token)
             logger.debug("Exited locale context manager (locale=%s)", locale)
 
-    def current_locale(self) -> str:
-        value = _current_locale.get() or self._translator.default_locale
+    def current_locale(self) -> str | None:
+        value = _current_locale.get()
         logger.debug("Current locale resolved to %s", value)
         return value
 
