@@ -241,17 +241,36 @@ class Settings(commands.Cog):
         dash_url = f"https://modbot.neomechanical.com/dashboard/{interaction.guild.id}"
         color = discord.Color.blurple()
 
+        texts = self.bot.translate(
+            "cogs.settings.help.view",
+            guild_id=guild_id,
+            placeholders={"dashboard_url": dash_url},
+            fallback={},
+        ) or {}
+
+        button_texts = texts.get("button", {})
+        button_label = button_texts.get("label", "Open Dashboard")
+        button_emoji = button_texts.get("emoji", "🛠️")
+
         view = discord.ui.View()
-        view.add_item(discord.ui.Button(label="Open Dashboard", url=dash_url, emoji="🛠️"))
+        view.add_item(discord.ui.Button(label=button_label, url=dash_url, emoji=button_emoji))
 
         avatar = interaction.client.user.display_avatar.url if interaction.client.user else None
 
         locale = self.bot.resolve_locale(interaction)
         translator = self.bot.translator
+        locale_texts = texts.get("locale", {})
         if locale:
-            locale_display = f"`{locale}`"
+            locale_display = locale_texts.get("current", "`{locale}`").format(locale=locale)
         else:
-            locale_display = f"Using default `{translator.default_locale}`"
+            locale_display = locale_texts.get(
+                "default",
+                "Using default `{default}`",
+            ).format(default=translator.default_locale)
+
+        no_description = texts.get("no_description", "No description.")
+        no_subcommands = texts.get("no_subcommands", "(No subcommands)")
+        no_groups = texts.get("no_groups", "(No command groups found.)")
 
         if command:
             group = next(
@@ -269,24 +288,51 @@ class Settings(commands.Cog):
                 await interaction.followup.send(message, ephemeral=True)
                 return
 
+            group_texts = texts.get("group", {})
+            group_title_template = group_texts.get("title", "/{name}")
+            group_description_template = group_texts.get(
+                "description",
+                "{description}\n\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\nUse `/help {name}` to view this again.",
+            )
+            description_value = group.description or no_description
             embed = discord.Embed(
-                title=f"/{group.name}",
-                description=(group.description or "No description.") +
-                            f"\n\n🛠️ **Dashboard:** [Open Dashboard]({dash_url})\nUse `/help {group.name}` to view this again.",
+                title=group_title_template.format(name=group.name),
+                description=group_description_template.format(
+                    description=description_value,
+                    dashboard_url=dash_url,
+                    name=group.name,
+                ),
                 color=color,
             )
             if avatar:
                 embed.set_thumbnail(url=avatar)
 
-            lines = [f"• `/{sub.qualified_name}` — {sub.description or 'No description'}"
-                    for sub in group.commands] or ["(No subcommands)"]
+            sub_line_template = group_texts.get(
+                "line",
+                "• `/{qualified_name}` — {description}",
+            )
+            lines = [
+                sub_line_template.format(
+                    qualified_name=sub.qualified_name,
+                    description=sub.description or no_description,
+                )
+                for sub in group.commands
+            ] or [no_subcommands]
+
+            group_field_texts = group_texts.get("fields", {})
 
             for i, chunk in enumerate(self._chunk_lines(lines), start=1):
-                name = "Subcommands" if len(lines) <= 12 else f"Subcommands (page {i})"
+                if len(lines) <= 12:
+                    name = group_field_texts.get("single", "Subcommands")
+                else:
+                    name = group_field_texts.get(
+                        "paged",
+                        "Subcommands (page {page})",
+                    ).format(page=i)
                 embed.add_field(name=name, value=chunk, inline=False)
 
             embed.add_field(
-                name="Locale Detection",
+                name=texts.get("fields", {}).get("locale_name", "Locale Detection"),
                 value=locale_display,
                 inline=False,
             )
@@ -294,13 +340,16 @@ class Settings(commands.Cog):
             await interaction.followup.send(embed=embed, ephemeral=True, view=view)
             return
 
+        overview_texts = texts.get("overview", {})
+        overview_description = overview_texts.get(
+            "description",
+            "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\n"
+            "Configure everything faster in the web dashboard.\n"
+            "Or run **`/help <group>`** for detailed subcommands.",
+        ).format(dashboard_url=dash_url)
         embed = discord.Embed(
-            title="Moderator Bot — Help",
-            description=(
-                 f"🛠️ **Dashboard:** [Open Dashboard]({dash_url})\n"
-                "Configure everything faster in the web dashboard.\n"
-                "Or run **`/help <group>`** for detailed subcommands."
-            ),
+            title=overview_texts.get("title", "Moderator Bot — Help"),
+            description=overview_description,
             color=color,
         )
         if avatar:
@@ -309,44 +358,66 @@ class Settings(commands.Cog):
         groups = [cmd for cmd in self.bot.tree.walk_commands() if isinstance(cmd, app_commands.Group)]
         groups.sort(key=lambda c: c.name.lower())
 
+        overview_line_template = overview_texts.get(
+            "line",
+            "• `/{name}` — {description}  _Try:_ `/help {name}`",
+        )
         lines = [
-            f"• `/{g.name}` — {g.description or 'No description'}  _Try:_ `/help {g.name}`"
+            overview_line_template.format(
+                name=g.name,
+                description=g.description or no_description,
+            )
             for g in groups
-        ] or ["(No command groups found.)"]
+        ] or [no_groups]
+
+        fields_texts = texts.get("fields", {})
+        groups_first_name = fields_texts.get("groups_first", "Available Command Groups")
+        groups_paged_template = fields_texts.get(
+            "groups_paged",
+            "Available Command Groups (page {page})",
+        )
 
         for i, chunk in enumerate(self._chunk_lines(lines), start=1):
-            name = "Available Command Groups" if i == 1 else f"Available Command Groups (page {i})"
+            if i == 1:
+                name = groups_first_name
+            else:
+                name = groups_paged_template.format(page=i)
             embed.add_field(name=name, value=chunk, inline=False)
 
         is_accelerated = await mysql.is_accelerated(guild_id=interaction.guild.id)
         if not is_accelerated:
             embed.add_field(
-                name="Speed Up Detection",
-                value="⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
+                name=fields_texts.get("speed_name", "Speed Up Detection"),
+                value=fields_texts.get(
+                    "speed_value",
+                    "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
+                ),
                 inline=False,
             )
 
         embed.add_field(
-            name="Links",
-            value=(
+            name=fields_texts.get("links_name", "Links"),
+            value=fields_texts.get(
+                "links_value",
                 "[Support](https://discord.gg/invite/33VcwjfEXC) • "
                 "[Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • "
                 "[ToS](https://modbot.neomechanical.com/terms-of-service) • "
-                "[Privacy](https://modbot.neomechanical.com/privacy-policy) • "
+                "[Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
             ),
             inline=False,
         )
 
         embed.add_field(
-            name="Trusted Developers",
-            value=(
-                "<@362421457759764481> (fork_prongs - 362421457759764481)"
+            name=fields_texts.get("trusted_name", "Trusted Developers"),
+            value=fields_texts.get(
+                "trusted_value",
+                "<@362421457759764481> (fork_prongs - 362421457759764481)",
             ),
             inline=False,
         )
 
         embed.add_field(
-            name="Locale Detection",
+            name=fields_texts.get("locale_name", "Locale Detection"),
             value=locale_display,
             inline=False,
         )
