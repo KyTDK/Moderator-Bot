@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "לוח המחוונים של בוט המודרטור",
         "description": "[לחץ כאן כדי לפתוח את לוח המחוונים]({url})"
