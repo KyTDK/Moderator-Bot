@@ -184,12 +184,10 @@ class ModeratorBot(commands.Bot):
         locale = self._guild_locales.resolve_from_candidates((*args, *kwargs.values()))
         token = service.push_locale(locale) if service else None
         try:
-            _logger.warning("Dispatching event '%s' with locale=%s", event_name, locale)
             super().dispatch(event_name, *args, **kwargs)
         finally:
             if service and token is not None:
                 service.reset_locale(token)
-                _logger.warning("Locale context reset after dispatch (event=%s)", event_name)
 
     def translate(
         self,
