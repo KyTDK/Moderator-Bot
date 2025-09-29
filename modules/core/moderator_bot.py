@@ -212,14 +212,19 @@ class ModeratorBot(commands.Bot):
         return super()._schedule_event(run_with_locale, event_name, *args, **kwargs)
 
     async def on_interaction(self, interaction: discord.Interaction):
+        token = None
         try:
             locale = self.resolve_locale(interaction)
             if locale:
-                self.push_locale(locale)
+                token = self.push_locale(locale)
         except Exception as e:
             _logger.warning("Failed to bind locale for interaction %s: %s", interaction.id, e)
 
-        await super().on_interaction(interaction)
+        try:
+            await super().on_interaction(interaction)
+        finally:
+            if token is not None:
+                self.reset_locale(token)
 
     def translate(
         self,
