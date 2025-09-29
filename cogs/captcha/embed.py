@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any
 
 import discord
 
@@ -194,19 +195,49 @@ class CaptchaEmbedMixin(CaptchaBaseMixin):
         provider_label: str | None,
         requires_login: bool,
     ) -> tuple[discord.Embed, discord.ui.View]:
-        description = (
-            "Click the button below to verify yourself. Once you pass the captcha, "
-            "you will gain access to the rest of the server."
+        embed_texts: dict[str, Any] = self._translate(
+            "cogs.captcha.embed_message",
+            guild_id=guild.id,
+            fallback={
+                "description": (
+                    "Click the button below to verify yourself. Once you pass the captcha, "
+                    "you will gain access to the rest of the server."
+                ),
+                "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
+                "title": "Complete Captcha Verification",
+                "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
+                "button_label": "Verify now",
+            },
+        ) or {}
+
+        description = embed_texts.get(
+            "description",
+            "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
         )
         if requires_login:
-            description += " You may be asked to log in to the Moderator Bot dashboard first."
+            login_notice = embed_texts.get(
+                "login_notice",
+                "You may be asked to log in to the Moderator Bot dashboard first.",
+            )
+            if login_notice:
+                description = f"{description} {login_notice}" if description else login_notice
+
+        footer_text = embed_texts.get(
+            "footer",
+            "Guild ID: {guild_id} | Powered by Moderator Bot",
+        ).format(guild_id=guild.id)
 
         embed = self._create_embed(
-            title="Complete Captcha Verification",
+            title=embed_texts.get("title", "Complete Captcha Verification"),
             description=description,
-            footer=f"Guild ID: {guild.id} | Powered by Moderator Bot",
+            footer=footer_text,
+            guild_id=guild.id,
         )
-        view = self._build_link_view(self._build_public_verification_url(guild.id))
+        view = self._build_link_view(
+            self._build_public_verification_url(guild.id),
+            label=embed_texts.get("button_label"),
+            guild_id=guild.id,
+        )
         return embed, view
 
     async def _fetch_guild_config(self, guild_id: int) -> CaptchaGuildConfig | None:

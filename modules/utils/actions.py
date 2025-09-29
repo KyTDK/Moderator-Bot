@@ -1,16 +1,24 @@
 from typing import Iterable, Optional, Union
 from discord import app_commands
 
+
+def _choice_label(fallback: str, value: str) -> app_commands.locale_str:
+    return app_commands.locale_str(
+        fallback,
+        key=f"modules.utils.actions.choices.{value}",
+    )
+
+
 ACTIONS = [
-    ("Strike", "strike"),
-    ("Kick", "kick"),
-    ("Ban", "ban"),
-    ("Timeout", "timeout"),
-    ("Delete Message", "delete"),
-    ("Give Role", "give_role"),
-    ("Remove Role", "take_role"),
-    ("Warn User", "warn"),
-    ("Broadcast Message", "broadcast")
+    (_choice_label("Strike", "strike"), "strike"),
+    (_choice_label("Kick", "kick"), "kick"),
+    (_choice_label("Ban", "ban"), "ban"),
+    (_choice_label("Timeout", "timeout"), "timeout"),
+    (_choice_label("Delete Message", "delete"), "delete"),
+    (_choice_label("Give Role", "give_role"), "give_role"),
+    (_choice_label("Remove Role", "take_role"), "take_role"),
+    (_choice_label("Warn User", "warn"), "warn"),
+    (_choice_label("Broadcast Message", "broadcast"), "broadcast"),
 ]
 
 VALID_ACTION_VALUES = [a[1] for a in ACTIONS]
@@ -26,9 +34,10 @@ def action_choices(
     if include:
         for item in include:
             if isinstance(item, str):
-                base.append((item.capitalize(), item))
+                base.append((_choice_label(item.capitalize(), item), item))
             else:
-                base.append(item)
+                label, value = item
+                base.append((_choice_label(label, value), value))
 
     seen = set()
     final = []

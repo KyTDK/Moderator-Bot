@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import discord
 from discord.ext import commands
 
 from .config import DEFAULT_PUBLIC_VERIFY_URL
+
+
+_MISSING = object()
 
 
 class CaptchaBaseMixin:
@@ -31,27 +34,92 @@ class CaptchaBaseMixin:
         text = str(value).strip()
         return text or None
 
-    @staticmethod
-    def _format_duration(delta: timedelta | None) -> str:
+    def _format_duration(
+        self,
+        delta: timedelta | None,
+        *,
+        guild_id: int | None = None,
+    ) -> str:
+        duration_texts: dict[str, Any] = self._translate(
+            "cogs.captcha.base.duration",
+            guild_id=guild_id,
+            fallback={
+                "few_minutes": "a few minutes",
+                "joiner": ", ",
+                "seconds": {
+                    "one": "{count} second",
+                    "other": "{count} seconds",
+                },
+                "minutes": {
+                    "one": "{count} minute",
+                    "other": "{count} minutes",
+                },
+                "hours": {
+                    "one": "{count} hour",
+                    "other": "{count} hours",
+                },
+                "days": {
+                    "one": "{count} day",
+                    "other": "{count} days",
+                },
+            },
+        ) or {}
+
         if not delta:
-            return "a few minutes"
+            return duration_texts.get("few_minutes", "a few minutes")
+
         total_seconds = int(delta.total_seconds())
         if total_seconds < 60:
-            return f"{total_seconds} second{'s' if total_seconds != 1 else ''}"
+            return self._render_quantity(
+                duration_texts.get("seconds", {}),
+                total_seconds,
+                singular="{count} second",
+                plural="{count} seconds",
+            )
+
         minutes, seconds = divmod(total_seconds, 60)
         hours, minutes = divmod(minutes, 60)
         days, hours = divmod(hours, 24)
 
         parts: list[str] = []
         if days:
-            parts.append(f"{days} day{'s' if days != 1 else ''}")
+            parts.append(
+                self._render_quantity(
+                    duration_texts.get("days", {}),
+                    days,
+                    singular="{count} day",
+                    plural="{count} days",
+                )
+            )
         if hours:
-            parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+            parts.append(
+                self._render_quantity(
+                    duration_texts.get("hours", {}),
+                    hours,
+                    singular="{count} hour",
+                    plural="{count} hours",
+                )
+            )
         if minutes:
-            parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+            parts.append(
+                self._render_quantity(
+                    duration_texts.get("minutes", {}),
+                    minutes,
+                    singular="{count} minute",
+                    plural="{count} minutes",
+                )
+            )
         if not parts and seconds:
-            parts.append(f"{seconds} second{'s' if seconds != 1 else ''}")
-        return ", ".join(parts)
+            parts.append(
+                self._render_quantity(
+                    duration_texts.get("seconds", {}),
+                    seconds,
+                    singular="{count} second",
+                    plural="{count} seconds",
+                )
+            )
+        joiner = duration_texts.get("joiner", ", ")
+        return joiner.join(parts) if parts else duration_texts.get("few_minutes", "a few minutes")
 
     def _build_description(
         self,
@@ -61,34 +129,80 @@ class CaptchaBaseMixin:
         *,
         location: str | None = None,
     ) -> str:
+        guild = member.guild
+        guild_id = guild.id if guild else None
         has_grace_period = bool(grace_text and grace_text != "0")
-        instruction = location or "complete the captcha"
-        description = (
-            f"Hi {member.mention}! To finish joining **{member.guild.name}**, "
-            + (
-                f"please {instruction} within **{grace_text}**."
-                if has_grace_period
-                else f"please {instruction} when you're ready."
-            )
+        description_texts: dict[str, Any] = self._translate(
+            "cogs.captcha.base.description",
+            guild_id=guild_id,
+            fallback={
+                "greeting": "Hi {member}! To finish joining **{guild}**, ",
+                "grace": "please {instruction} within **{grace}**.",
+                "no_grace": "please {instruction} when you're ready.",
+                "instruction_default": "complete the captcha",
+                "attempts": {
+                    "one": " You have **{count}** attempt.",
+                    "other": " You have **{count}** attempts.",
+                },
+            },
+        ) or {}
+
+        instruction = location or description_texts.get("instruction_default", "complete the captcha")
+        greeting = description_texts.get(
+            "greeting", "Hi {member}! To finish joining **{guild}**, "
         )
+        description = greeting.format(
+            member=member.mention,
+            guild=guild.name if guild else "the server",
+        )
+
+        grace_template = (
+            description_texts.get("grace")
+            if has_grace_period
+            else description_texts.get("no_grace")
+        )
+        if grace_template:
+            description += grace_template.format(
+                instruction=instruction,
+                grace=grace_text,
+            )
+
         if max_attempts:
-            attempt_label = "attempt" if max_attempts == 1 else "attempts"
-            description += f" You have **{max_attempts}** {attempt_label}."
+            attempts_text = self._render_quantity(
+                description_texts.get("attempts", {}),
+                max_attempts,
+                singular=" You have **{count}** attempt.",
+                plural=" You have **{count}** attempts.",
+            )
+            description += attempts_text
         return description
 
     def _create_embed(
         self,
         *,
         description: str,
-        title: str = "Captcha Verification Required",
-        footer: str | None = "Powered by Moderator Bot",
+        title: str | None = None,
+        footer: str | None | object = _MISSING,
         colour: discord.Colour | None = None,
+        guild_id: int | None = None,
     ) -> discord.Embed:
+        embed_defaults: dict[str, Any] = self._translate(
+            "cogs.captcha.base.embed",
+            guild_id=guild_id,
+            fallback={
+                "title": "Captcha Verification Required",
+                "footer": "Powered by Moderator Bot",
+            },
+        ) or {}
+
+        resolved_title = title or embed_defaults.get("title", "Captcha Verification Required")
         embed = discord.Embed(
-            title=title,
+            title=resolved_title,
             description=description,
             colour=colour or discord.Color.blurple(),
         )
+        if footer is _MISSING:
+            footer = embed_defaults.get("footer")
         if footer:
             embed.set_footer(text=footer)
         return embed
@@ -98,12 +212,19 @@ class CaptchaBaseMixin:
         url: str,
         *,
         timeout: float | None = None,
-        label: str = "Verify now",
+        label: str | None = None,
+        guild_id: int | None = None,
     ) -> discord.ui.View:
+        button_defaults: dict[str, Any] = self._translate(
+            "cogs.captcha.base.button",
+            guild_id=guild_id,
+            fallback={"label": "Verify now"},
+        ) or {}
+        resolved_label = label or button_defaults.get("label", "Verify now")
         view = discord.ui.View(timeout=timeout)
         view.add_item(
             discord.ui.Button(
-                label=label,
+                label=resolved_label,
                 url=url,
                 style=discord.ButtonStyle.link,
             )
@@ -137,3 +258,34 @@ class CaptchaBaseMixin:
                 return channel
 
         return None
+
+    def _render_quantity(
+        self,
+        forms: dict[str, str],
+        count: int,
+        *,
+        singular: str,
+        plural: str,
+    ) -> str:
+        template = forms.get("one" if count == 1 else "other")
+        if not template:
+            template = singular if count == 1 else plural
+        return template.format(count=count)
+
+    def _translate(
+        self,
+        key: str,
+        *,
+        guild_id: int | None = None,
+        placeholders: dict[str, Any] | None = None,
+        fallback: Any = None,
+    ) -> Any:
+        bot = getattr(self, "bot", None)
+        if bot is not None and hasattr(bot, "translate"):
+            return bot.translate(
+                key,
+                guild_id=guild_id,
+                placeholders=placeholders,
+                fallback=fallback,
+            )
+        return fallback
