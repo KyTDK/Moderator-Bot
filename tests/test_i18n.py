@@ -94,6 +94,6 @@ def test_refresh_reloads_from_disk(tmp_path: Path) -> None:
     repository.reload()
 
     _write(root, "en.json", {"value": "new"})
-    repository.refresh()
+    repository.reload()
 
     assert repository.get_value("en", "value") == "new"
