@@ -1,6 +1,33 @@
 ﻿{
   "cogs": {
     "channel_config": {
+      "meta": {
+        "group_description": "Configure log channels.",
+        "set": {
+          "description": "Set a log channel.",
+          "params": {
+            "channel": "The channel to use for logging.",
+            "type": "Which type of log this channel is for."
+          }
+        },
+        "unset": {
+          "description": "Unset a log channel.",
+          "params": {
+            "type": "Which log type to disable."
+          }
+        },
+        "show": {
+          "description": "Show current log channel settings."
+        },
+        "types": {
+          "strike": "Strike",
+          "nsfw": "NSFW",
+          "ai": "AI",
+          "monitor": "Monitor",
+          "captcha": "Captcha",
+          "vc_transcript": "VC Transcript"
+        }
+      },
       "nsfw_required": "{channel} no está restringido por edad. Por favor, elige un canal NSFW.",
       "missing_permissions": "Me faltan los siguientes permisos en {channel}: {permissions}",
       "set_success": "Los registros de {log_type} se publicarán en {channel}.",
