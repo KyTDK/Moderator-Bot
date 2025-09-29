@@ -184,13 +184,38 @@ class AutonomousModeratorCog(commands.Cog):
             if not guild:
                 continue
 
+            guild_locale = self.bot._guild_locales.resolve(guild)
+
             # Budget notification if applicable
             if report is None and trigger_msg and status == "budget":
                 try:
                     cycle_end = usage.get("cycle_end")
-                    reset_str = cycle_end.strftime('%Y-%m-%d %H:%M UTC') if cycle_end else "the next cycle"
+                    reset_label = (
+                        self.bot.translate(
+                            "cogs.autonomous_moderation.moderator.budget_reset_time",
+                            locale=guild_locale,
+                            placeholders={
+                                "time": cycle_end.strftime('%Y-%m-%d %H:%M UTC')
+                            },
+                            fallback=cycle_end.strftime('%Y-%m-%d %H:%M UTC'),
+                        )
+                        if cycle_end
+                        else self.bot.translate(
+                            "cogs.autonomous_moderation.moderator.budget_reset_next",
+                            locale=guild_locale,
+                            fallback="the next cycle",
+                        )
+                    )
                     await trigger_msg.reply(
-                        f"AI moderation budget reached for this billing cycle. Resets at {reset_str}.",
+                        self.bot.translate(
+                            "cogs.autonomous_moderation.moderator.budget_reached",
+                            locale=guild_locale,
+                            placeholders={"reset": reset_label},
+                            fallback=(
+                                "AI moderation budget reached for this billing cycle. "
+                                f"Resets at {reset_label}."
+                            ),
+                        ),
                         mention_author=False,
                     )
                 except discord.HTTPException:
@@ -206,7 +231,13 @@ class AutonomousModeratorCog(commands.Cog):
             if not report or not report.violations:
                 if trigger_msg:
                     try:
-                        await trigger_msg.reply("Thanks for the report. No violations were found.")
+                        await trigger_msg.reply(
+                            self.bot.translate(
+                                "cogs.autonomous_moderation.moderator.thanks_no_violation",
+                                locale=guild_locale,
+                                fallback="Thanks for the report. No violations were found.",
+                            )
+                        )
                     except discord.HTTPException:
                         pass
                 # Always log to AI violations channel when debug is enabled
@@ -253,7 +284,13 @@ class AutonomousModeratorCog(commands.Cog):
 
             if trigger_msg:
                 try:
-                    await trigger_msg.reply("Thanks for the report. Action was taken.")
+                    await trigger_msg.reply(
+                        self.bot.translate(
+                            "cogs.autonomous_moderation.moderator.thanks_action",
+                            locale=guild_locale,
+                            fallback="Thanks for the report. Action was taken.",
+                        )
+                    )
                 except discord.HTTPException:
                     pass
 
