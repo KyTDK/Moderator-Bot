@@ -339,11 +339,11 @@ class StrikesCog(commands.Cog):
     )
     @app_commands.describe(
         user=app_commands.locale_str(
-            "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
+            "User to intimidate. Leave empty to address the whole channel.",
             key="cogs.strikes.meta.intimidate.params.user",
         ),
         channel=app_commands.locale_str(
-            "If true, sends the user warning to the channel; otherwise, sends a direct message to the user.",
+            "Send the warning in the channel instead of a direct message.",
             key="cogs.strikes.meta.intimidate.params.channel",
         )
     )
