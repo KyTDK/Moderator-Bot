@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Bảng Điều Khiển Bot Điều Hành",
         "description": "[Nhấp vào đây để mở bảng điều khiển]({url})"
