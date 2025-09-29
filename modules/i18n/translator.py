@@ -67,12 +67,17 @@ class Translator:
                 return self._format_value(value, placeholders)
 
         if fallback is not None:
-            logger.info(
-                "Translation for key '%s' missing; using explicit fallback '%s'", key, fallback
+            logger.warning(
+                "Translation for key '%s' missing; using explicit fallback '%s'",
+                key,
+                fallback,
             )
             return self._apply_format(fallback, placeholders)
 
-        logger.info("Translation for key '%s' missing; falling back to key with placeholders", key)
+        logger.warning(
+            "Translation for key '%s' missing; falling back to key with placeholders",
+            key,
+        )
         return self._apply_format(key, placeholders)
 
     def get_locale_snapshot(self, locale: str) -> dict[str, Any]:

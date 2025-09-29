@@ -78,7 +78,7 @@ class LocaleRepository:
         with self._lock:
             data = self._cache.get(locale)
         if data is None:
-            logger.info("Requested locale %s missing from cache", locale)
+            logger.warning("Requested locale %s missing from cache", locale)
         return self._resolve_key(data, key)
 
     def _load_from_disk(self) -> dict[str, dict[str, Any]]:
@@ -141,7 +141,7 @@ class LocaleRepository:
             if isinstance(cursor, Mapping) and part in cursor:
                 cursor = cursor[part]
             else:
-                logger.info(
+                logger.warning(
                     "Key %s missing while traversing part %s (locale data available=%s)",
                     key,
                     part,
