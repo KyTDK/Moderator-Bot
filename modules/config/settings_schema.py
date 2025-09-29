@@ -18,6 +18,7 @@ class Setting:
         validator: Optional[Callable] = None,
         choices: Optional[list[str]] = None,
         required_plans: str | Iterable[str] | None = None,
+        description_key: str | None = None,
     ):
         self.name = name
         self.description = description
@@ -28,6 +29,7 @@ class Setting:
         self.private = private
         self.validator = validator
         self.choices = choices
+        self.description_key = description_key
 
         normalized_plans = resolve_required_plans(required_plans) if required_plans is not None else None
         self.required_plans = frozenset(normalized_plans) if normalized_plans else None
@@ -58,34 +60,39 @@ SETTINGS_SCHEMA = {
         name="strike-channel",
         description="Channel where strikes are logged.",
         setting_type=discord.TextChannel,
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.strike-channel.description",
     ),
     "aimod-debug": Setting(
         name="aimod-debug",
         description="Always send a detailed AI moderation debug message to the AI violations channel, including flagged messages, AI decision, and applied actions.",
         setting_type=bool,
         default=False,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.aimod-debug.description",
     ),
     "nsfw-verbose": Setting(
         name="nsfw-verbose",
         description="Post a detailed scan report embed in the same channel as the scanned media.",
         setting_type=bool,
         default=False,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.nsfw-verbose.description",
     ),
     "nsfw-channel": Setting(
         name="nsfw-channel",
         description="Channel where NSFW violations are logged with a preview of the media.",
         setting_type=discord.TextChannel,
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.nsfw-channel.description",
     ),
     "nsfw-enabled": Setting(
         name="nsfw-enabled",
         description="Enable NSFW scanning for messages, reactions, and avatars (other toggles still apply).",
         setting_type=bool,
         default=True,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.nsfw-enabled.description",
     ),
     "monitor-events": Setting(
         name="monitor-events",
@@ -101,7 +108,8 @@ SETTINGS_SCHEMA = {
             "message_delete": True,
             "message_edit": True,
             },
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.monitor-events.description",
     ),
     "locale": Setting(
         name="locale",
@@ -110,6 +118,7 @@ SETTINGS_SCHEMA = {
         default=None,
         validator=_validate_locale,
         choices=list_supported_locales(),
+        description_key="modules.config.settings_schema.locale.description",
     ),
     "nsfw-detection-action": Setting(
         name="nsfw-detection-action",
@@ -117,7 +126,8 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=["delete", "strike"],
         hidden=True,
-        choices=["strike", "kick", "ban", "timeout", "delete"]
+        choices=["strike", "kick", "ban", "timeout", "delete"],
+        description_key="modules.config.settings_schema.nsfw-detection-action.description",
     ),
     "nsfw-detection-categories": Setting(
         name="nsfw-detection-categories",
@@ -129,6 +139,7 @@ SETTINGS_SCHEMA = {
         ],
         required_plans=PLAN_CORE,
         hidden=True,
+        description_key="modules.config.settings_schema.nsfw-detection-categories.description",
     ),
     "nsfw-high-accuracy": Setting(
         name="nsfw-high-accuracy",
@@ -136,14 +147,16 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         required_plans=PLAN_CORE,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.nsfw-high-accuracy.description",
     ),
     "threshold": Setting(
         name="threshold",
         description="Threshold for NSFW detection confidence. Lower values are more sensitive.",
         setting_type=float,
         default=0.7,
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.threshold.description",
     ),
     "banned-words-action": Setting(
         name="banned-words-action",
@@ -151,38 +164,44 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=["delete"],
         hidden=True,
-        choices=["strike", "kick", "ban", "timeout", "delete"]
+        choices=["strike", "kick", "ban", "timeout", "delete"],
+        description_key="modules.config.settings_schema.banned-words-action.description",
     ),
     "monitor-channel": Setting(
         name="monitor-channel",
         hidden=True,
         description="Channel to log all server activities, including message edits, deletions, and user join/leave events.",
         setting_type=discord.TextChannel,
+        description_key="modules.config.settings_schema.monitor-channel.description",
     ),
     "captcha-log-channel": Setting(
         name="captcha-log-channel",
         description="Channel where captcha verification logs and activity updates are posted.",
         setting_type=discord.TextChannel,
         hidden=True,
+        description_key="modules.config.settings_schema.captcha-log-channel.description",
     ),
     "aimod-channel": Setting(
         name="aimod-channel",
         description="Channel where AI violation logs are posted.",
         setting_type=discord.TextChannel,
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.aimod-channel.description",
     ),
     "cycle-strike-actions": Setting(
         name="cycle-strike-actions",
         description="Cycle through strike actions when run out of actions to give user.",
         setting_type=bool,
         default=True,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.cycle-strike-actions.description",
     ),
     "exclude-bannedwords-channels": Setting(
         name="exclude-bannedwords-channels",
         description="Channels to exclude from banned words detection.",
         setting_type=list[discord.TextChannel],
         default=[],
+        description_key="modules.config.settings_schema.exclude-bannedwords-channels.description",
     ),
     "strike-actions": Setting(
         name="strike-actions",
@@ -194,19 +213,22 @@ SETTINGS_SCHEMA = {
             "2": ["timeout:7d"],
             "3": ["ban"],
         },
+        description_key="modules.config.settings_schema.strike-actions.description",
     ),
     "strike-expiry": Setting(
         name="strike-expiry",
         description="Time a strike lasts for. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively.",
         setting_type=TimeString,
-        default=None
+        default=None,
+        description_key="modules.config.settings_schema.strike-expiry.description",
     ),
     "dm-on-strike": Setting(
         name="dm-on-strike",
         description="DM the user when they receive a strike.",
         setting_type=bool,
         default=True,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.dm-on-strike.description",
     ),
     "check-pfp": Setting(
         name="check-pfp",
@@ -215,6 +237,7 @@ SETTINGS_SCHEMA = {
         default=False, # False by default to avoid unnecessary API calls
         choices=["true", "false"],
         required_plans=PLAN_CORE,
+        description_key="modules.config.settings_schema.check-pfp.description",
     ),
     "nsfw-pfp-action": Setting(
         name="nsfw-pfp-action",
@@ -222,6 +245,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=["kick"],
         choices=["strike", "strike:2d", "kick", "ban", "timeout:1d", "timeout:7d"],
+        description_key="modules.config.settings_schema.nsfw-pfp-action.description",
     ),
     "nsfw-pfp-message": Setting(
         name="nsfw-pfp-message",
@@ -233,7 +257,8 @@ SETTINGS_SCHEMA = {
             "Your profile picture is not appropriate for this server.",
             "Your profile picture has been flagged as NSFW.",
         ],
-        required_plans=PLAN_CORE
+        required_plans=PLAN_CORE,
+        description_key="modules.config.settings_schema.nsfw-pfp-message.description",
     ),
     "unmute-on-safe-pfp": Setting(
         name="unmute-on-safe-pfp",
@@ -241,21 +266,24 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         choices=["true", "false"],
-        required_plans=PLAN_CORE
+        required_plans=PLAN_CORE,
+        description_key="modules.config.settings_schema.unmute-on-safe-pfp.description",
     ),
     "scan-age-restricted": Setting(
         name="scan-age-restricted",
         description="Scan age-restricted (NSFW) channels. When off, NSFW channels are skipped.",
         setting_type=bool,
         default=True,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.scan-age-restricted.description",
     ),
     "check-tenor-gifs": Setting(
         name="check-tenor-gifs",
         description="Apply punishments when NSFW content is detected in Tenor GIFs.",
         setting_type=bool,
         default=False,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.check-tenor-gifs.description",
     ),
     "use-default-banned-words": Setting(
         name="use-default-banned-words",
@@ -263,13 +291,15 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         hidden=True,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.use-default-banned-words.description",
     ),
     "exclude-channels": Setting(
         name="exclude-channels",
         description="Channels to exclude from detection.",
         setting_type=list[discord.TextChannel],
         default=[],
+        description_key="modules.config.settings_schema.exclude-channels.description",
     ),
     "delete-scam-messages": Setting(
         name="delete-scam-messages",
@@ -277,7 +307,8 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=True,
         hidden=True,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.delete-scam-messages.description",
     ),
     "scam-detection-action": Setting(
         name="scam-detection-action",
@@ -286,6 +317,7 @@ SETTINGS_SCHEMA = {
         hidden=True,
         default=["delete"],
         choices=["strike", "kick", "ban", "timeout", "delete"],
+        description_key="modules.config.settings_schema.scam-detection-action.description",
     ),
     "check-links": Setting(
         name="check-links",
@@ -293,7 +325,8 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         hidden=True,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.check-links.description",
     ),
     "exclude-scam-channels": Setting(
         name="exclude-scam-channels",
@@ -301,6 +334,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[discord.TextChannel],
         default=[],
         hidden=True,
+        description_key="modules.config.settings_schema.exclude-scam-channels.description",
     ),
     "rules": Setting(
         name="rules",
@@ -309,6 +343,7 @@ SETTINGS_SCHEMA = {
         default="1. Be respectful — no harassment or hate speech.\n2. No NSFW or obscene content.\n3. No spam or excessive self-promotion.\n4. Follow Discord's Terms of Service.",
         hidden=True,
         required_plans=PLAN_CORE,
+        description_key="modules.config.settings_schema.rules.description",
     ),
     "aimod-detection-action": Setting(
         name="aimod-detection-action",
@@ -318,6 +353,7 @@ SETTINGS_SCHEMA = {
         default=["auto"],
         required_plans=PLAN_CORE,
         choices=["strike", "kick", "ban", "timeout", "delete", "auto"],
+        description_key="modules.config.settings_schema.aimod-detection-action.description",
     ),
     "aimod-high-accuracy": Setting(
         name="aimod-high-accuracy",
@@ -328,7 +364,8 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         required_plans=PLAN_CORE,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.aimod-high-accuracy.description",
     ),
 
     "autonomous-mod": Setting(
@@ -338,7 +375,8 @@ SETTINGS_SCHEMA = {
         default=False,
         hidden=True,
         required_plans=PLAN_CORE,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.autonomous-mod.description",
     ),
     "aimod-check-interval": Setting(
         name="aimod-check-interval",
@@ -346,6 +384,7 @@ SETTINGS_SCHEMA = {
         setting_type=TimeString,
         required_plans=PLAN_CORE,
         default=TimeString("1h"),
+        description_key="modules.config.settings_schema.aimod-check-interval.description",
     ),
     "aimod-mode": Setting(
         name="aimod-mode",
@@ -354,7 +393,8 @@ SETTINGS_SCHEMA = {
         default="report",
         required_plans=PLAN_CORE,
         choices=["interval", "report", "adaptive"],
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.aimod-mode.description",
     ),
     "aimod-adaptive-events": Setting(
         name="aimod-adaptive-events",
@@ -369,19 +409,22 @@ SETTINGS_SCHEMA = {
             "guild_inactive": ["enable_report", "disable_interval"],
             "server_spike": ["enable_interval", "disable_report"],
         },
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.aimod-adaptive-events.description",
     ),
     "no-forward-from-role": Setting(
         name="no-forward-from-role",
         description="Stop a specific role from forwarding messages.",
         setting_type=list[discord.Role],
-        default=[]
+        default=[],
+        description_key="modules.config.settings_schema.no-forward-from-role.description",
     ),
     "banned-urls": Setting(
         name="blocked-urls",
         description="Exact URLs or domains to block.",
         setting_type=list[str],
         default=[],
+        description_key="modules.config.settings_schema.banned-urls.description",
     ),
     "url-detection-action": Setting(
         name="url-detection-action",
@@ -389,12 +432,14 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=["delete"],
         choices=["delete", "strike", "kick", "ban", "timeout"],
+        description_key="modules.config.settings_schema.url-detection-action.description",
     ),
     "exclude-url-channels": Setting(
         name="exclude-url-channels",
         description="Channels to exclude from banned URLs.",
         setting_type=list[discord.TextChannel],
         default=[],
+        description_key="modules.config.settings_schema.exclude-url-channels.description",
     ),
     "vcmod-enabled": Setting(
         name="vcmod-enabled",
@@ -403,14 +448,16 @@ SETTINGS_SCHEMA = {
         default=False,
         hidden=True,
         required_plans=PLAN_CORE,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.vcmod-enabled.description",
     ),
     "vcmod-channels": Setting(
         name="vcmod-channels",
         description="Voice channels to monitor (when empty, none are monitored).",
         setting_type=list[discord.VoiceChannel],
         default=[],
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.vcmod-channels.description",
     ),
     "vcmod-listen-duration": Setting(
         name="vcmod-listen-duration",
@@ -418,7 +465,8 @@ SETTINGS_SCHEMA = {
         setting_type=TimeString,
         default=TimeString("2m"),
         required_plans=PLAN_CORE,
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.vcmod-listen-duration.description",
     ),
     "vcmod-idle-duration": Setting(
         name="vcmod-idle-duration",
@@ -426,7 +474,8 @@ SETTINGS_SCHEMA = {
         setting_type=TimeString,
         default=TimeString("30s"),
         required_plans=PLAN_CORE,
-        hidden=True
+        hidden=True,
+        description_key="modules.config.settings_schema.vcmod-idle-duration.description",
     ),
     "vcmod-saver-mode": Setting(
         name="vcmod-saver-mode",
@@ -435,7 +484,8 @@ SETTINGS_SCHEMA = {
         default=False,
         hidden=True,
         required_plans=PLAN_CORE,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.vcmod-saver-mode.description",
     ),
     "vcmod-rules": Setting(
         name="vcmod-rules",
@@ -450,6 +500,7 @@ SETTINGS_SCHEMA = {
         ),
         hidden=True,
         required_plans=PLAN_CORE,
+        description_key="modules.config.settings_schema.vcmod-rules.description",
     ),
     "vcmod-detection-action": Setting(
         name="vcmod-detection-action",
@@ -458,7 +509,8 @@ SETTINGS_SCHEMA = {
         default=["auto"],
         hidden=True,
         required_plans=PLAN_CORE,
-        choices=["strike", "kick", "ban", "timeout", "delete", "auto"]
+        choices=["strike", "kick", "ban", "timeout", "delete", "auto"],
+        description_key="modules.config.settings_schema.vcmod-detection-action.description",
     ),
     "vcmod-high-accuracy": Setting(
         name="vcmod-high-accuracy",
@@ -467,7 +519,8 @@ SETTINGS_SCHEMA = {
         default=False,
         hidden=True,
         required_plans=PLAN_CORE,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.vcmod-high-accuracy.description",
     ),
     "vcmod-high-quality-transcription": Setting(
         name="vcmod-high-quality-transcription",
@@ -476,13 +529,15 @@ SETTINGS_SCHEMA = {
         default=False,
         hidden=True,
         required_plans=PLAN_CORE,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.vcmod-high-quality-transcription.description",
     ),
     "vcmod-transcript-channel": Setting(
         name="vcmod-transcript-channel",
         description="Channel where VC transcripts are posted.",
         setting_type=discord.TextChannel,
         hidden=True,
+        description_key="modules.config.settings_schema.vcmod-transcript-channel.description",
     ),
     "vcmod-transcript-only": Setting(
         name="vcmod-transcript-only",
@@ -494,7 +549,8 @@ SETTINGS_SCHEMA = {
         default=False,
         hidden=False,
         required_plans=PLAN_CORE,
-        choices=["true", "false"]
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.vcmod-transcript-only.description",
     ),
     # Captcha settings
     "captcha-verification-enabled": Setting(
@@ -503,12 +559,14 @@ SETTINGS_SCHEMA = {
         setting_type=bool,
         default=False,
         choices=["true", "false"],
+        description_key="modules.config.settings_schema.captcha-verification-enabled.description",
     ),
     "captcha-grace-period": Setting(
         name="captcha-grace-period",
         description="How long newcomers have to finish captcha verification (e.g. 10m, 1h).",
         setting_type=TimeString,
         default="0", # No time limit by default
+        description_key="modules.config.settings_schema.captcha-grace-period.description",
     ),
     "captcha-success-actions": Setting(
         name="captcha-success-actions",
@@ -516,6 +574,7 @@ SETTINGS_SCHEMA = {
         setting_type=list[str],
         default=[],
         hidden=True,
+        description_key="modules.config.settings_schema.captcha-success-actions.description",
     ),
     "captcha-delivery-method": Setting(
         name="captcha-delivery-method",
@@ -524,12 +583,14 @@ SETTINGS_SCHEMA = {
         default="dm",
         choices=["dm", "embed"],
         hidden=True,
+        description_key="modules.config.settings_schema.captcha-delivery-method.description",
     ),
     "captcha-embed-channel-id": Setting(
         name="captcha-embed-channel-id",
         description="Channel where the captcha verification embed is posted when using embed delivery.",
         setting_type=discord.TextChannel,
         hidden=True,
+        description_key="modules.config.settings_schema.captcha-embed-channel-id.description",
     ),
     "pre-captcha-roles": Setting(
         name="pre-captcha-roles",
@@ -537,12 +598,14 @@ SETTINGS_SCHEMA = {
         setting_type=list[discord.Role],
         default=[],
         hidden=True,
+        description_key="modules.config.settings_schema.pre-captcha-roles.description",
     ),
     "captcha-failure-actions": Setting(
         name="captcha-failure-actions",
         description="Actions to perform automatically when a member fails captcha verification.",
         setting_type=list[str],
         default=["kick"],
+        description_key="modules.config.settings_schema.captcha-failure-actions.description",
     ),
 }
 
