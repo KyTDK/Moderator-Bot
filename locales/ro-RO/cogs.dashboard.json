@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Panoul de control al Bot-ului Moderator",
         "description": "[Faceți clic aici pentru a deschide panoul de control]({url})"
