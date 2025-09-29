@@ -255,20 +255,6 @@ class ModeratorBot(commands.Bot):
         finally:
             _current_locale.reset(token)
 
-    async def on_interaction(self, interaction: discord.Interaction) -> None:
-        locale = self._resolve_locale_from_candidate(interaction)
-        token = _current_locale.set(locale)
-        try:
-            try:
-                parent_on_interaction = super().on_interaction  # type: ignore[attr-defined]
-            except AttributeError:
-                parent_on_interaction = None
-
-            if parent_on_interaction is not None:
-                await parent_on_interaction(interaction)
-        finally:
-            _current_locale.reset(token)
-
     async def invoke(self, ctx: commands.Context[Any]) -> None:  # type: ignore[override]
         locale = self._resolve_locale_from_candidate(ctx)
         token = _current_locale.set(locale)
