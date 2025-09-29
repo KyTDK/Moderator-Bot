@@ -218,7 +218,6 @@ class ModeratorBot(commands.Bot):
             locale = self.resolve_locale(interaction)
             if locale is not None:
                 token = self.push_locale(locale)
-            await super().on_interaction(interaction)
         finally:
             if token is not None:
                 self.reset_locale(token)
