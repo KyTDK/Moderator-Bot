@@ -54,23 +54,36 @@ class TranslationService:
             fallback=fallback,
         )
 
-    def _prepare_locale(self, locale: Any | None) -> str | None:
-        if locale is None:
-            current = _current_locale.get()
-            logger.warning(
-                "Translation requested but no locale was provided; using current context locale %r",
-                current,
-            )
+    def _resolve_context_locale(self) -> str:
+        current = _current_locale.get()
+        if current:
             return current
+
+        default_locale = self._translator.default_locale
+        logger.debug(
+            "No locale currently bound to context; using translator default '%s'",
+            default_locale,
+        )
+        return default_locale
+
+    def _prepare_locale(self, locale: Any | None) -> str:
+        if locale is None:
+            context_locale = self._resolve_context_locale()
+            logger.debug(
+                "Translation requested without explicit locale; using context locale '%s'",
+                context_locale,
+            )
+            return context_locale
 
         normalized = normalise_locale(locale)
         if normalized is None:
-            current = _current_locale.get()
+            context_locale = self._resolve_context_locale()
             logger.warning(
-                "Translation requested but provided locale %r could not be normalised; using current context locale",
+                "Translation requested but provided locale %r could not be normalised; using context locale '%s'",
                 locale,
+                context_locale,
             )
-            return current
+            return context_locale
 
         logger.debug(
             "Locale prepared successfully (input=%r, normalized=%s)",
@@ -81,8 +94,15 @@ class TranslationService:
 
     def push_locale(self, locale: Any | None) -> Token[str | None]:
         normalized = normalise_locale(locale)
-        logger.debug("Pushing locale onto context: %r -> %s", locale, normalized)
-        return _current_locale.set(normalized)
+        if normalized is None and locale is not None:
+            logger.warning(
+                "Attempted to push invalid locale %r onto context; using default '%s' instead",
+                locale,
+                self._translator.default_locale,
+            )
+        resolved = normalized or self._translator.default_locale
+        logger.debug("Pushing locale onto context: %r -> %s", locale, resolved)
+        return _current_locale.set(resolved)
 
     def reset_locale(self, token: Token[str | None]) -> None:
         logger.debug("Resetting locale context to previous value")
@@ -98,8 +118,8 @@ class TranslationService:
             self.reset_locale(token)
             logger.debug("Exited locale context manager (locale=%s)", locale)
 
-    def current_locale(self) -> str | None:
-        value = _current_locale.get()
+    def current_locale(self) -> str:
+        value = _current_locale.get() or self._translator.default_locale
         logger.debug("Current locale resolved to %s", value)
         return value
 
