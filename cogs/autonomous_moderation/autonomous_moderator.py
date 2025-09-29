@@ -184,7 +184,7 @@ class AutonomousModeratorCog(commands.Cog):
             if not guild:
                 continue
 
-            guild_locale = self.bot._guild_locales.resolve(guild)
+            guild_locale = self.bot.resolve_locale(guild)
 
             # Budget notification if applicable
             if report is None and trigger_msg and status == "budget":
