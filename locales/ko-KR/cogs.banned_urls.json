@@ -1,6 +1,21 @@
 ﻿{
   "cogs": {
     "banned_urls": {
+      "meta": {
+        "group_description": "Banned URLs management commands.",
+        "add": {
+          "description": "Add a URL or domain to the banned list."
+        },
+        "remove": {
+          "description": "Remove a URL or domain from the banned list."
+        },
+        "list": {
+          "description": "List all banned URLs."
+        },
+        "clear": {
+          "description": "Clear all banned URLs."
+        }
+      },
       "limit_reached": "현재 이 서버에 등록할 수 있는 금지된 URL({limit}개)의 한도에 도달했습니다.\n`/bannedurls remove` 또는 `/bannedurls clear` 명령어를 사용하여 자리를 만드십시오.",
       "add": {
         "duplicate": "`{url}`은(는) 이미 금지된 URL입니다.",
