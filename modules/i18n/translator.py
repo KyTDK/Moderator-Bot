@@ -57,6 +57,9 @@ class Translator:
         )
 
         for code in chain:
+            logger.debug(
+                "Attempting to resolve key '%s' from locale '%s'", key, code
+            )
             value = self._repository.get_value(code, key)
             if value is not None:
                 if code != chain[0]:

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 """Helpers for building i18n components used by the moderator bot."""
 
+import logging
 from pathlib import Path
 from typing import Iterable
+
+logger = logging.getLogger(__name__)
 
 
 def _unique(paths: Iterable[Path]) -> list[Path]:
@@ -34,11 +37,20 @@ def resolve_locales_root(configured_root: str | None, repo_root: Path) -> tuple[
 
     unique_candidates = _unique(candidates)
 
+    logger.debug(
+        "Resolving locales root (configured=%s, repo_root=%s, candidates=%s)",
+        configured_root,
+        repo_root,
+        unique_candidates,
+    )
+
     for candidate in unique_candidates:
         if candidate.exists():
+            logger.debug("Locales root resolved to %s (exists=%s)", candidate, candidate.exists())
             return candidate, bool(configured_root) and candidate != raw.resolve()
 
     fallback = unique_candidates[0]
+    logger.debug("Falling back to locales root %s (configured missing=%s)", fallback, bool(configured_root))
     return fallback, bool(configured_root)
 
 
