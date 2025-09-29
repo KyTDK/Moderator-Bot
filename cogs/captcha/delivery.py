@@ -146,8 +146,11 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
             if expires_in is not None:
                 view_timeout = max(1, min(grace_seconds, expires_in))
 
+        guild_id = member.guild.id
         display_grace = grace_text or (
-            self._format_duration(grace_delta) if grace_delta is not None else None
+            self._format_duration(grace_delta, guild_id=guild_id)
+            if grace_delta is not None
+            else None
         )
 
         embed = self._create_embed(
@@ -156,13 +159,21 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
                 display_grace,
                 max_attempts,
             ),
+            guild_id=guild_id,
         )
+
+        dm_texts: dict[str, str] = self._translate(
+            "cogs.captcha.delivery.dm",
+            guild_id=guild_id,
+            fallback={"button_label": "Click here to verify"},
+        ) or {}
 
         timeout_value = None if view_timeout is None else float(view_timeout)
         view = self._build_link_view(
             response.verification_url,
             timeout=timeout_value,
-            label="Click here to verify",
+            label=dm_texts.get("button_label"),
+            guild_id=guild_id,
         )
 
         try:
@@ -198,20 +209,43 @@ class CaptchaDeliveryMixin(CaptchaBaseMixin):
         grace_text: str | None,
         max_attempts: int | None,
     ) -> None:
-        url = self._build_public_verification_url(member.guild.id)
+        guild = member.guild
+        guild_id = guild.id
+        url = self._build_public_verification_url(guild_id)
+        embed_texts: dict[str, str] = self._translate(
+            "cogs.captcha.delivery.embed",
+            guild_id=guild_id,
+            fallback={
+                "location": "visit {channel} and complete the captcha",
+                "help_title": "Need help?",
+                "help_value": "Click the button below to open the verification page.",
+                "button_label": "Open verification page",
+            },
+        ) or {}
+
+        location_instruction = embed_texts.get("location", "visit {channel} and complete the captcha").format(
+            channel=channel.mention
+        )
         description = self._build_description(
             member,
             grace_text,
             max_attempts,
-            location=f"visit {channel.mention} and complete the captcha",
+            location=location_instruction,
         )
-        embed = self._create_embed(description=description)
+        embed = self._create_embed(description=description, guild_id=guild_id)
         embed.add_field(
-            name="Need help?",
-            value="Click the button below to open the verification page.",
+            name=embed_texts.get("help_title", "Need help?"),
+            value=embed_texts.get(
+                "help_value",
+                "Click the button below to open the verification page.",
+            ),
             inline=False,
         )
-        view = self._build_link_view(url, label="Open verification page")
+        view = self._build_link_view(
+            url,
+            label=embed_texts.get("button_label"),
+            guild_id=guild_id,
+        )
 
         try:
             await member.send(embed=embed, view=view)

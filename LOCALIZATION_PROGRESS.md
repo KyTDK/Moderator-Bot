@@ -17,11 +17,10 @@
 - [x] cogs/debug.py — Localized command metadata and locale summary message.
 - [x] cogs/autonomous_moderation/auto_commands.py — Localized command metadata, choice labels, and mode status output.
 - [x] cogs/voice_moderation/voice_moderator.py — Localized transcript embeds and budget notifications.
+- [x] modules/utils/actions.py — Localized moderation action choices using locale-backed labels.
+- [x] cogs/captcha/base.py — Localized captcha embed scaffolding, duration text, and default button labels.
+- [x] cogs/captcha/delivery.py — Localized DM prompts, embed helpers, and verification call-to-action labels.
+- [x] cogs/captcha/embed.py — Localized verification embed title, body copy, footer, and button label.
 
 ## To Do
-- [ ] modules/utils/actions.py — Choice labels produced for moderation actions remain hard-coded.
-- [ ] cogs/captcha/base.py — Captcha embeds and button labels still contain inline English strings.
-- [ ] cogs/captcha/delivery.py — Help text and verification prompts need localization.
-- [ ] cogs/captcha/embed.py — Verification embed titles and descriptions remain hard-coded.
-- [ ] Review remaining modules for embedded message strings and prompts.
-- [ ] Expand audit to remaining modules for embedded message strings and prompts.
+- [ ] Audit remaining modules for embedded message strings and prompts.
