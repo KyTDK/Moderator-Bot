@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Moderator Bot Instrumentpanel",
         "description": "[Klicka här för att öppna instrumentpanelen]({url})"
