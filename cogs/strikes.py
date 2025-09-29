@@ -11,6 +11,7 @@ from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.discord_utils import safe_get_user
 from modules.utils.strike import validate_action
 from modules.variables.TimeString import TimeString
+from modules.core.moderator_bot import ModeratorBot
 
 async def autocomplete_strike_action(interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
     settings = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}
@@ -26,7 +27,7 @@ async def autocomplete_strike_action(interaction: Interaction, current: str) -> 
 class StrikesCog(commands.Cog):
     """A cog for moderation commands."""
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
 
     strike_group = app_commands.Group(
@@ -81,7 +82,8 @@ class StrikesCog(commands.Cog):
             embed.set_thumbnail(url=user.display_avatar.url)
             await interaction.followup.send(embed=embed, ephemeral=True)
         else:
-            strike_texts = self.bot.translate("cogs.strikes.strike")
+            strike_texts = self.bot.translate("cogs.strikes.strike",
+                                              guild_id=interaction.guild.id)
             await interaction.followup.send(
                 strike_texts["error"],
                 ephemeral=True,
@@ -98,8 +100,9 @@ class StrikesCog(commands.Cog):
     async def get_strikes(self, interaction: Interaction, user: Member):
         """Retrieve strikes for a specified user."""
         await interaction.response.defer(ephemeral=True)
-
-        strike_texts = self.bot.translate("cogs.strikes.get")
+        guild_id = interaction.guild.id
+        strike_texts = self.bot.translate("cogs.strikes.get",
+                                          guild_id=guild_id)
         strikes = await mysql.get_strikes(user.id, interaction.guild.id)
 
         if not strikes:
@@ -174,8 +177,9 @@ class StrikesCog(commands.Cog):
     async def clear_strikes(self, interaction: Interaction, user: Member):
         """Clear all strikes for a specified user."""
         await interaction.response.defer(ephemeral=True)
-
-        clear_texts = self.bot.translate("cogs.strikes.clear")
+        guild_id = interaction.guild.id
+        clear_texts = self.bot.translate("cogs.strikes.clear",
+                                          guild_id=guild_id)
         _, rows_affected = await mysql.execute_query(
             """
             DELETE FROM strikes
@@ -231,6 +235,7 @@ class StrikesCog(commands.Cog):
         reason: str = None,
     ):
         await interaction.response.defer(ephemeral=True)
+        guild_id = interaction.guild.id
         strike_actions = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}
         key = str(number_of_strikes)
         action_str = await validate_action(
@@ -244,7 +249,8 @@ class StrikesCog(commands.Cog):
         )
         if action_str is None:
             return
-        texts = self.bot.translate("cogs.strikes.actions")
+        texts = self.bot.translate("cogs.strikes.actions",
+                                   guild_id=guild_id)
         actions_list = strike_actions.get(key, [])
         if action_str in actions_list:
             await interaction.followup.send(
@@ -284,8 +290,10 @@ class StrikesCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         strike_actions = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}
         key = str(number_of_strikes)
+        guild_id = interaction.guild.id
         actions_list = strike_actions.get(key)
-        texts = self.bot.translate("cogs.strikes.actions")
+        texts = self.bot.translate("cogs.strikes.actions",
+                                   guild_id=guild_id)
         if not actions_list or action not in actions_list:
             await interaction.followup.send(
                 texts["missing"].format(action=action, key=key),
@@ -313,7 +321,10 @@ class StrikesCog(commands.Cog):
         ),
     )
     async def view_strike_actions(self, interaction: Interaction):
-        actions_texts = self.bot.translate("cogs.strikes.view_actions")
+        """View all configured strike actions."""
+        guild_id = interaction.guild.id
+        actions_texts = self.bot.translate("cogs.strikes.view_actions",
+                                           guild_id=guild_id)
         strike_actions = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}
         if not strike_actions:
             await interaction.response.send_message(actions_texts["none"], ephemeral=True)
@@ -351,7 +362,9 @@ class StrikesCog(commands.Cog):
     @app_commands.guild_only()
     async def intimidate(self, interaction: Interaction, user: Member = None, channel: bool = False):
         """Intimidate the user."""
-        intimidate_texts = self.bot.translate("cogs.strikes.intimidate")
+        guild_id = interaction.guild.id
+        intimidate_texts = self.bot.translate("cogs.strikes.intimidate",
+                                              guild_id=guild_id)
         if user:
             embed = Embed(
                 title=intimidate_texts["user_title"].format(name=user.display_name),

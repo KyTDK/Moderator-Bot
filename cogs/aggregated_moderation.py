@@ -10,6 +10,7 @@ from discord.utils import utcnow
 import os
 from dotenv import load_dotenv
 load_dotenv()
+from modules.core.moderator_bot import ModeratorBot
 
 FREE_MAX_WORKERS = int(os.getenv("FREE_MAX_WORKERS", 2))
 ACCELERATED_MAX_WORKERS = int(os.getenv("ACCELERATED_MAX_WORKERS", 5))
@@ -21,7 +22,7 @@ WORKER_AUTOSCALE_CHECK_INTERVAL = float(os.getenv("WORKER_AUTOSCALE_CHECK_INTERV
 WORKER_AUTOSCALE_SCALE_DOWN_GRACE = float(os.getenv("WORKER_AUTOSCALE_SCALE_DOWN_GRACE", 15))
 
 class AggregatedModerationCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
         self.scanner = NSFWScanner(bot)
         self.free_queue = WorkerQueue(
@@ -104,7 +105,9 @@ class AggregatedModerationCog(commands.Cog):
             )
             if flagged:
                 try:
-                    nsfw_texts = self.bot.translate("cogs.aggregated_moderation.nsfw_detection", placeholders={"mention": message.author.mention})
+                    nsfw_texts = self.bot.translate("cogs.aggregated_moderation.nsfw_detection", 
+                                                    placeholders={"mention": message.author.mention},
+                                                    guild_id=guild_id)
                     embed = discord.Embed(
                         title=nsfw_texts["title"],
                         description=nsfw_texts["description"],
@@ -309,7 +312,8 @@ class AggregatedModerationCog(commands.Cog):
                     try:
                         await member.edit(
                             timed_out_until=None,
-                            reason=self.bot.translate("cogs.aggregated_moderation.pfp.safe_reason"),
+                            reason=self.bot.translate("cogs.aggregated_moderation.pfp.safe_reason",
+                                                      guild_id=guild.id),
                         )
                         await mysql.execute_query(
                             "DELETE FROM timeouts WHERE user_id=%s AND guild_id=%s AND source='pfp'",

@@ -10,6 +10,7 @@ from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from modules.utils.url_utils import extract_urls, norm_domain, norm_url
 from urllib.parse import urlparse
+from modules.core.moderator_bot import ModeratorBot
 
 MAX_URLS = 500
 BANNEDURLS_ACTION_SETTING = "url-detection-action"
@@ -23,7 +24,7 @@ def _is_domain_only(s: str) -> bool:
     return (p.path or "").strip("/") == "" and not p.query and not p.fragment
 
 class BannedURLsCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
     
     bannedurls_group = app_commands.Group(
@@ -43,7 +44,9 @@ class BannedURLsCog(commands.Cog):
         )
         if count_row and count_row[0] >= MAX_URLS:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.limit_reached", placeholders={"limit": MAX_URLS}),
+                self.bot.translate("cogs.banned_urls.limit_reached", 
+                                   placeholders={"limit": MAX_URLS},
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
             return
@@ -56,7 +59,9 @@ class BannedURLsCog(commands.Cog):
         )
         if row:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.add.duplicate", placeholders={"url": url}),
+                self.bot.translate("cogs.banned_urls.add.duplicate", 
+                                   placeholders={"url": url},
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
             return
@@ -66,7 +71,9 @@ class BannedURLsCog(commands.Cog):
             (guild_id, url)
         )
         await interaction.response.send_message(
-            self.bot.translate("cogs.banned_urls.add.success", placeholders={"url": url}),
+            self.bot.translate("cogs.banned_urls.add.success", 
+                               placeholders={"url": url},
+                               guild_id=guild_id),
             ephemeral=True,
         )
 
@@ -80,12 +87,16 @@ class BannedURLsCog(commands.Cog):
         )
         if affected == 0:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.remove.missing", placeholders={"url": url}),
+                self.bot.translate("cogs.banned_urls.remove.missing", 
+                                   placeholders={"url": url},
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
         else:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.remove.success", placeholders={"url": url}),
+                self.bot.translate("cogs.banned_urls.remove.success", 
+                                   placeholders={"url": url},
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
 
@@ -108,14 +119,20 @@ class BannedURLsCog(commands.Cog):
         banned = [row[0] for row in (rows or [])]
         if not banned:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.list.empty"),
+                self.bot.translate("cogs.banned_urls.list.empty",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
             return
-        header = self.bot.translate("cogs.banned_urls.list.file_header")
-        lines = [self.bot.translate("cogs.banned_urls.list.file_item", placeholders={"url": u}) for u in banned]
+        header = self.bot.translate("cogs.banned_urls.list.file_header",
+                                    guild_id=guild_id,)
+        lines = [self.bot.translate("cogs.banned_urls.list.file_item", 
+                                    placeholders={"url": u},
+                                    guild_id=guild_id) for u in banned]
         buf = io.StringIO(header + "\n" + "\n".join(lines))
-        filename = self.bot.translate("cogs.banned_urls.list.filename", placeholders={"guild_id": interaction.guild.id})
+        filename = self.bot.translate("cogs.banned_urls.list.filename", 
+                                      placeholders={"guild_id": interaction.guild.id},
+                                      guild_id=guild_id)
         file = discord.File(buf, filename=filename)
         await interaction.response.send_message(file=file, ephemeral=True)
 
@@ -125,12 +142,14 @@ class BannedURLsCog(commands.Cog):
         _, affected = await execute_query("DELETE FROM banned_urls WHERE guild_id = %s", (guild_id,))
         if affected == 0:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.clear.empty"),
+                self.bot.translate("cogs.banned_urls.clear.empty",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
             return
         await interaction.response.send_message(
-            self.bot.translate("cogs.banned_urls.clear.success"),
+            self.bot.translate("cogs.banned_urls.clear.success",
+                               guild_id=guild_id,),
             ephemeral=True,
         )
 
@@ -185,8 +204,11 @@ class BannedURLsCog(commands.Cog):
                     user=message.author,
                     bot=self.bot,
                     action_string=action_flag,
-                    reason=self.bot.translate("cogs.banned_urls.enforcement.strike_reason", placeholders={"url": matched_url}),
-                    source=self.bot.translate("cogs.banned_urls.enforcement.strike_source"),
+                    reason=self.bot.translate("cogs.banned_urls.enforcement.strike_reason", 
+                                              placeholders={"url": matched_url},
+                                              guild_id=guild_id),
+                    source=self.bot.translate("cogs.banned_urls.enforcement.strike_source",
+                                              guild_id=guild_id),
                     message=message,
                 )
             except Exception:
@@ -194,8 +216,11 @@ class BannedURLsCog(commands.Cog):
 
         try:
             embed = discord.Embed(
-                title=self.bot.translate("cogs.banned_urls.enforcement.embed_title"),
-                description=self.bot.translate("cogs.banned_urls.enforcement.embed_description", placeholders={"mention": message.author.mention}),
+                title=self.bot.translate("cogs.banned_urls.enforcement.embed_title",
+                                         guild_id=guild_id),
+                description=self.bot.translate("cogs.banned_urls.enforcement.embed_description", 
+                                               placeholders={"mention": message.author.mention},
+                                               guild_id=guild_id),
                 color=discord.Color.red(),
             )
             embed.set_thumbnail(url=message.author.display_avatar.url)
@@ -230,15 +255,19 @@ class BannedURLsCog(commands.Cog):
 
     @bannedurls_group.command(name="view_actions", description="Show all actions currently configured to trigger when banned URLs are used.")
     async def view_banned_actions(self, interaction: Interaction):
+        guild_id = interaction.guild.id
         actions = await manager.view_actions(interaction.guild.id)
         if not actions:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.actions.none"),
+                self.bot.translate("cogs.banned_urls.actions.none",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
             return
         formatted = "\n".join(f"{i+1}. `{a}`" for i, a in enumerate(actions))
-        header = self.bot.translate("cogs.banned_urls.actions.header", placeholders={"actions": formatted})
+        header = self.bot.translate("cogs.banned_urls.actions.header", 
+                                    placeholders={"actions": formatted},
+                                    guild_id=guild_id)
         await interaction.response.send_message(header, ephemeral=True)
 
 async def setup(bot: commands.Bot):

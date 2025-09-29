@@ -27,6 +27,8 @@ from .config import resolve_api_base, resolve_public_verify_url
 from .delivery import CaptchaDeliveryMixin
 from .embed import CaptchaEmbedMixin
 
+from modules.core.moderator_bot import ModeratorBot
+
 _logger = logging.getLogger(__name__)
 
 
@@ -40,7 +42,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         super().__init__()
         self.bot = bot
         self._session_store = CaptchaSessionStore()
@@ -71,8 +73,11 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
 
     @captcha_group.command(name="sync", description="Resend the captcha verification embed.")
     async def sync_embed_command(self, interaction: Interaction) -> None:
-        common_texts = self.bot.translate("cogs.captcha.common")
-        sync_texts = self.bot.translate("cogs.captcha.sync")
+        guild_id = interaction.guild.id
+        common_texts = self.bot.translate("cogs.captcha.common",
+                                           guild_id=guild_id)
+        sync_texts = self.bot.translate("cogs.captcha.sync",
+                                         guild_id=guild_id)
         if interaction.guild is None:
             await interaction.response.send_message(
                 common_texts["guild_only"], ephemeral=True
@@ -111,8 +116,11 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
     async def request_verification_command(
         self, interaction: Interaction, member: discord.Member
     ) -> None:
-        common_texts = self.bot.translate("cogs.captcha.common")
-        request_texts = self.bot.translate("cogs.captcha.request")
+        guild_id = interaction.guild.id
+        common_texts = self.bot.translate("cogs.captcha.common",
+                                           guild_id=guild_id)
+        request_texts = self.bot.translate("cogs.captcha.request",
+                                           guild_id=guild_id)
         if interaction.guild is None:
             await interaction.response.send_message(
                 common_texts["guild_only"], ephemeral=True
@@ -196,7 +204,9 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
     async def _initiate_verification(
         self, member: discord.Member
     ) -> tuple[bool, str | None]:
-        texts = self.bot.translate("cogs.captcha.initiate")
+        gid = member.guild.id
+        texts = self.bot.translate("cogs.captcha.initiate",
+                                   guild_id=gid)
         if member.guild is None:
             return False, texts["not_in_guild"]
 
@@ -234,7 +244,8 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         ]
         if pre_roles:
             try:
-                await member.add_roles(*pre_roles, reason=self.bot.translate("cogs.captcha.roles.assign_reason"))
+                await member.add_roles(*pre_roles, reason=self.bot.translate("cogs.captcha.roles.assign_reason",
+                                                                             guild_id=gid))
             except discord.Forbidden:
                 _logger.warning(
                     "Missing permissions to assign pre-captcha roles in guild %s",
@@ -381,7 +392,8 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
             status="expired",
             success=False,
             state=session.state,
-            failure_reason=self.bot.translate("cogs.captcha.timeout.failure_reason"),
+            failure_reason=self.bot.translate("cogs.captcha.timeout.failure_reason",
+                                              guild_id=guild_id),
             metadata={"timeout": True, "reason": "expired"},
         )
 

@@ -20,6 +20,8 @@ from modules.ai.pipeline import run_moderation_pipeline
 from dotenv import load_dotenv
 import os
 
+from modules.core.moderator_bot import ModeratorBot
+
 load_dotenv()
 AUTOMOD_OPENAI_KEY = os.getenv('AUTOMOD_OPENAI_KEY')
 AIMOD_MODEL = os.getenv('AIMOD_MODEL', 'gpt-5-nano')
@@ -39,7 +41,7 @@ async def get_active_mode(guild_id: int) -> str:
     return mode
 
 class AutonomousModeratorCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
         self.message_batches: dict[int, list[tuple[str, str, discord.Message]]] = defaultdict(list)
         self.last_run: dict[int, datetime] = defaultdict(lambda: datetime.now(timezone.utc))
@@ -198,12 +200,14 @@ class AutonomousModeratorCog(commands.Cog):
                                 "time": cycle_end.strftime('%Y-%m-%d %H:%M UTC')
                             },
                             fallback=cycle_end.strftime('%Y-%m-%d %H:%M UTC'),
+                            guild_id=gid,
                         )
                         if cycle_end
                         else self.bot.translate(
                             "cogs.autonomous_moderation.moderator.budget_reset_next",
                             locale=guild_locale,
                             fallback="the next cycle",
+                            guild_id=gid,
                         )
                     )
                     await trigger_msg.reply(
@@ -215,6 +219,7 @@ class AutonomousModeratorCog(commands.Cog):
                                 "AI moderation budget reached for this billing cycle. "
                                 f"Resets at {reset_label}."
                             ),
+                            guild_id=gid,
                         ),
                         mention_author=False,
                     )
@@ -236,6 +241,7 @@ class AutonomousModeratorCog(commands.Cog):
                                 "cogs.autonomous_moderation.moderator.thanks_no_violation",
                                 locale=guild_locale,
                                 fallback="Thanks for the report. No violations were found.",
+                                guild_id=gid,
                             )
                         )
                     except discord.HTTPException:
@@ -291,6 +297,7 @@ class AutonomousModeratorCog(commands.Cog):
                             "cogs.autonomous_moderation.moderator.thanks_action",
                             locale=guild_locale,
                             fallback="Thanks for the report. Action was taken.",
+                            guild_id=gid,
                         )
                     )
                 except discord.HTTPException:

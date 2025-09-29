@@ -7,6 +7,7 @@ from modules.config.settings_schema import SETTINGS_SCHEMA
 from modules.config.premium_plans import describe_plan_requirements
 import traceback
 from modules.variables.TimeString import TimeString
+from modules.core.moderator_bot import ModeratorBot
 
 MAX_CHARS = 1900  # Leave buffer for formatting
 CHUNK_SEPARATOR = "\n"
@@ -28,7 +29,7 @@ def paginate(text, limit=MAX_CHARS):
 class Settings(commands.Cog):
     """A cog for settings commands."""
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
 
     async def value_autocomplete(this, interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
@@ -66,7 +67,10 @@ class Settings(commands.Cog):
 
     @settings_group.command(name="help", description="Get help on settings.")
     async def help_settings(self, interaction: Interaction):
-        texts = self.bot.translate("cogs.settings.help")
+        """Get help on settings."""
+        guid_id = interaction.guild.id
+        texts = self.bot.translate("cogs.settings.help",
+                                   guild_id=guid_id)
         header = texts["header"]
         entry_template = texts["entry"]
 
@@ -92,8 +96,10 @@ class Settings(commands.Cog):
     async def reset(self, interaction: Interaction):
         """Reset server settings."""
         await interaction.response.defer(ephemeral=True)
+        guid_id = interaction.guild.id
         _, rows = await mysql.execute_query("DELETE FROM settings WHERE guild_id = %s", (interaction.guild.id,))
-        texts = self.bot.translate("cogs.settings.reset")
+        texts = self.bot.translate("cogs.settings.reset",
+                                   guild_id=guid_id)
         message = texts["done"] if rows > 0 else texts["already"]
         await interaction.followup.send(message)
 
@@ -108,7 +114,9 @@ class Settings(commands.Cog):
         role: Optional[discord.Role] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        texts = self.bot.translate("cogs.settings.set")
+        guild_id = interaction.guild.id
+        texts = self.bot.translate("cogs.settings.set",
+                                   guild_id=guild_id)
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
             await interaction.followup.send(texts["invalid_name"], ephemeral=True)
@@ -208,7 +216,7 @@ class Settings(commands.Cog):
     @app_commands.default_permissions(moderate_members=True)
     async def help(self, interaction: Interaction, command: Optional[str] = None):
         await interaction.response.defer(ephemeral=True)
-
+        guild_id = interaction.guild.id
         dash_url = f"https://modbot.neomechanical.com/dashboard/{interaction.guild.id}"
         color = discord.Color.blurple()
 
@@ -235,6 +243,7 @@ class Settings(commands.Cog):
                     "cogs.settings.help.not_found",
                     placeholders={"command": command},
                     fallback=f"No help found for `{command}`.",
+                    guild_id=guild_id,
                 )
                 await interaction.followup.send(message, ephemeral=True)
                 return
@@ -336,8 +345,9 @@ class Settings(commands.Cog):
     async def get_setting(self, interaction: Interaction, name: str):
         """Get the current value of a server setting."""
         await interaction.response.defer(ephemeral=True)
-
-        texts = self.bot.translate("cogs.settings.get")
+        guild_id = interaction.guild.id
+        texts = self.bot.translate("cogs.settings.get",
+                                   guild_id=guild_id)
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
             await interaction.followup.send(texts["invalid_name"], ephemeral=True)
@@ -408,7 +418,9 @@ class Settings(commands.Cog):
         role: Optional[discord.Role] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        texts = self.bot.translate("cogs.settings.remove")
+        guild_id = interaction.guild.id
+        texts = self.bot.translate("cogs.settings.remove",
+                                   guild_id=guild_id)
         schema = SETTINGS_SCHEMA.get(name)
         if not schema:
             await interaction.followup.send(texts["invalid_name"], ephemeral=True)

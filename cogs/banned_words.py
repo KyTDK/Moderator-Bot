@@ -12,6 +12,7 @@ from modules.utils import mod_logging, mysql
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from modules.utils.text import normalize_text
+from modules.core.moderator_bot import ModeratorBot
 
 MAX_BANNED_WORDS = 500
 BANNED_ACTION_SETTING = "banned-words-action"
@@ -22,7 +23,7 @@ RE_REPEATS = re.compile(r"(.)\1{2,}")
 class BannedWordsCog(commands.Cog):
 
     """A cog for banned words handling and relevant commands."""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
     
     bannedwords_group = app_commands.Group(
@@ -78,10 +79,12 @@ class BannedWordsCog(commands.Cog):
                 if current is not False
                 else "cogs.banned_words.defaults.state_disabled"
             )
-            state = self.bot.translate(state_key)
+            state = self.bot.translate(state_key,
+                                       guild_id=guild_id)
             message = self.bot.translate(
                 "cogs.banned_words.defaults.status",
                 placeholders={"state": state},
+                guild_id=guild_id
             )
             await interaction.response.send_message(message, ephemeral=True)
             return
@@ -93,10 +96,12 @@ class BannedWordsCog(commands.Cog):
             if new_value
             else "cogs.banned_words.defaults.state_disabled"
         )
-        state = self.bot.translate(state_key)
+        state = self.bot.translate(state_key,
+                                   guild_id=guild_id)
         message = self.bot.translate(
             "cogs.banned_words.defaults.updated",
             placeholders={"state": state},
+            guild_id=guild_id
         )
         await interaction.response.send_message(message, ephemeral=True)
 
@@ -119,7 +124,9 @@ class BannedWordsCog(commands.Cog):
         )
         if existing_word:
             await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.add.duplicate", placeholders={"word": word}),
+                self.bot.translate("cogs.banned_words.add.duplicate", 
+                                   placeholders={"word": word},
+                                   guild_id=guild_id,),
                 ephemeral=True,
             )
             return
@@ -132,7 +139,9 @@ class BannedWordsCog(commands.Cog):
         )
         if count_result and count_result[0] >= MAX_BANNED_WORDS:
             await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.limit_reached", placeholders={"limit": MAX_BANNED_WORDS}),
+                self.bot.translate("cogs.banned_words.limit_reached", 
+                                   placeholders={"limit": MAX_BANNED_WORDS},
+                                   guild_id=guild_id,),
                 ephemeral=True,
             )
             return
@@ -143,7 +152,9 @@ class BannedWordsCog(commands.Cog):
             (guild_id, word)
         )
         await interaction.followup.send(
-            self.bot.translate("cogs.banned_words.add.success", placeholders={"word": word}),
+            self.bot.translate("cogs.banned_words.add.success", 
+                               placeholders={"word": word},
+                               guild_id=guild_id,),
             ephemeral=True,
         )
 
@@ -168,7 +179,9 @@ class BannedWordsCog(commands.Cog):
         existing_word = rows[0] if rows else None
         if not existing_word:
             await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.remove.missing", placeholders={"word": word}),
+                self.bot.translate("cogs.banned_words.remove.missing", 
+                                   placeholders={"word": word},
+                                   guild_id=guild_id,),
                 ephemeral=True,
             )
             return
@@ -179,7 +192,9 @@ class BannedWordsCog(commands.Cog):
             (guild_id, word)
         )
         await interaction.followup.send(
-            self.bot.translate("cogs.banned_words.remove.success", placeholders={"word": word}),
+            self.bot.translate("cogs.banned_words.remove.success", 
+                               placeholders={"word": word},
+                               guild_id=guild_id,),
             ephemeral=True,
         )
     @remove_banned_word.autocomplete("word")
@@ -223,15 +238,19 @@ class BannedWordsCog(commands.Cog):
 
         if not banned_words or len(banned_words) == 0:
             await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.list.empty"),
+                self.bot.translate("cogs.banned_words.list.empty",
+                                   guild_id=guild_id,),
                 ephemeral=True,
             )
             return
 
-        file_content = self.bot.translate("cogs.banned_words.list.file_header") + "\n"
+        file_content = self.bot.translate("cogs.banned_words.list.file_header",
+                                          guild_id=guild_id) + "\n"
         if banned_words and len(banned_words) > 0:
             for word in banned_words:
-                file_content += self.bot.translate("cogs.banned_words.list.file_item", placeholders={"word": word}) + "\n"
+                file_content += self.bot.translate("cogs.banned_words.list.file_item", 
+                                                   placeholders={"word": word},
+                                                   guild_id=guild_id) + "\n"
             file_buffer = io.StringIO(file_content)
             file = discord.File(file_buffer, filename = f"banned_words_{interaction.guild.id}.txt")
 
@@ -256,12 +275,14 @@ class BannedWordsCog(commands.Cog):
         )
         if affected_rows == 0:
             await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.clear.empty"),
+                self.bot.translate("cogs.banned_words.clear.empty",
+                                   guild_id=guild_id,),
                 ephemeral=True,
             )
             return
         await interaction.followup.send(
-            self.bot.translate("cogs.banned_words.clear.success"),
+            self.bot.translate("cogs.banned_words.clear.success",
+                               guild_id=guild_id,),
             ephemeral=True,
         )
 
@@ -322,8 +343,10 @@ class BannedWordsCog(commands.Cog):
                     user=message.author,
                     bot=self.bot,
                     action_string=action_flag,
-                    reason=self.bot.translate("cogs.banned_words.enforcement.strike_reason"),
-                    source=self.bot.translate("cogs.banned_words.enforcement.strike_source"),
+                    reason=self.bot.translate("cogs.banned_words.enforcement.strike_reason",
+                                              guild_id=guild_id,),
+                    source=self.bot.translate("cogs.banned_words.enforcement.strike_source",
+                                              guild_id=guild_id,),
                     message=message
                 )
             except Exception:
@@ -331,8 +354,11 @@ class BannedWordsCog(commands.Cog):
 
         try:
             embed = discord.Embed(
-                title=self.bot.translate("cogs.banned_words.enforcement.embed_title"),
-                description=self.bot.translate("cogs.banned_words.enforcement.embed_description", placeholders={"mention": message.author.mention}),
+                title=self.bot.translate("cogs.banned_words.enforcement.embed_title",
+                                         guild_id=guild_id,),
+                description=self.bot.translate("cogs.banned_words.enforcement.embed_description", 
+                                               placeholders={"mention": message.author.mention},
+                                               guild_id=guild_id,),
                 color=discord.Color.red()
             )
             embed.set_thumbnail(url=message.author.display_avatar.url)
@@ -417,9 +443,11 @@ class BannedWordsCog(commands.Cog):
     )
     async def view_banned_actions(self, interaction: Interaction):
         actions = await manager.view_actions(interaction.guild.id)
+        guild_id = interaction.guild.id
         if not actions:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_words.actions.none"),
+                self.bot.translate("cogs.banned_words.actions.none",
+                                   guild_id=guild_id,),
                 ephemeral=True,
             )
             return
@@ -428,6 +456,7 @@ class BannedWordsCog(commands.Cog):
         header = self.bot.translate(
             "cogs.banned_words.actions.header",
             placeholders={"actions": formatted},
+            guild_id=guild_id,
         )
         await interaction.response.send_message(header, ephemeral=True)
 

@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 import os
 from dotenv import load_dotenv
 import hashlib
-
+from modules.core.moderator_bot import ModeratorBot
 
 load_dotenv()
 
@@ -21,7 +21,7 @@ def compute_api_key_hash(api_key: str) -> str:
 class ApiPoolCog(commands.Cog):
     """A cog for managing the API pool."""
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
 
     api_pool_group = app_commands.Group(
@@ -34,8 +34,10 @@ class ApiPoolCog(commands.Cog):
         description="Explain the API pool."
     )
     async def explain(self, interaction: Interaction):
+        guild_id = interaction.guild.id
         explanation = self.bot.translate(
-            "cogs.api_pool.explanation.body"
+            "cogs.api_pool.explanation.body",
+            guild_id=guild_id,
         )
         await interaction.response.send_message(explanation, ephemeral=True)
 
@@ -46,6 +48,7 @@ class ApiPoolCog(commands.Cog):
     async def add_api(self, interaction: Interaction, api_key: str):
         await interaction.response.defer(ephemeral=True)
         user_id = interaction.user.id
+        guild_id = interaction.guild.id
         api_key_hash = compute_api_key_hash(api_key)
         
         # Check if the hash already exists in the database
@@ -61,10 +64,12 @@ class ApiPoolCog(commands.Cog):
                 exc.translation_key,
                 placeholders=dict(exc.placeholders),
                 fallback=exc.fallback,
+                guild_id=guild_id,
             )
             message = self.bot.translate(
                 "cogs.api_pool.add.invalid",
                 placeholders={"error": error_text},
+                guild_id=guild_id,
             )
             await interaction.followup.send(message, ephemeral=True)
             return
@@ -72,13 +77,15 @@ class ApiPoolCog(commands.Cog):
             message = self.bot.translate(
                 "cogs.api_pool.add.invalid",
                 placeholders={"error": str(exc)},
+                guild_id=guild_id,
             )
             await interaction.followup.send(message, ephemeral=True)
             return
 
         if existing:
             await interaction.followup.send(
-                self.bot.translate("cogs.api_pool.add.duplicate"),
+                self.bot.translate("cogs.api_pool.add.duplicate",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
         else:
@@ -88,7 +95,8 @@ class ApiPoolCog(commands.Cog):
                 (user_id, fernet.encrypt(api_key.encode()).decode(), api_key_hash)
             )
             await interaction.followup.send(
-                self.bot.translate("cogs.api_pool.add.success"),
+                self.bot.translate("cogs.api_pool.add.success",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
 
@@ -98,16 +106,19 @@ class ApiPoolCog(commands.Cog):
     )
     async def remove_api(self, interaction: Interaction, api_key: str):
         user_id = interaction.user.id
+        guild_id = interaction.guild.id
         query = "DELETE FROM api_pool WHERE user_id = %s AND api_key_hash = %s"
         _, affected_rows = await execute_query(query, (user_id, compute_api_key_hash(api_key)))
         if affected_rows > 0:
             await interaction.response.send_message(
-                self.bot.translate("cogs.api_pool.remove.success"),
+                self.bot.translate("cogs.api_pool.remove.success",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
         else:
             await interaction.response.send_message(
-                self.bot.translate("cogs.api_pool.remove.missing"),
+                self.bot.translate("cogs.api_pool.remove.missing",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
 
@@ -117,16 +128,19 @@ class ApiPoolCog(commands.Cog):
     )
     async def clear_api(self, interaction: Interaction):
         user_id = interaction.user.id
+        guild_id = interaction.guild.id
         query = "DELETE FROM api_pool WHERE user_id = %s"
         _, affected_rows = await execute_query(query, (user_id,))
         if affected_rows > 0:
             await interaction.response.send_message(
-                self.bot.translate("cogs.api_pool.clear.success"),
+                self.bot.translate("cogs.api_pool.clear.success",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
         else:
             await interaction.response.send_message(
-                self.bot.translate("cogs.api_pool.clear.empty"),
+                self.bot.translate("cogs.api_pool.clear.empty",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
 
@@ -136,19 +150,22 @@ class ApiPoolCog(commands.Cog):
     )
     async def list_apis(self, interaction: Interaction):
         user_id = interaction.user.id
+        guild_id = interaction.guild.id
         query = "SELECT api_key FROM api_pool WHERE user_id = %s"
         result, _ = await execute_query(query, (user_id,), fetch_all=True)
         if result:
             api_keys = [row[0] for row in result]
             formatted_keys = '\n'.join(f"- {fernet.decrypt(key.encode()).decode()}" for key in api_keys)
-            header = self.bot.translate("cogs.api_pool.list.header")
+            header = self.bot.translate("cogs.api_pool.list.header",
+                                        guild_id=guild_id)
             await interaction.response.send_message(
                 f"{header}\n{formatted_keys}",
                 ephemeral=True,
             )
         else:
             await interaction.response.send_message(
-                self.bot.translate("cogs.api_pool.list.empty"),
+                self.bot.translate("cogs.api_pool.list.empty",
+                                   guild_id=guild_id),
                 ephemeral=True,
             )
 

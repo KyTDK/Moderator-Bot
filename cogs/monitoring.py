@@ -6,15 +6,17 @@ from modules.cache import CachedMessage
 from modules.utils import mysql
 from discord.utils import format_dt, utcnow
 from discord import app_commands
-
+from modules.core.moderator_bot import ModeratorBot
 
 class MonitoringCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
         self._monitor_blocked_channels: set[int] = set()
 
-    def _texts(self, section: str):
-        return self.bot.translate(f"cogs.monitoring.{section}")
+    def _texts(self, section: str, guild_id: int):
+        return self.bot.translate(f"cogs.monitoring.{section}",
+                                    guild_id=guild_id
+                                  )
 
     async def get_monitor_channel(self, guild_id: int) -> Optional[int]:
         channel_id = await mysql.get_settings(guild_id, "monitor-channel")
@@ -59,7 +61,8 @@ class MonitoringCog(commands.Cog):
 
         try:
             allowed = discord.AllowedMentions.all() if mention_user else discord.AllowedMentions.none()
-            log_texts = self._texts("log_event")
+            log_texts = self._texts("log_event",
+                                    guild_id=guild.id)
             if embed is not None:
                 is_accelerated = await mysql.is_accelerated(guild_id=guild.id)
                 if not is_accelerated:
@@ -80,7 +83,8 @@ class MonitoringCog(commands.Cog):
         if not await self.is_event_enabled(guild.id, "join"):
             return
 
-        texts = self._texts("join")
+        texts = self._texts("join",
+                            guild_id=guild.id)
         try:
             embed = Embed(
                 title=texts["title"],
@@ -117,7 +121,8 @@ class MonitoringCog(commands.Cog):
         if not await self.is_event_enabled(guild.id, "timeout"):
             return
 
-        texts = self._texts("timeout")
+        texts = self._texts("timeout",
+                            guild_id=guild.id)
         timed_out = after.timed_out_until is not None
         title = texts["title_applied"] if timed_out else texts["title_removed"]
         description_template = texts["description_applied"] if timed_out else texts["description_removed"]
@@ -196,7 +201,8 @@ class MonitoringCog(commands.Cog):
             if not await self.is_event_enabled(guild.id, event_key):
                 return
 
-            texts = self._texts("leave")
+            texts = self._texts("leave",
+                                guild_id=guild.id)
             title = texts["title_kicked"] if kicked else texts["title_left"]
             description = (texts["description_kicked"] if kicked else texts["description_left"]).format(
                 mention=user.mention,
@@ -230,7 +236,8 @@ class MonitoringCog(commands.Cog):
         if not await self.is_event_enabled(guild_id, "message_delete"):
             return
 
-        texts = self._texts("message_delete")
+        texts = self._texts("message_delete",
+                            guild_id=guild_id)
         channel = self.bot.get_channel(cached_message.channel_id)
         if channel is None:
             return
@@ -342,7 +349,8 @@ class MonitoringCog(commands.Cog):
     async def on_member_ban(self, guild: discord.Guild, user: discord.User):
         if not await self.is_event_enabled(guild.id, "ban"):
             return
-        texts = self._texts("ban")
+        texts = self._texts("ban",
+                            guild_id=guild.id)
         try:
             embed = discord.Embed(
                 title=texts["title"],
@@ -375,7 +383,8 @@ class MonitoringCog(commands.Cog):
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
         if not await self.is_event_enabled(guild.id, "unban"):
             return
-        texts = self._texts("unban")
+        texts = self._texts("unban",
+                            guild_id=guild.id)
         try:
             embed = discord.Embed(
                 title=texts["title"],
@@ -407,7 +416,8 @@ class MonitoringCog(commands.Cog):
     async def handle_message_edit(self, cached_before: CachedMessage, after: discord.Message):
         if not await self.is_event_enabled(after.guild.id, "message_edit"):
             return
-        texts = self._texts("message_edit")
+        texts = self._texts("message_edit",
+                            guild_id=after.guild.id)
         embed = Embed(
             title=texts["title"],
             description=texts["description"].format(
@@ -440,7 +450,9 @@ class MonitoringCog(commands.Cog):
     @monitor_group.command(name="set", description="Set channel to output logs.")
     @app_commands.describe(channel="The channel to send logs to.")
     async def monitor_set(self, interaction: Interaction, channel: discord.TextChannel):
-        texts = self._texts("monitor_commands")
+        guild_id = interaction.guild.id
+        texts = self._texts("monitor_commands",
+                            guild_id=guild_id)
         await mysql.update_settings(interaction.guild.id, "monitor-channel", channel.id)
         await interaction.response.send_message(
             texts["set"].format(channel=channel.mention),
@@ -449,7 +461,9 @@ class MonitoringCog(commands.Cog):
 
     @monitor_group.command(name="remove", description="Remove the monitor channel setting.")
     async def monitor_remove(self, interaction: Interaction):
-        texts = self._texts("monitor_commands")
+        guild_id = interaction.guild.id
+        texts = self._texts("monitor_commands",
+                            guild_id=guild_id)
         removed = await mysql.update_settings(interaction.guild.id, "monitor-channel", None)
         if removed:
             await interaction.response.send_message(texts["removed"], ephemeral=True)
@@ -458,7 +472,9 @@ class MonitoringCog(commands.Cog):
 
     @monitor_group.command(name="show", description="Show the current monitor channel.")
     async def monitor_show(self, interaction: Interaction):
-        texts = self._texts("monitor_commands")
+        guild_id = interaction.guild.id
+        texts = self._texts("monitor_commands",
+                            guild_id=guild_id)
         channel_id = await mysql.get_settings(interaction.guild.id, "monitor-channel")
         if channel_id:
             channel = interaction.guild.get_channel(channel_id)
@@ -484,7 +500,9 @@ class MonitoringCog(commands.Cog):
         ]
     )
     async def toggle_event(self, interaction: Interaction, event: app_commands.Choice[str], enabled: bool):
-        texts = self._texts("monitor_commands")
+        guild_id = interaction.guild.id
+        texts = self._texts("monitor_commands",
+                            guild_id=guild_id)
         settings = await mysql.get_settings(interaction.guild.id, "monitor-events") or {}
         settings[event.value] = enabled
         await mysql.update_settings(interaction.guild.id, "monitor-events", settings)
@@ -496,7 +514,9 @@ class MonitoringCog(commands.Cog):
 
     @monitor_group.command(name="list_events", description="List current monitor event settings.")
     async def list_events(self, interaction: Interaction):
-        texts = self._texts("monitor_commands")
+        guild_id = interaction.guild.id
+        texts = self._texts("monitor_commands",
+                            guild_id=guild_id)
         await interaction.response.defer(ephemeral=True)
         settings = await mysql.get_settings(interaction.guild.id, "monitor-events") or {}
         lines = []

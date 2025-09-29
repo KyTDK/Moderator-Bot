@@ -1,9 +1,9 @@
 ﻿from discord.ext import commands
 from discord import Color, Embed, Interaction, app_commands
-
+from modules.core.moderator_bot import ModeratorBot
 
 class DashboardCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
 
     @app_commands.command(name="dashboard", description="Open the dashboard for this server.")
@@ -17,10 +17,12 @@ class DashboardCog(commands.Cog):
         await interaction.response.defer(ephemeral=True, thinking=True)
 
         embed = Embed(
-            title=self.bot.translate("cogs.dashboard.embed.title"),
+            title=self.bot.translate("cogs.dashboard.embed.title",
+                                     guild_id=guild_id),
             description=self.bot.translate(
                 "cogs.dashboard.embed.description",
                 placeholders={"url": backend_url},
+                guild_id=guild_id,
             ),
             color=Color.blurple()
         )

@@ -8,7 +8,7 @@ from modules.utils.event_manager import EventListManager
 from modules.utils.action_manager import ActionListManager
 from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.strike import validate_action
-
+from modules.core.moderator_bot import ModeratorBot
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 ACTION_MANAGER = ActionListManager(AIMOD_ACTION_SETTING)
@@ -57,7 +57,7 @@ async def can_run(interaction: Interaction) -> bool:
 
 
 class AutonomousCommandsCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
 
     ai_mod_group = app_commands.Group(
@@ -72,15 +72,19 @@ class AutonomousCommandsCog(commands.Cog):
     async def set_rules(self, interaction: Interaction, *, rules: str):
         if not await can_run(interaction):
             return
+        guild_id = interaction.guild.id
         await mysql.update_settings(interaction.guild.id, "rules", rules)
-        texts = self.bot.translate("cogs.autonomous_moderation.rules")
+        texts = self.bot.translate("cogs.autonomous_moderation.rules",
+                                   guild_id=guild_id)
         await interaction.response.send_message(texts["updated"], ephemeral=True)
 
     @ai_mod_group.command(name="rules_show", description="Show the currently configured moderation rules.")
     async def show_rules(self, interaction: Interaction):
         if not await can_run(interaction):
             return
-        texts = self.bot.translate("cogs.autonomous_moderation.rules")
+        guild_id = interaction.guild.id
+        texts = self.bot.translate("cogs.autonomous_moderation.rules",
+                                   guild_id=guild_id)
         rules = await mysql.get_settings(interaction.guild.id, "rules")
         if not rules:
             await interaction.response.send_message(texts["none"], ephemeral=True)
@@ -154,7 +158,8 @@ class AutonomousCommandsCog(commands.Cog):
         if not await can_run(interaction):
             return
         gid = interaction.guild.id
-        toggle_texts = self.bot.translate("cogs.autonomous_moderation.toggle")
+        toggle_texts = self.bot.translate("cogs.autonomous_moderation.toggle",
+                                           guild_id=gid)
 
         if enable.value == "status":
             enabled = await mysql.get_settings(gid, "autonomous-mod")
@@ -191,7 +196,9 @@ class AutonomousCommandsCog(commands.Cog):
         if not await can_run(interaction):
             return
         actions = await ACTION_MANAGER.view_actions(interaction.guild.id)
-        actions_texts = self.bot.translate("cogs.autonomous_moderation.actions")
+        guild_id = interaction.guild.id
+        actions_texts = self.bot.translate("cogs.autonomous_moderation.actions",
+                                           guild_id=guild_id)
         if not actions:
             await interaction.response.send_message(actions_texts["none"], ephemeral=True)
             return
@@ -228,7 +235,9 @@ class AutonomousCommandsCog(commands.Cog):
         if not await ensure_adaptive_mode(interaction):
             return
 
-        adaptive_texts = self.bot.translate("cogs.autonomous_moderation.adaptive")
+        guild_id = interaction.guild.id
+        adaptive_texts = self.bot.translate("cogs.autonomous_moderation.adaptive",
+                                            guild_id=guild_id)
 
         try:
             if event.value in {"role_online", "role_offline"}:
@@ -285,7 +294,9 @@ class AutonomousCommandsCog(commands.Cog):
             return
         if not await ensure_adaptive_mode(interaction):
             return
-        adaptive_texts = self.bot.translate("cogs.autonomous_moderation.adaptive")
+        guild_id = interaction.guild.id
+        adaptive_texts = self.bot.translate("cogs.autonomous_moderation.adaptive",
+                                            guild_id=guild_id)
         await mysql.update_settings(interaction.guild.id, AIMOD_EVENT_SETTING, {})
         await interaction.response.send_message(adaptive_texts["cleared"], ephemeral=True)
 
@@ -295,8 +306,9 @@ class AutonomousCommandsCog(commands.Cog):
             return
         if not await ensure_adaptive_mode(interaction):
             return
-
-        adaptive_texts = self.bot.translate("cogs.autonomous_moderation.adaptive")
+        guild_id = interaction.guild.id
+        adaptive_texts = self.bot.translate("cogs.autonomous_moderation.adaptive",
+                                            guild_id=guild_id)
         settings = await EVENT_MANAGER.view_events(interaction.guild.id)
         if not settings:
             await interaction.response.send_message(adaptive_texts["none"], ephemeral=True)

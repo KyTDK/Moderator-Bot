@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from modules.utils import mysql
+from modules.core.moderator_bot import ModeratorBot
 
 LOG_CHANNEL_TYPES: dict[str, tuple[str, str, str]] = {
     "strike": ("strike-channel", "Strike", "cogs.channel_config.meta.types.strike"),
@@ -28,7 +29,7 @@ def _channel_type_choices() -> list[app_commands.Choice[str]]:
 
 
 class ChannelConfigCog(commands.Cog):
-    def __init__(self, bot): self.bot = bot
+    def __init__(self, bot: ModeratorBot): self.bot = bot
 
     channels_group = app_commands.Group(
         name="channels",
@@ -64,12 +65,17 @@ class ChannelConfigCog(commands.Cog):
         channel: discord.TextChannel,
         type: app_commands.Choice[str],
     ):
+        guild_id = interaction.guild.id
         setting_key, _, translation_key = LOG_CHANNEL_TYPES[type.value]
-        type_label = self.bot.translate(translation_key, fallback=type.name)
+        type_label = self.bot.translate(translation_key, 
+                                        fallback=type.name,
+                                        guild_id=guild_id,)
 
         if type.value == "nsfw" and not channel.is_nsfw():
             await interaction.response.send_message(
-                self.bot.translate("cogs.channel_config.nsfw_required", placeholders={"channel": channel.mention}),
+                self.bot.translate("cogs.channel_config.nsfw_required", 
+                                   placeholders={"channel": channel.mention},
+                                   guild_id=guild_id,),
                 ephemeral=True,
             )
             return
@@ -86,7 +92,9 @@ class ChannelConfigCog(commands.Cog):
         if missing:
             perm_list = ", ".join(m.replace('_', ' ').title() for m in missing)
             await interaction.response.send_message(
-                self.bot.translate("cogs.channel_config.missing_permissions", placeholders={"channel": channel.mention, "permissions": perm_list}),
+                self.bot.translate("cogs.channel_config.missing_permissions", 
+                                   placeholders={"channel": channel.mention, "permissions": perm_list},
+                                   guild_id=guild_id,),
                 ephemeral=True,
             )
             return
@@ -96,6 +104,7 @@ class ChannelConfigCog(commands.Cog):
             self.bot.translate(
                 "cogs.channel_config.set_success",
                 placeholders={"log_type": type_label, "channel": channel.mention},
+                guild_id=guild_id,
             ),
             ephemeral=True,
         )
@@ -116,12 +125,14 @@ class ChannelConfigCog(commands.Cog):
     @app_commands.choices(type=_channel_type_choices())
     async def unset_channel(self, interaction: Interaction, type: app_commands.Choice[str]):
         setting_key, _, translation_key = LOG_CHANNEL_TYPES[type.value]
+        guild_id = interaction.guild.id
         type_label = self.bot.translate(translation_key, fallback=type.name)
         await mysql.update_settings(interaction.guild.id, setting_key, None)
         await interaction.response.send_message(
             self.bot.translate(
                 "cogs.channel_config.unset_success",
                 placeholders={"log_type": type_label},
+                guild_id=guild_id,
             ),
             ephemeral=True,
         )
@@ -167,9 +178,11 @@ class ChannelConfigCog(commands.Cog):
                     "name": self.bot.translate(
                         translation_key,
                         fallback=default_label,
+                        guild_id=guild_id,
                     ),
                     "value": value,
                 },
+                guild_id=guild_id,
             )
 
         lines = [fmt(identifier, config) for identifier, config in LOG_CHANNEL_TYPES.items()]

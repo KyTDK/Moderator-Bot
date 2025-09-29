@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 import platform
 import time
+from modules.core.moderator_bot import ModeratorBot
 
 load_dotenv()
 GUILD_ID = int(os.getenv('GUILD_ID', 0))
@@ -16,7 +17,7 @@ ALLOWED_USER_IDS = [int(id) for id in os.getenv('ALLOWED_USER_IDS', '').split(',
 tracemalloc.start()
 
 class DebugCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
         self.process = psutil.Process()
         self.start_time = time.time()
@@ -27,11 +28,13 @@ class DebugCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def stats(self, interaction: discord.Interaction, show_all: bool = True):
         await interaction.response.defer(ephemeral=True)
-
+        guild_id = interaction.guild.id
         # Check if bot is in list of allowed user IDs
         if interaction.user.id not in ALLOWED_USER_IDS:
             await interaction.followup.send(
-                self.bot.translate("cogs.debug.permission_denied"),
+                self.bot.translate("cogs.debug.permission_denied",
+                                   guild_id=guild_id
+                                   ),
                 ephemeral=True
             )
             return
@@ -80,7 +83,8 @@ class DebugCog(commands.Cog):
                 break
         
         if not top_allocations:
-            top_allocations.append(self.bot.translate("cogs.debug.no_allocations"))
+            top_allocations.append(self.bot.translate("cogs.debug.no_allocations",
+                                                      guild_id=guild_id))
 
         chunks = []
         current_chunk = ""
@@ -94,7 +98,8 @@ class DebugCog(commands.Cog):
             chunks.append(current_chunk)
 
         # Build embed
-        debug_texts = self.bot.translate("cogs.debug.embed")
+        debug_texts = self.bot.translate("cogs.debug.embed",
+                                         guild_id=guild_id)
         embed = discord.Embed(
             title=debug_texts["title"],
             color=discord.Color.blurple()

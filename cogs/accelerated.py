@@ -5,11 +5,12 @@ from discord.utils import format_dt, utcnow
 from modules.utils import mysql
 from datetime import timezone
 from discord.ui import View, Button
+from modules.core.moderator_bot import ModeratorBot
 
 class AcceleratedCog(commands.Cog):
     """Commands for Moderator Bot Accelerated (Premium)."""
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
 
     accelerated_group = app_commands.Group(
@@ -33,7 +34,8 @@ class AcceleratedCog(commands.Cog):
         guild_id = interaction.guild.id
 
         details = await mysql.get_premium_status(guild_id=guild_id)
-        texts = self.bot.translate("cogs.accelerated.status")
+        texts = self.bot.translate("cogs.accelerated.status", 
+                                   guild_id=guild_id)
         fields = texts["field_names"]
         footer_base = texts["footer_base"]
 
@@ -127,7 +129,8 @@ class AcceleratedCog(commands.Cog):
         await interaction.response.defer(ephemeral=True, thinking=True)
 
         is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
-        subscribe_texts = self.bot.translate("cogs.accelerated.subscribe")
+        subscribe_texts = self.bot.translate("cogs.accelerated.subscribe",
+                                             guild_id=guild_id)
         if is_accelerated:
             print(f"[Accelerated] User {user_id} in guild {guild_id} already subscribed.")
             return await interaction.followup.send(
@@ -159,7 +162,9 @@ class AcceleratedCog(commands.Cog):
     )
     async def perks(self, interaction: Interaction):
         """Show the benefits of Accelerated subscription."""
-        texts = self.bot.translate("cogs.accelerated.perks")
+        guild_id = interaction.guild.id
+        texts = self.bot.translate("cogs.accelerated.perks",
+                                   guild_id=guild_id)
         embed = discord.Embed(
             title=texts["title"],
             description=texts["description"],
@@ -176,8 +181,11 @@ class AcceleratedCog(commands.Cog):
     )
     async def cancel(self, interaction: Interaction):
         """Explain how to cancel your subscription."""
-        message = self.bot.translate("cogs.accelerated.cancel.message")
-        await interaction.response.send_message(message, ephemeral=True)
+        await interaction.response.defer(ephemeral=True)
+        guild_id = interaction.guild.id
+        message = self.bot.translate("cogs.accelerated.cancel.message", 
+                                     guild_id=guild_id)
+        await interaction.followup.send(message, ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

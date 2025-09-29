@@ -8,6 +8,7 @@ from modules.utils.discord_utils import require_accelerated
 from modules.utils.list_manager import ListManager
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
+from modules.core.moderator_bot import ModeratorBot
 
 NSFW_ACTION_SETTING = "nsfw-detection-action"
 manager = ActionListManager(NSFW_ACTION_SETTING)
@@ -15,7 +16,7 @@ NSFW_CATEGORY_SETTING = "nsfw-detection-categories"
 category_manager = ListManager(NSFW_CATEGORY_SETTING)
 
 class NSFWCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
 
     nsfw_group = app_commands.Group(
@@ -103,7 +104,8 @@ class NSFWCog(commands.Cog):
         gid = interaction.guild.id
 
         actions = await manager.view_actions(gid)
-        texts = self.bot.translate("cogs.nsfw.actions")
+        texts = self.bot.translate("cogs.nsfw.actions",
+                                    guild_id=gid)
         if not actions:
             await interaction.response.send_message(texts["none"], ephemeral=True)
             return
@@ -203,7 +205,8 @@ class NSFWCog(commands.Cog):
     async def view_categories(self, interaction: Interaction):
         gid = interaction.guild.id
         categories = await category_manager.view(gid)
-        texts = self.bot.translate("cogs.nsfw.categories")
+        texts = self.bot.translate("cogs.nsfw.categories",
+                                    guild_id=gid)
         if not categories:
             await interaction.response.send_message(texts["none"], ephemeral=True)
             return
@@ -227,7 +230,9 @@ class NSFWCog(commands.Cog):
         )
     )
     async def set_threshold(self, interaction: Interaction, threshold: float):
-        threshold_texts = self.bot.translate("cogs.nsfw.threshold")
+        guild_id = interaction.guild.id
+        threshold_texts = self.bot.translate("cogs.nsfw.threshold",
+                                            guild_id=guild_id)
         if not (0.0 <= threshold <= 1.0):
             await interaction.response.send_message(
                 threshold_texts["invalid"],
@@ -252,7 +257,8 @@ class NSFWCog(commands.Cog):
     async def view_threshold(self, interaction: Interaction):
         gid = interaction.guild.id
         threshold = await mysql.get_settings(gid, "threshold")
-        texts = self.bot.translate("cogs.nsfw.threshold")
+        texts = self.bot.translate("cogs.nsfw.threshold",
+                                   guild_id=gid)
         if threshold is None:
             await interaction.response.send_message(texts["unset"], ephemeral=True)
             return

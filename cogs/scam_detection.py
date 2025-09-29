@@ -16,6 +16,7 @@ import aiohttp
 from discord.ext import tasks
 from modules.utils.url_utils import extract_urls, unshorten_url, update_tld_list
 from modules.worker_queue import WorkerQueue
+from modules.core.moderator_bot import ModeratorBot
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -191,7 +192,7 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
 class ScamDetectionCog(commands.Cog):
     """Detect scam messages / URLs and let mods manage patterns + settings."""
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: ModeratorBot):
         self.bot = bot
         # Start background tasks after cog is fully loaded to avoid blocking startup
         self.free_queue = WorkerQueue(max_workers=1)
@@ -207,8 +208,9 @@ class ScamDetectionCog(commands.Cog):
     @scam_group.command(name="exclude_channel_add", description="Exclude a channel from scam detection.")
     @app_commands.describe(channel="The channel to exclude")
     async def exclude_channel_add(self, interaction: Interaction, channel: discord.TextChannel):
-        texts = self.bot.translate("cogs.scam_detection.exclude")
         gid = interaction.guild.id
+        texts = self.bot.translate("cogs.scam_detection.exclude",
+                                    guild_id=gid)
         current_excluded = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
         if channel.id in current_excluded:
             await interaction.response.send_message(
@@ -226,8 +228,9 @@ class ScamDetectionCog(commands.Cog):
     @scam_group.command(name="exclude_channel_remove", description="Remove a channel from the exclusion list.")
     @app_commands.describe(channel="The channel to remove from exclusion")
     async def exclude_channel_remove(self, interaction: Interaction, channel: discord.TextChannel):
-        texts = self.bot.translate("cogs.scam_detection.exclude")
         gid = interaction.guild.id
+        texts = self.bot.translate("cogs.scam_detection.exclude",
+                                    guild_id=gid)
         current_excluded = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
         if channel.id not in current_excluded:
             await interaction.response.send_message(
@@ -244,8 +247,9 @@ class ScamDetectionCog(commands.Cog):
 
     @scam_group.command(name="exclude_channel_list", description="List all excluded channels.")
     async def exclude_channel_list(self, interaction: Interaction):
-        texts = self.bot.translate("cogs.scam_detection.exclude")
         gid = interaction.guild.id
+        texts = self.bot.translate("cogs.scam_detection.exclude",
+                                    guild_id=gid)
         excluded_channels = await get_settings(gid, EXCLUDE_CHANNELS_SETTING) or []
         if not excluded_channels:
             await interaction.response.send_message(texts["list_empty"], ephemeral=True)
@@ -329,7 +333,8 @@ class ScamDetectionCog(commands.Cog):
     async def settings_view(self, interaction: Interaction):
         gid = interaction.guild.id
         action_setting = await manager.view_actions(gid)
-        texts = self.bot.translate("cogs.scam_detection.settings")
+        texts = self.bot.translate("cogs.scam_detection.settings",
+                                   guild_id=gid)
 
         if not action_setting:
             actions_formatted = texts["none"]
@@ -389,14 +394,16 @@ class ScamDetectionCog(commands.Cog):
                         user=message.author,
                         bot=self.bot,
                         action_string=action_flag,
-                        reason=self.bot.translate("cogs.scam_detection.detection.reason"),
+                        reason=self.bot.translate("cogs.scam_detection.detection.reason",
+                                                    guild_id=gid),
                         source="scam",
                         message=message,
                     )
                 except Exception:
                     pass
 
-            detection_texts = self.bot.translate("cogs.scam_detection.detection")
+            detection_texts = self.bot.translate("cogs.scam_detection.detection",
+                                                 guild_id=gid)
             try:
                 embed = discord.Embed(
                     title=detection_texts["title"],
