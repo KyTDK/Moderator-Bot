@@ -3,42 +3,71 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from modules.utils import mysql
 
-LOG_CHANNEL_TYPES = {
-    "Strike": "strike-channel",
-    "NSFW": "nsfw-channel",
-    "AI": "aimod-channel",
-    "Monitor": "monitor-channel",
-    "Captcha": "captcha-log-channel",
-    "VC Transcript": "vcmod-transcript-channel",
+LOG_CHANNEL_TYPES: dict[str, tuple[str, str, str]] = {
+    "strike": ("strike-channel", "Strike", "cogs.channel_config.meta.types.strike"),
+    "nsfw": ("nsfw-channel", "NSFW", "cogs.channel_config.meta.types.nsfw"),
+    "ai": ("aimod-channel", "AI", "cogs.channel_config.meta.types.ai"),
+    "monitor": ("monitor-channel", "Monitor", "cogs.channel_config.meta.types.monitor"),
+    "captcha": ("captcha-log-channel", "Captcha", "cogs.channel_config.meta.types.captcha"),
+    "vc_transcript": (
+        "vcmod-transcript-channel",
+        "VC Transcript",
+        "cogs.channel_config.meta.types.vc_transcript",
+    ),
 }
+
+
+def _channel_type_choices() -> list[app_commands.Choice[str]]:
+    return [
+        app_commands.Choice(
+            name=app_commands.locale_str(default_label, key=translation_key),
+            value=identifier,
+        )
+        for identifier, (_, default_label, translation_key) in LOG_CHANNEL_TYPES.items()
+    ]
+
 
 class ChannelConfigCog(commands.Cog):
     def __init__(self, bot): self.bot = bot
 
     channels_group = app_commands.Group(
         name="channels",
-        description="Configure log channels.",
+        description=app_commands.locale_str(
+            "Configure log channels.",
+            key="cogs.channel_config.meta.group_description",
+        ),
         guild_only=True,
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
-    @channels_group.command(name="set", description="Set a log channel.")
+    @channels_group.command(
+        name="set",
+        description=app_commands.locale_str(
+            "Set a log channel.",
+            key="cogs.channel_config.meta.set.description",
+        ),
+    )
     @app_commands.describe(
-        channel="The channel to use for logging.",
-        type="Which type of log this channel is for."
+        channel=app_commands.locale_str(
+            "The channel to use for logging.",
+            key="cogs.channel_config.meta.set.params.channel",
+        ),
+        type=app_commands.locale_str(
+            "Which type of log this channel is for.",
+            key="cogs.channel_config.meta.set.params.type",
+        ),
     )
-    @app_commands.choices(
-        type=[app_commands.Choice(name=name, value=name) for name in LOG_CHANNEL_TYPES]
-    )
+    @app_commands.choices(type=_channel_type_choices())
     async def set_channel(
         self,
         interaction: Interaction,
         channel: discord.TextChannel,
         type: app_commands.Choice[str],
     ):
-        key = LOG_CHANNEL_TYPES[type.value]
+        setting_key, _, translation_key = LOG_CHANNEL_TYPES[type.value]
+        type_label = self.bot.translate(translation_key, fallback=type.name)
 
-        if type.value == "NSFW" and not channel.is_nsfw():
+        if type.value == "nsfw" and not channel.is_nsfw():
             await interaction.response.send_message(
                 self.bot.translate("cogs.channel_config.nsfw_required", placeholders={"channel": channel.mention}),
                 ephemeral=True,
@@ -62,26 +91,48 @@ class ChannelConfigCog(commands.Cog):
             )
             return
 
-        await mysql.update_settings(interaction.guild.id, key, channel.id)
+        await mysql.update_settings(interaction.guild.id, setting_key, channel.id)
         await interaction.response.send_message(
-            self.bot.translate("cogs.channel_config.set_success", placeholders={"log_type": type.value, "channel": channel.mention}),
+            self.bot.translate(
+                "cogs.channel_config.set_success",
+                placeholders={"log_type": type_label, "channel": channel.mention},
+            ),
             ephemeral=True,
         )
 
-    @channels_group.command(name="unset", description="Unset a log channel.")
-    @app_commands.describe(type="Which log type to disable.")
-    @app_commands.choices(
-        type=[app_commands.Choice(name=name, value=name) for name in LOG_CHANNEL_TYPES]
+    @channels_group.command(
+        name="unset",
+        description=app_commands.locale_str(
+            "Unset a log channel.",
+            key="cogs.channel_config.meta.unset.description",
+        ),
     )
+    @app_commands.describe(
+        type=app_commands.locale_str(
+            "Which log type to disable.",
+            key="cogs.channel_config.meta.unset.params.type",
+        )
+    )
+    @app_commands.choices(type=_channel_type_choices())
     async def unset_channel(self, interaction: Interaction, type: app_commands.Choice[str]):
-        key = LOG_CHANNEL_TYPES[type.value]
-        await mysql.update_settings(interaction.guild.id, key, None)
+        setting_key, _, translation_key = LOG_CHANNEL_TYPES[type.value]
+        type_label = self.bot.translate(translation_key, fallback=type.name)
+        await mysql.update_settings(interaction.guild.id, setting_key, None)
         await interaction.response.send_message(
-            self.bot.translate("cogs.channel_config.unset_success", placeholders={"log_type": type.value}),
+            self.bot.translate(
+                "cogs.channel_config.unset_success",
+                placeholders={"log_type": type_label},
+            ),
             ephemeral=True,
         )
 
-    @channels_group.command(name="show", description="Show current log channel settings.")
+    @channels_group.command(
+        name="show",
+        description=app_commands.locale_str(
+            "Show current log channel settings.",
+            key="cogs.channel_config.meta.show.description",
+        ),
+    )
     async def show_channels(self, interaction: Interaction):
         show_texts = self.bot.translate("cogs.channel_config.show")
         # Ensure guild ID is an int
@@ -97,11 +148,12 @@ class ChannelConfigCog(commands.Cog):
 
         settings = await mysql.get_settings(
             guild_id,
-            list(LOG_CHANNEL_TYPES.values())
+            [config[0] for config in LOG_CHANNEL_TYPES.values()]
         ) or {}
 
-        def fmt(name, key):
-            cid = settings.get(key)
+        def fmt(identifier: str, config: tuple[str, str, str]):
+            setting_key, default_label, translation_key = config
+            cid = settings.get(setting_key)
             if isinstance(cid, str):
                 try:
                     cid = int(cid)
@@ -111,10 +163,16 @@ class ChannelConfigCog(commands.Cog):
             value = ch.mention if ch else show_texts["not_set"]
             return self.bot.translate(
                 "cogs.channel_config.show.entry",
-                placeholders={"name": name, "value": value},
+                placeholders={
+                    "name": self.bot.translate(
+                        translation_key,
+                        fallback=default_label,
+                    ),
+                    "value": value,
+                },
             )
 
-        lines = [fmt(name, key) for name, key in LOG_CHANNEL_TYPES.items()]
+        lines = [fmt(identifier, config) for identifier, config in LOG_CHANNEL_TYPES.items()]
         await interaction.response.send_message(
             show_texts["heading"] + "\n" + "\n".join(lines),
             ephemeral=True
