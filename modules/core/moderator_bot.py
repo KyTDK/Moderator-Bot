@@ -75,7 +75,6 @@ class ModeratorBot(commands.Bot):
         self._locale_settings_listener = self._handle_locale_setting_update
         self._initialise_i18n()
         mysql.add_settings_listener(self._locale_settings_listener)
-        self.tree.add_check(self._bind_locale_check)
 
         if self._heartbeat_seconds != 60:
             try:
@@ -212,13 +211,15 @@ class ModeratorBot(commands.Bot):
 
         return super()._schedule_event(run_with_locale, event_name, *args, **kwargs)
 
-    async def _bind_locale_check(self, interaction: discord.Interaction) -> bool:
+    async def on_interaction(self, interaction: discord.Interaction):
         try:
             locale = self.resolve_locale(interaction)
-        except Exception:
-            locale = None
-        self.push_locale(locale)
-        return True
+            if locale:
+                self.push_locale(locale)
+        except Exception as e:
+            _logger.warning("Failed to bind locale for interaction %s: %s", interaction.id, e)
+
+        await super().on_interaction(interaction)
 
     def translate(
         self,
