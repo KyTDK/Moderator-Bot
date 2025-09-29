@@ -229,7 +229,6 @@ class ModeratorBot(commands.Bot):
         finally:
             if service and token is not None:
                 service.reset_locale(token)
-                _logger.warning("Locale context reset after command invocation")
 
     async def _preload_guild_locale_cache(self) -> None:
         """Warm the in-memory guild locale cache from the database."""
