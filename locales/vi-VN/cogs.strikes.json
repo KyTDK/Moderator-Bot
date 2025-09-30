@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Các lệnh quản lý cảnh cáo.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Cảnh cáo một người dùng cụ thể.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Thành viên để cảnh cáo.",
+            "reason": "Lý do cho cảnh cáo.",
+            "expiry": "Thời hạn hết hạn tùy chọn (ví dụ: 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Lấy các cảnh cáo của một người dùng cụ thể."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Xóa tất cả các cảnh cáo của một người dùng cụ thể.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Người dùng mà tất cả các cảnh cáo sẽ bị xóa."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Thêm một hành động bổ sung cho mức độ cảnh cáo.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Số cảnh cáo cần để kích hoạt hành động.",
+            "action": "Hành động để thêm.",
+            "duration": "Thời hạn (chỉ dành cho việc tạm ngừng, ví dụ: 1h, 30m). Để trống nếu không cần."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Xoá một hành động khỏi mức độ cảnh cáo.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Số cảnh cáo liên quan đến hành động này.",
+            "action": "Chuỗi hành động cụ thể cần xóa."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Xem tất cả các hành động cảnh cáo đã được cấu hình."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Cảnh báo kênh hoặc một người dùng cụ thể.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
