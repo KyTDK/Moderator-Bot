@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "Greva",
+          "kick": "Lovitură",
+          "ban": "Interdicție",
+          "timeout": "Pauză",
+          "delete": "Șterge Mesajul",
+          "give_role": "Atribuie Rol",
+          "take_role": "Elimină Rolul",
+          "warn": "Avertizează Utilizatorul",
+          "broadcast": "Transmite Mesajul",
+          "auto": "Automat"
         }
       }
     }
