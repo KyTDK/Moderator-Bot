@@ -19,9 +19,9 @@
               "decision": "القرار: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "صورة",
+              "video": "فيديو",
+              "unknown": "غير معروف"
             },
             "decision": {
               "nsfw": "NSFW",
