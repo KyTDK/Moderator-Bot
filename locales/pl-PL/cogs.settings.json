@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Zarządzaj ustawieniami serwera.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Uzyskaj pomoc dotyczącą ustawień."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Usuń wszystkie ustawienia i zacznij od domyślnych. Tego nie można cofnąć"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Ustaw ustawienie serwera."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Pobierz bieżącą wartość ustawienia serwera."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Usuń ustawienie serwera lub element z listy."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Nie znaleziono pomocy dla `{command}`.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Otwórz panel administracyjny",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Brak opisu.",
+          "no_subcommands": "(Brak podkomend)",
+          "no_groups": "(Nie znaleziono grup poleceń.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Używa domyślnego `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Panel:** [Otwórz panel]({dashboard_url})\\nUżyj `/help {name}`, aby zobaczyć to ponownie.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Podkomendy",
+              "paged": "Podkomendy (strona {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderator Bot — Pomoc",
+            "description": "🛠️ **Panel:** [Otwórz panel]({dashboard_url})\\nKonfiguruj wszystko szybciej w panelu internetowym.\\nLub uruchom **`/help <group>`**, aby uzyskać szczegółowe podkomendy.",
+            "line": "• `/{name}` — {description}  _Wypróbuj:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Wykrywanie języka",
+            "groups_first": "Dostępne grupy poleceń",
+            "groups_paged": "Dostępne grupy poleceń (strona {page})",
+            "speed_name": "Przyspiesz wykrywanie",
+            "speed_value": "⚡ Ulepsz do Accelerated, aby przyspieszyć wykrywanie NSFW i oszustw — uruchom `/accelerated`.",
+            "links_name": "Linki",
+            "links_value": "[Pomoc](https://discord.gg/invite/33VcwjfEXC) • [Donacje](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Prywatność](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Zaufani deweloperzy",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
