@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "Obține statistici despre memorie și performanță",
+          "show_all": "Include alocările din toate bibliotecile (nu doar proiectul)"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "Afișează limba curentă asociată cu acest context de comandă"
         }
       },
       "permission_denied": "Nu ai permisiunea să utilizezi această comandă.",
@@ -26,7 +26,7 @@
         "footer": "Gazdă: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "Limba curentă: {locale}"
       }
     }
   }
