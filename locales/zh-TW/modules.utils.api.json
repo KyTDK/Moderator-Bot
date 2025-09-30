@@ -4,7 +4,7 @@
       "api": {
         "key_failed_notice": "**警告：** 您的 OpenAI API 金鑰未通過審核。\n\n這通常表示您的帳戶沒有啟用計費或暫時受限。\n\n請檢查您的 [OpenAI 計費儀表板](https://platform.openai.com/account/billing/overview)，以確保您的帳戶含有付款信息並至少有 $5 的額度。\n\n一旦解決此問題，您的金鑰將自動恢復作用 - 無需重新添加。",
         "key_validation": {
-          "billing_required": "Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly."
+          "billing_required": "您的 API 金鑰無法使用。這可能是因為您的組織尚未向其 OpenAI 帳戶添加任何信用。即使審查模型是免費的，OpenAI 要求帳戶中需有有效的支付詳情。如需添加信用，請訪問 [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) 頁面並至少購買 5 美元的信用。一旦您已添加支付方法和信用，您的 API 金鑰應該可以正常運作。"
         }
       }
     }
