@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Gestisci il tuo abbonamento Accelerato (Premium).",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Controlla se hai attualmente un abbonamento Accelerato."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Genera il tuo link di abbonamento unico PayPal."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Mostra i vantaggi dell'abbonamento Accelerato."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Spiega come annullare il tuo abbonamento."
         }
       },
       "group_description": "Gestisci il tuo abbonamento Accelerated (Premium).",
