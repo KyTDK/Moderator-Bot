@@ -3,62 +3,62 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "偵測到不適宜內容",
+          "description": "**使用者：** {user_mention} ({user_display})\n**原因：** {reason}",
+          "footer": "使用者編號：{user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "不適宜內容掃描報告",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "使用者：{user}",
+              "file": "檔案：`{filename}`",
+              "type": "類型：`{file_type}`",
+              "decision": "決策：**{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "圖片",
+              "video": "影片",
+              "unknown": "未知"
             },
             "decision": {
-              "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "nsfw": "不適宜",
+              "safe": "安全",
+              "unknown": "未知"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "原因",
+              "category": "類別",
+              "score": "評分",
+              "flagged_any": "標記任意",
+              "summary_categories": "摘要類別",
+              "max_similarity": "最大相似度",
+              "max_category": "最大相似度類別",
+              "similarity": "匹配相似度",
+              "high_accuracy": "高準確度",
+              "clip_threshold": "CLIP 門檻",
+              "moderation_threshold": "管理門檻",
+              "video_frames": "影片幀"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "OpenAI 審查",
+              "similarity_match": "相似度匹配",
+              "no_frames_extracted": "沒有提取幀",
+              "no_nsfw_frames_detected": "未檢測到不適宜影片幀"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "信心度",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "評分",
+            "similarity": "相似度"
           }
         },
         "boolean": {
@@ -66,9 +66,9 @@
           "false": "false"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "未指定"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "檢測到潛在政策違規 (類別：**{category}**)"
       }
     }
   }
