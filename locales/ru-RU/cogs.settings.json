@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Управляйте настройками сервера.",
         "help": {
-          "description": "Получите помощь по настройкам."
+          "description": "Получите помощь по настройкам.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Сотрите все настройки и начните с настроек по умолчанию. Это действие нельзя отменить"
