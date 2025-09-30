@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**O que é o API Pool?**\nO API Pool é uma coleção segura e anônima de chaves de API da OpenAI compartilhadas. Ele permite que o Bot Moderador continue operando efetivamente, mesmo quando os usuários individuais enfrentam limites de taxa.\n\n**Como funciona?**\n- Quando você adiciona sua chave de API da OpenAI ao pool, ela é criptografada e armazenada com segurança.\n- O bot usa essas chaves exclusivamente para acessar os modelos da OpenAI e realizar tarefas de moderação.\n- Sua chave de API permanece confidencial; ninguém, incluindo os desenvolvedores do bot, pode visualizá-la.\n- Você tem controle total e pode remover sua chave de API do pool a qualquer momento.\n\n**Importante:** Para contribuir com sua chave de API, sua conta OpenAI deve ter pelo menos $5 em créditos pré-pagos. Embora o terminal de moderação seja gratuito, a OpenAI exige que as contas tenham detalhes de cobrança ativos e cota. Você pode adicionar crédito à sua conta aqui: <https://platform.openai.com/account/billing/overview>\n\nAo contribuir com sua chave de API, você ajuda a garantir que o Bot Moderador permaneça responsivo e eficaz para todos os usuários."
       },

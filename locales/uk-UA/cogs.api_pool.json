@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**Що таке пул API?**\nПул API — це безпечна та анонімна колекція спільних ключів API OpenAI. Це дозволяє Боту-модератору ефективно працювати навіть тоді, коли окремі користувачі стикаються з обмеженнями швидкості.\n\n**Як це працює?**\n- Коли ви додаєте свій ключ OpenAI API до пулу, він шифрується і зберігається безпечно.\n- Бот використовує ці ключі виключно для доступу до моделей OpenAI для виконання модераційних завдань.\n- Ваш ключ API залишається конфіденційним; ніхто, включаючи розробників бота, не може його переглянути.\n- Ви маєте повний контроль і можете в будь-який час видалити свій ключ API з пулу.\n\n**Важливо:** Щоб внести свій ключ API, ваш обліковий запис OpenAI повинен мати принаймні $5 на рахунку. Хоча модераційна кінцева точка безкоштовна для використання, OpenAI вимагає, щоб облікові записи мали активні платіжні дані та квоту. Ви можете поповнити свій рахунок тут: <https://platform.openai.com/account/billing/overview>\n\nВносячи свій ключ API, ви допомагаєте забезпечити, що Бот-модератор залишається чутливим та ефективним для всіх користувачів."
       },

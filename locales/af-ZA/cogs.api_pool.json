@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Bestuur van jou persoonlike API-sleutels in die poel.",
+        "explain": {
+          "description": "Verduidelik die API-poel."
+        },
+        "add": {
+          "description": "Voeg \tfAPI-sleutel by die poel.",
+          "params": {
+            "api_key": "Die OpenAI API-sleutel om by die gedeelde poel te voeg."
+          }
+        },
+        "remove": {
+          "description": "Verwyder \tfAPI-sleutel uit die poel.",
+          "params": {
+            "api_key": "Die OpenAI API-sleutel om uit die gedeelde poel te verwyder."
+          }
+        },
+        "clear": {
+          "description": "Vee al jou API-sleutels uit die poel uit."
+        },
+        "list": {
+          "description": "Lys al die API-sleutels in jou poel (versleuteld)."
+        }
+      },
       "explanation": {
         "body": "**Wat is die API-poel?**\nDie API-poel is 'n veilige en anonieme versameling van gedeelde OpenAI API-sleutels. Dit stel Moderator Bot in staat om doeltreffend te bly funksioneer, selfs wanneer individuele gebruikers teikengrenze bereik.\n\n**Hoe werk dit?**\n- Wanneer jy jou OpenAI API-sleutel by die poel voeg, word dit geïnkripteer en veilig gestoor.\n- Die bot gebruik hierdie sleutels eksklusief vir toegang tot OpenAI-modelle om moderasietake uit te voer.\n- Jou API-sleutel bly vertroulik; niemand, insluitend die bot-ontwikkelaars, kan dit sien nie.\n- Jy het volle beheer en kan jou API-sleutel te enige tyd uit die poel verwyder.\n\n**Belangrik:** Om jou API-sleutel by te dra, moet jou OpenAI rekening ten minste $5 in vooruitbetaalde krediete hê. Selfs al is die moderasie-eindpunt gratis om te gebruik, vereis OpenAI dat rekeninge aktiewe faktuurdetails en kwota het. Jy kan krediet by jou rekening voeg hier: <https://platform.openai.com/account/billing/overview>\n\nDeur jou API-sleutel by te dra, help jy om te verseker dat Moderator Bot responsief en effektief bly vir alle gebruikers."
       },
