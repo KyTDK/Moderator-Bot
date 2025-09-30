@@ -70,7 +70,7 @@ class Translator:
                     logger.info("Translation for key '%s' satisfied by locale '%s'", key, code)
                 if isinstance(value, str):
                     return self._apply_format(value, placeholders)
-                return deepcopy(value)
+                return self._normalize_structure(value)
 
         if fallback is not None:
             logger.warning(
@@ -104,6 +104,24 @@ class Translator:
         except ValueError:
             return Translator._normalize_escapes(template)
         return Translator._normalize_escapes(formatted)
+
+    @staticmethod
+    def _normalize_structure(value: Any) -> Any:
+        """Return a deep copy of *value* with escaped newlines normalised."""
+
+        if isinstance(value, str):
+            return Translator._normalize_escapes(value)
+        if isinstance(value, Mapping):
+            return {key: Translator._normalize_structure(inner) for key, inner in value.items()}
+        if isinstance(value, list):
+            return [Translator._normalize_structure(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(Translator._normalize_structure(item) for item in value)
+        if isinstance(value, set):
+            return {Translator._normalize_structure(item) for item in value}
+        if isinstance(value, frozenset):
+            return frozenset(Translator._normalize_structure(item) for item in value)
+        return deepcopy(value)
 
     @staticmethod
     def _normalize_escapes(value: str) -> str:
