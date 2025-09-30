@@ -14,6 +14,24 @@
         },
         "clear": {
           "description": "清除所有被禁止的 URL。"
+        },
+        "actions": {
+          "add": {
+            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "options": {
+              "action": "Action to perform",
+              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            }
+          },
+          "remove": {
+            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "options": {
+              "action": "Exact action string to remove (e.g. timeout, delete)"
+            }
+          },
+          "view": {
+            "description": "Show all actions currently configured to trigger when banned URLs are used."
+          }
         }
       },
       "limit_reached": "您已达到此服务器的 {limit} 个禁止网址的限制。\n使用 `/bannedurls remove` 或 `/bannedurls clear` 来腾出空间。",
