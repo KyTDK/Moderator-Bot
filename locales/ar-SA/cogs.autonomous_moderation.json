@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "إدارة ميزات مراقبة الذكاء الاصطناعي.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "تعيين قواعد السيرفر"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "عرض القواعد المكونة حاليًا للمراقبة."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "إضافة إجراءات تنفيذ"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "إزالة إجراء محدد من قائمة العقوبات.",
+          "action": "نص الإجراء المحدد للإزالة (مثل التوقيت، الحذف)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "تمكين/تعطيل المراقبة، عرض الحالة، أو تعيين الوضع.",
+          "enable": "تشغيل أو إيقاف المراقبة التلقائية.",
+          "mode": "إجباري: تعيين تقرير / فترة / وضع تكيفي.",
+          "enable_choice": "تمكين",
+          "disable_choice": "تعطيل",
+          "status_choice": "الحالة",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "تقرير",
+            "interval": "الفاصل الزمني",
+            "adaptive": "تكيفي"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "عرض جميع الإجراءات المكونة حاليًا للتفعيل عند اكتشاف AI لانتهاك."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "ربط حدث الزناد بإجراء واحد أو أكثر من أوضاع المراقبة.",
+          "role": "أي أدوار للمراقبة (إن وجدت)",
+          "channel": "أي قناة للمراقبة (من أجل أحداث الذروة)",
+          "time_range": "النطاق الزمني في ساعة:دقيقة-ساعة:دقيقة لأحداث الزنادات المستندة إلى الوقت",
+          "threshold": "حد نسبة الأدوار المتصلة بالإنترنت (0 إلى 1، اختياري)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "إزالة إجراء محدد من حدث مكون.",
+          "event_key": "مفتاح الحدث التكيفي (يكتمل تلقائيًا)",
+          "action": "الإجراء لإزالته من هذا الحدث"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "مسح جميع مشغلات الأحداث التكيفية."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "عرض مشغلات المراقبة التكيفية الحالية."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "الأدوار عبر الإنترنت",
+            "role_offline": "الأدوار غير متصلة بالإنترنت",
+            "mass_join": "الانضمام الجماعي",
+            "mass_leave": "المغادرة الجماعية",
+            "guild_inactive": "خمول الخادم",
+            "role_online_percent": "نسبة الأدوار المتصلة بالإنترنت",
+            "time_range": "النطاق الزمني",
+            "server_spike": "ذروة الخادم"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "تمكين وضع الفاصل الزمني",
+          "disable_interval": "تعطيل وضع الفاصل الزمني",
+          "enable_report": "تمكين وضع التقرير",
+          "disable_report": "تعطيل وضع التقرير"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "معطل",
         "state_unknown": "غير معروف",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "تقرير",
+          "interval": "الفاصل",
+          "adaptive": "التكيف"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "تم بلوغ حد ميزانية المراقبة للذكاء الاصطناعي لهذه الدورة. يتم إعادة التعيين عند {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "الدورة التالية",
+        "thanks_no_violation": "شكرًا للتقرير. لم يتم العثور على انتهاكات.",
+        "thanks_action": "شكرًا للتقرير. تم اتخاذ إجراء."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "انتهاك تم تحديده بواسطة الذكاء الاصطناعي",
+          "description": "المستخدم: {user}\n القاعدة المنتهكة: {rule}\n السبب: {reason}\n الإجراءات: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "توزيع واسع النطاق",
+              "value": "تم اكتشاف مؤلفين متعددين؛ تم تطبيق الإجراءات حسب المؤلف."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "قرار الذكاء الاصطناعي",
+              "none": "لا شيء",
+              "unknown": "غير معروف"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "الإجراءات المطبقة",
+              "none": "لا يوجد"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
-              "entry": "• ID {id}: {content}"
+              "name": "الرسائل المعلمة",
+              "no_content": "[لا يوجد محتوى نصي]",
+              "entry": "• المعرف {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "فحص مراقبة الذكاء الاصطناعي (للتصحيح)",
+          "description": "لم يتم العثور على انتهاكات في الفحص الأخير.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "الرسائل المفحوصة",
+            "mode": "الوضع"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "تم اكتشاف انتهاك",
+          "reason_multiple": "انتهاكات متعددة: {reasons}",
+          "rule_default": "انتهاك القاعدة",
+          "rule_multiple": "قواعد متعددة: {rules}"
         }
       },
       "ensure_adaptive": "لم يتم تفعيل وضع التوزيع التكيفي. استخدم `/ai_mod set_mode` لتفعيله."
