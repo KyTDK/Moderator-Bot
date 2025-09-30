@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Керуйте вашим елітним (преміум) підписом.",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Перевірте, чи маєте ви наразі елітний підпис."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Створіть ваше унікальне посилання на підписку PayPal."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Покажіть переваги елітного підпису."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Поясніть, як скасувати ваш підпис."
         }
       },
       "group_description": "Керуйте своєю підпискою на Прискорення (Преміум).",
