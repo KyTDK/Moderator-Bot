@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "تكوين المراقبة",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "اضبط القناة لإخراج السجلات.",
+          "channel": "القناة لإرسال السجلات إليها."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "إزالة إعداد قناة المراقبة."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "إظهار قناة المراقبة الحالية."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "تمكين أو تعطيل حدث مراقبة معين.",
+          "event": "الحدث للتبديل",
+          "enabled": "تمكين أو تعطيل السجلات لهذا الحدث",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "انضمام مستخدم",
+            "leave": "مغادرة مستخدم",
+            "ban": "حظر",
+            "unban": "إلغاء حظر",
+            "timeout": "توقيت خارج",
+            "message_delete": "تم حذف الرسالة",
+            "message_edit": "تعديل الرسالة"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "عرض إعدادات أحداث المراقبة الحالية."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**المحتوى:**\n{content}",
         "description_generic": "تم حذف رسالة في {channel}.",
         "description_deleted_by": "\n**تم الحذف بواسطة:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[لا يوجد محتوى]",
         "fields": {
           "attachments": "المرفقات ({count})",
           "embeds": "تضمين {index}",
@@ -99,7 +99,7 @@
           "before": "قبل",
           "after": "بعد"
         },
-        "no_content": "[No Content]",
+        "no_content": "[لا يوجد محتوى]",
         "footer": "معرف المستخدم: {user_id}"
       },
       "ban": {
