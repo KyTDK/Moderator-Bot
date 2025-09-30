@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "NSFW tartalom észlelve",
+          "description": "**Felhasználó:** {user_mention} ({user_display})\n**Ok:** {reason}",
+          "footer": "Felhasználó ID: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "NSFW vizsgálati jelentés",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Felhasználó: {user}",
+              "file": "Fájl: `{filename}`",
+              "type": "Típus: `{file_type}`",
+              "decision": "Döntés: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "Kép",
+              "video": "Videó",
+              "unknown": "Ismeretlen"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Biztonságos",
+              "unknown": "Ismeretlen"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Ok",
+              "category": "Kategória",
+              "score": "Pontszám",
+              "flagged_any": "Bármely megjelölve",
+              "summary_categories": "Összefoglaló kategóriák",
+              "max_similarity": "Maximális hasonlóság",
+              "max_category": "Maximális hasonlósági kategória",
+              "similarity": "Egyező hasonlóság",
+              "high_accuracy": "Magas pontosság",
+              "clip_threshold": "CLIP küszöb",
+              "moderation_threshold": "Mérsékelt küszöb",
+              "video_frames": "Videó keretek"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "OpenAI moderáció",
+              "similarity_match": "Hasonlósági egyezés",
+              "no_frames_extracted": "Nincs kivont keret",
+              "no_nsfw_frames_detected": "Nincs észlelt NSFW keret"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Bizalom",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Pontszám",
+            "similarity": "Hasonlóság"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "igaz",
+          "false": "hamis"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Meghatározatlan"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Potenciális szabályszegés észlelve (Kategória: **{category}**)"
       }
     }
   }
