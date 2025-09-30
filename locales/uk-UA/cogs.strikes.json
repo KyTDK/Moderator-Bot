@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Команди управління страйками.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Застосувати страйк до конкретного користувача.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Учасник, якого потрібно застражувати.",
+            "reason": "Причина для страйку.",
+            "expiry": "Необов’язкова тривалість закінчення (напр., 30д, 2т)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Отримати страйки конкретного користувача."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Очистити всі страйки конкретного користувача.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Користувач, страйки якого будуть очищені."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Додати додаткову дію для рівня страйку.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Кількість страйків, необхідних для запуску дії.",
+            "action": "Дія для додавання.",
+            "duration": "Тривалість (тільки для таймауту, напр., 1г, 30хв). Залиште порожнім в інші випадки."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Видалити дію з рівня страйку.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Кількість страйків, пов’язаних з дією.",
+            "action": "Точний рядок дії для видалення."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Переглянути всі налаштовані дії страйку."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Залякати канал або певного користувача.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
