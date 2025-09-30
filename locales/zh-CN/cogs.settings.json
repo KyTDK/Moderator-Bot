@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "管理服务器设置。",
         "help": {
-          "description": "Get help on settings."
+          "description": "获取有关设置的帮助。"
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "清除所有设置并以默认值开始。此操作无法撤销"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "设置服务器设置。"
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "获取服务器设置的当前值。"
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "删除服务器设置或从列表类型设置中移除项目。"
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "找不到关于 `{command}` 的帮助。",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "打开控制面板。",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "无描述。",
+          "no_subcommands": "（无子命令）",
+          "no_groups": "（未找到命令组。）",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "使用默认的 `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **控制面板：** [打开控制面板]({dashboard_url})\\n使用 `/help {name}` 再次查看。",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "子命令",
+              "paged": "子命令（页面 {page}）"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderator Bot — 帮助",
+            "description": "🛠️ **控制面板：** [打开控制面板]({dashboard_url})\\n在网页控制面板中更快配置所有内容。\\n或者运行 **`/help <group>`** 获取详细子命令。",
+            "line": "• `/{name}` — {description}  _尝试：_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "语言检测",
+            "groups_first": "可用的命令组",
+            "groups_paged": "可用的命令组（页面 {page}）",
+            "speed_name": "加速检测",
+            "speed_value": "⚡ 升级至Accelerated以加速NSFW和诈骗检测——运行 `/accelerated`。",
+            "links_name": "链接",
+            "links_value": "[支持](https://discord.gg/invite/33VcwjfEXC) • [捐赠](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [服务条款](https://modbot.neomechanical.com/terms-of-service) • [隐私政策](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "可信开发者",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
