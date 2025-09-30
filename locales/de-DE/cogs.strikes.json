@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Befehle für das Streik-Management.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Einen bestimmten Benutzer striken.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Das Mitglied, das gestrikt wird.",
+            "reason": "Der Grund für den Streik.",
+            "expiry": "Optionale Ablaufdauer (z. B.: 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Strikes eines bestimmten Benutzers abrufen."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Alle Strikes eines bestimmten Benutzers löschen.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Der Benutzer, dessen Strikes gelöscht werden."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Eine zusätzliche Aktion für ein Streik-Level hinzufügen.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Anzahl der Strikes, die erforderlich sind, um die Aktion auszulösen.",
+            "action": "Aktion hinzufügen.",
+            "duration": "Dauer (nur für Timeout, z. B.: 1h, 30m). Andernfalls leer lassen."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Eine Aktion aus einem Streik-Level entfernen.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Anzahl der Strikes, die mit der Aktion verbunden sind.",
+            "action": "Genaue Aktionszeichenfolge, die entfernt werden soll."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Alle konfigurierten Streikaktionen anzeigen."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Den Kanal oder einen bestimmten Benutzer einschüchtern.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
