@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Конфігурація виявлення шахрайств та управління шаблонами.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Виключити канал із виявлення шахрайств.",
+          "channel": "Канал для виключення"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Видалити канал із списку виключень.",
+          "channel": "Канал для видалення з виключення"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Перелік усіх виключених каналів."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Перемикання чи перегляд перевірки посилань.",
+          "action_description": "увімкнути | вимкнути | статус",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "увімкнути",
+            "disable": "вимкнути",
+            "status": "статус"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Додати дію до списку покарань за шахрайство.",
+          "action": "Дія для виконання",
+          "duration": "Потрібно лише для тайм-ауту (наприклад, 10хв, 1г, 3д)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Видалити дію із списку покарань за шахрайство.",
+          "action": "Точний рядок дії для видалення (наприклад, тайм-аут:1д, видалити)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Перегляд налаштувань шахрайств."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Дії не встановлені.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Перевірка посилань є {state}.",
+        "updated": "Перевірка посилань {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**увімкнено**",
+          "disabled": "**вимкнено**"
         }
       },
       "detection": {
