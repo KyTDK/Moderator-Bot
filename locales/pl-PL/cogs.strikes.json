@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Polecenia zarządzania uderzeniami.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Uderzenie konkretnego użytkownika.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Członek do uderzenia.",
+            "reason": "Powód dla uderzenia.",
+            "expiry": "Opcjonalny czas wygaśnięcia (np. 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Uzyskaj uderzenia konkretnego użytkownika."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Wyczyść wszystkie uderzenia konkretnego użytkownika.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Użytkownik, którego uderzenia zostaną wyczyszczone."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Dodaj dodatkową akcję dla poziomu uderzenia.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Liczba uderzeń wymaganych do uruchomienia akcji.",
+            "action": "Akcja do dodania.",
+            "duration": "Czas trwania (tylko dla limitu, np. 1h, 30m). W przeciwnym razie pozostaw puste."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Usuń akcję z poziomu uderzenia.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Liczba uderzeń powiązanych z akcją.",
+            "action": "Dokładna akcja, którą należy usunąć."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Zobacz wszystkie skonfigurowane akcje uderzeń."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Zastrasz kanał lub konkretnego użytkownika.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
