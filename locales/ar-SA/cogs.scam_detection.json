@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "إعدادات الكشف عن الاحتيال وإدارة الأنماط.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "استثناء قناة من الكشف عن الاحتيال.",
+          "channel": "القناة المراد استثناؤها"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "إزالة قناة من قائمة الاستثناءات.",
+          "channel": "القناة المراد إزالتها من الاستثناء"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "عرض جميع القنوات المستثناة."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "تبديل أو عرض فحص الروابط.",
+          "action_description": "تمكين | تعطيل | الحالة",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "تمكين",
+            "disable": "تعطيل",
+            "status": "الحالة"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "إضافة إجراء إلى قائمة العقوبات للاحتيال.",
+          "action": "الإجراء لتنفيذه",
+          "duration": "مطلوب فقط من أجل المهلة (مثل 10 دقائق، 1 ساعة، 3 أيام)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "إزالة إجراء من قائمة العقوبات للاحتيال.",
+          "action": "النص الدقيق للإجراء لإزالته (مثل المهلة:1 يوم، حذف)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "عرض إعدادات الاحتيال الحالية."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*لم يتم تعيين أي إجراءات.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "فحص الروابط هو {state}.",
+        "updated": "فحص الروابط {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**مفعّل**",
+          "disabled": "**معطّل**"
         }
       },
       "detection": {
