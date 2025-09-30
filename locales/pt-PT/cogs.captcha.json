@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Gerencie a verificação captcha.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Reenvie o embed de verificação de captcha."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Envie uma solicitação de verificação de captcha para um membro.",
+          "member": "O membro que deve completar a verificação"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "alguns minutos",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} segundo",
+            "other": "{count} segundos"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} minuto",
+            "other": "{count} minutos"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} hora",
+            "other": "{count} horas"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} dia",
+            "other": "{count} dias"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Olá {member}! Para terminar de entrar no **{guild}**, ",
+          "grace": "por favor {instruction} dentro de **{grace}**.",
+          "no_grace": "por favor {instruction} quando estiver pronto.",
+          "instruction_default": "complete o captcha",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " Você tem **{count}** tentativa.",
+            "other": " Você tem **{count}** tentativas."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Verificação Captcha Necessária",
+          "footer": "Desenvolvido por Moderator Bot"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Verificar agora"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Clique aqui para verificar"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "visite {channel} e complete o captcha",
+          "help_title": "Precisa de ajuda?",
+          "help_value": "Clique no botão abaixo para abrir a página de verificação.",
+          "button_label": "Abrir página de verificação"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Clique no botão abaixo para se verificar. Uma vez que você passe pelo captcha, você terá acesso ao restante do servidor.",
+        "login_notice": "Pode ser solicitado a você que faça login no painel do Moderator Bot primeiro.",
+        "title": "Completar Verificação Captcha",
+        "footer": "ID do Servidor: {guild_id} | Desenvolvido por Moderator Bot",
+        "button_label": "Verificar agora"
       }
     }
   }
