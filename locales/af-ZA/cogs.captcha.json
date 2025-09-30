@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Bestuur captcha-verifikasie.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Stuur die captcha-verifikasie-embed weer."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Stuur 'n captcha-verifikasieversoek na 'n lid.",
+          "member": "Die lid wat verifikasie moet voltooi."
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "'n paar minute",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} sekonde",
+            "other": "{count} sekondes"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} minuut",
+            "other": "{count} minute"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} uur",
+            "other": "{count} ure"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} dag",
+            "other": "{count} dae"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Hi {member}! Om aan te sluit by **{guild}**, ",
+          "grace": "voltooi asseblief {instruction} binne **{grace}**.",
+          "no_grace": "voltooi asseblief {instruction} wanneer jy gereed is.",
+          "instruction_default": "voltooi die captcha",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " Jy het **{count}** poging.",
+            "other": " Jy het **{count}** pogings."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Captcha-verifikasie benodig",
+          "footer": "Aangedryf deur Moderator Bot"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Verifieer nou"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Klik hier om te verifieer"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "besoek {channel} en voltooi die captcha",
+          "help_title": "Het hulp nodig?",
+          "help_value": "Klik op die knoppie hieronder om die verifikasiebladsy te open.",
+          "button_label": "Maak verifikasiebladsy oop"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Klik op die knoppie hieronder om jouself te verifieer. Sodra jy die captcha slaag, kry jy toegang tot die res van die bediener.",
+        "login_notice": "Jy mag gevra word om eers op die Moderator Bot se paneel aan te meld.",
+        "title": "Voltooi Captcha-verifikasie",
+        "footer": "Guild-ID: {guild_id} | Aangedryf deur Moderator Bot",
+        "button_label": "Verifieer nou"
       }
     }
   }
