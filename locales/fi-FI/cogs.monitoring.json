@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Monitoroinnin asetukset",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Määritä kanava lokien tulostusta varten.",
+          "channel": "Kanava, johon lokit lähetetään."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Poista monitorointikanavan asetus."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Näytä nykyinen monitorointikanava."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Ota käyttöön tai poista käytöstä tietty seurantatapahtuma.",
+          "event": "Tapahtuma, jota vaihdetaan",
+          "enabled": "Ota käyttöön tai poista käytöstä lokitus tälle tapahtumalle",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Käyttäjä liittyy",
+            "leave": "Käyttäjä poistuu",
+            "ban": "Porttikielto",
+            "unban": "Porttikiellon poisto",
+            "timeout": "Aikakatkaisu",
+            "message_delete": "Viesti poistettu",
+            "message_edit": "Viesti muokattu"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Näytä nykyiset monitorointitapahtuma-asetukset."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Sisältö:**\n{content}",
         "description_generic": "Viesti poistettiin kanavassa {channel}.",
         "description_deleted_by": "\n**Poistettu käyttäjän toimesta:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Ei sisältöä]",
         "fields": {
           "attachments": "Liitteet ({count})",
           "embeds": "Upote {index}",
@@ -99,7 +99,7 @@
           "before": "Ennen",
           "after": "Jälkeen"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Ei sisältöä]",
         "footer": "Käyttäjä ID: {user_id}"
       },
       "ban": {
