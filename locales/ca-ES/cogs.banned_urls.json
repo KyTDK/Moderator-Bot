@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "Comandes de gestió d'URLs no permeses.",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "Afegiu un URL o domini a la llista de prohibits."
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "Elimina un URL o domini de la llista de prohibits."
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "Enumereu tots els URLs prohibits."
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "Netegeu tots els URLs prohibits."
         }
       },
       "limit_reached": "Has arribat al límit de {limit} URL bloquejades per aquest servidor.\nUtilitza `/bannedurls remove` o `/bannedurls clear` per alliberar espai.",
