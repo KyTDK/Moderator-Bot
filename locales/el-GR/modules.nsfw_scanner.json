@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "Ανιχνεύθηκε Περιεχόμενο NSFW",
+          "description": "**Χρήστης:** {user_mention} ({user_display})\n**Λόγος:** {reason}",
+          "footer": "ID Χρήστη: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "Αναφορά Σάρωσης NSFW",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Χρήστης: {user}",
+              "file": "Αρχείο: `{filename}`",
+              "type": "Τύπος: `{file_type}`",
+              "decision": "Απόφαση: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "Εικόνα",
+              "video": "Βίντεο",
+              "unknown": "Άγνωστο"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Ασφαλής",
+              "unknown": "Άγνωστο"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Λόγος",
+              "category": "Κατηγορία",
+              "score": "Βαθμολογία",
+              "flagged_any": "Σημειώθηκε",
+              "summary_categories": "Κατηγορίες Περίληψης",
+              "max_similarity": "Μέγιστη Ομοιότητα",
+              "max_category": "Κατηγορία Μέγιστης Ομοιότητας",
+              "similarity": "Ομοιότητα Αντιστοιχίας",
+              "high_accuracy": "Υψηλή Ακρίβεια",
+              "clip_threshold": "Όριο CLIP",
+              "moderation_threshold": "Όριο Εγκράτειας",
+              "video_frames": "Καρέ Βίντεο"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "εποπτεία OpenAI",
+              "similarity_match": "Αντιστοιχία Ομοιότητας",
+              "no_frames_extracted": "Δεν εξήχθησαν καρέ",
+              "no_nsfw_frames_detected": "Δεν εντοπίστηκαν καρέ NSFW"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Εμπιστοσύνη",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Βαθμολογία",
+            "similarity": "Ομοιότητα"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "αληθές",
+          "false": "ψευδές"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Μη Καθορισμένη"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Ανιχνεύθηκε πιθανή παραβίαση πολιτικής (Κατηγορία: **{category}**)"
       }
     }
   }
