@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "Διαχείριση ανίχνευσης περιεχομένου NSFW.",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "Προσθήκη μιας ενέργειας στη λίστα τιμωρίας NSFW.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Ενέργεια προς εκτέλεση",
+            "duration": "Απαιτείται μόνο για χρονικό όριο (π.χ. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "Αφαίρεση μιας ενέργειας από τη λίστα τιμωρίας NSFW.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Ακριβής ενέργεια για απομάκρυνση (π.χ. χρονικό όριο, διαγραφή)"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "Προβολή της τρέχουσας λίστας ενεργειών τιμωρίας NSFW."
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "Προσθήκη κατηγορίας στην ανίχνευση NSFW."
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "Γραφική Βία",
+          "violence": "Βία",
+          "sexual": "Σεξουαλικό",
+          "self_harm_instructions": "Οδηγίες Αυτοτραυματισμού",
+          "self_harm_intent": "Πρόθεση Αυτοτραυματισμού",
+          "self_harm": "Αυτοτραυματισμός"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "Αφαίρεση κατηγορίας από την ανίχνευση NSFW."
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "Προβολή κατηγοριών ανίχνευσης NSFW."
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "Ορισμός του ορίου εμπιστοσύνης για την ανίχνευση NSFW.",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "Όριο εμπιστοσύνης (0.0 έως 1.0)"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "Προβολή του τρέχοντος ορίου ανίχνευσης NSFW."
         }
       },
       "actions": {
