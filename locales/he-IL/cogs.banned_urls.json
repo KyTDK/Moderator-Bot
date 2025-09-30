@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "פקודות ניהול של כתובות URL חסומות.",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "הוסף כתובת URL או דומיין לרשימת החסומים."
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "הסר כתובת URL או דומיין מרשימת החסומים."
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "רשום את כל כתובות ה-URL החסומות."
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "נקה את כל כתובות ה-URL החסומות."
         }
       },
       "limit_reached": "הגעת למגבלת {limit} כתובות אתרים חסומות עבור השרת הזה.\nהשתמש ב-`/bannedurls remove` או `/bannedurls clear` כדי לפנות מקום.",
