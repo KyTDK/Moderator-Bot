@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Configuració del monitoratge",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Estableix el canal per emetre registres.",
+          "channel": "El canal per enviar registres."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Elimina la configuració del canal del monitor."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Mostra el canal del monitor actual."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Activa o desactiva un esdeveniment de monitoratge específic.",
+          "event": "L'esdeveniment per commutar",
+          "enabled": "Habilita o deshabilita el registre per a aquest esdeveniment",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Incorporació d'usuari",
+            "leave": "Sortida d'usuari",
+            "ban": "Prohibició",
+            "unban": "Desprohibició",
+            "timeout": "Temps d'espera",
+            "message_delete": "Missatge esborrat",
+            "message_edit": "Missatge editat"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Llista la configuració actual dels esdeveniments del monitor."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Contingut:**\n{content}",
         "description_generic": "Un missatge ha estat esborrat en {channel}.",
         "description_deleted_by": "\n**Esborrat per:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Sense contingut]",
         "fields": {
           "attachments": "Adjuncions ({count})",
           "embeds": "Incrustar {index}",
@@ -99,7 +99,7 @@
           "before": "Abans",
           "after": "Després"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Sense contingut]",
         "footer": "ID d'Usuari: {user_id}"
       },
       "ban": {
