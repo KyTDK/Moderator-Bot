@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "Kommandon för hantering av blockerade URL:er.",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "Lägg till en URL eller domän till listan över blockerade."
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "Ta bort en URL eller domän från listan över blockerade."
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "Visa alla blockerade URL:er."
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "Rensa alla blockerade URL:er."
         }
       },
       "limit_reached": "Du har nått gränsen på {limit} blockerade URL-adresser för den här servern.\nAnvänd `/bannedurls remove` eller `/bannedurls clear` för att frigöra utrymme.",
