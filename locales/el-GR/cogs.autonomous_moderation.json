@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "Διαχείριση λειτουργιών αυτόνομης επίβλεψης AI.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Ορισμός κανόνων διακομιστή"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Εμφάνιση των τρεχόντων ρυθμισμένων κανόνων επίβλεψης."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Προσθήκη ενεργειών επιβολής"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Αφαίρεση συγκεκριμένης ενέργειας από τη λίστα των τιμωριών.",
+          "action": "Ακριβής σειρά ενεργειών για αφαίρεση (π.χ. διάλειμμα, διαγραφή)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "Ενεργοποίηση/απενεργοποίηση επίβλεψης, προβολή κατάστασης ή ρύθμιση λειτουργίας.",
+          "enable": "Ενεργοποίηση αυτόνομης επίβλεψης.",
+          "mode": "Προαιρετικό: ορισμός αναφοράς / διαστήματος / προσαρμοστικής λειτουργίας.",
+          "enable_choice": "Ενεργοποίηση",
+          "disable_choice": "Απενεργοποίηση",
+          "status_choice": "Κατάσταση",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "Αναφορά",
+            "interval": "Διάστημα",
+            "adaptive": "Προσαρμοστική"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Εμφάνιση όλων των ενεργειών που έχουν ρυθμιστεί να ενεργοποιούνται όταν το AI εντοπίζει παραβίαση."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Σύνδεση ενός κυρίως γεγονότος με μία ή περισσότερες ενέργειες επίβλεψης.",
+          "role": "Ποιοι ρόλοι να παρακολουθούνται (εάν εφαρμόζονται)",
+          "channel": "Ποιο κανάλι να παρακολουθείται (για γεγονότα αυξήσεων)",
+          "time_range": "Διάστημα ώρας σε HH:MM-HH:MM για χρονικά ελεγχόμενες ενέργειες",
+          "threshold": "Όριο για ποσοστό διαδικτυακών ρόλων (0 έως 1, προαιρετικό)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Αφαίρεση συγκεκριμένης ενέργειας από ένα ρυθμισμένο γεγονός.",
+          "event_key": "Κλειδί προσαρμοστικού γεγονότος (αυτόματη συμπλήρωση)",
+          "action": "Ενέργεια προς αφαίρεση από αυτό το γεγονός"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Καθαρισμός όλων των προσαρμοστικών ενεργειών."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Εμφάνιση των τρεχόντων προσαρμοστικών ενεργειών επίβλεψης."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "Ρόλος Online",
+            "role_offline": "Ρόλος Offline",
+            "mass_join": "Μαζική Ένωση",
+            "mass_leave": "Μαζική Αποχώρηση",
+            "guild_inactive": "Αδράνεια του Διακομιστή",
+            "role_online_percent": "Ποσοστό Ρόλου Online",
+            "time_range": "Διάστημα Χρόνου",
+            "server_spike": "Έκρηξη Διακομιστή"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Ενεργοποίηση Λειτουργίας Διαστήματος",
+          "disable_interval": "Απενεργοποίηση Λειτουργίας Διαστήματος",
+          "enable_report": "Ενεργοποίηση Λειτουργίας Αναφοράς",
+          "disable_report": "Απενεργοποίηση Λειτουργίας Αναφοράς"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "απενεργοποιημένο",
         "state_unknown": "άγνωστο",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "αναφορά",
+          "interval": "διάστημα",
+          "adaptive": "προσαρμοστική"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "Ο προϋπολογισμός της αλληλεπίδρασης AI φτάνει για αυτόν τον κύκλο χρέωσης. Επαναφέρεται στο {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "ο επόμενος κύκλος",
+        "thanks_no_violation": "Ευχαριστούμε για την αναφορά. Δεν βρέθηκαν παραβιάσεις.",
+        "thanks_action": "Ευχαριστούμε για την αναφορά. Ελήφθησαν μέτρα."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "Παραβίαση που έχει υποδεχθεί AI",
+          "description": "Χρήστης: {user}\nΚανόνας που Παραβιάστηκε: {rule}\nΛόγος: {reason}\nΕνέργειες: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "Διανομή",
+              "value": "Εντοπίστηκαν πολλοί συγγραφείς. Εφαρμόστηκαν ενέργειες ανά συγγραφέα."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "Απόφαση AI",
+              "none": "Καμία",
+              "unknown": "Άγνωστη"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Εφαρμοσμένες Ενέργειες",
+              "none": "Καμία"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
+              "name": "Μηνύματα με Επισήμανση",
+              "no_content": "[χωρίς περιεχόμενο κειμένου]",
               "entry": "• ID {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "Σάρωση Ανίχνευσης AI (αποσφαλμάτωση)",
+          "description": "Δεν βρέθηκαν παραβιάσεις στην τελευταία ανίχνευση.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "Σαρωμένες Μηνύματα",
+            "mode": "Λειτουργία"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "Ανιχνεύθηκε παραβίαση",
+          "reason_multiple": "Πολλαπλές παραβιάσεις: {reasons}",
+          "rule_default": "Παραβίαση κανόνα",
+          "rule_multiple": "Πολλαπλοί κανόνες: {rules}"
         }
       },
       "ensure_adaptive": "Δεν έχει ενεργοποιηθεί η λειτουργία προσαρμοστικής εποπτείας. Χρησιμοποιήστε `/ai_mod set_mode` για ενεργοποίηση."
