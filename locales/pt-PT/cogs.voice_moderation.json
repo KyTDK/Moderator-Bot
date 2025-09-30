@@ -2,23 +2,23 @@
   "cogs": {
     "voice_moderation": {
       "transcript": {
-        "author_label": "AUTHOR",
-        "utterance_label": "UTTERANCE",
+        "author_label": "AUTOR",
+        "utterance_label": "ENUNCIAÇÃO",
         "divider": "---",
-        "unknown_speaker": "Unknown speaker",
-        "unknown_prefix": "Unknown",
+        "unknown_speaker": "Orador desconhecido",
+        "unknown_prefix": "Desconhecido",
         "user_fallback": "<@{id}> (id = {id})",
         "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transcript",
-        "title_part": "VC Transcript (part {index}/{total})",
-        "field_channel": "Channel",
-        "field_utterances": "Utterances",
-        "footer_high": "High accuracy transcript",
-        "footer_normal": "Normal accuracy transcript"
+        "title_single": "Transcrição de VC",
+        "title_part": "Transcrição de VC (parte {index}/{total})",
+        "field_channel": "Canal",
+        "field_utterances": "Enunciações",
+        "footer_high": "Transcrição de alta precisão",
+        "footer_normal": "Transcrição de precisão normal"
       },
       "budget": {
-        "title": "VC Moderation Budget Reached",
-        "description": "Skipping analysis for this cycle due to budget limit."
+        "title": "Orçamento de moderação de VC alcançado",
+        "description": "Análise pulada para este ciclo devido ao limite de orçamento."
       }
     }
   }
