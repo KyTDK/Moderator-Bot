@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Конфигурација надзора",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Подесите канал за излаз логова.",
+          "channel": "Канал за слање логова."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Уклоните подешавање канала надзора."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Приказујући тренутни канал надзора."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Омогући или онемогући одређени догађај надзора.",
+          "event": "Догађај за пребацивање",
+          "enabled": "Омогућите или онемогућите логовање за овај догађај",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Корисник се придружио",
+            "leave": "Корисник је напустио",
+            "ban": "Забрана",
+            "unban": "Укидање забране",
+            "timeout": "Време је истекло",
+            "message_delete": "Порука обрисана",
+            "message_edit": "Порука измењена"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Наведи тренутна подешавања догађаја надзора."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Садржај:**\n{content}",
         "description_generic": "Порука је избрисана у {channel}.",
         "description_deleted_by": "\n**Избрисао(ла):** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Нема садржаја]",
         "fields": {
           "attachments": "Прилози ({count})",
           "embeds": "Уградити {index}",
@@ -99,7 +99,7 @@
           "before": "Пре",
           "after": "После"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Нема садржаја]",
         "footer": "Кориснички ID: {user_id}"
       },
       "ban": {
