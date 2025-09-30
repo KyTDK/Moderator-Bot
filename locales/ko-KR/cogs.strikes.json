@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "스트라이크 관리 명령어.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "특정 사용자를 스트라이크하십시오.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "스트라이크할 멤버.",
+            "reason": "스트라이크 사유.",
+            "expiry": "선택적 만료 기간(예: 30일, 2주)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "특정 사용자의 스트라이크를 가져옵니다."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "특정 사용자의 모든 스트라이크를 제거합니다.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "스트라이크가 제거될 사용자."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "스트라이크 수준에 대한 추가 작업을 추가합니다.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "작업을 트리거하기 위해 필요한 스트라이크 수.",
+            "action": "추가할 작업.",
+            "duration": "기간(예: 1시간, 30분). 그렇지 않으면 비워둡니다."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "스트라이크 수준에서 작업을 제거합니다.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "작업과 관련된 스트라이크 수.",
+            "action": "제거할 작업 문자열."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "구성된 모든 스트라이크 작업보기."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "채널 또는 특정 사용자가 위협을 받습니다.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
