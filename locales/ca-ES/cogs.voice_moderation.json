@@ -2,23 +2,23 @@
   "cogs": {
     "voice_moderation": {
       "transcript": {
-        "author_label": "AUTHOR",
-        "utterance_label": "UTTERANCE",
+        "author_label": "AUTOR",
+        "utterance_label": "ENUNCIAT",
         "divider": "---",
-        "unknown_speaker": "Unknown speaker",
-        "unknown_prefix": "Unknown",
+        "unknown_speaker": "Parlante desconegut",
+        "unknown_prefix": "Desconegut",
         "user_fallback": "<@{id}> (id = {id})",
         "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transcript",
-        "title_part": "VC Transcript (part {index}/{total})",
-        "field_channel": "Channel",
-        "field_utterances": "Utterances",
-        "footer_high": "High accuracy transcript",
-        "footer_normal": "Normal accuracy transcript"
+        "title_single": "Transcripció VC",
+        "title_part": "Transcripció VC (part {index}/{total})",
+        "field_channel": "Canal",
+        "field_utterances": "Enunciats",
+        "footer_high": "Transcripció d'alta precisió",
+        "footer_normal": "Transcripció de precisió normal"
       },
       "budget": {
-        "title": "VC Moderation Budget Reached",
-        "description": "Skipping analysis for this cycle due to budget limit."
+        "title": "Pressupost de moderació de VC assolit",
+        "description": "S'està saltant l'anàlisi d'aquest cicle a causa del límit de pressupost."
       }
     }
   }
