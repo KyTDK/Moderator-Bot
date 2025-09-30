@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "禁止ワード管理コマンド。",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "組み込みの不適切表現リストを有効または無効にします。",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "有効化",
+            "disable": "無効化",
+            "status": "ステータス"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "禁止ワードリストに単語を追加します。"
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "禁止ワードリストから単語を削除します。"
         },
         "list": {
-          "description": "List all banned words."
+          "description": "すべての禁止ワードをリストします。"
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "すべての禁止ワードをクリアします。"
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "禁止ワードが検出されたときにトリガーされるモデレーションアクションを追加します。",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "実行するアクション",
+            "duration": "タイムアウトにのみ必要 (例: 10分, 1時間, 3日)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "禁止ワードに対する処罰リストから特定のアクションを削除します。",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "削除する正確なアクション文字列 (例: タイムアウト, 削除)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "禁止ワードが使われたときにトリガーされるように現在設定されているすべてのアクションを表示します。"
         }
       },
       "defaults": {
