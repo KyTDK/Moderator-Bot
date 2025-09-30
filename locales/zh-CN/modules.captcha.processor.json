@@ -3,59 +3,59 @@
     "captcha": {
       "processor": {
         "success": {
-          "reason": "Captcha verification successful",
+          "reason": "验证码验证成功",
           "embed": {
-            "title": "Captcha Verification Passed",
-            "description": "{mention} ({user_id}) passed captcha verification.",
+            "title": "验证码验证通过",
+            "description": "{mention} ({user_id}) 验证码验证通过。",
             "fields": {
-              "actions": "Actions Applied",
-              "attempts": "Attempts",
-              "provider": "Provider",
-              "challenge": "Challenge",
-              "review": "Review"
+              "actions": "已执行操作",
+              "attempts": "尝试次数",
+              "provider": "提供者",
+              "challenge": "挑战",
+              "review": "审查"
             }
           }
         },
         "failure": {
-          "reason_default": "Failed captcha verification.",
+          "reason_default": "验证码验证失败。",
           "notes": {
-            "deferred_generic": "Failure actions deferred; captcha attempts remain.",
-            "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
-            "member_left": "Member is no longer in the guild; configured failure actions were skipped."
+            "deferred_generic": "失败操作已延迟；验证码尝试次数仍有剩余。",
+            "deferred_remaining": "失败操作已延迟；剩余 {remaining} {attempts_word}。",
+            "member_left": "成员已不在公会中；跳过了配置的失败操作。"
           },
           "attempts": {
-            "unlimited": "Unlimited attempts remain.",
-            "additional": "Additional attempts remain.",
-            "remaining": "{count} {attempts_word} remaining.",
-            "word_one": "attempt",
-            "word_other": "attempts"
+            "unlimited": "剩余无限制尝试次数。",
+            "additional": "剩余额外尝试次数。",
+            "remaining": "剩余 {count} {attempts_word}。",
+            "word_one": "尝试",
+            "word_other": "尝试次数"
           },
           "embed": {
-            "title_failed": "Captcha Verification Failed",
-            "title_attempt": "Captcha Attempt Failed",
-            "description_failed": "{mention} ({user_id}) failed captcha verification.",
-            "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+            "title_failed": "验证码验证失败",
+            "title_attempt": "验证码尝试失败",
+            "description_failed": "{mention} ({user_id}) 验证码验证失败。",
+            "description_attempt": "{mention} ({user_id}) 验证码尝试失败。",
             "fields": {
-              "actions": "Actions Applied",
-              "notes": "Notes",
-              "attempts": "Attempts",
-              "remaining": "Attempts Remaining",
-              "challenge": "Challenge",
-              "reason": "Reason",
-              "review": "Review"
+              "actions": "已执行操作",
+              "notes": "备注",
+              "attempts": "尝试次数",
+              "remaining": "剩余尝试次数",
+              "challenge": "挑战",
+              "reason": "原因",
+              "review": "审查"
             }
           }
         },
         "errors": {
-          "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
-          "unknown_token": "No pending captcha verification found for this user.",
-          "token_mismatch": "Captcha token does not match the pending verification.",
-          "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
-          "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
-          "guild_not_found": "Guild {guild_id} is not available to this bot.",
-          "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
-          "member_not_found": "Member {user_id} not found in guild {guild_id}.",
-          "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}."
+          "role_assignment_failed": "由于 Discord API 错误，未能应用验证码成功操作。",
+          "unknown_token": "未找到此用户的待处理验证码验证。",
+          "token_mismatch": "验证码令牌与待处理验证不匹配。",
+          "missing_permissions": "机器人缺少应用验证码失败操作的权限。",
+          "action_failed": "由于 Discord API 错误，未能应用验证码失败操作。",
+          "guild_not_found": "公会 {guild_id} 对此机器人不可用。",
+          "guild_fetch_failed": "未能从 Discord 获取公会 {guild_id}。",
+          "member_not_found": "在公会 {guild_id} 中未找到成员 {user_id}。",
+          "member_fetch_failed": "未能从公会 {guild_id} 获取成员 {user_id}。"
         }
       }
     }
