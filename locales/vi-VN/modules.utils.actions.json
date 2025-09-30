@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "Đình công",
+          "kick": "Đá",
+          "ban": "Cấm",
+          "timeout": "Thời gian chờ",
+          "delete": "Xóa tin nhắn",
+          "give_role": "Cấp quyền",
+          "take_role": "Gỡ quyền",
+          "warn": "Cảnh báo người dùng",
+          "broadcast": "Phát tin nhắn",
+          "auto": "Tự động"
         }
       }
     }
