@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Spravovat nastavení serveru.",
         "help": {
-          "description": "Získat pomoc s nastavením."
+          "description": "Získat pomoc s nastavením.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Vymazat všechna nastavení a začít s výchozími hodnotami. Toto nelze vrátit zpět"

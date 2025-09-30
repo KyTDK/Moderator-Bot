@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Servereinstellungen verwalten.",
         "help": {
-          "description": "Hilfe zu den Einstellungen erhalten."
+          "description": "Hilfe zu den Einstellungen erhalten.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Alle Einstellungen zurücksetzen und mit Standardwerten neu starten. Dies kann nicht rückgängig gemacht werden."

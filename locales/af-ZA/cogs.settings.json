@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Bestuur bedienerinstellings.",
         "help": {
-          "description": "Kry hulp oor instellings."
+          "description": "Kry hulp oor instellings.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Vee alle instellings uit en begin met verstek. Dit kan nie ongedaan gemaak word nie"

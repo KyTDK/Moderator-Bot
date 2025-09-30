@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Zarządzaj ustawieniami serwera.",
         "help": {
-          "description": "Uzyskaj pomoc dotyczącą ustawień."
+          "description": "Uzyskaj pomoc dotyczącą ustawień.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Usuń wszystkie ustawienia i zacznij od domyślnych. Tego nie można cofnąć"

@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "إدارة إعدادات الخادم.",
         "help": {
-          "description": "الحصول على مساعدة بشأن الإعدادات."
+          "description": "الحصول على مساعدة بشأن الإعدادات.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "مسح جميع الإعدادات والبدء بالإعدادات الافتراضية. لا يمكن التراجع عن ذلك"

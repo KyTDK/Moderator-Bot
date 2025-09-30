@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Hallinnoi palvelimen asetuksia.",
         "help": {
-          "description": "Hanki apua asetuksissa."
+          "description": "Hanki apua asetuksissa.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Poista kaikki asetukset ja aloita oletuksilla. Tätä ei voi perua"

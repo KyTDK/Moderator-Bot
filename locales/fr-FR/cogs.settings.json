@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Gérez les paramètres du serveur.",
         "help": {
-          "description": "Obtenez de l'aide sur les paramètres."
+          "description": "Obtenez de l'aide sur les paramètres.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Effacez tous les paramètres et recommencez avec les valeurs par défaut. Cette action est irréversible"

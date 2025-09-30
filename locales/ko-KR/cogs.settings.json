@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "서버 설정 관리.",
         "help": {
-          "description": "설정에 대한 도움말 받기."
+          "description": "설정에 대한 도움말 받기.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "모든 설정을 초기화하고 기본값으로 시작합니다. 이 작업은 되돌릴 수 없습니다."

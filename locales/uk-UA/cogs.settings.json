@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Керування налаштуваннями сервера.",
         "help": {
-          "description": "Отримати допомогу з налаштуваннями."
+          "description": "Отримати допомогу з налаштуваннями.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Стерти всі налаштування й почати з умовчаннями. Це не можна скасувати"

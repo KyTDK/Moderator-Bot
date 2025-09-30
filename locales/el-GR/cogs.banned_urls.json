@@ -14,6 +14,24 @@
         },
         "clear": {
           "description": "Απαλείψτε όλα τα μπλοκαρισμένα URL."
+        },
+        "actions": {
+          "add": {
+            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "options": {
+              "action": "Action to perform",
+              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            }
+          },
+          "remove": {
+            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "options": {
+              "action": "Exact action string to remove (e.g. timeout, delete)"
+            }
+          },
+          "view": {
+            "description": "Show all actions currently configured to trigger when banned URLs are used."
+          }
         }
       },
       "limit_reached": "Έχετε φτάσει το όριο από {limit} αποκλεισμένες διευθύνσεις URL για αυτόν τον διακομιστή.\nΧρησιμοποιήστε `/bannedurls remove` ή `/bannedurls clear` για να κάνετε χώρο.",

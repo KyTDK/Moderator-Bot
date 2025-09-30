@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Gestisci le impostazioni del server.",
         "help": {
-          "description": "Ottieni aiuto sulle impostazioni."
+          "description": "Ottieni aiuto sulle impostazioni.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Cancella tutte le impostazioni e ripristina le predefinite. Questo non può essere annullato."

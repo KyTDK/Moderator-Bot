@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Gestionează setările serverului.",
         "help": {
-          "description": "Obține ajutor pentru setări."
+          "description": "Obține ajutor pentru setări.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Șterge toate setările și revin-o la cele implicite. Acest lucru nu poate fi anulat"

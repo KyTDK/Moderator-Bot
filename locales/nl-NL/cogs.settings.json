@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Beheer serverinstellingen.",
         "help": {
-          "description": "Krijg hulp bij instellingen."
+          "description": "Krijg hulp bij instellingen.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Wis alle instellingen en begin met standaardinstellingen. Dit kan niet ongedaan worden gemaakt."
