@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "AI 중재 기능을 관리합니다.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "서버 규칙 설정"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "현재 구성된 중재 규칙을 표시합니다."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "집행 조치 추가"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "처벌 리스트에서 특정 조치를 제거합니다.",
+          "action": "제거할 특정 조치 문자열 (예: 타임아웃, 삭제)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "중재 활성화/비활성화, 상태 보기, 또는 모드 설정 합니다.",
+          "enable": "자율 중재 기능을 켜거나 끕니다.",
+          "mode": "옵션: 보고서 / 간격 / 적응형 모드를 설정합니다.",
+          "enable_choice": "활성화",
+          "disable_choice": "비활성화",
+          "status_choice": "상태",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "보고서",
+            "interval": "간격",
+            "adaptive": "적응형"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "AI가 위반 사항을 감지했을 때 트리거되도록 현재 구성된 모든 동작을 표시합니다."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "트리거 이벤트를 하나 이상의 중재 모드 동작에 연결합니다.",
+          "role": "모니터링할 역할 (적용 가능한 경우)",
+          "channel": "모니터링할 채널 (급증 이벤트의 경우)",
+          "time_range": "시간 기반 트리거를 위한 HH:MM-HH:MM 시간 범위",
+          "threshold": "역할 온라인 퍼센트의 임계값 (0~1, 선택사항)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "구성된 이벤트에서 특정 조치를 제거합니다.",
+          "event_key": "적응형 이벤트 키 (자동완성)",
+          "action": "이 이벤트에서 제거할 조치"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "모든 적응형 이벤트 트리거를 삭제합니다."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "현재 적응형 중재 트리거를 표시합니다."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "역할 온라인",
+            "role_offline": "역할 오프라인",
+            "mass_join": "대량 가입",
+            "mass_leave": "대량 탈퇴",
+            "guild_inactive": "서버 비활동",
+            "role_online_percent": "역할 온라인 %",
+            "time_range": "시간 범위",
+            "server_spike": "서버 급증"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "간격 모드 활성화",
+          "disable_interval": "간격 모드 비활성화",
+          "enable_report": "보고 모드 활성화",
+          "disable_report": "보고 모드 비활성화"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "비활성화됨",
         "state_unknown": "알 수 없음",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "보고서",
+          "interval": "간격",
+          "adaptive": "적응형"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "AI 중재 예산이 이번 청구 주기에 도달했습니다. {reset}시에 재설정됩니다.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "다음 주기",
+        "thanks_no_violation": "신고해 주셔서 감사합니다. 위반 사항이 발견되지 않았습니다.",
+        "thanks_action": "신고해 주셔서 감사합니다. 조치가 취해졌습니다."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "AI-플래그 위반",
+          "description": "사용자: {user}\n위반 규칙: {rule}\n이유: {reason}\n조치: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "팬아웃",
+              "value": "다수의 작성자가 감지됨; 작성자별 조치가 적용되었습니다."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "AI 결정",
+              "none": "없음",
+              "unknown": "알 수 없음"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "적용된 조치",
+              "none": "없음"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
+              "name": "플래그 지정된 메시지(들)",
+              "no_content": "[데이터 없음]",
               "entry": "• ID {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "AI 중재 스캔 (디버그)",
+          "description": "최신 스캔에서 위반 사항이 발견되지 않았습니다.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "스캔된 메시지",
+            "mode": "모드"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "위반 사항이 감지됨",
+          "reason_multiple": "다중 위반: {reasons}",
+          "rule_default": "규칙 위반",
+          "rule_multiple": "다중 규칙: {rules}"
         }
       },
       "ensure_adaptive": "적응형 중재 모드가 활성화되어 있지 않습니다. \"/ai_mod set_mode\"를 사용하여 활성화하세요."
