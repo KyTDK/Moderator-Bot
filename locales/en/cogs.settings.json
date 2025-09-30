@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Manage server settings.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Get help on settings.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Wipe all settings and start with defaults. This can't be undone"

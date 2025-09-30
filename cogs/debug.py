@@ -200,4 +200,6 @@ class DebugCog(commands.Cog):
 async def setup(bot: commands.Bot):
     await bot.add_cog(DebugCog(bot))
     if GUILD_ID:
+        if isinstance(bot, ModeratorBot):
+            await bot.ensure_command_tree_translator()
         await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
