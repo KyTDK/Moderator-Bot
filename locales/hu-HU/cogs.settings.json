@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Szerverbeállítások kezelése.",
         "help": {
-          "description": "Segítség a beállításokhoz."
+          "description": "Segítség a beállításokhoz.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Minden beállítás törlése és az alapértelmezettekkel újrakezdés. Ez nem vonható vissza"
