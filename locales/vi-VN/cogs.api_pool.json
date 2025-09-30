@@ -2,27 +2,27 @@
   "cogs": {
     "api_pool": {
       "meta": {
-        "group_description": "Management of your personal API keys in the pool.",
+        "group_description": "Quản lý các khóa API cá nhân của bạn trong nhóm.",
         "explain": {
-          "description": "Explain the API pool."
+          "description": "Giải thích nhóm API."
         },
         "add": {
-          "description": "Add an API key to the pool.",
+          "description": "Thêm một khóa API vào nhóm.",
           "params": {
-            "api_key": "The OpenAI API key to add to the shared pool."
+            "api_key": "Khóa API OpenAI cần thêm vào nhóm chung."
           }
         },
         "remove": {
-          "description": "Remove an API key from the pool.",
+          "description": "Xóa một khóa API khỏi nhóm.",
           "params": {
-            "api_key": "The OpenAI API key to remove from the shared pool."
+            "api_key": "Khóa API OpenAI cần xóa khỏi nhóm chung."
           }
         },
         "clear": {
-          "description": "Clear all your API keys from the pool."
+          "description": "Xóa tất cả các khóa API của bạn khỏi nhóm."
         },
         "list": {
-          "description": "List all API keys in your pool (encrypted)."
+          "description": "Liệt kê tất cả các khóa API trong nhóm của bạn (được mã hóa)."
         }
       },
       "explanation": {
