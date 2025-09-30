@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Tiltott szavak kezelési parancsai.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Az beépített szűrőlista engedélyezése vagy letiltása.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "engedélyez",
+            "disable": "letilt",
+            "status": "állapot"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Hozzáad egy szót a tiltott szavak listájához."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Eltávolít egy szót a tiltott szavak listájáról."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Az összes tiltott szó listázása."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Minden tiltott szó törlése."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Hozzáad egy moderációs intézkedést, amelyet akkor váltanak ki, ha tiltott szót érzékelnek.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Végzendő művelet",
+            "duration": "Csak időkorlát esetén szükséges (pl. 10p, 1ó, 3n)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Eltávolít egy adott műveletet a tiltott szavak büntetési listájáról.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Eltávolítandó pontos műveleti szöveg (pl. időkorlát, törlés)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Az összes jelenleg beállított művelet megjelenítése, amelyet a tiltott szavak használatakor váltanak ki."
         }
       },
       "defaults": {
