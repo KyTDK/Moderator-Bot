@@ -3,16 +3,16 @@
     "config": {
       "premium_plans": {
         "plan_names": {
-          "free": "Free",
-          "core": "Core",
-          "pro": "Pro",
-          "ultra": "Ultra"
+          "free": "無料",
+          "core": "コア",
+          "pro": "プロ",
+          "ultra": "ウルトラ"
         },
         "requirements": {
-          "any": "an active premium plan",
-          "single": "an active {plan} plan",
-          "double": "an active {plan_a} or {plan_b} plan",
-          "list": "an active {plans}, or {last} plan"
+          "any": "有効なプレミアムプラン",
+          "single": "有効な{plan}プラン",
+          "double": "有効な{plan_a}または{plan_b}プラン",
+          "list": "有効な{plans}または{last}プラン"
         }
       }
     }
