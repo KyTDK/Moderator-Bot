@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "가속화 (프리미엄) 구독을 관리하세요.",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "현재 가속화 구독이 있는지 확인하세요."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "고유한 PayPal 구독 링크를 생성하세요."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "가속화 구독의 혜택을 보여주세요."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "구독을 취소하는 방법을 설명하세요."
         }
       },
       "group_description": "가속화된 (프리미엄) 구독을 관리하세요.",
