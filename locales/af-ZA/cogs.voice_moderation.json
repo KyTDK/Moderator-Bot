@@ -2,23 +2,23 @@
   "cogs": {
     "voice_moderation": {
       "transcript": {
-        "author_label": "AUTHOR",
-        "utterance_label": "UTTERANCE",
+        "author_label": "SKRYWER",
+        "utterance_label": "UITSPRAAK",
         "divider": "---",
-        "unknown_speaker": "Unknown speaker",
-        "unknown_prefix": "Unknown",
+        "unknown_speaker": "Onbekende spreker",
+        "unknown_prefix": "Onbekend",
         "user_fallback": "<@{id}> (id = {id})",
         "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transcript",
-        "title_part": "VC Transcript (part {index}/{total})",
-        "field_channel": "Channel",
-        "field_utterances": "Utterances",
-        "footer_high": "High accuracy transcript",
-        "footer_normal": "Normal accuracy transcript"
+        "title_single": "VC Transkripsie",
+        "title_part": "VC Transkripsie (deel {index}/{total})",
+        "field_channel": "Kanaal",
+        "field_utterances": "Uitsprake",
+        "footer_high": "Hoë akkuraatheid transkripsie",
+        "footer_normal": "Normale akkuraatheid transkripsie"
       },
       "budget": {
-        "title": "VC Moderation Budget Reached",
-        "description": "Skipping analysis for this cycle due to budget limit."
+        "title": "VC Moderasie Begroting Bereik",
+        "description": "Oorslaan van analise vir hierdie siklus as gevolg van begrotingslimiet."
       }
     }
   }
