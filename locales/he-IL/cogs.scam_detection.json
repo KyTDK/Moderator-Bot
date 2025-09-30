@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "ניהול תצורת זיהוי מרמה וניהול תבניות.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "התעלם מערוץ מסוים בזיהוי מרמה.",
+          "channel": "הערוץ להתעלם ממנו"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "הסרת ערוץ מרשימת ההחרגות.",
+          "channel": "הערוץ להסרה מרשימת ההחרגות"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "רשימת כל הערוצים המוחרגים."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "הפעל או הצג בדיקת קישורים.",
+          "action_description": "הפעל | השבת | סטטוס",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "הפעל",
+            "disable": "השבת",
+            "status": "סטטוס"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "הוסף פעולה לרשימת העונשים למרמה.",
+          "action": "פעולה לביצוע",
+          "duration": "דרוש רק במקרים של השהיה (לדוגמה: 10דק, 1ש, 3י)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "הסר פעולה מרשימת העונשים למרמה.",
+          "action": "מחרוזות פעולה להסרה (לדוגמה: השהיה:1י, מחק)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "הצג את הגדרות המרמה הנוכחיות."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*אין פעולות שנקבעו.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "בדיקת קישורים {state}.",
+        "updated": "בדיקת קישורים {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**מופעל**",
+          "disabled": "**מושבת**"
         }
       },
       "detection": {
