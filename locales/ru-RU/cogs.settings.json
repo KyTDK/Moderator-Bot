@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Управляйте настройками сервера.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Получите помощь по настройкам."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Сотрите все настройки и начните с настроек по умолчанию. Это действие нельзя отменить"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Установите настройку сервера."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Получите текущее значение настройки сервера."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Удалите настройку сервера или элемент из настройки типа списка."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Справка по команде `{command}` не найдена.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Открыть Панель управления",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Нет описания.",
+          "no_subcommands": "(Без подкоманд)",
+          "no_groups": "(Группы команд не найдены.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Используется по умолчанию `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Панель управления:** [Открыть Панель управления]({dashboard_url})\\nИспользуйте `/help {name}` для просмотра этого снова.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Подкоманды",
+              "paged": "Подкоманды (страница {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderator Bot — Справка",
+            "description": "🛠️ **Панель управления:** [Открыть Панель управления]({dashboard_url})\\nНастройте всё быстрее в веб-панели.\\nИли используйте **`/help <group>`** для детальных подкоманд.",
+            "line": "• `/{name}` — {description}  _Попробуйте:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Обнаружение языка",
+            "groups_first": "Доступные группы команд",
+            "groups_paged": "Доступные группы команд (страница {page})",
+            "speed_name": "Ускорение обнаружения",
+            "speed_value": "⚡ Обновитесь до Accelerated для более быстрого обнаружения NSFW и мошенничества — выполните команду `/accelerated`.",
+            "links_name": "Ссылки",
+            "links_value": "[Поддержка](https://discord.gg/invite/33VcwjfEXC) • [Пожертвовать](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [Условия использования](https://modbot.neomechanical.com/terms-of-service) • [Политика конфиденциальности](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Доверенные разработчики",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
