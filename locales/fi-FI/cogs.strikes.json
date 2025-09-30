@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Lakkojen hallintakomennot.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Anna lakko tietylle käyttäjälle.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Jäsen, jolle annetaan lakko.",
+            "reason": "Syynä lakolle.",
+            "expiry": "Valinnainen umpeutumisaika (esim. 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Hae tietyn käyttäjän lakkot."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Tyhjennä tietyn käyttäjän kaikki lakot.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Käyttäjä, jonka lakot tyhjennetään."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Lisää lisätoimenpide lakon tasolle.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Lakkojen määrä, joka tarvitaan toimenpiteen käynnistämiseen.",
+            "action": "Lisättävä toimenpide.",
+            "duration": "Kesto (vain aikakatkaisuun, esim. 1h, 30m). Jätä muutoin tyhjäksi."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Poista toimenpide lakon tasolta.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Lakkojen määrä, joka liittyy toimenpiteeseen.",
+            "action": "Poistettava tarkka toimenpide."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Näytä kaikki määritettyjä lakon toimenpiteet."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Peloittele kanavaa tai tiettyä käyttäjää.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
