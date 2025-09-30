@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "Yapay zeka moderasyon özelliklerini yönetin.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Sunucu kurallarını belirleyin"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Şu an yapılandırılmış moderasyon kurallarını gösterin."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Yaptırım eylemleri ekleyin"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Ceza listesinden belirli bir eylemi çıkarın.",
+          "action": "Çıkarılacak tam eylem metni (örneğin, zaman aşımı, silme)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "Moderasyonu etkinleştirin/devre dışı bırakın, durumu görüntüleyin veya modunu ayarlayın.",
+          "enable": "Otomatik moderasyonu açın veya kapatın.",
+          "mode": "İsteğe bağlı: rapor / aralık / uyarlanabilir modu ayarlayın.",
+          "enable_choice": "Etkinleştir",
+          "disable_choice": "Devre dışı bırak",
+          "status_choice": "Durum",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "Rapor",
+            "interval": "Aralık",
+            "adaptive": "Uyarlanabilir"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Yapay zekanın ihlal tespit ettiğinde tetiklenecek şu an yapılandırılmış tüm eylemleri gösterin."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Bir veya daha fazla moderasyon modu eylemine bir tetikleyici olay bağlayın.",
+          "role": "Hangi rollerin izleneceği (uygulanabilirse)",
+          "channel": "Hangi kanalın izleneceği (ani olaylar için)",
+          "time_range": "Zaman bazlı tetikleyiciler için saat aralığı HH:MM-HH:MM",
+          "threshold": "Rol çevrim içi yüzdesi için eşik (0 ile 1 arasında, isteğe bağlı)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Yapılandırılmış bir olaydan belirli bir eylemi kaldırın.",
+          "event_key": "Uyarlanabilir olay anahtarı (otomatik tamamlama)",
+          "action": "Bu etkinlikten çıkarılacak eylem"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Tüm uyarlanabilir olay tetikleyicilerini temizleyin."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Mevcut uyarlanabilir moderasyon tetikleyicilerini gösterin."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "Rol Çevrimiçi",
+            "role_offline": "Rol Çevrimdışı",
+            "mass_join": "Kitlesel Katılım",
+            "mass_leave": "Kitlesel Ayrılma",
+            "guild_inactive": "Sunucu Hareketsizliği",
+            "role_online_percent": "Rol Çevrimiçi %",
+            "time_range": "Zaman Aralığı",
+            "server_spike": "Sunucu Ani Artışı"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Aralık Modunu Etkinleştir",
+          "disable_interval": "Aralık Modunu Devre Dışı Bırak",
+          "enable_report": "Rapor Modunu Etkinleştir",
+          "disable_report": "Rapor Modunu Devre Dışı Bırak"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "devre dışı bırakıldı",
         "state_unknown": "bilinmiyor",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "rapor",
+          "interval": "aralık",
+          "adaptive": "uyarlanabilir"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "Bu fatura dönemi için yapay zeka moderasyon bütçesi doldu. {reset} tarihinde sıfırlanacak.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "sonraki döngü",
+        "thanks_no_violation": "Rapor için teşekkürler. Herhangi bir ihlal bulunamadı.",
+        "thanks_action": "Rapor için teşekkürler. Gerekli önlemler alındı."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "Yapay Zeka Tarafından İşaretlenen İhlal",
+          "description": "Kullanıcı: {user}\nİhlal Edilen Kural: {rule}\nNeden: {reason}\nAlınan Önlemler: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "Dağılım",
+              "value": "Birden fazla yazar tespit edildi; yazar başına işlemler uygulandı."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "Yapay Zeka Kararı",
+              "none": "Yok",
+              "unknown": "Bilinmeyen"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Uygulanan İşlemler",
+              "none": "Yok"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
+              "name": "İşaretlenen Mesaj(lar)",
+              "no_content": "[metin içeriği yok]",
               "entry": "• ID {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "Yapay Zeka Moderasyon Tarama (Hata Ayıklama)",
+          "description": "Son taramada herhangi bir ihlal bulunamadı.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "Taranan Mesajlar",
+            "mode": "Mod"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "İhlal tespit edildi",
+          "reason_multiple": "Birden fazla ihlal: {reasons}",
+          "rule_default": "Kural ihlali",
+          "rule_multiple": "Birden fazla kural: {rules}"
         }
       },
       "ensure_adaptive": "Uyarlanabilir moderasyon modu etkin değil. Etkinleştirmek için `/ai_mod set_mode` komutunu kullanın."
