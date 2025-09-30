@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Comandos de gerenciamento de advertências.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Advertir um usuário específico.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "O membro a ser advertido.",
+            "reason": "O motivo da advertência.",
+            "expiry": "Duração opcional de expiração (por exemplo, 30d, 2s)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Obter advertências de um usuário específico."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Limpar todas as advertências de um usuário específico.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "O usuário cujas advertências serão apagadas."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Adicionar uma ação adicional para um nível de advertência.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Número de advertências necessárias para acionar a ação.",
+            "action": "Ação a ser adicionada.",
+            "duration": "Duração (somente para tempo limite, por exemplo, 1h, 30m). Deixe em branco caso contrário."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Remover uma ação de um nível de advertência.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Número de advertências associadas à ação.",
+            "action": "String de ação exata para remover."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Ver todas as ações de advertências configuradas."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Intimidar o canal, ou um usuário específico.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
