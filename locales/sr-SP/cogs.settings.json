@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Управљајте подешавањима сервера.",
         "help": {
-          "description": "Потражите помоћ око подешавања."
+          "description": "Потражите помоћ око подешавања.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Избришите сва подешавања и започните са подразумеваним подешавањима. Ово не може бити поништено."
