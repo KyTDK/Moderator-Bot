@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "Conținut NSFW detectat",
+          "description": "**Utilizator:** {user_mention} ({user_display})\n**Motiv:** {reason}",
+          "footer": "ID Utilizator: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "Raport Scanare NSFW",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Utilizator: {user}",
+              "file": "Fișier: `{filename}`",
+              "type": "Tip: `{file_type}`",
+              "decision": "Decizie: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
+              "image": "Imagine",
               "video": "Video",
-              "unknown": "Unknown"
+              "unknown": "Necunoscut"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Sigur",
+              "unknown": "Necunoscut"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Motiv",
+              "category": "Categorie",
+              "score": "Scor",
+              "flagged_any": "Marcat Oricare",
+              "summary_categories": "Categorii Sumare",
+              "max_similarity": "Similaritate Maximă",
+              "max_category": "Categorie Similaritate Maximă",
+              "similarity": "Similaritate Potrivită",
+              "high_accuracy": "Acuratețe Ridicată",
+              "clip_threshold": "Prag CLIP",
+              "moderation_threshold": "Prag Moderare",
+              "video_frames": "Cadre Video"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "Moderare OpenAI",
+              "similarity_match": "Potrivire Similaritate",
+              "no_frames_extracted": "Fără cadre extrase",
+              "no_nsfw_frames_detected": "Fără cadre NSFW detectate"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Încredere",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Scor",
+            "similarity": "Similaritate"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "adevărat",
+          "false": "fals"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Nespecificat"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Detectată posibila încălcare a politicii (Categorie: **{category}**)"
       }
     }
   }
