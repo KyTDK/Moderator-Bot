@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "Αναστολή",
+          "kick": "Λάκτισμα",
+          "ban": "Αποκλεισμός",
+          "timeout": "Διακοπή",
+          "delete": "Διαγραφή μηνύματος",
+          "give_role": "Παροχή ρόλου",
+          "take_role": "Αφαίρεση ρόλου",
+          "warn": "Προειδοποίηση χρήστη",
+          "broadcast": "Μετάδοση μηνύματος",
+          "auto": "Αυτόματο"
         }
       }
     }
