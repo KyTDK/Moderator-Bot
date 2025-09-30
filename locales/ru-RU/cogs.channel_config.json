@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Настройте каналы журнала.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Установить канал журнала.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Канал, используемый для ведения журнала.",
+            "type": "Какого типа журнал для этого канала."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Снять настройку канала журнала.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Какой тип журнала отключить."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Показать текущие настройки канала журнала."
         },
         "types": {
-          "strike": "Strike",
+          "strike": "Стачка",
           "nsfw": "NSFW",
-          "ai": "AI",
-          "monitor": "Monitor",
-          "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "ai": "ИИ",
+          "monitor": "Монитор",
+          "captcha": "Капча",
+          "vc_transcript": "Транскрипция ВК"
         }
       },
       "nsfw_required": "{channel} не имеет возрастных ограничений. Пожалуйста, выберите канал NSFW.",
