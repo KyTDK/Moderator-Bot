@@ -4,7 +4,7 @@
       "api": {
         "key_failed_notice": "**Waarschuwing:** Uw OpenAI API-sleutel is gezakt voor een moderatiecontrole.\n\nDit betekent meestal dat uw account geen actieve facturering heeft of tijdelijk aan snelheidslimieten is onderworpen.\n\nControleer alstublieft uw [OpenAI Factureringsdashboard](https://platform.openai.com/account/billing/overview) om ervoor te zorgen dat uw account betalingsgegevens heeft en ten minste $5 aan tegoeden.\n\nZodra dit is opgelost, zal uw sleutel automatisch weer functioneren - het opnieuw toevoegen is niet nodig.",
         "key_validation": {
-          "billing_required": "Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly."
+          "billing_required": "Uw API-sleutel werkte niet. Dit komt waarschijnlijk omdat uw organisatie geen krediet heeft toegevoegd aan zijn OpenAI-account. Hoewel het moderatiemodel gratis is, vereist OpenAI dat accounts geldige betalingsgegevens hebben geregistreerd. Ga naar de [OpenAI Factureringsoverzicht](https://platform.openai.com/account/billing/overview) pagina en koop ten minste $5 aan tegoed om krediet toe te voegen. Zodra u een betaalmethode en tegoeden heeft toegevoegd, zou uw API-sleutel correct moeten functioneren."
         }
       }
     }
