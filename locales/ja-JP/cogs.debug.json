@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "メモリとパフォーマンスの統計を取得",
+          "show_all": "すべてのライブラリの割り当てを含める (プロジェクトだけでなく)"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "このコマンドコンテキストに現在バインドされているロケールを表示"
         }
       },
       "permission_denied": "このコマンドを使用する権限がありません。",
@@ -26,7 +26,7 @@
         "footer": "ホスト: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "現在のロケール: {locale}"
       }
     }
   }
