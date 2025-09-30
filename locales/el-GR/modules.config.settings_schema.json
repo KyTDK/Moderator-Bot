@@ -1,0 +1,11 @@
+{
+  "modules": {
+    "config": {
+      "settings_schema": {
+        "locale": {
+          "invalid": "Invalid locale. Supported locales: {supported}"
+        }
+      }
+    }
+  }
+}
