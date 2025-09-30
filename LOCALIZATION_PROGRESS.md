@@ -36,6 +36,7 @@
 - [x] modules/nsfw_scanner/helpers/videos.py — Replaced hard-coded scan reasons with locale-driven identifiers.
 - [x] modules/nsfw_scanner/helpers/images.py — Localized similarity-match reasons for scan summaries.
 - [x] modules/nsfw_scanner/helpers/moderation.py — Localized OpenAI moderation reason codes for verbose reporting.
+- [x] modules/captcha/processor.py — Localized captcha callback errors, success/failure embeds, and deferred action notes.
 
 ## To Do
 - [ ] Audit remaining modules for embedded message strings and prompts.

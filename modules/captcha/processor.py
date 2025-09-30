@@ -13,6 +13,7 @@ from modules.utils import mysql
 from modules.utils import mod_logging
 from modules.moderation import strike
 from modules.utils.time import parse_duration
+from modules.utils.localization import TranslateFn, localize_message
 
 from .models import (
     CaptchaCallbackPayload,
@@ -22,6 +23,82 @@ from .models import (
 from .sessions import CaptchaSession, CaptchaSessionStore
 
 _logger = logging.getLogger(__name__)
+
+
+PROCESSOR_BASE_KEY = "modules.captcha.processor"
+
+SUCCESS_TEXTS_FALLBACK: dict[str, Any] = {
+    "reason": "Captcha verification successful",
+    "embed": {
+        "title": "Captcha Verification Passed",
+        "description": "{mention} ({user_id}) passed captcha verification.",
+        "fields": {
+            "actions": "Actions Applied",
+            "attempts": "Attempts",
+            "provider": "Provider",
+            "challenge": "Challenge",
+            "review": "Review",
+        },
+    },
+}
+
+FAILURE_TEXTS_FALLBACK: dict[str, Any] = {
+    "reason_default": "Failed captcha verification.",
+    "notes": {
+        "deferred_generic": "Failure actions deferred; captcha attempts remain.",
+        "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
+        "member_left": "Member is no longer in the guild; configured failure actions were skipped.",
+    },
+    "attempts": {
+        "unlimited": "Unlimited attempts remain.",
+        "additional": "Additional attempts remain.",
+        "remaining": "{count} {attempts_word} remaining.",
+        "word_one": "attempt",
+        "word_other": "attempts",
+    },
+    "embed": {
+        "title_failed": "Captcha Verification Failed",
+        "title_attempt": "Captcha Attempt Failed",
+        "description_failed": "{mention} ({user_id}) failed captcha verification.",
+        "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+        "fields": {
+            "actions": "Actions Applied",
+            "notes": "Notes",
+            "attempts": "Attempts",
+            "remaining": "Attempts Remaining",
+            "challenge": "Challenge",
+            "reason": "Reason",
+            "review": "Review",
+        },
+    },
+}
+
+ERROR_TEXTS_FALLBACK: dict[str, str] = {
+    "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
+    "unknown_token": "No pending captcha verification found for this user.",
+    "token_mismatch": "Captcha token does not match the pending verification.",
+    "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
+    "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
+    "guild_not_found": "Guild {guild_id} is not available to this bot.",
+    "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
+    "member_not_found": "Member {user_id} not found in guild {guild_id}.",
+    "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}.",
+}
+
+
+def _merge_dicts(base: Mapping[str, Any], overrides: Mapping[str, Any]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in base.items():
+        if isinstance(value, Mapping):
+            result[key] = _merge_dicts(value, {})
+        else:
+            result[key] = value
+    for key, value in overrides.items():
+        if isinstance(value, Mapping) and isinstance(result.get(key), dict):
+            result[key] = _merge_dicts(result[key], value)
+        else:
+            result[key] = value
+    return result
 
 
 @dataclass(slots=True)
@@ -46,6 +123,44 @@ class CaptchaCallbackProcessor:
     def __init__(self, bot: commands.Bot, session_store: CaptchaSessionStore):
         self._bot = bot
         self._sessions = session_store
+
+    def _translator(self) -> TranslateFn | None:
+        translator = getattr(self._bot, "translate", None)
+        return translator if callable(translator) else None
+
+    def _translate(
+        self,
+        key: str,
+        *,
+        fallback: str,
+        placeholders: Mapping[str, Any] | None = None,
+        guild_id: int | None = None,
+    ) -> str:
+        return localize_message(
+            self._translator(),
+            PROCESSOR_BASE_KEY,
+            key,
+            placeholders=placeholders,
+            fallback=fallback,
+            guild_id=guild_id,
+        )
+
+    def _get_texts(
+        self,
+        key: str,
+        fallback: Mapping[str, Any],
+        *,
+        guild_id: int | None = None,
+    ) -> dict[str, Any]:
+        translator = self._translator()
+        if translator is not None:
+            value = translator(
+                f"{PROCESSOR_BASE_KEY}.{key}",
+                guild_id=guild_id,
+            )
+            if isinstance(value, Mapping):
+                return _merge_dicts(fallback, value)
+        return _merge_dicts(fallback, {})
 
     async def process(self, payload: CaptchaCallbackPayload) -> CaptchaProcessResult:
         context = await self._build_context(payload)
@@ -123,19 +238,31 @@ class CaptchaCallbackProcessor:
         action_result: str | None = None
         raw_success_actions = settings.get("captcha-success-actions")
         if raw_success_actions:
+            success_texts = self._get_texts("success", SUCCESS_TEXTS_FALLBACK, guild_id=guild.id)
             action_result = await strike.perform_disciplinary_action(
                 user=member,
                 bot=self._bot,
                 action_string=raw_success_actions,
-                reason="Captcha verification successful",
+                reason=success_texts["reason"],
                 source="captcha",
             )
 
-        if action_result and "Action failed" in action_result:
-            raise CaptchaProcessingError(
-                "role_assignment_failed",
-                "Failed to apply captcha success actions due to a Discord API error.",
+        if action_result:
+            disciplinary_texts = strike._get_translation_dict(
+                self._bot,
+                "modules.moderation.strike.disciplinary",
+                strike.DISCIPLINARY_TEXTS_FALLBACK,
             )
+            failure_prefix = disciplinary_texts["action_failed"].split("{")[0]
+            if failure_prefix and failure_prefix in action_result:
+                raise CaptchaProcessingError(
+                    "role_assignment_failed",
+                    self._translate(
+                        "errors.role_assignment_failed",
+                        fallback=ERROR_TEXTS_FALLBACK["role_assignment_failed"],
+                        guild_id=guild.id,
+                    ),
+                )
 
         success_actions = _extract_action_strings(raw_success_actions)
 
@@ -203,7 +330,11 @@ class CaptchaCallbackProcessor:
         if method != "embed":
             raise CaptchaProcessingError(
                 "unknown_token",
-                "No pending captcha verification found for this user.",
+                self._translate(
+                    "errors.unknown_token",
+                    fallback=ERROR_TEXTS_FALLBACK["unknown_token"],
+                    guild_id=payload.guild_id,
+                ),
                 http_status=404,
             )
 
@@ -232,7 +363,11 @@ class CaptchaCallbackProcessor:
             else:
                 raise CaptchaProcessingError(
                     "token_mismatch",
-                    "Captcha token does not match the pending verification.",
+                    self._translate(
+                        "errors.token_mismatch",
+                        fallback=ERROR_TEXTS_FALLBACK["token_mismatch"],
+                        guild_id=session.guild_id,
+                    ),
                     http_status=404,
                 )
         elif not session.token:
@@ -331,6 +466,12 @@ class CaptchaCallbackProcessor:
     ) -> None:
         actions = _normalize_failure_actions(settings.get("captcha-failure-actions"))
         disciplinary_actions: list[str] = []
+        failure_texts = self._get_texts(
+            "failure",
+            FAILURE_TEXTS_FALLBACK,
+            guild_id=member.guild.id,
+        )
+        attempts_texts = failure_texts["attempts"]
 
         for action in actions:
             if action.action == "log":
@@ -344,18 +485,23 @@ class CaptchaCallbackProcessor:
             else:
                 disciplinary_actions.append(action.action)
 
-        resolved_reason = _resolve_failure_reason(payload) or "Failed captcha verification."
+        resolved_reason = _resolve_failure_reason(payload) or failure_texts["reason_default"]
 
         applied_actions: list[str] = []
         skip_note: str | None = None
         if not attempts_exhausted:
             if disciplinary_actions:
                 if attempts_remaining is None:
-                    skip_note = "Failure actions deferred; captcha attempts remain."
+                    skip_note = failure_texts["notes"]["deferred_generic"]
                 else:
-                    plural = "attempt" if attempts_remaining == 1 else "attempts"
-                    skip_note = (
-                        f"Failure actions deferred; {attempts_remaining} {plural} remaining."
+                    plural_word = (
+                        attempts_texts["word_one"]
+                        if attempts_remaining == 1
+                        else attempts_texts["word_other"]
+                    )
+                    skip_note = failure_texts["notes"]["deferred_remaining"].format(
+                        remaining=attempts_remaining,
+                        attempts_word=plural_word,
                     )
                 _logger.info(
                     "Deferring captcha failure actions for guild %s user %s; attempts remaining: %s",
@@ -375,20 +521,26 @@ class CaptchaCallbackProcessor:
             except discord.Forbidden as exc:
                 raise CaptchaProcessingError(
                     "missing_permissions",
-                    "Bot is missing permissions to apply captcha failure actions.",
+                    self._translate(
+                        "errors.missing_permissions",
+                        fallback=ERROR_TEXTS_FALLBACK["missing_permissions"],
+                        guild_id=member.guild.id,
+                    ),
                     http_status=403,
                 ) from exc
             except discord.HTTPException as exc:
                 raise CaptchaProcessingError(
                     "action_failed",
-                    "Failed to apply captcha failure actions due to a Discord API error.",
+                    self._translate(
+                        "errors.action_failed",
+                        fallback=ERROR_TEXTS_FALLBACK["action_failed"],
+                        guild_id=member.guild.id,
+                    ),
                 ) from exc
             else:
                 applied_actions = list(disciplinary_actions)
         elif disciplinary_actions:
-            skip_note = (
-                "Member is no longer in the guild; configured failure actions were skipped."
-            )
+            skip_note = failure_texts["notes"]["member_left"]
             _logger.info(
                 "Skipping captcha failure actions for guild %s user %s because the member is no longer in the guild.",
                 member.guild.id,
@@ -416,15 +568,24 @@ class CaptchaCallbackProcessor:
         if not channel_id:
             return
 
+        success_texts = self._get_texts(
+            "success",
+            SUCCESS_TEXTS_FALLBACK,
+            guild_id=member.guild.id,
+        )
+        embed_texts = success_texts["embed"]
         embed = discord.Embed(
-            title="Captcha Verification Passed",
-            description=f"{member.mention} ({member.id}) passed captcha verification.",
+            title=embed_texts["title"],
+            description=embed_texts["description"].format(
+                mention=member.mention,
+                user_id=member.id,
+            ),
             colour=discord.Colour.green(),
         )
 
         if actions:
             embed.add_field(
-                name="Actions Applied",
+                name=embed_texts["fields"]["actions"],
                 value=", ".join(actions),
                 inline=False,
             )
@@ -451,19 +612,35 @@ class CaptchaCallbackProcessor:
         ):
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
-            embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
+            embed.add_field(
+                name=embed_texts["fields"]["attempts"],
+                value=f"{used}/{total}",
+                inline=True,
+            )
 
         provider = _extract_metadata_str(payload.metadata, "provider")
         if provider:
-            embed.add_field(name="Provider", value=provider, inline=True)
-            
+            embed.add_field(
+                name=embed_texts["fields"]["provider"],
+                value=provider,
+                inline=True,
+            )
+
         challenge = _extract_metadata_str(payload.metadata,"challengeType")
         if challenge:
-            embed.add_field(name="Challenge", value=challenge, inline=True)
+            embed.add_field(
+                name=embed_texts["fields"]["challenge"],
+                value=challenge,
+                inline=True,
+            )
 
         review_url = _extract_metadata_str(payload.metadata, "reviewUrl", "review_url")
         if review_url:
-            embed.add_field(name="Review", value=review_url, inline=False)
+            embed.add_field(
+                name=embed_texts["fields"]["review"],
+                value=review_url,
+                inline=False,
+            )
 
         embed.set_footer(text=f"Guild ID: {member.guild.id}")
 
@@ -495,6 +672,13 @@ class CaptchaCallbackProcessor:
             )
             return
 
+        failure_texts = self._get_texts(
+            "failure",
+            FAILURE_TEXTS_FALLBACK,
+            guild_id=member.guild.id,
+        )
+        embed_texts = failure_texts["embed"]
+        attempts_texts = failure_texts["attempts"]
         fallback_max_attempts = _coerce_int(settings.get("captcha-max-attempts"))
         _, unlimited_attempts = _determine_attempt_limit(
             payload.metadata,
@@ -509,25 +693,34 @@ class CaptchaCallbackProcessor:
             max_attempts = None
 
         if attempts_exhausted:
-            title = "Captcha Verification Failed"
-            description = (
-                f"{member.mention} ({member.id}) failed captcha verification."
+            title = embed_texts["title_failed"]
+            description = embed_texts["description_failed"].format(
+                mention=member.mention,
+                user_id=member.id,
             )
             colour = discord.Colour.red()
         else:
-            title = "Captcha Attempt Failed"
-            description = (
-                f"{member.mention} ({member.id}) failed a captcha attempt."
+            title = embed_texts["title_attempt"]
+            description = embed_texts["description_attempt"].format(
+                mention=member.mention,
+                user_id=member.id,
             )
             colour = discord.Colour.orange()
             if attempts_remaining is None:
                 if unlimited_attempts:
-                    description += " Unlimited attempts remain."
+                    description += f" {attempts_texts['unlimited']}"
                 else:
-                    description += " Additional attempts remain."
+                    description += f" {attempts_texts['additional']}"
             elif attempts_remaining > 0:
-                plural = "attempt" if attempts_remaining == 1 else "attempts"
-                description += f" {attempts_remaining} {plural} remaining."
+                plural_word = (
+                    attempts_texts["word_one"]
+                    if attempts_remaining == 1
+                    else attempts_texts["word_other"]
+                )
+                description += " " + attempts_texts["remaining"].format(
+                    count=attempts_remaining,
+                    attempts_word=plural_word,
+                )
 
         embed = discord.Embed(
             title=title,
@@ -537,12 +730,16 @@ class CaptchaCallbackProcessor:
 
         if applied_actions:
             embed.add_field(
-                name="Actions Applied",
+                name=embed_texts["fields"]["actions"],
                 value=", ".join(applied_actions),
                 inline=False,
             )
         if note:
-            embed.add_field(name="Notes", value=note, inline=False)
+            embed.add_field(
+                name=embed_texts["fields"]["notes"],
+                value=note,
+                inline=False,
+            )
         if (
             not unlimited_attempts
             and (
@@ -552,7 +749,11 @@ class CaptchaCallbackProcessor:
         ):
             total = max_attempts if max_attempts is not None else "?"
             used = attempts if attempts is not None else "?"
-            embed.add_field(name="Attempts", value=f"{used}/{total}", inline=True)
+            embed.add_field(
+                name=embed_texts["fields"]["attempts"],
+                value=f"{used}/{total}",
+                inline=True,
+            )
         if (
             not attempts_exhausted
             and not unlimited_attempts
@@ -560,7 +761,7 @@ class CaptchaCallbackProcessor:
             and attempts_remaining >= 0
         ):
             embed.add_field(
-                name="Attempts Remaining",
+                name=embed_texts["fields"]["remaining"],
                 value=str(attempts_remaining),
                 inline=True,
             )
@@ -572,14 +773,26 @@ class CaptchaCallbackProcessor:
             "type",
         )
         if challenge:
-            embed.add_field(name="Challenge", value=challenge, inline=True)
+            embed.add_field(
+                name=embed_texts["fields"]["challenge"],
+                value=challenge,
+                inline=True,
+            )
         resolved_reason = _resolve_failure_reason(payload)
         if resolved_reason:
-            embed.add_field(name="Reason", value=resolved_reason, inline=False)
+            embed.add_field(
+                name=embed_texts["fields"]["reason"],
+                value=resolved_reason,
+                inline=False,
+            )
 
         review_url = _extract_metadata_str(payload.metadata, "reviewUrl", "review_url")
         if review_url:
-            embed.add_field(name="Review", value=review_url, inline=False)
+            embed.add_field(
+                name=embed_texts["fields"]["review"],
+                value=review_url,
+                inline=False,
+            )
 
         embed.set_footer(text=f"Guild ID: {member.guild.id}")
 
@@ -601,13 +814,23 @@ class CaptchaCallbackProcessor:
         except discord.NotFound as exc:
             raise CaptchaProcessingError(
                 "guild_not_found",
-                f"Guild {guild_id} is not available to this bot.",
+                self._translate(
+                    "errors.guild_not_found",
+                    fallback=ERROR_TEXTS_FALLBACK["guild_not_found"],
+                    placeholders={"guild_id": guild_id},
+                    guild_id=guild_id,
+                ),
                 http_status=404,
             ) from exc
         except discord.HTTPException as exc:
             raise CaptchaProcessingError(
                 "guild_fetch_failed",
-                f"Failed to fetch guild {guild_id} from Discord.",
+                self._translate(
+                    "errors.guild_fetch_failed",
+                    fallback=ERROR_TEXTS_FALLBACK["guild_fetch_failed"],
+                    placeholders={"guild_id": guild_id},
+                    guild_id=guild_id,
+                ),
             ) from exc
 
     async def _resolve_member(self, guild: discord.Guild, user_id: int) -> discord.Member:
@@ -619,13 +842,23 @@ class CaptchaCallbackProcessor:
         except discord.NotFound as exc:
             raise CaptchaProcessingError(
                 "member_not_found",
-                f"Member {user_id} not found in guild {guild.id}.",
+                self._translate(
+                    "errors.member_not_found",
+                    fallback=ERROR_TEXTS_FALLBACK["member_not_found"],
+                    placeholders={"user_id": user_id, "guild_id": guild.id},
+                    guild_id=guild.id,
+                ),
                 http_status=404,
             ) from exc
         except discord.HTTPException as exc:
             raise CaptchaProcessingError(
                 "member_fetch_failed",
-                f"Failed to fetch member {user_id} from guild {guild.id}.",
+                self._translate(
+                    "errors.member_fetch_failed",
+                    fallback=ERROR_TEXTS_FALLBACK["member_fetch_failed"],
+                    placeholders={"user_id": user_id, "guild_id": guild.id},
+                    guild_id=guild.id,
+                ),
             ) from exc
 @dataclass(slots=True)
 class FailureAction:
