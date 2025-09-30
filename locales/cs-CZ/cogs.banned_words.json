@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Příkazy pro správu zakázaných slov.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Povolit nebo zakázat vestavěný seznam nevhodných slov.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "povolit",
+            "disable": "zakázat",
+            "status": "stav"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Přidat slovo na seznam zakázaných slov."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Odebrat slovo ze seznamu zakázaných slov."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Vypsat všechna zakázaná slova."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Vymazat všechna zakázaná slova."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Přidat akci moderování, která se spustí při detekci zakázaného slova.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Akce k provedení",
+            "duration": "Povinné pouze pro časový limit (např. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Odstranit konkrétní akci ze seznamu trestů za zakázaná slova.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Přesný řetězec akce k odstranění (např. time-out, smazat)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Zobrazit všechny akce aktuálně nakonfigurované ke spuštění při použití zakázaných slov."
         }
       },
       "defaults": {
