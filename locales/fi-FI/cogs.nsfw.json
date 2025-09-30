@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "Hallitse NSFW-sisällöntunnistusta.",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "Lisää toimenpide NSFW-rangaistuslistalle.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Suoritettava toimenpide",
+            "duration": "Vain aikakatkaisua varten (esim. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "Poista toimenpide NSFW-rangaistuslistalta.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Tarkka poistettava toimintokomento (esim. aikakatkaisu, poista)"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "Näytä nykyiset NSFW-rangaistustoimenpiteet."
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "Lisää kategoria NSFW-tunnistukseen."
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "Graafinen väkivalta",
+          "violence": "Väkivalta",
+          "sexual": "Seksuaalinen",
+          "self_harm_instructions": "Itsetuhon ohjeet",
+          "self_harm_intent": "Itsetuhoajatukset",
+          "self_harm": "Itsetuhoisuus"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "Poista kategoria NSFW-tunnistuksesta."
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "Näytä NSFW-tunnistuskategoriat."
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "Aseta NSFW-tunnistusluottamuksen kynnys.",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "Luottamuksen kynnys (0.0 - 1.0)"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "Näytä nykyinen NSFW-tunnistuskynnys."
         }
       },
       "actions": {
