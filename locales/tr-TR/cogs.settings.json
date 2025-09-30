@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Sunucu ayarlarını yönetin.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Ayarlar hakkında yardım alın."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Tüm ayarları silin ve varsayılanlarla başlayın. Bu işlem geri alınamaz."
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Bir sunucu ayarı ayarlayın."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Bir sunucu ayarının mevcut değerini alın."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Bir sunucu ayarını veya bir liste türü ayarından bir öğeyi kaldırın."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "`{command}` için yardım bulunamadı.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Kontrol Panelini Aç",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Açıklama yok.",
+          "no_subcommands": "(Alt komut yok)",
+          "no_groups": "(Komut grubu bulunamadı.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Varsayılan kullanılmakta `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Kontrol Paneli:** [Kontrol Panelini Aç]({dashboard_url})\\nTekrar görmek için `/help {name}` kullanın.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Alt Komutlar",
+              "paged": "Alt Komutlar (sayfa {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderator Bot — Yardım",
+            "description": "🛠️ **Kontrol Paneli:** [Kontrol Panelini Aç]({dashboard_url})\\nWeb kontrol panelinde her şeyi daha hızlı yapılandırın.\\nYa da detaylı alt komutlar için **`/help <group>`** çalıştırın.",
+            "line": "• `/{name}` — {description}  _Deneyin:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Yerelleştirme Algılaması",
+            "groups_first": "Mevcut Komut Grupları",
+            "groups_paged": "Mevcut Komut Grupları (sayfa {page})",
+            "speed_name": "Algılama Hızlandırma",
+            "speed_value": "⚡ Daha hızlı NSFW ve sahtekarlık algılama için **Hızlandırılmış** sürümüne geçin — çalıştırın `/accelerated`.",
+            "links_name": "Bağlantılar",
+            "links_value": "[Destek](https://discord.gg/invite/33VcwjfEXC) • [Bağış Yap](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [Kullanım Şartları](https://modbot.neomechanical.com/terms-of-service) • [Gizlilik](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Güvenilir Geliştiriciler",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
