@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Sunucu ayarlarını yönetin.",
         "help": {
-          "description": "Ayarlar hakkında yardım alın."
+          "description": "Ayarlar hakkında yardım alın.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Tüm ayarları silin ve varsayılanlarla başlayın. Bu işlem geri alınamaz."
