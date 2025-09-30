@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "Comandos de gerenciamento de URLs banidos.",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "Adicione um URL ou domínio à lista de banidos."
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "Remova um URL ou domínio da lista de banidos."
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "Liste todos os URLs banidos."
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "Limpe todos os URLs banidos."
         }
       },
       "limit_reached": "Você atingiu o limite de {limit} URLs banidos para este servidor.\nUse `/bannedurls remove` ou `/bannedurls clear` para liberar espaço.",
