@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Настройка обнаружения мошенничества и управление шаблонами.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Исключить канал из обнаружения мошенничества.",
+          "channel": "Канал для исключения"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Удалить канал из списка исключений.",
+          "channel": "Канал для удаления из исключений"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Перечислить все исключённые каналы."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Переключение или просмотр проверки ссылок.",
+          "action_description": "включить | отключить | статус",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "включить",
+            "disable": "отключить",
+            "status": "статус"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Добавить действие в список наказаний за мошенничество.",
+          "action": "Действие для выполнения",
+          "duration": "Требуется только для тайм-аута (например, 10м, 1ч, 3д)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Удалить действие из списка наказаний за мошенничество.",
+          "action": "Точное действие для удаления (например, тайм-аут:1д, удалить)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Просмотреть текущие настройки мошенничества."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Действия не установлены.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Проверка ссылок {state}.",
+        "updated": "Проверка ссылок {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**включена**",
+          "disabled": "**отключена**"
         }
       },
       "detection": {
