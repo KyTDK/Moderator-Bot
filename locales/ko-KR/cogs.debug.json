@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "메모리 및 성능 통계 가져오기",
+          "show_all": "모든 라이브러리(프로젝트뿐만 아니라)에서 할당 포함"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "해당 명령 컨텍스트에 현재 바인딩된 로케일 표시"
         }
       },
       "permission_denied": "이 명령어를 사용할 권한이 없습니다.",
@@ -26,7 +26,7 @@
         "footer": "호스트: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "현재 로케일: {locale}"
       }
     }
   }
