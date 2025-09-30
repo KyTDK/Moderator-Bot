@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "ניהול הגדרות השרת.",
         "help": {
-          "description": "קבל עזרה על הגדרות."
+          "description": "קבל עזרה על הגדרות.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "נקה את כל ההגדרות והתחל מההגדרות ברירת המחדל. לא ניתן לבטל את זה."
