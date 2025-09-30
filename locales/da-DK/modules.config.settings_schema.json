@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "Ugyldig område. Understøttede områder: {supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "Dit profilbillede blev fundet at indeholde eksplicit indhold",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "Dit profilbillede blev fundet at indeholde eksplicit indhold",
+            "Dit profilbillede er ikke passende til denne server.",
+            "Dit profilbillede er blevet markeret som NSFW."
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. Vær respektfuld — ingen chikane eller hadefuldt sprog.",
+            "2. Ingen NSFW eller uanstændigt indhold.",
+            "3. Ingen spam eller overdreven selvpromovering.",
+            "4. Følg Discord's servicevilkår."
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. Ingen chikane, hadefuldt sprog, eller trusler.",
+            "2. Ingen nedsættende eller diskriminerende sprog.",
+            "3. Ingen tilskyndelse til vold eller ulovlig aktivitet.",
+            "4. Ingen seksuelt indhold eller eksplicitte bemærkninger.",
+            "5. Følg Discord's servicevilkår."
           ]
         }
       }
