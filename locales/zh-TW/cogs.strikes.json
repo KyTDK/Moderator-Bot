@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "罷工管理指令。",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "對特定用戶進行罷工。",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "要罷工的成員。",
+            "reason": "罷工的原因。",
+            "expiry": "可選的到期時長（例如：30天，2週）。"
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "獲取特定用戶的罷工記錄。"
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "清除特定用戶的所有罷工記錄。",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "將清除的用戶。"
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "為某個罷工級別添加額外的行動。",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "觸發行動所需的罷工次數。",
+            "action": "要添加的行動。",
+            "duration": "持續時間（僅限超時使用，例如：1小時，30分鐘）。否則留空。"
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "從罷工級別移除一個行動。",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "與此行動相關的罷工次數。",
+            "action": "要移除的確切行動字符串。"
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "查看所有設定的罷工行動。"
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "威嚇該頻道或特定用戶。",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
