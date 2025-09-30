@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Dolandırıcılık tespiti yapılandırması ve desen yönetimi.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Bir kanalı dolandırıcılık tespitinden hariç tut.",
+          "channel": "Hariç tutulacak kanal"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Bir kanalı hariç tutma listesinden kaldırın.",
+          "channel": "Hariç tutmadan kaldırılacak kanal"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Tüm hariç tutulan kanalları listeleyin."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Bağlantı kontrolünü aç/kapat veya görüntüle.",
+          "action_description": "etkinleştir | devre dışı bırak | durum",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "etkinleştir",
+            "disable": "devre dışı bırak",
+            "status": "durum"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Dolandırıcılık ceza listesine bir eylem ekleyin.",
+          "action": "Yapılacak işlem",
+          "duration": "Yalnızca zaman aşımı için gereklidir (örn. 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Dolandırıcılık ceza listesinden bir eylemi kaldırın.",
+          "action": "Kaldırılacak tam eylem dizesi (örn. zaman aşımı:1d, sil)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Mevcut dolandırıcılık ayarlarını görüntüleyin."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Eylem ayarlanmadı.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Bağlantı kontrolü {state}.",
+        "updated": "Bağlantı kontrolü {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**etkin**",
+          "disabled": "**devre dışı**"
         }
       },
       "detection": {
