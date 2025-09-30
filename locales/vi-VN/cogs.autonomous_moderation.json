@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "Quản lý các tính năng điều tiết AI.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Thiết lập các quy tắc máy chủ"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Hiển thị các quy tắc điều tiết hiện tại được cấu hình."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Thêm các hành động thực thi"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Xóa một hành động cụ thể khỏi danh sách hình phạt.",
+          "action": "Chuỗi hành động chính xác cần xóa (ví dụ: timeout, delete)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "Bật/tắt điều tiết, xem trạng thái, hoặc cài đặt chế độ.",
+          "enable": "Bật hoặc tắt điều tiết tự động.",
+          "mode": "Tùy chọn: cài đặt báo cáo / khoảng thời gian / chế độ thích ứng.",
+          "enable_choice": "Bật",
+          "disable_choice": "Tắt",
+          "status_choice": "Trạng thái",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "Báo cáo",
+            "interval": "Khoảng thời gian",
+            "adaptive": "Thích ứng"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Hiển thị tất cả các hành động hiện đang được cấu hình để kích hoạt khi AI phát hiện vi phạm."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Liên kết một sự kiện kích hoạt với một hoặc nhiều hành động chế độ điều tiết.",
+          "role": "Vai trò nào cần giám sát (nếu áp dụng)",
+          "channel": "Kênh nào cần giám sát (cho các sự kiện đột biến)",
+          "time_range": "Khoảng thời gian HH:MM-HH:MM cho các kích hoạt theo thời gian",
+          "threshold": "Ngưỡng cho phần trăm vai trò trực tuyến (0 đến 1, tùy chọn)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Xóa một hành động cụ thể khỏi một sự kiện đã cấu hình.",
+          "event_key": "Khóa sự kiện thích ứng (tự động hoàn thành)",
+          "action": "Hành động cần xóa khỏi sự kiện này"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Xóa tất cả các kích hoạt sự kiện thích ứng."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Hiển thị các kích hoạt điều tiết thích ứng hiện tại."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "Vai trò Trực tuyến",
+            "role_offline": "Vai trò Ngoại tuyến",
+            "mass_join": "Gia nhập ồ ạt",
+            "mass_leave": "Rời đi ồ ạt",
+            "guild_inactive": "Máy chủ không hoạt động",
+            "role_online_percent": "Phần trăm vai trò Trực tuyến",
+            "time_range": "Khoảng thời gian",
+            "server_spike": "Đột biến máy chủ"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Bật Chế Độ Khoảng Thời Gian",
+          "disable_interval": "Tắt Chế Độ Khoảng Thời Gian",
+          "enable_report": "Bật Chế Độ Báo Cáo",
+          "disable_report": "Tắt Chế Độ Báo Cáo"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "tắt",
         "state_unknown": "không xác định",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "báo cáo",
+          "interval": "khoảng thời gian",
+          "adaptive": "thích ứng"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "Ngân sách điều tiết AI đã đạt đến giới hạn trong chu kỳ thanh toán này. Đặt lại vào {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "chu kỳ tiếp theo",
+        "thanks_no_violation": "Cảm ơn vì đã báo cáo. Không có vi phạm nào được tìm thấy.",
+        "thanks_action": "Cảm ơn vì đã báo cáo. Đã thực hiện hành động."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "Vi phạm được đánh dấu bởi AI",
+          "description": "Người dùng: {user}\nQuy tắc vi phạm: {rule}\nLý do: {reason}\nHành động: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "Lan toả",
+              "value": "Phát hiện nhiều tác giả; áp dụng các hành động theo từng tác giả."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "Quyết định AI",
+              "none": "Không có",
+              "unknown": "Không rõ"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Hành động đã áp dụng",
+              "none": "Không"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
+              "name": "Tin nhắn bị đánh dấu",
+              "no_content": "[không có nội dung]",
               "entry": "• ID {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "Quét Điều tiết AI (Gỡ lỗi)",
+          "description": "Không có vi phạm nào được tìm thấy trong lần quét mới nhất.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "Tin nhắn đã quét",
+            "mode": "Chế độ"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "Phát hiện vi phạm",
+          "reason_multiple": "Nhiều vi phạm: {reasons}",
+          "rule_default": "Vi phạm quy tắc",
+          "rule_multiple": "Nhiều quy tắc: {rules}"
         }
       },
       "ensure_adaptive": "Chế độ kiểm duyệt thích ứng chưa được bật. Sử dụng `/ai_mod set_mode` để bật."
