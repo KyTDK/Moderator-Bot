@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Overvåkningskonfigurasjon",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Sett kanal for å legge ut logger.",
+          "channel": "Kanalen for å sende logger til."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Fjern monitorinnstillinger for kanal."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Vis den nåværende monitorinnstillingskanalen."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Aktiver eller deaktiver en spesifikk overvåkningshendelse.",
+          "event": "Hendelsen som skal aktiveres eller deaktiveres",
+          "enabled": "Aktiver eller deaktiver logging for denne hendelsen",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Bruker blir med",
+            "leave": "Bruker forlater",
+            "ban": "Utesteng",
+            "unban": "Opphev utestenging",
+            "timeout": "Tidsavbrudd",
+            "message_delete": "Melding slettet",
+            "message_edit": "Melding redigert"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "List nåværende monitorinnstillinger for hendelser."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Innhold:**\n{content}",
         "description_generic": "En melding ble slettet i {channel}.",
         "description_deleted_by": "\n**Slettet av:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Ingen innhold]",
         "fields": {
           "attachments": "Vedlegg ({count})",
           "embeds": "Innebygget {index}",
@@ -99,7 +99,7 @@
           "before": "Før",
           "after": "Etter"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Ingen innhold]",
         "footer": "Bruker-ID: {user_id}"
       },
       "ban": {
