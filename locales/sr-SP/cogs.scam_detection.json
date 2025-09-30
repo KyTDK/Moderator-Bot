@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Подешавање и управљање шаблонима за детекцију превара.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Искључите канал из детекције превара.",
+          "channel": "Канал за искључење"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Уклоните канал из листе искључења.",
+          "channel": "Канал за уклањање из искључења"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Прикажи све искључене канале."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Укључите или видите проверу линкова.",
+          "action_description": "укључи | искључи | статус",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "укључи",
+            "disable": "искључи",
+            "status": "статус"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Додајте акцију на листу казни за превару.",
+          "action": "Акција за извршење",
+          "duration": "Потребно само за паузу (нпр. 10м, 1ч, 3д)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Уклоните акцију са листе казни за превару.",
+          "action": "Тачна стринг акција за уклањање (нпр. пауза:1д, брисање)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Погледајте тренутна подешавања за превару."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Нису подешене акције.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Провера линкова је {state}.",
+        "updated": "Провера линкова {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**укључено**",
+          "disabled": "**искључено**"
         }
       },
       "detection": {
