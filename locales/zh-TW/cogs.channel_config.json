@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "設置日誌通道。",
         "set": {
-          "description": "Set a log channel.",
+          "description": "設定日誌通道。",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "用於日誌記錄的通道。",
+            "type": "該通道屬於哪種類型日誌。"
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "取消設置日誌通道。",
           "params": {
-            "type": "Which log type to disable."
+            "type": "要禁用的日誌類型。"
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "顯示當前日誌通道設置。"
         },
         "types": {
-          "strike": "Strike",
-          "nsfw": "NSFW",
-          "ai": "AI",
-          "monitor": "Monitor",
-          "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "strike": "處分",
+          "nsfw": "不當內容 (NSFW)",
+          "ai": "人工智能 (AI)",
+          "monitor": "監控",
+          "captcha": "驗證碼",
+          "vc_transcript": "語音通話轉錄"
         }
       },
       "nsfw_required": "{channel} 不是年齡限制的頻道。請選擇一個 NSFW 頻道。",
