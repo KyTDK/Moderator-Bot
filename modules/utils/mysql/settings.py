@@ -12,6 +12,7 @@ from modules.config.premium_plans import (
     describe_plan_requirements,
 )
 from modules.config.settings_schema import SETTINGS_SCHEMA
+from modules.utils.localization import LocalizedError
 
 from .config import fernet
 from .connection import execute_query
@@ -152,8 +153,17 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
     if schema and schema.required_plans:
         active_plan = await resolve_guild_plan(guild_id)
         if active_plan not in schema.required_plans:
-            requirement = describe_plan_requirements(schema.required_plans)
-            raise ValueError(f"This setting requires {requirement}.")
+            raise LocalizedError(
+                "modules.utils.mysql.settings.plan_required",
+                "This setting requires {requirement}.",
+                placeholders={
+                    "requirement": lambda translator=None, **kwargs: describe_plan_requirements(
+                        schema.required_plans,
+                        translator=translator,
+                        **kwargs,
+                    )
+                },
+            )
 
     public_value = settings_value
 

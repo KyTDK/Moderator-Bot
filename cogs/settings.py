@@ -5,6 +5,7 @@ import discord
 from modules.utils import mysql
 from modules.config.settings_schema import SETTINGS_SCHEMA
 from modules.config.premium_plans import describe_plan_requirements
+from modules.utils.localization import LocalizedError
 import traceback
 from modules.variables.TimeString import TimeString
 from modules.core.moderator_bot import ModeratorBot
@@ -157,7 +158,11 @@ class Settings(commands.Cog):
             if required_plans:
                 active_plan = await mysql.resolve_guild_plan(interaction.guild.id)
                 if active_plan not in required_plans:
-                    requirement = describe_plan_requirements(required_plans)
+                    requirement = describe_plan_requirements(
+                        required_plans,
+                        translator=self.bot.translate,
+                        guild_id=guild_id,
+                    )
                     raise ValueError(texts["requires_plan"].format(requirement=requirement))
 
             # Validate required parameters for expected type
@@ -218,6 +223,12 @@ class Settings(commands.Cog):
                 ephemeral=True,
             )
 
+        except LocalizedError as le:
+            message = le.localize(self.bot.translate, guild_id=guild_id)
+            if interaction.response.is_done():
+                await interaction.followup.send(message, ephemeral=True)
+            else:
+                await interaction.response.send_message(message, ephemeral=True)
         except ValueError as ve:
             await interaction.followup.send(str(ve), ephemeral=True)
 

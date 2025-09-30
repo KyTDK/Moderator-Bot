@@ -24,7 +24,12 @@
 - [x] cogs/captcha/delivery.py — Localized DM prompts, embed helpers, and verification call-to-action labels.
 - [x] cogs/captcha/embed.py — Localized verification embed title, body copy, footer, and button label.
 - [x] modules/config/settings_schema.py — Moved setting descriptions onto locale-backed strings and added translation keys for help output.
+- [x] modules/config/settings_schema.py — Localized locale validator errors via shared translation keys.
+- [x] modules/config/premium_plans.py — Localized premium plan requirement phrases and plan display names.
+- [x] modules/utils/mysql/settings.py — Localized premium requirement enforcement messaging.
+- [x] modules/variables/TimeString.py — Localized invalid duration validation error.
+- [x] modules/utils/localization.py — Added reusable localized error helper for validation feedback.
 
 ## To Do
 - [ ] Audit remaining modules for embedded message strings and prompts.
-- [ ] modules/config/settings_schema.py — Localize validator errors and default message content (e.g., nsfw-pfp-message, rules, vcmod-rules).
+- [ ] modules/config/settings_schema.py — Localize default message content (e.g., nsfw-pfp-message, rules, vcmod-rules).

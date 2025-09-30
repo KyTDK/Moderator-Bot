@@ -3,6 +3,7 @@ from collections.abc import Iterable
 import discord
 from modules.config.premium_plans import PLAN_CORE, PLAN_PRO, PLAN_ULTRA, resolve_required_plans
 from modules.i18n.locale_utils import list_supported_locales, normalise_locale
+from modules.utils.localization import LocalizedError
 from modules.variables.TimeString import TimeString
 
 class Setting:
@@ -50,9 +51,10 @@ async def _validate_locale(value: Any) -> None:
 
     if not normalized or candidate.lower() != normalized.lower():
         supported = ", ".join(list_supported_locales())
-        raise ValueError(
-            "Invalid locale. Supported locales: "
-            f"{supported}"
+        raise LocalizedError(
+            "modules.config.settings_schema.locale.invalid",
+            "Invalid locale. Supported locales: {supported}",
+            placeholders={"supported": supported},
         )
 
 SETTINGS_SCHEMA = {
