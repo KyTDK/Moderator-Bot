@@ -3,7 +3,7 @@
     "dashboard": {
       "meta": {
         "dashboard": {
-          "description": "Open the dashboard for this server."
+          "description": "Nyissa meg a vezérlőpultot ehhez a szerverhez."
         }
       },
       "embed": {
