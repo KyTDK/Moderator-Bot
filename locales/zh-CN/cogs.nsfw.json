@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "管理 NSFW 内容检测。",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "将一个行动添加到 NSFW 惩罚列表。",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "要执行的操作",
+            "duration": "仅在超时时需要（例如 10m, 1h, 3d）"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "从 NSFW 惩罚列表中移除一个行动。",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "要移除的精确操作字符串（例如 timeout, delete）"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "查看当前的 NSFW 惩罚行动列表。"
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "为 NSFW 检测添加一个类别。"
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "暴力图像",
+          "violence": "暴力",
+          "sexual": "性行为",
+          "self_harm_instructions": "自残指导",
+          "self_harm_intent": "自残意图",
+          "self_harm": "自残"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "从 NSFW 检测中移除一个类别。"
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "查看 NSFW 检测类别。"
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "设置 NSFW 检测信心阈值。",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "信心阈值（0.0至1.0）"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "查看当前的 NSFW 检测阈值。"
         }
       },
       "actions": {
