@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "모니터링 구성",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "로그를 출력할 채널 설정.",
+          "channel": "로그를 보낼 채널입니다."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "모니터 채널 설정 제거."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "현재 모니터 채널 표시."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "특정 모니터링 이벤트 활성화/비활성화.",
+          "event": "토글할 이벤트",
+          "enabled": "이 이벤트에 대한 로깅 활성화/비활성화",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "사용자 참여",
+            "leave": "사용자 퇴장",
+            "ban": "차단",
+            "unban": "차단 해제",
+            "timeout": "시간 초과",
+            "message_delete": "메시지 삭제됨",
+            "message_edit": "메시지 수정됨"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "현재 모니터 이벤트 설정 나열."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**내용:**\n{content}",
         "description_generic": "{channel}에서 메시지가 삭제되었습니다.",
         "description_deleted_by": "\n**삭제자:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[내용 없음]",
         "fields": {
           "attachments": "첨부 파일 ({count})",
           "embeds": "임베드 {index}",
@@ -99,7 +99,7 @@
           "before": "이전",
           "after": "이후"
         },
-        "no_content": "[No Content]",
+        "no_content": "[내용 없음]",
         "footer": "사용자 ID: {user_id}"
       },
       "ban": {
