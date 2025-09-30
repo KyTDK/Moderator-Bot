@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from modules.utils.localization import TranslateFn, localize_message
+
 PLAN_FREE = "free"
 PLAN_CORE = "core"
 PLAN_PRO = "pro"
@@ -92,17 +94,82 @@ def order_plans(plans: Iterable[str]) -> list[str]:
     return [plan for plan in PREMIUM_PLANS if plan in normalized]
 
 
-def describe_plan_requirements(plans: Iterable[str]) -> str:
+def _localize_plan_name(
+    plan: str,
+    translator: TranslateFn | None,
+    translator_kwargs: dict | None,
+) -> str:
+    return localize_message(
+        translator,
+        "modules.config.premium_plans.plan_names",
+        plan,
+        fallback=PLAN_DISPLAY_NAMES[plan],
+        **(translator_kwargs or {}),
+    )
+
+
+def describe_plan_requirements(
+    plans: Iterable[str],
+    *,
+    translator: TranslateFn | None = None,
+    **translator_kwargs: object,
+) -> str:
     """Produce a human-readable description of plan requirements."""
+
     ordered = order_plans(plans)
-    if not ordered:
-        return "an active premium plan"
-    if len(ordered) == len(PREMIUM_PLANS):
-        return "an active premium plan"
+    if not ordered or len(ordered) == len(PREMIUM_PLANS):
+        return localize_message(
+            translator,
+            "modules.config.premium_plans.requirements",
+            "any",
+            fallback="an active premium plan",
+            **translator_kwargs,
+        )
+
+    fallback_names = [PLAN_DISPLAY_NAMES[p] for p in ordered]
+    active_names = fallback_names
+    if translator is not None:
+        active_names = [
+            _localize_plan_name(plan, translator, translator_kwargs)
+            for plan in ordered
+        ]
+
     if len(ordered) == 1:
-        return f"an active {PLAN_DISPLAY_NAMES[ordered[0]]} plan"
+        return localize_message(
+            translator,
+            "modules.config.premium_plans.requirements",
+            "single",
+            placeholders={"plan": active_names[0]},
+            fallback=f"an active {fallback_names[0]} plan",
+            **translator_kwargs,
+        )
+
     if len(ordered) == 2:
-        return f"an active {PLAN_DISPLAY_NAMES[ordered[0]]} or {PLAN_DISPLAY_NAMES[ordered[1]]} plan"
-    joined = ", ".join(PLAN_DISPLAY_NAMES[p] for p in ordered[:-1])
-    return f"an active {joined}, or {PLAN_DISPLAY_NAMES[ordered[-1]]} plan"
+        return localize_message(
+            translator,
+            "modules.config.premium_plans.requirements",
+            "double",
+            placeholders={
+                "plan_a": active_names[0],
+                "plan_b": active_names[1],
+            },
+            fallback=(
+                f"an active {fallback_names[0]} or {fallback_names[1]} plan"
+            ),
+            **translator_kwargs,
+        )
+
+    joined_fallback = ", ".join(fallback_names[:-1])
+    joined_active = ", ".join(active_names[:-1])
+    return localize_message(
+        translator,
+        "modules.config.premium_plans.requirements",
+        "list",
+        placeholders={
+            "plans": joined_active,
+            "last": active_names[-1],
+        },
+        fallback=f"an active {joined_fallback}, or {fallback_names[-1]} plan",
+        **translator_kwargs,
+    )
 
