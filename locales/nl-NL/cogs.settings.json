@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Beheer serverinstellingen.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Krijg hulp bij instellingen."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Wis alle instellingen en begin met standaardinstellingen. Dit kan niet ongedaan worden gemaakt."
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Stel een serverinstelling in."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Bekijk de huidige waarde van een serverinstelling."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Verwijder een serverinstelling of een item uit een lijst-type instelling."
         }
       },
       "help": {
@@ -28,36 +28,36 @@
             "label": "Open Dashboard",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Geen beschrijving.",
+          "no_subcommands": "(Geen subopdrachten)",
+          "no_groups": "(Geen commando groepen gevonden.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Standaard gebruiken `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nGebruik `/help {name}` om dit opnieuw te bekijken.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Subopdrachten",
+              "paged": "Subopdrachten (pagina {page})"
             }
           },
           "overview": {
             "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigureer alles sneller op het webdashboard.\\nOf voer **`/help <group>`** uit voor gedetailleerde subopdrachten.",
+            "line": "• `/{name}` — {description}  _Probeer:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
+            "locale_name": "Taalherkenning",
+            "groups_first": "Beschikbare Commandogroepen",
+            "groups_paged": "Beschikbare Commandogroepen (pagina {page})",
+            "speed_name": "Versnelde Detectie",
+            "speed_value": "⚡ Upgrade naar Accelerated voor snellere NSFW & scam detectie — voer `/accelerated` uit.",
             "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "links_value": "[Ondersteuning](https://discord.gg/invite/33VcwjfEXC) • [Doneer](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Vertrouwde Ontwikkelaars",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
