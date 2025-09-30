@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "Ütés",
+          "kick": "Rúgás",
+          "ban": "Tiltás",
+          "timeout": "Időkérés",
+          "delete": "Üzenet törlése",
+          "give_role": "Szerepkör adása",
+          "take_role": "Szerepkör eltávolítása",
+          "warn": "Felhasználó figyelmeztetése",
+          "broadcast": "Üzenet sugárzása",
+          "auto": "Automatikus"
         }
       }
     }
