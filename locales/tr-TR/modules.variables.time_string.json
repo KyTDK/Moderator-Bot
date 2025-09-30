@@ -2,7 +2,7 @@
   "modules": {
     "variables": {
       "time_string": {
-        "invalid_format": "Invalid duration format. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively."
+        "invalid_format": "Geçersiz süre formatı. 20s, 30m, 2h, 30d, 2w, 5mo, 1y gibi formatları kullanın. Saniyeler, dakikalar, saatler, günler, haftalar, aylar ve yıllara karşılık gelir."
       }
     }
   }
