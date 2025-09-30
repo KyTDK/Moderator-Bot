@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Ρυθμίσεις και διαχείριση σχεδίων ανίχνευσης απάτης.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Εξαίρεση ενός καναλιού από την ανίχνευση απάτης.",
+          "channel": "Το κανάλι προς εξαίρεση"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Αφαίρεση ενός καναλιού από τη λίστα εξαίρεσης.",
+          "channel": "Το κανάλι που θα αφαιρεθεί από την εξαίρεση"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Λίστα όλων των εξαιρούμενων καναλιών."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Εναλλαγή ή προβολή ελέγχου συνδέσμων.",
+          "action_description": "ενεργοποίηση | απενεργοποίηση | κατάσταση",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "ενεργοποίηση",
+            "disable": "απενεργοποίηση",
+            "status": "κατάσταση"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Προσθήκη μιας ενέργειας στη λίστα τιμωριών για απάτη.",
+          "action": "Ενέργεια για εκτέλεση",
+          "duration": "Απαιτείται μόνο για κλείδωμα (π.χ. 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Αφαίρεση μιας ενέργειας από τη λίστα τιμωριών για απάτη.",
+          "action": "Ακριβής συμβολοσειρά ενέργειας για αφαίρεση (π.χ. χρονικό όριο:1d, διαγραφή)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Προβολή των τρέχουσών ρυθμίσεων απάτης."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Δεν έχουν οριστεί δράσεις.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Ο έλεγχος συνδέσμων είναι {state}.",
+        "updated": "Ο έλεγχος συνδέσμων {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**ενεργοποιήθηκε**",
+          "disabled": "**απενεργοποιήθηκε**"
         }
       },
       "detection": {
