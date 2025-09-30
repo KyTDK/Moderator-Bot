@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Szerverbeállítások kezelése.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Segítség a beállításokhoz."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Minden beállítás törlése és az alapértelmezettekkel újrakezdés. Ez nem vonható vissza"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Szerverbeállítás megadása."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Egy szerverbeállítás jelenlegi értékének lekérése."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Egy szerverbeállítás vagy egy lista típusú beállítás elemének eltávolítása."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Nem található segítség a(z) `{command}` parancshoz.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Irányítópult megnyitása",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Nincs leírás.",
+          "no_subcommands": "(Nincs alparancs)",
+          "no_groups": "(Nincs parancscsoport található.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Alapértelmezett használata `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Irányítópult:** [Irányítópult megnyitása]({dashboard_url})\\nHasználja a `/help {name}` parancsot, hogy ezt újra megtekintse.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Alparancsok",
+              "paged": "Alparancsok (oldal {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderátor Bot — Segítség",
+            "description": "🛠️ **Irányítópult:** [Irányítópult megnyitása]({dashboard_url})\\nÁllítson be mindent gyorsabban a webes irányítópulton.\\nVagy futtassa a **`/help <group>`** parancsot a részletes alparancsok megtekintéséhez.",
+            "line": "• `/{name}` — {description}  _Próbálja ki:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Helyi nyelv felismerése",
+            "groups_first": "Elérhető parancscsoportok",
+            "groups_paged": "Elérhető parancscsoportok (oldal {page})",
+            "speed_name": "Gyorsítás érzékelése",
+            "speed_value": "⚡ Frissítsen Accelerated-re gyorsabb NSFW és csalás érzékeléshez — futtassa a `/accelerated` parancsot.",
+            "links_name": "Hivatkozások",
+            "links_value": "[Támogatás](https://discord.gg/invite/33VcwjfEXC) • [Adomány](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [Szabályzat](https://modbot.neomechanical.com/terms-of-service) • [Adatvédelem](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Megerősített fejlesztők",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
