@@ -4,10 +4,123 @@ from typing import Any
 import discord
 
 from modules.utils import mod_logging, mysql
+from modules.utils.localization import TranslateFn, localize_message
 
 from ..utils import determine_file_type
 from .images import process_image
 from .videos import process_video
+
+REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
+SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
+SHARED_CATEGORY = "modules.nsfw_scanner.shared.category"
+SHARED_ROOT = "modules.nsfw_scanner.shared"
+
+DECISION_FALLBACKS = {
+    "unknown": "Unknown",
+    "nsfw": "NSFW",
+    "safe": "Safe",
+}
+
+FIELD_FALLBACKS = {
+    "reason": "Reason",
+    "category": "Category",
+    "score": "Score",
+    "flagged_any": "Flagged Any",
+    "summary_categories": "Summary Categories",
+    "max_similarity": "Max Similarity",
+    "max_category": "Max Similarity Category",
+    "similarity": "Matched Similarity",
+    "high_accuracy": "High Accuracy",
+    "clip_threshold": "CLIP Threshold",
+    "moderation_threshold": "Moderation Threshold",
+    "video_frames": "Video Frames",
+}
+
+REASON_FALLBACKS = {
+    "openai_moderation": "OpenAI moderation",
+    "similarity_match": "Similarity match",
+    "no_frames_extracted": "No frames extracted",
+    "no_nsfw_frames_detected": "No NSFW frames detected",
+}
+
+
+def _resolve_translator(scanner) -> TranslateFn | None:
+    translate = getattr(getattr(scanner, "bot", None), "translate", None)
+    return translate if callable(translate) else None
+
+
+def _localize_decision(translator: TranslateFn | None, decision: str, guild_id: int | None) -> str:
+    fallback = DECISION_FALLBACKS.get(decision, decision.capitalize())
+    return localize_message(
+        translator,
+        REPORT_BASE,
+        f"decision.{decision}",
+        fallback=fallback,
+        guild_id=guild_id,
+    )
+
+
+def _localize_field_name(translator: TranslateFn | None, field: str, guild_id: int | None) -> str:
+    fallback = FIELD_FALLBACKS.get(field, field.replace("_", " ").title())
+    return localize_message(
+        translator,
+        REPORT_BASE,
+        f"fields.{field}",
+        fallback=fallback,
+        guild_id=guild_id,
+    )
+
+
+def _localize_reason(
+    translator: TranslateFn | None,
+    reason: Any,
+    guild_id: int | None,
+) -> str | None:
+    if reason is None:
+        return None
+    if isinstance(reason, str):
+        normalized = reason if reason in REASON_FALLBACKS else reason.lower().replace(" ", "_")
+        fallback = REASON_FALLBACKS.get(normalized, str(reason))
+        return localize_message(
+            translator,
+            REPORT_BASE,
+            f"reasons.{normalized}",
+            fallback=fallback,
+            guild_id=guild_id,
+        )
+    return str(reason)
+
+
+def _localize_boolean(
+    translator: TranslateFn | None,
+    value: bool,
+    guild_id: int | None,
+) -> str:
+    key = "true" if value else "false"
+    return localize_message(
+        translator,
+        SHARED_BOOLEAN,
+        key,
+        fallback=key,
+        guild_id=guild_id,
+    )
+
+
+def _localize_category(
+    translator: TranslateFn | None,
+    category: str | None,
+    guild_id: int | None,
+) -> str:
+    if not category:
+        category = "unspecified"
+    fallback = category.replace("_", " ").title()
+    return localize_message(
+        translator,
+        SHARED_CATEGORY,
+        category,
+        fallback=fallback,
+        guild_id=guild_id,
+    )
 
 
 async def check_attachment(
@@ -48,98 +161,164 @@ async def check_attachment(
         )
         return False
 
+    translator = _resolve_translator(scanner)
+
     try:
         if message is not None and await mysql.get_settings(guild_id, "nsfw-verbose"):
-            decision = "Unknown"
+            decision_key = "unknown"
             if scan_result is not None:
-                decision = (
-                    "NSFW"
-                    if scan_result.get("is_nsfw")
-                    else "Safe"
-                )
+                decision_key = "nsfw" if scan_result.get("is_nsfw") else "safe"
+            decision_label = _localize_decision(translator, decision_key, guild_id)
             embed = discord.Embed(
-                title="NSFW Scan Report",
-                description=(
-                    f"User: {author.mention}\n"
-                    f"File: `{filename}`\n"
-                    f"Type: `{file_type}`\n"
-                    f"Decision: **{decision}**"
+                title=localize_message(
+                    translator,
+                    REPORT_BASE,
+                    "title",
+                    fallback="NSFW Scan Report",
+                    guild_id=guild_id,
+                ),
+                description="\n".join(
+                    [
+                        localize_message(
+                            translator,
+                            REPORT_BASE,
+                            "description.user",
+                            placeholders={"user": author.mention},
+                            fallback="User: {user}",
+                            guild_id=guild_id,
+                        ),
+                        localize_message(
+                            translator,
+                            REPORT_BASE,
+                            "description.file",
+                            placeholders={"filename": filename},
+                            fallback="File: `{filename}`",
+                            guild_id=guild_id,
+                        ),
+                        localize_message(
+                            translator,
+                            REPORT_BASE,
+                            "description.type",
+                            placeholders={"file_type": file_type},
+                            fallback="Type: `{file_type}`",
+                            guild_id=guild_id,
+                        ),
+                        localize_message(
+                            translator,
+                            REPORT_BASE,
+                            "description.decision",
+                            placeholders={"decision": decision_label},
+                            fallback="Decision: **{decision}**",
+                            guild_id=guild_id,
+                        ),
+                    ]
                 ),
                 color=(
                     discord.Color.orange()
-                    if decision == "Safe"
+                    if decision_key == "safe"
                     else (
                         discord.Color.red()
-                        if decision == "NSFW"
+                        if decision_key == "nsfw"
                         else discord.Color.dark_grey()
                     )
                 ),
             )
             if scan_result:
-                if scan_result.get("reason"):
+                reason_value = _localize_reason(
+                    translator, scan_result.get("reason"), guild_id
+                )
+                if reason_value:
                     embed.add_field(
-                        name="Reason",
-                        value=str(scan_result.get("reason"))[:1024],
+                        name=_localize_field_name(translator, "reason", guild_id),
+                        value=str(reason_value)[:1024],
                         inline=False,
                     )
                 if scan_result.get("category"):
                     embed.add_field(
-                        name="Category",
-                        value=str(scan_result.get("category")),
+                        name=_localize_field_name(translator, "category", guild_id),
+                        value=_localize_category(
+                            translator,
+                            str(scan_result.get("category")),
+                            guild_id,
+                        ),
                         inline=True,
                     )
                 if scan_result.get("score") is not None:
                     embed.add_field(
-                        name="Score",
+                        name=_localize_field_name(translator, "score", guild_id),
                         value=f"{float(scan_result.get('score') or 0):.3f}",
                         inline=True,
                     )
                 if scan_result.get("flagged_any") is not None:
                     embed.add_field(
-                        name="Flagged Any",
-                        value=str(bool(scan_result.get("flagged_any"))).lower(),
+                        name=_localize_field_name(
+                            translator, "flagged_any", guild_id
+                        ),
+                        value=_localize_boolean(
+                            translator,
+                            bool(scan_result.get("flagged_any")),
+                            guild_id,
+                        ),
                         inline=True,
                     )
                 if scan_result.get("summary_categories") is not None:
                     embed.add_field(
-                        name="Summary Categories",
+                        name=_localize_field_name(
+                            translator, "summary_categories", guild_id
+                        ),
                         value=str(scan_result.get("summary_categories")),
                         inline=False,
                     )
                 if scan_result.get("max_similarity") is not None:
                     embed.add_field(
-                        name="Max Similarity",
+                        name=_localize_field_name(
+                            translator, "max_similarity", guild_id
+                        ),
                         value=f"{float(scan_result.get('max_similarity') or 0):.3f}",
                         inline=True,
                     )
                 if scan_result.get("max_category") is not None:
                     embed.add_field(
-                        name="Max Similarity Category",
+                        name=_localize_field_name(
+                            translator, "max_category", guild_id
+                        ),
                         value=str(scan_result.get("max_category")),
                         inline=True,
                     )
                 if scan_result.get("similarity") is not None:
                     embed.add_field(
-                        name="Matched Similarity",
+                        name=_localize_field_name(
+                            translator, "similarity", guild_id
+                        ),
                         value=f"{float(scan_result.get('similarity') or 0):.3f}",
                         inline=True,
                     )
                 if scan_result.get("high_accuracy") is not None:
                     embed.add_field(
-                        name="High Accuracy",
-                        value=str(bool(scan_result.get("high_accuracy"))).lower(),
+                        name=_localize_field_name(
+                            translator, "high_accuracy", guild_id
+                        ),
+                        value=_localize_boolean(
+                            translator,
+                            bool(scan_result.get("high_accuracy")),
+                            guild_id,
+                        ),
                         inline=True,
                     )
                 if scan_result.get("clip_threshold") is not None:
                     embed.add_field(
-                        name="CLIP Threshold",
+                        name=_localize_field_name(
+                            translator, "clip_threshold", guild_id
+                        ),
                         value=f"{float(scan_result.get('clip_threshold') or 0):.3f}",
                         inline=True,
                     )
                 if scan_result.get("threshold") is not None:
                     try:
                         embed.add_field(
-                            name="Moderation Threshold",
+                            name=_localize_field_name(
+                                translator, "moderation_threshold", guild_id
+                            ),
                             value=f"{float(scan_result.get('threshold') or 0):.3f}",
                             inline=True,
                         )
@@ -149,7 +328,9 @@ async def check_attachment(
                     scanned = scan_result.get("video_frames_scanned")
                     target = scan_result.get("video_frames_target")
                     embed.add_field(
-                        name="Video Frames",
+                        name=_localize_field_name(
+                            translator, "video_frames", guild_id
+                        ),
                         value=f"{scanned}/{target}",
                         inline=True,
                     )
@@ -173,10 +354,10 @@ async def check_attachment(
         try:
             if scan_result.get("score") is not None:
                 confidence_value = float(scan_result.get("score"))
-                confidence_source = "Score"
+                confidence_source = "score"
             elif scan_result.get("similarity") is not None:
                 confidence_value = float(scan_result.get("similarity"))
-                confidence_source = "Similarity"
+                confidence_source = "similarity"
         except Exception:
             confidence_value = None
             confidence_source = None
@@ -184,11 +365,23 @@ async def check_attachment(
         if file is None:
             file = discord.File(temp_filename, filename=filename)
         try:
+            category_label = _localize_category(
+                translator,
+                category_name,
+                guild_id,
+            )
             await nsfw_callback(
                 author,
                 scanner.bot,
                 guild_id,
-                f"Detected potential policy violation (Category: **{category_name.title()}**)",
+                localize_message(
+                    translator,
+                    SHARED_ROOT,
+                    "policy_violation",
+                    placeholders={"category": category_label},
+                    fallback="Detected potential policy violation (Category: **{category}**)",
+                    guild_id=guild_id,
+                ),
                 file,
                 message,
                 confidence=confidence_value,

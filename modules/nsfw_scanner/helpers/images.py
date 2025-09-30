@@ -91,7 +91,7 @@ async def process_image(
                         )
                         return {
                             "is_nsfw": False,
-                            "reason": "Similarity match",
+                            "reason": "similarity_match",
                             "max_similarity": max_similarity,
                             "max_category": max_category,
                             "high_accuracy": high_accuracy,
@@ -108,7 +108,7 @@ async def process_image(
                         return {
                             "is_nsfw": True,
                             "category": category,
-                            "reason": "Similarity match",
+                            "reason": "similarity_match",
                             "max_similarity": max_similarity,
                             "max_category": max_category,
                             "high_accuracy": high_accuracy,
