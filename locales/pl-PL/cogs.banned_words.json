@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Polecenia zarządzania zablokowanymi słowami.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Włącz lub wyłącz wbudowaną listę przekleństw.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
+            "enable": "włącz",
+            "disable": "wyłącz",
             "status": "status"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Dodaj słowo do listy zablokowanych słów."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Usuń słowo z listy zablokowanych słów."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Wyświetl wszystkie zablokowane słowa."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Wyczyść wszystkie zablokowane słowa."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Dodaj akcję moderacyjną, która zostanie wywołana po wykryciu zablokowanego słowa.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Akcja do wykonania",
+            "duration": "Wymagane tylko dla zakończenia (np. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Usuń określoną akcję z listy kar za zablokowane słowa.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Dokładny opis akcji do usunięcia (np. zakończenie, usunięcie)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Wyświetl wszystkie akcje obecnie skonfigurowane do uruchomienia, gdy używane są zablokowane słowa."
         }
       },
       "defaults": {
