@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "NSFW-Inhalt erkannt",
+          "description": "**Benutzer:** {user_mention} ({user_display})\n**Grund:** {reason}",
+          "footer": "Benutzer-ID: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "NSFW-Scan-Bericht",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Benutzer: {user}",
+              "file": "Datei: `{filename}`",
+              "type": "Typ: `{file_type}`",
+              "decision": "Entscheidung: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
+              "image": "Bild",
               "video": "Video",
-              "unknown": "Unknown"
+              "unknown": "Unbekannt"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Sicher",
+              "unknown": "Unbekannt"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Grund",
+              "category": "Kategorie",
+              "score": "Punktzahl",
+              "flagged_any": "Beliebig markiert",
+              "summary_categories": "Zusammenfassende Kategorien",
+              "max_similarity": "Maximale Ähnlichkeit",
+              "max_category": "Maximale Ähnlichkeitskategorie",
+              "similarity": "Übereinstimmende Ähnlichkeit",
+              "high_accuracy": "Hohe Genauigkeit",
+              "clip_threshold": "CLIP-Schwellenwert",
+              "moderation_threshold": "Moderationsschwelle",
+              "video_frames": "Video-Frames"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "OpenAI-Moderation",
+              "similarity_match": "Ähnlichkeitsabgleich",
+              "no_frames_extracted": "Keine Frames extrahiert",
+              "no_nsfw_frames_detected": "Keine NSFW-Frames erkannt"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Vertrauen",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Punktzahl",
+            "similarity": "Ähnlichkeit"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "wahr",
+          "false": "falsch"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Nicht spezifiziert"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Entdeckter möglicher Richtlinienverstoß (Kategorie: **{category}**)"
       }
     }
   }
