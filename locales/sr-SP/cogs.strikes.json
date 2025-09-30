@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Команде за управљање ударима.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Дати ударац одређеном кориснику.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Члан који треба да добије ударац.",
+            "reason": "Разлог за ударац.",
+            "expiry": "Опционо трајање истека (нпр. 30д, 2н)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Прикупити ударце одређеног корисника."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Очистити све ударце одређеног корисника.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Корисник чији ће ударци бити очишћени."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Додати додатну акцију за ниво удараца.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Број удараца потребан за активирање акције.",
+            "action": "Акција коју треба додати.",
+            "duration": "Трајање (само за тајмер, нпр. 1с, 30м). У супротном оставите празно."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Уклонити акцију са нивоа удараца.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Број удараца повезаних са акцијом.",
+            "action": "Прецизан низ акција који треба уклонити."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Прегледати све конфигурисане акције удараца."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Интимидирајте канал или одређеног корисника.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
