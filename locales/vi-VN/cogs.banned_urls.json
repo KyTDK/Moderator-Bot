@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "Các lệnh quản lý URL bị cấm.",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "Thêm một URL hoặc tên miền vào danh sách bị cấm."
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "Loại bỏ một URL hoặc tên miền khỏi danh sách bị cấm."
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "Danh sách tất cả các URL bị cấm."
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "Xóa tất cả các URL bị cấm."
         }
       },
       "limit_reached": "Bạn đã đạt đến giới hạn {limit} URL bị cấm cho máy chủ này.\nSử dụng `/bannedurls remove` hoặc `/bannedurls clear` để tạo không gian.",
