@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Gekanselleerde woorde bestuursopdragte.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Aktiveer of deaktiveer die ingeboude vloekwoordelys.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
+            "enable": "aktiveer",
+            "disable": "deaktiveer",
             "status": "status"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Voeg 'n woord by die lys van gekanselleerde woorde."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Verwyder 'n woord van die lys van gekanselleerde woorde."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Lys alle gekanselleerde woorde."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Vee alle gekanselleerde woorde skoon."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Voeg 'n moderasie-aksie by wat geaktiveer word wanneer 'n gekanselleerde woord opgespoor word.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Aksie om uit te voer",
+            "duration": "Slegs benodig vir tydsduur (bv. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Verwyder 'n spesifieke aksie van die lys van strafmaatreëls vir gekanselleerde woorde.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Presiese aksiestring om te verwyder (bv. tydsduur, verwyder)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Wys alle aksies wat tans geprogrammeer is om geaktiveer te word wanneer gekanselleerde woorde gebruik word."
         }
       },
       "defaults": {
