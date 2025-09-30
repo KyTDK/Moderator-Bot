@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Spravujte ověření captcha.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Znovu odeslat vnoření ověření captcha."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Pošlete žádost o ověření captcha členovi.",
+          "member": "Člen, který by měl dokončit ověření"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "několik minut",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} sekunda",
+            "other": "{count} sekund"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} minuta",
+            "other": "{count} minut"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} hodina",
+            "other": "{count} hodin"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} den",
+            "other": "{count} dnů"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Ahoj {member}! K dokončení vstupu do **{guild}**, ",
+          "grace": "prosím {instruction} během **{grace}**.",
+          "no_grace": "prosím {instruction}, až budete připraveni.",
+          "instruction_default": "dokončete captcha",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " Máte **{count}** pokus.",
+            "other": " Máte **{count}** pokusů."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Požadováno ověření Captcha",
+          "footer": "Vytvořil Moderátor Bot"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Ověřte nyní"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Klikněte zde pro ověření"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "navštivte {channel} a dokončete captcha",
+          "help_title": "Potřebujete pomoc?",
+          "help_value": "Klikněte na tlačítko níže a otevřete stránku ověřování.",
+          "button_label": "Otevřít stránku ověřování"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Klikněte na tlačítko níže k ověření. Jakmile projdete captchou, získáte přístup ke zbytku serveru.",
+        "login_notice": "Můžete být požádáni o přihlášení na ovládací panel Moderátora Bota jako první.",
+        "title": "Dokončete ověření Captcha",
+        "footer": "ID serveru: {guild_id} | Vytvořil Moderátor Bot",
+        "button_label": "Ověřte nyní"
       }
     }
   }
