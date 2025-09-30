@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """Discord app command translator bridging to the internal translation service."""
 
+import asyncio
 from typing import Any
 
 from discord import Locale, app_commands
@@ -42,8 +43,9 @@ class DiscordAppCommandTranslator(app_commands.Translator):
         self._service = service
 
     async def load(self) -> None:
-        # Nothing to preload; translations are read on-demand from the service.
-        return
+        # Ensure locale data is available before Discord starts requesting translations.
+        repository = self._service.translator.repository
+        await asyncio.to_thread(repository.ensure_loaded)
 
     async def translate(
         self,
