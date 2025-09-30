@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "اللغة المحلية غير صالحة. اللغات المدعومة: {supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "تم اكتشاف أن صورة ملفك الشخصي تحتوي على محتوى صريح",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "تم اكتشاف أن صورة ملفك الشخصي تحتوي على محتوى صريح",
+            "صورة ملفك الشخصي غير ملائمة لهذا الخادم.",
+            "تم تحديد صورة ملفك الشخصي كصورة غير آمنة للعمل (NSFW)."
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. كون محترمًا — ممنوع التحرش أو خطاب الكراهية.",
+            "2. ممنوع المحتوى غير المناسب أو الفاحش.",
+            "3. ممنوع الرسائل المزعجة أو الترويج الذاتي المفرط.",
+            "4. اتبع شروط خدمة Discord."
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. ممنوع التحرش، أو خطاب الكراهية، أو التهديدات.",
+            "2. ممنوع الشتائم أو اللغة التمييزية.",
+            "3. ممنوع التحريض على العنف أو النشاطات الغير قانونية.",
+            "4. ممنوع المحتوى الجنسي أو التصريحات الصريحة.",
+            "5. اتبع شروط خدمة Discord."
           ]
         }
       }
