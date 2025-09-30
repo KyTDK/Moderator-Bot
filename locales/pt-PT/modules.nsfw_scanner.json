@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "Conteúdo NSFW Detectado",
+          "description": "**Usuário:** {user_mention} ({user_display})\n**Motivo:** {reason}",
+          "footer": "ID do Usuário: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "Relatório de Escaneamento NSFW",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Usuário: {user}",
+              "file": "Arquivo: `{filename}`",
+              "type": "Tipo: `{file_type}`",
+              "decision": "Decisão: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "Imagem",
+              "video": "Vídeo",
+              "unknown": "Desconhecido"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Seguro",
+              "unknown": "Desconhecido"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Motivo",
+              "category": "Categoria",
+              "score": "Pontuação",
+              "flagged_any": "Qualquer sinalizado",
+              "summary_categories": "Categorias de Resumo",
+              "max_similarity": "Similaridade Máxima",
+              "max_category": "Categoria de Similaridade Máxima",
+              "similarity": "Similaridade Correspondente",
+              "high_accuracy": "Alta Precisão",
+              "clip_threshold": "Limite CLIP",
+              "moderation_threshold": "Limite de Moderação",
+              "video_frames": "Frames de Vídeo"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "moderação OpenAI",
+              "similarity_match": "correspondência de similaridade",
+              "no_frames_extracted": "Nenhum frame extraído",
+              "no_nsfw_frames_detected": "Nenhum frame NSFW detectado"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Confiança",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Pontuação",
+            "similarity": "Similaridade"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "verdadeiro",
+          "false": "falso"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Não especificado"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Detectada potencial violação de política (Categoria: **{category}**)"
       }
     }
   }
