@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "ניהול תכונות המודרציה AI.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "הגדר חוקים לשרת"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "הצג את חוקים המודרציה המוגדרים כיום."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "הוסף פעולות אכיפה"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "הסר פעולה מסוימת מרשימת הענישות.",
+          "action": "הפעולה המדויקת להסרה (לדוגמה, השהייה, מחיקה)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "הפעל/בטל מודרציה, צפייה במצב, או הגדר מצב.",
+          "enable": "הפעל או כבה את המודרציה האוטונומית.",
+          "mode": "אופציונלי: הגדר דוח / אינטראבל / מצב אדפטיבי.",
+          "enable_choice": "הפעל",
+          "disable_choice": "בטל",
+          "status_choice": "מצב",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "דווח",
+            "interval": "אינטרבל",
+            "adaptive": "אדפטיבי"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "הצג את כל הפעולות המוגדרות להפעיל כאשר ה-AI מזהה הפרה."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "קשר אירוע קריאה לפעולה אחת או יותר במצב המודרציה.",
+          "role": "איזה תפקידים לפקח עליהם (אם רלוונטי)",
+          "channel": "איזה ערוץ לפקח עליו (לאירועים של ספייק)",
+          "time_range": "טווח זמן של HH:MM-HH:MM לטריגרים מבוססי זמן",
+          "threshold": "סף עבור אחוז התפקידים מקוון (0 עד 1, אופציונלי)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "הסר פעילות מסוימת מאירוע מוגדר.",
+          "event_key": "מפתח אירוע אדפטיבי (אוטומטית)",
+          "action": "פעולה להסיר מהאירוע זה"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "נקה את כל הטריגרים של האירועים האדפטיביים."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "הצג את הטריגרים האדפטיביים הנוכחיים למודרציה."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "תפקיד מחובר",
+            "role_offline": "תפקיד מנותק",
+            "mass_join": "חברות מרובות",
+            "mass_leave": "עזיבה מרובה",
+            "guild_inactive": "חוסר פעילות בשרת",
+            "role_online_percent": "אחוז תפקידים מחוברים",
+            "time_range": "טווח זמן",
+            "server_spike": "ספייק בשרת"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "הפעל מצב אינטרבל",
+          "disable_interval": "הפעל מצב דוח",
+          "enable_report": "בטל מצב אינטרבל",
+          "disable_report": "בטל מצב דוח"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "מנוטרל",
         "state_unknown": "לא ידוע",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "דווח",
+          "interval": "אינטרבל",
+          "adaptive": "אדפטיבי"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "תקציב ההגנה על המודרציה AI הגיע למכסתו עבור מחזור החיוב הנוכחי. יחזור לאפס ב-{reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "המחזור הבא",
+        "thanks_no_violation": "תודה על הדיווח. לא נמצאו הפרות.",
+        "thanks_action": "תודה על הדיווח. ננקטו פעולות."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "הפרה שסומנה על ידי ה-AI",
+          "description": "משתמש: {user}\nחבילה שנשברה: {rule}\nסיבה: {reason}\nפעולות: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "פיצול",
+              "value": "זוהו מספר כותבים; ננקטו פעולות לכל כותב."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "החלטת AI",
+              "none": "כלום",
+              "unknown": "לא ידוע"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "פעולות שבוצעו",
+              "none": "כלום"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
-              "entry": "• ID {id}: {content}"
+              "name": "הודעות מסומנות",
+              "no_content": "[אין תוכן טקסט]",
+              "entry": "• מזהה {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "סריקת מודרציה AI (דיבוג)",
+          "description": "לא נמצאו הפרות בסריקה העדכנית.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "הודעות שנסרקו",
+            "mode": "מצב"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "זוהתה הפרה",
+          "reason_multiple": "הפרות מרובות: {reasons}",
+          "rule_default": "הפרת כלל",
+          "rule_multiple": "חוקים מרובים: {rules}"
         }
       },
       "ensure_adaptive": "מצב מנגונון אדפטיבי לא מופעל. השתמש ב-`/ai_mod set_mode` כדי להפעילו."
