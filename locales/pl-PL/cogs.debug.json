@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "Uzyskaj dane statystyczne dotyczące pamięci i wydajności.",
+          "show_all": "Zawiera alokacje ze wszystkich bibliotek (nie tylko projekt)."
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "Pokaż lokalizację aktualnie związana z tym kontekstem polecenia."
         }
       },
       "permission_denied": "Nie masz uprawnień do użycia tej komendy.",
@@ -26,7 +26,7 @@
         "footer": "Host: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "Aktualna lokalizacja: {locale}"
       }
     }
   }
