@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "Управљање НСФВ откривањем садржаја.",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "Додајте акцију на листу казни за НСФВ.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Акција за извршење",
+            "duration": "Потребно само за привремену забрану (нпр. 10м, 1ч, 3д)"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "Уклоните акцију са листе казни за НСФВ.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Тачан низ акција за уклањање (нпр. привремена забрана, брисање)"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "Прикажи тренутну листу акција за казне НСФВ."
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "Додајте категорију у НСФВ откривање."
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "Графичко насиље",
+          "violence": "Насиље",
+          "sexual": "Сексуално",
+          "self_harm_instructions": "Упутства за самоповређивање",
+          "self_harm_intent": "Намера самоповређивања",
+          "self_harm": "Самоповређивање"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "Уклоните категорију из НСФВ откривања."
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "Погледајте категорије откривања НСФВ."
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "Подесите праг за поузданост НСФВ откривања.",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "Праг поузданости (0.0 до 1.0)"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "Погледајте тренутни праг откривања НСФВ."
         }
       },
       "actions": {
