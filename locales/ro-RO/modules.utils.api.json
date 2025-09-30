@@ -4,7 +4,7 @@
       "api": {
         "key_failed_notice": "**Avertisment:** Cheia ta API OpenAI nu a trecut de o verificare de moderare.\n\nDe obicei, acest lucru înseamnă că contul tău nu are facturare activă sau este temporar limitat în funcție de rată.\n\nTe rugăm să verifici [Panoul tău de Facturare OpenAI](https://platform.openai.com/account/billing/overview) pentru a te asigura că informațiile de plată sunt corecte și că ai cel puțin $5 în credite.\n\nOdată ce problema este rezolvată, cheia ta va începe să funcționeze din nou automat - nu este necesar să o adaugi din nou.",
         "key_validation": {
-          "billing_required": "Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly."
+          "billing_required": "Cheia API nu a funcționat. Acest lucru se întâmplă probabil pentru că organizația dvs. nu a adăugat niciun credit în contul său OpenAI. Deși modelul de moderare este gratuit, OpenAI solicită ca conturile să aibă detalii de plată valide. Pentru a adăuga credit, vizitați pagina [Prezentare Generală Facturare OpenAI](https://platform.openai.com/account/billing/overview) și achiziționați cel puțin 5 USD în credite. Odată ce ați adăugat o metodă de plată și credite, cheia API ar trebui să funcționeze corect."
         }
       }
     }
