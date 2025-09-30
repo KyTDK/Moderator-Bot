@@ -3,59 +3,59 @@
     "captcha": {
       "processor": {
         "success": {
-          "reason": "Captcha verification successful",
+          "reason": "Проверка капчи прошла успешно",
           "embed": {
-            "title": "Captcha Verification Passed",
-            "description": "{mention} ({user_id}) passed captcha verification.",
+            "title": "Проверка капчи пройдена",
+            "description": "{mention} ({user_id}) прошел(а) проверку капчи.",
             "fields": {
-              "actions": "Actions Applied",
-              "attempts": "Attempts",
-              "provider": "Provider",
-              "challenge": "Challenge",
-              "review": "Review"
+              "actions": "Применены действия",
+              "attempts": "Попытки",
+              "provider": "Провайдер",
+              "challenge": "Вызов",
+              "review": "Обзор"
             }
           }
         },
         "failure": {
-          "reason_default": "Failed captcha verification.",
+          "reason_default": "Проверка капчи не удалась.",
           "notes": {
-            "deferred_generic": "Failure actions deferred; captcha attempts remain.",
-            "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
-            "member_left": "Member is no longer in the guild; configured failure actions were skipped."
+            "deferred_generic": "Действия в случае сбоя отложены; остаются попытки проверки капчи.",
+            "deferred_remaining": "Действия в случае сбоя отложены; {remaining} {attempts_word} остаётся.",
+            "member_left": "Участника больше нет в гильдии; настроенные действия в случае сбоя были пропущены."
           },
           "attempts": {
-            "unlimited": "Unlimited attempts remain.",
-            "additional": "Additional attempts remain.",
-            "remaining": "{count} {attempts_word} remaining.",
-            "word_one": "attempt",
-            "word_other": "attempts"
+            "unlimited": "Оставшиеся попытки не ограничены.",
+            "additional": "Остаются дополнительные попытки.",
+            "remaining": "Остаётся {count} {attempts_word}.",
+            "word_one": "попытка",
+            "word_other": "попытки"
           },
           "embed": {
-            "title_failed": "Captcha Verification Failed",
-            "title_attempt": "Captcha Attempt Failed",
-            "description_failed": "{mention} ({user_id}) failed captcha verification.",
-            "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+            "title_failed": "Проверка капчи не выполнена",
+            "title_attempt": "Неудачная попытка капчи",
+            "description_failed": "{mention} ({user_id}) не прошел(а) проверку капчи.",
+            "description_attempt": "{mention} ({user_id}) неудачно попытался(ась) пройти проверку капчи.",
             "fields": {
-              "actions": "Actions Applied",
-              "notes": "Notes",
-              "attempts": "Attempts",
-              "remaining": "Attempts Remaining",
-              "challenge": "Challenge",
-              "reason": "Reason",
-              "review": "Review"
+              "actions": "Применены действия",
+              "notes": "Заметки",
+              "attempts": "Попытки",
+              "remaining": "Оставшиеся попытки",
+              "challenge": "Вызов",
+              "reason": "Причина",
+              "review": "Обзор"
             }
           }
         },
         "errors": {
-          "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
-          "unknown_token": "No pending captcha verification found for this user.",
-          "token_mismatch": "Captcha token does not match the pending verification.",
-          "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
-          "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
-          "guild_not_found": "Guild {guild_id} is not available to this bot.",
-          "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
-          "member_not_found": "Member {user_id} not found in guild {guild_id}.",
-          "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}."
+          "role_assignment_failed": "Не удалось применить действия успеха проверки капчи из-за ошибки Discord API.",
+          "unknown_token": "Для этого пользователя не найдено ожидающей проверки капчи.",
+          "token_mismatch": "Токен капчи не соответствует ожидаемой проверке.",
+          "missing_permissions": "У бота отсутствуют разрешения для применения действий в случае сбоя капчи.",
+          "action_failed": "Не удалось применить действия в случае сбоя капчи из-за ошибки Discord API.",
+          "guild_not_found": "Гильдия {guild_id} недоступна для этого бота.",
+          "guild_fetch_failed": "Не удалось получить гильдию {guild_id} из Discord.",
+          "member_not_found": "Участник {user_id} не найден в гильдии {guild_id}.",
+          "member_fetch_failed": "Не удалось получить участника {user_id} из гильдии {guild_id}."
         }
       }
     }
