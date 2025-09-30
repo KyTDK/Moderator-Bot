@@ -3,7 +3,7 @@
     "dashboard": {
       "meta": {
         "dashboard": {
-          "description": "Open the dashboard for this server."
+          "description": "이 서버의 대시보드를 엽니다."
         }
       },
       "embed": {
