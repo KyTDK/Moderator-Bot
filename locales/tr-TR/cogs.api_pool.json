@@ -2,27 +2,27 @@
   "cogs": {
     "api_pool": {
       "meta": {
-        "group_description": "Management of your personal API keys in the pool.",
+        "group_description": "Kişisel API anahtarlarınızın havuzdaki yönetimi.",
         "explain": {
-          "description": "Explain the API pool."
+          "description": "API havuzunu açıklayın."
         },
         "add": {
-          "description": "Add an API key to the pool.",
+          "description": "Havuza bir API anahtarı ekle.",
           "params": {
-            "api_key": "The OpenAI API key to add to the shared pool."
+            "api_key": "Paylaşılan havuza eklemek için OpenAI API anahtarı."
           }
         },
         "remove": {
-          "description": "Remove an API key from the pool.",
+          "description": "Havuzdan bir API anahtarı kaldır.",
           "params": {
-            "api_key": "The OpenAI API key to remove from the shared pool."
+            "api_key": "Paylaşılan havuzdan kaldırmak için OpenAI API anahtarı."
           }
         },
         "clear": {
-          "description": "Clear all your API keys from the pool."
+          "description": "Tüm API anahtarlarınızı havuzdan temizleyin."
         },
         "list": {
-          "description": "List all API keys in your pool (encrypted)."
+          "description": "Havuzunuzdaki tüm API anahtarlarını listeleyin (şifrelenmiş)."
         }
       },
       "explanation": {
