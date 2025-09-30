@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "Управљајте функцијама АИ модерације.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Подесите правила сервера"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Прикажи тренутно конфигурисана правила модерације."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Додајте акције примене"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Уклоните специфичну акцију са списка казни.",
+          "action": "Тачан стриг акције за уклањање (нпр. привремено, избриши)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "Омогући/онемогући модерацију, прегледајте статус или поставите мод.",
+          "enable": "Укључи аутономну модерацију.",
+          "mode": "Необавезно: подесите извештај / интервал / прилагодљив мод.",
+          "enable_choice": "Омогући",
+          "disable_choice": "Онемогући",
+          "status_choice": "Статус",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "Извештај",
+            "interval": "Интервал",
+            "adaptive": "Прилагодљив"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Прикажи све акције тренутно конфигурисане за покретање када АИ открије прекршај."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Повежите догађај покретача са једном или више акција режима модерације.",
+          "role": "Које улоге надгледати (ако је применљиво)",
+          "channel": "Који канал надгледати (за скокове догађаја)",
+          "time_range": "Опсег времена у ЧЧ:ММ-ЧЧ:ММ за временске покретаче",
+          "threshold": "Праг за проценат улога на мрежи (0 до 1, опционо)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Уклоните конкретну акцију из конфигурисаног догађаја.",
+          "event_key": "Кључ адаптивног догађаја (самоиспуњавање)",
+          "action": "Акција за уклањање из овог догађаја"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Очистите све покретаче адаптивних догађаја."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Прикажи тренутне покретаче адаптивне модерације."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "Улога на мрежи",
+            "role_offline": "Улога ван мреже",
+            "mass_join": "Масовно придруживање",
+            "mass_leave": "Масовно напуштање",
+            "guild_inactive": "Неактивност сервера",
+            "role_online_percent": "Улога на мрежи %",
+            "time_range": "Опсег времена",
+            "server_spike": "Скок сервера"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Омогући мод интервала",
+          "disable_interval": "Онемогући мод интервала",
+          "enable_report": "Омогући режим извештаја",
+          "disable_report": "Онемогући режим извештаја"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "онемогућен",
         "state_unknown": "непознат",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "извештај",
+          "interval": "интервал",
+          "adaptive": "прилагодљив"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "Биџет АИ модерације достигнут за овај обрачунски циклус. Поново се ресетује {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "следећи циклус",
+        "thanks_no_violation": "Хвала на пријави. Нема прекршаја.",
+        "thanks_action": "Хвала на пријави. Предузете мере."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "Прекршај означен АИ-ом",
+          "description": "Корисник: {user}\nПрекршена правила: {rule}\nРазлог: {reason}\nАкције: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "Фан-аут",
+              "value": "Откривено више аутора; примењене мере по аутору."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "Одлука АИ",
+              "none": "Ниједна",
+              "unknown": "Непознато"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Примењене акције",
+              "none": "Ниједна"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
-              "entry": "• ID {id}: {content}"
+              "name": "Означене поруке",
+              "no_content": "[нема садржаја текста]",
+              "entry": "• ИД {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "АИ модерација Скен (Откоња)",
+          "description": "Нису пронађени прекршаји у последњем скенирању.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "Скенерене поруке",
+            "mode": "Мод"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "Откривен прекршај",
+          "reason_multiple": "Више прекршаја: {reasons}",
+          "rule_default": "Кршење правила",
+          "rule_multiple": "Више правила: {rules}"
         }
       },
       "ensure_adaptive": "Адаптивни режим модерације није омогућен. Користите `/ai_mod set_mode` да га омогућите."
