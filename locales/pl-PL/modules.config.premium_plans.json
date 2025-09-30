@@ -3,16 +3,16 @@
     "config": {
       "premium_plans": {
         "plan_names": {
-          "free": "Free",
-          "core": "Core",
+          "free": "Darmowy",
+          "core": "Podstawowy",
           "pro": "Pro",
           "ultra": "Ultra"
         },
         "requirements": {
-          "any": "an active premium plan",
-          "single": "an active {plan} plan",
-          "double": "an active {plan_a} or {plan_b} plan",
-          "list": "an active {plans}, or {last} plan"
+          "any": "aktywny plan premium",
+          "single": "aktywny plan {plan}",
+          "double": "aktywny plan {plan_a} lub {plan_b}",
+          "list": "aktywny plan {plans}, lub {last}"
         }
       }
     }
