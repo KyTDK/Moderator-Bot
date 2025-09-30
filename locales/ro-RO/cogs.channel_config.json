@@ -2,22 +2,22 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Configurează canalele de logare.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Setează un canal de logare.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Canalul utilizat pentru logare.",
+            "type": "Pentru ce tip de logare este acest canal."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Dezactivează un canal de logare.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Ce tip de logare să dezactivezi."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Afișează setările curente ale canalului de logare."
         },
         "types": {
           "strike": "Strike",
@@ -25,7 +25,7 @@
           "ai": "AI",
           "monitor": "Monitor",
           "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "vc_transcript": "Transcriere VC"
         }
       },
       "nsfw_required": "{channel} nu are restricții de vârstă. Te rog să alegi un canal NSFW.",
