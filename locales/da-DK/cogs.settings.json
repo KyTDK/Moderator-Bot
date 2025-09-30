@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Administrer serverindstillinger.",
         "help": {
-          "description": "Få hjælp til indstillinger."
+          "description": "Få hjælp til indstillinger.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Slet alle indstillinger og start med standardindstillinger. Dette kan ikke fortrydes."
