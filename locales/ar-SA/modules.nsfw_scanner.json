@@ -3,72 +3,67 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "تم الكشف عن محتوى NSFW",
-          "description": "**المستخدم:** {user_mention} ({user_display})\n**السبب:** {reason}",
-          "footer": "معرف المستخدم: {user_id}"
+          "title": "NSFW Content Detected",
+          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
+          "footer": "User ID: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "تقرير فحص NSFW",
+            "title": "NSFW Scan Report",
             "description": {
-              "user": "المستخدم: {user}",
-              "file": "الملف: `{filename}`",
-              "type": "النوع: `{file_type}`",
-              "decision": "القرار: **{decision}**"
-            },
-            "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "user": "User: {user}",
+              "file": "File: `{filename}`",
+              "type": "Type: `{file_type}`",
+              "decision": "Decision: **{decision}**"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "آمن",
-              "unknown": "غير معروف"
+              "safe": "Safe",
+              "unknown": "Unknown"
             },
             "fields": {
-              "reason": "السبب",
-              "category": "الفئة",
-              "score": "الدرجة",
-              "flagged_any": "تم الإبلاغ عن أي شيء",
-              "summary_categories": "ملخص الفئات",
-              "max_similarity": "أقصى تشابه",
-              "max_category": "فئة أعلى تشابه",
-              "similarity": "التشابه المطابق",
-              "high_accuracy": "دقة عالية",
-              "clip_threshold": "عتبة CLIP",
-              "moderation_threshold": "عتبة الاعتدال",
-              "video_frames": "إطارات الفيديو"
+              "reason": "Reason",
+              "category": "Category",
+              "score": "Score",
+              "flagged_any": "Flagged Any",
+              "summary_categories": "Summary Categories",
+              "max_similarity": "Max Similarity",
+              "max_category": "Max Similarity Category",
+              "similarity": "Matched Similarity",
+              "high_accuracy": "High Accuracy",
+              "clip_threshold": "CLIP Threshold",
+              "moderation_threshold": "Moderation Threshold",
+              "video_frames": "Video Frames"
             },
             "reasons": {
-              "openai_moderation": "تقييم OpenAI",
-              "similarity_match": "مطابقة التشابه",
-              "no_frames_extracted": "لم يتم استخراج إطارات",
-              "no_nsfw_frames_detected": "لم يتم اكتشاف إطارات NSFW"
+              "openai_moderation": "OpenAI moderation",
+              "similarity_match": "Similarity match",
+              "no_frames_extracted": "No frames extracted",
+              "no_nsfw_frames_detected": "No NSFW frames detected"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "الثقة",
+          "name": "Confidence",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "النتيجة",
-            "similarity": "التشابه"
+            "score": "Score",
+            "similarity": "Similarity"
           }
         },
         "boolean": {
-          "true": "صحيح",
-          "false": "خطأ"
+          "true": "true",
+          "false": "false"
         },
         "category": {
-          "unspecified": "غير محدد"
+          "unspecified": "Unspecified"
         },
-        "policy_violation": "تم اكتشاف انتهاك محتمل للسياسة (الفئة: **{category}**)"
+        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
       }
     }
   }
