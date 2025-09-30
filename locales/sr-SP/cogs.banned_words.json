@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Команде за управљање забрањеним речима.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Омогући или онемогући уграђену листу речи за пристојност.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "омогући",
+            "disable": "онемогући",
+            "status": "статус"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Додај реч на листу забрањених речи."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Уклони реч са листе забрањених речи."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Прикажи све забрањене речи."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Очисти све забрањене речи."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Додај акцију модерације која се активира када се открије забрањена реч.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Акција за извршење",
+            "duration": "Захтева се само за стопирање (нпр. 10м, 1ч, 3д)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Уклони одређену акцију са листе казни за забрањене речи.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Тачан низ акције за уклањање (нпр. стопирање, брисање)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Прикажи све акције које су тренутно конфигурисане да се активирају када се користе забрањене речи."
         }
       },
       "defaults": {
