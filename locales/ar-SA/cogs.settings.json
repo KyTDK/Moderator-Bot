@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "إدارة إعدادات الخادم.",
         "help": {
-          "description": "Get help on settings."
+          "description": "الحصول على مساعدة بشأن الإعدادات."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "مسح جميع الإعدادات والبدء بالإعدادات الافتراضية. لا يمكن التراجع عن ذلك"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "تكوين إعدادات الخادم."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "عرض القيمة الحالية لإعدادات الخادم."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "إزالة إعدادات الخادم أو عنصر من إعداد القائمة."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "لم يتم العثور على مساعدة للأمر `{command}`.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "فتح لوحة التحكم",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "لا توجد وصف.",
+          "no_subcommands": "(لا توجد أوامر فرعية)",
+          "no_groups": "(لم يتم العثور على مجموعات الأوامر.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "يتم استخدام الافتراضي `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **لوحة التحكم:** [فتح لوحة التحكم]({dashboard_url})\\nاستخدم `/help {name}` لعرض هذا مرة أخرى.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "الأوامر الفرعية",
+              "paged": "الأوامر الفرعية (الصفحة {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "روبوت المراقب — مساعدة",
+            "description": "🛠️ **لوحة التحكم:** [فتح لوحة التحكم]({dashboard_url})\\nكونقر كل شيء أسرع في لوحة الويب.\\nأو قم بتشغيل **`/help <group>`** للحصول على أوامر فرعية مفصلة.",
+            "line": "• `/{name}` — {description}  _جرب:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "اكتشاف الإعدادات المحلية",
+            "groups_first": "المجموعات المتوفرة من الأوامر",
+            "groups_paged": "المجموعات المتوفرة من الأوامر (الصفحة {page})",
+            "speed_name": "تسريع الاكتشاف",
+            "speed_value": "⚡ قم بالترقية إلى المسرع لاكتشاف NSFW والاحتيال بشكل أسرع — قم بتشغيل `/accelerated`.",
+            "links_name": "الروابط",
+            "links_value": "[الدعم](https://discord.gg/invite/33VcwjfEXC) • [تبرع](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [الشروط](https://modbot.neomechanical.com/terms-of-service) • [الخصوصية](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "المطورين الموثوق بهم",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
