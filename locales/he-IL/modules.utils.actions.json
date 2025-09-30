@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "שביתה",
+          "kick": "בעיטה",
+          "ban": "חסום",
+          "timeout": "זמן השבתה",
+          "delete": "מחק הודעה",
+          "give_role": "הענק תפקיד",
+          "take_role": "הסר תפקיד",
+          "warn": "הזהר משתמש",
+          "broadcast": "שדר הודעה",
+          "auto": "אוטומטי"
         }
       }
     }
