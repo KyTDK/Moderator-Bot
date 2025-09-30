@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Управљајте верификацијом captcha-е.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Поново пошаљите уграђивање верификације captcha-е."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Пошаљите захтев за верификацију captcha-е члану.",
+          "member": "Члан који треба да доврши верификацију"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "неколико минута",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} секунда",
+            "other": "{count} секунди"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} минут",
+            "other": "{count} минута"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} сат",
+            "other": "{count} сати"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} дан",
+            "other": "{count} дана"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Здраво {member}! Да бисте завршили придруживање **{guild}**, ",
+          "grace": "молимо вас {instruction} у року од **{grace}**.",
+          "no_grace": "молимо вас {instruction} када будете спремни.",
+          "instruction_default": "довршите captcha",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " Имате **{count}** покушај.",
+            "other": " Имате **{count}** покушаја."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Потребна је верификација Captcha-е",
+          "footer": "Покреће се од стране бот модератора"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Проверите одмах"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Кликните овде да верификујете"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "посетите {channel} и довршите captcha",
+          "help_title": "Да ли вам треба помоћ?",
+          "help_value": "Кликните на дугме испод како бисте отворили страницу за верификацију.",
+          "button_label": "Отворите страницу за верификацију"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Кликните на дугме испод да бисте се верификовали. Када прођете captcha, добићете приступ остатку сервера.",
+        "login_notice": "Можда ће вам бити затражено да се прво пријавите на командну таблу бот модератора.",
+        "title": "Довршите верификацију Captcha-е",
+        "footer": "ID гилде: {guild_id} | Покреће се од стране бот модератора",
+        "button_label": "Проверите одмах"
       }
     }
   }
