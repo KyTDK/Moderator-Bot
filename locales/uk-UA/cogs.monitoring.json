@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Налаштування моніторингу",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Встановіть канал для виводу логів.",
+          "channel": "Канал, на який відправляються логи."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Видалити налаштування каналу моніторингу."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Показати поточний канал моніторингу."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Увімкнути або вимкнути певну подію моніторингу.",
+          "event": "Подія, яку потрібно перемкнути.",
+          "enabled": "Увімкнути або вимкнути логування цієї події.",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Приєднання користувача",
+            "leave": "Вихід користувача",
+            "ban": "Бан",
+            "unban": "Розбан",
+            "timeout": "Тайм-аут",
+            "message_delete": "Повідомлення видалено",
+            "message_edit": "Повідомлення відредаговано"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Показати поточні налаштування подій моніторингу."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Зміст:**\n{content}",
         "description_generic": "Повідомлення було видалено в {channel}.",
         "description_deleted_by": "\n**Видалив:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Немає вмісту]",
         "fields": {
           "attachments": "Вкладень ({count})",
           "embeds": "Вміст {index}",
@@ -99,7 +99,7 @@
           "before": "До",
           "after": "Після"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Немає вмісту]",
         "footer": "ID користувача: {user_id}"
       },
       "ban": {
