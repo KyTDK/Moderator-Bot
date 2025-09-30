@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**Wat is die API-poel?**\nDie API-poel is 'n veilige en anonieme versameling van gedeelde OpenAI API-sleutels. Dit stel Moderator Bot in staat om doeltreffend te bly funksioneer, selfs wanneer individuele gebruikers teikengrenze bereik.\n\n**Hoe werk dit?**\n- Wanneer jy jou OpenAI API-sleutel by die poel voeg, word dit geïnkripteer en veilig gestoor.\n- Die bot gebruik hierdie sleutels eksklusief vir toegang tot OpenAI-modelle om moderasietake uit te voer.\n- Jou API-sleutel bly vertroulik; niemand, insluitend die bot-ontwikkelaars, kan dit sien nie.\n- Jy het volle beheer en kan jou API-sleutel te enige tyd uit die poel verwyder.\n\n**Belangrik:** Om jou API-sleutel by te dra, moet jou OpenAI rekening ten minste $5 in vooruitbetaalde krediete hê. Selfs al is die moderasie-eindpunt gratis om te gebruik, vereis OpenAI dat rekeninge aktiewe faktuurdetails en kwota het. Jy kan krediet by jou rekening voeg hier: <https://platform.openai.com/account/billing/overview>\n\nDeur jou API-sleutel by te dra, help jy om te verseker dat Moderator Bot responsief en effektief bly vir alle gebruikers."
       },
