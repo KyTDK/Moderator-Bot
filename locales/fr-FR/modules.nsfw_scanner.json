@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "Contenu NSFW détecté",
+          "description": "**Utilisateur :** {user_mention} ({user_display})\n**Raison :** {reason}",
+          "footer": "ID utilisateur : {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "Rapport de Scan NSFW",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Utilisateur : {user}",
+              "file": "Fichier : `{filename}`",
+              "type": "Type : `{file_type}`",
+              "decision": "Décision : **{decision}**"
             },
             "file_types": {
               "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "video": "Vidéo",
+              "unknown": "Inconnu"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Sûr",
+              "unknown": "Inconnu"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
+              "reason": "Raison",
+              "category": "Catégorie",
               "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "flagged_any": "Marqué n’importe lequel",
+              "summary_categories": "Catégories Résumées",
+              "max_similarity": "Similitude Max",
+              "max_category": "Catégorie de Similitude Max",
+              "similarity": "Similitude Correspondante",
+              "high_accuracy": "Précision Élevée",
+              "clip_threshold": "Seuil CLIP",
+              "moderation_threshold": "Seuil de Modération",
+              "video_frames": "Trames Vidéo"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "modération OpenAI",
+              "similarity_match": "Correspondance de similitude",
+              "no_frames_extracted": "Pas de trames extraites",
+              "no_nsfw_frames_detected": "Pas de trames NSFW détectées"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Confiance",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
             "score": "Score",
-            "similarity": "Similarity"
+            "similarity": "Similitude"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "vrai",
+          "false": "faux"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Non spécifié"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Violation potentielle de la politique détectée (Catégorie : **{category}**)"
       }
     }
   }
