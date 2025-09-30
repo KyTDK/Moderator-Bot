@@ -3,16 +3,16 @@
     "config": {
       "premium_plans": {
         "plan_names": {
-          "free": "Free",
-          "core": "Core",
-          "pro": "Pro",
-          "ultra": "Ultra"
+          "free": "Безкоштовний",
+          "core": "Основний",
+          "pro": "Про",
+          "ultra": "Ультра"
         },
         "requirements": {
-          "any": "an active premium plan",
-          "single": "an active {plan} plan",
-          "double": "an active {plan_a} or {plan_b} plan",
-          "list": "an active {plans}, or {last} plan"
+          "any": "активний преміум-план",
+          "single": "активний план {plan}",
+          "double": "активний план {plan_a} або {plan_b}",
+          "list": "активний {plans}, або {last} план"
         }
       }
     }
