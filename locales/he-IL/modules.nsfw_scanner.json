@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "תוכן NSFW זוהה",
+          "description": "**משתמש:** {user_mention} ({user_display})\n**סיבה:** {reason}",
+          "footer": "מזהה משתמש: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "דוח סריקת NSFW",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "משתמש: {user}",
+              "file": "קובץ: `{filename}`",
+              "type": "סוג: `{file_type}`",
+              "decision": "החלטה: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "תמונה",
+              "video": "וידאו",
+              "unknown": "לא ידוע"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "בטוח",
+              "unknown": "לא ידוע"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "סיבה",
+              "category": "קטגוריה",
+              "score": "ניקוד",
+              "flagged_any": "סומן כחלקי",
+              "summary_categories": "קטגוריות סיכום",
+              "max_similarity": "דמיון מקסימלי",
+              "max_category": "קטגוריית דמיון מקסימלית",
+              "similarity": "דמיון תואם",
+              "high_accuracy": "דיוק גבוה",
+              "clip_threshold": "סף CLIP",
+              "moderation_threshold": "סף פיקוח",
+              "video_frames": "מסגרות וידאו"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "מדיניות OpenAI",
+              "similarity_match": "התאמת דמיון",
+              "no_frames_extracted": "לא נשלפו מסגרות",
+              "no_nsfw_frames_detected": "לא זוהו מסגרות NSFW"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "ביטחון",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "ניקוד",
+            "similarity": "דמיון"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "אמת",
+          "false": "שקר"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "לא מוגדר"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "זוהה פוטנציאל להפרת מדיניות (קטגוריה: **{category}**)"
       }
     }
   }
