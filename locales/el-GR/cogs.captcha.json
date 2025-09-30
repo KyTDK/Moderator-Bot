@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Διαχείριση επαλήθευσης captcha.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Επανυποβολή του ενσωματωμένου επαλήθευσης captcha."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Αποστολή αιτήματος επαλήθευσης captcha σε ένα μέλος.",
+          "member": "Το μέλος που πρέπει να ολοκληρώσει την επαλήθευση"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "μερικά λεπτά",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} δευτερόλεπτο",
+            "other": "{count} δευτερόλεπτα"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} λεπτό",
+            "other": "{count} λεπτά"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} ώρα",
+            "other": "{count} ώρες"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} ημέρα",
+            "other": "{count} ημέρες"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Γεια, {member}! Για να ολοκληρώσετε την ένταξη στο **{guild}**, ",
+          "grace": "παρακαλώ {instruction} εντός **{grace}**.",
+          "no_grace": "παρακαλώ {instruction} όταν είστε έτοιμοι.",
+          "instruction_default": "ολοκληρώστε το captcha",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": "Έχετε **{count}** προσπάθεια.",
+            "other": "Έχετε **{count}** προσπάθειες."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
+          "title": "Απαιτείται Επαλήθευση Captcha",
           "footer": "Powered by Moderator Bot"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Επαληθεύστε τώρα"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Κάντε κλικ εδώ για επαλήθευση"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "επισκεφθείτε το {channel} και ολοκληρώστε το captcha",
+          "help_title": "Χρειάζεστε βοήθεια;",
+          "help_value": "Κάντε κλικ στο κουμπί παρακάτω για να ανοίξετε τη σελίδα επαλήθευσης.",
+          "button_label": "Άνοιγμα σελίδας επαλήθευσης"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Κάντε κλικ στο κουμπί παρακάτω για να επαληθευτείτε. Μόλις περάσετε το captcha, θα αποκτήσετε πρόσβαση στο υπόλοιπο διακομιστή.",
+        "login_notice": "Μπορεί να σας ζητηθεί να συνδεθείτε πρώτα στον πίνακα ελέγχου του Moderator Bot.",
+        "title": "Ολοκληρωμένη Επαλήθευση Captcha",
+        "footer": "ID Διακομιστή: {guild_id} | Powered by Moderator Bot",
+        "button_label": "Επαληθεύστε τώρα"
       }
     }
   }
