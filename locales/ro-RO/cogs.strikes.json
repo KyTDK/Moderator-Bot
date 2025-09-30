@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Comenzi de gestionare a atacurilor.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Aplica o penalizare unui utilizator specific.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Membrul căruia i se va aplica penalizarea.",
+            "reason": "Motivul aplicării penalizării.",
+            "expiry": "Durata expirării opționale (ex: 30z, 2s)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Obține penalizările pentru un utilizator specific."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Șterge toate penalizările unui utilizator specific.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Utilizatorul ale cărui penalizări vor fi șterse."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Adaugă o acțiune suplimentară pentru un nivel de penalizare.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Numărul de penalizări necesar pentru a declanșa acțiunea.",
+            "action": "Acțiunea de adăugat.",
+            "duration": "Durata (numai pentru timeout, ex: 1h, 30m). Lăsați gol altfel."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Elimină o acțiune dintr-un nivel de penalizare.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Numărul de penalizări asociate cu acțiunea.",
+            "action": "String-ul exact al acțiunii de eliminat."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Vizualizează toate acțiunile configurate pentru penalizări."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Intimidare a canalului, sau a unui utilizator specific.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
