@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Spravujte své předplatné Accelerated (Premium).",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Zkontrolujte, zda máte aktuálně předplatu Accelerated."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Generujte svůj jedinečný odkaz na předplatné PayPal."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Zobrazit výhody předplatného Accelerated."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Vysvětlete, jak zrušit své předplatné."
         }
       },
       "group_description": "Spravujte své předplatné Zrychlené (Premium).",
