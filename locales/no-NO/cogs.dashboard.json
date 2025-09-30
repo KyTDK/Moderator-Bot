@@ -3,7 +3,7 @@
     "dashboard": {
       "meta": {
         "dashboard": {
-          "description": "Open the dashboard for this server."
+          "description": "Åpne dashbordet for denne serveren."
         }
       },
       "embed": {
