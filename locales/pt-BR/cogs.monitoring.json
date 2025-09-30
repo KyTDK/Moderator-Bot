@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Configuração de monitoramento",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Defina o canal para saída dos logs.",
+          "channel": "O canal para enviar os logs."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Remova a configuração do canal de monitoramento."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Mostre o canal de monitoramento atual."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Ativar ou desativar um evento específico de monitoramento.",
+          "event": "O evento a ser alternado",
+          "enabled": "Ativar ou desativar o registro para este evento",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Usuário Entrou",
+            "leave": "Usuário Saiu",
+            "ban": "Banimento",
+            "unban": "Desbanir",
+            "timeout": "Tempo Limite",
+            "message_delete": "Mensagem Deletada",
+            "message_edit": "Mensagem Editada"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Listar as configurações de eventos de monitoramento atuais."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Conteúdo:**\n{content}",
         "description_generic": "Uma mensagem foi apagada em {channel}.",
         "description_deleted_by": "\n**Apagado por:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Sem Conteúdo]",
         "fields": {
           "attachments": "Anexos ({count})",
           "embeds": "Incorporar {index}",
@@ -99,7 +99,7 @@
           "before": "Antes",
           "after": "Depois"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Sem Conteúdo]",
         "footer": "ID do Usuário: {user_id}"
       },
       "ban": {
