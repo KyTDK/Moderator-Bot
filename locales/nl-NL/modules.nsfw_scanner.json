@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "NSFW-inhoud Gedetecteerd",
+          "description": "**Gebruiker:** {user_mention} ({user_display})\n**Reden:** {reason}",
+          "footer": "Gebruikers-ID: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "NSFW Scan Rapport",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
+              "user": "Gebruiker: {user}",
+              "file": "Bestand: `{filename}`",
               "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "decision": "Beslissing: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
+              "image": "Afbeelding",
               "video": "Video",
-              "unknown": "Unknown"
+              "unknown": "Onbekend"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Veilig",
+              "unknown": "Onbekend"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
+              "reason": "Reden",
+              "category": "Categorie",
               "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "flagged_any": "Iets gemarkeerd",
+              "summary_categories": "Samenvattingscategorieën",
+              "max_similarity": "Maximale Gelijkenis",
+              "max_category": "Maximale Gelijkeniscategorie",
+              "similarity": "Overeenkomende Gelijkenis",
+              "high_accuracy": "Hoge Nauwkeurigheid",
+              "clip_threshold": "CLIP Drempelwaarde",
+              "moderation_threshold": "Moderatie Drempelwaarde",
+              "video_frames": "Videoframes"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "OpenAI-moderatie",
+              "similarity_match": "Gelijkheidsmatch",
+              "no_frames_extracted": "Geen frames geëxtraheerd",
+              "no_nsfw_frames_detected": "Geen NSFW-frames gedetecteerd"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Vertrouwen",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
             "score": "Score",
-            "similarity": "Similarity"
+            "similarity": "Gelijkenis"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "waar",
+          "false": "onwaar"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Niet gespecificeerd"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Potentiële beleidsoverschrijding gedetecteerd (Categorie: **{category}**)"
       }
     }
   }
