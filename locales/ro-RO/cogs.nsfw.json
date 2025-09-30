@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "Gestionează detectarea conținutului NSFW.",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "Adaugă o acțiune în lista de pedepse NSFW.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Acțiunea de efectuat",
+            "duration": "Necesar doar pentru timeout (ex.: 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "Elimină o acțiune din lista de pedepse NSFW.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Exact acțiunea de eliminat (ex.: timeout, delete)"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "Vizualizează lista curentă de acțiuni de pedeapsă NSFW."
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "Adaugă o categorie la detectarea NSFW."
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "Violență Grafică",
+          "violence": "Violență",
+          "sexual": "Sexualitate",
+          "self_harm_instructions": "Instrucțiuni de Automutilare",
+          "self_harm_intent": "Intenție de Automutilare",
+          "self_harm": "Automutilare"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "Elimină o categorie din detectarea NSFW."
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "Vizualizează categoriile de detectare a NSFW."
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "Setează pragul pentru încrederea în detectarea NSFW.",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "Pragul de încredere (0.0 la 1.0)"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "Vizualizează pragul curent de detectare NSFW."
         }
       },
       "actions": {
