@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "נהל את המנוי המואץ (פרימיום) שלך.",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "בדוק אם יש לך כרגע מנוי מואץ."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "צור קישור מנוי ייחודי עבור PayPal."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "הראה את היתרונות של המנוי המואץ."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "הסבר כיצד לבטל את המנוי שלך."
         }
       },
       "group_description": "נהל את המנוי המואץ (פרמיום) שלך.",
