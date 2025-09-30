@@ -26,12 +26,13 @@ class DiscordAppCommandTranslator(app_commands.Translator):
         locale: Locale,
         context: app_commands.TranslationContext,
     ) -> str | None:
-        key: str | None = getattr(string, "key", None)
+        extras = getattr(string, "extras", None) or {}
+        key = extras.get("key")
         if not key:
             return None
 
-        placeholders: dict[str, Any] | None = getattr(string, "placeholders", None)
-        fallback = getattr(string, "default", getattr(string, "value", None))
+        placeholders = extras.get("placeholders")
+        fallback = extras.get("default", getattr(string, "message", None))
         return self._service.translate(
             key,
             locale=locale.value,

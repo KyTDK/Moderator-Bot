@@ -8,6 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from discord import Locale, app_commands
 
 os.environ.setdefault(
     "FERNET_SECRET_KEY", "DeJ3sXDDTTbikeRSJzRgg8r_Ch61_NbE8D3LWnLOJO4="
@@ -18,6 +19,7 @@ from modules.config.settings_schema import SETTINGS_SCHEMA
 from modules.i18n.locale_utils import list_supported_locales
 from modules.core.moderator_bot import ModeratorBot
 from modules.utils import mysql
+from modules.i18n.discord_translator import DiscordAppCommandTranslator
 
 
 class DummyGuild(SimpleNamespace):
@@ -206,6 +208,22 @@ def test_push_and_reset_locale(bot: ModeratorBot) -> None:
 
     assert bot.current_locale() is None
 
+
+
+def test_discord_translator_uses_locale_extras(bot: ModeratorBot) -> None:
+    translator = DiscordAppCommandTranslator(bot.translation_service)
+    locale_string = app_commands.locale_str(
+        "Open the dashboard for this server.",
+        key="cogs.dashboard.meta.dashboard.description",
+    )
+    context = app_commands.TranslationContext(
+        location=app_commands.TranslationContextLocation.command_description,
+        data=None,
+    )
+
+    result = asyncio.run(translator.translate(locale_string, Locale.french, context))
+
+    assert result == "Ouvrez le tableau de bord pour ce serveur."
 
 
 def test_preload_guild_locale_cache(bot: ModeratorBot, monkeypatch: pytest.MonkeyPatch) -> None:
