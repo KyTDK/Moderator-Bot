@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "قم بتكوين قنوات السجل.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "قم بتعيين قناة السجل.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "القناة المستخدمة للتسجيل.",
+            "type": "نوع السجل لهذه القناة."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "قم بإلغاء تعيين قناة السجل.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "أي نوع من السجلات لتعطيله."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "عرض إعدادات قناة السجل الحالية."
         },
         "types": {
-          "strike": "Strike",
-          "nsfw": "NSFW",
-          "ai": "AI",
-          "monitor": "Monitor",
-          "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "strike": "انتهاك",
+          "nsfw": "غير ملائم",
+          "ai": "ذكاء إصطناعي",
+          "monitor": "مراقبة",
+          "captcha": "اختبار",
+          "vc_transcript": "نص المحادثة الصوتية"
         }
       },
       "nsfw_required": "{channel} ليست مقيدة بالعمر. يرجى اختيار قناة NSFW.",
