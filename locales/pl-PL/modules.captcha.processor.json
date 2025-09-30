@@ -3,59 +3,59 @@
     "captcha": {
       "processor": {
         "success": {
-          "reason": "Captcha verification successful",
+          "reason": "Zweryfikowano poprawność captcha",
           "embed": {
-            "title": "Captcha Verification Passed",
-            "description": "{mention} ({user_id}) passed captcha verification.",
+            "title": "Weryfikacja Captcha Zakończona Sukcesem",
+            "description": "{mention} ({user_id}) poprawnie zweryfikowano captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "attempts": "Attempts",
-              "provider": "Provider",
-              "challenge": "Challenge",
-              "review": "Review"
+              "actions": "Zastosowane działania",
+              "attempts": "Próby",
+              "provider": "Dostawca",
+              "challenge": "Wyzwanie",
+              "review": "Przejrzyj"
             }
           }
         },
         "failure": {
-          "reason_default": "Failed captcha verification.",
+          "reason_default": "Nie udało się zweryfikować captcha.",
           "notes": {
-            "deferred_generic": "Failure actions deferred; captcha attempts remain.",
-            "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
-            "member_left": "Member is no longer in the guild; configured failure actions were skipped."
+            "deferred_generic": "Działania końcowe odroczone; próby weryfikacji captcha pozostały.",
+            "deferred_remaining": "Działania końcowe odroczone; pozostało {remaining} {attempts_word}.",
+            "member_left": "Członek już nie jest w gildii; skonfigurowane działania końcowe zostały pominięte."
           },
           "attempts": {
-            "unlimited": "Unlimited attempts remain.",
-            "additional": "Additional attempts remain.",
-            "remaining": "{count} {attempts_word} remaining.",
-            "word_one": "attempt",
-            "word_other": "attempts"
+            "unlimited": "Pozostało nieograniczenie prób.",
+            "additional": "Pozostały dodatkowe próby.",
+            "remaining": "Pozostało {count} {attempts_word}.",
+            "word_one": "próba",
+            "word_other": "próby"
           },
           "embed": {
-            "title_failed": "Captcha Verification Failed",
-            "title_attempt": "Captcha Attempt Failed",
-            "description_failed": "{mention} ({user_id}) failed captcha verification.",
-            "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+            "title_failed": "Weryfikacja Captcha Niepowiodła Się",
+            "title_attempt": "Próba Captcha Nieudana",
+            "description_failed": "{mention} ({user_id}) nie udało się zweryfikować captcha.",
+            "description_attempt": "{mention} ({user_id}) nie udało się przeprowadzić próby captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "notes": "Notes",
-              "attempts": "Attempts",
-              "remaining": "Attempts Remaining",
-              "challenge": "Challenge",
-              "reason": "Reason",
-              "review": "Review"
+              "actions": "Zastosowane działania",
+              "notes": "Notatki",
+              "attempts": "Próby",
+              "remaining": "Pozostałe Próby",
+              "challenge": "Wyzwanie",
+              "reason": "Powód",
+              "review": "Przejrzyj"
             }
           }
         },
         "errors": {
-          "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
-          "unknown_token": "No pending captcha verification found for this user.",
-          "token_mismatch": "Captcha token does not match the pending verification.",
-          "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
-          "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
-          "guild_not_found": "Guild {guild_id} is not available to this bot.",
-          "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
-          "member_not_found": "Member {user_id} not found in guild {guild_id}.",
-          "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}."
+          "role_assignment_failed": "Nie udało się zastosować działań sukcesu captcha z powodu błędu API Discord.",
+          "unknown_token": "Nie znaleziono oczekującej weryfikacji captcha dla tego użytkownika.",
+          "token_mismatch": "Token captcha nie pasuje do oczekującej weryfikacji.",
+          "missing_permissions": "Botowi brakuje uprawnień do zastosowania działań końcowych captcha.",
+          "action_failed": "Nie udało się zastosować działań końcowych captcha z powodu błędu API Discord.",
+          "guild_not_found": "Gildia {guild_id} nie jest dostępna dla tego bota.",
+          "guild_fetch_failed": "Nie udało się pobrać gildii {guild_id} z Discord.",
+          "member_not_found": "Członek {user_id} nie znaleziony w gildii {guild_id}.",
+          "member_fetch_failed": "Nie udało się pobrać członka {user_id} z gildii {guild_id}."
         }
       }
     }
