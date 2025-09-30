@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "الحصول على إحصائيات الذاكرة والأداء",
+          "show_all": "تضمين التخصيصات من جميع المكتبات (وليس المشروع فقط)"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "عرض اللغة المرتبطة حاليًا بسياق هذا الأمر"
         }
       },
       "permission_denied": " ليس لديك إذن لاستخدام هذا الأمر.",
@@ -26,7 +26,7 @@
         "footer": "المضيف: {host} | بايثون {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "اللغة الحالية: {locale}"
       }
     }
   }
