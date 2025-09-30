@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "Gestisci il rilevamento dei contenuti NSFW.",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "Aggiungi un'azione alla lista di punizioni NSFW.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Azione da eseguire",
+            "duration": "Richiesto solo per il timeout (es. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "Rimuovi un'azione dalla lista di punizioni NSFW.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Stringa esatta dell'azione da rimuovere (es. timeout, elimina)"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "Visualizza l'elenco corrente delle azioni di punizione NSFW."
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "Aggiungi una categoria al rilevamento NSFW."
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "Violenza grafica",
+          "violence": "Violenza",
+          "sexual": "Sessuale",
+          "self_harm_instructions": "Istruzioni per l'autolesionismo",
+          "self_harm_intent": "Intento di autolesionismo",
+          "self_harm": "Autolesionismo"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "Rimuovi una categoria dal rilevamento NSFW."
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "Visualizza le categorie di rilevamento NSFW."
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "Imposta la soglia di confidenza per il rilevamento NSFW.",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "Soglia di confidenza (da 0.0 a 1.0)"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "Visualizza la soglia corrente per il rilevamento NSFW."
         }
       },
       "actions": {
