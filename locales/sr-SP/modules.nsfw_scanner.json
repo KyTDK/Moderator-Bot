@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "Откривен НСФВ садржај",
+          "description": "**Корисник:** {user_mention} ({user_display})\n**Разлог:** {reason}",
+          "footer": "Кориснички ИД: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "Извештај НСФВ скенирања",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Корисник: {user}",
+              "file": "Фајл: `{filename}`",
+              "type": "Тип: `{file_type}`",
+              "decision": "Одлука: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "Слика",
+              "video": "Видео",
+              "unknown": "Непознато"
             },
             "decision": {
-              "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "nsfw": "НСФВ",
+              "safe": "Безбедно",
+              "unknown": "Непознато"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Разлог",
+              "category": "Категорија",
+              "score": "Оцена",
+              "flagged_any": "Означено било шта",
+              "summary_categories": "Резиме категорија",
+              "max_similarity": "Максимална сличност",
+              "max_category": "Категорија максималне сличности",
+              "similarity": "Поклапање сличности",
+              "high_accuracy": "Висока тачност",
+              "clip_threshold": "CLIP праг",
+              "moderation_threshold": "Праг умерености",
+              "video_frames": "Видео оквири"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "OpenAI модерација",
+              "similarity_match": "Поклапање сличности",
+              "no_frames_extracted": "Није издвојен ниједан оквир",
+              "no_nsfw_frames_detected": "Није откривен НСФВ садржај"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Поузданост",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Оцена",
+            "similarity": "Сличност"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "истина",
+          "false": "нетачно"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Неспецификовано"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Детектовано могуће кршење политике (Категорија: **{category}**)"
       }
     }
   }
