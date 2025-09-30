@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Strejkestyring kommandoer.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Giv en specifik bruger en strejke.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Medlemmet der skal have en strejke.",
+            "reason": "Årsagen til strejken.",
+            "expiry": "Valgfri udløbstid (f.eks. 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Hent strejker for en specifik bruger."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Ryd alle strejker for en specifik bruger.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Brugeren hvis strejker vil blive ryddet."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Tilføj en yderligere handling for et strejkeniveau.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Antal strejker nødvendigt for at udløse handlingen.",
+            "action": "Handling der skal tilføjes.",
+            "duration": "Varighed (kun for timeout, f.eks. 1t, 30m). Lad være tom ellers."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Fjern en handling fra et strejkeniveau.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Antal strejker forbundet med handlingen.",
+            "action": "Præcis handlingsstreng der skal fjernes."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Se alle konfigurerede strejkehandlinger."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Intimider kanalen eller en specifik bruger.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
