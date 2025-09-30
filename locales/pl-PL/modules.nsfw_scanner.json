@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "Wykryto treść NSFW",
+          "description": "**Użytkownik:** {user_mention} ({user_display})\n**Powód:** {reason}",
+          "footer": "ID użytkownika: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "Raport skanowania NSFW",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Użytkownik: {user}",
+              "file": "Plik: `{filename}`",
+              "type": "Typ: `{file_type}`",
+              "decision": "Decyzja: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "Obraz",
+              "video": "Wideo",
+              "unknown": "Nieznany"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Bezpieczny",
+              "unknown": "Nieznany"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Powód",
+              "category": "Kategoria",
+              "score": "Ocena",
+              "flagged_any": "Oznaczone cokolwiek",
+              "summary_categories": "Podsumowanie kategorii",
+              "max_similarity": "Maksymalna podobieństwo",
+              "max_category": "Kategoria maksymalnej podobieństwa",
+              "similarity": "Dopasowane podobieństwo",
+              "high_accuracy": "Wysoka dokładność",
+              "clip_threshold": "Próg CLIP",
+              "moderation_threshold": "Próg moderacji",
+              "video_frames": "Klatki wideo"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "Moderacja OpenAI",
+              "similarity_match": "Dopasowanie podobieństwa",
+              "no_frames_extracted": "Nie wyodrębniono klatek",
+              "no_nsfw_frames_detected": "Nie wykryto klatek NSFW"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Pewność",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Ocena",
+            "similarity": "Podobieństwo"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "prawda",
+          "false": "fałsz"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Niesprecyzowany"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Wykryto potencjalne naruszenie polityki (Kategoria: **{category}**)"
       }
     }
   }
