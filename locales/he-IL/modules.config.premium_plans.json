@@ -3,16 +3,16 @@
     "config": {
       "premium_plans": {
         "plan_names": {
-          "free": "Free",
-          "core": "Core",
-          "pro": "Pro",
-          "ultra": "Ultra"
+          "free": "חינם",
+          "core": "ליבה",
+          "pro": "מקצועי",
+          "ultra": "אולטרה"
         },
         "requirements": {
-          "any": "an active premium plan",
-          "single": "an active {plan} plan",
-          "double": "an active {plan_a} or {plan_b} plan",
-          "list": "an active {plans}, or {last} plan"
+          "any": "תוכנית פרימיום פעילה",
+          "single": "תכנית {plan} פעילה",
+          "double": "תכנית {plan_a} פעילה או תכנית {plan_b}",
+          "list": "תכנית {plans} פעילה, או תכנית {last}"
         }
       }
     }
