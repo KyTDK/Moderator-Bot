@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Příkazy pro správu varování.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Varovat konkrétního uživatele.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Člen, kterého chcete varovat.",
+            "reason": "Důvod pro udělení varování.",
+            "expiry": "Volitelná délka vypršení (např. 30d, 2t)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Získat varování konkrétního uživatele."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Vymazat všechna varování konkrétního uživatele.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Uživatel, jehož varování budou vymazána."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Přidat další akci pro úroveň varování.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Počet varování potřebných pro spuštění akce.",
+            "action": "Akce, kterou chcete přidat.",
+            "duration": "Délka (pouze pro časový limit, např. 1h, 30m). Jinak nevyplňujte."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Odstranit akci z úrovně varování.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Počet varování spojených s akcí.",
+            "action": "Přesný text akce k odstranění."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Zobrazit všechny konfigurované akce varování."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Vystrašit kanál nebo konkrétního uživatele.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
