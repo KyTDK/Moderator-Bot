@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Comandos de gestión de sanciones.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Sancionar a un usuario específico.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "El miembro a sancionar.",
+            "reason": "La razón de la sanción.",
+            "expiry": "Duración de expiración opcional (p.ej., 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Obtener sanciones de un usuario específico."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Eliminar todas las sanciones de un usuario específico.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "El usuario cuyas sanciones serán eliminadas."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Agregar una acción adicional para un nivel de sanción.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Número de sanciones requeridas para activar la acción.",
+            "action": "Acción a agregar.",
+            "duration": "Duración (solo para descanso, p.ej., 1h, 30m). Lo deja vacío de lo contrario."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Eliminar una acción de un nivel de sanción.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Número de sanciones asociadas con la acción.",
+            "action": "Cadena de acción exacta a eliminar."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Ver todas las acciones de sanciones configuradas."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Intimidar al canal o a un usuario específico.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
