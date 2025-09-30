@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**Τι είναι το API Pool?**\nΤο API Pool είναι μια ασφαλής και ανώνυμη συλλογή κοινών κλειδιών API του OpenAI. Επιτρέπει στο Moderator Bot να συνεχίσει να λειτουργεί αποτελεσματικά, ακόμα και όταν οι μεμονωμένοι χρήστες αντιμετωπίζουν όρια ρυθμού.\n\n**Πώς λειτουργεί;**\n- Όταν προσθέτετε το κλειδί API του OpenAI στο pool, κρυπτογραφείται και αποθηκεύεται με ασφάλεια.\n- Το bot χρησιμοποιεί αυτά τα κλειδιά αποκλειστικά για την πρόσβαση σε μοντέλα OpenAI για την εκτέλεση εργασιών μέτριας.\n- Το κλειδί API σας παραμένει εμπιστευτικό, κανείς, συμπεριλαμβανομένων των προγραμματιστών bot, δεν μπορεί να το δει.\n- Έχετε πλήρη έλεγχο και μπορείτε να αφαιρέσετε το κλειδί API από το pool ανά πάσα στιγμή.\n\n**Σημαντικό:** Για να συνεισφέρετε το κλειδί API σας, ο λογαριασμός σας OpenAI πρέπει να έχει τουλάχιστον 5$ σε προπληρωμένες μονάδες. Αν και το σημείο τερματικού moderation είναι δωρεάν για χρήση, το OpenAI απαιτεί λογαριασμούς με ενεργές λεπτομέρειες χρέωσης και όριο χρήσης. Μπορείτε να προσθέσετε μονάδες στον λογαριασμό σας εδώ: <https://platform.openai.com/account/billing/overview>\n\nΣυνεισφέροντας το κλειδί API σας, βοηθάτε να παραμείνει ο Moderator Bot ευέλικτος και αποτελεσματικός για όλους τους χρήστες."
       },
