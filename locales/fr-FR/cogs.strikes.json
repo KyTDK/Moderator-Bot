@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Commandes de gestion des frappes.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Frapper un utilisateur spécifique.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Le membre à frapper.",
+            "reason": "La raison de la frappe.",
+            "expiry": "Durée d'expiration optionnelle (par exemple, 30j, 2s)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Obtenez les frappes d'un utilisateur spécifique."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Effacer toutes les frappes d'un utilisateur spécifique.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "L'utilisateur dont les frappes seront effacées."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Ajouter une action supplémentaire pour un niveau de frappe.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Nombre de frappes nécessaires pour déclencher l'action.",
+            "action": "Action à ajouter.",
+            "duration": "Durée (uniquement pour le délai d'attente, par exemple, 1h, 30m). Laisser vide sinon."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Supprimer une action d'un niveau de frappe.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Nombre de frappes associées à l'action.",
+            "action": "Chaîne d'action exacte à supprimer."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Voir toutes les actions de frappe configurées."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Intimider le canal ou un utilisateur spécifique.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
