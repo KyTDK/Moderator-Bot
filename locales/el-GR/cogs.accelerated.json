@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Διαχειριστείτε τη συνδρομή σας στο Επιταχυνόμενο (Premium).",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Ελέγξτε αν έχετε αυτή τη στιγμή Επιταχυνόμενη συνδρομή."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Δημιουργήστε τον μοναδικό σας σύνδεσμο συνδρομής στο PayPal."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Δείξτε τα οφέλη της Επιταχυνόμενης συνδρομής."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Εξηγήστε πώς να ακυρώσετε τη συνδρομή σας."
         }
       },
       "group_description": "Διαχειριστείτε τη συνδρομή σας στο Accelerator (Premium).",
