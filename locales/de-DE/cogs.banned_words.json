@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Befehle zur Verwaltung gesperrter Wörter.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Aktivieren oder Deaktivieren der integrierten Fluchwortliste.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "aktivieren",
+            "disable": "deaktivieren",
+            "status": "Status"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Ein Wort zur Liste der gesperrten Wörter hinzufügen."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Ein Wort von der Liste der gesperrten Wörter entfernen."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Alle gesperrten Wörter auflisten."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Alle gesperrten Wörter löschen."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Eine Moderationsaktion hinzufügen, die ausgelöst wird, wenn ein gesperrtes Wort erkannt wird.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Durchzuführende Aktion",
+            "duration": "Nur für Timeout erforderlich (z.B. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Eine bestimmte Aktion aus der Liste der Strafen für gesperrte Wörter entfernen.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Genauer Aktionsstring zum Entfernen (z.B. Timeout, Löschen)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Alle derzeit konfigurierten Aktionen anzeigen, die ausgelöst werden, wenn gesperrte Wörter verwendet werden."
         }
       },
       "defaults": {
