@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "תצורת ניטור",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "הגדר ערוץ לפלט לוגים.",
+          "channel": "הערוץ לשליחת לוגים ל."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "הסר את הגדרת הערוץ למוניטור."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "הצג את הערוץ הנוכחי למוניטור."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "הפעל או השבת אירוע ניטור ספציפי.",
+          "event": "האירוע שיש להפעיל או להשבית",
+          "enabled": "הפעל או השבת את הלוגים עבור אירוע זה",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "משתמש הצטרף",
+            "leave": "משתמש עזב",
+            "ban": "חסימה",
+            "unban": "ביטול חסימה",
+            "timeout": "תקצוב זמן",
+            "message_delete": "הודעה נמחקה",
+            "message_edit": "הודעה נערכה"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "רשימת הגדרות אירועי המוניטור הנוכחיות."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**תוכן:**\n{content}",
         "description_generic": "הודעה נמחקה בערוץ {channel}.",
         "description_deleted_by": "\n**נמחק על ידי:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[ללא תוכן]",
         "fields": {
           "attachments": "קבצים מצורפים ({count})",
           "embeds": "משולב {index}",
@@ -99,7 +99,7 @@
           "before": "לפני",
           "after": "אחרי"
         },
-        "no_content": "[No Content]",
+        "no_content": "[ללא תוכן]",
         "footer": "מזהה משתמש: {user_id}"
       },
       "ban": {
