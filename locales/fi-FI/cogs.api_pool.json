@@ -2,27 +2,27 @@
   "cogs": {
     "api_pool": {
       "meta": {
-        "group_description": "Management of your personal API keys in the pool.",
+        "group_description": "Hallitse henkilökohtaisia ​​API-avaimiasi ryhmässä.",
         "explain": {
-          "description": "Explain the API pool."
+          "description": "Selitä API-allas."
         },
         "add": {
-          "description": "Add an API key to the pool.",
+          "description": "Lisää API-avain altaaseen.",
           "params": {
-            "api_key": "The OpenAI API key to add to the shared pool."
+            "api_key": "OpenAI API-avain lisättäväksi yhteiseen ryhmään."
           }
         },
         "remove": {
-          "description": "Remove an API key from the pool.",
+          "description": "Poista API-avain altaasta.",
           "params": {
-            "api_key": "The OpenAI API key to remove from the shared pool."
+            "api_key": "OpenAI API-avain poistettavaksi yhteisestä ryhmästä."
           }
         },
         "clear": {
-          "description": "Clear all your API keys from the pool."
+          "description": "Tyhjennä kaikki API-avaimesi altaasta."
         },
         "list": {
-          "description": "List all API keys in your pool (encrypted)."
+          "description": "Listaa kaikki API-avaimet altaassasi (salaus)."
         }
       },
       "explanation": {
