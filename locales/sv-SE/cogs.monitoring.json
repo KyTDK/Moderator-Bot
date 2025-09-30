@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Övervakningskonfiguration",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Ställ in kanal för att skicka loggar.",
+          "channel": "Kanal för att skicka loggar till."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Ta bort inställningen för övervakningskanal."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Visa aktuell övervakningskanal."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Aktivera eller inaktivera en specifik övervakningshändelse.",
+          "event": "Händelsen att växla",
+          "enabled": "Aktivera eller inaktivera loggning för denna händelse",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
+            "join": "Användare gick med",
+            "leave": "Användare lämnade",
+            "ban": "Förbud",
+            "unban": "Häv förbud",
             "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "message_delete": "Meddelande borttaget",
+            "message_edit": "Meddelande redigerat"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Lista aktuella inställningar för övervakningshändelsen."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Innehåll:**\n{content}",
         "description_generic": "Ett meddelande raderades i {channel}.",
         "description_deleted_by": "\n**Raderat av:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Inget Innehåll]",
         "fields": {
           "attachments": "Bilagor ({count})",
           "embeds": "Inbäddning {index}",
@@ -99,7 +99,7 @@
           "before": "Före",
           "after": "Efter"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Inget Innehåll]",
         "footer": "Användar-ID: {user_id}"
       },
       "ban": {
