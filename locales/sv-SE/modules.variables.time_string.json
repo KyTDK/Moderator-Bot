@@ -2,7 +2,7 @@
   "modules": {
     "variables": {
       "time_string": {
-        "invalid_format": "Invalid duration format. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively."
+        "invalid_format": "Ogiltigt tidsformat. Använd format som 20s, 30m, 2h, 30d, 2v, 5mån, 1år. Sekunder, minuter, timmar, dagar, veckor, månader och år respektive."
       }
     }
   }
