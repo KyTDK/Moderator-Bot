@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "Bestuur verbode URL's bestuur bevele.",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "Voeg 'n URL of domein by die verbode lys."
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "Verwyder 'n URL of domein van die verbode lys."
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "Lys alle verbode URL's."
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "Vee alle verbode URL's skoon."
         }
       },
       "limit_reached": "Jy het die limiet van {limit} verbode URL's vir hierdie bediener bereik.\nGebruik `/bannedurls remove` of `/bannedurls clear` om ruimte te maak.",
