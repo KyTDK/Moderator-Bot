@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "管理您的加速（高级）订阅。",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "检查您当前是否拥有加速订阅。"
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "生成您唯一的 PayPal 订阅链接。"
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "展示加速订阅的好处。"
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "说明如何取消您的订阅。"
         }
       },
       "group_description": "管理您的加速（高级）订阅。",
