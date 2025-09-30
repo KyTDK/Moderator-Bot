@@ -3,16 +3,16 @@
     "config": {
       "premium_plans": {
         "plan_names": {
-          "free": "Free",
-          "core": "Core",
-          "pro": "Pro",
-          "ultra": "Ultra"
+          "free": "免費",
+          "core": "核心",
+          "pro": "專業版",
+          "ultra": "超極版"
         },
         "requirements": {
-          "any": "an active premium plan",
-          "single": "an active {plan} plan",
-          "double": "an active {plan_a} or {plan_b} plan",
-          "list": "an active {plans}, or {last} plan"
+          "any": "有效的高級計劃",
+          "single": "有效的{plan}計劃",
+          "double": "有效的{plan_a}或{plan_b}計劃",
+          "list": "有效的{plans}，或{last}計劃"
         }
       }
     }
