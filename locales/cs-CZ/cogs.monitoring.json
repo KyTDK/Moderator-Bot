@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Nastavení monitorování",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Nastavte kanál pro výstup logů.",
+          "channel": "Kanál, do kterého se posílají logy."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Odstranit nastavení monitorovacího kanálu."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Zobrazit aktuální monitorovací kanál."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Povolit nebo zakázat konkrétní událost monitorování.",
+          "event": "Událost k přepnutí",
+          "enabled": "Povolit nebo zakázat logování pro tuto událost",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Příchod uživatele",
+            "leave": "Odchod uživatele",
+            "ban": "Zákaz",
+            "unban": "Odstranění zákazu",
+            "timeout": "Časový limit",
+            "message_delete": "Smazaná zpráva",
+            "message_edit": "Upravená zpráva"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Seznam aktuálního nastavení monitorovacích událostí."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Obsah:**\n{content}",
         "description_generic": "Zpráva byla smazána v {channel}.",
         "description_deleted_by": "\n**Smazal:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Bez obsahu]",
         "fields": {
           "attachments": "Přílohy ({count})",
           "embeds": "Vložený obsah {index}",
@@ -99,7 +99,7 @@
           "before": "Před",
           "after": "Po"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Bez obsahu]",
         "footer": "ID uživatele: {user_id}"
       },
       "ban": {
