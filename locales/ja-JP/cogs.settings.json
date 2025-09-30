@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "サーバー設定を管理します。",
         "help": {
-          "description": "Get help on settings."
+          "description": "設定に関するヘルプを取得します。"
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "すべての設定を消去し、デフォルトから始めます。この操作は取り消せません。"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "サーバー設定を設定します。"
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "サーバー設定の現在の値を取得します。"
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "サーバー設定またはリスト型設定の項目を削除します。"
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "`{command}` のヘルプは見つかりませんでした。",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "ダッシュボードを開く",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "説明がありません。",
+          "no_subcommands": "（サブコマンドはありません）",
+          "no_groups": "（コマンドグループが見つかりませんでした。）",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "デフォルトを使用 `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **ダッシュボード:** [ダッシュボードを開く]({dashboard_url})\\n再度表示するには `/help {name}` を使用してください。",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "サブコマンド",
+              "paged": "サブコマンド（ページ {page}）"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "モデレーターボット — ヘルプ",
+            "description": "🛠️ **ダッシュボード:** [ダッシュボードを開く]({dashboard_url})\\nWebダッシュボードでより速くすべてを設定してください。\\nまたは、詳細なサブコマンドを確認するには **`/help <group>`** を実行してください。",
+            "line": "• `/{name}` — {description}  _試してみてください:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "ロケール検出",
+            "groups_first": "利用可能なコマンドグループ",
+            "groups_paged": "利用可能なコマンドグループ（ページ {page}）",
+            "speed_name": "検出速度向上",
+            "speed_value": "⚡ NSFWや詐欺検出をより高速にするためにアクセラレーテッドにアップグレードしてください。 `/accelerated` を実行します。",
+            "links_name": "リンク",
+            "links_value": "[サポート](https://discord.gg/invite/33VcwjfEXC) • [寄付](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [利用規約](https://modbot.neomechanical.com/terms-of-service) • [プライバシー](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "信頼できる開発者",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
