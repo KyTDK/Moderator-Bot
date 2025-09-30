@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "Управляйте функциями модерации ИИ.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Установить правила сервера"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Показать текущие настроенные правила модерации."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Добавить меры исполнения"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Удалите конкретное действие из списка наказаний.",
+          "action": "Точная строка действия для удаления (например, тайм-аут, удаление)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "Включите/отключите модерацию, просмотр статуса или установите режим.",
+          "enable": "Включите или отключите автономную модерацию.",
+          "mode": "Необязательно: установить режим отчета / интервала / адаптивный режим.",
+          "enable_choice": "Включить",
+          "disable_choice": "Отключить",
+          "status_choice": "Статус",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "Отчет",
+            "interval": "Интервал",
+            "adaptive": "Адаптивный"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Показать все действия, которые в настоящее время настроены для запуска, когда ИИ обнаруживает нарушение."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Связать событие запуска с одним или несколькими действиями режима модерации.",
+          "role": "Какие роли отслеживать (если применимо)",
+          "channel": "Какой канал отслеживать (для событий всплеска)",
+          "time_range": "Диапазон времени в формате HH:MM-HH:MM для триггеров, ориентированных на время",
+          "threshold": "Порог для процентов онлайн-роли (от 0 до 1, необязательно)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Удалите конкретное действие из настроенного события.",
+          "event_key": "Ключ адаптивного события (автозаполнение)",
+          "action": "Действие для удаления из этого события"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Удалите все триггеры адаптивных событий."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Показать текущие триггеры адаптивной модерации."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "Роль онлайн",
+            "role_offline": "Роль офлайн",
+            "mass_join": "Массовое присоединение",
+            "mass_leave": "Массовый выход",
+            "guild_inactive": "Неактивность сервера",
+            "role_online_percent": "Процент роли онлайн",
+            "time_range": "Диапазон времени",
+            "server_spike": "Всплеск на сервере"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Включить режим интервала",
+          "disable_interval": "Отключить режим интервала",
+          "enable_report": "Включить режим отчета",
+          "disable_report": "Отключить режим отчета"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "отключено",
         "state_unknown": "неизвестно",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "отчет",
+          "interval": "интервал",
+          "adaptive": "адаптивный"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "Достигнут предел бюджета модерации ИИ на этот цикл выставления счетов. Сброс произойдет {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "в следующий цикл",
+        "thanks_no_violation": "Спасибо за отчет. Нарушений не обнаружено.",
+        "thanks_action": "Спасибо за отчет. Приняты меры."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "Обнаружено нарушение ИИ",
+          "description": "Пользователь: {user}\nНарушенное правило: {rule}\nПричина: {reason}\nДействия: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "Расширение",
+              "value": "Обнаружены несколько авторов; применены меры по каждому из них."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "Решение ИИ",
+              "none": "Нет",
+              "unknown": "Неизвестно"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Примененные действия",
+              "none": "Нет"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
+              "name": "Сообщение(я) с флагами",
+              "no_content": "[нет текстового содержания]",
               "entry": "• ID {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "Сканирование модерации ИИ (отладка)",
+          "description": "Нарушений в последнем сканировании не обнаружено.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "Проверенные сообщения",
+            "mode": "Режим"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "Обнаружено нарушение",
+          "reason_multiple": "Несколько нарушений: {reasons}",
+          "rule_default": "Нарушение правила",
+          "rule_multiple": "Несколько правил: {rules}"
         }
       },
       "ensure_adaptive": "Адаптивный режим модерации не включен. Используйте `/ai_mod set_mode`, чтобы его включить."
