@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Διαμόρφωση καναλιών καταγραφής.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Ορίστε ένα κανάλι καταγραφής.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Το κανάλι που θα χρησιμοποιηθεί για την καταγραφή.",
+            "type": "Ποιος τύπος καταγραφής είναι αυτό το κανάλι."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Αποεπιλογή ενός καναλιού καταγραφής.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Ποιος τύπος καταγραφής να απενεργοποιηθεί."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Προβολή τρεχουσών ρυθμίσεων καναλιού καταγραφής."
         },
         "types": {
-          "strike": "Strike",
+          "strike": "Απεργία",
           "nsfw": "NSFW",
           "ai": "AI",
-          "monitor": "Monitor",
+          "monitor": "Παρακολούθηση",
           "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "vc_transcript": "Απομαγνητοφώνηση VC"
         }
       },
       "nsfw_required": "{channel} δεν είναι περιορισμένο ως προς την ηλικία. Επιλέξτε ένα κανάλι NSFW.",
