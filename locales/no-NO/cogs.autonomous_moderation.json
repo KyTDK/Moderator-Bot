@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "Administrer AI-modrasjonsfunksjoner.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Angi serverregler"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Vis de gjeldende konfigurerte moderasjonsregler."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Legg til håndhevelsestiltak"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Fjern en spesifikk handling fra listen over straffer.",
+          "action": "Eksakt handlingsstreng å fjerne (f.eks. pause, slett)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
+          "description": "Aktiver/deaktivere moderasjon, se status eller angi modus.",
+          "enable": "Slå autonom moderasjon av eller på.",
+          "mode": "Valgfritt: angi rapport / intervall / adaptiv modus.",
+          "enable_choice": "Aktivere",
+          "disable_choice": "Deaktivere",
           "status_choice": "Status",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "Rapport",
+            "interval": "Intervall",
+            "adaptive": "Adaptiv"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Vis alle handlinger som for øyeblikket er konfigurert til å utløses når AI oppdager et brudd."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Koble en triggerhendelse til en eller flere moderasjonsmodus handlinger.",
+          "role": "Hvilke roller å overvåke (hvis aktuelt)",
+          "channel": "Hvilken kanal å overvåke (for topphendelser)",
+          "time_range": "Tidsområde i HH:MM-HH:MM for tidsbaserte triggere",
+          "threshold": "Terskel for rolle online prosent (0 til 1, valgfritt)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Fjern en spesifikk handling fra en konfigurert hendelse.",
+          "event_key": "Adaptiv hendelsesnøkkel (fullføres automatisk)",
+          "action": "Handling å fjerne fra denne hendelsen"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Fjern alle adaptive hendelsestriggere."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Vis nåværende adaptive moderasjonstriggere."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
+            "role_online": "Rolle Online",
+            "role_offline": "Rolle Offline",
+            "mass_join": "Masse Bli Medlem",
+            "mass_leave": "Massetrekk",
+            "guild_inactive": "Server Inaktivitet",
+            "role_online_percent": "Rolle Online %",
+            "time_range": "Tidsområde",
             "server_spike": "Server Spike"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Aktiver Intervall Modus",
+          "disable_interval": "Deaktiver Intervall Modus",
+          "enable_report": "Aktiver Rapport Modus",
+          "disable_report": "Deaktiver Rapport Modus"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "deaktivert",
         "state_unknown": "ukjent",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "rapport",
+          "interval": "intervall",
+          "adaptive": "adaptiv"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "AI-modrasjonsbudsjettet er nådd for denne faktureringssyklusen. Nullstilles den {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "den neste syklusen",
+        "thanks_no_violation": "Takk for rapporten. Ingen brudd ble funnet.",
+        "thanks_action": "Takk for rapporten. Tiltak ble iverksatt."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "AI-Flagget Brudd",
+          "description": "Bruker: {user}\nBrutt Regel: {rule}\nÅrsak: {reason}\nHandlinger: {actions}",
           "fields": {
             "fanout": {
               "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "value": "Flere forfattere oppdaget; handlinger utført per forfatter."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "AI Beslutning",
+              "none": "Ingen",
+              "unknown": "Ukjent"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Anvendte Handlinger",
+              "none": "Ingen"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
+              "name": "Flaggede Meldinger",
+              "no_content": "[ingen tekstinnhold]",
               "entry": "• ID {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "AI Moderasjons Søk (Debug)",
+          "description": "Ingen regelbrudd ble funnet i siste søk.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "Skannede Meldinger",
+            "mode": "Modus"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "Brudd oppdaget",
+          "reason_multiple": "Flere brudd: {reasons}",
+          "rule_default": "Regelbrudd",
+          "rule_multiple": "Flere regler: {rules}"
         }
       },
       "ensure_adaptive": "Adaptiv modereringsmodus er ikke aktivert. Bruk `/ai_mod set_mode` for å aktivere den."
