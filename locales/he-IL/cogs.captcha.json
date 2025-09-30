@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "נהל את אימות הקאפצ'ה.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "שלח מחדש את ההטמעה של אימות הקאפצ'ה."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "שלח בקשת אימות קאפצ'ה לחבר.",
+          "member": "החבר שצריך להשלים את האימות"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "כמה דקות",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} שניה",
+            "other": "{count} שניות"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} דקה",
+            "other": "{count} דקות"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} שעה",
+            "other": "{count} שעות"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} יום",
+            "other": "{count} ימים"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "שלום {member}! כדי לסיים את ההצטרפות אל **{guild}**, ",
+          "grace": "אנא {instruction} בתוך **{grace}**.",
+          "no_grace": "אנא {instruction} כאשר תהיה מוכן.",
+          "instruction_default": "השלם את הקאפצ'ה",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " יש לך **{count}** ניסיון.",
+            "other": " יש לך **{count}** ניסיונות."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "נדרש אימות קאפצ'ה",
+          "footer": "מבוסס על ידי הבוט המנהל"
         },
         "button": {
-          "label": "Verify now"
+          "label": "אמת עכשיו"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "לחץ כאן כדי לאמת"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "בקר ב-{channel} והשלם את הקאפצ'ה",
+          "help_title": "צריך עזרה?",
+          "help_value": "לחץ על הכפתור למטה כדי לפתוח את דף האימות.",
+          "button_label": "פתח דף אימות"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "לחץ על הכפתור למטה כדי לאמת את עצמך. כשתעבר את הקאפצ'ה, תוכל לגשת לשאר השרת.",
+        "login_notice": "ייתכן שתתבקש להיכנס לדשבורד של הבוט המנהל תחילה.",
+        "title": "השלם את אימות הקאפצ'ה",
+        "footer": "תעודת זהות של הגילדה: {guild_id} | מבוסס על ידי הבוט המנהל",
+        "button_label": "אמת עכשיו"
       }
     }
   }
