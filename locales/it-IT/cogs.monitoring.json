@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Configurazione del monitoraggio",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Imposta il canale per i log in uscita.",
+          "channel": "Il canale a cui inviare i log."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Rimuovi l'impostazione del canale di monitoraggio."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Mostra il canale di monitoraggio corrente."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Abilita o disabilita un evento di monitoraggio specifico.",
+          "event": "L'evento da abilitare o disabilitare",
+          "enabled": "Abilita o disabilita il logging per questo evento",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
+            "join": "Utente Entrato",
+            "leave": "Utente Uscito",
             "ban": "Ban",
-            "unban": "Unban",
+            "unban": "Revoca Ban",
             "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "message_delete": "Messaggio Eliminato",
+            "message_edit": "Messaggio Modificato"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Elenca le impostazioni correnti degli eventi di monitoraggio."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Contenuto:**\n{content}",
         "description_generic": "Un messaggio è stato eliminato in {channel}.",
         "description_deleted_by": "\n**Eliminato da:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Nessun Contenuto]",
         "fields": {
           "attachments": "Allegati ({count})",
           "embeds": "Incorpora {index}",
@@ -99,7 +99,7 @@
           "before": "Prima",
           "after": "Dopo"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Nessun Contenuto]",
         "footer": "ID Utente: {user_id}"
       },
       "ban": {
