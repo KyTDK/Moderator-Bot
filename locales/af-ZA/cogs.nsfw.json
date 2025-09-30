@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "Bestuur NSFW-inhoudopsporing.",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "Voeg 'n aksie by die NSFW-straflys.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Aksie om uit te voer",
+            "duration": "Slegs vereis vir tydsduur (bv. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "Verwyder 'n aksie van die NSFW-straflys.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Presiese aksiestring om te verwyder (bv. tydraamwerk, verwyder)"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "Kyk na die huidige lys van NSFW-strafaksies."
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "Voeg 'n kategorie by NSFW-opsporing."
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "Geweld Grafies",
+          "violence": "Geweld",
+          "sexual": "Seksueel",
+          "self_harm_instructions": "Selfbeseringsinstruksies",
+          "self_harm_intent": "Voorneme tot Selfbesering",
+          "self_harm": "Selfbesering"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "Verwyder 'n kategorie van NSFW-opsporing."
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "Kyk na NSFW-kategorieë vir opsporing."
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "Stel die drumpel vir NSFW-opsporingsvertroue.",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "Vertrouend drumpel (0.0 tot 1.0)"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "Kyk na die huidige NSFW-opsporingsdrumpel."
         }
       },
       "actions": {
