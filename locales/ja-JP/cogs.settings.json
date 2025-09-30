@@ -6,7 +6,7 @@
         "help": {
           "description": "設定に関するヘルプを取得します。",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "任意: ヘルプを得るためのコマンドグループ"
           }
         },
         "reset": {
