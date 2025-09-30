@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Comandos de gestão de penalidades.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Aplique uma penalidade a um usuário específico.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "O membro a ser penalizado.",
+            "reason": "A razão da penalidade.",
+            "expiry": "Duração de expiração opcional (por exemplo, 30d, 2s)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Obtenha penalidades de um usuário específico."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Limpe todas as penalidades de um usuário específico.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "O usuário cujas penalidades serão limpas."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Adicione uma ação adicional para um nível de penalidade.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Número de penalidades necessárias para acionar a ação.",
+            "action": "Ação a adicionar.",
+            "duration": "Duração (somente para tempo limite, por exemplo, 1h, 30m). Deixe em branco caso contrário."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Remova uma ação de um nível de penalidade.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Número de penalidades associadas à ação.",
+            "action": "Sequência de ação exata a remover."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Veja todas as ações de penalidade configuradas."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Intimide o canal ou um usuário específico.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
