@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Moderátor Bot Irányítópult",
         "description": "[Kattintson ide az irányítópult megnyitásához]({url})"

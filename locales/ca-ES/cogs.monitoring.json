@@ -1,6 +1,36 @@
 ﻿{
   "cogs": {
     "monitoring": {
+      "meta": {
+        "group_description": "Monitoring configuration",
+        "set": {
+          "description": "Set channel to output logs.",
+          "channel": "The channel to send logs to."
+        },
+        "remove": {
+          "description": "Remove the monitor channel setting."
+        },
+        "show": {
+          "description": "Show the current monitor channel."
+        },
+        "toggle_event": {
+          "description": "Enable or disable a specific monitoring event.",
+          "event": "The event to toggle",
+          "enabled": "Enable or disable logging for this event",
+          "choices": {
+            "join": "User Join",
+            "leave": "User Leave",
+            "ban": "Ban",
+            "unban": "Unban",
+            "timeout": "Timeout",
+            "message_delete": "Message Deleted",
+            "message_edit": "Message Edited"
+          }
+        },
+        "list_events": {
+          "description": "List current monitor event settings."
+        }
+      },
       "log_event": {
         "upgrade_footer": "Millora a Accelerated per a una detecció de NSFW i estafes més ràpida — /accelerated",
         "guild_footer": "ID del Gremi: {guild_id}"
@@ -50,6 +80,7 @@
         "content_label": "**Contingut:**\n{content}",
         "description_generic": "Un missatge ha estat esborrat en {channel}.",
         "description_deleted_by": "\n**Esborrat per:** {deleter}",
+        "no_content": "[No Content]",
         "fields": {
           "attachments": "Adjuncions ({count})",
           "embeds": "Incrustar {index}",
@@ -68,6 +99,7 @@
           "before": "Abans",
           "after": "Després"
         },
+        "no_content": "[No Content]",
         "footer": "ID d'Usuari: {user_id}"
       },
       "ban": {

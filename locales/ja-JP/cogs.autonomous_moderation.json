@@ -1,6 +1,74 @@
-﻿{
+{
   "cogs": {
     "autonomous_moderation": {
+      "meta": {
+        "group_description": "Manage AI moderation features.",
+        "rules_set": {
+          "description": "Set server rules"
+        },
+        "rules_show": {
+          "description": "Show the currently configured moderation rules."
+        },
+        "add_action": {
+          "description": "Add enforcement actions"
+        },
+        "remove_action": {
+          "description": "Remove a specific action from the list of punishments.",
+          "action": "Exact action string to remove (e.g. timeout, delete)"
+        },
+        "toggle": {
+          "description": "Enable/disable moderation, view status, or set mode.",
+          "enable": "Turn autonomous moderation on or off.",
+          "mode": "Optional: set report / interval / adaptive mode.",
+          "enable_choice": "Enable",
+          "disable_choice": "Disable",
+          "status_choice": "Status",
+          "mode_choices": {
+            "report": "Report",
+            "interval": "Interval",
+            "adaptive": "Adaptive"
+          }
+        },
+        "view_actions": {
+          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+        },
+        "add_adaptive_event": {
+          "description": "Link a trigger event to one or more moderation mode actions.",
+          "role": "Which roles to monitor (if applicable)",
+          "channel": "Which channel to monitor (for spike events)",
+          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
+          "threshold": "Threshold for role online percent (0 to 1, optional)"
+        },
+        "remove_adaptive_event": {
+          "description": "Remove a specific action from a configured event.",
+          "event_key": "Adaptive event key (autocompletes)",
+          "action": "Action to remove from this event"
+        },
+        "clear_adaptive_events": {
+          "description": "Clear all adaptive event triggers."
+        },
+        "view_adaptive_events": {
+          "description": "Show current adaptive moderation triggers."
+        },
+        "adaptive": {
+          "events": {
+            "role_online": "Role Online",
+            "role_offline": "Role Offline",
+            "mass_join": "Mass Join",
+            "mass_leave": "Mass Leave",
+            "guild_inactive": "Server Inactivity",
+            "role_online_percent": "Role Online %",
+            "time_range": "Time Range",
+            "server_spike": "Server Spike"
+          }
+        },
+        "actions": {
+          "enable_interval": "Enable Interval Mode",
+          "disable_interval": "Disable Interval Mode",
+          "enable_report": "Enable Report Mode",
+          "disable_report": "Disable Report Mode"
+        }
+      },
       "common": {
         "subscription_required": "このサーバーにはAcceleratedサブスクリプションがありません。プレミアムプランを開始するには、`/accelerated subscribe`を使ってください。"
       },
@@ -19,7 +87,12 @@
         "status_active": "\nアクティブなサブモード: **{active}**",
         "state_enabled": "有効",
         "state_disabled": "無効",
-        "state_unknown": "不明"
+        "state_unknown": "不明",
+        "modes": {
+          "report": "report",
+          "interval": "interval",
+          "adaptive": "adaptive"
+        }
       },
       "actions": {
         "none": "現在設定されているアクションはありません。",

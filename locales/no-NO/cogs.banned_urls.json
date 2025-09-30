@@ -1,6 +1,21 @@
 ﻿{
   "cogs": {
     "banned_urls": {
+      "meta": {
+        "group_description": "Banned URLs management commands.",
+        "add": {
+          "description": "Add a URL or domain to the banned list."
+        },
+        "remove": {
+          "description": "Remove a URL or domain from the banned list."
+        },
+        "list": {
+          "description": "List all banned URLs."
+        },
+        "clear": {
+          "description": "Clear all banned URLs."
+        }
+      },
       "limit_reached": "Du har nådd grensen på {limit} utestengte URL-er for denne serveren.\nBruk `/bannedurls remove` eller `/bannedurls clear` for å gjøre plass.",
       "add": {
         "duplicate": "`{url}` er allerede utestengt.",

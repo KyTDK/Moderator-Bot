@@ -1,6 +1,36 @@
 ﻿{
   "cogs": {
     "monitoring": {
+      "meta": {
+        "group_description": "Monitoring configuration",
+        "set": {
+          "description": "Set channel to output logs.",
+          "channel": "The channel to send logs to."
+        },
+        "remove": {
+          "description": "Remove the monitor channel setting."
+        },
+        "show": {
+          "description": "Show the current monitor channel."
+        },
+        "toggle_event": {
+          "description": "Enable or disable a specific monitoring event.",
+          "event": "The event to toggle",
+          "enabled": "Enable or disable logging for this event",
+          "choices": {
+            "join": "User Join",
+            "leave": "User Leave",
+            "ban": "Ban",
+            "unban": "Unban",
+            "timeout": "Timeout",
+            "message_delete": "Message Deleted",
+            "message_edit": "Message Edited"
+          }
+        },
+        "list_events": {
+          "description": "List current monitor event settings."
+        }
+      },
       "log_event": {
         "upgrade_footer": "Upgrade naar Versneld voor snellere NSFW- en scamdetectie — /accelerated",
         "guild_footer": "Guild ID: {guild_id}"
@@ -50,6 +80,7 @@
         "content_label": "**Inhoud:**\n{content}",
         "description_generic": "Een bericht is verwijderd in {channel}.",
         "description_deleted_by": "\n**Verwijderd door:** {deleter}",
+        "no_content": "[No Content]",
         "fields": {
           "attachments": "Bijlagen ({count})",
           "embeds": "Insluiten {index}",
@@ -68,6 +99,7 @@
           "before": "Voor",
           "after": "Na"
         },
+        "no_content": "[No Content]",
         "footer": "Gebruikers-ID: {user_id}"
       },
       "ban": {

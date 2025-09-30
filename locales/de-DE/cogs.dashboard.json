@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Moderator-Bot-Dashboard",
         "description": "[Klicken Sie hier, um das Dashboard zu öffnen]({url})"

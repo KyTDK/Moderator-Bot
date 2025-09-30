@@ -1,6 +1,15 @@
-﻿{
+{
   "cogs": {
     "debug": {
+      "meta": {
+        "stats": {
+          "description": "Get memory and performance stats",
+          "show_all": "Include allocations from all libraries (not just project)"
+        },
+        "locale": {
+          "description": "Show the locale currently bound to this command context"
+        }
+      },
       "permission_denied": "Sie haben keine Berechtigung, diesen Befehl zu verwenden.",
       "no_allocations": "Keine projektbezogenen Zuweisungen gefunden.",
       "embed": {
@@ -15,6 +24,9 @@
         "worker_name": "Arbeiter Warteschlangen",
         "worker_error": "(Fehler beim Sammeln der Metriken: {error})",
         "footer": "Host: {host} | Python {python_version}"
+      },
+      "locale": {
+        "current": "Current locale: {locale}"
       }
     }
   }

@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "لوحة تحكم روبوت المشرف",
         "description": "[اضغط هنا لفتح لوحة التحكم]({url})"

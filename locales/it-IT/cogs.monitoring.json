@@ -1,6 +1,36 @@
 ﻿{
   "cogs": {
     "monitoring": {
+      "meta": {
+        "group_description": "Monitoring configuration",
+        "set": {
+          "description": "Set channel to output logs.",
+          "channel": "The channel to send logs to."
+        },
+        "remove": {
+          "description": "Remove the monitor channel setting."
+        },
+        "show": {
+          "description": "Show the current monitor channel."
+        },
+        "toggle_event": {
+          "description": "Enable or disable a specific monitoring event.",
+          "event": "The event to toggle",
+          "enabled": "Enable or disable logging for this event",
+          "choices": {
+            "join": "User Join",
+            "leave": "User Leave",
+            "ban": "Ban",
+            "unban": "Unban",
+            "timeout": "Timeout",
+            "message_delete": "Message Deleted",
+            "message_edit": "Message Edited"
+          }
+        },
+        "list_events": {
+          "description": "List current monitor event settings."
+        }
+      },
       "log_event": {
         "upgrade_footer": "Aggiorna a Accelerato per una rilevazione più veloce di NSFW e truffe — /accelerated",
         "guild_footer": "ID Gilda: {guild_id}"
@@ -50,6 +80,7 @@
         "content_label": "**Contenuto:**\n{content}",
         "description_generic": "Un messaggio è stato eliminato in {channel}.",
         "description_deleted_by": "\n**Eliminato da:** {deleter}",
+        "no_content": "[No Content]",
         "fields": {
           "attachments": "Allegati ({count})",
           "embeds": "Incorpora {index}",
@@ -68,6 +99,7 @@
           "before": "Prima",
           "after": "Dopo"
         },
+        "no_content": "[No Content]",
         "footer": "ID Utente: {user_id}"
       },
       "ban": {

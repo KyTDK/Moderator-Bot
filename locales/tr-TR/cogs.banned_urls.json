@@ -1,6 +1,21 @@
 ﻿{
   "cogs": {
     "banned_urls": {
+      "meta": {
+        "group_description": "Banned URLs management commands.",
+        "add": {
+          "description": "Add a URL or domain to the banned list."
+        },
+        "remove": {
+          "description": "Remove a URL or domain from the banned list."
+        },
+        "list": {
+          "description": "List all banned URLs."
+        },
+        "clear": {
+          "description": "Clear all banned URLs."
+        }
+      },
       "limit_reached": "Bu sunucu için {limit} yasaklı URL sınırına ulaştınız.\nYer açmak için `/bannedurls remove` veya `/bannedurls clear` kullanın.",
       "add": {
         "duplicate": "`{url}` zaten yasaklı.",

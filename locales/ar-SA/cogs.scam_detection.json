@@ -1,10 +1,53 @@
-﻿{
+{
   "cogs": {
     "scam_detection": {
+      "meta": {
+        "group_description": "Scam-detection configuration and pattern management.",
+        "exclude_channel_add": {
+          "description": "Exclude a channel from scam detection.",
+          "channel": "The channel to exclude"
+        },
+        "exclude_channel_remove": {
+          "description": "Remove a channel from the exclusion list.",
+          "channel": "The channel to remove from exclusion"
+        },
+        "exclude_channel_list": {
+          "description": "List all excluded channels."
+        },
+        "check_links": {
+          "description": "Toggle or view link checking.",
+          "action_description": "enable | disable | status",
+          "choices": {
+            "enable": "enable",
+            "disable": "disable",
+            "status": "status"
+          }
+        },
+        "add_action": {
+          "description": "Add an action to the scam punishment list.",
+          "action": "Action to perform",
+          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+        },
+        "remove_action": {
+          "description": "Remove an action from the scam punishment list.",
+          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+        },
+        "view": {
+          "description": "View current scam settings."
+        }
+      },
       "settings": {
         "heading": "**إعدادات الاحتيال:**",
         "actions": "- إجراءات الاحتيال:\n{actions}",
         "none": "*لم يتم تعيين أي إجراءات.*"
+      },
+      "check_links": {
+        "status": "Link checking is {state}.",
+        "updated": "Link checking {state}.",
+        "state": {
+          "enabled": "**enabled**",
+          "disabled": "**disabled**"
+        }
       },
       "detection": {
         "reason": "تم اكتشاف رسالة احتيال",

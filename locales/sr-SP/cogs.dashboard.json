@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Модератор Бот Контролна табла",
         "description": "[Кликните овде да отворите контролну таблу]({url})"

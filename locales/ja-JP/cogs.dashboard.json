@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "モデレーターボットダッシュボード",
         "description": "[ダッシュボードを開くにはこちらをクリック]({url})"

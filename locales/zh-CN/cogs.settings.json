@@ -1,10 +1,66 @@
 {
   "cogs": {
     "settings": {
+      "meta": {
+        "group_description": "Manage server settings.",
+        "help": {
+          "description": "Get help on settings."
+        },
+        "reset": {
+          "description": "Wipe all settings and start with defaults. This can't be undone"
+        },
+        "set": {
+          "description": "Set a server setting."
+        },
+        "get": {
+          "description": "Get the current value of a server setting."
+        },
+        "remove": {
+          "description": "Remove a server setting or an item from a list-type setting."
+        }
+      },
       "help": {
         "header": "**可用设置：**\\n",
         "entry": "**{name}**: {description} (类型：{type})",
-        "not_found": "找不到关于 `{command}` 的帮助。"
+        "not_found": "找不到关于 `{command}` 的帮助。",
+        "view": {
+          "button": {
+            "label": "Open Dashboard",
+            "emoji": "🛠️"
+          },
+          "no_description": "No description.",
+          "no_subcommands": "(No subcommands)",
+          "no_groups": "(No command groups found.)",
+          "locale": {
+            "current": "`{locale}`",
+            "default": "Using default `{default}`"
+          },
+          "group": {
+            "title": "/{name}",
+            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "line": "• `/{qualified_name}` — {description}",
+            "fields": {
+              "single": "Subcommands",
+              "paged": "Subcommands (page {page})"
+            }
+          },
+          "overview": {
+            "title": "Moderator Bot — Help",
+            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
+            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+          },
+          "fields": {
+            "locale_name": "Locale Detection",
+            "groups_first": "Available Command Groups",
+            "groups_paged": "Available Command Groups (page {page})",
+            "speed_name": "Speed Up Detection",
+            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
+            "links_name": "Links",
+            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Trusted Developers",
+            "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
+          }
+        }
       },
       "reset": {
         "done": "重置所有设置为默认值。",

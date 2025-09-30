@@ -1,6 +1,36 @@
 ﻿{
   "cogs": {
     "monitoring": {
+      "meta": {
+        "group_description": "Monitoring configuration",
+        "set": {
+          "description": "Set channel to output logs.",
+          "channel": "The channel to send logs to."
+        },
+        "remove": {
+          "description": "Remove the monitor channel setting."
+        },
+        "show": {
+          "description": "Show the current monitor channel."
+        },
+        "toggle_event": {
+          "description": "Enable or disable a specific monitoring event.",
+          "event": "The event to toggle",
+          "enabled": "Enable or disable logging for this event",
+          "choices": {
+            "join": "User Join",
+            "leave": "User Leave",
+            "ban": "Ban",
+            "unban": "Unban",
+            "timeout": "Timeout",
+            "message_delete": "Message Deleted",
+            "message_edit": "Message Edited"
+          }
+        },
+        "list_events": {
+          "description": "List current monitor event settings."
+        }
+      },
       "log_event": {
         "upgrade_footer": "Uppgradera till Accelerated för snabbare NSFW och bedrägeriavkänning — /accelerated",
         "guild_footer": "Guild ID: {guild_id}"
@@ -50,6 +80,7 @@
         "content_label": "**Innehåll:**\n{content}",
         "description_generic": "Ett meddelande raderades i {channel}.",
         "description_deleted_by": "\n**Raderat av:** {deleter}",
+        "no_content": "[No Content]",
         "fields": {
           "attachments": "Bilagor ({count})",
           "embeds": "Inbäddning {index}",
@@ -68,6 +99,7 @@
           "before": "Före",
           "after": "Efter"
         },
+        "no_content": "[No Content]",
         "footer": "Användar-ID: {user_id}"
       },
       "ban": {

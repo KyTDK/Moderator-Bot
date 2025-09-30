@@ -1,6 +1,15 @@
-﻿{
+{
   "cogs": {
     "debug": {
+      "meta": {
+        "stats": {
+          "description": "Get memory and performance stats",
+          "show_all": "Include allocations from all libraries (not just project)"
+        },
+        "locale": {
+          "description": "Show the locale currently bound to this command context"
+        }
+      },
       "permission_denied": "Bu komutu kullanma izniniz yok.",
       "no_allocations": "Proje ile ilgili tahsisat bulunamadı.",
       "embed": {
@@ -15,6 +24,9 @@
         "worker_name": "Çalışan Kuyrukları",
         "worker_error": "(metrikler toplanırken hata oluştu: {error})",
         "footer": "Ev sahibi: {host} | Python {python_version}"
+      },
+      "locale": {
+        "current": "Current locale: {locale}"
       }
     }
   }

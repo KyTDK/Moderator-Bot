@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Přehledový panel Moderátora Bota",
         "description": "[Klikněte zde pro otevření přehledového panelu]({url})"

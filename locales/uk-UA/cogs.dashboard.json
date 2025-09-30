@@ -1,6 +1,11 @@
 ﻿{
   "cogs": {
     "dashboard": {
+      "meta": {
+        "dashboard": {
+          "description": "Open the dashboard for this server."
+        }
+      },
       "embed": {
         "title": "Панель Управління Модератор Бота",
         "description": "[Натисніть тут, щоб відкрити панель керування]({url})"

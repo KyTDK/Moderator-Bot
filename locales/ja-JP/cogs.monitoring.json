@@ -1,6 +1,36 @@
 ﻿{
   "cogs": {
     "monitoring": {
+      "meta": {
+        "group_description": "Monitoring configuration",
+        "set": {
+          "description": "Set channel to output logs.",
+          "channel": "The channel to send logs to."
+        },
+        "remove": {
+          "description": "Remove the monitor channel setting."
+        },
+        "show": {
+          "description": "Show the current monitor channel."
+        },
+        "toggle_event": {
+          "description": "Enable or disable a specific monitoring event.",
+          "event": "The event to toggle",
+          "enabled": "Enable or disable logging for this event",
+          "choices": {
+            "join": "User Join",
+            "leave": "User Leave",
+            "ban": "Ban",
+            "unban": "Unban",
+            "timeout": "Timeout",
+            "message_delete": "Message Deleted",
+            "message_edit": "Message Edited"
+          }
+        },
+        "list_events": {
+          "description": "List current monitor event settings."
+        }
+      },
       "log_event": {
         "upgrade_footer": "NSFW と詐欺検出を高速化するために Accelerated にアップグレードする — /accelerated",
         "guild_footer": "ギルド ID: {guild_id}"
@@ -50,6 +80,7 @@
         "content_label": "**内容:**\n{content}",
         "description_generic": "メッセージが {channel} で削除されました。",
         "description_deleted_by": "\n**削除者:** {deleter}",
+        "no_content": "[No Content]",
         "fields": {
           "attachments": "添付ファイル ({count})",
           "embeds": "埋め込み {index}",
@@ -68,6 +99,7 @@
           "before": "編集前",
           "after": "編集後"
         },
+        "no_content": "[No Content]",
         "footer": "ユーザー ID: {user_id}"
       },
       "ban": {
