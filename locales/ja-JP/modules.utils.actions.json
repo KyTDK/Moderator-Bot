@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "ストライク",
+          "kick": "キック",
+          "ban": "禁止",
+          "timeout": "タイムアウト",
+          "delete": "メッセージ削除",
+          "give_role": "ロールを付与",
+          "take_role": "ロールを削除",
+          "warn": "ユーザー警告",
+          "broadcast": "メッセージのブロードキャスト",
+          "auto": "自動"
         }
       }
     }
