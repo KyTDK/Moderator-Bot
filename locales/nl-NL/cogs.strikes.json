@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Commando's voor het beheer van strikes.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Een specifieke gebruiker straffen.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Het lid dat gestraft moet worden.",
+            "reason": "De reden voor de sanctie.",
+            "expiry": "Optionele vervaldatum (bijv., 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Haal de strikes van een specifieke gebruiker op."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Verwijder alle strikes van een specifieke gebruiker.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "De gebruiker wiens sancties worden gewist."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Voeg een extra actie toe voor een sanctieniveau.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Aantal strikes nodig om de actie te activeren.",
+            "action": "Actie om toe te voegen.",
+            "duration": "Duur (alleen voor time-out, bijv., 1h, 30m). Laat anders leeg."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Verwijder een actie van een sanctieniveau.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Aantal strikes geassocieerd met de actie.",
+            "action": "Exacte actietekst om te verwijderen."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Bekijk alle geconfigureerde strike-acties."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Intimideer het kanaal of een specifieke gebruiker.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
