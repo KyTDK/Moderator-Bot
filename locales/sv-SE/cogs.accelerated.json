@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Hantera din Accelerated (Premium) prenumeration.",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Kontrollera om du för närvarande har en Accelerated-prenumeration."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Generera din unika PayPal-prenumerationslänk."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Visa fördelarna med Accelerated-prenumerationen."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Förklara hur du avslutar din prenumeration."
         }
       },
       "group_description": "Hantera din Accelerated (Premium) prenumeration.",
