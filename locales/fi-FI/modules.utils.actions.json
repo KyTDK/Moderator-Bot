@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "Lama \u001f91a",
+          "kick": "Potku",
+          "ban": "Kielto",
+          "timeout": "Tauko",
+          "delete": "Poista viesti",
+          "give_role": "Anna rooli",
+          "take_role": "Poista rooli",
+          "warn": "Varoitus",
+          "broadcast": "Lähetä viesti",
+          "auto": "Automaattinen"
         }
       }
     }
