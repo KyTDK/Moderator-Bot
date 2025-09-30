@@ -33,6 +33,45 @@ class Settings(commands.Cog):
     def __init__(self, bot: ModeratorBot):
         self.bot = bot
 
+    def _localize_command_description(
+        self,
+        command: app_commands.Command | app_commands.Group,
+        locale: str | None,
+        fallback: str,
+    ) -> str:
+        """Return the localized description for a command, respecting Discord locale strings."""
+
+        description_locale = getattr(command, "_locale_description", None)
+        if description_locale is None:
+            return fallback
+
+        extras = getattr(description_locale, "extras", None) or {}
+        key = extras.get("key")
+        placeholders = extras.get("placeholders")
+        default_message = extras.get(
+            "default",
+            getattr(description_locale, "message", None) or fallback,
+        )
+        resolved_fallback = default_message or fallback
+
+        if not key:
+            return resolved_fallback
+
+        try:
+            translated = self.bot.translation_service.translate(
+                key,
+                locale=locale,
+                placeholders=placeholders,
+                fallback=resolved_fallback,
+            )
+        except RuntimeError:
+            return resolved_fallback
+
+        if isinstance(translated, str):
+            return translated
+
+        return str(translated)
+
     async def value_autocomplete(this, interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
         name_option = getattr(interaction.namespace, "name", None)
         if not name_option:
@@ -324,7 +363,11 @@ class Settings(commands.Cog):
                 "description",
                 "{description}\n\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\nUse `/help {name}` to view this again.",
             )
-            description_value = group.description or no_description
+            description_value = self._localize_command_description(
+                group,
+                locale,
+                group.description or no_description,
+            )
             embed = discord.Embed(
                 title=group_title_template.format(name=group.name),
                 description=group_description_template.format(
@@ -344,7 +387,11 @@ class Settings(commands.Cog):
             lines = [
                 sub_line_template.format(
                     qualified_name=sub.qualified_name,
-                    description=sub.description or no_description,
+                    description=self._localize_command_description(
+                        sub,
+                        locale,
+                        sub.description or no_description,
+                    ),
                 )
                 for sub in group.commands
             ] or [no_subcommands]
@@ -395,7 +442,11 @@ class Settings(commands.Cog):
         lines = [
             overview_line_template.format(
                 name=g.name,
-                description=g.description or no_description,
+                description=self._localize_command_description(
+                    g,
+                    locale,
+                    g.description or no_description,
+                ),
             )
             for g in groups
         ] or [no_groups]
