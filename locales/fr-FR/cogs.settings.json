@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Gérez les paramètres du serveur.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Obtenez de l'aide sur les paramètres."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Effacez tous les paramètres et recommencez avec les valeurs par défaut. Cette action est irréversible"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Définissez un paramètre de serveur."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Obtenez la valeur actuelle d'un paramètre du serveur."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Supprimez un paramètre de serveur ou un élément d'un paramètre de type liste."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Aucune aide trouvée pour `{command}`.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Ouvrir le Tableau de Bord",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Pas de description.",
+          "no_subcommands": "(Pas de sous-commandes)",
+          "no_groups": "(Aucun groupe de commandes trouvé.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Utilisation du défaut `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Tableau de Bord:** [Ouvrir le Tableau de Bord]({dashboard_url})\\nUtilisez `/help {name}` pour voir ceci à nouveau.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Sous-commandes",
+              "paged": "Sous-commandes (page {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Bot Modérateur — Aide",
+            "description": "🛠️ **Tableau de Bord:** [Ouvrir le Tableau de Bord]({dashboard_url})\\nConfigurez tout plus rapidement sur le tableau de bord web.\\nOu exécutez **`/help <group>`** pour obtenir des sous-commandes détaillées.",
+            "line": "• `/{name}` — {description}  _Essayez:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Détection de la langue",
+            "groups_first": "Groupes de Commandes Disponibles",
+            "groups_paged": "Groupes de Commandes Disponibles (page {page})",
+            "speed_name": "Accélérer la Détection",
+            "speed_value": "⚡ Passez à Accéléré pour une détection NSFW et de scams plus rapide — exécutez `/accelerated`.",
+            "links_name": "Liens",
+            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Faire un don](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Confidentialité](https://modbot.neomechanical.com/privacy-policy) •",
+            "trusted_name": "Développeurs de Confiance",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
