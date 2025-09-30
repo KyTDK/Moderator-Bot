@@ -2,23 +2,23 @@
   "cogs": {
     "voice_moderation": {
       "transcript": {
-        "author_label": "AUTHOR",
-        "utterance_label": "UTTERANCE",
+        "author_label": "АВТОР",
+        "utterance_label": "ВЫСКАЗЫВАНИЕ",
         "divider": "---",
-        "unknown_speaker": "Unknown speaker",
-        "unknown_prefix": "Unknown",
-        "user_fallback": "<@{id}> (id = {id})",
+        "unknown_speaker": "Неизвестный спикер",
+        "unknown_prefix": "Неизвестно",
+        "user_fallback": "<@{id}> (идентификатор = {id})",
         "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transcript",
-        "title_part": "VC Transcript (part {index}/{total})",
-        "field_channel": "Channel",
-        "field_utterances": "Utterances",
-        "footer_high": "High accuracy transcript",
-        "footer_normal": "Normal accuracy transcript"
+        "title_single": "Стенограмма ВК",
+        "title_part": "Стенограмма ВК (часть {index}/{total})",
+        "field_channel": "Канал",
+        "field_utterances": "Высказывания",
+        "footer_high": "Стенограмма с высокой точностью",
+        "footer_normal": "Стенограмма с нормальной точностью"
       },
       "budget": {
-        "title": "VC Moderation Budget Reached",
-        "description": "Skipping analysis for this cycle due to budget limit."
+        "title": "Достигнут лимит бюджета на модерацию ВК",
+        "description": "Пропускаем анализ на этом цикле из-за ограничений бюджета."
       }
     }
   }
