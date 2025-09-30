@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Captcha doğrulamasını yönetin.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Captcha doğrulama yerleştirmesini tekrar gönderin."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Bir üyeye captcha doğrulama isteği gönderin.",
+          "member": "Doğrulamayı tamamlaması gereken üye"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "birkaç dakika",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} saniye",
+            "other": "{count} saniye"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} dakika",
+            "other": "{count} dakika"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} saat",
+            "other": "{count} saat"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} gün",
+            "other": "{count} gün"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Merhaba {member}! **{guild}**'e katılmayı bitirmek için, ",
+          "grace": "lütfen **{grace}** içinde {instruction}.",
+          "no_grace": "hazır olduğunuzda lütfen {instruction}.",
+          "instruction_default": "captcha'yı tamamla",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " **{count}** hakkınız var.",
+            "other": " **{count}** hakkınız var."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Captcha Doğrulaması Gerekli",
+          "footer": "Moderasyon Botu Tarafından Desteklenmektedir"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Şimdi Doğrula"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Doğrulamak için buraya tıklayın"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "{channel} ziyaret edin ve captcha'yı tamamlayın",
+          "help_title": "Yardıma mı ihtiyacınız var?",
+          "help_value": "Doğrulama sayfasını açmak için aşağıdaki düğmeye tıklayın.",
+          "button_label": "Doğrulama sayfasını aç"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Kendinizi doğrulamak için aşağıdaki düğmeye tıklayın. Captcha'yı geçtiğinizde sunucunun kalanına erişim sağlayacaksınız.",
+        "login_notice": "Öncelikle Moderation Botu kontrol paneline giriş yapmanız istenebilir.",
+        "title": "Captcha Doğrulamasını Tamamlama",
+        "footer": "Sunucu ID: {guild_id} | Moderasyon Botu Tarafından Desteklenmektedir",
+        "button_label": "Şimdi Doğrula"
       }
     }
   }
