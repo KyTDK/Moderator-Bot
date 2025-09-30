@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Nastavit protokolové kanály.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Nastavit protokolový kanál.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Kanál pro protokolování.",
+            "type": "Pro jaký typ protokolu je tento kanál."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Odstranit protokolový kanál.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Který typ protokolu zakázat."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Zobrazit aktuální nastavení protokolového kanálu."
         },
         "types": {
-          "strike": "Strike",
+          "strike": "Napomenutí",
           "nsfw": "NSFW",
           "ai": "AI",
-          "monitor": "Monitor",
+          "monitor": "Monitorování",
           "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "vc_transcript": "Přepis VC"
         }
       },
       "nsfw_required": "{channel} není omezen věkem. Vyberte NSFW kanál.",
