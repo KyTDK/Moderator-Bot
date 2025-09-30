@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Cấu hình các kênh nhật ký.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Thiết lập một kênh nhật ký.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Kênh để sử dụng cho việc ghi nhật ký.",
+            "type": "Loại nhật ký nào mà kênh này dành cho."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Hủy cấu hình kênh nhật ký.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Loại nhật ký nào cần tắt."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Hiển thị cài đặt kênh nhật ký hiện tại."
         },
         "types": {
-          "strike": "Strike",
-          "nsfw": "NSFW",
+          "strike": "Lượt cấm",
+          "nsfw": "NDTT",
           "ai": "AI",
-          "monitor": "Monitor",
+          "monitor": "Giám sát",
           "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "vc_transcript": "Bản ghi chuyển giọng nói thành văn bản (VC Transcript)"
         }
       },
       "nsfw_required": "{channel} không bị giới hạn độ tuổi. Vui lòng chọn kênh NSFW.",
