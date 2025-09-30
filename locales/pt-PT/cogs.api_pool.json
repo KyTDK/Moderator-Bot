@@ -2,27 +2,27 @@
   "cogs": {
     "api_pool": {
       "meta": {
-        "group_description": "Management of your personal API keys in the pool.",
+        "group_description": "Gerenciamento das suas chaves pessoais de API no pool.",
         "explain": {
-          "description": "Explain the API pool."
+          "description": "Explique o pool de API."
         },
         "add": {
-          "description": "Add an API key to the pool.",
+          "description": "Adicione uma chave de API ao pool.",
           "params": {
-            "api_key": "The OpenAI API key to add to the shared pool."
+            "api_key": "A chave de API OpenAI a ser adicionada ao pool compartilhado."
           }
         },
         "remove": {
-          "description": "Remove an API key from the pool.",
+          "description": "Remova uma chave de API do pool.",
           "params": {
-            "api_key": "The OpenAI API key to remove from the shared pool."
+            "api_key": "A chave de API OpenAI a ser removida do pool compartilhado."
           }
         },
         "clear": {
-          "description": "Clear all your API keys from the pool."
+          "description": "Limpe todas as suas chaves de API do pool."
         },
         "list": {
-          "description": "List all API keys in your pool (encrypted)."
+          "description": "Liste todas as chaves de API em seu pool (criptografadas)."
         }
       },
       "explanation": {
