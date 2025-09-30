@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "ストライク管理コマンド。",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "特定のユーザーにストライクを実行。",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "ストライクを与えるメンバー。",
+            "reason": "ストライクの理由。",
+            "expiry": "オプションの有効期限の期間（例：30日、2週間）。"
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "特定のユーザーのストライクを確認。"
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "特定のユーザーの全ストライクをクリア。",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "ストライクをクリアする対象のユーザー。"
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "ストライクレベルに追加のアクションを追加。",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "アクションをトリガーするために必要なストライク数。",
+            "action": "追加するアクション。",
+            "duration": "期間（タイムアウトの場合のみ、例：1時間、30分）。それ以外の場合は空白のままにしてください。"
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "ストライクレベルからアクションを削除。",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "アクションに関連付けられているストライクの数。",
+            "action": "削除する正確なアクション文字列。"
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "設定された全てのストライクアクションを表示。"
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "チャンネルまたは特定のユーザーを威嚇。",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
