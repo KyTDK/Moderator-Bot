@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "Idioma no vàlid. Idiomes admesos: {supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "S'ha detectat que la teva imatge de perfil conté contingut explícit",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "S'ha detectat que la teva imatge de perfil conté contingut explícit",
+            "La teva imatge de perfil no és adequada per a aquest servidor.",
+            "La teva imatge de perfil ha estat marcada com a NSFW."
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. Sigues respectuós: no es permet l'assetjament ni els discursos d'odi.",
+            "2. No es permet contingut NSFW o obscé.",
+            "3. No es permet spam ni autopromoció excessiva.",
+            "4. Segueix les Condicions del Servei de Discord."
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. No es permet l'assetjament, els discursos d'odi ni les amenaces.",
+            "2. No es permeten insults ni llenguatge discriminatori.",
+            "3. No es permet incitar a la violència o activitats il·legals.",
+            "4. No es permet contingut sexual o comentaris explícits.",
+            "5. Segueix les Condicions del Servei de Discord."
           ]
         }
       }
