@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "管理 AI 审核功能。",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "设置服务器规则"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "显示当前配置的审核规则。"
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "添加执行措施"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "从惩罚列表中删除特定的措施。",
+          "action": "要删除的确切操作字符串（例如：超时、删除）"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "启用/禁用审核，查看状态或设置模式。",
+          "enable": "开启自动审核。",
+          "mode": "可选：设置报告/间隔/自适应模式。",
+          "enable_choice": "启用",
+          "disable_choice": "禁用",
+          "status_choice": "状态",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "报告",
+            "interval": "间隔",
+            "adaptive": "自适应"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "显示当前配置的，当AI检测到违规时触发的所有措施。"
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "将触发事件与一个或多个审核模式动作关联。",
+          "role": "要监视的角色（如果适用）",
+          "channel": "要监视的频道（用于突发事件）",
+          "time_range": "基于时间触发的时间范围，格式为 HH:MM-HH:MM",
+          "threshold": "角色在线百分比阈值（0到1，可选）"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "从配置的事件中删除特定的措施。",
+          "event_key": "自适应事件键（自动完成）",
+          "action": "从此事件中移除的行动"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "清除所有自适应事件触发器。"
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "显示当前的自适应审核触发器。"
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "角色在线",
+            "role_offline": "角色离线",
+            "mass_join": "批量加入",
+            "mass_leave": "批量离开",
+            "guild_inactive": "服务器不活动",
+            "role_online_percent": "角色在线百分比",
+            "time_range": "时间范围",
+            "server_spike": "服务器峰值"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "启用间隔模式",
+          "disable_interval": "禁用间隔模式",
+          "enable_report": "启用报告模式",
+          "disable_report": "禁用报告模式"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "停用",
         "state_unknown": "未知",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "报告",
+          "interval": "间隔",
+          "adaptive": "自适应"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "AI 审核的预算已达到本账单周期的上限。将在{reset}重置。",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "下一个周期",
+        "thanks_no_violation": "感谢您的报告。没有发现违规行为。",
+        "thanks_action": "感谢您的报告。已采取措施。"
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "AI 标记的违规",
+          "description": "用户：{user}\\n违反规则：{rule}\\n原因：{reason}\\n措施：{actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "广播",
+              "value": "检测到多个作者；已对每个作者采取措施。"
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "AI 决策",
+              "none": "无",
+              "unknown": "未知"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "已应用的措施",
+              "none": "无"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
-              "entry": "• ID {id}: {content}"
+              "name": "标记的信息",
+              "no_content": "[无文本内容]",
+              "entry": "• ID {id}：{content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "AI 审核扫描（调试）",
+          "description": "最近的扫描中未发现违规行为。",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "已扫描的信息",
+            "mode": "模式"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "检测到违规行为",
+          "reason_multiple": "多重违规：{reasons}",
+          "rule_default": "违反规则",
+          "rule_multiple": "多个规则：{rules}"
         }
       },
       "ensure_adaptive": "自動調節模式未啟用。使用 `/ai_mod set_mode` 以啟用。"
