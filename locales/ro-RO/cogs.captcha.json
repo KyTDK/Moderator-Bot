@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Gestionează verificarea captcha.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Retrimite integrantul de verificare captcha."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Trimite o solicitare de verificare captcha unui membru.",
+          "member": "Membrul care trebuie să completeze verificarea"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "câteva minute",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} secundă",
+            "other": "{count} secunde"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} minut",
+            "other": "{count} minute"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} oră",
+            "other": "{count} ore"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} zi",
+            "other": "{count} zile"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Salut {member}! Pentru a termina înscrierea la **{guild}**, ",
+          "grace": "te rog să {instruction} în termen de **{grace}**.",
+          "no_grace": "te rog să {instruction} când ești gata.",
+          "instruction_default": "completează captcha-ul",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " Ai **{count}** încercare.",
+            "other": " Ai **{count}** încercări."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Necesitatea verificării Captcha",
+          "footer": "Furnizat de Moderator Bot"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Verifică acum"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Apasă aici pentru a verifica"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "vizitează {channel} și completează captcha-ul",
+          "help_title": "Ai nevoie de ajutor?",
+          "help_value": "Apasă butonul de mai jos pentru a deschide pagina de verificare.",
+          "button_label": "Deschide pagina de verificare"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Apasă butonul de mai jos pentru a te verifica. Odată ce treci de captcha, vei avea acces la restul serverului.",
+        "login_notice": "S-ar putea să fii rugat să te autentifici mai întâi pe tabloul de bord al Moderator Bot.",
+        "title": "Completează verificarea Captcha",
+        "footer": "Guild ID: {guild_id} | Furnizat de Moderator Bot",
+        "button_label": "Verifică acum"
       }
     }
   }
