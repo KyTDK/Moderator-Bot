@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Gerencie as configurações do servidor.",
         "help": {
-          "description": "Obtenha ajuda sobre as configurações."
+          "description": "Obtenha ajuda sobre as configurações.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Apague todas as configurações e comece com as padrões. Isso não pode ser desfeito."
