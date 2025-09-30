@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Керування налаштуваннями сервера.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Отримати допомогу з налаштуваннями."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Стерти всі налаштування й почати з умовчаннями. Це не можна скасувати"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Встановити налаштування сервера."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Отримати поточне значення налаштування сервера."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Видалити налаштування сервера або елемент зі списку в налаштуваннях."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Довідка для `{command}` не знайдена.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Відкрити Панель",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Без опису.",
+          "no_subcommands": "(Немає підкоманд)",
+          "no_groups": "(Групи команд не знайдено.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Використовується умовчання `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Панель:** [Відкрити Панель]({dashboard_url})\\nВикористовуйте `/help {name}` для повторного перегляду.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Підкоманди",
+              "paged": "Підкоманди (сторінка {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderator Bot — Допомога",
+            "description": "🛠️ **Панель:** [Відкрити Панель]({dashboard_url})\\nНалаштовуйте все швидше в веб-панелі.\\nАбо виконайте **`/help <group>`** для детальних підкоманд.",
+            "line": "• `/{name}` — {description}  _Спробуйте:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Виявлення мови",
+            "groups_first": "Доступні Групи Команд",
+            "groups_paged": "Доступні Групи Команд (сторінка {page})",
+            "speed_name": "Прискорити Виявлення",
+            "speed_value": "⚡ Оновіть до Прискореного для швидшого виявлення NSFW та шахрайства — запустіть `/accelerated`.",
+            "links_name": "Посилання",
+            "links_value": "[Підтримка](https://discord.gg/invite/33VcwjfEXC) • [Пожертвувати](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [Умови використання](https://modbot.neomechanical.com/terms-of-service) • [Політика конфіденційності](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Надійні Розробники",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
