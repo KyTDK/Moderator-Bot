@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Configurarea monitorizării",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Setați canalul pentru a trimite jurnalele.",
+          "channel": "Canalul pe care se trimit jurnalele."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Eliminați setarea canalului de monitorizare."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Afișați canalul curent de monitorizare."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Activează sau dezactivează un eveniment de monitorizare specific.",
+          "event": "Evenimentul de activat sau dezactivat",
+          "enabled": "Activează sau dezactivează jurnalizarea pentru acest eveniment",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Alăturare utilizator",
+            "leave": "Ieșire utilizator",
+            "ban": "Interdicție",
+            "unban": "Anulare interdicție",
+            "timeout": "Timp de așteptare",
+            "message_delete": "Mesaj șters",
+            "message_edit": "Mesaj editat"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Listează setările actuale pentru evenimentele de monitorizare."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Conținut:**\n{content}",
         "description_generic": "Un mesaj a fost șters în {channel}.",
         "description_deleted_by": "\n**Șters de:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Fără Conținut]",
         "fields": {
           "attachments": "Atașamente ({count})",
           "embeds": "Incorporează {index}",
@@ -99,7 +99,7 @@
           "before": "Înainte",
           "after": "După"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Fără Conținut]",
         "footer": "ID-ul utilizatorului: {user_id}"
       },
       "ban": {
