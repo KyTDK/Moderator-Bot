@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "서버 설정 관리.",
         "help": {
-          "description": "Get help on settings."
+          "description": "설정에 대한 도움말 받기."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "모든 설정을 초기화하고 기본값으로 시작합니다. 이 작업은 되돌릴 수 없습니다."
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "서버 설정 설정."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "현재 서버 설정 값을 가져옵니다."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "서버 설정 또는 목록 유형 설정에서 항목 제거."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "`{command}`에 대한 도움말을 찾을 수 없습니다.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "대시보드 열기",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "설명 없음.",
+          "no_subcommands": "(서브 커맨드 없음)",
+          "no_groups": "(명령 그룹이 없습니다.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "기본값 사용 `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **대시보드:** [대시보드 열기]({dashboard_url})\\n이것을 다시 보려면 `/help {name}` 을(를) 사용하십시오.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "서브 커맨드",
+              "paged": "서브 커맨드 (페이지 {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "모더레이터 봇 — 도움말",
+            "description": "🛠️ **대시보드:** [대시보드 열기]({dashboard_url})\\n웹 대시보드에서 모든 것을 더 빠르게 구성하십시오.\\n또는 **`/help <group>`** 을(를) 실행하여 자세한 서브 커맨드를 보십시오.",
+            "line": "• `/{name}` — {description}  _시도해 보세요:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "로케일 감지",
+            "groups_first": "사용 가능한 명령 그룹",
+            "groups_paged": "사용 가능한 명령 그룹 (페이지 {page})",
+            "speed_name": "감지 속도 높이기",
+            "speed_value": "⚡ 더 빠른 NSFW 및 사기 감지를 위해 Accelerated로 업그레이드 — `/accelerated` 실행.",
+            "links_name": "링크",
+            "links_value": "[지원](https://discord.gg/invite/33VcwjfEXC) • [기부](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [이용약관](https://modbot.neomechanical.com/terms-of-service) • [개인정보 보호정책](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "신뢰할 수 있는 개발자",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
