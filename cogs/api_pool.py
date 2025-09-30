@@ -26,12 +26,18 @@ class ApiPoolCog(commands.Cog):
 
     api_pool_group = app_commands.Group(
         name="api_pool",
-        description="Management of your personal API keys in the pool.",
+        description=app_commands.locale_str(
+            "Management of your personal API keys in the pool.",
+            key="cogs.api_pool.meta.group_description",
+        ),
     )
 
     @api_pool_group.command(
         name="explanation",
-        description="Explain the API pool."
+        description=app_commands.locale_str(
+            "Explain the API pool.",
+            key="cogs.api_pool.meta.explain.description",
+        ),
     )
     async def explain(self, interaction: Interaction):
         guild_id = interaction.guild.id
@@ -43,7 +49,16 @@ class ApiPoolCog(commands.Cog):
 
     @api_pool_group.command(
         name="add",
-        description="Add an API key to the pool."
+        description=app_commands.locale_str(
+            "Add an API key to the pool.",
+            key="cogs.api_pool.meta.add.description",
+        ),
+    )
+    @app_commands.describe(
+        api_key=app_commands.locale_str(
+            "The OpenAI API key to add to the shared pool.",
+            key="cogs.api_pool.meta.add.params.api_key",
+        )
     )
     async def add_api(self, interaction: Interaction, api_key: str):
         await interaction.response.defer(ephemeral=True)
@@ -102,7 +117,16 @@ class ApiPoolCog(commands.Cog):
 
     @api_pool_group.command(
         name="remove",
-        description="Remove an API key from the pool."
+        description=app_commands.locale_str(
+            "Remove an API key from the pool.",
+            key="cogs.api_pool.meta.remove.description",
+        ),
+    )
+    @app_commands.describe(
+        api_key=app_commands.locale_str(
+            "The OpenAI API key to remove from the shared pool.",
+            key="cogs.api_pool.meta.remove.params.api_key",
+        )
     )
     async def remove_api(self, interaction: Interaction, api_key: str):
         user_id = interaction.user.id
@@ -124,7 +148,10 @@ class ApiPoolCog(commands.Cog):
 
     @api_pool_group.command(
         name="clear",
-        description="Clear all your API keys from the pool."
+        description=app_commands.locale_str(
+            "Clear all your API keys from the pool.",
+            key="cogs.api_pool.meta.clear.description",
+        ),
     )
     async def clear_api(self, interaction: Interaction):
         user_id = interaction.user.id
@@ -146,7 +173,10 @@ class ApiPoolCog(commands.Cog):
 
     @api_pool_group.command(
         name="list",
-        description="List all API keys in your pool (encrypted)."
+        description=app_commands.locale_str(
+            "List all API keys in your pool (encrypted).",
+            key="cogs.api_pool.meta.list.description",
+        ),
     )
     async def list_apis(self, interaction: Interaction):
         user_id = interaction.user.id

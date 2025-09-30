@@ -3,7 +3,7 @@
 ## Completed
 - [x] cogs/accelerated.py — Localized slash command group and command descriptions for premium management.
 - [x] modules/utils/api.py — Added a structured validation error for OpenAI API keys with locale-backed messaging.
-- [x] cogs/api_pool.py — Localized API key validation responses using the new translator-aware error details.
+- [x] cogs/api_pool.py — Localized API key validation responses and slash-command metadata using locale-backed strings.
 - [x] cogs/nsfw.py — Moved slash-command metadata and category choices into locale-driven strings.
 - [x] cogs/banned_words.py — Localized command descriptions, parameter prompts, and action choices.
 - [x] cogs/strikes.py — Localized command metadata and parameter descriptions for moderation utilities.
