@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "إدارة التحقق من الكابتشا.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "إعادة إرسال تضمين التحقق من الكابتشا."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "إرسال طلب تحقق من الكابتشا لعضو.",
+          "member": "العضو الذي يجب أن يكمل التحقق."
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
-          "joiner": ", ",
+          "few_minutes": "بضع دقائق",
+          "joiner": "، ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} ثانية",
+            "other": "{count} ثواني"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} دقيقة",
+            "other": "{count} دقائق"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} ساعة",
+            "other": "{count} ساعات"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} يوم",
+            "other": "{count} أيام"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "مرحبًا {member}! لإكمال الانضمام إلى **{guild}**، ",
+          "grace": "الرجاء {instruction} خلال **{grace}**.",
+          "no_grace": "الرجاء {instruction} عندما تكون مستعدًا.",
+          "instruction_default": "أكمل الكابتشا",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " لديك **{count}** محاولة.",
+            "other": " لديك **{count}** محاولات."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "مطلوب التحقق من الكابتشا",
+          "footer": "مدعوم من Moderator Bot"
         },
         "button": {
-          "label": "Verify now"
+          "label": "تحقق الآن"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "انقر هنا للتحقق"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "قم بزيارة {channel} وأكمل الكابتشا",
+          "help_title": "هل تحتاج إلى مساعدة؟",
+          "help_value": "انقر على الزر أدناه لفتح صفحة التحقق.",
+          "button_label": "افتح صفحة التحقق"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "انقر على الزر أدناه للتحقق من نفسك. بمجرد اجتياز الكابتشا، ستحصل على الوصول لباقي الخادم.",
+        "login_notice": "قد يُطلب منك تسجيل الدخول إلى لوحة تحكم Moderator Bot أولاً.",
+        "title": "أكمل التحقق من الكابتشا",
+        "footer": "معرف الجمعية: {guild_id} | مدعوم من Moderator Bot",
+        "button_label": "تحقق الآن"
       }
     }
   }
