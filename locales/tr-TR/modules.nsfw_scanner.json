@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "NSFW İçeriği Tespit Edildi",
+          "description": "**Kullanıcı:** {user_mention} ({user_display})\n**Sebep:** {reason}",
+          "footer": "Kullanıcı Kimliği: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "NSFW Tarama Raporu",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Kullanıcı: {user}",
+              "file": "Dosya: `{filename}`",
+              "type": "Tür: `{file_type}`",
+              "decision": "Karar: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
+              "image": "Görüntü",
               "video": "Video",
-              "unknown": "Unknown"
+              "unknown": "Bilinmeyen"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Güvenli",
+              "unknown": "Bilinmeyen"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Sebep",
+              "category": "Kategori",
+              "score": "Puan",
+              "flagged_any": "Herhangi Birini Bayrakla",
+              "summary_categories": "Özet Kategoriler",
+              "max_similarity": "Maksimum Benzerlik",
+              "max_category": "Maksimum Benzerlik Kategorisi",
+              "similarity": "Eşleşen Benzerlik",
+              "high_accuracy": "Yüksek Doğruluk",
+              "clip_threshold": "CLIP Eşiği",
+              "moderation_threshold": "Moderasyon Eşiği",
+              "video_frames": "Video Kareleri"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "OpenAI moderasyonu",
+              "similarity_match": "Benzerlik eşleşmesi",
+              "no_frames_extracted": "Kareler çıkarılamadı",
+              "no_nsfw_frames_detected": "NSFW kareleri tespit edilmedi"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Güven",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Puan",
+            "similarity": "Benzerlik"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "doğru",
+          "false": "yanlış"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Belirtilmemiş"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Potansiyel politika ihlali tespit edildi (Kategori: **{category}**)"
       }
     }
   }
