@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Конфигуришите лог канале.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Поставите лог канал.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Канал који ће се користити за логовање.",
+            "type": "Који тип лога је за овај канал."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Уклоните лог канал.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Који тип лога треба онемогућити."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Прикажи тренутна подешавања лог канала."
         },
         "types": {
-          "strike": "Strike",
+          "strike": "Удар",
           "nsfw": "NSFW",
           "ai": "AI",
-          "monitor": "Monitor",
-          "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "monitor": "Монитор",
+          "captcha": "Капча",
+          "vc_transcript": "VC Транскрипт"
         }
       },
       "nsfw_required": "{channel} није канал са ограничењем старосне доби. Молимо вас да изаберете NSFW канал.",
