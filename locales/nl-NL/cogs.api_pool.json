@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**Wat is de API Pool?**\nDe API Pool is een beveiligde en anonieme verzameling van gedeelde OpenAI-API-sleutels. Het stelt Moderator Bot in staat om effectief te blijven functioneren, zelfs wanneer individuele gebruikers tegen limieten aanlopen.\n\n**Hoe werkt het?**\n- Wanneer je jouw OpenAI-API-sleutel aan de pool toevoegt, wordt deze versleuteld en veilig opgeslagen.\n- De bot gebruikt deze sleutels exclusief voor toegang tot OpenAI-modellen om moderatietaken uit te voeren.\n- Jouw API-sleutel blijft vertrouwelijk; niemand, inclusief de ontwikkelaars van de bot, kan deze bekijken.\n- Je hebt volledige controle en kunt jouw API-sleutel op elk moment uit de pool verwijderen.\n\n**Belangrijk:** Om bij te dragen met jouw API-sleutel, moet je OpenAI-account ten minste $5 aan prepaid tegoed hebben. Hoewel het moderatie-eindpunt gratis te gebruiken is, vereist OpenAI dat accounts actieve betalingsgegevens en quota hebben. Je kunt tegoed aan je account toevoegen hier: <https://platform.openai.com/account/billing/overview>\n\nDoor jouw API-sleutel bij te dragen, help je ervoor te zorgen dat Moderator Bot responsief en effectief blijft voor alle gebruikers."
       },
