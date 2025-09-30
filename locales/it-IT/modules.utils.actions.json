@@ -3,15 +3,15 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
+          "strike": "Colpo",
+          "kick": "Calcio",
           "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
+          "timeout": "Sospensione",
+          "delete": "Elimina Messaggio",
+          "give_role": "Assegna Ruolo",
+          "take_role": "Rimuovi Ruolo",
+          "warn": "Avverti Utente",
+          "broadcast": "Trasmetti Messaggio",
           "auto": "Auto"
         }
       }
