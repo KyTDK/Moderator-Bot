@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "유효하지 않은 로케일입니다. 지원되는 로케일: {supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "프로필 사진이 명시적 콘텐츠를 포함한 것으로 감지되었습니다.",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "프로필 사진이 명시적 콘텐츠를 포함한 것으로 감지되었습니다.",
+            "프로필 사진이 이 서버에 적합하지 않습니다.",
+            "프로필 사진이 NSFW로 표시되었습니다."
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. 존중해주세요 - 괴롭힘 또는 증오 연설 금지.",
+            "2. NSFW 또는 외설적인 콘텐츠 금지.",
+            "3. 스팸 또는 과도한 자기 홍보 금지.",
+            "4. Discord의 서비스 약관을 따르세요."
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. 괴롭힘, 증오 발언 또는 위협 금지.",
+            "2. 비방 또는 차별적인 언어 금지.",
+            "3. 폭력이나 불법 활동 선동 금지.",
+            "4. 성적 콘텐츠 또는 명시적 발언 금지.",
+            "5. Discord의 서비스 약관을 따르세요."
           ]
         }
       }
