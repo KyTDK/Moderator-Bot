@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**Was ist der API-Pool?**\nDer API-Pool ist eine sichere und anonyme Sammlung von gemeinsamen OpenAI-API-Schlüsseln. Er ermöglicht dem Moderator-Bot, effektiv weiterzuarbeiten, selbst wenn einzelne Nutzer auf Abrufbeschränkungen stoßen.\n\n**Wie funktioniert es?**\n- Wenn Sie Ihren OpenAI-API-Schlüssel zum Pool hinzufügen, wird er verschlüsselt und sicher gespeichert.\n- Der Bot verwendet diese Schlüssel ausschließlich für den Zugriff auf OpenAI-Modelle, um Moderationsaufgaben auszuführen.\n- Ihr API-Schlüssel bleibt vertraulich; niemand, einschließlich der Bot-Entwickler, kann ihn einsehen.\n- Sie haben die volle Kontrolle und können Ihren API-Schlüssel jederzeit aus dem Pool entfernen.\n\n**Wichtig:** Um Ihren API-Schlüssel beizutragen, muss Ihr OpenAI-Konto über mindestens $5 an Prepaid-Guthaben verfügen. Obwohl der Moderationsendpunkt kostenlos ist, erfordert OpenAI, dass Konten aktive Rechnungsdetails und Quoten haben. Sie können Ihr Konto hier aufladen: <https://platform.openai.com/account/billing/overview>\n\nIndem Sie Ihren API-Schlüssel beitragen, tragen Sie dazu bei, dass der Moderator-Bot für alle Nutzer reaktionsfähig und effektiv bleibt."
       },
