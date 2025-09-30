@@ -31,6 +31,11 @@
 - [x] modules/utils/localization.py — Added reusable localized error helper for validation feedback.
 - [x] modules/utils/event_manager.py — Localized adaptive event manager responses for action assignments.
 - [x] modules/config/settings_schema.py — Localized default NSFW profile message and rule templates using locale-backed strings.
+- [x] modules/nsfw_scanner/actions.py — Localized NSFW enforcement embeds and confidence labels.
+- [x] modules/nsfw_scanner/helpers/attachments.py — Localized verbose scan reports, decision labels, and policy violation prompts.
+- [x] modules/nsfw_scanner/helpers/videos.py — Replaced hard-coded scan reasons with locale-driven identifiers.
+- [x] modules/nsfw_scanner/helpers/images.py — Localized similarity-match reasons for scan summaries.
+- [x] modules/nsfw_scanner/helpers/moderation.py — Localized OpenAI moderation reason codes for verbose reporting.
 
 ## To Do
 - [ ] Audit remaining modules for embedded message strings and prompts.

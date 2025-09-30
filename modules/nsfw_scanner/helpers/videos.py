@@ -73,7 +73,7 @@ async def process_video(
         safe_delete(original_filename)
         return None, {
             "is_nsfw": False,
-            "reason": "No frames extracted",
+            "reason": "no_frames_extracted",
             "video_frames_scanned": 0,
             "video_frames_target": frames_to_scan,
         }
@@ -127,7 +127,7 @@ async def process_video(
 
         return None, {
             "is_nsfw": False,
-            "reason": "No NSFW frames detected",
+            "reason": "no_nsfw_frames_detected",
             "video_frames_scanned": len(temp_frames),
             "video_frames_target": frames_to_scan,
         }
