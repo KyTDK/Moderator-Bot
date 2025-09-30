@@ -3,7 +3,7 @@
     "utils": {
       "mysql": {
         "settings": {
-          "plan_required": "This setting requires {requirement}."
+          "plan_required": "この設定には {requirement} が必要です。"
         }
       }
     }
