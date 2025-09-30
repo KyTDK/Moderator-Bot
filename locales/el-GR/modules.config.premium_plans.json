@@ -3,16 +3,16 @@
     "config": {
       "premium_plans": {
         "plan_names": {
-          "free": "Free",
-          "core": "Core",
-          "pro": "Pro",
-          "ultra": "Ultra"
+          "free": "Δωρεάν",
+          "core": "Πυρήνας",
+          "pro": "Επαγγελματικό",
+          "ultra": "Υπέρτατο"
         },
         "requirements": {
-          "any": "an active premium plan",
-          "single": "an active {plan} plan",
-          "double": "an active {plan_a} or {plan_b} plan",
-          "list": "an active {plans}, or {last} plan"
+          "any": "ένα ενεργό premium σχέδιο",
+          "single": "ένα ενεργό σχέδιο {plan}",
+          "double": "ένα ενεργό σχέδιο {plan_a} ή {plan_b}",
+          "list": "ένα ενεργό σχέδιο {plans}, ή {last}"
         }
       }
     }
