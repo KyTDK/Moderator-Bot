@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "사기 탐지 구성 및 패턴 관리.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "사기 탐지에서 채널 제외.",
+          "channel": "제외할 채널"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "제외 목록에서 채널 제거.",
+          "channel": "제외할 채널 제거."
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "제외된 모든 채널 나열."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "링크 검사를 전환하거나 확인합니다.",
+          "action_description": "활성화 | 비활성화 | 상태",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "활성화",
+            "disable": "비활성화",
+            "status": "상태"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "사기 처벌 목록에 활동 추가.",
+          "action": "수행할 작업",
+          "duration": "타임아웃에 필요 (예: 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "사기 처벌 목록에서 활동 제거.",
+          "action": "제거할 정확한 작업 문자열 (예: timeout:1d, delete)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "현재 사기 설정 보기."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*설정된 조치 없음.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "링크 검사는 {state}.",
+        "updated": "링크 검사가 {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**활성화됨**",
+          "disabled": "**비활성화됨**"
         }
       },
       "detection": {
