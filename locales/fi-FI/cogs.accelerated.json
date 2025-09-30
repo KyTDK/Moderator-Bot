@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Hallinnoi kiihdytettyä (Premium) tilaustasi.",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Tarkista, onko sinulla parhaillaan kiihdytetty tilaus."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Luo oma PayPal-tilauslinkkisi."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Näytä kiihdytetyn tilauksen edut."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Selitä, miten peruuttaa tilauksesi."
         }
       },
       "group_description": "Hallitse kiihdytettyä (Premium) tilaustasi.",
