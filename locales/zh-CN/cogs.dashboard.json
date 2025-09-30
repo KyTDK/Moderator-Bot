@@ -3,7 +3,7 @@
     "dashboard": {
       "meta": {
         "dashboard": {
-          "description": "Open the dashboard for this server."
+          "description": "打开此服务器的仪表板。"
         }
       },
       "embed": {
