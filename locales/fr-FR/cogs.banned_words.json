@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Commandes de gestion des mots interdits.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Activer ou désactiver la liste de grossièretés intégrée.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "activer",
+            "disable": "désactiver",
+            "status": "statut"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Ajouter un mot à la liste des mots interdits."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Supprimer un mot de la liste des mots interdits."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Lister tous les mots interdits."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Effacer tous les mots interdits."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Ajouter une action de modération à déclencher lorsqu'un mot interdit est détecté.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Action à effectuer",
+            "duration": "Requis uniquement pour le délai (par exemple, 10m, 1h, 3j)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Supprimer une action spécifique de la liste des punitions pour les mots interdits.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Chaîne d'action exacte à retirer (par exemple, délai, suppression)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Afficher toutes les actions actuellement configurées pour se déclencher lorsque des mots interdits sont utilisés."
         }
       },
       "defaults": {
