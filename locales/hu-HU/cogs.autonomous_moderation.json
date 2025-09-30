@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "AI moderációs funkciók kezelése.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Szerver szabályok beállítása"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Jelenleg konfigurált moderációs szabályok megjelenítése."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Végrehajtási intézkedések hozzáadása"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Egy adott intézkedés eltávolítása a büntetési listából.",
+          "action": "Pontosan eltávolítandó művelet (például: időkorlát, törlés)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "Moderáció engedélyezése/letiltása, állapot megtekintése vagy mód beállítása.",
+          "enable": "Önálló moderáció be- vagy kikapcsolása.",
+          "mode": "Opcionális: jelentés / időköz / adaptív mód beállítása.",
+          "enable_choice": "Engedélyezés",
+          "disable_choice": "Letiltás",
+          "status_choice": "Állapot",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "Jelentés",
+            "interval": "Időköz",
+            "adaptive": "Adaptív"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Az összes olyan művelet megjelenítése, amelyet jelenleg az AI által észlelt szabálysértések esetén váltanak ki."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Egy kiváltó esemény hozzárendelése egy vagy több moderációs módú művelethez.",
+          "role": "Mely szerepeket kell figyelni (ha alkalmazható)",
+          "channel": "Melyik csatornát kell figyelni (csúcseseményekhez)",
+          "time_range": "Időtartomány HH:MM-HH:MM időalapú kiváltókhoz",
+          "threshold": "Küszöbérték a szerep online százalékára (0-tól 1-ig, opcionális)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Egy adott intézkedés eltávolítása egy konfigurált eseményből.",
+          "event_key": "Adaptív esemény kulcs (automatikus kitöltés)",
+          "action": "Eseményből eltávolítandó művelet"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Az összes adaptív eseménykiváltó törlése."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Az aktuális adaptív moderációs kiváltók megjelenítése."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "Szerep online",
+            "role_offline": "Szerep offline",
+            "mass_join": "Tömeges belépés",
+            "mass_leave": "Tömeges kilépés",
+            "guild_inactive": "Szerver inaktivitás",
+            "role_online_percent": "Szerep online %",
+            "time_range": "Időtartomány",
+            "server_spike": "Szerver csúcs"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Időközi mód engedélyezése",
+          "disable_interval": "Időközi mód letiltása",
+          "enable_report": "Jelentési mód engedélyezése",
+          "disable_report": "Jelentési mód letiltása"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "letiltva",
         "state_unknown": "ismeretlen",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "jelentés",
+          "interval": "időköz",
+          "adaptive": "adaptív"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "Az AI moderációs keret elérte a határt ebben a számlázási ciklusban. Újraindul {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "a következő ciklus",
+        "thanks_no_violation": "Köszönjük a jelentést. Nem találtunk szabálysértést.",
+        "thanks_action": "Köszönjük a jelentést. Intézkedések történtek."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "AI által jelzett szabálysértés",
+          "description": "Felhasználó: {user}\nMegszegett szabály: {rule}\nOk: {reason}\nIntézkedések: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "Kiterjesztés",
+              "value": "Több szerzőt észleltek; minden szerzőre külön intézkedések vonatkoznak."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "AI döntés",
+              "none": "Nincs",
+              "unknown": "Ismeretlen"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Alkalmazott intézkedések",
+              "none": "Nincs"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
-              "entry": "• ID {id}: {content}"
+              "name": "Jelölt üzenet(ek)",
+              "no_content": "[nincs szöveges tartalom]",
+              "entry": "• Azonosító {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "AI moderációs vizsgálat (Hibakeresés)",
+          "description": "A legutóbbi vizsgálat során nem találtunk szabálysértést.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "Vizsgált üzenetek",
+            "mode": "Mód"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "Szabálysértés észlelve",
+          "reason_multiple": "Többszörös szabálysértés: {reasons}",
+          "rule_default": "Szabálysértés",
+          "rule_multiple": "Több szabály: {rules}"
         }
       },
       "ensure_adaptive": "Az adaptív moderációs mód nincs engedélyezve. Használja az `/ai_mod set_mode` parancsot annak engedélyezéséhez."
