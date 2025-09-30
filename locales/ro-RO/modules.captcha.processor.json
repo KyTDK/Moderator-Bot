@@ -3,59 +3,59 @@
     "captcha": {
       "processor": {
         "success": {
-          "reason": "Captcha verification successful",
+          "reason": "Verificare captcha reușită",
           "embed": {
-            "title": "Captcha Verification Passed",
-            "description": "{mention} ({user_id}) passed captcha verification.",
+            "title": "Verificare Captcha Trecută",
+            "description": "{mention} ({user_id}) a trecut de verificarea captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "attempts": "Attempts",
-              "provider": "Provider",
-              "challenge": "Challenge",
-              "review": "Review"
+              "actions": "Acțiuni Aplicate",
+              "attempts": "Încercări",
+              "provider": "Furnizor",
+              "challenge": "Provocare",
+              "review": "Revizuire"
             }
           }
         },
         "failure": {
-          "reason_default": "Failed captcha verification.",
+          "reason_default": "Verificarea captcha a eșuat.",
           "notes": {
-            "deferred_generic": "Failure actions deferred; captcha attempts remain.",
-            "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
-            "member_left": "Member is no longer in the guild; configured failure actions were skipped."
+            "deferred_generic": "Acțiunile de eșec amânate; rămân încercări captcha.",
+            "deferred_remaining": "Acțiunile de eșec amânate; {remaining} {attempts_word} rămase.",
+            "member_left": "Membru nu mai este în guild; acțiunile de eșec configurate au fost sărite."
           },
           "attempts": {
-            "unlimited": "Unlimited attempts remain.",
-            "additional": "Additional attempts remain.",
-            "remaining": "{count} {attempts_word} remaining.",
-            "word_one": "attempt",
-            "word_other": "attempts"
+            "unlimited": "Încercări nelimitate rămân.",
+            "additional": "Încercări suplimentare rămân.",
+            "remaining": "{count} {attempts_word} rămase.",
+            "word_one": "încercare",
+            "word_other": "încercări"
           },
           "embed": {
-            "title_failed": "Captcha Verification Failed",
-            "title_attempt": "Captcha Attempt Failed",
-            "description_failed": "{mention} ({user_id}) failed captcha verification.",
-            "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+            "title_failed": "Verificare Captcha Eșuată",
+            "title_attempt": "Încercare Captcha Eșuată",
+            "description_failed": "{mention} ({user_id}) a eșuat în verificarea captcha.",
+            "description_attempt": "{mention} ({user_id}) a eșuat o încercare de captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "notes": "Notes",
-              "attempts": "Attempts",
-              "remaining": "Attempts Remaining",
-              "challenge": "Challenge",
-              "reason": "Reason",
-              "review": "Review"
+              "actions": "Acțiuni Aplicate",
+              "notes": "Note",
+              "attempts": "Încercări",
+              "remaining": "Încercări Rămase",
+              "challenge": "Provocare",
+              "reason": "Motiv",
+              "review": "Revizuire"
             }
           }
         },
         "errors": {
-          "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
-          "unknown_token": "No pending captcha verification found for this user.",
-          "token_mismatch": "Captcha token does not match the pending verification.",
-          "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
-          "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
-          "guild_not_found": "Guild {guild_id} is not available to this bot.",
-          "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
-          "member_not_found": "Member {user_id} not found in guild {guild_id}.",
-          "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}."
+          "role_assignment_failed": "Acțiunile de succes captcha nu au fost aplicate din cauza unei erori Discord API.",
+          "unknown_token": "Nicio verificare captcha în așteptare nu a fost găsită pentru acest utilizator.",
+          "token_mismatch": "Token-ul captcha nu corespunde cu verificarea în așteptare.",
+          "missing_permissions": "Botul nu are permisiuni pentru a aplica acțiunile de eșec captcha.",
+          "action_failed": "Acțiunile de eșec captcha nu au fost aplicate din cauza unei erori Discord API.",
+          "guild_not_found": "Guild {guild_id} nu este disponibil pentru acest bot.",
+          "guild_fetch_failed": "Eșuat să se aducă guild {guild_id} de pe Discord.",
+          "member_not_found": "Membrul {user_id} nu a fost găsit în guild {guild_id}.",
+          "member_fetch_failed": "Eșuat să se aducă membru {user_id} din guild {guild_id}."
         }
       }
     }
