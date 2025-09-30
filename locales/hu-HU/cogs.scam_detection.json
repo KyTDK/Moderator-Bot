@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Csalásérzékelés beállításai és minta kezelése.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Csatorna kizárása a csalásérzékelésből.",
+          "channel": "A csatorna, amelyet ki kell zárni"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Csatorna eltávolítása a kizárási listáról.",
+          "channel": "A csatorna, amelyet el kell távolítani a kizárásból"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Az összes kizárt csatorna listázása."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Linkellenőrzés megtekintése vagy kapcsolása.",
+          "action_description": "engedélyez | letilt | állapot",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "engedélyez",
+            "disable": "letilt",
+            "status": "állapot"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Művelet hozzáadása a csalásmegtorlási listához.",
+          "action": "Végrehajtandó művelet",
+          "duration": "Csak időtúllépés esetén szükséges (pl. 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Művelet eltávolítása a csalásmegtorlási listáról.",
+          "action": "Az eltávolítandó műveletsztring (pl. időtúllépés:1d, törlés)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Jelenlegi csalás beállítások megtekintése."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Nincsenek beállított műveletek.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "A linkellenőrzés {state}.",
+        "updated": "Linkellenőrzés {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**engedélyezett**",
+          "disabled": "**letiltott**"
         }
       },
       "detection": {
