@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "Uderzenie",
+          "kick": "Kopnięcie",
+          "ban": "Zablokuj",
+          "timeout": "Czasowe wyciszenie",
+          "delete": "Usuń wiadomość",
+          "give_role": "Przyznaj rolę",
+          "take_role": "Usuń rolę",
+          "warn": "Ostrzeż użytkownika",
+          "broadcast": "Prześlij wiadomość",
+          "auto": "Automatycznie"
         }
       }
     }
