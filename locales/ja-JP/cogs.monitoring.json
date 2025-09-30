@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "監視設定",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "ログの出力用チャネルを設定します。",
+          "channel": "ログを送信するチャネル。"
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "監視チャネル設定を削除します。"
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "現在の監視チャネルを表示します。"
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "特定の監視イベントを有効または無効にします。",
+          "event": "切り替えるイベント",
+          "enabled": "このイベントのロギングを有効または無効にします",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "ユーザーの参加",
+            "leave": "ユーザーの退会",
+            "ban": "禁止",
+            "unban": "禁止解除",
+            "timeout": "タイムアウト",
+            "message_delete": "メッセージが削除されました",
+            "message_edit": "メッセージが編集されました"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "現在の監視イベント設定を一覧表示します。"
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**内容:**\n{content}",
         "description_generic": "メッセージが {channel} で削除されました。",
         "description_deleted_by": "\n**削除者:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[内容なし]",
         "fields": {
           "attachments": "添付ファイル ({count})",
           "embeds": "埋め込み {index}",
@@ -99,7 +99,7 @@
           "before": "編集前",
           "after": "編集後"
         },
-        "no_content": "[No Content]",
+        "no_content": "[内容なし]",
         "footer": "ユーザー ID: {user_id}"
       },
       "ban": {
