@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Felügyeleti konfiguráció",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Állítsa be a csatornát a naplók kimenetéhez.",
+          "channel": "A csatorna, ahova a naplók kerülnek."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Távolítsa el a monitor csatorna beállítást."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Mutassa meg a jelenlegi monitor csatornát."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Engedélyezze vagy tiltsa le egy konkrét figyelési eseményt.",
+          "event": "Az esemény, amelyet átválthat",
+          "enabled": "Engedélyezze vagy tiltsa le az esemény naplózását",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Felhasználó csatlakozik",
+            "leave": "Felhasználó elhagyja",
+            "ban": "Kitiltás",
+            "unban": "Kitiltás visszavonása",
+            "timeout": "Időtúllépés",
+            "message_delete": "Üzenet törölve",
+            "message_edit": "Üzenet módosítva"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Jelenlegi monitor esemény beállítások listája."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Tartalom:**\n{content}",
         "description_generic": "Egy üzenetet töröltek a {channel} csatornán.",
         "description_deleted_by": "\n**Törölte:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Nincs tartalom]",
         "fields": {
           "attachments": "Mellékletek ({count})",
           "embeds": "Beágyazás {index}",
@@ -99,7 +99,7 @@
           "before": "Előtte",
           "after": "Utána"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Nincs tartalom]",
         "footer": "Felhasználói ID: {user_id}"
       },
       "ban": {
