@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "Εντολές διαχείρισης μπλοκαρισμένων URL.",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "Προσθέστε μια διεύθυνση URL ή έναν τομέα στη λίστα απαγορευμένων."
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "Αφαιρέστε μια διεύθυνση URL ή έναν τομέα από τη λίστα απαγορευμένων."
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "Λίστα όλων των μπλοκαρισμένων URL."
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "Απαλείψτε όλα τα μπλοκαρισμένα URL."
         }
       },
       "limit_reached": "Έχετε φτάσει το όριο από {limit} αποκλεισμένες διευθύνσεις URL για αυτόν τον διακομιστή.\nΧρησιμοποιήστε `/bannedurls remove` ή `/bannedurls clear` για να κάνετε χώρο.",
