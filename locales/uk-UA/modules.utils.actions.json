@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "Попередження",
+          "kick": "Пинок",
+          "ban": "Заборонити",
+          "timeout": "Перерва",
+          "delete": "Видалити повідомлення",
+          "give_role": "Надати роль",
+          "take_role": "Вилучити роль",
+          "warn": "Попередити користувача",
+          "broadcast": "Розіслати повідомлення",
+          "auto": "Авто"
         }
       }
     }
