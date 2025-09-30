@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "Ungültige Gebietsschema. Unterstützte Gebietsschema: {supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "Dein Profilbild wurde als expliziter Inhalt erkannt.",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "Dein Profilbild wurde als expliziter Inhalt erkannt.",
+            "Dein Profilbild ist nicht angemessen für diesen Server.",
+            "Dein Profilbild wurde als NSFW markiert."
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. Respektiere andere — kein Mobbing oder Hassrede.",
+            "2. Kein NSFW oder obszöner Inhalt.",
+            "3. Kein Spam oder übermäßige Eigenwerbung.",
+            "4. Beachte die Discord-Nutzungsbedingungen."
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. Kein Mobbing, keine Hassrede oder Drohungen.",
+            "2. Keine Schimpfwörter oder diskriminierende Sprache.",
+            "3. Keine Aufforderungen zu Gewalt oder illegalen Aktivitäten.",
+            "4. Kein sexueller Inhalt oder explizite Bemerkungen.",
+            "5. Beachte die Discord-Nutzungsbedingungen."
           ]
         }
       }
