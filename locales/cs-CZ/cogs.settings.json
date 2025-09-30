@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Spravovat nastavení serveru.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Získat pomoc s nastavením."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Vymazat všechna nastavení a začít s výchozími hodnotami. Toto nelze vrátit zpět"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Nastavit nastavení serveru."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Získat aktuální hodnotu nastavení serveru."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Odstranit nastavení serveru nebo položku z nastavení typu seznam."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Nápověda pro `{command}` nebyla nalezena.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Otevřít Dashboard",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Žádný popis.",
+          "no_subcommands": "(Žádné podpříkazy)",
+          "no_groups": "(Nebyly nalezeny žádné příkazové skupiny.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Použití výchozího `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Dashboard:** [Otevřít dashboard]({dashboard_url})\\nPoužijte `/help {name}` pro zobrazení znovu.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Podpříkazy",
+              "paged": "Podpříkazy (strana {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderátor Bot — Nápověda",
+            "description": "🛠️ **Dashboard:** [Otevřít dashboard]({dashboard_url})\\nPro rychlejší nastavení využijte webový dashboard.\\nNebo spusťte **`/help <group>`** pro podrobné podpříkazy.",
+            "line": "• `/{name}` — {description}  _Zkuste:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Detekce jazyka",
+            "groups_first": "Dostupné skupiny příkazů",
+            "groups_paged": "Dostupné skupiny příkazů (stránka {page})",
+            "speed_name": "Zrychlená detekce",
+            "speed_value": "⚡ Upgradujte na Accelerated pro rychlejší detekci NSFW & podvodů — zadejte `/accelerated`.",
+            "links_name": "Odkazy",
+            "links_value": "[Podpora](https://discord.gg/invite/33VcwjfEXC) • [Příspěvek](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [Podmínky](https://modbot.neomechanical.com/terms-of-service) • [Soukromí](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Důvěryhodní vývojáři",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
