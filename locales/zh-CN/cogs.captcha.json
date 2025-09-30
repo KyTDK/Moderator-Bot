@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "管理验证码验证。",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "重新发送验证码验证嵌入。"
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "向成员发送验证码验证请求。",
+          "member": "应完成验证的成员"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "几分钟",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} 秒",
+            "other": "{count} 秒"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} 分钟",
+            "other": "{count} 分钟"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} 小时",
+            "other": "{count} 小时"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} 天",
+            "other": "{count} 天"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "嗨，{member}！要完成加入 **{guild}** 的过程，",
+          "grace": "请在 **{grace}** 内 {instruction}。",
+          "no_grace": "请当您准备好时 {instruction}。",
+          "instruction_default": "完成验证码",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": "您有 **{count}** 次尝试。",
+            "other": "您有 **{count}** 次尝试。"
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "需要验证码验证",
+          "footer": "由 Moderator Bot 提供"
         },
         "button": {
-          "label": "Verify now"
+          "label": "立即验证"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "点击此处进行验证"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "访问 {channel} 并完成验证码",
+          "help_title": "需要帮助吗？",
+          "help_value": "点击下方按钮打开验证页面。",
+          "button_label": "打开验证页面"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "点击下方按钮进行验证。一旦通过验证码，您将获得访问服务器其余部分的权限。",
+        "login_notice": "您可能会被要求先登录 Moderator Bot 控制台。",
+        "title": "完成验证码验证",
+        "footer": "公会 ID: {guild_id} | 由 Moderator Bot 提供",
+        "button_label": "立即验证"
       }
     }
   }
