@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Управляйте проверкой капчи.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Переотправить встроенную проверку капчи."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Отправить запрос на проверку капчи участнику.",
+          "member": "Участник, который должен завершить проверку"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "несколько минут",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} секунда",
+            "other": "{count} секунд"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} минута",
+            "other": "{count} минут"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} час",
+            "other": "{count} часов"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} день",
+            "other": "{count} дней"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Привет {member}! Чтобы завершить присоединение к **{guild}**, ",
+          "grace": "пожалуйста, {instruction} в течение **{grace}**.",
+          "no_grace": "пожалуйста, {instruction}, как будете готовы.",
+          "instruction_default": "завершите проверку капчи",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " У вас есть **{count}** попытка.",
+            "other": " У вас есть **{count}** попыток."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Требуется проверка капчи",
+          "footer": "На базе модераторского бота"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Проверить сейчас"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Нажмите здесь, чтобы пройти проверку"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "посетите {channel} и пройдите проверку капчи",
+          "help_title": "Нужна помощь?",
+          "help_value": "Нажмите на кнопку ниже, чтобы открыть страницу проверки.",
+          "button_label": "Открыть страницу проверки"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Нажмите на кнопку ниже, чтобы пройти проверку. Как только вы пройдете капчу, получите доступ к остальной части сервера.",
+        "login_notice": "Возможно, вам потребуется сначала войти в панель управления модераторского бота.",
+        "title": "Завершить проверку капчи",
+        "footer": "ID сервера: {guild_id} | На базе модераторского бота",
+        "button_label": "Проверить сейчас"
       }
     }
   }
