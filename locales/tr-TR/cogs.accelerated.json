@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Hızlandırılmış (Premium) aboneliğinizi yönetin.",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Şu anda bir Hızlandırılmış aboneliğiniz olup olmadığını kontrol edin."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Benzersiz PayPal abonelik bağlantınızı oluşturun."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Hızlandırılmış aboneliğin avantajlarını gösterin."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Aboneliğinizi nasıl iptal edeceğinizi açıklayın."
         }
       },
       "group_description": "Hızlandırılmış (Premium) aboneliğinizi yönetin.",
