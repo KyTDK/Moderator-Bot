@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "Érvénytelen területi beállítás. Támogatott területek: {supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "A profilképedet explicit tartalommal jelölték meg.",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "A profilképedet explicit tartalommal jelölték meg.",
+            "A profilképed nem megfelelő erre a szerverre.",
+            "A profilképed NSFW-ként lett megjelölve."
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. Légy tisztelettudó — nincs zaklatás vagy gyűlöletbeszéd.",
+            "2. Nincs NSFW vagy obszcén tartalom.",
+            "3. Nincs spam vagy túlzott önreklám.",
+            "4. Kövesd a Discord szolgáltatási feltételeit."
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. Nincs zaklatás, gyűlöletbeszéd vagy fenyegetés.",
+            "2. Nincs rágalmazás vagy diszkriminatív nyelvezet.",
+            "3. Nincs erőszakra vagy illegális tevékenységre buzdítás.",
+            "4. Nincs szexuális tartalom vagy explicit megjegyzések.",
+            "5. Kövesd a Discord szolgáltatási feltételeit."
           ]
         }
       }
