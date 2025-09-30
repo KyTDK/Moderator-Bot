@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "Locale non valido. Locali supportati: {supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "La tua immagine del profilo è stata rilevata contenere contenuto esplicito",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "La tua immagine del profilo è stata rilevata contenere contenuto esplicito",
+            "La tua immagine del profilo non è appropriata per questo server.",
+            "La tua immagine del profilo è stata segnalata come NSFW."
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. Rispetta gli altri — no molestie o discorsi di odio.",
+            "2. Nessun contenuto NSFW o osceno.",
+            "3. Nessuna spam o auto-promozione eccessiva.",
+            "4. Segui i Termini di Servizio di Discord."
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. No molestie, discorsi di odio o minacce.",
+            "2. Nessun insulto o linguaggio discriminatorio.",
+            "3. Nessun incitamento alla violenza o attività illegale.",
+            "4. Nessun contenuto sessuale o commenti espliciti.",
+            "5. Segui i Termini di Servizio di Discord."
           ]
         }
       }
