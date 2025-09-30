@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "Bestuur KI-moderasie funksies.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Stel bediener reëls op."
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Toon die tans opgestelde moderasie reëls."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Voeg handhawingsaksies by."
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Verwyder 'n spesifieke aksie uit die lys van strawwe.",
+          "action": "Presiese aksie string om te verwyder (bv. tydperk, verwyder)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
+          "description": "Aktiveer/deaktiveer moderasie, kyk status, of stel modus.",
+          "enable": "Skakel outonome moderasie aan of af.",
+          "mode": "Opsioneel: stel verslag / interval / adaptiewe modus.",
+          "enable_choice": "Aktiveer",
+          "disable_choice": "Deaktiveer",
           "status_choice": "Status",
           "mode_choices": {
-            "report": "Report",
+            "report": "Verslag",
             "interval": "Interval",
-            "adaptive": "Adaptive"
+            "adaptive": "Aanpasbaar"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Toon alle aksies wat tans geaktiveer is om in werking te tree wanneer die KI 'n oortreding opspoor."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Koppel 'n sneller gebeurtenis aan een of meer moderasie modus aksies.",
+          "role": "Watter rolle om te moniteer (indien van toepassing)",
+          "channel": "Watter kanaal om te moniteer (vir spits gebeure)",
+          "time_range": "Tydsbestek in HH:MM-HH:MM vir tyd-gebaseerde snellers",
+          "threshold": "Drempel vir rol aanlyn persentasie (0 tot 1, opsioneel)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Verwyder 'n spesifieke aksie uit 'n geconfigureerde gebeurtenis.",
+          "event_key": "Aanpasbare gebeurtenis sleutel (autovoltooi)",
+          "action": "Aksie om vanaf hierdie gebeurtenis te verwyder"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Maak alle aanpasbare gebeurtenis snellers skoon."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Toon huidige aanpasbare moderasie snellers."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "Rol Aanlyn",
+            "role_offline": "Rol Vanlyn",
+            "mass_join": "Massa Aanmeld",
+            "mass_leave": "Massa Afmeld",
+            "guild_inactive": "Bediener Onaktiwiteit",
+            "role_online_percent": "Rol Aanlyn %",
+            "time_range": "Tydsbestek",
+            "server_spike": "Bediener Spits"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Aktiveer Intervalmodus",
+          "disable_interval": "Deaktiveer Intervalmodus",
+          "enable_report": "Aktiveer Verslagmodus",
+          "disable_report": "Deaktiveer Verslagmodus"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "gedeaktiveer",
         "state_unknown": "onbekend",
         "modes": {
-          "report": "report",
+          "report": "verslag",
           "interval": "interval",
-          "adaptive": "adaptive"
+          "adaptive": "aanpasbaar"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "AI-moderasie begroting bereik vir hierdie faktuursiklus. Herstel by {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "die volgende siklus",
+        "thanks_no_violation": "Dankie vir die verslag. Geen oortredings is gevind nie.",
+        "thanks_action": "Dankie vir die verslag. Aksie is geneem."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "KI-gemerkte oortreding",
+          "description": "Gebruiker: {user}\nReël Gebreek: {rule}\nRede: {reason}\nAksies: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "Kies-opspring",
+              "value": "Meervoudige skrywers opgespoor; per-skrywer aksies toegepas."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "KI Beslissing",
+              "none": "Geen",
+              "unknown": "Onbekend"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Toegepaste Aksies",
+              "none": "Geen"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
+              "name": "Gemerkte Boodskap(pe)",
+              "no_content": "[geen teksinhoud]",
               "entry": "• ID {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "KI Moderasie Skandering (Debug)",
+          "description": "Geen oortredings is gevind in die jongste skandering nie.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "Geskandeerde Boodskappe",
+            "mode": "Modus"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "Oortreding opgespoor",
+          "reason_multiple": "Meervoudige oortredings: {reasons}",
+          "rule_default": "Reëloortreding",
+          "rule_multiple": "Meervoudige reëls: {rules}"
         }
       },
       "ensure_adaptive": "Aanpasbare moderasiemodus is nie geaktiveer nie. Gebruik `/ai_mod set_mode` om dit te aktiveer."
