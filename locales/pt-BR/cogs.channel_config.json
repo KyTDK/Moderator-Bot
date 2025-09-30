@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Configurar canais de log.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Definir um canal de log.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "O canal a ser usado para registro.",
+            "type": "Qual tipo de log este canal é para."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Desativar um canal de log.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Qual tipo de log desativar."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Mostrar configurações atuais do canal de log."
         },
         "types": {
-          "strike": "Strike",
+          "strike": "Punição",
           "nsfw": "NSFW",
-          "ai": "AI",
-          "monitor": "Monitor",
+          "ai": "IA",
+          "monitor": "Monitoramento",
           "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "vc_transcript": "Transcrição de VC"
         }
       },
       "nsfw_required": "{channel} não é restrito por idade. Por favor, escolha um canal NSFW.",
