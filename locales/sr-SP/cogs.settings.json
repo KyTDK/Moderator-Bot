@@ -6,7 +6,7 @@
         "help": {
           "description": "Потражите помоћ око подешавања.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Опционо: група команди за добијање помоћи"
           }
         },
         "reset": {
