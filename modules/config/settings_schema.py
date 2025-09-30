@@ -1,5 +1,8 @@
 from typing import Any, Callable, Optional
 from collections.abc import Iterable
+import json
+from pathlib import Path
+
 import discord
 from modules.config.premium_plans import PLAN_CORE, PLAN_PRO, PLAN_ULTRA, resolve_required_plans
 from modules.i18n.locale_utils import list_supported_locales, normalise_locale
@@ -56,6 +59,71 @@ async def _validate_locale(value: Any) -> None:
             "Invalid locale. Supported locales: {supported}",
             placeholders={"supported": supported},
         )
+
+def _load_en_settings_schema_locale() -> dict[str, Any]:
+    locale_path = (
+        Path(__file__).resolve().parents[2]
+        / "locales"
+        / "en"
+        / "modules.config.settings_schema.json"
+    )
+    try:
+        with locale_path.open("r", encoding="utf-8") as fp:
+            data = json.load(fp)
+    except FileNotFoundError as exc:  # pragma: no cover - defensive
+        raise RuntimeError(
+            "Missing English locale file for settings schema defaults"
+        ) from exc
+
+    settings_data = data.get("modules", {}).get("config", {}).get("settings_schema", {})
+    if not settings_data:
+        raise RuntimeError(
+            "Settings schema locale defaults are missing from locales/en/modules.config.settings_schema.json"
+        )
+    return settings_data
+
+
+def _get_locale_value(data: dict[str, Any], path: list[str]) -> Any:
+    current: Any = data
+    for part in path:
+        if not isinstance(current, dict) or part not in current:
+            raise RuntimeError(
+                "Missing locale value for settings schema path: " + ".".join(path)
+            )
+        current = current[part]
+    return current
+
+
+_LOCALE_DEFAULTS = _load_en_settings_schema_locale()
+
+_NSFW_PFP_DEFAULT_MESSAGE = _get_locale_value(
+    _LOCALE_DEFAULTS, ["nsfw_pfp_message", "default"]
+)
+_NSFW_PFP_DEFAULT_CHOICES = _get_locale_value(
+    _LOCALE_DEFAULTS, ["nsfw_pfp_message", "choices"]
+)
+
+_RULES_DEFAULT_TEXT = _get_locale_value(_LOCALE_DEFAULTS, ["rules", "default"])
+_VCMOD_RULES_DEFAULT_TEXT = _get_locale_value(
+    _LOCALE_DEFAULTS, ["vcmod_rules", "default"]
+)
+
+if not isinstance(_NSFW_PFP_DEFAULT_MESSAGE, str):
+    raise RuntimeError("NSFW profile picture default message must be a string")
+if not isinstance(_NSFW_PFP_DEFAULT_CHOICES, list):
+    raise RuntimeError("NSFW profile picture message choices must be a list")
+
+if isinstance(_RULES_DEFAULT_TEXT, list):
+    _RULES_DEFAULT_TEXT = "\n".join(str(part) for part in _RULES_DEFAULT_TEXT)
+elif not isinstance(_RULES_DEFAULT_TEXT, str):
+    raise RuntimeError("Rules default text must resolve to a string")
+
+if isinstance(_VCMOD_RULES_DEFAULT_TEXT, list):
+    _VCMOD_RULES_DEFAULT_TEXT = "\n".join(
+        str(part) for part in _VCMOD_RULES_DEFAULT_TEXT
+    )
+elif not isinstance(_VCMOD_RULES_DEFAULT_TEXT, str):
+    raise RuntimeError("VC moderation rules default must resolve to a string")
 
 SETTINGS_SCHEMA = {
     "strike-channel": Setting(
@@ -253,12 +321,8 @@ SETTINGS_SCHEMA = {
         name="nsfw-pfp-message",
         description="The message to send when a player has had their profile picture flagged.",
         setting_type=str,
-        default="Your profile picture was detected to contain explicit content",
-        choices=[
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW.",
-        ],
+        default=_NSFW_PFP_DEFAULT_MESSAGE,
+        choices=list(_NSFW_PFP_DEFAULT_CHOICES),
         required_plans=PLAN_CORE,
         description_key="modules.config.settings_schema.nsfw-pfp-message.description",
     ),
@@ -342,7 +406,7 @@ SETTINGS_SCHEMA = {
         name="rules",
         description="The server rules used for autonomous moderation.",
         setting_type=str,
-        default="1. Be respectful — no harassment or hate speech.\n2. No NSFW or obscene content.\n3. No spam or excessive self-promotion.\n4. Follow Discord's Terms of Service.",
+        default=_RULES_DEFAULT_TEXT,
         hidden=True,
         required_plans=PLAN_CORE,
         description_key="modules.config.settings_schema.rules.description",
@@ -493,13 +557,7 @@ SETTINGS_SCHEMA = {
         name="vcmod-rules",
         description="Rules applied to voice chat moderation (separate from text rules).",
         setting_type=str,
-        default=(
-            "1. No harassment, hate speech, or threats.\n"
-            "2. No slurs or discriminatory language.\n"
-            "3. No incitement to violence or illegal activity.\n"
-            "4. No sexual content or explicit remarks.\n"
-            "5. Follow Discord's Terms of Service."
-        ),
+        default=_VCMOD_RULES_DEFAULT_TEXT,
         hidden=True,
         required_plans=PLAN_CORE,
         description_key="modules.config.settings_schema.vcmod-rules.description",

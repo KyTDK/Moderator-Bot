@@ -30,7 +30,7 @@
 - [x] modules/variables/TimeString.py — Localized invalid duration validation error.
 - [x] modules/utils/localization.py — Added reusable localized error helper for validation feedback.
 - [x] modules/utils/event_manager.py — Localized adaptive event manager responses for action assignments.
+- [x] modules/config/settings_schema.py — Localized default NSFW profile message and rule templates using locale-backed strings.
 
 ## To Do
 - [ ] Audit remaining modules for embedded message strings and prompts.
-- [ ] modules/config/settings_schema.py — Localize default message content (e.g., nsfw-pfp-message, rules, vcmod-rules).
