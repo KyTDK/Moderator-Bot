@@ -3,67 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "Contingut NSFW detectat",
+          "description": "**Usuari:** {user_mention} ({user_display})\n**Raó:** {reason}",
+          "footer": "ID Usuari: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "Informe d'escaneig NSFW",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Usuari: {user}",
+              "file": "Fitxer: `{filename}`",
+              "type": "Tipus: `{file_type}`",
+              "decision": "Decisió: **{decision}**"
+            },
+            "file_types": {
+              "image": "Imatge",
+              "video": "Vídeo",
+              "unknown": "Desconegut"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Segur",
+              "unknown": "Desconegut"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Raó",
+              "category": "Categoria",
+              "score": "Puntuació",
+              "flagged_any": "Qualsevol marcat",
+              "summary_categories": "Categories Resum",
+              "max_similarity": "Similitud màxima",
+              "max_category": "Categoria de similitud màxima",
+              "similarity": "Similitud trobada",
+              "high_accuracy": "Alta precisió",
+              "clip_threshold": "Límit CLIP",
+              "moderation_threshold": "Límit de moderació",
+              "video_frames": "Fotogrames de vídeo"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "Moderació OpenAI",
+              "similarity_match": "Coincidència de similitud",
+              "no_frames_extracted": "No s'han extret fotogrames",
+              "no_nsfw_frames_detected": "No s'han detectat fotogrames NSFW"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Confiança",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Puntuació",
+            "similarity": "Similitud"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "veritable",
+          "false": "fals"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "No especificat"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Detectada possible violació de política (Categoria: **{category}**)"
       }
     }
   }
