@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "캡차 인증 관리를 하십시오.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "캡차 인증 재확인 메시지를 재전송 하십시오."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "사용자에게 캡차 인증 요청을 발송하십시오.",
+          "member": "인증을 완료해야 하는 사용자"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "몇 분",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} 초",
+            "other": "{count} 초"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} 분",
+            "other": "{count} 분"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} 시간",
+            "other": "{count} 시간"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} 일",
+            "other": "{count} 일"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "안녕하세요 {member}! **{guild}** 가입을 완료하려면, ",
+          "grace": "**{grace}** 내에 {instruction}하십시오.",
+          "no_grace": "준비되면 {instruction}하십시오.",
+          "instruction_default": "캡차를 완료하십시오",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " **{count}** 번의 시도가 남아 있습니다.",
+            "other": " **{count}** 번의 시도가 남아 있습니다."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "캡차 인증 필요",
+          "footer": "Moderator Bot 제공"
         },
         "button": {
-          "label": "Verify now"
+          "label": "지금 인증"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "여기를 클릭해 인증하세요"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "{channel}에 방문하여 캡차를 완료하십시오",
+          "help_title": "도움이 필요하신가요?",
+          "help_value": "아래 버튼을 눌러 인증 페이지를 여십시오.",
+          "button_label": "인증 페이지 열기"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "아래 버튼을 눌러 본인을 인증하십시오. 캡차 통과 후 서버의 나머지 부분에 접근할 수 있습니다.",
+        "login_notice": "먼저 Moderator Bot 대시보드에 로그인해 주십시오.",
+        "title": "캡차 인증 완료",
+        "footer": "길드 ID: {guild_id} | Moderator Bot 제공",
+        "button_label": "지금 인증"
       }
     }
   }
