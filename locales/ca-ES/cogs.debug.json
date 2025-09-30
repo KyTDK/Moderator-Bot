@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "Obteniu estadístiques de memòria i rendiment",
+          "show_all": "Inclou les assignacions de totes les biblioteques (no només del projecte)"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "Mostra la configuració regional actualment vinculada a aquest context de comanda"
         }
       },
       "permission_denied": "No tens permís per utilitzar aquesta comanda.",
@@ -26,7 +26,7 @@
         "footer": "Amfitrió: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "Configuració regional actual: {locale}"
       }
     }
   }
