@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "إدارة الكشف عن محتوى NSFW.",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "إضافة إجراء إلى قائمة عقوبات NSFW.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "الإجراء الذي سيتم تنفيذه",
+            "duration": "مطلوب فقط للتعطيل المؤقت (مثل: 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "إزالة إجراء من قائمة عقوبات NSFW.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "سلسلة الإجراءات المحددة للإزالة (مثل: التعطيل المؤقت، الحذف)"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "عرض قائمة إجراءات عقوبات NSFW الحالية."
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "إضافة فئة إلى كشف NSFW."
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "العنف البياني",
+          "violence": "العنف",
+          "sexual": "جنسي",
+          "self_harm_instructions": "تعليمات إيذاء الذات",
+          "self_harm_intent": "نية إيذاء الذات",
+          "self_harm": "إيذاء الذات"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "إزالة فئة من كشف NSFW."
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "عرض فئات كشف NSFW."
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "تعيين الحد الأدنى لثقة كشف NSFW.",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "حد الثقة (0.0 إلى 1.0)"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "عرض حد كشف NSFW الحالي."
         }
       },
       "actions": {
