@@ -2,7 +2,7 @@
   "modules": {
     "variables": {
       "time_string": {
-        "invalid_format": "Invalid duration format. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively."
+        "invalid_format": "無效的時間格式。使用類似20秒，30分鐘，2小時，30天，2周，5個月，1年的格式。分別代表秒，分鐘，小時，天，周，月和年。"
       }
     }
   }
