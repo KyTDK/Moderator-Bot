@@ -1,7 +1,7 @@
 import base64
 import os
 import uuid
-from typing import Optional
+from typing import Optional, Tuple
 
 import cv2
 import filetype
@@ -25,35 +25,46 @@ ANIMATED_EXTS = {".gif", ".webp", ".apng", ".avif"}
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".heic"}
 VIDEO_EXTS = {".mp4", ".mov", ".m4v", ".avi", ".mkv", ".webm"}
 
-def determine_file_type(filename: str) -> str:
+FILE_TYPE_IMAGE = "image"
+FILE_TYPE_VIDEO = "video"
+FILE_TYPE_UNKNOWN = "unknown"
+
+FILE_TYPE_LABELS = {
+    FILE_TYPE_IMAGE: "Image",
+    FILE_TYPE_VIDEO: "Video",
+    FILE_TYPE_UNKNOWN: "Unknown",
+}
+
+
+def determine_file_type(filename: str) -> Tuple[str, Optional[str]]:
     ext = os.path.splitext(filename)[1].lower()
     kind = filetype.guess(filename)
 
     if not kind:
         if ext in ANIMATED_EXTS:
-            return "Video"
+            return FILE_TYPE_VIDEO, None
         if ext in VIDEO_EXTS:
-            return "Video"
+            return FILE_TYPE_VIDEO, None
         if ext in IMAGE_EXTS:
-            return "Image"
-        return "Unknown"
+            return FILE_TYPE_IMAGE, None
+        return FILE_TYPE_UNKNOWN, None
 
-    mime = kind.mime
+    mime = kind.mime or ""
 
     if mime.startswith("video"):
-        return "Video"
+        return FILE_TYPE_VIDEO, mime
 
     if mime.startswith("image"):
         if ext in ANIMATED_EXTS:
             try:
                 with Image.open(filename) as im:
                     if getattr(im, "is_animated", False) or getattr(im, "n_frames", 1) > 1:
-                        return "Video"
+                        return FILE_TYPE_VIDEO, mime
             except Exception:
-                return "Video"
-        return "Image"
+                return FILE_TYPE_VIDEO, mime
+        return FILE_TYPE_IMAGE, mime
 
-    return mime
+    return FILE_TYPE_UNKNOWN, mime or None
 
 
 def extract_frames_threaded(filename: str, wanted: Optional[int]) -> list[str]:

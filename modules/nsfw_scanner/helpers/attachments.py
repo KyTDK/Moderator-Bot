@@ -6,7 +6,12 @@ import discord
 from modules.utils import mod_logging, mysql
 from modules.utils.localization import TranslateFn, localize_message
 
-from ..utils import determine_file_type
+from ..utils import (
+    determine_file_type,
+    FILE_TYPE_IMAGE,
+    FILE_TYPE_LABELS,
+    FILE_TYPE_VIDEO,
+)
 from .images import process_image
 from .videos import process_video
 
@@ -133,7 +138,7 @@ async def check_attachment(
     perform_actions: bool = True,
 ) -> bool:
     filename = os.path.basename(temp_filename)
-    file_type = determine_file_type(temp_filename)
+    file_type, detected_mime = determine_file_type(temp_filename)
 
     if guild_id is None:
         print("[check_attachment] Guild_id is None")
@@ -142,14 +147,14 @@ async def check_attachment(
     file = None
     scan_result: dict[str, Any] | None = None
 
-    if file_type == "Image":
+    if file_type == FILE_TYPE_IMAGE:
         scan_result = await process_image(
             scanner,
             original_filename=temp_filename,
             guild_id=guild_id,
             clean_up=False,
         )
-    elif file_type == "Video":
+    elif file_type == FILE_TYPE_VIDEO:
         file, scan_result = await process_video(
             scanner,
             original_filename=temp_filename,
@@ -157,7 +162,7 @@ async def check_attachment(
         )
     else:
         print(
-            f"[check_attachment] Unsupported file type: {file_type} for {filename}"
+            f"[check_attachment] Unsupported file type: {detected_mime or file_type} for {filename}"
         )
         return False
 
@@ -169,6 +174,14 @@ async def check_attachment(
             if scan_result is not None:
                 decision_key = "nsfw" if scan_result.get("is_nsfw") else "safe"
             decision_label = _localize_decision(translator, decision_key, guild_id)
+            file_type_label = localize_message(
+                translator,
+                REPORT_BASE,
+                f"file_types.{file_type}",
+                fallback=FILE_TYPE_LABELS.get(file_type, detected_mime or file_type.title()),
+                guild_id=guild_id,
+            )
+
             embed = discord.Embed(
                 title=localize_message(
                     translator,
@@ -199,7 +212,7 @@ async def check_attachment(
                             translator,
                             REPORT_BASE,
                             "description.type",
-                            placeholders={"file_type": file_type},
+                            placeholders={"file_type": file_type_label},
                             fallback="Type: `{file_type}`",
                             guild_id=guild_id,
                         ),
