@@ -3,59 +3,59 @@
     "captcha": {
       "processor": {
         "success": {
-          "reason": "Captcha verification successful",
+          "reason": "Перевірка Captcha успішна",
           "embed": {
-            "title": "Captcha Verification Passed",
-            "description": "{mention} ({user_id}) passed captcha verification.",
+            "title": "Перевірка Captcha пройдена",
+            "description": "{mention} ({user_id}) пройшов перевірку Captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "attempts": "Attempts",
-              "provider": "Provider",
-              "challenge": "Challenge",
-              "review": "Review"
+              "actions": "Застосовані дії",
+              "attempts": "Спроби",
+              "provider": "Постачальник",
+              "challenge": "Виклик",
+              "review": "Перегляд"
             }
           }
         },
         "failure": {
-          "reason_default": "Failed captcha verification.",
+          "reason_default": "Перевірка Captcha не пройдена.",
           "notes": {
-            "deferred_generic": "Failure actions deferred; captcha attempts remain.",
-            "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
-            "member_left": "Member is no longer in the guild; configured failure actions were skipped."
+            "deferred_generic": "Неуспішні дії відкладені; спроби Captcha ще є.",
+            "deferred_remaining": "Неуспішні дії відкладені; залишилося {remaining} {attempts_word}.",
+            "member_left": "Учасник більше не є частиною гільдії; налаштовані дії провалу було пропущено."
           },
           "attempts": {
-            "unlimited": "Unlimited attempts remain.",
-            "additional": "Additional attempts remain.",
-            "remaining": "{count} {attempts_word} remaining.",
-            "word_one": "attempt",
-            "word_other": "attempts"
+            "unlimited": "Залишаються необмежені спроби.",
+            "additional": "Залишаються додаткові спроби.",
+            "remaining": "Залишилося {count} {attempts_word}.",
+            "word_one": "спроба",
+            "word_other": "спроби"
           },
           "embed": {
-            "title_failed": "Captcha Verification Failed",
-            "title_attempt": "Captcha Attempt Failed",
-            "description_failed": "{mention} ({user_id}) failed captcha verification.",
-            "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+            "title_failed": "Перевірка Captcha не пройдена",
+            "title_attempt": "Спроба перевірки Captcha не вдалася",
+            "description_failed": "{mention} ({user_id}) не пройшов перевірку Captcha.",
+            "description_attempt": "{mention} ({user_id}) не вдалося пройти спробу Captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "notes": "Notes",
-              "attempts": "Attempts",
-              "remaining": "Attempts Remaining",
-              "challenge": "Challenge",
-              "reason": "Reason",
-              "review": "Review"
+              "actions": "Застосовані дії",
+              "notes": "Примітки",
+              "attempts": "Спроби",
+              "remaining": "Залишилися спроби",
+              "challenge": "Виклик",
+              "reason": "Причина",
+              "review": "Перегляд"
             }
           }
         },
         "errors": {
-          "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
-          "unknown_token": "No pending captcha verification found for this user.",
-          "token_mismatch": "Captcha token does not match the pending verification.",
-          "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
-          "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
-          "guild_not_found": "Guild {guild_id} is not available to this bot.",
-          "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
-          "member_not_found": "Member {user_id} not found in guild {guild_id}.",
-          "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}."
+          "role_assignment_failed": "Не вдалося застосувати дії успішного завершення Captcha через помилку API Discord.",
+          "unknown_token": "Не знайдено незавершеної перевірки Captcha для цього користувача.",
+          "token_mismatch": "Маркер Captcha не відповідає очікуваній перевірці.",
+          "missing_permissions": "Боту не вистачає дозволів для здійснення неуспішних дій Captcha.",
+          "action_failed": "Не вдалося здійснити неуспішні дії Captcha через помилку API Discord.",
+          "guild_not_found": "Гільдія {guild_id} недоступна для цього бота.",
+          "guild_fetch_failed": "Не вдалося отримати гільдію {guild_id} з Discord.",
+          "member_not_found": "Учасник {user_id} не знайдений у гільдії {guild_id}.",
+          "member_fetch_failed": "Не вдалося отримати учасника {user_id} з гільдії {guild_id}."
         }
       }
     }
