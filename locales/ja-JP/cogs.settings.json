@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "サーバー設定を管理します。",
         "help": {
-          "description": "設定に関するヘルプを取得します。"
+          "description": "設定に関するヘルプを取得します。",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "すべての設定を消去し、デフォルトから始めます。この操作は取り消せません。"
