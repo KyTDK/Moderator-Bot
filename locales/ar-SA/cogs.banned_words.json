@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "أوامر إدارة الكلمات المحظورة.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "تمكين أو تعطيل قائمة الألفاظ المحظورة المدمجة.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "تمكين",
+            "disable": "تعطيل",
+            "status": "الحالة"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "إضافة كلمة إلى قائمة الكلمات المحظورة."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "إزالة كلمة من قائمة الكلمات المحظورة."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "عرض جميع الكلمات المحظورة."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "مسح جميع الكلمات المحظورة."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "إضافة إجراء لتفعيل عندما يتم اكتشاف كلمة محظورة.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "الإجراء لتنفيذه",
+            "duration": "مطلوب فقط للتقييد المؤقت (مثل 10م، 1س، 3ي)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "إزالة إجراء محدد من قائمة العقوبات للكلمات المحظورة.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "النص الدقيق للإجراء لإزالته (مثل التقييد المؤقت، الحذف)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "عرض جميع الإجراءات المهيئة حالياً لتفعيلها عند استخدام الكلمات المحظورة."
         }
       },
       "defaults": {
