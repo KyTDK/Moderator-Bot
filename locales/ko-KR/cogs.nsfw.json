@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "NSFW 콘텐츠 감지 관리",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "NSFW 처벌 목록에 액션 추가",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "수행할 작업",
+            "duration": "타임아웃에만 필요 (예: 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "NSFW 처벌 목록에서 액션 제거",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "제거할 정확한 작업 문자열 (예: timeout, delete)"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "현재 NSFW 처벌 액션 목록 보기"
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "NSFW 감지에 카테고리 추가"
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "그래픽 폭력",
+          "violence": "폭력",
+          "sexual": "성적",
+          "self_harm_instructions": "자해 지침",
+          "self_harm_intent": "자해 의도",
+          "self_harm": "자해"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "NSFW 감지에서 카테고리 제거"
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "NSFW 감지 카테고리 보기"
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "NSFW 감지 신뢰 임계값 설정",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "신뢰 임계값 (0.0 to 1.0)"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "현재 NSFW 감지 임계값 보기"
         }
       },
       "actions": {
