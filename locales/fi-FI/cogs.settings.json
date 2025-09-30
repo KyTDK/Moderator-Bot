@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Hallinnoi palvelimen asetuksia.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Hanki apua asetuksissa."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Poista kaikki asetukset ja aloita oletuksilla. Tätä ei voi perua"
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Aseta palvelimen asetus."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Hae palvelimen asetuksen nykyinen arvo."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Poista palvelimen asetus tai listatyyppisen asetuksen kohde."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Käskylle `{command}` ei löytynyt apua.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Avaa koontinäyttö",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Ei kuvausta.",
+          "no_subcommands": "(Ei alikomentoja)",
+          "no_groups": "(Komennot ryhmiä ei löytynyt.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Käytetään oletusta `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Koontinäyttö:** [Avaa koontinäyttö]({dashboard_url})\\nKäytä `/help {name}` nähdäksesi tämä uudelleen.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Alikomennot",
+              "paged": "Alikomennot (sivu {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderaattoribotti — Ohje",
+            "description": "🛠️ **Koontinäyttö:** [Avaa koontinäyttö]({dashboard_url})\\nValitse kaikki nopeammin verkkokoontinäytössä.\\nTai suorita **`/help <group>`** nähdäksesi yksityiskohtaiset alikomennot.",
+            "line": "• `/{name}` — {description}  _Kokeile:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Kielitunnistus",
+            "groups_first": "Käytettävissä olevat komentoryhmät",
+            "groups_paged": "Käytettävissä olevat komentoryhmät (sivu {page})",
+            "speed_name": "Nopeuta tunnistusta",
+            "speed_value": "⚡ Päivitä Accelerated-versioon nopeampaa NSFW- ja huijaustunnistusta varten — suorita `/accelerated`.",
+            "links_name": "Linkit",
+            "links_value": "[Tuki](https://discord.gg/invite/33VcwjfEXC) • [Lahjoita](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [Käyttöehdot](https://modbot.neomechanical.com/terms-of-service) • [Tietosuoja](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Luotetut kehittäjät",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
