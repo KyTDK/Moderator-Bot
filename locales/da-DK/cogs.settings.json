@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Administrer serverindstillinger.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Få hjælp til indstillinger."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Slet alle indstillinger og start med standardindstillinger. Dette kan ikke fortrydes."
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Indstil en serverindstilling."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Få den aktuelle værdi af en serverindstilling."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Fjern en serverindstilling eller et element fra en listeindstilling."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Ingen hjælp fundet for `{command}`.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Åbn Dashboard",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Ingen beskrivelse.",
+          "no_subcommands": "(Ingen underkommandoer)",
+          "no_groups": "(Ingen kommandogrupper fundet.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Bruger standard `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Dashboard:** [Åbn Dashboard]({dashboard_url})\\nBrug `/help {name}` for at se dette igen.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Underkommandoer",
+              "paged": "Underkommandoer (side {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderator Bot — Hjælp",
+            "description": "🛠️ **Dashboard:** [Åbn Dashboard]({dashboard_url})\\nKonfigurer alt hurtigere i webdashboardet.\\nEller kør **`/help <group>`** for detaljerede underkommandoer.",
+            "line": "• `/{name}` — {description}  _Prøv:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
+            "locale_name": "Sprog Registrering",
+            "groups_first": "Tilgængelige Kommandogrupper",
+            "groups_paged": "Tilgængelige Kommandogrupper (side {page})",
+            "speed_name": "Fremskynd Registrering",
+            "speed_value": "⚡ Opgrader til Accelerated for hurtigere NSFW & scam registrering — kør `/accelerated`.",
             "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donér](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privatliv](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Betroede udviklere",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
