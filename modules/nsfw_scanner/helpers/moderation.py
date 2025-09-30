@@ -128,14 +128,14 @@ async def moderator_api(
                 "is_nsfw": True,
                 "category": best_category,
                 "score": best_score,
-                "reason": "OpenAI moderation",
+                "reason": "openai_moderation",
                 "threshold": threshold,
                 "summary_categories": summary_categories,
             }
 
         return {
             "is_nsfw": False,
-            "reason": "OpenAI moderation",
+            "reason": "openai_moderation",
             "flagged_any": flagged_any,
             "threshold": threshold,
             "summary_categories": summary_categories,
