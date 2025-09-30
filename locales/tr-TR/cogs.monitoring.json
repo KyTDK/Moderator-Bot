@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "İzleme yapılandırması",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Günlükleri çıkış kanalına ayarlayın.",
+          "channel": "Günlükleri gönderecek kanal."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "İzleme kanal ayarını kaldırın."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Geçerli izleme kanalını göster."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Belirli bir izleme olayını etkinleştirin veya devre dışı bırakın.",
+          "event": "Devre dışı bırakılacak olay",
+          "enabled": "Bu olay için günlük kaydını etkinleştirin veya devre dışı bırakın",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Kullanıcı Katıldı",
+            "leave": "Kullanıcı Ayrıldı",
+            "ban": "Yasak",
+            "unban": "Yasağı Kaldır",
+            "timeout": "Zaman Aşımı",
+            "message_delete": "Mesaj Silindi",
+            "message_edit": "Mesaj Düzenlendi"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Geçerli izleme olay ayarlarını listeleyin."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**İçerik:**\n{content}",
         "description_generic": "Bir mesaj {channel} kanalında silindi.",
         "description_deleted_by": "\n**Silen Kişi:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[İçerik Yok]",
         "fields": {
           "attachments": "Ekler ({count})",
           "embeds": "Yerleştir {index}",
@@ -99,7 +99,7 @@
           "before": "Önce",
           "after": "Sonra"
         },
-        "no_content": "[No Content]",
+        "no_content": "[İçerik Yok]",
         "footer": "Kullanıcı Kimliği: {user_id}"
       },
       "ban": {
