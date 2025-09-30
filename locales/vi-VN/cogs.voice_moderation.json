@@ -2,23 +2,23 @@
   "cogs": {
     "voice_moderation": {
       "transcript": {
-        "author_label": "AUTHOR",
-        "utterance_label": "UTTERANCE",
+        "author_label": "TÁC GIẢ",
+        "utterance_label": "PHÁT NGÔN",
         "divider": "---",
-        "unknown_speaker": "Unknown speaker",
-        "unknown_prefix": "Unknown",
+        "unknown_speaker": "Người nói không xác định",
+        "unknown_prefix": "Không Xác Định",
         "user_fallback": "<@{id}> (id = {id})",
         "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transcript",
-        "title_part": "VC Transcript (part {index}/{total})",
-        "field_channel": "Channel",
-        "field_utterances": "Utterances",
-        "footer_high": "High accuracy transcript",
-        "footer_normal": "Normal accuracy transcript"
+        "title_single": "Bản Ghi Âm VC",
+        "title_part": "Bản Ghi Âm VC (phần {index}/{total})",
+        "field_channel": "Kênh",
+        "field_utterances": "Phát Ngôn",
+        "footer_high": "Bản ghi âm độ chính xác cao",
+        "footer_normal": "Bản ghi âm độ chính xác bình thường"
       },
       "budget": {
-        "title": "VC Moderation Budget Reached",
-        "description": "Skipping analysis for this cycle due to budget limit."
+        "title": "Đã Đạt Ngân Sách Kiểm Duyệt VC",
+        "description": "Bỏ qua phân tích trong chu kỳ này do giới hạn ngân sách."
       }
     }
   }
