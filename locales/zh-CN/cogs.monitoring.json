@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "监控配置",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "设置频道以输出日志。",
+          "channel": "发送日志的频道。"
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "移除监控频道设置。"
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "显示当前监控频道。"
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "启用或禁用特定的监控事件。",
+          "event": "要切换的事件",
+          "enabled": "启用或禁用此事件的日志记录",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "用户加入",
+            "leave": "用户离开",
+            "ban": "封禁",
+            "unban": "解封",
+            "timeout": "超时",
+            "message_delete": "消息已删除",
+            "message_edit": "消息已编辑"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "列出当前监控事件设置。"
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**内容:**\n{content}",
         "description_generic": "{channel} 中的消息已被删除。",
         "description_deleted_by": "\n**删除者:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[无内容]",
         "fields": {
           "attachments": "附件 ({count})",
           "embeds": "嵌入 {index}",
@@ -99,7 +99,7 @@
           "before": "之前",
           "after": "之后"
         },
-        "no_content": "[No Content]",
+        "no_content": "[无内容]",
         "footer": "用户 ID: {user_id}"
       },
       "ban": {
