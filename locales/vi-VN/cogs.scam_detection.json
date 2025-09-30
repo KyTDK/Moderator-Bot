@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Cấu hình phát hiện lừa đảo và quản lý mẫu.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Loại bỏ một kênh khỏi phát hiện lừa đảo.",
+          "channel": "Kênh cần loại trừ"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Xóa một kênh khỏi danh sách loại trừ.",
+          "channel": "Kênh cần xóa khỏi loại trừ"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Liệt kê tất cả kênh đã được loại trừ."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Chuyển đổi hoặc xem kiểm tra liên kết.",
+          "action_description": "bật | tắt | trạng thái",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "bật",
+            "disable": "tắt",
+            "status": "trạng thái"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Thêm một hành động vào danh sách trừng phạt lừa đảo.",
+          "action": "Hành động cần thực hiện",
+          "duration": "Chỉ cần thiết cho thời gian giới hạn (ví dụ: 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Xóa một hành động khỏi danh sách trừng phạt lừa đảo.",
+          "action": "Chuỗi hành động chính xác để xóa (ví dụ: timeout:1d, delete)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Xem cấu hình lừa đảo hiện tại."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Không có hành động nào được thiết lập.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Kiểm tra liên kết đang {state}.",
+        "updated": "Kiểm tra liên kết {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**đã bật**",
+          "disabled": "**đã tắt**"
         }
       },
       "detection": {
