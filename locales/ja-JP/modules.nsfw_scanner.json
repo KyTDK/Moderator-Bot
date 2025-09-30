@@ -3,62 +3,62 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "NSFWコンテンツが検出されました",
+          "description": "**ユーザー：** {user_mention} ({user_display})\n**理由：** {reason}",
+          "footer": "ユーザーID：{user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "NSFWスキャンレポート",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "ユーザー：{user}",
+              "file": "ファイル： `{filename}`",
+              "type": "タイプ： `{file_type}`",
+              "decision": "決定：**{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "画像",
+              "video": "ビデオ",
+              "unknown": "不明"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "安全",
+              "unknown": "不明"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "理由",
+              "category": "カテゴリ",
+              "score": "スコア",
+              "flagged_any": "いずれかにフラグされました",
+              "summary_categories": "要約カテゴリ",
+              "max_similarity": "最大類似性",
+              "max_category": "最大類似カテゴリ",
+              "similarity": "一致した類似性",
+              "high_accuracy": "高精度",
+              "clip_threshold": "CLIPしきい値",
+              "moderation_threshold": "モデレーションしきい値",
+              "video_frames": "ビデオフレーム"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "OpenAIのモデレーション",
+              "similarity_match": "類似性の一致",
+              "no_frames_extracted": "フレームが抽出されていません",
+              "no_nsfw_frames_detected": "NSFWフレームが検出されていません"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "信頼度",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "スコア",
+            "similarity": "類似性"
           }
         },
         "boolean": {
@@ -66,9 +66,9 @@
           "false": "false"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "未指定"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "潜在的なポリシー違反を検出しました（カテゴリ：**{category}**）"
       }
     }
   }
