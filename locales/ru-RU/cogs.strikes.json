@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Команды управления выговорами.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Выставить выговор конкретному пользователю.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Участник, которому выставляется выговор.",
+            "reason": "Причина выговора.",
+            "expiry": "Необязательная продолжительность истечения срока (например, 30д, 2н)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Получить список выговоров конкретного пользователя."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Удалить все выговоры конкретного пользователя.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Пользователь, чьи выговоры будут удалены."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Добавить дополнительное действие для уровня выговора.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Количество выговоров, требуемое для выполнения действия.",
+            "action": "Действие для добавления.",
+            "duration": "Продолжительность (только для простой блокировки, например, 1ч, 30м). Оставьте пустым в остальных случаях."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Удалить действие с уровня выговора.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Количество выговоров, связанных с действием.",
+            "action": "Точная строка действия для удаления."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Просмотреть все настроенные действия по выговорам."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Запугать канал или конкретного пользователя.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
