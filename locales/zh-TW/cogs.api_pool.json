@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**What is the API Pool?**\nAPI Pool 是一個安全且匿名的共享 OpenAI API 金鑰的集合。即使個別用戶面臨速率限制，它也可以使 Moderator Bot 能夠有效地繼續運行。\n\n**它如何運作？**\n- 當您將 OpenAI API 金鑰加入到池中時，它會被加密並安全地儲存。\n- 機器人僅使用這些金鑰來存取 OpenAI 模型以執行審核任務。\n- 您的 API 金鑰保持機密；沒有人，包括機器人開發人員，能夠查看它。\n- 您擁有完整的控制權，可以在任何時候從池中移除您的 API 金鑰。\n\n**重要:** 為了貢獻您的 API 金鑰，您的 OpenAI 帳戶必須至少加值 $5 美元的預付額度。儘管審核端點是免費使用的，但 OpenAI 要求帳戶必須有有效的計費資料和配額。您可以在此添加信用額度：<https://platform.openai.com/account/billing/overview>\n\n通過貢獻您的 API 金鑰，您幫助確保 Moderator Bot 對所有用戶保持敏捷和有效。"
       },
