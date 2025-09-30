@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "أوامر إدارة الإضراب.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "إضراب مستخدم محدد.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "العضو الذي سيتم إضرابه.",
+            "reason": "سبب الإضراب.",
+            "expiry": "مدة انتهاء الصلاحية الاختيارية (مثل 30يوم، 2أسبوع)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "احصل على إضرابات مستخدم محدد."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "مسح جميع الإضرابات لمستخدم محدد.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "المستخدم الذي ستُمسح إضراباته."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "أضف إجراء إضافي لمستوى الإضراب.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "عدد الإضرابات المطلوبة لبدء الإجراء.",
+            "action": "الإجراء الذي سيتم إضافته.",
+            "duration": "المدة (لفترة التأخير فقط، مثل 1س، 30د). اتركه فارغًا في غير ذلك."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "إزالة إجراء من مستوى الإضراب.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "عدد الإضرابات المرتبطة بالإجراء.",
+            "action": "نص الإجراء المحدد المراد إزالته."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "عرض جميع إجراءات الإضراب المكونة."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "تهديد القناة أو مستخدم محدد.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
