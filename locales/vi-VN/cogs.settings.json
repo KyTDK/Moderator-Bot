@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Quản lý cài đặt máy chủ.",
         "help": {
-          "description": "Nhận trợ giúp về cài đặt."
+          "description": "Nhận trợ giúp về cài đặt.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Xóa tất cả cài đặt và bắt đầu với mặc định. Không thể hoàn tác điều này."
