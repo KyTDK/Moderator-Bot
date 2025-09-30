@@ -3,59 +3,59 @@
     "captcha": {
       "processor": {
         "success": {
-          "reason": "Captcha verification successful",
+          "reason": "驗證碼驗證成功",
           "embed": {
-            "title": "Captcha Verification Passed",
-            "description": "{mention} ({user_id}) passed captcha verification.",
+            "title": "驗證碼驗證通過",
+            "description": "{mention} ({user_id}) 已通過驗證碼驗證。",
             "fields": {
-              "actions": "Actions Applied",
-              "attempts": "Attempts",
-              "provider": "Provider",
-              "challenge": "Challenge",
-              "review": "Review"
+              "actions": "應用的動作",
+              "attempts": "嘗試次數",
+              "provider": "提供商",
+              "challenge": "挑戰",
+              "review": "審查"
             }
           }
         },
         "failure": {
-          "reason_default": "Failed captcha verification.",
+          "reason_default": "驗證碼驗證失敗。",
           "notes": {
-            "deferred_generic": "Failure actions deferred; captcha attempts remain.",
-            "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
-            "member_left": "Member is no longer in the guild; configured failure actions were skipped."
+            "deferred_generic": "失敗的動作被延遲；驗證碼嘗試次數仍有剩餘。",
+            "deferred_remaining": "失敗的動作被延遲；剩餘 {remaining} {attempts_word}。",
+            "member_left": "成員已不再公會中；配置的失敗動作被跳過。"
           },
           "attempts": {
-            "unlimited": "Unlimited attempts remain.",
-            "additional": "Additional attempts remain.",
-            "remaining": "{count} {attempts_word} remaining.",
-            "word_one": "attempt",
-            "word_other": "attempts"
+            "unlimited": "嘗試次數無限。",
+            "additional": "仍有額外的嘗試次數。",
+            "remaining": "剩餘 {count} {attempts_word}。",
+            "word_one": "嘗試",
+            "word_other": "嘗試"
           },
           "embed": {
-            "title_failed": "Captcha Verification Failed",
-            "title_attempt": "Captcha Attempt Failed",
-            "description_failed": "{mention} ({user_id}) failed captcha verification.",
-            "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+            "title_failed": "驗證碼驗證失敗",
+            "title_attempt": "驗證碼嘗試失敗",
+            "description_failed": "{mention} ({user_id}) 未通過驗證碼驗證。",
+            "description_attempt": "{mention} ({user_id}) 的驗證碼嘗試失敗。",
             "fields": {
-              "actions": "Actions Applied",
-              "notes": "Notes",
-              "attempts": "Attempts",
-              "remaining": "Attempts Remaining",
-              "challenge": "Challenge",
-              "reason": "Reason",
-              "review": "Review"
+              "actions": "應用的動作",
+              "notes": "備註",
+              "attempts": "嘗試次數",
+              "remaining": "剩餘嘗試次數",
+              "challenge": "挑戰",
+              "reason": "原因",
+              "review": "審查"
             }
           }
         },
         "errors": {
-          "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
-          "unknown_token": "No pending captcha verification found for this user.",
-          "token_mismatch": "Captcha token does not match the pending verification.",
-          "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
-          "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
-          "guild_not_found": "Guild {guild_id} is not available to this bot.",
-          "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
-          "member_not_found": "Member {user_id} not found in guild {guild_id}.",
-          "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}."
+          "role_assignment_failed": "由於迪斯科 API 錯誤，未能成功應用驗證碼成功動作。",
+          "unknown_token": "未找到此用戶的待處理驗證碼驗證。",
+          "token_mismatch": "驗證碼不匹配待處理的驗證。",
+          "missing_permissions": "機器人缺少應用驗證碼失敗動作的權限。",
+          "action_failed": "由於迪斯科 API 錯誤，未能應用驗證碼失敗動作。",
+          "guild_not_found": "公會 {guild_id} 對此機器人不可用。",
+          "guild_fetch_failed": "未能從迪斯科獲取公會 {guild_id}。",
+          "member_not_found": "在公會 {guild_id} 中未找到成員 {user_id}。",
+          "member_fetch_failed": "未能從公會 {guild_id} 中獲取成員 {user_id}。"
         }
       }
     }
