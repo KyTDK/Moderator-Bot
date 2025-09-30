@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Slå-administrasjons kommandoer.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Gi en slående til en spesifikk bruker.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Medlemmet som skal gis en slående.",
+            "reason": "Årsaken til slående.",
+            "expiry": "Valgfri varighet for utløp (f.eks. 30d, 2u)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Få slåene til en spesifikk bruker."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Fjern alle slående til en spesifikk bruker.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Brukeren hvis slag skal fjernes."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Legg til en ekstra handling for en slående-nivå.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Antall slående krevd for å trigge handlingen.",
+            "action": "Handling å legge til.",
+            "duration": "Varighet (kun for timeout, f.eks. 1t, 30min). La stå tom ellers."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Fjern en handling fra et slående-nivå.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Antall slående assosiert med handlingen.",
+            "action": "Den nøyaktige handlingsstrengen å fjerne."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Vis alle konfigurerte slående handlinger."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Skremme kanalen, eller en spesifikk bruker.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
