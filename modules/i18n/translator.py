@@ -94,15 +94,23 @@ class Translator:
     @staticmethod
     def _apply_format(template: str, placeholders: Mapping[str, Any]) -> str:
         if not placeholders:
-            return template
+            return Translator._normalize_escapes(template)
         try:
-            return template.format(**placeholders)
+            formatted = template.format(**placeholders)
         except KeyError as exc:
             missing = exc.args[0]
             logger.warning("Missing placeholder '%s' for template '%s'", missing, template)
-            return template
+            return Translator._normalize_escapes(template)
         except ValueError:
-            # Invalid format string; return template unchanged.
-            return template
+            return Translator._normalize_escapes(template)
+        return Translator._normalize_escapes(formatted)
+
+    @staticmethod
+    def _normalize_escapes(value: str) -> str:
+        """Convert escaped newline sequences into actual newlines."""
+
+        if "\\n" not in value:
+            return value
+        return value.replace("\\n", "\n")
 
 __all__ = ["Translator"]
