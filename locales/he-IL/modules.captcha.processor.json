@@ -3,59 +3,59 @@
     "captcha": {
       "processor": {
         "success": {
-          "reason": "Captcha verification successful",
+          "reason": "אימות Captcha הצליח",
           "embed": {
-            "title": "Captcha Verification Passed",
-            "description": "{mention} ({user_id}) passed captcha verification.",
+            "title": "אימות Captcha עבר",
+            "description": "{mention} ({user_id}) עבר אימות Captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "attempts": "Attempts",
-              "provider": "Provider",
-              "challenge": "Challenge",
-              "review": "Review"
+              "actions": "פעולות שהופעלו",
+              "attempts": "ניסיונות",
+              "provider": "ספק",
+              "challenge": "אתגר",
+              "review": "סקירה"
             }
           }
         },
         "failure": {
-          "reason_default": "Failed captcha verification.",
+          "reason_default": "אימות Captcha נכשל.",
           "notes": {
-            "deferred_generic": "Failure actions deferred; captcha attempts remain.",
-            "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
-            "member_left": "Member is no longer in the guild; configured failure actions were skipped."
+            "deferred_generic": "פעולות כשל מחכות; ניסיונות Captcha נותרו.",
+            "deferred_remaining": "פעולות כשל מחכות; נותרו {remaining} {attempts_word}.",
+            "member_left": "חבר זה כבר לא נמצא בגילדה; פעולות הכשל שהוגדרו דוולגו."
           },
           "attempts": {
-            "unlimited": "Unlimited attempts remain.",
-            "additional": "Additional attempts remain.",
-            "remaining": "{count} {attempts_word} remaining.",
-            "word_one": "attempt",
-            "word_other": "attempts"
+            "unlimited": "נותרו ניסיונות ללא הגבלה.",
+            "additional": "נותרו ניסיונות נוספים.",
+            "remaining": "נותרו {count} {attempts_word}.",
+            "word_one": "ניסיון",
+            "word_other": "ניסיונות"
           },
           "embed": {
-            "title_failed": "Captcha Verification Failed",
-            "title_attempt": "Captcha Attempt Failed",
-            "description_failed": "{mention} ({user_id}) failed captcha verification.",
-            "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+            "title_failed": "אימות Captcha נכשל",
+            "title_attempt": "ניסיון אימות Captcha נכשל",
+            "description_failed": "{mention} ({user_id}) נכשל באימות Captcha.",
+            "description_attempt": "{mention} ({user_id}) נכשל בניסיון Captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "notes": "Notes",
-              "attempts": "Attempts",
-              "remaining": "Attempts Remaining",
-              "challenge": "Challenge",
-              "reason": "Reason",
-              "review": "Review"
+              "actions": "פעולות שהופעלו",
+              "notes": "הערות",
+              "attempts": "ניסיונות",
+              "remaining": "נותרו ניסיונות",
+              "challenge": "אתגר",
+              "reason": "סיבה",
+              "review": "סקירה"
             }
           }
         },
         "errors": {
-          "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
-          "unknown_token": "No pending captcha verification found for this user.",
-          "token_mismatch": "Captcha token does not match the pending verification.",
-          "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
-          "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
-          "guild_not_found": "Guild {guild_id} is not available to this bot.",
-          "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
-          "member_not_found": "Member {user_id} not found in guild {guild_id}.",
-          "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}."
+          "role_assignment_failed": "לא ניתן להפעיל פעולות הצלחה של Captcha עקב שגיאת API של דיסקורד.",
+          "unknown_token": "לא נמצא אימות Captcha ממתין עבור משתמש זה.",
+          "token_mismatch": "מפתח Captcha לא תואם את האימות הממתין.",
+          "missing_permissions": "לרובוט חסרות הרשאות להפעיל פעולות כשל של Captcha.",
+          "action_failed": "לא ניתן להפעיל פעולות כשל של Captcha עקב שגיאת API של דיסקורד.",
+          "guild_not_found": "הגילדה {guild_id} אינה זמינה לרובוט זה.",
+          "guild_fetch_failed": "לא ניתן להביא את הגילדה {guild_id} מדיסקורד.",
+          "member_not_found": "חבר {user_id} לא נמצא בגילדה {guild_id}.",
+          "member_fetch_failed": "לא ניתן להביא את החבר {user_id} מהגילדה {guild_id}."
         }
       }
     }
