@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
+          "strike": "Slå",
+          "kick": "Spark",
+          "ban": "Forbyd",
           "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "delete": "Slet besked",
+          "give_role": "Giv rolle",
+          "take_role": "Fjern rolle",
+          "warn": "Advar bruger",
+          "broadcast": "Udsend besked",
+          "auto": "Automatisk"
         }
       }
     }
