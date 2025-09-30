@@ -19,9 +19,9 @@
               "decision": "Besluit: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
+              "image": "Beeld",
               "video": "Video",
-              "unknown": "Unknown"
+              "unknown": "Onbekend"
             },
             "decision": {
               "nsfw": "NSFW",
