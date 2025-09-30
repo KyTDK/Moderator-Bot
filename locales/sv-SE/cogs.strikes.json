@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Kommandon för hantering av varningar.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Varna en specifik användare.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Medlemmen att varna.",
+            "reason": "Anledningen till varningen.",
+            "expiry": "Valfri utgångsvaraktighet (t.ex., 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Hämta varningarna för en specifik användare."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Rensa alla varningar för en specifik användare.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Användaren vars varningar kommer att rensas."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Lägg till en ytterligare åtgärd för en varningsnivå.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Antal varningar som krävs för att trigga åtgärden.",
+            "action": "Åtgärd att lägga till.",
+            "duration": "Varaktighet (endast för timeout, t.ex., 1h, 30m). Lämna tomt annars."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Ta bort en åtgärd från en varningsnivå.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Antal varningar kopplade till åtgärden.",
+            "action": "Exakt åtgärdssträng att ta bort."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Visa alla konfigurerade varningsåtgärder."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Avskräcka kanalen eller en specifik användare.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
