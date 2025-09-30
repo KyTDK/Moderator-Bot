@@ -17,20 +17,20 @@
         },
         "actions": {
           "add": {
-            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "description": "הוסף פעולה מנהלית שתופעל כאשר מתגלה כתובת URL אסורה.",
             "options": {
-              "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "action": "פעולה לביצוע",
+              "duration": "דרוש רק במקרים של השהיה (לדוגמה: 10דק, 1ש, 3י)"
             }
           },
           "remove": {
-            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "description": "הסר פעולה ספציפית מרשימת העונשים לכתובות URL אסורות.",
             "options": {
-              "action": "Exact action string to remove (e.g. timeout, delete)"
+              "action": "הפעולה המדויקת להסרה (לדוגמה, השהייה, מחיקה)"
             }
           },
           "view": {
-            "description": "Show all actions currently configured to trigger when banned URLs are used."
+            "description": "הצג את כל הפעולות שמוגדרות לפעול כאשר משתמשים בכתובות URL אסורות."
           }
         }
       },
