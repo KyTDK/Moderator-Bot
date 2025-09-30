@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Swendelary-opsporing-opstelling en patroonbestuur.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Sluit 'n kanaal uit van swendelary-opsporing.",
+          "channel": "Die kanaal om uit te sluit"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Verwyder 'n kanaal van die uitsluitingslys.",
+          "channel": "Die kanaal om van uitsluiting te verwyder"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Lys alle uitgeslote kanale."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Skakel of bepaal skakelkontrole.",
+          "action_description": "aktiveer | deaktiveer | status",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
+            "enable": "aktiveer",
+            "disable": "deaktiveer",
             "status": "status"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Voeg 'n aksie by die swendelary straaflys.",
+          "action": "Aksie om uit te voer",
+          "duration": "Slegs nodig vir tydsduur (bv. 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Verwyder 'n aksie van die swendelary straaflys.",
+          "action": "Presiese aksiestring om te verwyder (bv. tydsduur:1d, uitvee)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Bepaal huidige swendelary instellings."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Geen aksies gestel.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Skakelkontrole is {state}.",
+        "updated": "Skakelkontrole {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**geaktiveer**",
+          "disabled": "**gedeaktiveer**"
         }
       },
       "detection": {
