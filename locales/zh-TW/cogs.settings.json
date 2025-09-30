@@ -6,7 +6,7 @@
         "help": {
           "description": "獲取有關設定的幫助。",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "選用：命令組來獲得幫助"
           }
         },
         "reset": {
