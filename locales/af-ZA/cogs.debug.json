@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "Kry geheue- en werkverrigtingstatistieke",
+          "show_all": "Sluit toewysings van alle biblioteke in (nie net projek nie)"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "Wys die lokaal wat tans aan hierdie opdragkonteks gebind is"
         }
       },
       "permission_denied": "Jy het nie toestemming om hierdie opdrag te gebruik nie.",
@@ -26,7 +26,7 @@
         "footer": "Gasheer: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "Huidige lokaal: {locale}"
       }
     }
   }
