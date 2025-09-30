@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "Bellek ve performans istatistiklerini alın",
+          "show_all": "Tüm kütüphanelerden (sadece proje değil) tahsisleri dahil et"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "Bu komut bağlamına şu anda bağlı dili göster"
         }
       },
       "permission_denied": "Bu komutu kullanma izniniz yok.",
@@ -26,7 +26,7 @@
         "footer": "Ev sahibi: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "Geçerli yerel ayar: {locale}"
       }
     }
   }
