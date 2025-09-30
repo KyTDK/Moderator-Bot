@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**Ce este API Pool?**\nAPI Pool este o colecție sigură și anonimă de chei API OpenAI partajate. Permite Moderator Bot să continue să funcționeze eficient, chiar și atunci când utilizatorii individuali se confruntă cu limite de rată.\n\n**Cum funcționează?**\n- Când adăugați cheia dvs. API OpenAI în pool, aceasta este criptată și stocată în siguranță.\n- Botul utilizează aceste chei exclusiv pentru a accesa modelele OpenAI pentru a efectua sarcini de moderare.\n- Cheia dvs. API rămâne confidențială; nimeni, inclusiv dezvoltatorii botului, nu o poate vizualiza.\n- Aveți control total și puteți elimina cheia dvs. API din pool în orice moment.\n\n**Important:** Pentru a contribui cu cheia dvs. API, contul dvs. OpenAI trebuie să aibă cel puțin 5 USD în credite preplătite. Deși endpoint-ul de moderare este gratuit de utilizat, OpenAI solicită ca conturile să aibă detalii de facturare active și cotă. Puteți adăuga credit în contul dvs. aici: <https://platform.openai.com/account/billing/overview>\n\nContribuind cu cheia dvs. API, ajutați la asigurarea faptului că Moderator Bot rămâne receptiv și eficient pentru toți utilizatorii."
       },
