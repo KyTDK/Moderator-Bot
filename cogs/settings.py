@@ -251,8 +251,19 @@ class Settings(commands.Cog):
             chunks.append(buf)
         return chunks
 
-    @app_commands.command(name="help", description="Get help on a specific command group.")
-    @app_commands.describe(command="Optional: command group to get help with")
+    @app_commands.command(
+        name="help",
+        description=app_commands.locale_str(
+            "Get help on a specific command group.",
+            key="cogs.settings.meta.help.description",
+        ),
+    )
+    @app_commands.describe(
+        command=app_commands.locale_str(
+            "Optional: command group to get help with",
+            key="cogs.settings.meta.help.options.command",
+        )
+    )
     @app_commands.default_permissions(moderate_members=True)
     async def help(self, interaction: Interaction, command: Optional[str] = None):
         await interaction.response.defer(ephemeral=True)

@@ -262,8 +262,23 @@ class BannedURLsCog(commands.Cog):
     async def handle_message_edit(self, cached_before: dict, after: discord.Message):
         await self.handle_message(after)
 
-    @bannedurls_group.command(name="add_action", description="Add a moderation action to be triggered when a banned URL is detected.")
-    @app_commands.describe(action="Action to perform", duration="Only required for timeout (e.g. 10m, 1h, 3d)")
+    @bannedurls_group.command(
+        name="add_action",
+        description=app_commands.locale_str(
+            "Add a moderation action to be triggered when a banned URL is detected.",
+            key="cogs.banned_urls.meta.actions.add.description",
+        ),
+    )
+    @app_commands.describe(
+        action=app_commands.locale_str(
+            "Action to perform",
+            key="cogs.banned_urls.meta.actions.add.options.action",
+        ),
+        duration=app_commands.locale_str(
+            "Only required for timeout (e.g. 10m, 1h, 3d)",
+            key="cogs.banned_urls.meta.actions.add.options.duration",
+        ),
+    )
     @app_commands.choices(action=action_choices())
     async def add_banned_action(self, interaction: Interaction, action: str, duration: str = None, role: discord.Role = None, reason: str = None):
         await interaction.response.defer(ephemeral=True)
@@ -273,14 +288,31 @@ class BannedURLsCog(commands.Cog):
         msg = await manager.add_action(interaction.guild.id, action_str, translator=self.bot.translate)
         await interaction.followup.send(msg, ephemeral=True)
 
-    @bannedurls_group.command(name="remove_action", description="Remove a specific action from the list of punishments for banned URLs.")
-    @app_commands.describe(action="Exact action string to remove (e.g. timeout, delete)")
+    @bannedurls_group.command(
+        name="remove_action",
+        description=app_commands.locale_str(
+            "Remove a specific action from the list of punishments for banned URLs.",
+            key="cogs.banned_urls.meta.actions.remove.description",
+        ),
+    )
+    @app_commands.describe(
+        action=app_commands.locale_str(
+            "Exact action string to remove (e.g. timeout, delete)",
+            key="cogs.banned_urls.meta.actions.remove.options.action",
+        )
+    )
     @app_commands.autocomplete(action=manager.autocomplete)
     async def remove_banned_action(self, interaction: Interaction, action: str):
         msg = await manager.remove_action(interaction.guild.id, action, translator=self.bot.translate)
         await interaction.response.send_message(msg, ephemeral=True)
 
-    @bannedurls_group.command(name="view_actions", description="Show all actions currently configured to trigger when banned URLs are used.")
+    @bannedurls_group.command(
+        name="view_actions",
+        description=app_commands.locale_str(
+            "Show all actions currently configured to trigger when banned URLs are used.",
+            key="cogs.banned_urls.meta.actions.view.description",
+        ),
+    )
     async def view_banned_actions(self, interaction: Interaction):
         guild_id = interaction.guild.id
         actions = await manager.view_actions(interaction.guild.id)
