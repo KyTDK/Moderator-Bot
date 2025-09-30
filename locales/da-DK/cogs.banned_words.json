@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Kommandovejledning til styring af forbudte ord.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Aktiver eller deaktiver den indbyggede liste med bandeord.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
+            "enable": "aktiver",
+            "disable": "deaktiver",
             "status": "status"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Tilføj et ord til listen med forbudte ord."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Fjern et ord fra listen med forbudte ord."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Vis alle forbudte ord."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Ryd alle forbudte ord."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Tilføj en moderationshandling, der udløses, når et forbudt ord opdages.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Handling at udføre",
+            "duration": "Kun nødvendigt for timeout (f.eks. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Fjern en specifik handling fra straffelisten for forbudte ord.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Nøjagtig handlingsstreng, der skal fjernes (f.eks. timeout, slet)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Vis alle handlinger, der i øjeblikket er konfigureret til at udløses, når forbudte ord bruges."
         }
       },
       "defaults": {
