@@ -14,6 +14,22 @@
         },
         "clear": {
           "description": "Clear all banned URLs."
+        },
+        "add_action": {
+          "description": "Add a moderation action to be triggered when a banned URL is detected.",
+          "params": {
+            "action": "Action to perform",
+            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          }
+        },
+        "remove_action": {
+          "description": "Remove a specific action from the list of punishments for banned URLs.",
+          "params": {
+            "action": "Exact action string to remove (e.g. timeout, delete)"
+          }
+        },
+        "view_actions": {
+          "description": "Show all actions currently configured to trigger when banned URLs are used."
         }
       },
       "limit_reached": "You've reached the limit of {limit} banned URLs for this server.\nUse `/bannedurls remove` or `/bannedurls clear` to make space.",

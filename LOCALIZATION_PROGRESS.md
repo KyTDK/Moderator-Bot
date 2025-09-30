@@ -8,13 +8,13 @@
 - [x] cogs/banned_words.py — Localized command descriptions, parameter prompts, and action choices.
 - [x] cogs/strikes.py — Localized command metadata and parameter descriptions for moderation utilities.
 - [x] cogs/channel_config.py — Localized channel configuration metadata and translated choice labels.
-- [x] cogs/settings.py — Localized group metadata and command descriptions.
+- [x] cogs/settings.py — Localized group metadata and command descriptions (including help command metadata).
 - [x] cogs/settings.py — Localized help overview embeds, dashboard prompts, and group listings.
 - [x] cogs/dashboard.py — Moved slash command description into locale files.
 - [x] cogs/scam_detection.py — Localized command metadata, parameter prompts, and link-checking responses.
 - [x] cogs/monitoring.py — Localized command metadata, choice labels, and empty-content placeholders.
 - [x] cogs/captcha/cog.py — Localized slash command metadata.
-- [x] cogs/banned_urls.py — Localized command metadata.
+- [x] cogs/banned_urls.py — Localized command metadata and action management prompts.
 - [x] cogs/debug.py — Localized command metadata and locale summary message.
 - [x] cogs/autonomous_moderation/auto_commands.py — Localized command metadata, choice labels, and mode status output.
 - [x] cogs/voice_moderation/voice_moderator.py — Localized transcript embeds and budget notifications.
