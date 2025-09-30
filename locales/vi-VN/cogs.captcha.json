@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Quản lý xác minh captcha.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Gửi lại mã nhúng xác minh captcha."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Gửi yêu cầu xác minh captcha đến thành viên.",
+          "member": "Thành viên cần hoàn thành xác minh."
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "một vài phút",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} giây",
+            "other": "{count} giây"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} phút",
+            "other": "{count} phút"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} giờ",
+            "other": "{count} giờ"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} ngày",
+            "other": "{count} ngày"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Chào {member}! Để hoàn tất tham gia **{guild}**, ",
+          "grace": "vui lòng {instruction} trong vòng **{grace}**.",
+          "no_grace": "vui lòng {instruction} khi bạn đã sẵn sàng.",
+          "instruction_default": "hoàn thành captcha",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " Bạn có **{count}** lần thử.",
+            "other": " Bạn có **{count}** lần thử."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Yêu cầu xác minh Captcha",
+          "footer": "Được cung cấp bởi Moderator Bot"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Xác minh ngay"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Nhấn vào đây để xác minh"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "ghé thăm {channel} và hoàn thành captcha",
+          "help_title": "Cần trợ giúp?",
+          "help_value": "Nhấn nút dưới đây để mở trang xác minh.",
+          "button_label": "Mở trang xác minh"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Nhấn nút dưới đây để tự xác minh. Khi bạn vượt qua captcha, bạn sẽ được truy cập vào các phần khác của máy chủ.",
+        "login_notice": "Bạn có thể sẽ được yêu cầu đăng nhập vào bảng điều khiển của Moderator Bot trước.",
+        "title": "Hoàn thành Xác minh Captcha",
+        "footer": "ID Guild: {guild_id} | Được cung cấp bởi Moderator Bot",
+        "button_label": "Xác minh ngay"
       }
     }
   }
