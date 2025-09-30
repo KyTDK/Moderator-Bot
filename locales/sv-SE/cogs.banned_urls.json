@@ -17,20 +17,20 @@
         },
         "actions": {
           "add": {
-            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "description": "Lägg till en modereringsåtgärd som ska utlösas när en förbjuden URL upptäcks.",
             "options": {
-              "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "action": "Åtgärd att utföra",
+              "duration": "Endast nödvändigt för timeout (t.ex. 10m, 1h, 3d)"
             }
           },
           "remove": {
-            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "description": "Ta bort en specifik åtgärd från listan över bestraffningar för förbjudna URL:er.",
             "options": {
-              "action": "Exact action string to remove (e.g. timeout, delete)"
+              "action": "Exakt åtgärdssträng att ta bort (t.ex. timeout, delete)"
             }
           },
           "view": {
-            "description": "Show all actions currently configured to trigger when banned URLs are used."
+            "description": "Visa alla för närvarande konfigurerade åtgärder som utlöses när förbjudna URL:er används."
           }
         }
       },
