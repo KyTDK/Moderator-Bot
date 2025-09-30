@@ -70,6 +70,7 @@ class ModeratorBot(commands.Bot):
         self._translator: Translator | None = None
         self._translation_service: TranslationService | None = None
         self._command_tree_translator: DiscordAppCommandTranslator | None = None
+        self._command_tree_translator_loaded = False
         self._guild_locales = GuildLocaleCache()
         self._locale_resolver = LocaleResolver(self._guild_locales)
         self._locale_settings_listener = self._handle_locale_setting_update
@@ -165,6 +166,7 @@ class ModeratorBot(commands.Bot):
         self._command_tree_translator = DiscordAppCommandTranslator(
             self._translation_service
         )
+        self._command_tree_translator_loaded = False
 
     @property
     def translator(self) -> Translator:
@@ -226,6 +228,26 @@ class ModeratorBot(commands.Bot):
         if self._translation_service is None:
             raise RuntimeError("Translation service has not been initialised")
         return self._translation_service
+
+    async def ensure_command_tree_translator(self) -> None:
+        """Ensure the Discord command tree translator is set before syncing."""
+
+        translator = self._command_tree_translator
+        if translator is None:
+            _logger.warning("Command tree translator requested but not initialised")
+            return
+
+        if not self._command_tree_translator_loaded:
+            _logger.debug("Loading command tree translator before activation")
+            await translator.load()
+            self._command_tree_translator_loaded = True
+
+        current = getattr(self.tree, "translator", None)
+        if current is translator:
+            return
+
+        _logger.debug("Setting Discord command tree translator prior to sync")
+        await self.tree.set_translator(translator)
 
     def push_locale(self, locale: Any | None) -> Token[str | None]:
         return self.translation_service.push_locale(locale)
@@ -390,9 +412,7 @@ class ModeratorBot(commands.Bot):
             _logger.exception("Failed to update shard status (%s)", status)
 
     async def setup_hook(self) -> None:  # type: ignore[override]
-        if self._command_tree_translator is not None:
-            _logger.warning("Setting Discord command tree translator")
-            await self.tree.set_translator(self._command_tree_translator)
+        await self.ensure_command_tree_translator()
 
         try:
             await mysql.initialise_and_get_pool()
@@ -418,6 +438,7 @@ class ModeratorBot(commands.Bot):
         except Exception as exc:
             print(f"[WARN] top.gg poster could not start: {exc}")
 
+        await self.ensure_command_tree_translator()
         try:
             await self.tree.sync(guild=None)
         except Exception as exc:
