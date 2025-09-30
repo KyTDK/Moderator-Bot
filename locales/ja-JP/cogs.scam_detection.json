@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "詐欺検出設定とパターン管理。",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "チャンネルを詐欺検出から除外します。",
+          "channel": "除外するチャンネル"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "リストからチャンネルを削除します。",
+          "channel": "除外から削除するチャンネル"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "除外されたチャンネルをすべてリストします。"
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "リンクのチェックを切り替えるかビューします。",
+          "action_description": "有効|無効|状態",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "有効",
+            "disable": "無効",
+            "status": "状態"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "詐欺処罰リストにアクションを追加します。",
+          "action": "実行するアクション",
+          "duration": "タイムアウトの場合のみ必要（例: 10m, 1h, 3d）"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "詐欺処罰リストからアクションを削除します。",
+          "action": "削除する正確なアクション文字列（例: timeout:1d, delete）"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "現在の詐欺設定を表示します。"
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*アクションが設定されていません。*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "リンクのチェックは{state}です。",
+        "updated": "リンクのチェック{state}。",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**有効**",
+          "disabled": "**無効**"
         }
       },
       "detection": {
