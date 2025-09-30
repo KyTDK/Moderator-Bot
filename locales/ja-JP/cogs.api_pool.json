@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**APIプールとは？**\nAPIプールは安全で匿名の共有OpenAI APIキーのコレクションです。各ユーザーがレート制限に直面してもモデレーターボットが効果的に運用を継続できるようにします。\n\n**仕組みは？**\n- APIキーをプールに追加すると、暗号化され安全に保存されます。\n- ボットはこれらのキーを専らOpenAIモデルにアクセスしてモデレーションタスクを行うために使用します。\n- あなたのAPIキーは機密に保たれ、開発者を含む誰も見ることはできません。\n- プールからAPIキーをいつでも削除する完全なコントロール権があります。\n\n**重要:** APIキーを提供するためには、あなたのOpenAIアカウントに少なくとも$5のプリペイドクレジットが必要です。モデレーションエンドポイントの使用は無料ですが、OpenAIはアカウントに有効な請求情報やクオータを求めます。 <https://platform.openai.com/account/billing/overview> でクレジットを追加できます。\n\nAPIキーを提供することで、モデレーター・ボットが全てのユーザーに対して応答性と効果を持ち続けるのを支援できます。"
       },
