@@ -3,16 +3,16 @@
     "config": {
       "premium_plans": {
         "plan_names": {
-          "free": "Free",
-          "core": "Core",
-          "pro": "Pro",
-          "ultra": "Ultra"
+          "free": "Miễn phí",
+          "core": "Cốt lõi",
+          "pro": "Chuyên nghiệp",
+          "ultra": "Siêu cấp"
         },
         "requirements": {
-          "any": "an active premium plan",
-          "single": "an active {plan} plan",
-          "double": "an active {plan_a} or {plan_b} plan",
-          "list": "an active {plans}, or {last} plan"
+          "any": "một gói cao cấp đang hoạt động",
+          "single": "một gói {plan} đang hoạt động",
+          "double": "một gói {plan_a} hoặc {plan_b} đang hoạt động",
+          "list": "một trong các gói {plans}, hoặc gói {last} đang hoạt động"
         }
       }
     }
