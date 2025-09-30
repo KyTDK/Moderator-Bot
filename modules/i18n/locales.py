@@ -27,6 +27,11 @@ class LocaleRepository:
         self._cache: dict[str, dict[str, Any]] = {}
         self._lock = Lock()
         self._loaded = False
+        self._warn_locales = {
+            value.lower()
+            for value in (self._default_locale, self._fallback_locale)
+            if value
+        }
 
     @property
     def locales_root(self) -> Path:
@@ -73,8 +78,9 @@ class LocaleRepository:
         with self._lock:
             data = self._cache.get(locale)
         if data is None:
-            logger.warning("Requested locale %s missing from cache", locale)
-        return self._resolve_key(data, key)
+            self._log_missing_locale(locale)
+            return None
+        return self._resolve_key(locale, data, key)
 
     def _load_from_disk(self) -> dict[str, dict[str, Any]]:
         cache: dict[str, dict[str, Any]] = {}
@@ -127,8 +133,14 @@ class LocaleRepository:
                 merged[key] = deepcopy(value)
         return merged
 
-    @staticmethod
-    def _resolve_key(data: dict[str, Any] | None, key: str) -> Any:
+    def _should_warn_for_locale(self, locale: str) -> bool:
+        return locale.lower() in self._warn_locales
+
+    def _log_missing_locale(self, locale: str) -> None:
+        level = logging.WARNING if self._should_warn_for_locale(locale) else logging.DEBUG
+        logger.log(level, "Requested locale %s missing from cache", locale)
+
+    def _resolve_key(self, locale: str, data: dict[str, Any] | None, key: str) -> Any:
         if data is None:
             return None
         cursor: Any = data
@@ -136,10 +148,17 @@ class LocaleRepository:
             if isinstance(cursor, Mapping) and part in cursor:
                 cursor = cursor[part]
             else:
-                logger.warning(
-                    "Key %s missing while traversing part %s (locale data available=%s)",
+                level = (
+                    logging.WARNING
+                    if self._should_warn_for_locale(locale)
+                    else logging.DEBUG
+                )
+                logger.log(
+                    level,
+                    "Key %s missing while traversing part %s for locale %s (locale data available=%s)",
                     key,
                     part,
+                    locale,
                     cursor is not None,
                 )
                 return None

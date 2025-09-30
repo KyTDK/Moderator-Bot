@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -268,6 +269,26 @@ def test_locale_aliases_use_translated_welcome_button(
     result = bot.translate("bot.welcome.button_label", locale=locale_hint)
 
     assert result == expected
+
+
+def test_missing_translation_for_non_default_locale_logs_debug(
+    bot: ModeratorBot, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.DEBUG, logger="modules.i18n.locales")
+
+    key = "cogs.settings.meta.help.options.command"
+    result = bot.translate(key, locale="es-ES")
+
+    assert result == "Optional: command group to get help with"
+
+    locale_records = [
+        record
+        for record in caplog.records
+        if record.name == "modules.i18n.locales"
+    ]
+    assert locale_records
+    assert all(record.levelno < logging.WARNING for record in locale_records)
+    assert any(key in record.getMessage() for record in locale_records)
 
 
 def _spanish_settings_header() -> str:
