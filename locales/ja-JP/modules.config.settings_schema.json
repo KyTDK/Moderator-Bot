@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "無効なロケールです。サポートされているロケール: {supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "プロファイル画像に不適切なコンテンツが含まれていると検出されました。",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "プロファイル画像に不適切なコンテンツが含まれていると検出されました。",
+            "このサーバーには不適切なプロファイル画像です。",
+            "プロファイル画像がNSFWとしてフラグ付けされました。"
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. 敬意を持って行動してください — 嫌がらせやヘイトスピーチを禁止します。",
+            "2. NSFWまたは卑猥なコンテンツを禁止します。",
+            "3. スパムまたは過度な自己宣伝を禁止します。",
+            "4. Discordの利用規約を遵守してください。"
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. 嫌がらせ、ヘイトスピーチ、または脅迫は禁止します。",
+            "2. 中傷や差別的な発言を禁止します。",
+            "3. 暴力または違法行為の扇動を禁止します。",
+            "4. 性的コンテンツや露骨な発言は禁止します。",
+            "5. Discordの利用規約を遵守してください。"
           ]
         }
       }
