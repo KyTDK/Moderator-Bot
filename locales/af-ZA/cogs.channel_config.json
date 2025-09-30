@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Stel log kanale op.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Stel 'n log kanaal in.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Die kanaal om vir log aan te wend.",
+            "type": "Vir watter tipe log is hierdie kanaal."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Verwyder 'n log kanaal.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Watter log tipe om uit te skakel."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Wys huidige log kanaalinstellings."
         },
         "types": {
-          "strike": "Strike",
+          "strike": "Staking",
           "nsfw": "NSFW",
-          "ai": "AI",
+          "ai": "KI",
           "monitor": "Monitor",
           "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "vc_transcript": "VC Transkripsie"
         }
       },
       "nsfw_required": "{channel} is nie ouderdomsbeperk nie. Kies asseblief 'n NSFW-kanaal.",
