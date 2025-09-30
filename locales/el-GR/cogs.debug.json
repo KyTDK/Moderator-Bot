@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "Λάβετε στοιχεία μνήμης και απόδοσης",
+          "show_all": "Συμπεριλάβετε κατανομές από όλες τις βιβλιοθήκες (όχι μόνο του έργου)"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "Εμφανίστε την τοπική ρύθμιση που είναι συνδεδεμένη με αυτό το πλαίσιο εντολών"
         }
       },
       "permission_denied": "Δεν έχετε άδεια να χρησιμοποιήσετε αυτήν την εντολή.",
@@ -26,7 +26,7 @@
         "footer": "Υπολογιστής Φιλοξενίας: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "Τρέχουσα τοπική ρύθμιση: {locale}"
       }
     }
   }
