@@ -3,15 +3,15 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
+          "strike": "Slå",
+          "kick": "Sparka",
+          "ban": "Bannlys",
           "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
+          "delete": "Ta bort meddelande",
+          "give_role": "Tilldela roll",
+          "take_role": "Ta bort roll",
+          "warn": "Varna användare",
+          "broadcast": "Skicka meddelande",
           "auto": "Auto"
         }
       }
