@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "NSFWコンテンツ検出を管理します。",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "NSFW処罰リストにアクションを追加します。",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "実行するアクション",
+            "duration": "タイムアウトの場合のみ必須（例: 10分, 1時間, 3日）"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "NSFW処罰リストからアクションを削除します。",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "削除する確定的なアクション文字列（例: タイムアウト, 削除）"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "現在のNSFW処罰アクションのリストを表示します。"
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "NSFW検出にカテゴリを追加します。"
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "暴力的 - グラフィック",
+          "violence": "暴力",
+          "sexual": "性的",
+          "self_harm_instructions": "自傷行為の指示",
+          "self_harm_intent": "自傷行為の意図",
+          "self_harm": "自傷行為"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "NSFW検出からカテゴリを削除します。"
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "NSFW検出カテゴリを表示します。"
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "NSFW検出の信頼度しきい値を設定します。",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "信頼度しきい値（0.0から1.0まで）"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "現在のNSFW検出しきい値を表示します。"
         }
       },
       "actions": {
