@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Διαχείριση ρυθμίσεων διακομιστή.",
         "help": {
-          "description": "Λάβετε βοήθεια για τις ρυθμίσεις."
+          "description": "Λάβετε βοήθεια για τις ρυθμίσεις.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Διαγράψτε όλες τις ρυθμίσεις και ξεκινήστε με τις προεπιλογές. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
