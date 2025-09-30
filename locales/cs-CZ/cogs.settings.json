@@ -6,7 +6,7 @@
         "help": {
           "description": "Získat pomoc s nastavením.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Volitelné: skupina příkazů pro získání nápovědy"
           }
         },
         "reset": {
