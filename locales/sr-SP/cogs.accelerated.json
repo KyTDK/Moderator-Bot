@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Управљајте вашим убрзаним (премијум) претплатама.",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Проверите да ли тренутно имате убрзану претплату."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Генеришите вашу јединствену PayPal везу за претплату."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Прикажите користи од убрзане претплате."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Објасните како да откажете вашу претплату."
         }
       },
       "group_description": "Управљање вашем убрзаном (премиум) претплатом.",
