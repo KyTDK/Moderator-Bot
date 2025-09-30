@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Команди для управління забороненими словами.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Увімкнути або вимкнути вбудований список нецензурних слів.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "увімкнути",
+            "disable": "вимкнути",
+            "status": "статус"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Додати слово до списку заборонених слів."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Видалити слово зі списку заборонених слів."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Перелічити всі заборонені слова."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Очистити всі заборонені слова."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Додати дію модерації, яка буде застосована при виявленні забороненого слова.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Дія для виконання",
+            "duration": "Потрібно лише для тайм-ауту (наприклад, 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Видалити конкретну дію зі списку покарань за заборонені слова.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Точний рядок дії для видалення (наприклад, тайм-аут, видалити)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Показати всі дії, які наразі налаштовані для виконання при використанні заборонених слів."
         }
       },
       "defaults": {
