@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "Страјк",
+          "kick": "Ударац",
+          "ban": "Бан",
+          "timeout": "Истек времена",
+          "delete": "Обриши поруку",
+          "give_role": "Додели улогу",
+          "take_role": "Уклони улогу",
+          "warn": "Упозори корисника",
+          "broadcast": "Јавно објави поруку",
+          "auto": "Аутоматски"
         }
       }
     }
