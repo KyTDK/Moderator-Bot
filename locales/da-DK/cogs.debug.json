@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "Få hukommelses- og ydelsesstatistikker",
+          "show_all": "Inkluder allokeringer fra alle biblioteker (ikke kun projektet)"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "Vis det lokale, der aktuelt er bundet til denne kommandokontekst"
         }
       },
       "permission_denied": "Du har ikke tilladelse til at bruge denne kommando.",
@@ -26,7 +26,7 @@
         "footer": "Vært: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "Nuværende lokal: {locale}"
       }
     }
   }
