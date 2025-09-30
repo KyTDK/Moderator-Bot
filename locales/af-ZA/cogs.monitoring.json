@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Monitering konfigurasie",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Stel kanaal in om logs uit te voer.",
+          "channel": "Die kanaal om logs na te stuur."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Verwyder die monitor kanaal instel."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Toon die huidige monitor kanaal."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Aktiveer of deaktiveer 'n spesifieke monitering gebeurtenis.",
+          "event": "Die gebeurtenis om te wissel",
+          "enabled": "Aktiveer of deaktiveer logboeke vir hierdie gebeurtenis",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Gebruiker aangesluit",
+            "leave": "Gebruiker verlaat",
+            "ban": "Blok",
+            "unban": "Ontblok",
+            "timeout": "Tyd af",
+            "message_delete": "Boodskap verwyder",
+            "message_edit": "Boodskap gewysig"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Lys huidige monitor gebeurtenis instellings."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Inhoud:**\n{content}",
         "description_generic": "'n Boodskap is in {channel} verwyder.",
         "description_deleted_by": "\n**Verwyder deur:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Geen Inhoud]",
         "fields": {
           "attachments": "Aanhangsels ({count})",
           "embeds": "Insluiting {index}",
@@ -99,7 +99,7 @@
           "before": "Voorheen",
           "after": "Daarna"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Geen Inhoud]",
         "footer": "Gebruiker ID: {user_id}"
       },
       "ban": {
