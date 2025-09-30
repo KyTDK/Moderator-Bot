@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "פקודות ניהול עונשין.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "לשלול משתמש מסוים.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "החבר שצריך לשלול.",
+            "reason": "הסיבה לעונשין.",
+            "expiry": "משך פקיעת תוקף (למשל, 30 ימים, 2 שבועות)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "לקבל את העונשין של משתמש מסוים."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "לנקות כל העונשין של משתמש מסוים.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "המשתמש שעונשיו ינוקו."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "להוסיף פעולה נוספת לרמת עונשין.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "מספר העונשין הנדרש כדי להפעיל את הפעולה.",
+            "action": "הפעולה להוספה.",
+            "duration": "משך זמן (רק עבור תזמון לפי שעות, לדוגמה, 1ש, 30ד). השאר ריק אחרת."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "להסיר פעולה מרמת עונשין.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "מספר העונשין הקשור לפעולה.",
+            "action": "מחרוזת פעולה מדויקת להסרה."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "להציג את כל פעולות העונשין שהוגדרו."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "לאיים על הערוץ או על משתמש מסוים.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
