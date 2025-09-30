@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "Gérer les fonctionnalités de modération IA.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Définir les règles du serveur"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Afficher les règles de modération actuellement configurées."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Ajouter des actions d'application"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Supprimer une action spécifique de la liste des sanctions.",
+          "action": "Chaîne d'action exacte à supprimer (par exemple, délai d'attente, suppression)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "Activer/désactiver la modération, voir le statut ou définir le mode.",
+          "enable": "Activer ou désactiver la modération autonome.",
+          "mode": "Optionnel : définir le mode rapport / intervalle / adaptatif.",
+          "enable_choice": "Activer",
+          "disable_choice": "Désactiver",
+          "status_choice": "Statut",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "Rapport",
+            "interval": "Intervalle",
+            "adaptive": "Adaptatif"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Afficher toutes les actions actuellement configurées pour se déclencher lorsque l'IA détecte une violation."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Lier un événement déclencheur à une ou plusieurs actions de mode de modération.",
+          "role": "Quels rôles surveiller (le cas échéant)",
+          "channel": "Quel canal surveiller (pour les événements de pic)",
+          "time_range": "Plage horaire en HH:MM-HH:MM pour les déclencheurs basés sur le temps",
+          "threshold": "Seuil pour le pourcentage de rôle en ligne (0 à 1, optionnel)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Supprimer une action spécifique d'un événement configuré.",
+          "event_key": "Clé d'événement adaptatif (autocomplète)",
+          "action": "Action à supprimer de cet événement"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Effacer tous les déclencheurs d'événements adaptatifs."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Afficher les déclencheurs de modération adaptative actuels."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "Rôle en ligne",
+            "role_offline": "Rôle hors ligne",
+            "mass_join": "Adhésion massive",
+            "mass_leave": "Départ en masse",
+            "guild_inactive": "Inactivité du serveur",
+            "role_online_percent": "Rôle en ligne %",
+            "time_range": "Plage horaire",
+            "server_spike": "Pic du serveur"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Activer le mode intervalle",
+          "disable_interval": "Désactiver le mode intervalle",
+          "enable_report": "Activer le mode rapport",
+          "disable_report": "Désactiver le mode rapport"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "désactivé",
         "state_unknown": "inconnu",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "rapport",
+          "interval": "intervalle",
+          "adaptive": "adaptatif"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "Budget de modération IA atteint pour ce cycle de facturation. Réinitialisation à {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "le prochain cycle",
+        "thanks_no_violation": "Merci pour le signalement. Aucune infraction n’a été trouvée.",
+        "thanks_action": "Merci pour le signalement. Une action a été entreprise."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "Violation signalée par l'IA",
+          "description": "Utilisateur : {user}\nRègle enfreinte : {rule}\nRaison : {reason}\nActions : {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "Diffusion",
+              "value": "Auteurs multiples détectés ; actions appliquées par auteur."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "Décision AI",
+              "none": "Aucune",
+              "unknown": "Inconnu"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Actions appliquées",
+              "none": "Aucune"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
-              "entry": "• ID {id}: {content}"
+              "name": "Message(s) flagué(s)",
+              "no_content": "[pas de contenu textuel]",
+              "entry": "• ID {id} : {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "Analyse de modération IA (Débogage)",
+          "description": "Aucune violation n’a été trouvée lors de la dernière analyse.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
+            "scanned_messages": "Messages scannés",
             "mode": "Mode"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "Violation détectée",
+          "reason_multiple": "Violations multiples : {reasons}",
+          "rule_default": "Violation de la règle",
+          "rule_multiple": "Règles multiples : {rules}"
         }
       },
       "ensure_adaptive": "Le mode de modération adaptatif n'est pas activé. Utilisez `/ai_mod set_mode` pour l'activer."
