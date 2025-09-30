@@ -29,6 +29,7 @@
 - [x] modules/utils/mysql/settings.py — Localized premium requirement enforcement messaging.
 - [x] modules/variables/TimeString.py — Localized invalid duration validation error.
 - [x] modules/utils/localization.py — Added reusable localized error helper for validation feedback.
+- [x] modules/utils/event_manager.py — Localized adaptive event manager responses for action assignments.
 
 ## To Do
 - [ ] Audit remaining modules for embedded message strings and prompts.
