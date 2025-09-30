@@ -4,7 +4,7 @@
       "api": {
         "key_failed_notice": "**Aviso:** Sua chave de API do OpenAI falhou em uma verificação de moderação.\n\nIsso geralmente significa que sua conta não possui fatura ativa ou está temporariamente limitada por taxa.\n\nPor favor, verifique o seu [Painel de Faturamento do OpenAI](https://platform.openai.com/account/billing/overview) para garantir que sua conta possui informações de pagamento e pelo menos $5 em créditos.\n\nUma vez resolvido, sua chave começará a funcionar novamente automaticamente - não há necessidade de adicioná-la novamente.",
         "key_validation": {
-          "billing_required": "Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly."
+          "billing_required": "Sua chave API não funcionou. Isso provavelmente ocorre porque sua organização não adicionou créditos à conta do OpenAI. Embora o modelo de moderação seja gratuito, o OpenAI requer que as contas possuam informações de pagamento válidas no arquivo. Para adicionar crédito, visite a página de [Visão Geral do Pagamento do OpenAI](https://platform.openai.com/account/billing/overview) e compre pelo menos $5 em créditos. Após adicionar uma forma de pagamento e créditos, sua chave API deverá funcionar corretamente."
         }
       }
     }
