@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Määritä lokikanavat.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Aseta lokikanava.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Kanava, jota käytetään lokille.",
+            "type": "Mille lokityypille tämä kanava on tarkoitettu."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Poista lokikanava käytöstä.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Minkä lokityypin haluat poistaa käytöstä."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Näytä nykyiset lokikanavan asetukset."
         },
         "types": {
-          "strike": "Strike",
+          "strike": "Rikkomus",
           "nsfw": "NSFW",
           "ai": "AI",
-          "monitor": "Monitor",
+          "monitor": "Seuranta",
           "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "vc_transcript": "Äänikanavan transkripti"
         }
       },
       "nsfw_required": "{channel} ei ole ikärajoitettu. Valitse NSFW-kanava.",
