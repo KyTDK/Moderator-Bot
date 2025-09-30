@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "Lấy số liệu về bộ nhớ và hiệu suất",
+          "show_all": "Bao gồm các phân bổ từ tất cả các thư viện (không chỉ dự án)"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "Hiển thị ngôn ngữ hiện tại được liên kết với ngữ cảnh lệnh này"
         }
       },
       "permission_denied": "Bạn không có quyền sử dụng lệnh này.",
@@ -26,7 +26,7 @@
         "footer": "Máy Chủ: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "Ngôn ngữ hiện tại: {locale}"
       }
     }
   }
