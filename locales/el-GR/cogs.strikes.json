@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Εντολές διαχείρισης απεργιών.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Επιλέγει έναν συγκεκριμένο χρήστη.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Το μέλος που θα επιλεγεί.",
+            "reason": "Ο λόγος της απεργίας.",
+            "expiry": "Προαιρετική διάρκεια λήξης (π.χ., 30 ημέρες, 2 εβδομάδες)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Προβολή απεργιών ενός συγκεκριμένου χρήστη."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Αφαίρεση όλων των απεργιών ενός συγκεκριμένου χρήστη.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Ο χρήστης από τον οποίο θα αφαιρεθούν απεργίες."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Προσθήκη επιπλέον ενέργειας για ένα επίπεδο απεργίας.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Αριθμός απεργιών που απαιτούνται για να ενεργοποιηθεί η ενέργεια.",
+            "action": "Η ενέργεια που θα προστεθεί.",
+            "duration": "Διάρκεια (μόνο για αναστολή, π.χ., 1 ώρα, 30 λεπτά). Αφήστε κενό διαφορετικά."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Αφαίρεση ενέργειας από επίπεδο απεργίας.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Αριθμός απεργιών που σχετίζονται με την ενέργεια.",
+            "action": "Ακριβής συμβολοσειρά δράσης για αφαίρεση."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Προβολή όλων των διαμορφωμένων ενεργειών απεργίας."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Εκφοβίστε το κανάλι ή έναν συγκεκριμένο χρήστη.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
