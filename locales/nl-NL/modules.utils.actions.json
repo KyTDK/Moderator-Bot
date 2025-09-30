@@ -3,15 +3,15 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
+          "strike": "Slaan",
+          "kick": "Schoppen",
+          "ban": "Verbannen",
+          "timeout": "Time-out",
+          "delete": "Bericht verwijderen",
+          "give_role": "Rol geven",
+          "take_role": "Rol verwijderen",
+          "warn": "Gebruiker waarschuwen",
+          "broadcast": "Bericht uitzenden",
           "auto": "Auto"
         }
       }
