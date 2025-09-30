@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "诈骗检测配置和模式管理。",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "将一个频道从诈骗检测中排除。",
+          "channel": "要排除的频道"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "从排除列表中移除一个频道。",
+          "channel": "要从排除中移除的频道"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "列出所有排除的频道。"
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "切换或查看链接检测。",
+          "action_description": "启用 | 禁用 | 状态",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "启用",
+            "disable": "禁用",
+            "status": "状态"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "将一个操作添加到诈骗处罚列表。",
+          "action": "执行的操作",
+          "duration": "仅在超时时需要（例如 10m、1h、3d）"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "从诈骗处罚列表中移除一个操作。",
+          "action": "要移除的准确操作字符串（例如 timeout:1d, delete）"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "查看当前诈骗设置。"
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*未设置行为。*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "链接检测已{state}。",
+        "updated": "链接检测{state}。",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**已启用**",
+          "disabled": "**已禁用**"
         }
       },
       "detection": {
