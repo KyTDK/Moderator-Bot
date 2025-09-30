@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "騙局偵測配置與樣式管理。",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "排除頻道以避免騙局偵測。",
+          "channel": "要排除的頻道"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "從排除名單中移除頻道。",
+          "channel": "要從排除中移除的頻道"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "列出所有被排除的頻道。"
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "切換或檢視連結檢查。",
+          "action_description": "啟用 | 停用 | 狀態",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "啟用",
+            "disable": "停用",
+            "status": "狀態"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "將行動添加到騙局懲罰清單。",
+          "action": "執行的行動",
+          "duration": "僅在超時時需要（例如10分鐘、1小時、3天）"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "從騙局懲罰清單中移除行動。",
+          "action": "要移除的精確行動字串（例如 timeout:1d, delete）"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "檢視目前的騙局設定。"
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*未設定操作。*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "連結檢查為{state}。",
+        "updated": "連結檢查{state}。",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**啟用**",
+          "disabled": "**停用**"
         }
       },
       "detection": {
