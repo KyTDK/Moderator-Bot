@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "AIモデレーション機能を管理します。",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "サーバーのルールを設定"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "現在設定されているモデレーションルールを表示します。"
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "執行措置を追加"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "罰則リストから特定の措置を削除します。",
+          "action": "削除する正確な措置文字列 (例: タイムアウト、削除)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "モデレーションを有効/無効にし、ステータスを表示したり、モードを設定します。",
+          "enable": "自律モデレーションをオンまたはオフにします。",
+          "mode": "オプション: レポート / インターバル / アダプティブモードを設定します。",
+          "enable_choice": "有効化",
+          "disable_choice": "無効化",
+          "status_choice": "ステータス",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "レポート",
+            "interval": "インターバル",
+            "adaptive": "アダプティブ"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "AIが違反を検出した際にトリガーする現在設定されているすべての措置を表示します。"
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "トリガーイベントを1つ以上のモデレーションモード措置にリンクします。",
+          "role": "監視する役割（適用可能な場合）",
+          "channel": "監視するチャンネル（スパイクイベント用）",
+          "time_range": "時間ベースのトリガーのための HH:MM-HH:MM の時間範囲",
+          "threshold": "役割オンラインの割合のしきい値（0から1、任意）"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "設定されたイベントから特定の措置を削除します。",
+          "event_key": "アダプティブイベントキー（オートコンプリート）",
+          "action": "このイベントから削除する措置"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "すべてのアダプティブイベントトリガーをクリアします。"
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "現在のアダプティブモデレーショントリガーを表示します。"
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "役割オンライン",
+            "role_offline": "役割オフライン",
+            "mass_join": "大量参加",
+            "mass_leave": "大量退出",
+            "guild_inactive": "サーバーの非アクティブ",
+            "role_online_percent": "役割オンライン率",
+            "time_range": "時間範囲",
+            "server_spike": "サーバースパイク"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "インターバルモードを有効化",
+          "disable_interval": "インターバルモードを無効化",
+          "enable_report": "レポートモードを有効化",
+          "disable_report": "レポートモードを無効化"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "無効",
         "state_unknown": "不明",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "レポート",
+          "interval": "インターバル",
+          "adaptive": "アダプティブ"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "この請求サイクルのAIモデレーション予算が上限に達しました。{reset}にリセットされます。",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "次のサイクル",
+        "thanks_no_violation": "報告ありがとうございます。違反は見つかりませんでした。",
+        "thanks_action": "報告ありがとうございます。措置が取られました。"
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "AIによってフラグが立てられた違反",
+          "description": "ユーザー: {user}\n違反ルール: {rule}\n理由: {reason}\n措置: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "ファンアウト",
+              "value": "複数の著者が検出されました。著者ごとに適用される措置が実施されました。"
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "AIの判断",
+              "none": "なし",
+              "unknown": "不明"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "適用された措置",
+              "none": "なし"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
+              "name": "フラグ付きメッセージ",
+              "no_content": "[テキスト内容なし]",
               "entry": "• ID {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "AIモデレーションスキャン (デバッグ)",
+          "description": "最新のスキャンでは違反は見つかりませんでした。",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "スキャンされたメッセージ",
+            "mode": "モード"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "違反が検出されました",
+          "reason_multiple": "複数の違反: {reasons}",
+          "rule_default": "ルール違反",
+          "rule_multiple": "複数のルール: {rules}"
         }
       },
       "ensure_adaptive": "適応モデレーションモードが有効になっていません。有効にするには、`/ai_mod set_mode`を使用してください。"
