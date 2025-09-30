@@ -439,12 +439,6 @@ class ModeratorBot(commands.Bot):
             try:
                 preferred = getattr(guild, "preferred_locale", None)
                 normalized_locale = normalise_locale(preferred)
-                _logger.warning(
-                    "Normalised preferred locale for guild %s: %r -> %s",
-                    guild.id,
-                    preferred,
-                    normalized_locale,
-                )
                 owner_id = await self._resolve_guild_owner_id(guild)
                 if owner_id is None:
                     _logger.warning(
@@ -476,12 +470,6 @@ class ModeratorBot(commands.Bot):
     async def on_guild_join(self, guild: discord.Guild) -> None:  # type: ignore[override]
         preferred = getattr(guild, "preferred_locale", None)
         normalized_locale = normalise_locale(preferred)
-        _logger.warning(
-            "Normalised preferred locale for joined guild %s: %r -> %s",
-            guild.id,
-            preferred,
-            normalized_locale,
-        )
         owner_id = await self._resolve_guild_owner_id(guild)
         if owner_id is None:
             _logger.warning(

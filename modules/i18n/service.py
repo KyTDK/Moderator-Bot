@@ -39,14 +39,6 @@ class TranslationService:
         fallback: str | None = None,
     ) -> Any:
         resolved_locale = self._prepare_locale(locale)
-        logger.warning(
-            "TranslationService.translate called (key=%s, requested_locale=%s, resolved_locale=%s, placeholders=%s, fallback=%s)",
-            key,
-            locale,
-            resolved_locale,
-            placeholders,
-            fallback,
-        )
         return self._translator.translate(
             key,
             locale=resolved_locale,
