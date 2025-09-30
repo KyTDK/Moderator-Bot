@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "Обнаружен контент NSFW",
+          "description": "**Пользователь:** {user_mention} ({user_display})\n**Причина:** {reason}",
+          "footer": "ID пользователя: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "Отчёт о сканировании NSFW",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Пользователь: {user}",
+              "file": "Файл: `{filename}`",
+              "type": "Тип: `{file_type}`",
+              "decision": "Решение: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "Изображение",
+              "video": "Видео",
+              "unknown": "Неизвестный"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Безопасно",
+              "unknown": "Неизвестно"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Причина",
+              "category": "Категория",
+              "score": "Оценка",
+              "flagged_any": "Помечено любое",
+              "summary_categories": "Резюме категорий",
+              "max_similarity": "Максимальное сходство",
+              "max_category": "Категория максимального сходства",
+              "similarity": "Совпадение сходства",
+              "high_accuracy": "Высокая точность",
+              "clip_threshold": "Порог CLIP",
+              "moderation_threshold": "Порог модерации",
+              "video_frames": "Кадры видео"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "Модерация OpenAI",
+              "similarity_match": "Совпадение по сходству",
+              "no_frames_extracted": "Кадры не извлечены",
+              "no_nsfw_frames_detected": "Кадры NSFW не обнаружены"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Уверенность",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Оценка",
+            "similarity": "Сходство"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "правда",
+          "false": "ложь"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Не указано"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Обнаружено потенциальное нарушение политики (Категория: **{category}**)"
       }
     }
   }
