@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Διαχείριση ρυθμίσεων διακομιστή.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Λάβετε βοήθεια για τις ρυθμίσεις."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Διαγράψτε όλες τις ρυθμίσεις και ξεκινήστε με τις προεπιλογές. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Ορίστε μια ρύθμιση διακομιστή."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Λάβετε την τρέχουσα τιμή μιας ρύθμισης διακομιστή."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Αφαιρέστε μια ρύθμιση διακομιστή ή ένα στοιχείο από μια ρύθμιση τύπου λίστας."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Δεν βρέθηκε βοήθεια για `{command}`.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Άνοιγμα Πίνακα Ελέγχου",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Χωρίς περιγραφή.",
+          "no_subcommands": "(Χωρίς υποεντολές)",
+          "no_groups": "(Δεν βρέθηκαν ομάδες εντολών.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Χρησιμοποιείται η προεπιλογή `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Πίνακας Ελέγχου:** [Άνοιγμα Πίνακα Ελέγχου]({dashboard_url})\\nΧρησιμοποιήστε `/help {name}` για να το δείτε ξανά.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Υποεντολές",
+              "paged": "Υποεντολές (σελίδα {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Bot Συντονιστής — Βοήθεια",
+            "description": "🛠️ **Πίνακας Ελέγχου:** [Άνοιγμα Πίνακα Ελέγχου]({dashboard_url})\\nΔιαμορφώστε τα πάντα πιο γρήγορα στον ιστό.\\nΉ εκτελέστε **`/help <group>`** για αναλυτικές υποεντολές.",
+            "line": "• `/{name}` — {description}  _Δοκιμάστε:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Ανίχνευση Τοπικής",
+            "groups_first": "Διαθέσιμες Ομάδες Εντολών",
+            "groups_paged": "Διαθέσιμες Ομάδες Εντολών (σελίδα {page})",
+            "speed_name": "Επιτάχυνση Ανίχνευσης",
+            "speed_value": "⚡ Αναβαθμίστε σε Επιτάχυνση για ταχύτερη ανίχνευση NSFW και απατεώνων — εκτελέστε `/accelerated`.",
+            "links_name": "Σύνδεσμοι",
+            "links_value": "[Υποστήριξη](https://discord.gg/invite/33VcwjfEXC) • [Δωρεά](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Ιδιωτικό Απόρρητο](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Αξιόπιστοι Προγραμματιστές",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
