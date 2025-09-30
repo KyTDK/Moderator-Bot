@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Kezelje a captcha ellenőrzés kezelése.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Küldje el újra a captcha ellenőrzési beágyazást."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Küldjön captcha ellenőrzési kérelmet egy tagnak.",
+          "member": "A tag, aki be kell fejezze az ellenőrzést."
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "néhány perc",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} másodperc",
+            "other": "{count} másodperc"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} perc",
+            "other": "{count} perc"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} óra",
+            "other": "{count} óra"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} nap",
+            "other": "{count} nap"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Szia {member}! A **{guild}** csatlakozásának befejezéséhez, ",
+          "grace": "kérlek {instruction} **{grace}** időn belül.",
+          "no_grace": "kérlek {instruction}, amikor készen állsz.",
+          "instruction_default": "fejezd be a captchát",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " **{count}** próbálkozásod van.",
+            "other": " **{count}** próbálkozásod van."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Captcha ellenőrzés szükséges",
+          "footer": "A Moderator Bot által üzemeltetve"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Ellenőrizd most"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Kattints ide az ellenőrzéshez"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "látogasd meg a {channel} és fejezd be a captchát",
+          "help_title": "Segítségre van szüksége?",
+          "help_value": "Kattints a lenti gombra az ellenőrzési oldal megnyitásához.",
+          "button_label": "Nyisd meg az ellenőrzési oldalt"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Kattints a lenti gombra magad ellenőrzéséhez. Miután átmész a captcha-n, hozzáférést kapsz a szerver többi részéhez.",
+        "login_notice": "Előfordulhat, hogy először be kell jelentkezned a Moderator Bot irányítópultjára.",
+        "title": "Captcha ellenőrzés befejezése",
+        "footer": "Szerver ID: {guild_id} | A Moderator Bot által üzemeltetve",
+        "button_label": "Ellenőrizd most"
       }
     }
   }
