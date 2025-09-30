@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Configuração de detecção de golpes e gerenciamento de padrões.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Excluir um canal da detecção de golpes.",
+          "channel": "O canal a ser excluído"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Remover um canal da lista de exclusão.",
+          "channel": "O canal a ser removido da exclusão"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Listar todos os canais excluídos."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Alternar ou visualizar verificação de links.",
+          "action_description": "ativar | desativar | status",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
+            "enable": "ativar",
+            "disable": "desativar",
             "status": "status"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Adicionar uma ação à lista de punições por golpes.",
+          "action": "Ação a ser realizada",
+          "duration": "Necessário apenas para tempo limite (por exemplo, 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Remover uma ação da lista de punições por golpes.",
+          "action": "String de ação exata a ser removida (por exemplo, timeout:1d, delete)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Ver configurações atuais de golpes."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Nenhuma ação definida.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "A verificação de links está {state}.",
+        "updated": "Verificação de links {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**ativado**",
+          "disabled": "**desativado**"
         }
       },
       "detection": {
