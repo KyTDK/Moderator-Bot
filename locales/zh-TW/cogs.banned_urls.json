@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "管理被禁的 URL 指令。",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "將 URL 或網域新增至被禁名單。"
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "從被禁名單中移除 URL 或網域。"
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "列出所有被禁的 URLs。"
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "清除所有被禁的 URLs。"
         }
       },
       "limit_reached": "您已達到此伺服器禁止 URL 的限制數量：{limit}。\n使用 `/bannedurls remove` 或 `/bannedurls clear` 來空出空間。",
