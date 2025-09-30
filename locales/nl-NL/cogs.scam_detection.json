@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Configuratie voor scam-detectie en patroonbeheer.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Sluit een kanaal uit van scamdetectie.",
+          "channel": "Het kanaal om uit te sluiten."
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Verwijder een kanaal van de uitsluitingslijst.",
+          "channel": "Het kanaal om uit te sluiten te verwijderen"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Toon alle uitgesloten kanalen."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Schakel linkcontrole in of bekijk de status.",
+          "action_description": "in- of uitschakelen | status",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
+            "enable": "inschakelen",
+            "disable": "uitschakelen",
             "status": "status"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Voeg een actie toe aan de straflijst voor scams.",
+          "action": "Actie om uit te voeren",
+          "duration": "Alleen vereist voor time-out (bijv. 10m, 1u, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Verwijder een actie van de straflijst voor scams.",
+          "action": "Exacte actie string om te verwijderen (bijv. time-out:1d, verwijderen)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Bekijk huidige scam-instellingen."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Geen acties ingesteld.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Linkcontrole is {state}.",
+        "updated": "Linkcontrole {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**ingeschakeld**",
+          "disabled": "**uitgeschakeld**"
         }
       },
       "detection": {
