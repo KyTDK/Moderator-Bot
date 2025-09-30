@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Stakingbestuursopdragte.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Staking van 'n spesifieke gebruiker.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Die lid om te straf.",
+            "reason": "Die rede vir die straf.",
+            "expiry": "Opsionele vervaldatum (bv. 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Kry die stryke van 'n spesifieke gebruiker."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Verwyder alle stryke van 'n spesifieke gebruiker.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "Die gebruiker wie se stryke verwyder sal word."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Voeg 'n bykomende aksie vir 'n stygingsvlak by.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Aantal stakings benodig om die aksie te aktiveer.",
+            "action": "Aksie om by te voeg.",
+            "duration": "Duur (slegs vir tydtoekenning, bv. 1h, 30m). Laat andersins leeg."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Verwyder 'n aksie van 'n strafvlak.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Aantal stryke gekoppel aan die aksie.",
+            "action": "Presiese aksie string om te verwyder."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Sien alle geconfigureerde stakingsaksies."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Intimideer die kanaal, of 'n spesifieke gebruiker.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
