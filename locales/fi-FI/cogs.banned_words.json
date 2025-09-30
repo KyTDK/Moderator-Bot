@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Kiellettyjen sanojen hallintakomennot.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Ota käyttöön tai poista sisäänrakennettu kirosanalista.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "ota käyttöön",
+            "disable": "poista käytöstä",
+            "status": "tila"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Lisää sana kiellettyjen sanojen listalle."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Poista sana kiellettyjen sanojen listalta."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Näytä kaikki kielletyt sanat."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Tyhjennä kaikki kielletyt sanat."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Lisää valvontatoimenpide, joka laukaistaan, kun kielletty sana havaitaan.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Toiminto, joka suoritetaan",
+            "duration": "Tarvitaan vain aikakatkaisua varten (esim. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Poista tietty toimenpide kiellettyjä sanoja koskevista rangaistuksista.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Poistettavan tarkan toimenpiteen merkkijono (esim. aikakatkaisu, poista)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Näytä kaikki toimenpiteet, jotka on tällä hetkellä määritetty tapahtuvan, kun kiellettyjä sanoja käytetään."
         }
       },
       "defaults": {
