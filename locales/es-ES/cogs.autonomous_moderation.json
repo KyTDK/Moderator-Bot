@@ -2,71 +2,71 @@
   "cogs": {
     "autonomous_moderation": {
       "meta": {
-        "group_description": "Manage AI moderation features.",
+        "group_description": "Administra las funciones de moderación de IA.",
         "rules_set": {
-          "description": "Set server rules"
+          "description": "Establecer reglas del servidor"
         },
         "rules_show": {
-          "description": "Show the currently configured moderation rules."
+          "description": "Muestra las reglas de moderación actualmente configuradas."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Agregar acciones de cumplimiento"
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments.",
-          "action": "Exact action string to remove (e.g. timeout, delete)"
+          "description": "Eliminar una acción específica de la lista de castigos.",
+          "action": "Cadena de acción exacta para eliminar (por ejemplo, tiempo de espera, eliminar)"
         },
         "toggle": {
-          "description": "Enable/disable moderation, view status, or set mode.",
-          "enable": "Turn autonomous moderation on or off.",
-          "mode": "Optional: set report / interval / adaptive mode.",
-          "enable_choice": "Enable",
-          "disable_choice": "Disable",
-          "status_choice": "Status",
+          "description": "Habilitar/deshabilitar la moderación, ver el estado o establecer un modo.",
+          "enable": "Activar o desactivar la moderación autónoma.",
+          "mode": "Opcional: establecer modo de informe / intervalo / adaptativo.",
+          "enable_choice": "Habilitar",
+          "disable_choice": "Deshabilitar",
+          "status_choice": "Estado",
           "mode_choices": {
-            "report": "Report",
-            "interval": "Interval",
-            "adaptive": "Adaptive"
+            "report": "Informe",
+            "interval": "Intervalo",
+            "adaptive": "Adaptativo"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when the AI detects a violation."
+          "description": "Mostrar todas las acciones actualmente configuradas para activarse cuando la IA detecta una infracción."
         },
         "add_adaptive_event": {
-          "description": "Link a trigger event to one or more moderation mode actions.",
-          "role": "Which roles to monitor (if applicable)",
-          "channel": "Which channel to monitor (for spike events)",
-          "time_range": "Time range in HH:MM-HH:MM for time-based triggers",
-          "threshold": "Threshold for role online percent (0 to 1, optional)"
+          "description": "Vincular un evento desencadenante a una o más acciones de modo de moderación.",
+          "role": "Qué roles monitorizar (si corresponde)",
+          "channel": "Qué canal monitorizar (para eventos de picos)",
+          "time_range": "Rango de tiempo en HH:MM-HH:MM para activadores basados en tiempo",
+          "threshold": "Umbral para el porcentaje de roles en línea (0 a 1, opcional)"
         },
         "remove_adaptive_event": {
-          "description": "Remove a specific action from a configured event.",
-          "event_key": "Adaptive event key (autocompletes)",
-          "action": "Action to remove from this event"
+          "description": "Eliminar una acción específica de un evento configurado.",
+          "event_key": "Clave de evento adaptativo (completa automáticamente)",
+          "action": "Acción a eliminar de este evento"
         },
         "clear_adaptive_events": {
-          "description": "Clear all adaptive event triggers."
+          "description": "Eliminar todos los desencadenantes de eventos adaptativos."
         },
         "view_adaptive_events": {
-          "description": "Show current adaptive moderation triggers."
+          "description": "Mostrar los desencadenantes de moderación adaptativa actuales."
         },
         "adaptive": {
           "events": {
-            "role_online": "Role Online",
-            "role_offline": "Role Offline",
-            "mass_join": "Mass Join",
-            "mass_leave": "Mass Leave",
-            "guild_inactive": "Server Inactivity",
-            "role_online_percent": "Role Online %",
-            "time_range": "Time Range",
-            "server_spike": "Server Spike"
+            "role_online": "Rol en Línea",
+            "role_offline": "Rol Fuera de Línea",
+            "mass_join": "Ingreso Masivo",
+            "mass_leave": "Salida Masiva",
+            "guild_inactive": "Inactividad del Servidor",
+            "role_online_percent": "% Rol en Línea",
+            "time_range": "Rango de Tiempo",
+            "server_spike": "Pico del Servidor"
           }
         },
         "actions": {
-          "enable_interval": "Enable Interval Mode",
-          "disable_interval": "Disable Interval Mode",
-          "enable_report": "Enable Report Mode",
-          "disable_report": "Disable Report Mode"
+          "enable_interval": "Habilitar Modo Intervalo",
+          "disable_interval": "Deshabilitar Modo Intervalo",
+          "enable_report": "Habilitar Modo Informa",
+          "disable_report": "Deshabilitar Modo Informe"
         }
       },
       "common": {
@@ -89,9 +89,9 @@
         "state_disabled": "deshabilitada",
         "state_unknown": "desconocida",
         "modes": {
-          "report": "report",
-          "interval": "interval",
-          "adaptive": "adaptive"
+          "report": "informe",
+          "interval": "intervalo",
+          "adaptive": "adaptativo"
         }
       },
       "actions": {
@@ -116,50 +116,50 @@
         "detail_threshold": "{display} — `{threshold}`"
       },
       "moderator": {
-        "budget_reached": "AI moderation budget reached for this billing cycle. Resets at {reset}.",
+        "budget_reached": "Se alcanzó el presupuesto de moderación de IA para este ciclo de facturación. Se restablece a las {reset}.",
         "budget_reset_time": "{time}",
-        "budget_reset_next": "the next cycle",
-        "thanks_no_violation": "Thanks for the report. No violations were found.",
-        "thanks_action": "Thanks for the report. Action was taken."
+        "budget_reset_next": "el próximo ciclo",
+        "thanks_no_violation": "Gracias por el reporte. No se encontraron infracciones.",
+        "thanks_action": "Gracias por el reporte. Se tomaron acciones."
       },
       "helpers": {
         "embed": {
-          "title": "AI-Flagged Violation",
-          "description": "User: {user}\nRule Broken: {rule}\nReason: {reason}\nActions: {actions}",
+          "title": "Infracción marcada por IA",
+          "description": "Usuario: {user}\nRegla Rota: {rule}\nRazón: {reason}\nAcciones: {actions}",
           "fields": {
             "fanout": {
-              "name": "Fan-out",
-              "value": "Multiple authors detected; applied per-author actions."
+              "name": "Distribución",
+              "value": "Se detectaron múltiples autores; se aplicaron acciones por autor."
             },
             "ai_decision": {
-              "name": "AI Decision",
-              "none": "None",
-              "unknown": "Unknown"
+              "name": "Decisión de la IA",
+              "none": "Ninguna",
+              "unknown": "Desconocido"
             },
             "applied_actions": {
-              "name": "Applied Actions",
-              "none": "None"
+              "name": "Acciones Aplicadas",
+              "none": "Ninguna"
             },
             "flagged_messages": {
-              "name": "Flagged Message(s)",
-              "no_content": "[no text content]",
+              "name": "Mensaje(s) Marcado(s)",
+              "no_content": "[sin contenido de texto]",
               "entry": "• ID {id}: {content}"
             }
           }
         },
         "no_violations": {
-          "title": "AI Moderation Scan (Debug)",
-          "description": "No violations were found in the latest scan.",
+          "title": "Escaneo de Moderación de IA (Debug)",
+          "description": "No se encontraron infracciones en el último escaneo.",
           "fields": {
-            "scanned_messages": "Scanned Messages",
-            "mode": "Mode"
+            "scanned_messages": "Mensajes Escaneados",
+            "mode": "Modo"
           }
         },
         "summary": {
-          "reason_default": "Violation detected",
-          "reason_multiple": "Multiple violations: {reasons}",
-          "rule_default": "Rule violation",
-          "rule_multiple": "Multiple rules: {rules}"
+          "reason_default": "Se detectó infracción",
+          "reason_multiple": "Múltiples infracciones: {reasons}",
+          "rule_default": "Infracción de regla",
+          "rule_multiple": "Múltiples reglas: {rules}"
         }
       },
       "ensure_adaptive": "El modo de moderación adaptativa no está habilitado. Usa `/ai_mod set_mode` para habilitarlo."
