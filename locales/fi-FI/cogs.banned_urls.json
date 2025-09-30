@@ -17,20 +17,20 @@
         },
         "actions": {
           "add": {
-            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "description": "Lisää valvontatoimenpide, joka laukaistaan, kun kielletty URL havaitaan.",
             "options": {
-              "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "action": "Suoritettava toiminto",
+              "duration": "Tarvitaan vain aikakatkaisulle (esim. 10m, 1h, 3d)"
             }
           },
           "remove": {
-            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "description": "Poista tietty toimenpide kiellettyjä URL-osoitteita koskevista rangaistuksista.",
             "options": {
-              "action": "Exact action string to remove (e.g. timeout, delete)"
+              "action": "Tarkka toimenpiteen merkkijono poistettavaksi (esim. aikakatkaisu, poista)"
             }
           },
           "view": {
-            "description": "Show all actions currently configured to trigger when banned URLs are used."
+            "description": "Näytä kaikki toimenpiteet, jotka on tällä hetkellä määritetty tapahtuvan, kun kiellettyjä URL-osoitteita käytetään."
           }
         }
       },
