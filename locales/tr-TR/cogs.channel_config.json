@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Günlük kayıt kanallarını yapılandır.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Günlük kayıt kanalı ayarla.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Günlük kayıt için kullanılacak kanal.",
+            "type": "Bu kanalın hangi günlük türü için olduğu."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Günlük kayıt kanalını ayardan çıkar.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Devre dışı bırakılacak günlük türü."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Günlük kayıt kanalı ayarlarını göster."
         },
         "types": {
-          "strike": "Strike",
-          "nsfw": "NSFW",
-          "ai": "AI",
-          "monitor": "Monitor",
-          "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "strike": "Cezalandırma",
+          "nsfw": "Yetişkin İçerik (NSFW)",
+          "ai": "Yapay Zeka",
+          "monitor": "İzleme",
+          "captcha": "Doğrulama (Captcha)",
+          "vc_transcript": "Sesli Görüşme Transkripti"
         }
       },
       "nsfw_required": "{channel} yaş kısıtlaması yoktur. Lütfen bir NSFW kanalı seçin.",
