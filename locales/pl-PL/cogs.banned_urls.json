@@ -17,20 +17,20 @@
         },
         "actions": {
           "add": {
-            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "description": "Dodaj akcję moderacyjną, która zostanie wywołana po wykryciu zablokowanego adresu URL.",
             "options": {
-              "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "action": "Akcja do wykonania",
+              "duration": "Wymagane tylko dla czasu oczekiwania (np. 10m, 1h, 3d)"
             }
           },
           "remove": {
-            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "description": "Usuń określoną akcję z listy kar za zablokowane adresy URL.",
             "options": {
-              "action": "Exact action string to remove (e.g. timeout, delete)"
+              "action": "Dokładny ciąg znaków akcji do usunięcia (np. timeout, delete)"
             }
           },
           "view": {
-            "description": "Show all actions currently configured to trigger when banned URLs are used."
+            "description": "Wyświetl wszystkie akcje obecnie skonfigurowane do uruchomienia, gdy używane są zablokowane adresy URL."
           }
         }
       },
