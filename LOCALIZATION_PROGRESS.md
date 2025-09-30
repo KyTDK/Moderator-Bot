@@ -37,6 +37,9 @@
 - [x] modules/nsfw_scanner/helpers/images.py — Localized similarity-match reasons for scan summaries.
 - [x] modules/nsfw_scanner/helpers/moderation.py — Localized OpenAI moderation reason codes for verbose reporting.
 - [x] modules/captcha/processor.py — Localized captcha callback errors, success/failure embeds, and deferred action notes.
+- [x] cogs/api_pool.py — Localized slash command group metadata for API pool management.
+- [x] cogs/banned_urls.py — Localized action management command metadata and parameter prompts.
+- [x] cogs/settings.py — Localized help command metadata and command option prompt.
 
 ## To Do
 - [ ] Audit remaining modules for embedded message strings and prompts.
