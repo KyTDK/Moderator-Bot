@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Bestuur jou **Versnelde** (Premium) intekening.",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Kyk of jy tans 'n Versnelde intekening het."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Genereer jou unieke PayPal-intekening skakel."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Wys die voordele van 'n Versnelde intekening."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Verduidelik hoe om jou intekening te kanselleer."
         }
       },
       "group_description": "Bestuur jou **Versnelde** (Premium) intekening.",
