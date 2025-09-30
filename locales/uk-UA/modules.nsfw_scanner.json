@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "Виявлено NSFW контент",
+          "description": "**Користувач:** {user_mention} ({user_display})\n**Причина:** {reason}",
+          "footer": "ID користувача: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "Звіт NSFW сканування",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "Користувач: {user}",
+              "file": "Файл: `{filename}`",
+              "type": "Тип: `{file_type}`",
+              "decision": "Рішення: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "Зображення",
+              "video": "Відео",
+              "unknown": "Невідомо"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Безпечно",
+              "unknown": "Невідомо"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Причина",
+              "category": "Категорія",
+              "score": "Рахунок",
+              "flagged_any": "Позначено будь-який",
+              "summary_categories": "Категорії підсумку",
+              "max_similarity": "Максимальна схожість",
+              "max_category": "Категорія максимальної схожості",
+              "similarity": "Збіг схожості",
+              "high_accuracy": "Висока точність",
+              "clip_threshold": "Поріг CLIP",
+              "moderation_threshold": "Поріг модерування",
+              "video_frames": "Кадри відео"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "Модерація OpenAI",
+              "similarity_match": "Збіг схожості",
+              "no_frames_extracted": "Кадри не витягнуто",
+              "no_nsfw_frames_detected": "NSFW кадри не виявлено"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Впевненість",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Рахунок",
+            "similarity": "Схожість"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "істина",
+          "false": "неправда"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Не вказано"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Виявлено потенційне порушення політики (Категорія: **{category}**)"
       }
     }
   }
