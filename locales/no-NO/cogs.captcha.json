@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Administrer captcha-verifisering.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Send kapittelverifiseringsembed på nytt."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Send en forespørsel om captcha-verifisering til et medlem.",
+          "member": "Medlemmet som skal fullføre verifiseringen"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "noen minutter",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} sekund",
+            "other": "{count} sekunder"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} minutt",
+            "other": "{count} minutter"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} time",
+            "other": "{count} timer"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} dag",
+            "other": "{count} dager"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Hei {member}! For å fullføre å bli med i **{guild}**, ",
+          "grace": "vennligst {instruction} innen **{grace}**.",
+          "no_grace": "vennligst {instruction} når du er klar.",
+          "instruction_default": "fullfør captcha'en",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " Du har **{count}** forsøk.",
+            "other": " Du har **{count}** forsøk."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Captcha-verifisering kreves",
+          "footer": "Drevet av Moderator Bot"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Bekreft nå"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Klikk her for å bekrefte"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "gå til {channel} og fullfør captchaverifiseringen",
+          "help_title": "Trenger du hjelp?",
+          "help_value": "Klikk på knappen nedenfor for å åpne verifiseringssiden.",
+          "button_label": "Åpne verifiseringssiden"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Klikk på knappen nedenfor for å bekrefte deg selv. Når du har bestått captchaen, vil du få tilgang til resten av serveren.",
+        "login_notice": "Du kan bli bedt om å logge inn på Moderator Bot-dashbordet først.",
+        "title": "Fullfør Captcha-verifisering",
+        "footer": "Gilde-ID: {guild_id} | Drevet av Moderator Bot",
+        "button_label": "Bekreft nå"
       }
     }
   }
