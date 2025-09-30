@@ -3,7 +3,7 @@
     "dashboard": {
       "meta": {
         "dashboard": {
-          "description": "Open the dashboard for this server."
+          "description": "Mở bảng điều khiển cho máy chủ này."
         }
       },
       "embed": {
