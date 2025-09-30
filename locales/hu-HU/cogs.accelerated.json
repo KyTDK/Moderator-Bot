@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Kezeld Gyorsított (Prémium) előfizetésed.",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Ellenőrizd, hogy jelenleg van-e Gyorsított előfizetésed."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Generáld az egyedi PayPal előfizetési linked."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Mutasd be a Gyorsított előfizetés előnyeit."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Magyarázd el, hogyan lehet lemondani az előfizetést."
         }
       },
       "group_description": "Kezeld Gyorsított (Prémium) előfizetésed.",
