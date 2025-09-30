@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Administrer serverinnstillinger.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Få hjelp med innstillinger."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Slett alle innstillinger og start med standardverdier. Dette kan ikke angres."
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Oppsett en serverinnstilling."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Hent den nåværende verdien av en serverinnstilling."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Fjern en serverinnstilling eller et element fra en listeinnstilling."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Ingen hjelp funnet for `{command}`.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Åpne Dashboard",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Ingen beskrivelse.",
+          "no_subcommands": "(Ingen underkommandoer)",
+          "no_groups": "(Ingen kommandogrupper funnet.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Bruker standard `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Dashboard:** [Åpne Dashboard]({dashboard_url})\\nBruk `/help {name}` for å se dette igjen.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Underkommandoer",
+              "paged": "Underkommandoer (side {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Moderator Bot — Hjelp",
+            "description": "🛠️ **Dashboard:** [Åpne Dashboard]({dashboard_url})\\nKonfigurer alt raskere i nettgrensesnittet.\\nEller kjør **`/help <group>`** for detaljerte underkommandoer.",
+            "line": "• `/{name}` — {description}  _Prøv:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Språkgjenkjenning",
+            "groups_first": "Tilgjengelige kommandogrupper",
+            "groups_paged": "Tilgjengelige kommandogrupper (side {page})",
+            "speed_name": "Fartsgjenkjenning",
+            "speed_value": "⚡ Oppgrader til Accelerated for raskere NSFW- og svindelgjenkjenning — kjør `/accelerated`.",
+            "links_name": "Lenker",
+            "links_value": "[Støtte](https://discord.gg/invite/33VcwjfEXC) • [Doner](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [Vilkår for bruk](https://modbot.neomechanical.com/terms-of-service) • [Personvern](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Pålitelige Utviklere",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
