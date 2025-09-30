@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Configuratie van monitoring",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Stel kanaal in om logs uit te voeren.",
+          "channel": "Het kanaal om logs naartoe te sturen."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Verwijder de instelling van het monitorkanaal."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Toon het huidige monitorkanaal."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Schakel een specifieke monitoringgebeurtenis in of uit.",
+          "event": "De gebeurtenis om in of uit te schakelen",
+          "enabled": "Schakel logboeken voor deze gebeurtenis in of uit",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
+            "join": "Gebruiker doet mee",
+            "leave": "Gebruiker verlaat",
             "ban": "Ban",
             "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "timeout": "Time-out",
+            "message_delete": "Bericht verwijderd",
+            "message_edit": "Bericht bewerkt"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Lijst huidige instelingen voor monitorgebeurtenissen."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Inhoud:**\n{content}",
         "description_generic": "Een bericht is verwijderd in {channel}.",
         "description_deleted_by": "\n**Verwijderd door:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Geen inhoud]",
         "fields": {
           "attachments": "Bijlagen ({count})",
           "embeds": "Insluiten {index}",
@@ -99,7 +99,7 @@
           "before": "Voor",
           "after": "Na"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Geen inhoud]",
         "footer": "Gebruikers-ID: {user_id}"
       },
       "ban": {
