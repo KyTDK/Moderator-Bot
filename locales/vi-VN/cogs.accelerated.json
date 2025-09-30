@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "Quản lý đăng ký Tăng tốc của bạn (Premium).",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "Kiểm tra nếu bạn hiện tại có một đăng ký Tăng tốc."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "Tạo liên kết đăng ký PayPal độc nhất của bạn."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "Hiển thị các lợi ích của đăng ký Tăng tốc."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "Giải thích cách hủy bỏ đăng ký của bạn."
         }
       },
       "group_description": "Quản lý đăng ký Tăng tốc của bạn (Premium).",
