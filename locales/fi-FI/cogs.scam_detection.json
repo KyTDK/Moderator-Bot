@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Huijausten havaitsemisen määritykset ja kuviot.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Jätä kanava pois huijausten havaitsemisesta.",
+          "channel": "Poissuljettava kanava"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Poista kanava poissulkemislistalta.",
+          "channel": "Poistettava kanava poissulkemisesta"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Luettelo kaikista poissuljetuista kanavista."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Vaihda tai tarkastele linkkien tarkistusta.",
+          "action_description": "ota käyttöön | poista käytöstä | tila",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "ota käyttöön",
+            "disable": "poista käytöstä",
+            "status": "tila"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Lisää toiminta huijausrangaistuslistaan.",
+          "action": "Suoritettava toiminto",
+          "duration": "Tarvitaan vain aikakatkaisulle (esim. 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Poista toiminto huijausrangaistuslistalta.",
+          "action": "Poistettava tarkka toimintomerkkijono (esim. aikakatkaisu:1d, poista)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Näytä nykyiset huijausasetukset."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Ei asetettuja toimia.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Linkkien tarkistus on {state}.",
+        "updated": "Linkkien tarkistus {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "** käytössä **",
+          "disabled": "** poissa käytöstä **"
         }
       },
       "detection": {
