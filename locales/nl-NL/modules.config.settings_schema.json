@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "Ongeldige landinstelling. Ondersteunde landinstellingen: {supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "Uw profielfoto bevat naar schatting expliciete inhoud",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "Uw profielfoto bevat naar schatting expliciete inhoud",
+            "Uw profielfoto is niet geschikt voor deze server.",
+            "Uw profielfoto is gemarkeerd als NSFW."
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. Wees respectvol — geen intimidatie of haatzaaiende uitspraken.",
+            "2. Geen NSFW of obscene inhoud.",
+            "3. Geen spam of buitensporige zelfpromotie.",
+            "4. Volg de Servicevoorwaarden van Discord."
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. Geen intimidatie, haatzaaiende uitspraken of bedreigingen.",
+            "2. Geen beledigingen of discriminerende taal.",
+            "3. Geen opruiing tot geweld of illegale activiteiten.",
+            "4. Geen seksuele inhoud of expliciete opmerkingen.",
+            "5. Volg de Servicevoorwaarden van Discord."
           ]
         }
       }
