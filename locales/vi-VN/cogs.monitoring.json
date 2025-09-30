@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Cấu hình giám sát.",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Đặt kênh để xuất nhật ký.",
+          "channel": "Kênh để gửi nhật ký."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Xóa cài đặt kênh theo dõi."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Hiển thị kênh theo dõi hiện tại."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Bật hoặc tắt một sự kiện giám sát cụ thể.",
+          "event": "Sự kiện để chuyển đổi",
+          "enabled": "Bật hoặc tắt ghi nhật ký cho sự kiện này",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Người dùng Tham gia",
+            "leave": "Người dùng Rời đi",
+            "ban": "Cấm",
+            "unban": "Bỏ cấm",
+            "timeout": "Hết hạn",
+            "message_delete": "Tin nhắn đã xóa",
+            "message_edit": "Tin nhắn đã chỉnh sửa"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Liệt kê cài đặt sự kiện giám sát hiện tại."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Nội dung:**\n{content}",
         "description_generic": "Một tin nhắn đã bị xoá trong {channel}.",
         "description_deleted_by": "\n**Người xoá:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Không có Nội dung]",
         "fields": {
           "attachments": "Tệp đính kèm ({count})",
           "embeds": "Đính kèm {index}",
@@ -99,7 +99,7 @@
           "before": "Trước",
           "after": "Sau"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Không có Nội dung]",
         "footer": "ID người dùng: {user_id}"
       },
       "ban": {
