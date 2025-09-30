@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "禁止されたURL管理コマンド。",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "禁止リストにURLやドメインを追加します。"
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "禁止リストからURLやドメインを削除します。"
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "すべての禁止URLを一覧表示。"
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "すべての禁止URLをクリア。"
         }
       },
       "limit_reached": "このサーバーの禁止されたURLの制限に達しました。\\n場所を作るには、`/bannedurls remove`または`/bannedurls clear`を使用してください。",
