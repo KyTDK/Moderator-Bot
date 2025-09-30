@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "Gestiona la configuració del servidor.",
         "help": {
-          "description": "Obtén ajuda sobre la configuració."
+          "description": "Obtén ajuda sobre la configuració.",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "Esborra tota la configuració i comença amb els valors per defecte. Això no es pot desfer."
