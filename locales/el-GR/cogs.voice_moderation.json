@@ -2,23 +2,23 @@
   "cogs": {
     "voice_moderation": {
       "transcript": {
-        "author_label": "AUTHOR",
-        "utterance_label": "UTTERANCE",
+        "author_label": "ΣΥΓΓΡΑΦΕΑΣ",
+        "utterance_label": "ΕΚΦΡΑΣΗ",
         "divider": "---",
-        "unknown_speaker": "Unknown speaker",
-        "unknown_prefix": "Unknown",
+        "unknown_speaker": "Άγνωστος ομιλητής",
+        "unknown_prefix": "Άγνωστος",
         "user_fallback": "<@{id}> (id = {id})",
         "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transcript",
-        "title_part": "VC Transcript (part {index}/{total})",
-        "field_channel": "Channel",
-        "field_utterances": "Utterances",
-        "footer_high": "High accuracy transcript",
-        "footer_normal": "Normal accuracy transcript"
+        "title_single": "Απομαγνητοφώνηση VC",
+        "title_part": "Απομαγνητοφώνηση VC (μέρος {index}/{total})",
+        "field_channel": "Κανάλι",
+        "field_utterances": "Εκφράσεις",
+        "footer_high": "Απομαγνητοφώνηση υψηλής ακρίβειας",
+        "footer_normal": "Απομαγνητοφώνηση κανονικής ακρίβειας"
       },
       "budget": {
-        "title": "VC Moderation Budget Reached",
-        "description": "Skipping analysis for this cycle due to budget limit."
+        "title": "Οικονομικός Προϋπολογισμός VC Έχει Εξαντληθεί",
+        "description": "Παράλειψη ανάλυσης για αυτόν τον κύκλο λόγω ορίου προϋπολογισμού."
       }
     }
   }
