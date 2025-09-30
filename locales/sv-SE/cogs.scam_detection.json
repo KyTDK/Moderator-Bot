@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Konfiguration och mönsterhantering för lurendrejeridetektion.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Uteslut en kanal från lurendrejeridetektion.",
+          "channel": "Kanalen att utesluta"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Ta bort en kanal från exklusionslistan.",
+          "channel": "Kanalen att ta bort från exklusion"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Lista alla exkluderade kanaler."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Växla eller visa länkgranskning.",
+          "action_description": "aktivera | inaktivera | status",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
+            "enable": "aktivera",
+            "disable": "inaktivera",
             "status": "status"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Lägg till en åtgärd på listan för påföljder vid lurendrejeri.",
+          "action": "Åtgärd att utföra",
+          "duration": "Endast nödvändigt för timeout (t.ex. 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Ta bort en åtgärd från listan för påföljder vid lurendrejeri.",
+          "action": "Exakt åtgärdssträng att ta bort (t.ex. timeout:1d, delete)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Visa nuvarande inställningar för lurendrejeri."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Inga handlingar har satts.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Länkgranskning är {state}.",
+        "updated": "Länkgranskning {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**aktiverad**",
+          "disabled": "**inaktiverad**"
         }
       },
       "detection": {
