@@ -2,21 +2,21 @@
   "cogs": {
     "settings": {
       "meta": {
-        "group_description": "Manage server settings.",
+        "group_description": "Управљајте подешавањима сервера.",
         "help": {
-          "description": "Get help on settings."
+          "description": "Потражите помоћ око подешавања."
         },
         "reset": {
-          "description": "Wipe all settings and start with defaults. This can't be undone"
+          "description": "Избришите сва подешавања и започните са подразумеваним подешавањима. Ово не може бити поништено."
         },
         "set": {
-          "description": "Set a server setting."
+          "description": "Подесите подешавање сервера."
         },
         "get": {
-          "description": "Get the current value of a server setting."
+          "description": "Преузмите тренутну вредност подешавања сервера."
         },
         "remove": {
-          "description": "Remove a server setting or an item from a list-type setting."
+          "description": "Уклоните подешавање сервера или ставку из подешавања типа листе."
         }
       },
       "help": {
@@ -25,39 +25,39 @@
         "not_found": "Нема помоћи за `{command}`.",
         "view": {
           "button": {
-            "label": "Open Dashboard",
+            "label": "Отворите Контролну таблу",
             "emoji": "🛠️"
           },
-          "no_description": "No description.",
-          "no_subcommands": "(No subcommands)",
-          "no_groups": "(No command groups found.)",
+          "no_description": "Нема описа.",
+          "no_subcommands": "(Нема подкоманди)",
+          "no_groups": "(Нема пронађених група команди.)",
           "locale": {
             "current": "`{locale}`",
-            "default": "Using default `{default}`"
+            "default": "Коришћење подразумеваног `{default}`"
           },
           "group": {
             "title": "/{name}",
-            "description": "{description}\\n\\n🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nUse `/help {name}` to view this again.",
+            "description": "{description}\\n\\n🛠️ **Контролна табла:** [Отворите Контролну таблу]({dashboard_url})\\nКористите `/help {name}` да ово поново видите.",
             "line": "• `/{qualified_name}` — {description}",
             "fields": {
-              "single": "Subcommands",
-              "paged": "Subcommands (page {page})"
+              "single": "Подкоманде",
+              "paged": "Подкоманде (страна {page})"
             }
           },
           "overview": {
-            "title": "Moderator Bot — Help",
-            "description": "🛠️ **Dashboard:** [Open Dashboard]({dashboard_url})\\nConfigure everything faster in the web dashboard.\\nOr run **`/help <group>`** for detailed subcommands.",
-            "line": "• `/{name}` — {description}  _Try:_ `/help {name}`"
+            "title": "Модератор Бот — Помоћ",
+            "description": "🛠️ **Контролна табла:** [Отворите Контролну таблу]({dashboard_url})\\nКонфигуришите све брже на веб контролној табли.\\nИли покрените **`/help <group>`** за детаљне подкоманде.",
+            "line": "• `/{name}` — {description}  _Покушајте:_ `/help {name}`"
           },
           "fields": {
-            "locale_name": "Locale Detection",
-            "groups_first": "Available Command Groups",
-            "groups_paged": "Available Command Groups (page {page})",
-            "speed_name": "Speed Up Detection",
-            "speed_value": "⚡ Upgrade to Accelerated for faster NSFW & scam detection — run `/accelerated`.",
-            "links_name": "Links",
-            "links_value": "[Support](https://discord.gg/invite/33VcwjfEXC) • [Donate](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [ToS](https://modbot.neomechanical.com/terms-of-service) • [Privacy](https://modbot.neomechanical.com/privacy-policy) • ",
-            "trusted_name": "Trusted Developers",
+            "locale_name": "Детекција Локала",
+            "groups_first": "Доступне Групе Команди",
+            "groups_paged": "Доступне Групе Команди (страна {page})",
+            "speed_name": "Убрзана Детекција",
+            "speed_value": "⚡ Надоградите на Убрзано за брже NSFW & детекцију превара — покрените `/accelerated`.",
+            "links_name": "Линкови",
+            "links_value": "[Подршка](https://discord.gg/invite/33VcwjfEXC) • [Донације](https://www.paypal.com/donate/?hosted_button_id=9FAG4EDFBBRGC) • [Услови коришћења](https://modbot.neomechanical.com/terms-of-service) • [Приватност](https://modbot.neomechanical.com/privacy-policy) • ",
+            "trusted_name": "Поверљиви Развијаоци",
             "trusted_value": "<@362421457759764481> (fork_prongs - 362421457759764481)"
           }
         }
