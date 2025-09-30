@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Διαμόρφωση παρακολούθησης",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Ρυθμίστε το κανάλι για έξοδο καταγραφών.",
+          "channel": "Το κανάλι αποστολής των καταγραφών."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Αφαιρέστε τη ρύθμιση καναλιού παρακολούθησης."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Προβολή του τρέχοντος καναλιού παρακολούθησης."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Ενεργοποιήστε ή απενεργοποιήστε ένα συγκεκριμένο συμβάν παρακολούθησης.",
+          "event": "Το συμβάν που θέλετε να εναλλάξετε",
+          "enabled": "Ενεργοποιήστε ή απενεργοποιήστε την καταγραφή για αυτό το συμβάν",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Είσοδος χρήστη",
+            "leave": "Αποχώρηση χρήστη",
+            "ban": "Απαγόρευση",
+            "unban": "Άρση απαγόρευσης",
+            "timeout": "Χρονικό όριο",
+            "message_delete": "Διαγραφή μηνύματος",
+            "message_edit": "Επεξεργασία μηνύματος"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Λίστα των τρεχουσών ρυθμίσεων συμβάντων παρακολούθησης."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Περιεχόμενο:**\n{content}",
         "description_generic": "Ένα μήνυμα διαγράφηκε στο {channel}.",
         "description_deleted_by": "\n**Διαγραφή από:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Χωρίς Περιεχόμενο]",
         "fields": {
           "attachments": "Συνημμένα ({count})",
           "embeds": "Ενσωμάτωση {index}",
@@ -99,7 +99,7 @@
           "before": "Πριν",
           "after": "Μετά"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Χωρίς Περιεχόμενο]",
         "footer": "ID Χρήστη: {user_id}"
       },
       "ban": {
