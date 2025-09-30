@@ -3,59 +3,59 @@
     "captcha": {
       "processor": {
         "success": {
-          "reason": "Captcha verification successful",
+          "reason": "Ověření Captcha bylo úspěšné",
           "embed": {
-            "title": "Captcha Verification Passed",
-            "description": "{mention} ({user_id}) passed captcha verification.",
+            "title": "Ověření Captcha prošlo",
+            "description": "{mention} ({user_id}) prošel ověřením Captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "attempts": "Attempts",
-              "provider": "Provider",
-              "challenge": "Challenge",
-              "review": "Review"
+              "actions": "Aplikované akce",
+              "attempts": "Pokusy",
+              "provider": "Poskytovatel",
+              "challenge": "Výzva",
+              "review": "Recenze"
             }
           }
         },
         "failure": {
-          "reason_default": "Failed captcha verification.",
+          "reason_default": "Ověření Captcha selhalo.",
           "notes": {
-            "deferred_generic": "Failure actions deferred; captcha attempts remain.",
-            "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
-            "member_left": "Member is no longer in the guild; configured failure actions were skipped."
+            "deferred_generic": "Selhaly akce pozdržené; pokusy ověření zůstávají.",
+            "deferred_remaining": "Selhaly akce pozdržené; {remaining} {attempts_word} zbývá.",
+            "member_left": "Člen již není v cechu; konfigurované selhání akcí bylo přeskočeno."
           },
           "attempts": {
-            "unlimited": "Unlimited attempts remain.",
-            "additional": "Additional attempts remain.",
-            "remaining": "{count} {attempts_word} remaining.",
-            "word_one": "attempt",
-            "word_other": "attempts"
+            "unlimited": "Neomezený počet pokusů zůstává.",
+            "additional": "Další pokusy zůstávají.",
+            "remaining": "{count} {attempts_word} zbývá.",
+            "word_one": "pokus",
+            "word_other": "pokusy"
           },
           "embed": {
-            "title_failed": "Captcha Verification Failed",
-            "title_attempt": "Captcha Attempt Failed",
-            "description_failed": "{mention} ({user_id}) failed captcha verification.",
-            "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+            "title_failed": "Ověření Captcha selhalo",
+            "title_attempt": "Pokus o ověření Captcha selhal",
+            "description_failed": "{mention} ({user_id}) selhal ověřením Captcha.",
+            "description_attempt": "{mention} ({user_id}) selhal při pokusu o ověření Captcha.",
             "fields": {
-              "actions": "Actions Applied",
-              "notes": "Notes",
-              "attempts": "Attempts",
-              "remaining": "Attempts Remaining",
-              "challenge": "Challenge",
-              "reason": "Reason",
-              "review": "Review"
+              "actions": "Aplikované akce",
+              "notes": "Poznámky",
+              "attempts": "Pokusy",
+              "remaining": "Zbývající pokusy",
+              "challenge": "Výzva",
+              "reason": "Důvod",
+              "review": "Recenze"
             }
           }
         },
         "errors": {
-          "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
-          "unknown_token": "No pending captcha verification found for this user.",
-          "token_mismatch": "Captcha token does not match the pending verification.",
-          "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
-          "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
-          "guild_not_found": "Guild {guild_id} is not available to this bot.",
-          "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
-          "member_not_found": "Member {user_id} not found in guild {guild_id}.",
-          "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}."
+          "role_assignment_failed": "Nepodařilo se aplikovat úspěšné akce ověření Captcha kvůli chybě API Discord.",
+          "unknown_token": "Pro tohoto uživatele nebylo nalezeno žádné čekající ověření Captcha.",
+          "token_mismatch": "Token Captcha neodpovídá čekajícímu ověření.",
+          "missing_permissions": "Bot nemá oprávnění k provádění akce selhání Captcha.",
+          "action_failed": "Nepodařilo se aplikovat akce selhání Captcha kvůli chybě API Discord.",
+          "guild_not_found": "Cech {guild_id} není k dispozici pro tohoto bota.",
+          "guild_fetch_failed": "Nezdařilo se načíst cech {guild_id} z Discord.",
+          "member_not_found": "Člen {user_id} nebyl nalezen v cechu {guild_id}.",
+          "member_fetch_failed": "Nepodařilo se načíst člena {user_id} z cechu {guild_id}."
         }
       }
     }
