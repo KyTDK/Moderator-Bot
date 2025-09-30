@@ -3,15 +3,15 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
+          "strike": "Streik",
+          "kick": "Spark",
           "ban": "Ban",
           "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
+          "delete": "Slett Melding",
+          "give_role": "Gi Rolle",
+          "take_role": "Fjern Rolle",
+          "warn": "Advar Bruker",
+          "broadcast": "Send Melding",
           "auto": "Auto"
         }
       }
