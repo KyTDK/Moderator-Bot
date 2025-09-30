@@ -2,23 +2,23 @@
   "cogs": {
     "voice_moderation": {
       "transcript": {
-        "author_label": "AUTHOR",
-        "utterance_label": "UTTERANCE",
+        "author_label": "YAZAR",
+        "utterance_label": "KONUŞMA",
         "divider": "---",
-        "unknown_speaker": "Unknown speaker",
-        "unknown_prefix": "Unknown",
+        "unknown_speaker": "Bilinmeyen konuşmacı",
+        "unknown_prefix": "Bilinmeyen",
         "user_fallback": "<@{id}> (id = {id})",
         "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transcript",
-        "title_part": "VC Transcript (part {index}/{total})",
-        "field_channel": "Channel",
-        "field_utterances": "Utterances",
-        "footer_high": "High accuracy transcript",
-        "footer_normal": "Normal accuracy transcript"
+        "title_single": "VC Transkripti",
+        "title_part": "VC Transkripti (bölüm {index}/{total})",
+        "field_channel": "Kanal",
+        "field_utterances": "Konuşmalar",
+        "footer_high": "Yüksek hassasiyetli transkript",
+        "footer_normal": "Normal hassasiyetli transkript"
       },
       "budget": {
-        "title": "VC Moderation Budget Reached",
-        "description": "Skipping analysis for this cycle due to budget limit."
+        "title": "VC Moderasyon Bütçesi Sınırına Ulaşıldı",
+        "description": "Bütçe limiti nedeniyle bu döngü için analiz atlanıyor."
       }
     }
   }
