@@ -4,7 +4,10 @@
       "meta": {
         "group_description": "管理服务器设置。",
         "help": {
-          "description": "获取有关设置的帮助。"
+          "description": "获取有关设置的帮助。",
+          "options": {
+            "command": "Optional: command group to get help with"
+          }
         },
         "reset": {
           "description": "清除所有设置并以默认值开始。此操作无法撤销"
