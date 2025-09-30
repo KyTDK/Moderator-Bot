@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "Comenzi pentru gestionarea adreselor URL interzise.",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "Adăugați o adresă URL sau un domeniu la lista interzisă."
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "Eliminați o adresă URL sau un domeniu din lista interzisă."
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "Afișează toate adresele URL interzise."
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "Ștergeți toate adresele URL interzise."
         }
       },
       "limit_reached": "Ai atins limita de {limit} URL-uri interzise pentru acest server.\nFolosește `/bannedurls remove` sau `/bannedurls clear` pentru a elibera spațiu.",
