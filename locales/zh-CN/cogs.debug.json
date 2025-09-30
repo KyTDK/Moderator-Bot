@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "获取内存和性能统计数据",
+          "show_all": "包括所有库的分配（不仅限于项目）"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "显示当前绑定到此命令上下文的区域设置"
         }
       },
       "permission_denied": "您无权使用此命令。",
@@ -26,7 +26,7 @@
         "footer": "主机: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "当前区域设置: {locale}"
       }
     }
   }
