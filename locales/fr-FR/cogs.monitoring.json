@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Configuration de la surveillance",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Définir le canal pour sortir les journaux.",
+          "channel": "Le canal vers lequel envoyer les journaux."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Supprimer le paramètre de canal de surveillance."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Afficher le canal de surveillance actuel."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Activer ou désactiver un événement de surveillance spécifique.",
+          "event": "L'événement à basculer",
+          "enabled": "Activer ou désactiver la journalisation de cet événement",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
-            "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "join": "Utilisateur a rejoint",
+            "leave": "Utilisateur a quitté",
+            "ban": "Bannissement",
+            "unban": "Levée du bannissement",
+            "timeout": "Expiration",
+            "message_delete": "Message supprimé",
+            "message_edit": "Message modifié"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Lister les paramètres actuels de l'événement de surveillance."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Contenu :**\n{content}",
         "description_generic": "Un message a été supprimé dans {channel}.",
         "description_deleted_by": "\n**Supprimé par :** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Pas de contenu]",
         "fields": {
           "attachments": "Pièces jointes ({count})",
           "embeds": "Intégrer {index}",
@@ -99,7 +99,7 @@
           "before": "Avant",
           "after": "Après"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Pas de contenu]",
         "footer": "ID Utilisateur : {user_id}"
       },
       "ban": {
