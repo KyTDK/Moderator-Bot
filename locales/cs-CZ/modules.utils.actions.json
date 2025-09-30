@@ -3,16 +3,16 @@
     "utils": {
       "actions": {
         "choices": {
-          "strike": "Strike",
-          "kick": "Kick",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Delete Message",
-          "give_role": "Give Role",
-          "take_role": "Remove Role",
-          "warn": "Warn User",
-          "broadcast": "Broadcast Message",
-          "auto": "Auto"
+          "strike": "Úder",
+          "kick": "Kop",
+          "ban": "Zákaz",
+          "timeout": "Časový limit",
+          "delete": "Smazat zprávu",
+          "give_role": "Přidat roli",
+          "take_role": "Odstranit roli",
+          "warn": "Varovat uživatele",
+          "broadcast": "Rozeslat zprávu",
+          "auto": "Automaticky"
         }
       }
     }
