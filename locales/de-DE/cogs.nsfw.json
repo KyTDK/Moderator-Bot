@@ -2,48 +2,48 @@
   "cogs": {
     "nsfw": {
       "meta": {
-        "group_description": "Manage NSFW content detection.",
+        "group_description": "Verwalten Sie die Erkennung von nicht jugendfreien Inhalten.",
         "add_action": {
-          "description": "Add an action to the NSFW punishment list.",
+          "description": "Fügen Sie eine Aktion zur Liste der Strafen für nicht jugendfreie Inhalte hinzu.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Auszuführende Aktion",
+            "duration": "Nur bei Auszeit erforderlich (z. B. 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove an action from the NSFW punishment list.",
+          "description": "Entfernen Sie eine Aktion aus der Liste der Strafen für nicht jugendfreie Inhalte.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Genauer Aktionsstring zum Entfernen (z. B. Auszeit, Löschen)"
           }
         },
         "view_actions": {
-          "description": "View the current list of NSFW punishment actions."
+          "description": "Die aktuelle Liste der Strafen für nicht jugendfreie Inhalte anzeigen."
         },
         "add_category": {
-          "description": "Add a category to NSFW detection."
+          "description": "Eine Kategorie zur Erkennung nicht jugendfreier Inhalte hinzufügen."
         },
         "categories": {
-          "violence_graphic": "Violence Graphic",
-          "violence": "Violence",
-          "sexual": "Sexual",
-          "self_harm_instructions": "Self Harm Instructions",
-          "self_harm_intent": "Self Harm Intent",
-          "self_harm": "Self Harm"
+          "violence_graphic": "Grafische Gewalt",
+          "violence": "Gewalt",
+          "sexual": "Sexuell",
+          "self_harm_instructions": "Anleitungen zu Selbstverletzung",
+          "self_harm_intent": "Absicht zur Selbstverletzung",
+          "self_harm": "Selbstverletzung"
         },
         "remove_category": {
-          "description": "Remove a category from NSFW detection."
+          "description": "Eine Kategorie aus der Erkennung von nicht jugendfreien Inhalten entfernen."
         },
         "view_categories": {
-          "description": "View NSFW detection categories."
+          "description": "Kategorien der Erkennung nicht jugendfreier Inhalte anzeigen."
         },
         "set_threshold": {
-          "description": "Set the threshold for NSFW detection confidence.",
+          "description": "Den Schwellenwert für die Erkennungssicherheit bei nicht jugendfreien Inhalten festlegen.",
           "params": {
-            "threshold": "Confidence threshold (0.0 to 1.0)"
+            "threshold": "Schwellenwert der Erkennungssicherheit (0,0 bis 1,0)"
           }
         },
         "view_threshold": {
-          "description": "View the current NSFW detection threshold."
+          "description": "Den aktuellen Schwellenwert für die Erkennung nicht jugendfreier Inhalte anzeigen."
         }
       },
       "actions": {
