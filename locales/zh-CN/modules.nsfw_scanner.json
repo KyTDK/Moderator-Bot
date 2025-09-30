@@ -3,72 +3,72 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "检测到不当内容 (NSFW)",
+          "description": "**用户：** {user_mention} ({user_display})\n**原因：** {reason}",
+          "footer": "用户 ID：{user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "不当内容扫描报告",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "user": "用户：{user}",
+              "file": "文件：`{filename}`",
+              "type": "类型：`{file_type}`",
+              "decision": "决策：**{decision}**"
             },
             "file_types": {
-              "image": "Image",
-              "video": "Video",
-              "unknown": "Unknown"
+              "image": "图片",
+              "video": "视频",
+              "unknown": "未知"
             },
             "decision": {
-              "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "nsfw": "不当内容 (NSFW)",
+              "safe": "安全",
+              "unknown": "未知"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "理由",
+              "category": "类别",
+              "score": "得分",
+              "flagged_any": "标记任何",
+              "summary_categories": "总结类别",
+              "max_similarity": "最大相似度",
+              "max_category": "最大相似度类别",
+              "similarity": "匹配相似度",
+              "high_accuracy": "高精度",
+              "clip_threshold": "CLIP 阈值",
+              "moderation_threshold": "审核阈值",
+              "video_frames": "视频帧"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "OpenAI 审核",
+              "similarity_match": "相似度匹配",
+              "no_frames_extracted": "未提取帧",
+              "no_nsfw_frames_detected": "未检测到不当内容帧"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "置信度",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "得分",
+            "similarity": "相似度"
           }
         },
         "boolean": {
-          "true": "true",
-          "false": "false"
+          "true": "真",
+          "false": "假"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "未指定"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "检测到潜在政策违规（类别：**{category}**）"
       }
     }
   }
