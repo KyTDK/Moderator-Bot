@@ -2,42 +2,42 @@
   "cogs": {
     "banned_words": {
       "meta": {
-        "group_description": "Banned words management commands.",
+        "group_description": "Quản lý các lệnh cấm từ ngữ.",
         "defaults": {
-          "description": "Enable or disable the built-in profanity list.",
+          "description": "Bật hoặc tắt danh sách từ ngữ tục tĩu mặc định.",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "bật",
+            "disable": "tắt",
+            "status": "trạng thái"
           }
         },
         "add": {
-          "description": "Add a word to the banned words list."
+          "description": "Thêm một từ vào danh sách từ ngữ bị cấm."
         },
         "remove": {
-          "description": "Remove a word from the banned words list."
+          "description": "Xoá một từ khỏi danh sách từ ngữ bị cấm."
         },
         "list": {
-          "description": "List all banned words."
+          "description": "Liệt kê tất cả các từ ngữ bị cấm."
         },
         "clear": {
-          "description": "Clear all banned words."
+          "description": "Xoá tất cả các từ ngữ bị cấm."
         },
         "add_action": {
-          "description": "Add a moderation action to be triggered when a banned word is detected.",
+          "description": "Thêm hành động điều tiết để kích hoạt khi phát hiện từ ngữ bị cấm.",
           "params": {
-            "action": "Action to perform",
-            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+            "action": "Hành động cần thực hiện",
+            "duration": "Chỉ yêu cầu đối với thời gian chờ (ví dụ: 10m, 1h, 3d)"
           }
         },
         "remove_action": {
-          "description": "Remove a specific action from the list of punishments for banned words.",
+          "description": "Xoá một hành động cụ thể từ danh sách các hình phạt cho từ ngữ bị cấm.",
           "params": {
-            "action": "Exact action string to remove (e.g. timeout, delete)"
+            "action": "Chuỗi hành động chính xác cần xoá (ví dụ: thời gian chờ, xoá)"
           }
         },
         "view_actions": {
-          "description": "Show all actions currently configured to trigger when banned words are used."
+          "description": "Hiển thị tất cả các hành động hiện đang được cấu hình để kích hoạt khi sử dụng từ ngữ bị cấm."
         }
       },
       "defaults": {
