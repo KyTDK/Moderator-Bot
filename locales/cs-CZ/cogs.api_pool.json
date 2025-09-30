@@ -1,6 +1,30 @@
 ﻿{
   "cogs": {
     "api_pool": {
+      "meta": {
+        "group_description": "Management of your personal API keys in the pool.",
+        "explain": {
+          "description": "Explain the API pool."
+        },
+        "add": {
+          "description": "Add an API key to the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to add to the shared pool."
+          }
+        },
+        "remove": {
+          "description": "Remove an API key from the pool.",
+          "params": {
+            "api_key": "The OpenAI API key to remove from the shared pool."
+          }
+        },
+        "clear": {
+          "description": "Clear all your API keys from the pool."
+        },
+        "list": {
+          "description": "List all API keys in your pool (encrypted)."
+        }
+      },
       "explanation": {
         "body": "**Co je API Pool?**\nAPI Pool je bezpečná a anonymní sbírka sdílených OpenAI API klíčů. Umožňuje Moderátor Botovi pokračovat v efektivním provozu, i když jednotliví uživatelé čelí omezením rychlosti.\n\n**Jak to funguje?**\n- Když přidáte svůj OpenAI API klíč do poolu, je šifrovaný a bezpečně uložen.\n- Bot tyto klíče využívá výhradně k přístupu k OpenAI modelům pro provádění moderátorských úkolů.\n- Váš API klíč zůstává důvěrný; nikdo, včetně vývojářů botu, jej nemůže zobrazit.\n- Máte plnou kontrolu a můžete kdykoli odstranit svůj API klíč z poolu.\n\n**Důležité:** Abyste mohli přispět svým API klíčem, váš OpenAI účet musí mít alespoň $5 v předplacených kreditech. I když je použití moderátorského rozhraní zdarma, OpenAI vyžaduje účty s aktivními fakturačními detaily a kvótou. Kredit na svůj účet můžete přidat zde: <https://platform.openai.com/account/billing/overview>\n\nPřispěním svého API klíče přispíváte k zajištění, že Moderátor Bot zůstane schopný ihned reagovat a efektivní pro všechny uživatele."
       },
