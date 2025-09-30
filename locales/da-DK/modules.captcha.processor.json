@@ -3,59 +3,59 @@
     "captcha": {
       "processor": {
         "success": {
-          "reason": "Captcha verification successful",
+          "reason": "Captcha-verifikation lykkedes",
           "embed": {
-            "title": "Captcha Verification Passed",
-            "description": "{mention} ({user_id}) passed captcha verification.",
+            "title": "Captcha-verifikation bestået",
+            "description": "{mention} ({user_id}) bestod captcha-verifikation.",
             "fields": {
-              "actions": "Actions Applied",
-              "attempts": "Attempts",
-              "provider": "Provider",
-              "challenge": "Challenge",
-              "review": "Review"
+              "actions": "Handlinger Anvendt",
+              "attempts": "Forsøg",
+              "provider": "Udbyder",
+              "challenge": "Udfordring",
+              "review": "Gennemgang"
             }
           }
         },
         "failure": {
-          "reason_default": "Failed captcha verification.",
+          "reason_default": "Captcha-verifikation mislykkedes.",
           "notes": {
-            "deferred_generic": "Failure actions deferred; captcha attempts remain.",
-            "deferred_remaining": "Failure actions deferred; {remaining} {attempts_word} remaining.",
-            "member_left": "Member is no longer in the guild; configured failure actions were skipped."
+            "deferred_generic": "Fejlhandlinger udsat; captcha-forsøg resterer.",
+            "deferred_remaining": "Fejlhandlinger udsat; {remaining} {attempts_word} resterende.",
+            "member_left": "Medlemmet er ikke længere i guilden; konfigurerede fejlhandlinger blev sprunget over."
           },
           "attempts": {
-            "unlimited": "Unlimited attempts remain.",
-            "additional": "Additional attempts remain.",
-            "remaining": "{count} {attempts_word} remaining.",
-            "word_one": "attempt",
-            "word_other": "attempts"
+            "unlimited": "Ubegrænsede forsøg tilbage.",
+            "additional": "Yderligere forsøg tilbage.",
+            "remaining": "{count} {attempts_word} tilbage.",
+            "word_one": "forsøg",
+            "word_other": "forsøg"
           },
           "embed": {
-            "title_failed": "Captcha Verification Failed",
-            "title_attempt": "Captcha Attempt Failed",
-            "description_failed": "{mention} ({user_id}) failed captcha verification.",
-            "description_attempt": "{mention} ({user_id}) failed a captcha attempt.",
+            "title_failed": "Captcha-verifikation mislykkedes",
+            "title_attempt": "Captcha-forsøg mislykkedes",
+            "description_failed": "{mention} ({user_id}) mislykkedes med captcha-verifikation.",
+            "description_attempt": "{mention} ({user_id}) mislykkedes med et captcha-forsøg.",
             "fields": {
-              "actions": "Actions Applied",
-              "notes": "Notes",
-              "attempts": "Attempts",
-              "remaining": "Attempts Remaining",
-              "challenge": "Challenge",
-              "reason": "Reason",
-              "review": "Review"
+              "actions": "Handlinger Anvendt",
+              "notes": "Notater",
+              "attempts": "Forsøg",
+              "remaining": "Resterende Forsøg",
+              "challenge": "Udfordring",
+              "reason": "Årsag",
+              "review": "Gennemgang"
             }
           }
         },
         "errors": {
-          "role_assignment_failed": "Failed to apply captcha success actions due to a Discord API error.",
-          "unknown_token": "No pending captcha verification found for this user.",
-          "token_mismatch": "Captcha token does not match the pending verification.",
-          "missing_permissions": "Bot is missing permissions to apply captcha failure actions.",
-          "action_failed": "Failed to apply captcha failure actions due to a Discord API error.",
-          "guild_not_found": "Guild {guild_id} is not available to this bot.",
-          "guild_fetch_failed": "Failed to fetch guild {guild_id} from Discord.",
-          "member_not_found": "Member {user_id} not found in guild {guild_id}.",
-          "member_fetch_failed": "Failed to fetch member {user_id} from guild {guild_id}."
+          "role_assignment_failed": "Kunne ikke anvende captcha-succeshandlinger på grund af en Discord API-fejl.",
+          "unknown_token": "Ingen afventende captcha-verifikation fundet for denne bruger.",
+          "token_mismatch": "Captcha-token matcher ikke den afventende verifikation.",
+          "missing_permissions": "Botten mangler tilladelser til at anvende captcha-fejlhandlinger.",
+          "action_failed": "Kunne ikke anvende captcha-fejlhandlinger på grund af en Discord API-fejl.",
+          "guild_not_found": "Guild {guild_id} er ikke tilgængelig for denne bot.",
+          "guild_fetch_failed": "Kunne ikke hente guild {guild_id} fra Discord.",
+          "member_not_found": "Medlem {user_id} ikke fundet i guild {guild_id}.",
+          "member_fetch_failed": "Kunne ikke hente medlem {user_id} fra guild {guild_id}."
         }
       }
     }
