@@ -2,7 +2,7 @@
   "modules": {
     "variables": {
       "time_string": {
-        "invalid_format": "Invalid duration format. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively."
+        "invalid_format": "تنسيق غير صالح للمدة. استخدم صيغًا مثل 20ث، 30د، 2س، 30ي، 2أ، 5ش، 1س. للثواني، الدقائق، الساعات، الأيام، الأسابيع، الأشهر والسنوات على التوالي."
       }
     }
   }
