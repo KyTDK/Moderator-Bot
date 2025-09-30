@@ -3,11 +3,11 @@
     "debug": {
       "meta": {
         "stats": {
-          "description": "Get memory and performance stats",
-          "show_all": "Include allocations from all libraries (not just project)"
+          "description": "קבל סטטיסטיקות זיכרון וביצועים",
+          "show_all": "כלול הקצאות מכל הספריות (ולא רק מהפרויקט)"
         },
         "locale": {
-          "description": "Show the locale currently bound to this command context"
+          "description": "הצג את השפה הנוכחית הקשורה להקשר הפקודה הזה"
         }
       },
       "permission_denied": "אין לך הרשאה להשתמש בפקודה זו.",
@@ -26,7 +26,7 @@
         "footer": "מארח: {host} | Python {python_version}"
       },
       "locale": {
-        "current": "Current locale: {locale}"
+        "current": "שפה נוכחית: {locale}"
       }
     }
   }
