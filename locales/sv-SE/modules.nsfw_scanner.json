@@ -18,6 +18,11 @@
               "type": "Type: `{file_type}`",
               "decision": "Decision: **{decision}**"
             },
+            "file_types": {
+              "image": "Image",
+              "video": "Video",
+              "unknown": "Unknown"
+            },
             "decision": {
               "nsfw": "NSFW",
               "safe": "Safe",
