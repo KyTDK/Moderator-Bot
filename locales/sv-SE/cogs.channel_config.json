@@ -2,30 +2,30 @@
   "cogs": {
     "channel_config": {
       "meta": {
-        "group_description": "Configure log channels.",
+        "group_description": "Konfigurera loggkanaler.",
         "set": {
-          "description": "Set a log channel.",
+          "description": "Ställ in en loggkanal.",
           "params": {
-            "channel": "The channel to use for logging.",
-            "type": "Which type of log this channel is for."
+            "channel": "Kanalen som ska användas för loggning.",
+            "type": "Vilken typ av logg denna kanal är för."
           }
         },
         "unset": {
-          "description": "Unset a log channel.",
+          "description": "Ta bort inställningen för en loggkanal.",
           "params": {
-            "type": "Which log type to disable."
+            "type": "Vilken loggtyp som ska inaktiveras."
           }
         },
         "show": {
-          "description": "Show current log channel settings."
+          "description": "Visa nuvarande inställningar för loggkanalen."
         },
         "types": {
-          "strike": "Strike",
+          "strike": "Straff",
           "nsfw": "NSFW",
           "ai": "AI",
           "monitor": "Monitor",
           "captcha": "Captcha",
-          "vc_transcript": "VC Transcript"
+          "vc_transcript": "VC Transkript"
         }
       },
       "nsfw_required": "{channel} är inte åldersbegränsad. Välj en NSFW-kanal.",
