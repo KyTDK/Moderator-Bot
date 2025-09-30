@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Configurarea detectării înșelătoriilor și gestionarea modelelor.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Exclude un canal de la detectarea înșelătoriilor.",
+          "channel": "Canalul de exclus"
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Eliminează un canal din lista de excluderi.",
+          "channel": "Canalul de eliminat din excludere"
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Listează toate canalele excluse."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Comută sau vizualizează verificarea linkurilor.",
+          "action_description": "activează | dezactivează | stare",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "activează",
+            "disable": "dezactivează",
+            "status": "stare"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Adaugă o acțiune în lista de pedepse pentru înșelătorii.",
+          "action": "Acțiunea de efectuat",
+          "duration": "Necesar doar pentru timeout (de exemplu, 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Elimină o acțiune din lista de pedepse pentru înșelătorii.",
+          "action": "Șirul de acțiune exact de eliminat (de exemplu, timeout:1d, șterge)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Vizualizează setările actuale pentru înșelătorii."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Nicio acțiune setată.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Verificarea linkurilor este {state}.",
+        "updated": "Verificarea linkurilor {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**activat**",
+          "disabled": "**dezactivat**"
         }
       },
       "detection": {
