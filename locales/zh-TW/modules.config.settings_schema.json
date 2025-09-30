@@ -3,31 +3,31 @@
     "config": {
       "settings_schema": {
         "locale": {
-          "invalid": "Invalid locale. Supported locales: {supported}"
+          "invalid": "無效的區域設置。支援的區域設置：{supported}"
         },
         "nsfw_pfp_message": {
-          "default": "Your profile picture was detected to contain explicit content",
+          "default": "您的個人檔案圖片被檢測到包含不雅內容",
           "choices": [
-            "Your profile picture was detected to contain explicit content",
-            "Your profile picture is not appropriate for this server.",
-            "Your profile picture has been flagged as NSFW."
+            "您的個人檔案圖片被檢測到包含不雅內容",
+            "您的個人檔案圖片不適合此伺服器。",
+            "您的個人檔案圖片已被標記為 NSFW。"
           ]
         },
         "rules": {
           "default": [
-            "1. Be respectful — no harassment or hate speech.",
-            "2. No NSFW or obscene content.",
-            "3. No spam or excessive self-promotion.",
-            "4. Follow Discord's Terms of Service."
+            "1. 請保持尊重——無騷擾或仇恨言論。",
+            "2. 不要發佈 NSFW 或不雅內容。",
+            "3. 不要發送垃圾信息或過度自我宣傳。",
+            "4. 遵循 Discord 的服務條款。"
           ]
         },
         "vcmod_rules": {
           "default": [
-            "1. No harassment, hate speech, or threats.",
-            "2. No slurs or discriminatory language.",
-            "3. No incitement to violence or illegal activity.",
-            "4. No sexual content or explicit remarks.",
-            "5. Follow Discord's Terms of Service."
+            "1. 不得騷擾、仇恨言論或威脅。",
+            "2. 不得使用污辱性或歧視性語言。",
+            "3. 不得煽動暴力或非法活動。",
+            "4. 不得發佈色情內容或明示言論。",
+            "5. 遵循 Discord 的服務條款。"
           ]
         }
       }
