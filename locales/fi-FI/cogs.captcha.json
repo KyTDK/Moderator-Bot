@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "Hallitse captcha-varmennusta.",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "Lähetä captcha-varmennusupotus uudelleen."
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "Lähetä captcha-varmennuspyyntö jäsenelle.",
+          "member": "Jäsen, jonka on suoritettava vahvistus"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "muutama minuutti",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count} sekunti",
+            "other": "{count} sekuntia"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count} minuutti",
+            "other": "{count} minuuttia"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count} tunti",
+            "other": "{count} tuntia"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count} päivä",
+            "other": "{count} päivää"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "Hei {member}! Viimeistelläksesi liittymisen **{guild}** ",
+          "grace": "ole hyvä ja {instruction} **{grace}** aikana.",
+          "no_grace": "ole hyvä ja {instruction} kun olet valmis.",
+          "instruction_default": "suorita captcha",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " Sinulla on **{count}** yritys.",
+            "other": " Sinulla on **{count}** yrityksiä."
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "Captchan vahvistus vaaditaan",
+          "footer": "Voimanlähteenä Moderator Bot"
         },
         "button": {
-          "label": "Verify now"
+          "label": "Vahvista nyt"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "Klikkaa tästä vahvistaaksesi"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "vieraile {channel} ja suorita captcha",
+          "help_title": "Tarvitsetko apua?",
+          "help_value": "Klikkaa alla olevaa painiketta avataksesi vahvistussivun.",
+          "button_label": "Avaa vahvistussivu"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "Klikkaa alla olevaa painiketta vahvistaaksesi itsesi. Kun olet läpäissyt captchan, saat pääsyn muuhun palvelimeen.",
+        "login_notice": "Sinulta saatetaan pyytää kirjautumista Moderator Botin hallintapaneeliin ensin.",
+        "title": "Suorita captchan vahvistus",
+        "footer": "Gildi ID: {guild_id} | Voimanlähteenä Moderator Bot",
+        "button_label": "Vahvista nyt"
       }
     }
   }
