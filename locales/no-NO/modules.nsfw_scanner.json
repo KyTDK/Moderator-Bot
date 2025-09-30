@@ -3,62 +3,62 @@
     "nsfw_scanner": {
       "actions": {
         "embed": {
-          "title": "NSFW Content Detected",
-          "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
-          "footer": "User ID: {user_id}"
+          "title": "NSFW-innhold oppdaget",
+          "description": "**Bruker:** {user_mention} ({user_display})\n**Årsak:** {reason}",
+          "footer": "Bruker-ID: {user_id}"
         }
       },
       "helpers": {
         "attachments": {
           "report": {
-            "title": "NSFW Scan Report",
+            "title": "NSFW-skannerapport",
             "description": {
-              "user": "User: {user}",
-              "file": "File: `{filename}`",
+              "user": "Bruker: {user}",
+              "file": "Fil: `{filename}`",
               "type": "Type: `{file_type}`",
-              "decision": "Decision: **{decision}**"
+              "decision": "Beslutning: **{decision}**"
             },
             "file_types": {
-              "image": "Image",
+              "image": "Bilde",
               "video": "Video",
-              "unknown": "Unknown"
+              "unknown": "Ukjent"
             },
             "decision": {
               "nsfw": "NSFW",
-              "safe": "Safe",
-              "unknown": "Unknown"
+              "safe": "Trygg",
+              "unknown": "Ukjent"
             },
             "fields": {
-              "reason": "Reason",
-              "category": "Category",
-              "score": "Score",
-              "flagged_any": "Flagged Any",
-              "summary_categories": "Summary Categories",
-              "max_similarity": "Max Similarity",
-              "max_category": "Max Similarity Category",
-              "similarity": "Matched Similarity",
-              "high_accuracy": "High Accuracy",
-              "clip_threshold": "CLIP Threshold",
-              "moderation_threshold": "Moderation Threshold",
-              "video_frames": "Video Frames"
+              "reason": "Årsak",
+              "category": "Kategori",
+              "score": "Poengsum",
+              "flagged_any": "Flagget en",
+              "summary_categories": "Sammendragskategorier",
+              "max_similarity": "Maksimal likhet",
+              "max_category": "Kategori for maksimal likhet",
+              "similarity": "Matchet likhet",
+              "high_accuracy": "Høy nøyaktighet",
+              "clip_threshold": "CLIP-grense",
+              "moderation_threshold": "Moderasjonsgrense",
+              "video_frames": "Videorammer"
             },
             "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Similarity match",
-              "no_frames_extracted": "No frames extracted",
-              "no_nsfw_frames_detected": "No NSFW frames detected"
+              "openai_moderation": "OpenAI-moderering",
+              "similarity_match": "Likhetsmatch",
+              "no_frames_extracted": "Ingen rammer ekstrahert",
+              "no_nsfw_frames_detected": "Ingen NSFW-rammer oppdaget"
             }
           }
         }
       },
       "shared": {
         "confidence": {
-          "name": "Confidence",
+          "name": "Tillit",
           "value": "{value}{source_suffix}",
           "source_suffix": " ({source_label})",
           "sources": {
-            "score": "Score",
-            "similarity": "Similarity"
+            "score": "Poengsum",
+            "similarity": "Likhet"
           }
         },
         "boolean": {
@@ -66,9 +66,9 @@
           "false": "false"
         },
         "category": {
-          "unspecified": "Unspecified"
+          "unspecified": "Uspesifisert"
         },
-        "policy_violation": "Detected potential policy violation (Category: **{category}**)"
+        "policy_violation": "Oppdaget potensiell policybrudd (Kategori: **{category}**)"
       }
     }
   }
