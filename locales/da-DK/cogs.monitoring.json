@@ -2,33 +2,33 @@
   "cogs": {
     "monitoring": {
       "meta": {
-        "group_description": "Monitoring configuration",
+        "group_description": "Overvågningskonfiguration",
         "set": {
-          "description": "Set channel to output logs.",
-          "channel": "The channel to send logs to."
+          "description": "Indstil kanal til outputlogs.",
+          "channel": "Kanalen til at sende logs til."
         },
         "remove": {
-          "description": "Remove the monitor channel setting."
+          "description": "Fjern monitor-kanalindstillingen."
         },
         "show": {
-          "description": "Show the current monitor channel."
+          "description": "Vis den aktuelle monitor-kanal."
         },
         "toggle_event": {
-          "description": "Enable or disable a specific monitoring event.",
-          "event": "The event to toggle",
-          "enabled": "Enable or disable logging for this event",
+          "description": "Aktiver eller deaktiver en specifik overvågningshændelse.",
+          "event": "Hændelsen at skifte",
+          "enabled": "Aktiver eller deaktiver logføring for denne hændelse",
           "choices": {
-            "join": "User Join",
-            "leave": "User Leave",
-            "ban": "Ban",
-            "unban": "Unban",
+            "join": "Bruger Tilmeld",
+            "leave": "Bruger Forlad",
+            "ban": "Forbud",
+            "unban": "Ophæv forbud",
             "timeout": "Timeout",
-            "message_delete": "Message Deleted",
-            "message_edit": "Message Edited"
+            "message_delete": "Besked Slettet",
+            "message_edit": "Besked Redigeret"
           }
         },
         "list_events": {
-          "description": "List current monitor event settings."
+          "description": "Vis nuværende indstillinger for monitorhændelser."
         }
       },
       "log_event": {
@@ -80,7 +80,7 @@
         "content_label": "**Indhold:**\n{content}",
         "description_generic": "En besked blev slettet i {channel}.",
         "description_deleted_by": "\n**Slettet af:** {deleter}",
-        "no_content": "[No Content]",
+        "no_content": "[Ingen indhold]",
         "fields": {
           "attachments": "Vedhæftninger ({count})",
           "embeds": "Indlejring {index}",
@@ -99,7 +99,7 @@
           "before": "Før",
           "after": "Efter"
         },
-        "no_content": "[No Content]",
+        "no_content": "[Ingen indhold]",
         "footer": "Bruger ID: {user_id}"
       },
       "ban": {
