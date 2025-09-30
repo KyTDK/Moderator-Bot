@@ -2,38 +2,38 @@
   "cogs": {
     "scam_detection": {
       "meta": {
-        "group_description": "Scam-detection configuration and pattern management.",
+        "group_description": "Configurazione e gestione dei modelli di rilevamento truffe.",
         "exclude_channel_add": {
-          "description": "Exclude a channel from scam detection.",
-          "channel": "The channel to exclude"
+          "description": "Escludi un canale dal rilevamento truffe.",
+          "channel": "Il canale da escludere."
         },
         "exclude_channel_remove": {
-          "description": "Remove a channel from the exclusion list.",
-          "channel": "The channel to remove from exclusion"
+          "description": "Rimuovi un canale dall'elenco delle esclusioni.",
+          "channel": "Il canale da rimuovere dall'esclusione."
         },
         "exclude_channel_list": {
-          "description": "List all excluded channels."
+          "description": "Elenca tutti i canali esclusi."
         },
         "check_links": {
-          "description": "Toggle or view link checking.",
-          "action_description": "enable | disable | status",
+          "description": "Attiva o visualizza il controllo dei collegamenti.",
+          "action_description": "abilita | disabilita | stato",
           "choices": {
-            "enable": "enable",
-            "disable": "disable",
-            "status": "status"
+            "enable": "abilita",
+            "disable": "disabilita",
+            "status": "stato"
           }
         },
         "add_action": {
-          "description": "Add an action to the scam punishment list.",
-          "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "description": "Aggiungi un'azione all'elenco di penalità per truffe.",
+          "action": "Azione da eseguire.",
+          "duration": "Richiesto solo per il timeout (ad es. 10m, 1h, 3d)"
         },
         "remove_action": {
-          "description": "Remove an action from the scam punishment list.",
-          "action": "Exact action string to remove (e.g. timeout:1d, delete)"
+          "description": "Rimuovi un'azione dall'elenco di penalità per truffe.",
+          "action": "Stringa di azione esatta da rimuovere (ad es. timeout:1d, elimina)"
         },
         "view": {
-          "description": "View current scam settings."
+          "description": "Visualizza le impostazioni truffa."
         }
       },
       "settings": {
@@ -42,11 +42,11 @@
         "none": "*Nessuna azione impostata.*"
       },
       "check_links": {
-        "status": "Link checking is {state}.",
-        "updated": "Link checking {state}.",
+        "status": "Il controllo dei collegamenti è {state}.",
+        "updated": "Controllo dei collegamenti {state}.",
         "state": {
-          "enabled": "**enabled**",
-          "disabled": "**disabled**"
+          "enabled": "**abilitato**",
+          "disabled": "**disabilitato**"
         }
       },
       "detection": {
