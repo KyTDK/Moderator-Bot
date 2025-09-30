@@ -2,18 +2,18 @@
   "cogs": {
     "banned_urls": {
       "meta": {
-        "group_description": "Banned URLs management commands.",
+        "group_description": "Befehle zur Verwaltung gesperrter URLs.",
         "add": {
-          "description": "Add a URL or domain to the banned list."
+          "description": "Eine URL oder Domain zur Sperrliste hinzufügen."
         },
         "remove": {
-          "description": "Remove a URL or domain from the banned list."
+          "description": "Eine URL oder Domain aus der Sperrliste entfernen."
         },
         "list": {
-          "description": "List all banned URLs."
+          "description": "Liste aller gesperrten URLs."
         },
         "clear": {
-          "description": "Clear all banned URLs."
+          "description": "Alle gesperrten URLs löschen."
         }
       },
       "limit_reached": "Sie haben das Limit von {limit} gesperrten URLs für diesen Server erreicht.\nVerwenden Sie `/bannedurls remove` oder `/bannedurls clear`, um Platz zu schaffen.",
