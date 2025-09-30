@@ -2,23 +2,23 @@
   "cogs": {
     "voice_moderation": {
       "transcript": {
-        "author_label": "AUTHOR",
-        "utterance_label": "UTTERANCE",
+        "author_label": "FORFATTER",
+        "utterance_label": "YTRING",
         "divider": "---",
-        "unknown_speaker": "Unknown speaker",
-        "unknown_prefix": "Unknown",
+        "unknown_speaker": "Ukjent taler",
+        "unknown_prefix": "Ukjent",
         "user_fallback": "<@{id}> (id = {id})",
         "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transcript",
-        "title_part": "VC Transcript (part {index}/{total})",
-        "field_channel": "Channel",
-        "field_utterances": "Utterances",
-        "footer_high": "High accuracy transcript",
-        "footer_normal": "Normal accuracy transcript"
+        "title_single": "VC-utskrift",
+        "title_part": "VC-utskrift (del {index}/{total})",
+        "field_channel": "Kanal",
+        "field_utterances": "Ytringer",
+        "footer_high": "Utskrift med høy nøyaktighet",
+        "footer_normal": "Utskrift med normal nøyaktighet"
       },
       "budget": {
-        "title": "VC Moderation Budget Reached",
-        "description": "Skipping analysis for this cycle due to budget limit."
+        "title": "VC-moderasjon budsjett nådd",
+        "description": "Hopper over analyse for denne syklusen på grunn av budsjettgrense."
       }
     }
   }
