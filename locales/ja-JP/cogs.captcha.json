@@ -2,13 +2,13 @@
   "cogs": {
     "captcha": {
       "meta": {
-        "group_description": "Manage captcha verification.",
+        "group_description": "キャプチャ検証を管理します。",
         "sync": {
-          "description": "Resend the captcha verification embed."
+          "description": "キャプチャ検証の埋め込みを再送信します。"
         },
         "request": {
-          "description": "Send a captcha verification request to a member.",
-          "member": "The member who should complete verification"
+          "description": "メンバーにキャプチャ検証を送信します。",
+          "member": "検証を完了すべきメンバー"
         }
       },
       "common": {
@@ -42,60 +42,60 @@
       },
       "base": {
         "duration": {
-          "few_minutes": "a few minutes",
+          "few_minutes": "数分",
           "joiner": ", ",
           "seconds": {
-            "one": "{count} second",
-            "other": "{count} seconds"
+            "one": "{count}秒",
+            "other": "{count}秒"
           },
           "minutes": {
-            "one": "{count} minute",
-            "other": "{count} minutes"
+            "one": "{count}分",
+            "other": "{count}分"
           },
           "hours": {
-            "one": "{count} hour",
-            "other": "{count} hours"
+            "one": "{count}時間",
+            "other": "{count}時間"
           },
           "days": {
-            "one": "{count} day",
-            "other": "{count} days"
+            "one": "{count}日",
+            "other": "{count}日"
           }
         },
         "description": {
-          "greeting": "Hi {member}! To finish joining **{guild}**, ",
-          "grace": "please {instruction} within **{grace}**.",
-          "no_grace": "please {instruction} when you're ready.",
-          "instruction_default": "complete the captcha",
+          "greeting": "こんにちは{member}！**{guild}**に参加するために、 ",
+          "grace": "**{grace}** 内に{instruction}してください。",
+          "no_grace": "準備ができたら{instruction}してください。",
+          "instruction_default": "キャプチャを完了してください",
           "attempts": {
-            "one": " You have **{count}** attempt.",
-            "other": " You have **{count}** attempts."
+            "one": " **{count}** 回の試行が可能です。",
+            "other": " **{count}** 回の試行が可能です。"
           }
         },
         "embed": {
-          "title": "Captcha Verification Required",
-          "footer": "Powered by Moderator Bot"
+          "title": "キャプチャ検証が必要です",
+          "footer": "Moderator Bot提供"
         },
         "button": {
-          "label": "Verify now"
+          "label": "今すぐ検証"
         }
       },
       "delivery": {
         "dm": {
-          "button_label": "Click here to verify"
+          "button_label": "ここをクリックして検証"
         },
         "embed": {
-          "location": "visit {channel} and complete the captcha",
-          "help_title": "Need help?",
-          "help_value": "Click the button below to open the verification page.",
-          "button_label": "Open verification page"
+          "location": "{channel}に移動してキャプチャを完了します。",
+          "help_title": "助けが必要ですか？",
+          "help_value": "下のボタンをクリックして検証ページを開きます。",
+          "button_label": "検証ページを開く"
         }
       },
       "embed_message": {
-        "description": "Click the button below to verify yourself. Once you pass the captcha, you will gain access to the rest of the server.",
-        "login_notice": "You may be asked to log in to the Moderator Bot dashboard first.",
-        "title": "Complete Captcha Verification",
-        "footer": "Guild ID: {guild_id} | Powered by Moderator Bot",
-        "button_label": "Verify now"
+        "description": "下のボタンをクリックして自分を検証します。キャプチャを通過すると、サーバーの残りの部分にアクセスできます。",
+        "login_notice": "最初にModerator Botダッシュボードにログインするよう求められることがあります。",
+        "title": "キャプチャ検証を完了する",
+        "footer": "ギルド ID: {guild_id} | Moderator Bot提供",
+        "button_label": "今すぐ検証"
       }
     }
   }
