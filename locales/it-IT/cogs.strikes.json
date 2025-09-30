@@ -2,44 +2,44 @@
   "cogs": {
     "strikes": {
       "meta": {
-        "group_description": "Strike management commands.",
+        "group_description": "Comandi di gestione dei provvedimenti.",
         "strike": {
-          "description": "Strike a specific user.",
+          "description": "Colpisci un utente specifico.",
           "params": {
-            "user": "The member to strike.",
-            "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "user": "Il membro da colpire.",
+            "reason": "Il motivo del provvedimento.",
+            "expiry": "Durata di scadenza facoltativa (es., 30d, 2w)."
           }
         },
         "get": {
-          "description": "Get strikes of a specific user."
+          "description": "Ottieni i provvedimenti di un utente specifico."
         },
         "clear": {
-          "description": "Clear all strikes of a specific user.",
+          "description": "Cancella tutti i provvedimenti di un utente specifico.",
           "params": {
-            "user": "The user whose strikes will be cleared."
+            "user": "L'utente i cui provvedimenti saranno cancellati."
           }
         },
         "add_action": {
-          "description": "Add an additional action for a strike level.",
+          "description": "Aggiungi un'azione aggiuntiva per un livello di provvedimento.",
           "params": {
-            "number_of_strikes": "Number of strikes required to trigger the action.",
-            "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "number_of_strikes": "Numero di provvedimenti richiesti per attivare l'azione.",
+            "action": "Azione da aggiungere.",
+            "duration": "Durata (solo per timeout, es., 1h, 30m). Lasciare vuoto in caso contrario."
           }
         },
         "remove_action": {
-          "description": "Remove an action from a strike level.",
+          "description": "Rimuovi un'azione da un livello di provvedimento.",
           "params": {
-            "number_of_strikes": "Number of strikes associated with the action.",
-            "action": "Exact action string to remove."
+            "number_of_strikes": "Numero di provvedimenti associati all'azione.",
+            "action": "Stringa esatta di azione da rimuovere."
           }
         },
         "view_actions": {
-          "description": "View all configured strike actions."
+          "description": "Visualizza tutte le azioni di provvedimento configurate."
         },
         "intimidate": {
-          "description": "Intimidate the channel, or a specific user.",
+          "description": "Intimidire il canale o un utente specifico.",
           "params": {
             "user": "The user to intimidate. If not provided, the entire channel will be addressed with a broader message.",
             "channel": "If true, sends the user warning to the channel; otherwise, sends a direct message to the user."
