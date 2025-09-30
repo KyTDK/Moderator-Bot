@@ -2,18 +2,18 @@
   "cogs": {
     "accelerated": {
       "meta": {
-        "group_description": "Manage your Accelerated (Premium) subscription.",
+        "group_description": "إدارة اشتراكك المباشر (المميز).",
         "status": {
-          "description": "Check if you currently have an Accelerated subscription."
+          "description": "تحقق مما إذا كنت تملك اشتراكًا مباشرًا."
         },
         "subscribe": {
-          "description": "Generate your unique PayPal subscription link."
+          "description": "توليد رابط اشتراك باي بال الخاص بك."
         },
         "perks": {
-          "description": "Show the benefits of Accelerated subscription."
+          "description": "عرض المنافع الخاصة باشتراك مباشر."
         },
         "cancel": {
-          "description": "Explain how to cancel your subscription."
+          "description": "شرح كيفية إلغاء اشتراكك."
         }
       },
       "group_description": "إدارة الاشتراك المسارع (المميز) الخاص بك.",
