@@ -4,7 +4,7 @@
       "api": {
         "key_failed_notice": "**⚠️ Your OpenAI API key failed a moderation check.**\n\nThis usually means your account does not have active billing or is temporarily rate-limited.\n\nPlease check your [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) to ensure your account has payment info and at least $5 in credits.\n\nOnce that is resolved, your key will automatically start working again - no need to re-add it.",
         "key_validation": {
-          "billing_required": "Your API key didn't work. This is likely because your organization hasn't added any credit to its OpenAI account. Even though the moderation model is free, OpenAI requires accounts to have valid payment details on file. To add credit, visit the [OpenAI Billing Overview](https://platform.openai.com/account/billing/overview) page and purchase at least $5 in credits. Once you've added a payment method and credits, your API key should function correctly."
+          "billing_required": "La teva clau API no ha funcionat. Això probablement és perquè la teva organització no ha afegit crèdit al seu compte d'OpenAI. Encara que el model de moderació és gratuït, OpenAI requereix que els comptes tinguin dades de pagament vàlides registrades. Per afegir crèdit, visita la pàgina [Visió General de Facturació d'OpenAI](https://platform.openai.com/account/billing/overview) i compra almenys $5 en crèdits. Un cop hagis afegit un mètode de pagament i crèdits, la teva clau API hauria de funcionar correctament."
         }
       }
     }
