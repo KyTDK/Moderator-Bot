@@ -8,6 +8,7 @@ import os
 from dotenv import load_dotenv
 import hashlib
 from modules.core.moderator_bot import ModeratorBot
+from modules.i18n.strings import locale_string
 
 load_dotenv()
 
@@ -26,18 +27,12 @@ class ApiPoolCog(commands.Cog):
 
     api_pool_group = app_commands.Group(
         name="api_pool",
-        description=app_commands.locale_str(
-            "Management of your personal API keys in the pool.",
-            key="cogs.api_pool.meta.group_description",
-        ),
+        description=locale_string("cogs.api_pool.meta.group_description"),
     )
 
     @api_pool_group.command(
         name="explanation",
-        description=app_commands.locale_str(
-            "Explain the API pool.",
-            key="cogs.api_pool.meta.explain.description",
-        ),
+        description=locale_string("cogs.api_pool.meta.explain.description"),
     )
     async def explain(self, interaction: Interaction):
         guild_id = interaction.guild.id
@@ -49,16 +44,10 @@ class ApiPoolCog(commands.Cog):
 
     @api_pool_group.command(
         name="add",
-        description=app_commands.locale_str(
-            "Add an API key to the pool.",
-            key="cogs.api_pool.meta.add.description",
-        ),
+        description=locale_string("cogs.api_pool.meta.add.description"),
     )
     @app_commands.describe(
-        api_key=app_commands.locale_str(
-            "The OpenAI API key to add to the shared pool.",
-            key="cogs.api_pool.meta.add.params.api_key",
-        )
+        api_key=locale_string("cogs.api_pool.meta.add.params.api_key")
     )
     async def add_api(self, interaction: Interaction, api_key: str):
         await interaction.response.defer(ephemeral=True)
@@ -117,16 +106,10 @@ class ApiPoolCog(commands.Cog):
 
     @api_pool_group.command(
         name="remove",
-        description=app_commands.locale_str(
-            "Remove an API key from the pool.",
-            key="cogs.api_pool.meta.remove.description",
-        ),
+        description=locale_string("cogs.api_pool.meta.remove.description"),
     )
     @app_commands.describe(
-        api_key=app_commands.locale_str(
-            "The OpenAI API key to remove from the shared pool.",
-            key="cogs.api_pool.meta.remove.params.api_key",
-        )
+        api_key=locale_string("cogs.api_pool.meta.remove.params.api_key")
     )
     async def remove_api(self, interaction: Interaction, api_key: str):
         user_id = interaction.user.id
@@ -148,10 +131,7 @@ class ApiPoolCog(commands.Cog):
 
     @api_pool_group.command(
         name="clear",
-        description=app_commands.locale_str(
-            "Clear all your API keys from the pool.",
-            key="cogs.api_pool.meta.clear.description",
-        ),
+        description=locale_string("cogs.api_pool.meta.clear.description"),
     )
     async def clear_api(self, interaction: Interaction):
         user_id = interaction.user.id
@@ -173,10 +153,7 @@ class ApiPoolCog(commands.Cog):
 
     @api_pool_group.command(
         name="list",
-        description=app_commands.locale_str(
-            "List all API keys in your pool (encrypted).",
-            key="cogs.api_pool.meta.list.description",
-        ),
+        description=locale_string("cogs.api_pool.meta.list.description"),
     )
     async def list_apis(self, interaction: Interaction):
         user_id = interaction.user.id

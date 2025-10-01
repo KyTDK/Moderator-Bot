@@ -10,6 +10,7 @@ from better_profanity import profanity
 from cleantext import clean
 from modules.utils import mod_logging, mysql
 from modules.utils.strike import validate_action
+from modules.i18n.strings import locale_namespace
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from modules.utils.text import normalize_text
 from modules.core.moderator_bot import ModeratorBot
@@ -20,6 +21,12 @@ manager = ActionListManager(BANNED_ACTION_SETTING)
 
 RE_REPEATS = re.compile(r"(.)\1{2,}")
 
+LOCALE = locale_namespace("cogs", "banned_words")
+META = LOCALE.child("meta")
+DEFAULT_CHOICES = META.child("defaults", "choices")
+ADD_ACTION_PARAMS = META.child("add_action", "params")
+REMOVE_ACTION_PARAMS = META.child("remove_action", "params")
+
 class BannedWordsCog(commands.Cog):
 
     """A cog for banned words handling and relevant commands."""
@@ -28,42 +35,27 @@ class BannedWordsCog(commands.Cog):
     
     bannedwords_group = app_commands.Group(
         name="bannedwords",
-        description=app_commands.locale_str(
-            "Banned words management commands.",
-            key="cogs.banned_words.meta.group_description",
-        ),
+        description=META.string("group_description"),
         default_permissions=discord.Permissions(manage_messages=True),
         guild_only=True
     )
 
     @bannedwords_group.command(
         name="defaults",
-        description=app_commands.locale_str(
-            "Enable or disable the built-in profanity list.",
-            key="cogs.banned_words.meta.defaults.description",
-        ),
+        description=META.string("defaults", "description"),
     )
     @app_commands.choices(
         action=[
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "enable",
-                    key="cogs.banned_words.meta.defaults.choices.enable",
-                ),
+                name=DEFAULT_CHOICES.string("enable"),
                 value="true",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "disable",
-                    key="cogs.banned_words.meta.defaults.choices.disable",
-                ),
+                name=DEFAULT_CHOICES.string("disable"),
                 value="false",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "status",
-                    key="cogs.banned_words.meta.defaults.choices.status",
-                ),
+                name=DEFAULT_CHOICES.string("status"),
                 value="status",
             ),
         ]
@@ -107,10 +99,7 @@ class BannedWordsCog(commands.Cog):
 
     @bannedwords_group.command(
         name="add",
-        description=app_commands.locale_str(
-            "Add a word to the banned words list.",
-            key="cogs.banned_words.meta.add.description",
-        ),
+        description=META.string("add", "description"),
     )
     async def add_banned_word(self, interaction: Interaction, word: str):
         """Add a word to the banned words list."""
@@ -161,10 +150,7 @@ class BannedWordsCog(commands.Cog):
     # Remove a banned word
     @bannedwords_group.command(
         name="remove",
-        description=app_commands.locale_str(
-            "Remove a word from the banned words list.",
-            key="cogs.banned_words.meta.remove.description",
-        ),
+        description=META.string("remove", "description"),
     )
     async def remove_banned_word(self, interaction: Interaction, word: str):
         """Remove a word from the banned words list."""
@@ -218,10 +204,7 @@ class BannedWordsCog(commands.Cog):
     # List banned words (in a text file)
     @bannedwords_group.command(
         name="list",
-        description=app_commands.locale_str(
-            "List all banned words.",
-            key="cogs.banned_words.meta.list.description",
-        ),
+        description=META.string("list", "description"),
     )
     async def list_banned_words(self, interaction: Interaction):
         """List all banned words."""
@@ -259,10 +242,7 @@ class BannedWordsCog(commands.Cog):
     # Clear all banned words
     @bannedwords_group.command(
         name="clear",
-        description=app_commands.locale_str(
-            "Clear all banned words.",
-            key="cogs.banned_words.meta.clear.description",
-        ),
+        description=META.string("clear", "description"),
     )
     async def clear_banned_words(self, interaction: Interaction):
         """Clear all banned words."""
@@ -375,20 +355,11 @@ class BannedWordsCog(commands.Cog):
 
     @bannedwords_group.command(
         name="add_action",
-        description=app_commands.locale_str(
-            "Add a moderation action to be triggered when a banned word is detected.",
-            key="cogs.banned_words.meta.add_action.description",
-        ),
+        description=META.string("add_action", "description"),
     )
     @app_commands.describe(
-        action=app_commands.locale_str(
-            "Action to perform",
-            key="cogs.banned_words.meta.add_action.params.action",
-        ),
-        duration=app_commands.locale_str(
-            "Only required for timeout (e.g. 10m, 1h, 3d)",
-            key="cogs.banned_words.meta.add_action.params.duration",
-        ),
+        action=ADD_ACTION_PARAMS.string("action"),
+        duration=ADD_ACTION_PARAMS.string("duration"),
     )
     @app_commands.choices(action=action_choices())
     async def add_banned_action(
@@ -418,16 +389,10 @@ class BannedWordsCog(commands.Cog):
 
     @bannedwords_group.command(
         name="remove_action",
-        description=app_commands.locale_str(
-            "Remove a specific action from the list of punishments for banned words.",
-            key="cogs.banned_words.meta.remove_action.description",
-        ),
+        description=META.string("remove_action", "description"),
     )
     @app_commands.describe(
-        action=app_commands.locale_str(
-            "Exact action string to remove (e.g. timeout, delete)",
-            key="cogs.banned_words.meta.remove_action.params.action",
-        )
+        action=REMOVE_ACTION_PARAMS.string("action")
     )
     @app_commands.autocomplete(action=manager.autocomplete)
     async def remove_banned_action(self, interaction: Interaction, action: str):
@@ -436,10 +401,7 @@ class BannedWordsCog(commands.Cog):
 
     @bannedwords_group.command(
         name="view_actions",
-        description=app_commands.locale_str(
-            "Show all actions currently configured to trigger when banned words are used.",
-            key="cogs.banned_words.meta.view_actions.description",
-        ),
+        description=META.string("view_actions", "description"),
     )
     async def view_banned_actions(self, interaction: Interaction):
         actions = await manager.view_actions(interaction.guild.id)

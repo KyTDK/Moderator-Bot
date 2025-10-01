@@ -8,6 +8,7 @@ import os
 import platform
 import time
 from modules.core.moderator_bot import ModeratorBot
+from modules.i18n.strings import locale_string
 
 load_dotenv()
 GUILD_ID = int(os.getenv('GUILD_ID', 0))
@@ -24,17 +25,11 @@ class DebugCog(commands.Cog):
 
     @app_commands.command(
         name="stats",
-        description=app_commands.locale_str(
-            "Get memory and performance stats",
-            key="cogs.debug.meta.stats.description",
-        ),
+        description=locale_string("cogs.debug.meta.stats.description"),
     )
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     @app_commands.describe(
-        show_all=app_commands.locale_str(
-            "Include allocations from all libraries (not just project)",
-            key="cogs.debug.meta.stats.show_all",
-        )
+        show_all=locale_string("cogs.debug.meta.stats.show_all")
     )
     @app_commands.checks.has_permissions(administrator=True)
     async def stats(self, interaction: discord.Interaction, show_all: bool = True):
@@ -182,10 +177,7 @@ class DebugCog(commands.Cog):
 
     @app_commands.command(
         name="locale",
-        description=app_commands.locale_str(
-            "Show the locale currently bound to this command context",
-            key="cogs.debug.meta.locale.description",
-        ),
+        description=locale_string("cogs.debug.meta.locale.description"),
     )
     async def current_locale(self, interaction: discord.Interaction):
         current = self.bot.current_locale()

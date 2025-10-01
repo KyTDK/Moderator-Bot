@@ -7,6 +7,7 @@ from modules.utils import mysql
 from discord.utils import format_dt, utcnow
 from discord import app_commands
 from modules.core.moderator_bot import ModeratorBot
+from modules.i18n.strings import locale_string
 
 class MonitoringCog(commands.Cog):
     def __init__(self, bot: ModeratorBot):
@@ -443,26 +444,17 @@ class MonitoringCog(commands.Cog):
 
     monitor_group = app_commands.Group(
         name="monitor",
-        description=app_commands.locale_str(
-            "Monitoring configuration",
-            key="cogs.monitoring.meta.group_description",
-        ),
+        description=locale_string("cogs.monitoring.meta.group_description"),
         guild_only=True,
         default_permissions=discord.Permissions(manage_messages=True),
     )
 
     @monitor_group.command(
         name="set",
-        description=app_commands.locale_str(
-            "Set channel to output logs.",
-            key="cogs.monitoring.meta.set.description",
-        ),
+        description=locale_string("cogs.monitoring.meta.set.description"),
     )
     @app_commands.describe(
-        channel=app_commands.locale_str(
-            "The channel to send logs to.",
-            key="cogs.monitoring.meta.set.channel",
-        )
+        channel=locale_string("cogs.monitoring.meta.set.channel")
     )
     async def monitor_set(self, interaction: Interaction, channel: discord.TextChannel):
         guild_id = interaction.guild.id
@@ -476,10 +468,7 @@ class MonitoringCog(commands.Cog):
 
     @monitor_group.command(
         name="remove",
-        description=app_commands.locale_str(
-            "Remove the monitor channel setting.",
-            key="cogs.monitoring.meta.remove.description",
-        ),
+        description=locale_string("cogs.monitoring.meta.remove.description"),
     )
     async def monitor_remove(self, interaction: Interaction):
         guild_id = interaction.guild.id
@@ -493,10 +482,7 @@ class MonitoringCog(commands.Cog):
 
     @monitor_group.command(
         name="show",
-        description=app_commands.locale_str(
-            "Show the current monitor channel.",
-            key="cogs.monitoring.meta.show.description",
-        ),
+        description=locale_string("cogs.monitoring.meta.show.description"),
     )
     async def monitor_show(self, interaction: Interaction):
         guild_id = interaction.guild.id
@@ -515,70 +501,40 @@ class MonitoringCog(commands.Cog):
 
     @monitor_group.command(
         name="toggle_event",
-        description=app_commands.locale_str(
-            "Enable or disable a specific monitoring event.",
-            key="cogs.monitoring.meta.toggle_event.description",
-        ),
+        description=locale_string("cogs.monitoring.meta.toggle_event.description"),
     )
     @app_commands.describe(
-        event=app_commands.locale_str(
-            "The event to toggle",
-            key="cogs.monitoring.meta.toggle_event.event",
-        ),
-        enabled=app_commands.locale_str(
-            "Enable or disable logging for this event",
-            key="cogs.monitoring.meta.toggle_event.enabled",
-        ),
+        event=locale_string("cogs.monitoring.meta.toggle_event.event"),
+        enabled=locale_string("cogs.monitoring.meta.toggle_event.enabled"),
     )
     @app_commands.choices(
         event=[
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "User Join",
-                    key="cogs.monitoring.meta.toggle_event.choices.join",
-                ),
+                name=locale_string("cogs.monitoring.meta.toggle_event.choices.join"),
                 value="join",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "User Leave",
-                    key="cogs.monitoring.meta.toggle_event.choices.leave",
-                ),
+                name=locale_string("cogs.monitoring.meta.toggle_event.choices.leave"),
                 value="leave",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Ban",
-                    key="cogs.monitoring.meta.toggle_event.choices.ban",
-                ),
+                name=locale_string("cogs.monitoring.meta.toggle_event.choices.ban"),
                 value="ban",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Unban",
-                    key="cogs.monitoring.meta.toggle_event.choices.unban",
-                ),
+                name=locale_string("cogs.monitoring.meta.toggle_event.choices.unban"),
                 value="unban",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Timeout",
-                    key="cogs.monitoring.meta.toggle_event.choices.timeout",
-                ),
+                name=locale_string("cogs.monitoring.meta.toggle_event.choices.timeout"),
                 value="timeout",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Message Deleted",
-                    key="cogs.monitoring.meta.toggle_event.choices.message_delete",
-                ),
+                name=locale_string("cogs.monitoring.meta.toggle_event.choices.message_delete"),
                 value="message_delete",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Message Edited",
-                    key="cogs.monitoring.meta.toggle_event.choices.message_edit",
-                ),
+                name=locale_string("cogs.monitoring.meta.toggle_event.choices.message_edit"),
                 value="message_edit",
             ),
         ]
@@ -598,10 +554,7 @@ class MonitoringCog(commands.Cog):
 
     @monitor_group.command(
         name="list_events",
-        description=app_commands.locale_str(
-            "List current monitor event settings.",
-            key="cogs.monitoring.meta.list_events.description",
-        ),
+        description=locale_string("cogs.monitoring.meta.list_events.description"),
     )
     async def list_events(self, interaction: Interaction):
         guild_id = interaction.guild.id

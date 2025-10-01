@@ -6,6 +6,7 @@ from modules.utils import mysql
 from datetime import timezone
 from discord.ui import View, Button
 from modules.core.moderator_bot import ModeratorBot
+from modules.i18n.strings import locale_string
 
 class AcceleratedCog(commands.Cog):
     """Commands for Moderator Bot Accelerated (Premium)."""
@@ -15,18 +16,12 @@ class AcceleratedCog(commands.Cog):
 
     accelerated_group = app_commands.Group(
         name="accelerated",
-        description=app_commands.locale_str(
-            "Manage your Accelerated (Premium) subscription.",
-            key="cogs.accelerated.meta.group_description",
-        ),
+        description=locale_string("cogs.accelerated.meta.group_description"),
     )
 
     @accelerated_group.command(
         name="status",
-        description=app_commands.locale_str(
-            "Check if you currently have an Accelerated subscription.",
-            key="cogs.accelerated.meta.status.description",
-        ),
+        description=locale_string("cogs.accelerated.meta.status.description"),
     )
     async def status(self, interaction: Interaction):
         """Check if you currently have an Accelerated subscription."""
@@ -115,10 +110,7 @@ class AcceleratedCog(commands.Cog):
 
     @accelerated_group.command(
         name="subscribe",
-        description=app_commands.locale_str(
-            "Generate your unique PayPal subscription link.",
-            key="cogs.accelerated.meta.subscribe.description",
-        ),
+        description=locale_string("cogs.accelerated.meta.subscribe.description"),
     )
     async def subscribe(self, interaction: Interaction):
         """Generate your unique PayPal subscription link."""
@@ -155,10 +147,7 @@ class AcceleratedCog(commands.Cog):
 
     @accelerated_group.command(
         name="perks",
-        description=app_commands.locale_str(
-            "Show the benefits of Accelerated subscription.",
-            key="cogs.accelerated.meta.perks.description",
-        ),
+        description=locale_string("cogs.accelerated.meta.perks.description"),
     )
     async def perks(self, interaction: Interaction):
         """Show the benefits of Accelerated subscription."""
@@ -174,10 +163,7 @@ class AcceleratedCog(commands.Cog):
 
     @accelerated_group.command(
         name="cancel",
-        description=app_commands.locale_str(
-            "Explain how to cancel your subscription.",
-            key="cogs.accelerated.meta.cancel.description",
-        ),
+        description=locale_string("cogs.accelerated.meta.cancel.description"),
     )
     async def cancel(self, interaction: Interaction):
         """Explain how to cancel your subscription."""

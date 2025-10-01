@@ -19,6 +19,7 @@ from modules.captcha import (
 )
 from modules.captcha.client import CaptchaApiClient, CaptchaGuildConfig
 from modules.captcha.sessions import CaptchaSessionStore
+from modules.i18n.strings import locale_namespace
 from modules.utils import mysql
 from modules.utils.discord_utils import resolve_role_references
 from modules.utils.time import parse_duration
@@ -31,16 +32,16 @@ from modules.core.moderator_bot import ModeratorBot
 
 _logger = logging.getLogger(__name__)
 
+CAPTCHA_LOCALE = locale_namespace("cogs", "captcha")
+CAPTCHA_META = CAPTCHA_LOCALE.child("meta")
+
 
 class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
     """Captcha verification flow for new guild members."""
 
     captcha_group = app_commands.Group(
         name="captcha",
-        description=app_commands.locale_str(
-            "Manage captcha verification.",
-            key="cogs.captcha.meta.group_description",
-        ),
+        description=CAPTCHA_META.string("group_description"),
         guild_only=True,
         default_permissions=discord.Permissions(manage_guild=True),
     )
@@ -76,10 +77,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
 
     @captcha_group.command(
         name="sync",
-        description=app_commands.locale_str(
-            "Resend the captcha verification embed.",
-            key="cogs.captcha.meta.sync.description",
-        ),
+        description=CAPTCHA_META.string("sync", "description"),
     )
     async def sync_embed_command(self, interaction: Interaction) -> None:
         guild_id = interaction.guild.id
@@ -120,16 +118,10 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
 
     @captcha_group.command(
         name="request",
-        description=app_commands.locale_str(
-            "Send a captcha verification request to a member.",
-            key="cogs.captcha.meta.request.description",
-        ),
+        description=CAPTCHA_META.string("request", "description"),
     )
     @app_commands.describe(
-        member=app_commands.locale_str(
-            "The member who should complete verification",
-            key="cogs.captcha.meta.request.member",
-        )
+        member=CAPTCHA_META.string("request", "member")
     )
     async def request_verification_command(
         self, interaction: Interaction, member: discord.Member

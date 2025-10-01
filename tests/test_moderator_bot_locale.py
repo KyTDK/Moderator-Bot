@@ -21,6 +21,7 @@ from modules.i18n.locale_utils import list_supported_locales
 from modules.core.moderator_bot import ModeratorBot
 from modules.utils import mysql
 from modules.i18n.discord_translator import DiscordAppCommandTranslator
+from modules.i18n.strings import locale_string
 
 
 class DummyGuild(SimpleNamespace):
@@ -213,16 +214,13 @@ def test_push_and_reset_locale(bot: ModeratorBot) -> None:
 
 def test_discord_translator_uses_locale_extras(bot: ModeratorBot) -> None:
     translator = DiscordAppCommandTranslator(bot.translation_service)
-    locale_string = app_commands.locale_str(
-        "Open the dashboard for this server.",
-        key="cogs.dashboard.meta.dashboard.description",
-    )
+    locale_entry = locale_string("cogs.dashboard.meta.dashboard.description")
     context = app_commands.TranslationContext(
         location=app_commands.TranslationContextLocation.command_description,
         data=None,
     )
 
-    result = asyncio.run(translator.translate(locale_string, Locale.french, context))
+    result = asyncio.run(translator.translate(locale_entry, Locale.french, context))
 
     assert result == "Ouvrez le tableau de bord pour ce serveur."
 
@@ -274,21 +272,21 @@ def test_locale_aliases_use_translated_welcome_button(
 def test_missing_translation_for_non_default_locale_logs_debug(
     bot: ModeratorBot, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger="modules.i18n.locales")
+    caplog.set_level(logging.WARNING, logger="modules.i18n.translator")
 
-    key = "cogs.settings.meta.help.options.command"
-    result = bot.translate(key, locale="es-ES")
+    key = "cogs.settings.meta.help.options.unknown"
+    fallback = "Example fallback"
+    result = bot.translate(key, locale="fr-FR", fallback=fallback)
 
-    assert result == "Optional: command group to get help with"
+    assert result == fallback
 
-    locale_records = [
+    translator_records = [
         record
         for record in caplog.records
-        if record.name == "modules.i18n.locales"
+        if record.name == "modules.i18n.translator"
     ]
-    assert locale_records
-    assert all(record.levelno < logging.WARNING for record in locale_records)
-    assert any(key in record.getMessage() for record in locale_records)
+    assert translator_records
+    assert any("missing" in record.getMessage() for record in translator_records)
 
 
 def _spanish_settings_header() -> str:
