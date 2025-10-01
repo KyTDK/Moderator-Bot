@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from modules.utils import mysql
 from modules.core.moderator_bot import ModeratorBot
+from modules.i18n.strings import locale_string
 
 LOG_CHANNEL_TYPES: dict[str, tuple[str, str, str]] = {
     "strike": ("strike-channel", "Strike", "cogs.channel_config.meta.types.strike"),
@@ -21,7 +22,7 @@ LOG_CHANNEL_TYPES: dict[str, tuple[str, str, str]] = {
 def _channel_type_choices() -> list[app_commands.Choice[str]]:
     return [
         app_commands.Choice(
-            name=app_commands.locale_str(default_label, key=translation_key),
+            name=locale_string(translation_key, default=default_label),
             value=identifier,
         )
         for identifier, (_, default_label, translation_key) in LOG_CHANNEL_TYPES.items()
@@ -33,30 +34,18 @@ class ChannelConfigCog(commands.Cog):
 
     channels_group = app_commands.Group(
         name="channels",
-        description=app_commands.locale_str(
-            "Configure log channels.",
-            key="cogs.channel_config.meta.group_description",
-        ),
+        description=locale_string("cogs.channel_config.meta.group_description"),
         guild_only=True,
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
     @channels_group.command(
         name="set",
-        description=app_commands.locale_str(
-            "Set a log channel.",
-            key="cogs.channel_config.meta.set.description",
-        ),
+        description=locale_string("cogs.channel_config.meta.set.description"),
     )
     @app_commands.describe(
-        channel=app_commands.locale_str(
-            "The channel to use for logging.",
-            key="cogs.channel_config.meta.set.params.channel",
-        ),
-        type=app_commands.locale_str(
-            "Which type of log this channel is for.",
-            key="cogs.channel_config.meta.set.params.type",
-        ),
+        channel=locale_string("cogs.channel_config.meta.set.params.channel"),
+        type=locale_string("cogs.channel_config.meta.set.params.type"),
     )
     @app_commands.choices(type=_channel_type_choices())
     async def set_channel(
@@ -111,16 +100,10 @@ class ChannelConfigCog(commands.Cog):
 
     @channels_group.command(
         name="unset",
-        description=app_commands.locale_str(
-            "Unset a log channel.",
-            key="cogs.channel_config.meta.unset.description",
-        ),
+        description=locale_string("cogs.channel_config.meta.unset.description"),
     )
     @app_commands.describe(
-        type=app_commands.locale_str(
-            "Which log type to disable.",
-            key="cogs.channel_config.meta.unset.params.type",
-        )
+        type=locale_string("cogs.channel_config.meta.unset.params.type")
     )
     @app_commands.choices(type=_channel_type_choices())
     async def unset_channel(self, interaction: Interaction, type: app_commands.Choice[str]):
@@ -139,10 +122,7 @@ class ChannelConfigCog(commands.Cog):
 
     @channels_group.command(
         name="show",
-        description=app_commands.locale_str(
-            "Show current log channel settings.",
-            key="cogs.channel_config.meta.show.description",
-        ),
+        description=locale_string("cogs.channel_config.meta.show.description"),
     )
     async def show_channels(self, interaction: Interaction):
         show_texts = self.bot.translate("cogs.channel_config.show")

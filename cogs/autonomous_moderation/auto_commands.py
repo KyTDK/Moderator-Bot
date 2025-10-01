@@ -9,6 +9,7 @@ from modules.utils.action_manager import ActionListManager
 from modules.utils.actions import VALID_ACTION_VALUES, action_choices
 from modules.utils.strike import validate_action
 from modules.core.moderator_bot import ModeratorBot
+from modules.i18n.strings import locale_string
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 ACTION_MANAGER = ActionListManager(AIMOD_ACTION_SETTING)
@@ -63,20 +64,14 @@ class AutonomousCommandsCog(commands.Cog):
 
     ai_mod_group = app_commands.Group(
         name="ai_mod",
-        description=app_commands.locale_str(
-            "Manage AI moderation features.",
-            key="cogs.autonomous_moderation.meta.group_description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.group_description"),
         default_permissions=discord.Permissions(manage_messages=True),
         guild_only=True,
     )
 
     @ai_mod_group.command(
         name="rules_set",
-        description=app_commands.locale_str(
-            "Set server rules",
-            key="cogs.autonomous_moderation.meta.rules_set.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.rules_set.description"),
     )
     @app_commands.default_permissions(manage_guild=True)
     async def set_rules(self, interaction: Interaction, *, rules: str):
@@ -90,10 +85,7 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(
         name="rules_show",
-        description=app_commands.locale_str(
-            "Show the currently configured moderation rules.",
-            key="cogs.autonomous_moderation.meta.rules_show.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.rules_show.description"),
     )
     async def show_rules(self, interaction: Interaction):
         if not await can_run(interaction):
@@ -116,10 +108,7 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(
         name="add_action",
-        description=app_commands.locale_str(
-            "Add enforcement actions",
-            key="cogs.autonomous_moderation.meta.add_action.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.add_action.description"),
     )
     @app_commands.default_permissions(manage_guild=True)
     @app_commands.choices(action=action_choices(include=[("Auto", "auto")]))
@@ -152,16 +141,10 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(
         name="remove_action",
-        description=app_commands.locale_str(
-            "Remove a specific action from the list of punishments.",
-            key="cogs.autonomous_moderation.meta.remove_action.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.remove_action.description"),
     )
     @app_commands.describe(
-        action=app_commands.locale_str(
-            "Exact action string to remove (e.g. timeout, delete)",
-            key="cogs.autonomous_moderation.meta.remove_action.action",
-        )
+        action=locale_string("cogs.autonomous_moderation.meta.remove_action.action")
     )
     @app_commands.autocomplete(action=ACTION_MANAGER.autocomplete)
     async def remove_action(self, interaction: Interaction, action: str):
@@ -172,65 +155,38 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(
         name="toggle",
-        description=app_commands.locale_str(
-            "Enable/disable moderation, view status, or set mode.",
-            key="cogs.autonomous_moderation.meta.toggle.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.toggle.description"),
     )
     @app_commands.describe(
-        enable=app_commands.locale_str(
-            "Turn autonomous moderation on or off.",
-            key="cogs.autonomous_moderation.meta.toggle.enable",
-        ),
-        mode=app_commands.locale_str(
-            "Optional: set report / interval / adaptive mode.",
-            key="cogs.autonomous_moderation.meta.toggle.mode",
-        ),
+        enable=locale_string("cogs.autonomous_moderation.meta.toggle.enable"),
+        mode=locale_string("cogs.autonomous_moderation.meta.toggle.mode"),
     )
     @app_commands.choices(
         enable=[
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Enable",
-                    key="cogs.autonomous_moderation.meta.toggle.enable_choice",
-                ),
+                name=locale_string("cogs.autonomous_moderation.meta.toggle.enable_choice"),
                 value="enable",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Disable",
-                    key="cogs.autonomous_moderation.meta.toggle.disable_choice",
-                ),
+                name=locale_string("cogs.autonomous_moderation.meta.toggle.disable_choice"),
                 value="disable",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Status",
-                    key="cogs.autonomous_moderation.meta.toggle.status_choice",
-                ),
+                name=locale_string("cogs.autonomous_moderation.meta.toggle.status_choice"),
                 value="status",
             ),
         ],
         mode=[
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Report",
-                    key="cogs.autonomous_moderation.meta.toggle.mode_choices.report",
-                ),
+                name=locale_string("cogs.autonomous_moderation.meta.toggle.mode_choices.report"),
                 value="report",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Interval",
-                    key="cogs.autonomous_moderation.meta.toggle.mode_choices.interval",
-                ),
+                name=locale_string("cogs.autonomous_moderation.meta.toggle.mode_choices.interval"),
                 value="interval",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Adaptive",
-                    key="cogs.autonomous_moderation.meta.toggle.mode_choices.adaptive",
-                ),
+                name=locale_string("cogs.autonomous_moderation.meta.toggle.mode_choices.adaptive"),
                 value="adaptive",
             ),
         ],
@@ -277,10 +233,7 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(
         name="view_actions",
-        description=app_commands.locale_str(
-            "Show all actions currently configured to trigger when the AI detects a violation.",
-            key="cogs.autonomous_moderation.meta.view_actions.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.view_actions.description"),
     )
     async def view_actions(self, interaction: Interaction):
         if not await can_run(interaction):
@@ -301,40 +254,25 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(
         name="add_adaptive_event",
-        description=app_commands.locale_str(
-            "Link a trigger event to one or more moderation mode actions.",
-            key="cogs.autonomous_moderation.meta.add_adaptive_event.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.add_adaptive_event.description"),
     )
     @app_commands.describe(
-        role=app_commands.locale_str(
-            "Which roles to monitor (if applicable)",
-            key="cogs.autonomous_moderation.meta.add_adaptive_event.role",
-        ),
-        channel=app_commands.locale_str(
-            "Which channel to monitor (for spike events)",
-            key="cogs.autonomous_moderation.meta.add_adaptive_event.channel",
-        ),
-        time_range=app_commands.locale_str(
-            "Time range in HH:MM-HH:MM for time-based triggers",
-            key="cogs.autonomous_moderation.meta.add_adaptive_event.time_range",
-        ),
-        threshold=app_commands.locale_str(
-            "Threshold for role online percent (0 to 1, optional)",
-            key="cogs.autonomous_moderation.meta.add_adaptive_event.threshold",
-        ),
+        role=locale_string("cogs.autonomous_moderation.meta.add_adaptive_event.role"),
+        channel=locale_string("cogs.autonomous_moderation.meta.add_adaptive_event.channel"),
+        time_range=locale_string("cogs.autonomous_moderation.meta.add_adaptive_event.time_range"),
+        threshold=locale_string("cogs.autonomous_moderation.meta.add_adaptive_event.threshold"),
     )
     @app_commands.choices(
         event=[
             app_commands.Choice(
-                name=app_commands.locale_str(label, key=key),
+                name=locale_string(key, default=label),
                 value=value,
             )
             for label, value, key in ADAPTIVE_EVENTS
         ],
         action=[
             app_commands.Choice(
-                name=app_commands.locale_str(label, key=key),
+                name=locale_string(key, default=label),
                 value=value,
             )
             for label, value, key in ACTIONS
@@ -398,26 +336,17 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(
         name="remove_adaptive_event",
-        description=app_commands.locale_str(
-            "Remove a specific action from a configured event.",
-            key="cogs.autonomous_moderation.meta.remove_adaptive_event.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.remove_adaptive_event.description"),
     )
     @app_commands.describe(
-        event_key=app_commands.locale_str(
-            "Adaptive event key (autocompletes)",
-            key="cogs.autonomous_moderation.meta.remove_adaptive_event.event_key",
-        ),
-        action=app_commands.locale_str(
-            "Action to remove from this event",
-            key="cogs.autonomous_moderation.meta.remove_adaptive_event.action",
-        ),
+        event_key=locale_string("cogs.autonomous_moderation.meta.remove_adaptive_event.event_key"),
+        action=locale_string("cogs.autonomous_moderation.meta.remove_adaptive_event.action"),
     )
     @app_commands.autocomplete(event_key=EVENT_MANAGER.autocomplete_event)
     @app_commands.choices(
         action=[
             app_commands.Choice(
-                name=app_commands.locale_str(label, key=key),
+                name=locale_string(key, default=label),
                 value=value,
             )
             for label, value, key in ACTIONS
@@ -433,10 +362,7 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(
         name="clear_adaptive_events",
-        description=app_commands.locale_str(
-            "Clear all adaptive event triggers.",
-            key="cogs.autonomous_moderation.meta.clear_adaptive_events.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.clear_adaptive_events.description"),
     )
     async def clear_adaptive_events(self, interaction: Interaction):
         if not await can_run(interaction):
@@ -451,10 +377,7 @@ class AutonomousCommandsCog(commands.Cog):
 
     @ai_mod_group.command(
         name="view_adaptive_events",
-        description=app_commands.locale_str(
-            "Show current adaptive moderation triggers.",
-            key="cogs.autonomous_moderation.meta.view_adaptive_events.description",
-        ),
+        description=locale_string("cogs.autonomous_moderation.meta.view_adaptive_events.description"),
     )
     async def view_adaptive_events(self, interaction: Interaction):
         if not await can_run(interaction):

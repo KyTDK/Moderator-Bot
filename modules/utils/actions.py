@@ -1,31 +1,39 @@
+from __future__ import annotations
+
 from typing import Iterable, Optional, Union
+
 from discord import app_commands
 
+from modules.i18n.strings import locale_namespace
 
-def _choice_label(fallback: str, value: str) -> app_commands.locale_str:
-    return app_commands.locale_str(
-        fallback,
-        key=f"modules.utils.actions.choices.{value}",
-    )
+CHOICE_LABELS = locale_namespace("modules", "utils", "actions", "choices")
+
+
+def _choice_label(value: str, *, fallback: str | None = None) -> app_commands.locale_str:
+    extras: dict[str, str] = {}
+    if fallback is not None:
+        extras["default"] = fallback
+    return CHOICE_LABELS.string(value, **extras)
 
 
 ACTIONS = [
-    (_choice_label("Strike", "strike"), "strike"),
-    (_choice_label("Kick", "kick"), "kick"),
-    (_choice_label("Ban", "ban"), "ban"),
-    (_choice_label("Timeout", "timeout"), "timeout"),
-    (_choice_label("Delete Message", "delete"), "delete"),
-    (_choice_label("Give Role", "give_role"), "give_role"),
-    (_choice_label("Remove Role", "take_role"), "take_role"),
-    (_choice_label("Warn User", "warn"), "warn"),
-    (_choice_label("Broadcast Message", "broadcast"), "broadcast"),
+    (_choice_label("strike"), "strike"),
+    (_choice_label("kick"), "kick"),
+    (_choice_label("ban"), "ban"),
+    (_choice_label("timeout"), "timeout"),
+    (_choice_label("delete"), "delete"),
+    (_choice_label("give_role"), "give_role"),
+    (_choice_label("take_role"), "take_role"),
+    (_choice_label("warn"), "warn"),
+    (_choice_label("broadcast"), "broadcast"),
 ]
 
 VALID_ACTION_VALUES = [a[1] for a in ACTIONS]
 
+
 def action_choices(
     exclude: Iterable[str] = (),
-    include: Optional[Union[Iterable[str], Iterable[tuple[str, str]]]] = None
+    include: Optional[Union[Iterable[str], Iterable[tuple[str, str]]]] = None,
 ) -> list[app_commands.Choice[str]]:
     exclude_set = set(exclude)
 
@@ -34,10 +42,10 @@ def action_choices(
     if include:
         for item in include:
             if isinstance(item, str):
-                base.append((_choice_label(item.capitalize(), item), item))
+                base.append((_choice_label(item, fallback=item.capitalize()), item))
             else:
                 label, value = item
-                base.append((_choice_label(label, value), value))
+                base.append((_choice_label(value, fallback=label), value))
 
     seen = set()
     final = []

@@ -9,6 +9,7 @@ from modules.utils.localization import LocalizedError
 import traceback
 from modules.variables.TimeString import TimeString
 from modules.core.moderator_bot import ModeratorBot
+from modules.i18n.strings import locale_string
 
 MAX_CHARS = 1900  # Leave buffer for formatting
 CHUNK_SEPARATOR = "\n"
@@ -100,20 +101,14 @@ class Settings(commands.Cog):
 
     settings_group = app_commands.Group(
         name="settings",
-        description=app_commands.locale_str(
-            "Manage server settings.",
-            key="cogs.settings.meta.group_description",
-        ),
+        description=locale_string("cogs.settings.meta.group_description"),
         guild_only=True,
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
     @settings_group.command(
         name="help",
-        description=app_commands.locale_str(
-            "Get help on settings.",
-            key="cogs.settings.meta.help.description",
-        ),
+        description=locale_string("cogs.settings.meta.help.description"),
     )
     async def help_settings(self, interaction: Interaction):
         """Get help on settings."""
@@ -151,10 +146,7 @@ class Settings(commands.Cog):
 
     @settings_group.command(
         name="reset",
-        description=app_commands.locale_str(
-            "Wipe all settings and start with defaults. This can't be undone",
-            key="cogs.settings.meta.reset.description",
-        ),
+        description=locale_string("cogs.settings.meta.reset.description"),
     )
     async def reset(self, interaction: Interaction):
         """Reset server settings."""
@@ -168,10 +160,7 @@ class Settings(commands.Cog):
 
     @settings_group.command(
         name="set",
-        description=app_commands.locale_str(
-            "Set a server setting.",
-            key="cogs.settings.meta.set.description",
-        ),
+        description=locale_string("cogs.settings.meta.set.description"),
     )
     @app_commands.autocomplete(value=value_autocomplete, name=name_autocomplete)
     async def set_setting(
@@ -292,16 +281,10 @@ class Settings(commands.Cog):
 
     @app_commands.command(
         name="help",
-        description=app_commands.locale_str(
-            "Get help on a specific command group.",
-            key="cogs.settings.meta.help.description",
-        ),
+        description=locale_string("cogs.settings.meta.help.description"),
     )
     @app_commands.describe(
-        command=app_commands.locale_str(
-            "Optional: command group to get help with",
-            key="cogs.settings.meta.help.options.command",
-        )
+        command=locale_string("cogs.settings.meta.help.options.command")
     )
     @app_commands.default_permissions(moderate_members=True)
     async def help(self, interaction: Interaction, command: Optional[str] = None):
@@ -515,10 +498,7 @@ class Settings(commands.Cog):
 
     @settings_group.command(
         name="get",
-        description=app_commands.locale_str(
-            "Get the current value of a server setting.",
-            key="cogs.settings.meta.get.description",
-        ),
+        description=locale_string("cogs.settings.meta.get.description"),
     )
     @app_commands.autocomplete(name=name_autocomplete)
     async def get_setting(self, interaction: Interaction, name: str):
@@ -589,10 +569,7 @@ class Settings(commands.Cog):
 
     @settings_group.command(
         name="remove",
-        description=app_commands.locale_str(
-            "Remove a server setting or an item from a list-type setting.",
-            key="cogs.settings.meta.remove.description",
-        ),
+        description=locale_string("cogs.settings.meta.remove.description"),
     )
     @app_commands.autocomplete(name=name_autocomplete)
     async def remove_setting(

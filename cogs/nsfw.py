@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 
+from modules.i18n.strings import locale_namespace
 from modules.utils import mysql
 from modules.utils.action_manager import ActionListManager
 from modules.utils.discord_utils import require_accelerated
@@ -15,36 +16,28 @@ manager = ActionListManager(NSFW_ACTION_SETTING)
 NSFW_CATEGORY_SETTING = "nsfw-detection-categories"
 category_manager = ListManager(NSFW_CATEGORY_SETTING)
 
+NSFW_LOCALE = locale_namespace("cogs", "nsfw")
+NSFW_META = NSFW_LOCALE.child("meta")
+NSFW_CATEGORY_LABELS = NSFW_META.child("categories")
+
 class NSFWCog(commands.Cog):
     def __init__(self, bot: ModeratorBot):
         self.bot = bot
 
     nsfw_group = app_commands.Group(
         name="nsfw",
-        description=app_commands.locale_str(
-            "Manage NSFW content detection.",
-            key="cogs.nsfw.meta.group_description",
-        ),
+        description=NSFW_META.string("group_description"),
         guild_only=True,
         default_permissions=discord.Permissions(manage_messages=True),
     )
 
     @nsfw_group.command(
         name="add_action",
-        description=app_commands.locale_str(
-            "Add an action to the NSFW punishment list.",
-            key="cogs.nsfw.meta.add_action.description",
-        ),
+        description=NSFW_META.string("add_action", "description"),
     )
     @app_commands.describe(
-        action=app_commands.locale_str(
-            "Action to perform",
-            key="cogs.nsfw.meta.add_action.params.action",
-        ),
-        duration=app_commands.locale_str(
-            "Only required for timeout (e.g. 10m, 1h, 3d)",
-            key="cogs.nsfw.meta.add_action.params.duration",
-        ),
+        action=NSFW_META.child("add_action", "params").string("action"),
+        duration=NSFW_META.child("add_action", "params").string("duration"),
     )
     @app_commands.choices(action=action_choices())
     async def add_nsfw_action(
@@ -75,16 +68,10 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(
         name="remove_action",
-        description=app_commands.locale_str(
-            "Remove an action from the NSFW punishment list.",
-            key="cogs.nsfw.meta.remove_action.description",
-        ),
+        description=NSFW_META.string("remove_action", "description"),
     )
     @app_commands.describe(
-        action=app_commands.locale_str(
-            "Exact action string to remove (e.g. timeout, delete)",
-            key="cogs.nsfw.meta.remove_action.params.action",
-        )
+        action=NSFW_META.child("remove_action", "params").string("action")
     )
     @app_commands.autocomplete(action=manager.autocomplete)
     async def remove_nsfw_action(self, interaction: Interaction, action: str):
@@ -95,10 +82,7 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(
         name="view_actions",
-        description=app_commands.locale_str(
-            "View the current list of NSFW punishment actions.",
-            key="cogs.nsfw.meta.view_actions.description",
-        ),
+        description=NSFW_META.string("view_actions", "description"),
     )
     async def view_nsfw_actions(self, interaction: Interaction):
         gid = interaction.guild.id
@@ -118,53 +102,32 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(
         name="add_category",
-        description=app_commands.locale_str(
-            "Add a category to NSFW detection.",
-            key="cogs.nsfw.meta.add_category.description",
-        ),
+        description=NSFW_META.string("add_category", "description"),
     )
     @app_commands.choices(
         category=[
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Violence Graphic",
-                    key="cogs.nsfw.meta.categories.violence_graphic",
-                ),
+                name=NSFW_CATEGORY_LABELS.string("violence_graphic"),
                 value="violence_graphic",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Violence",
-                    key="cogs.nsfw.meta.categories.violence",
-                ),
+                name=NSFW_CATEGORY_LABELS.string("violence"),
                 value="violence",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Sexual",
-                    key="cogs.nsfw.meta.categories.sexual",
-                ),
+                name=NSFW_CATEGORY_LABELS.string("sexual"),
                 value="sexual",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Self Harm Instructions",
-                    key="cogs.nsfw.meta.categories.self_harm_instructions",
-                ),
+                name=NSFW_CATEGORY_LABELS.string("self_harm_instructions"),
                 value="self_harm_instructions",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Self Harm Intent",
-                    key="cogs.nsfw.meta.categories.self_harm_intent",
-                ),
+                name=NSFW_CATEGORY_LABELS.string("self_harm_intent"),
                 value="self_harm_intent",
             ),
             app_commands.Choice(
-                name=app_commands.locale_str(
-                    "Self Harm",
-                    key="cogs.nsfw.meta.categories.self_harm",
-                ),
+                name=NSFW_CATEGORY_LABELS.string("self_harm"),
                 value="self_harm",
             ),
         ]
@@ -180,10 +143,7 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(
         name="remove_category",
-        description=app_commands.locale_str(
-            "Remove a category from NSFW detection.",
-            key="cogs.nsfw.meta.remove_category.description",
-        ),
+        description=NSFW_META.string("remove_category", "description"),
     )
     @app_commands.autocomplete(category=category_manager.autocomplete)
     async def remove_category(self, interaction: Interaction, category: str):
@@ -197,10 +157,7 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(
         name="view_categories",
-        description=app_commands.locale_str(
-            "View NSFW detection categories.",
-            key="cogs.nsfw.meta.view_categories.description",
-        ),
+        description=NSFW_META.string("view_categories", "description"),
     )
     async def view_categories(self, interaction: Interaction):
         gid = interaction.guild.id
@@ -218,16 +175,10 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(
         name="set_threshold",
-        description=app_commands.locale_str(
-            "Set the threshold for NSFW detection confidence.",
-            key="cogs.nsfw.meta.set_threshold.description",
-        ),
+        description=NSFW_META.string("set_threshold", "description"),
     )
     @app_commands.describe(
-        threshold=app_commands.locale_str(
-            "Confidence threshold (0.0 to 1.0)",
-            key="cogs.nsfw.meta.set_threshold.params.threshold",
-        )
+        threshold=NSFW_META.child("set_threshold", "params").string("threshold")
     )
     async def set_threshold(self, interaction: Interaction, threshold: float):
         guild_id = interaction.guild.id
@@ -249,10 +200,7 @@ class NSFWCog(commands.Cog):
 
     @nsfw_group.command(
         name="view_threshold",
-        description=app_commands.locale_str(
-            "View the current NSFW detection threshold.",
-            key="cogs.nsfw.meta.view_threshold.description",
-        ),
+        description=NSFW_META.string("view_threshold", "description"),
     )
     async def view_threshold(self, interaction: Interaction):
         gid = interaction.guild.id

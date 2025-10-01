@@ -11,6 +11,7 @@ from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from modules.utils.url_utils import extract_urls, norm_domain, norm_url
 from urllib.parse import urlparse
 from modules.core.moderator_bot import ModeratorBot
+from modules.i18n.strings import locale_string
 
 MAX_URLS = 500
 BANNEDURLS_ACTION_SETTING = "url-detection-action"
@@ -29,20 +30,14 @@ class BannedURLsCog(commands.Cog):
     
     bannedurls_group = app_commands.Group(
         name="bannedurls",
-        description=app_commands.locale_str(
-            "Banned URLs management commands.",
-            key="cogs.banned_urls.meta.group_description",
-        ),
+        description=locale_string("cogs.banned_urls.meta.group_description"),
         default_permissions=discord.Permissions(manage_messages=True),
         guild_only=True
     )
 
     @bannedurls_group.command(
         name="add",
-        description=app_commands.locale_str(
-            "Add a URL or domain to the banned list.",
-            key="cogs.banned_urls.meta.add.description",
-        ),
+        description=locale_string("cogs.banned_urls.meta.add.description"),
     )
     async def add_banned_urls(self, interaction: Interaction, url: str):
         guild_id = interaction.guild.id
@@ -88,10 +83,7 @@ class BannedURLsCog(commands.Cog):
 
     @bannedurls_group.command(
         name="remove",
-        description=app_commands.locale_str(
-            "Remove a URL or domain from the banned list.",
-            key="cogs.banned_urls.meta.remove.description",
-        ),
+        description=locale_string("cogs.banned_urls.meta.remove.description"),
     )
     async def remove_banned_urls(self, interaction: Interaction, url: str):
         guild_id = interaction.guild.id
@@ -127,10 +119,7 @@ class BannedURLsCog(commands.Cog):
 
     @bannedurls_group.command(
         name="list",
-        description=app_commands.locale_str(
-            "List all banned URLs.",
-            key="cogs.banned_urls.meta.list.description",
-        ),
+        description=locale_string("cogs.banned_urls.meta.list.description"),
     )
     async def list_banned_urls(self, interaction: Interaction):
         guild_id = interaction.guild.id
@@ -159,10 +148,7 @@ class BannedURLsCog(commands.Cog):
 
     @bannedurls_group.command(
         name="clear",
-        description=app_commands.locale_str(
-            "Clear all banned URLs.",
-            key="cogs.banned_urls.meta.clear.description",
-        ),
+        description=locale_string("cogs.banned_urls.meta.clear.description"),
     )
     async def clear_banned_urls(self, interaction: Interaction):
         guild_id = interaction.guild.id
@@ -264,20 +250,11 @@ class BannedURLsCog(commands.Cog):
 
     @bannedurls_group.command(
         name="add_action",
-        description=app_commands.locale_str(
-            "Add a moderation action to be triggered when a banned URL is detected.",
-            key="cogs.banned_urls.meta.actions.add.description",
-        ),
+        description=locale_string("cogs.banned_urls.meta.actions.add.description"),
     )
     @app_commands.describe(
-        action=app_commands.locale_str(
-            "Action to perform",
-            key="cogs.banned_urls.meta.actions.add.options.action",
-        ),
-        duration=app_commands.locale_str(
-            "Only required for timeout (e.g. 10m, 1h, 3d)",
-            key="cogs.banned_urls.meta.actions.add.options.duration",
-        ),
+        action=locale_string("cogs.banned_urls.meta.actions.add.options.action"),
+        duration=locale_string("cogs.banned_urls.meta.actions.add.options.duration"),
     )
     @app_commands.choices(action=action_choices())
     async def add_banned_action(self, interaction: Interaction, action: str, duration: str = None, role: discord.Role = None, reason: str = None):
@@ -290,16 +267,10 @@ class BannedURLsCog(commands.Cog):
 
     @bannedurls_group.command(
         name="remove_action",
-        description=app_commands.locale_str(
-            "Remove a specific action from the list of punishments for banned URLs.",
-            key="cogs.banned_urls.meta.actions.remove.description",
-        ),
+        description=locale_string("cogs.banned_urls.meta.actions.remove.description"),
     )
     @app_commands.describe(
-        action=app_commands.locale_str(
-            "Exact action string to remove (e.g. timeout, delete)",
-            key="cogs.banned_urls.meta.actions.remove.options.action",
-        )
+        action=locale_string("cogs.banned_urls.meta.actions.remove.options.action")
     )
     @app_commands.autocomplete(action=manager.autocomplete)
     async def remove_banned_action(self, interaction: Interaction, action: str):
@@ -308,10 +279,7 @@ class BannedURLsCog(commands.Cog):
 
     @bannedurls_group.command(
         name="view_actions",
-        description=app_commands.locale_str(
-            "Show all actions currently configured to trigger when banned URLs are used.",
-            key="cogs.banned_urls.meta.actions.view.description",
-        ),
+        description=locale_string("cogs.banned_urls.meta.actions.view.description"),
     )
     async def view_banned_actions(self, interaction: Interaction):
         guild_id = interaction.guild.id

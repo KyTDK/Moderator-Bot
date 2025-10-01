@@ -12,6 +12,7 @@ from modules.utils.discord_utils import safe_get_user
 from modules.utils.strike import validate_action
 from modules.variables.TimeString import TimeString
 from modules.core.moderator_bot import ModeratorBot
+from modules.i18n.strings import locale_string
 
 async def autocomplete_strike_action(interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
     settings = await mysql.get_settings(interaction.guild.id, "strike-actions") or {}
@@ -32,10 +33,7 @@ class StrikesCog(commands.Cog):
 
     strike_group = app_commands.Group(
         name="strikes",
-        description=app_commands.locale_str(
-            "Strike management commands.",
-            key="cogs.strikes.meta.group_description",
-        ),
+        description=locale_string("cogs.strikes.meta.group_description"),
         default_permissions=discord.Permissions(moderate_members=True),
         guild_only=True
     )
@@ -43,24 +41,12 @@ class StrikesCog(commands.Cog):
     #strike
     @app_commands.command(
         name="strike",
-        description=app_commands.locale_str(
-            "Strike a specific user.",
-            key="cogs.strikes.meta.strike.description",
-        ),
+        description=locale_string("cogs.strikes.meta.strike.description"),
     )
     @app_commands.describe(
-        user=app_commands.locale_str(
-            "The member to strike.",
-            key="cogs.strikes.meta.strike.params.user",
-        ),
-        reason=app_commands.locale_str(
-            "The reason for the strike.",
-            key="cogs.strikes.meta.strike.params.reason",
-        ),
-        expiry=app_commands.locale_str(
-            "Optional expiry duration (e.g., 30d, 2w).",
-            key="cogs.strikes.meta.strike.params.expiry",
-        ),
+        user=locale_string("cogs.strikes.meta.strike.params.user"),
+        reason=locale_string("cogs.strikes.meta.strike.params.reason"),
+        expiry=locale_string("cogs.strikes.meta.strike.params.expiry"),
     )
     @app_commands.default_permissions(moderate_members=True)
     @app_commands.guild_only()
@@ -91,10 +77,7 @@ class StrikesCog(commands.Cog):
 
     @strike_group.command(
         name="get",
-        description=app_commands.locale_str(
-            "Get strikes of a specific user.",
-            key="cogs.strikes.meta.get.description",
-        ),
+        description=locale_string("cogs.strikes.meta.get.description"),
     )
     @app_commands.guild_only()
     async def get_strikes(self, interaction: Interaction, user: Member):
@@ -161,16 +144,10 @@ class StrikesCog(commands.Cog):
     # Clear strikes
     @strike_group.command(
         name="clear",
-        description=app_commands.locale_str(
-            "Clear all strikes of a specific user.",
-            key="cogs.strikes.meta.clear.description",
-        ),
+        description=locale_string("cogs.strikes.meta.clear.description"),
     )
     @app_commands.describe(
-        user=app_commands.locale_str(
-            "The user whose strikes will be cleared.",
-            key="cogs.strikes.meta.clear.params.user",
-        ),
+        user=locale_string("cogs.strikes.meta.clear.params.user"),
     )
     @app_commands.default_permissions(moderate_members=True)
     @app_commands.guild_only()
@@ -205,24 +182,12 @@ class StrikesCog(commands.Cog):
 
     @strike_group.command(
         name="add_action",
-        description=app_commands.locale_str(
-            "Add an additional action for a strike level.",
-            key="cogs.strikes.meta.add_action.description",
-        ),
+        description=locale_string("cogs.strikes.meta.add_action.description"),
     )
     @app_commands.describe(
-        number_of_strikes=app_commands.locale_str(
-            "Number of strikes required to trigger the action.",
-            key="cogs.strikes.meta.add_action.params.number_of_strikes",
-        ),
-        action=app_commands.locale_str(
-            "Action to add.",
-            key="cogs.strikes.meta.add_action.params.action",
-        ),
-        duration=app_commands.locale_str(
-            "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise.",
-            key="cogs.strikes.meta.add_action.params.duration",
-        ),
+        number_of_strikes=locale_string("cogs.strikes.meta.add_action.params.number_of_strikes"),
+        action=locale_string("cogs.strikes.meta.add_action.params.action"),
+        duration=locale_string("cogs.strikes.meta.add_action.params.duration"),
     )
     @app_commands.choices(action=action_choices(exclude=("delete", "strike")))
     async def add_strike_action(
@@ -270,20 +235,11 @@ class StrikesCog(commands.Cog):
 
     @strike_group.command(
         name="remove_action",
-        description=app_commands.locale_str(
-            "Remove an action from a strike level.",
-            key="cogs.strikes.meta.remove_action.description",
-        ),
+        description=locale_string("cogs.strikes.meta.remove_action.description"),
     )
     @app_commands.describe(
-        number_of_strikes=app_commands.locale_str(
-            "Number of strikes associated with the action.",
-            key="cogs.strikes.meta.remove_action.params.number_of_strikes",
-        ),
-        action=app_commands.locale_str(
-            "Exact action string to remove.",
-            key="cogs.strikes.meta.remove_action.params.action",
-        ),
+        number_of_strikes=locale_string("cogs.strikes.meta.remove_action.params.number_of_strikes"),
+        action=locale_string("cogs.strikes.meta.remove_action.params.action"),
     )
     @app_commands.autocomplete(action=autocomplete_strike_action)
     async def remove_strike_action(self, interaction: Interaction, number_of_strikes: int, action: str):
@@ -315,10 +271,7 @@ class StrikesCog(commands.Cog):
 
     @strike_group.command(
         name="view_actions",
-        description=app_commands.locale_str(
-            "View all configured strike actions.",
-            key="cogs.strikes.meta.view_actions.description",
-        ),
+        description=locale_string("cogs.strikes.meta.view_actions.description"),
     )
     async def view_strike_actions(self, interaction: Interaction):
         """View all configured strike actions."""
@@ -343,20 +296,11 @@ class StrikesCog(commands.Cog):
     # Warn channel or optionally user
     @app_commands.command(
         name="intimidate",
-        description=app_commands.locale_str(
-            "Intimidate the channel, or a specific user.",
-            key="cogs.strikes.meta.intimidate.description",
-        ),
+        description=locale_string("cogs.strikes.meta.intimidate.description"),
     )
     @app_commands.describe(
-        user=app_commands.locale_str(
-            "User to intimidate. Leave empty to address the whole channel.",
-            key="cogs.strikes.meta.intimidate.params.user",
-        ),
-        channel=app_commands.locale_str(
-            "Send the warning in the channel instead of a direct message.",
-            key="cogs.strikes.meta.intimidate.params.channel",
-        )
+        user=locale_string("cogs.strikes.meta.intimidate.params.user"),
+        channel=locale_string("cogs.strikes.meta.intimidate.params.channel")
     )
     @app_commands.default_permissions(moderate_members=True)
     @app_commands.guild_only()
