@@ -242,7 +242,6 @@ class VoiceModeratorCog(commands.Cog):
 
                     t = asyncio.create_task(_do_transcribe())
                     chunk_tasks.append(t)
-                    print(f"[VCMod] Spawned transcribe task. pending={len([x for x in chunk_tasks if not x.done()])}")
                 # schedule next harvest
                 next_tick += HARVEST_WINDOW_SECONDS
                 remaining = min(listen_delta.total_seconds(), next_tick - time.monotonic())
@@ -256,7 +255,6 @@ class VoiceModeratorCog(commands.Cog):
                     break
             # Wait for all chunk tasks to complete before processing results
             if chunk_tasks:
-                print(f"[VCMod] Waiting for {len(chunk_tasks)} transcribe tasks to finish...")
                 await asyncio.gather(*chunk_tasks, return_exceptions=True)
         else:
             # Saver mode: no listening/transcribing in this cycle

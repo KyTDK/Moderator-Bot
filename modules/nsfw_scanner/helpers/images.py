@@ -63,11 +63,7 @@ async def process_image(
                         similarity_response,
                         key=lambda candidate: float(candidate.get("similarity", 0) or 0)
                     )
-                    best_similarity = float(best_item.get("similarity", 0) or 0)
                     vector_id = best_item.get("vector_id")
-                    print(
-                        f"[process_image] Refreshing vector {vector_id} (similarity {best_similarity:.2f}) for guild {guild_id}."
-                    )
                     if vector_id is not None:
                         try:
                             await clip_vectors.delete_vectors([vector_id])
@@ -86,9 +82,6 @@ async def process_image(
                         break
 
                     if not category:
-                        print(
-                            f"[process_image] Similar SFW image found with similarity {similarity:.2f} for guild {guild_id}."
-                        )
                         return {
                             "is_nsfw": False,
                             "reason": "similarity_match",
@@ -100,9 +93,6 @@ async def process_image(
                         }
 
                     if is_allowed_category(category, allowed_categories):
-                        print(
-                            f"[process_image] Found similar image category: {category} with similarity {similarity:.2f} for guild {guild_id}."
-                        )
                         if high_accuracy and max_similarity < HIGH_ACCURACY_SIMILARITY:
                             break
                         return {
@@ -125,9 +115,6 @@ async def process_image(
                 guild_id=guild_id,
                 image=image,
                 skip_vector_add=skip_vector,
-            )
-            print(
-                f"[process_image] Moderation result for {original_filename}: {response} (similarity={max_similarity:.2f}) for guild {guild_id}"
             )
             if isinstance(response, dict):
                 response.setdefault("max_similarity", max_similarity)
