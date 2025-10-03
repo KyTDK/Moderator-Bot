@@ -30,7 +30,7 @@ async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=
             )
             footer_text = (
                 translator(
-                    "modules.utils.mod_logging.promo_footer",
+                    "promo_footer",
                     guild_id=guild_id,
                     placeholders={"command": "/accelerated"},
                     fallback=fallback,

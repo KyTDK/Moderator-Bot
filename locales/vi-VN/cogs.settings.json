@@ -6,7 +6,7 @@
         "help": {
           "description": "Nhận trợ giúp về cài đặt.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Tùy chọn: nhóm lệnh để nhận trợ giúp"
           }
         },
         "reset": {

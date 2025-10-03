@@ -340,14 +340,8 @@ class ModeratorBot(commands.Bot):
             _logger.exception("Failed to load locale override for guild %s", guild_id)
 
         if override is not None:
-            _logger.warning(
-                "Loaded locale override for guild %s: %r", guild_id, override
-            )
             normalized = self._guild_locales.set_override(guild_id, override)
             if normalized:
-                _logger.debug(
-                    "Using saved override for guild %s -> %s", guild_id, normalized
-                )
                 return
 
             _logger.warning(

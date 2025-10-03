@@ -166,7 +166,6 @@ async def harvest_pcm_chunk(
             vc.listen(sink)
             setattr(vc, "_mod_pool", pool)
             setattr(vc, "_mod_sink", sink)
-            print(f"[VC IO] continuous listening started in guild {guild.id} ch {channel.id}")
         except Exception as e:
             print(f"[VC IO] continuous listen failed: {e}")
             if not do_listen:
@@ -250,12 +249,6 @@ async def transcribe_harvest_chunk(
             return [], 0.0
     except Exception as e:
         print(f"[VC IO] budget check failed, proceeding cautiously: {e}")
-
-    # Transcribe
-    print(
-        f"[VC IO] Transcribing chunk: users={len(eligible_map)} est_minutes={est_minutes:.3f} "
-        f"target={'gpt-4o-mini-transcribe' if high_quality else 'local-whisper'}"
-    )
 
     segs, actual_cost, used_remote = await transcribe_pcm_map(
         guild_id=guild_id,

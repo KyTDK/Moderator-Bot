@@ -17,20 +17,20 @@
         },
         "actions": {
           "add": {
-            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "description": "禁止URLが検出されたときにトリガーされるモデレーションアクションを追加します。",
             "options": {
-              "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "action": "実行するアクション",
+              "duration": "タイムアウトの場合のみ必要（例: 10m, 1h, 3d）"
             }
           },
           "remove": {
-            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "description": "禁止URLに対する処罰リストから特定のアクションを削除します。",
             "options": {
-              "action": "Exact action string to remove (e.g. timeout, delete)"
+              "action": "削除する確定的なアクション文字列（例: タイムアウト, 削除）"
             }
           },
           "view": {
-            "description": "Show all actions currently configured to trigger when banned URLs are used."
+            "description": "禁止URLが使われたときにトリガーされるように現在設定されているすべてのアクションを表示します。"
           }
         }
       },

@@ -19,6 +19,7 @@ REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
 SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
 SHARED_CATEGORY = "modules.nsfw_scanner.shared.category"
 SHARED_ROOT = "modules.nsfw_scanner.shared"
+NSFW_CATEGORY_NAMESPACE = "cogs.nsfw.meta.categories"
 
 DECISION_FALLBACKS = {
     "unknown": "Unknown",
@@ -116,13 +117,20 @@ def _localize_category(
     category: str | None,
     guild_id: int | None,
 ) -> str:
-    if not category:
-        category = "unspecified"
-    fallback = category.replace("_", " ").title()
+    normalized = (category or "unspecified").strip()
+    if not normalized:
+        normalized = "unspecified"
+    normalized = normalized.replace("/", "_").replace("-", "_").lower()
+    fallback = normalized.replace("_", " ").title()
+
+    if translator is None:
+        return fallback
+
+    namespace = SHARED_CATEGORY if normalized == "unspecified" else NSFW_CATEGORY_NAMESPACE
     return localize_message(
         translator,
-        SHARED_CATEGORY,
-        category,
+        namespace,
+        normalized,
         fallback=fallback,
         guild_id=guild_id,
     )

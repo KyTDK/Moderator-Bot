@@ -66,9 +66,6 @@ async def process_video(
     temp_frames = await asyncio.to_thread(
         extract_frames_threaded, original_filename, frames_to_scan
     )
-    print(
-        f"[process_video] extracted {len(temp_frames)} frames (target={frames_to_scan})"
-    )
     if not temp_frames:
         safe_delete(original_filename)
         return None, {
@@ -110,13 +107,6 @@ async def process_video(
             if isinstance(scan, dict):
                 if not scan.get("is_nsfw"):
                     continue
-                category_name = scan.get("category") or "unspecified"
-            else:
-                category_name = str(scan)
-
-            print(
-                f"[process_video] NSFW detected in frame: {frame_path} (category: {category_name})"
-            )
             for task in tasks:
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)

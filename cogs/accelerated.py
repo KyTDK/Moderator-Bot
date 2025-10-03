@@ -124,7 +124,6 @@ class AcceleratedCog(commands.Cog):
         subscribe_texts = self.bot.translate("cogs.accelerated.subscribe",
                                              guild_id=guild_id)
         if is_accelerated:
-            print(f"[Accelerated] User {user_id} in guild {guild_id} already subscribed.")
             return await interaction.followup.send(
                 subscribe_texts["already_subscribed"],
                 ephemeral=True
