@@ -9,6 +9,8 @@ from pathlib import Path
 from threading import Lock
 from typing import Any
 
+from .logging_utils import format_missing_locale_message
+
 logger = logging.getLogger(__name__)
 
 class LocaleRepository:
@@ -138,7 +140,10 @@ class LocaleRepository:
 
     def _log_missing_locale(self, locale: str) -> None:
         level = logging.WARNING if self._should_warn_for_locale(locale) else logging.DEBUG
-        logger.log(level, "Requested locale %s missing from cache", locale)
+        with self._lock:
+            available = tuple(self._cache.keys())
+        message = format_missing_locale_message(locale, self._fallback_locale, available)
+        logger.log(level, message)
 
     def _resolve_key(self, locale: str, data: dict[str, Any] | None, key: str) -> Any:
         if data is None:
