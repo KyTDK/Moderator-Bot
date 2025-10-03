@@ -32,6 +32,7 @@ async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=
                 translator(
                     "modules.utils.mod_logging.promo_footer",
                     guild_id=guild_id,
+                    placeholders={"command": "/accelerated"},
                     fallback=fallback,
                 )
                 if callable(translator)
