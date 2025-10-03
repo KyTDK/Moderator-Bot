@@ -9,9 +9,10 @@ import discord
 from discord.ext import commands
 from discord.utils import utcnow
 
-from modules.utils import mysql
-from modules.utils import mod_logging
+from modules.i18n import get_translated_mapping
 from modules.moderation import strike
+from modules.utils import mod_logging
+from modules.utils import mysql
 from modules.utils.time import parse_duration
 from modules.utils.localization import TranslateFn, localize_message
 
@@ -248,10 +249,11 @@ class CaptchaCallbackProcessor:
             )
 
         if action_result:
-            disciplinary_texts = strike._get_translation_dict(
+            disciplinary_texts = get_translated_mapping(
                 self._bot,
                 "modules.moderation.strike.disciplinary",
                 strike.DISCIPLINARY_TEXTS_FALLBACK,
+                guild_id=guild.id,
             )
             failure_prefix = disciplinary_texts["action_failed"].split("{")[0]
             if failure_prefix and failure_prefix in action_result:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 
@@ -9,6 +8,7 @@ import discord
 from discord import Color, Embed, Interaction, Member, Message
 from discord.ext import commands
 
+from modules.i18n import get_translated_mapping
 from modules.utils import mod_logging, mysql
 from modules.utils.discord_utils import message_user, resolve_role_references
 from modules.utils.mysql import execute_query
@@ -86,19 +86,6 @@ WARN_EMBED_FALLBACK: dict[str, str] = {
     "footer": "Server: {server}",
 }
 
-
-def _get_translation_dict(
-    bot: commands.Bot, key: str, fallback: dict[str, str]
-) -> dict[str, str]:
-    translator = getattr(bot, "translate", None)
-    if callable(translator):
-        value = translator(key)
-        if isinstance(value, Mapping):
-            merged = fallback.copy()
-            merged.update(value)
-            return merged
-    return fallback.copy()
-
 def get_ban_threshold(strike_settings):
     """
     Given a settings dict mapping strike numbers to an action and duration,
@@ -138,8 +125,11 @@ async def perform_disciplinary_action(
     actions = [action_string] if isinstance(action_string, str) else action_string
     messages = message if isinstance(message, list) else ([message] if message else [])
 
-    disciplinary_texts = _get_translation_dict(
-        bot, "modules.moderation.strike.disciplinary", DISCIPLINARY_TEXTS_FALLBACK
+    disciplinary_texts = get_translated_mapping(
+        bot,
+        "modules.moderation.strike.disciplinary",
+        DISCIPLINARY_TEXTS_FALLBACK,
+        guild_id=user.guild.id,
     )
 
     for action in actions:
@@ -271,8 +261,11 @@ async def perform_disciplinary_action(
                 continue
 
             if normalized_action == "warn":
-                warn_texts = _get_translation_dict(
-                    bot, "modules.moderation.strike.warn_embed", WARN_EMBED_FALLBACK
+                warn_texts = get_translated_mapping(
+                    bot,
+                    "modules.moderation.strike.warn_embed",
+                    WARN_EMBED_FALLBACK,
+                    guild_id=user.guild.id,
                 )
                 reason_block = (
                     warn_texts["reason_block"].format(reason=reason)
@@ -356,11 +349,17 @@ async def strike(
     else:
         strike_by = bot.user
 
-    strike_texts = _get_translation_dict(
-        bot, "modules.moderation.strike.strike", STRIKE_TEXTS_FALLBACK
+    strike_texts = get_translated_mapping(
+        bot,
+        "modules.moderation.strike.strike",
+        STRIKE_TEXTS_FALLBACK,
+        guild_id=user.guild.id,
     )
-    errors_texts = _get_translation_dict(
-        bot, "modules.moderation.strike.errors", STRIKE_ERRORS_FALLBACK
+    errors_texts = get_translated_mapping(
+        bot,
+        "modules.moderation.strike.errors",
+        STRIKE_ERRORS_FALLBACK,
+        guild_id=user.guild.id,
     )
 
     guild_id = user.guild.id
