@@ -166,7 +166,6 @@ async def harvest_pcm_chunk(
             vc.listen(sink)
             setattr(vc, "_mod_pool", pool)
             setattr(vc, "_mod_sink", sink)
-            print(f"[VC IO] continuous listening started in guild {guild.id} ch {channel.id}")
         except Exception as e:
             print(f"[VC IO] continuous listen failed: {e}")
             if not do_listen:
