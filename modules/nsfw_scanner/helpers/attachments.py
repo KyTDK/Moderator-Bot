@@ -19,6 +19,20 @@ REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
 SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
 SHARED_CATEGORY = "modules.nsfw_scanner.shared.category"
 SHARED_ROOT = "modules.nsfw_scanner.shared"
+NSFW_CATEGORY_NAMESPACE = "cogs.nsfw.meta.categories"
+
+CATEGORY_NAMESPACE_OVERRIDES = {
+    "unspecified": SHARED_CATEGORY,
+}
+
+LOCALIZED_CATEGORY_KEYS = {
+    "sexual",
+    "self_harm",
+    "self_harm_intent",
+    "self_harm_instructions",
+    "violence",
+    "violence_graphic",
+}
 
 DECISION_FALLBACKS = {
     "unknown": "Unknown",
@@ -39,6 +53,16 @@ FIELD_FALLBACKS = {
     "clip_threshold": "CLIP Threshold",
     "moderation_threshold": "Moderation Threshold",
     "video_frames": "Video Frames",
+}
+
+CATEGORY_FALLBACKS = {
+    "unspecified": "Unspecified",
+    "sexual": "Sexual",
+    "self_harm": "Self Harm",
+    "self_harm_intent": "Self Harm Intent",
+    "self_harm_instructions": "Self Harm Instructions",
+    "violence": "Violence",
+    "violence_graphic": "Violence Graphic",
 }
 
 REASON_FALLBACKS = {
@@ -116,16 +140,37 @@ def _localize_category(
     category: str | None,
     guild_id: int | None,
 ) -> str:
-    if not category:
-        category = "unspecified"
-    fallback = category.replace("_", " ").title()
-    return localize_message(
-        translator,
-        SHARED_CATEGORY,
-        category,
-        fallback=fallback,
-        guild_id=guild_id,
+    normalized = (category or "unspecified").strip()
+    if not normalized:
+        normalized = "unspecified"
+    normalized = normalized.replace("/", "_").replace("-", "_").lower()
+    fallback = CATEGORY_FALLBACKS.get(
+        normalized, normalized.replace("_", " ").title()
     )
+
+    if translator is None:
+        return fallback
+
+    namespace = CATEGORY_NAMESPACE_OVERRIDES.get(normalized)
+    if namespace is not None:
+        return localize_message(
+            translator,
+            namespace,
+            normalized,
+            fallback=fallback,
+            guild_id=guild_id,
+        )
+
+    if normalized in LOCALIZED_CATEGORY_KEYS:
+        return localize_message(
+            translator,
+            NSFW_CATEGORY_NAMESPACE,
+            normalized,
+            fallback=fallback,
+            guild_id=guild_id,
+        )
+
+    return fallback
 
 
 async def check_attachment(
