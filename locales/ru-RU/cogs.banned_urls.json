@@ -17,20 +17,20 @@
         },
         "actions": {
           "add": {
-            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "description": "Добавить действие модерации, которое будет срабатывать при обнаружении запрещённого URL-адреса.",
             "options": {
-              "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "action": "Действие для выполнения",
+              "duration": "Требуется только для тайм-аута (например, 10м, 1ч, 3д)"
             }
           },
           "remove": {
-            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "description": "Удалить конкретное действие из списка наказаний за запрещённые URL-адреса.",
             "options": {
-              "action": "Exact action string to remove (e.g. timeout, delete)"
+              "action": "Точная строка действия для удаления (например, тайм-аут, удаление)"
             }
           },
           "view": {
-            "description": "Show all actions currently configured to trigger when banned URLs are used."
+            "description": "Показать все действия, которые в настоящее время настроены на срабатывание при использовании запрещённых URL-адресов."
           }
         }
       },

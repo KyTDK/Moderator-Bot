@@ -6,7 +6,7 @@
         "help": {
           "description": "Segítség a beállításokhoz.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Opcionális: parancsok csoportja, amely segít eligazodni"
           }
         },
         "reset": {

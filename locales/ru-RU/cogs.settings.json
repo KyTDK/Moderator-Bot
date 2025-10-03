@@ -6,7 +6,7 @@
         "help": {
           "description": "Получите помощь по настройкам.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Необязательно: группа команд для получения справки"
           }
         },
         "reset": {

@@ -6,7 +6,7 @@
         "help": {
           "description": "Λάβετε βοήθεια για τις ρυθμίσεις.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Προαιρετικό: κατηγορία εντολών για λήψη βοήθειας με"
           }
         },
         "reset": {

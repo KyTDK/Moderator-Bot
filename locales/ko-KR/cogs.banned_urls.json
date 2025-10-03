@@ -17,20 +17,20 @@
         },
         "actions": {
           "add": {
-            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "description": "금지된 URL 감지 시 실행될 모더레이션 액션을 추가합니다.",
             "options": {
-              "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "action": "실행할 작업",
+              "duration": "타임아웃에 필요 (예: 10m, 1h, 3d)"
             }
           },
           "remove": {
-            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "description": "금지된 URL 처벌 목록에서 특정 작업을 제거합니다.",
             "options": {
-              "action": "Exact action string to remove (e.g. timeout, delete)"
+              "action": "제거할 특정 조치 문자열 (예: 타임아웃, 삭제)"
             }
           },
           "view": {
-            "description": "Show all actions currently configured to trigger when banned URLs are used."
+            "description": "금지된 URL 사용 시 트리거되도록 구성된 모든 작업을 표시합니다."
           }
         }
       },

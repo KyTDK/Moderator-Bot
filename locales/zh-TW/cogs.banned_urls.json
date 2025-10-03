@@ -17,20 +17,20 @@
         },
         "actions": {
           "add": {
-            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "description": "添加當檢測到禁用網址時要觸發的管理動作。",
             "options": {
-              "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "action": "執行的行動",
+              "duration": "僅在超時時需要（例如10分鐘、1小時、3天）"
             }
           },
           "remove": {
-            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "description": "從禁用網址的懲罰列表中移除特定動作。",
             "options": {
-              "action": "Exact action string to remove (e.g. timeout, delete)"
+              "action": "要刪除的精確動作字串（例如：超時、刪除）"
             }
           },
           "view": {
-            "description": "Show all actions currently configured to trigger when banned URLs are used."
+            "description": "顯示目前配置為在使用禁用網址時觸發的所有動作。"
           }
         }
       },

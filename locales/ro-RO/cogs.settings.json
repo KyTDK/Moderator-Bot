@@ -6,7 +6,7 @@
         "help": {
           "description": "Obține ajutor pentru setări.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Opțional: grup de comenzi pentru a obține ajutor cu"
           }
         },
         "reset": {

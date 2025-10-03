@@ -6,7 +6,7 @@
         "help": {
           "description": "Ayarlar hakkında yardım alın.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "İsteğe bağlı: yardım almak için komut grubu"
           }
         },
         "reset": {

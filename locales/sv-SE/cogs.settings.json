@@ -6,7 +6,7 @@
         "help": {
           "description": "Få hjälp med inställningar.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Valfritt: kommandogrupp för att få hjälp med"
           }
         },
         "reset": {

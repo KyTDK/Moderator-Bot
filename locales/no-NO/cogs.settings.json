@@ -6,7 +6,7 @@
         "help": {
           "description": "Få hjelp med innstillinger.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Valgfritt: kommandogruppe for å få hjelp med"
           }
         },
         "reset": {

@@ -6,7 +6,7 @@
         "help": {
           "description": "설정에 대한 도움말 받기.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "선택 사항: 도움말을 받을 명령 그룹"
           }
         },
         "reset": {

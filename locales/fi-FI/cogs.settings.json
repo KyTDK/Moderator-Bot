@@ -6,7 +6,7 @@
         "help": {
           "description": "Hanki apua asetuksissa.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Valinnainen: komentoryhmä, jolta saat apua"
           }
         },
         "reset": {

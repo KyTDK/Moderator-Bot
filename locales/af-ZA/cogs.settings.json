@@ -6,7 +6,7 @@
         "help": {
           "description": "Kry hulp oor instellings.",
           "options": {
-            "command": "Optional: command group to get help with"
+            "command": "Opsioneel: opdraggroep om hulp te kry met"
           }
         },
         "reset": {

@@ -17,20 +17,20 @@
         },
         "actions": {
           "add": {
-            "description": "Add a moderation action to be triggered when a banned URL is detected.",
+            "description": "Afegeix una acció de moderació que s'activarà quan es detecti un URL prohibit.",
             "options": {
-              "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "action": "Acció a realitzar",
+              "duration": "Només necessari per al temps d'espera (per exemple, 10m, 1h, 3d)"
             }
           },
           "remove": {
-            "description": "Remove a specific action from the list of punishments for banned URLs.",
+            "description": "Elimina una acció específica de la llista de càstigs per a URLs prohibits.",
             "options": {
-              "action": "Exact action string to remove (e.g. timeout, delete)"
+              "action": "Cadena d'acció exacta a eliminar (p. ex. pausa, eliminar)"
             }
           },
           "view": {
-            "description": "Show all actions currently configured to trigger when banned URLs are used."
+            "description": "Mostra totes les accions que actualment estan configurades per activar-se quan s'utilitzen URLs prohibits."
           }
         }
       },
