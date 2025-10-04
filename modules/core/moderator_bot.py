@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from pathlib import Path
@@ -74,6 +75,7 @@ class ModeratorBot(commands.Bot):
         self._guild_locales = GuildLocaleCache()
         self._locale_resolver = LocaleResolver(self._guild_locales)
         self._locale_settings_listener = self._handle_locale_setting_update
+        self._command_tree_sync_task: asyncio.Task[None] | None = None
         self._initialise_i18n()
         mysql.add_settings_listener(self._locale_settings_listener)
 
@@ -432,13 +434,48 @@ class ModeratorBot(commands.Bot):
         except Exception as exc:
             print(f"[WARN] top.gg poster could not start: {exc}")
 
-        await self.ensure_command_tree_translator()
-        try:
-            await self.tree.sync(guild=None)
-        except Exception as exc:
-            print(f"[ERROR] Command tree sync failed: {exc}")
+        self._command_tree_sync_task = asyncio.create_task(self._run_command_tree_sync())
 
         await self.push_status("starting")
+
+    async def _run_command_tree_sync(self) -> None:
+        try:
+            await self.wait_until_ready()
+            max_attempts = 3
+            retry_delay = 10.0
+            timeout = 45.0
+
+            for attempt in range(1, max_attempts + 1):
+                if self.is_closed():
+                    return
+                try:
+                    await self.ensure_command_tree_translator()
+                    await asyncio.wait_for(self.tree.sync(guild=None), timeout=timeout)
+                except asyncio.TimeoutError:
+                    print(
+                        f"[WARN] Command tree sync timed out after {timeout}s "
+                        f"(attempt {attempt}/{max_attempts}); retrying in {retry_delay}s"
+                    )
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    print(
+                        f"[ERROR] Command tree sync failed on attempt {attempt}/{max_attempts}: {exc}"
+                    )
+                else:
+                    print(
+                        f"[COMMANDS] Command tree sync completed on attempt {attempt}"
+                    )
+                    return
+
+                if attempt < max_attempts:
+                    await asyncio.sleep(retry_delay)
+
+            print(
+                f"[WARN] Command tree sync abandoned after {max_attempts} attempts; commands may be outdated."
+            )
+        finally:
+            self._command_tree_sync_task = None
 
     async def on_ready(self) -> None:  # type: ignore[override]
         shard_label = (
@@ -578,5 +615,14 @@ class ModeratorBot(commands.Bot):
             _logger.exception("Failed to submit instance heartbeat")
 
     async def close(self) -> None:
+        if self._command_tree_sync_task is not None:
+            self._command_tree_sync_task.cancel()
+            try:
+                await self._command_tree_sync_task
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self._command_tree_sync_task = None
+
         mysql.remove_settings_listener(self._locale_settings_listener)
         await super().close()
