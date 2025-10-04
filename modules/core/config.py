@@ -64,7 +64,7 @@ def load_runtime_config() -> RuntimeConfig:
     load_dotenv()
 
     token = os.getenv("DISCORD_TOKEN", "")
-    log_level = log_level = os.getenv("LOG_LEVEL", "WARNING").upper()
+    log_level = log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 
     total_shards = _parse_int(
         os.getenv("MODBOT_TOTAL_SHARDS") or os.getenv("DISCORD_TOTAL_SHARDS"),

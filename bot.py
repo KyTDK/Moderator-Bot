@@ -138,8 +138,12 @@ async def _main() -> None:
             f"{shard_assignment.shard_id}/{shard_assignment.shard_count}"
         )
 
+        logger.info("Applying shard assignment to bot")
+        print("[TRACE] Applying shard assignment to bot")
         bot.set_shard_assignment(shard_assignment)
         await bot.push_status("starting")
+        logger.info("Shard status pushed: starting")
+        print("[TRACE] Marked bot status as starting")
 
         if standby_prepared:
             print("[SHARD] Standby takeover complete; connecting to gateway")
@@ -161,27 +165,42 @@ async def _main() -> None:
             except Exception:
                 logger.exception("Failed to persist shard error state")
     finally:
+        logger.info("Entering shutdown cleanup")
+        print("[TRACE] Entering shutdown cleanup sequence")
         if bot is not None and not bot.is_closed():
+            logger.info("Closing bot connection")
+            print("[TRACE] Closing bot connection")
             try:
                 await bot.close()
+                logger.info("Bot connection closed cleanly")
+                print("[TRACE] Bot closed cleanly")
             except Exception:
                 logger.exception("Failed to close bot cleanly")
         try:
+            logger.info("Clearing instance heartbeat for %s", config.shard.instance_id)
             await mysql.clear_instance_heartbeat(config.shard.instance_id)
+            logger.info("Instance heartbeat cleared for %s", config.shard.instance_id)
+            print(f"[TRACE] Cleared instance heartbeat for {config.shard.instance_id}")
         except Exception:
             logger.exception("Failed to clear instance heartbeat")
         if shard_assignment is not None:
             try:
-                await mysql.release_shard(shard_assignment.shard_id, config.shard.instance_id)
+                logger.info("Releasing shard %s for instance %s", shard_assignment.shard_id, config.shard.instance_id)
+                released = await mysql.release_shard(shard_assignment.shard_id, config.shard.instance_id)
+                if released:
+                    logger.info("Shard %s released", shard_assignment.shard_id)
+                    print(f"[TRACE] Released shard {shard_assignment.shard_id}")
+                else:
+                    logger.warning("Release call reported no changes for shard %s", shard_assignment.shard_id)
             except Exception:
-                logger.exception(
-                    "Failed to release shard %s", shard_assignment.shard_id
-                )
+                logger.exception("Failed to release shard %s", shard_assignment.shard_id)
         try:
+            logger.info("Closing MySQL pool")
             await mysql.close_pool()
+            logger.info("MySQL pool closed")
+            print("[TRACE] MySQL pool closed")
         except Exception:
-            pass
-
+            logger.exception("Failed to close MySQL pool cleanly")
 
 if __name__ == "__main__":
     asyncio.run(_main())
