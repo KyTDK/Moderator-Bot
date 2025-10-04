@@ -76,6 +76,7 @@ class ModeratorBot(commands.Bot):
         self._locale_resolver = LocaleResolver(self._guild_locales)
         self._locale_settings_listener = self._handle_locale_setting_update
         self._command_tree_sync_task: asyncio.Task[None] | None = None
+        self._command_tree_sync_retry_seconds = 300.0
         self._initialise_i18n()
         mysql.add_settings_listener(self._locale_settings_listener)
 
@@ -434,12 +435,33 @@ class ModeratorBot(commands.Bot):
         except Exception as exc:
             print(f"[WARN] top.gg poster could not start: {exc}")
 
-        self._command_tree_sync_task = asyncio.create_task(self._run_command_tree_sync())
+        self._schedule_command_tree_sync()
 
         await self.push_status("starting")
 
-    async def _run_command_tree_sync(self) -> None:
+    def _schedule_command_tree_sync(self, *, delay: float = 0.0, force: bool = False) -> None:
+        if self.is_closed():
+            return
+
+        current = self._command_tree_sync_task
+        if current is not None:
+            if current.done():
+                self._command_tree_sync_task = None
+            elif not force:
+                return
+            else:
+                current.cancel()
+
+        self._command_tree_sync_task = asyncio.create_task(
+            self._run_command_tree_sync(delay=delay)
+        )
+
+    async def _run_command_tree_sync(self, *, delay: float = 0.0) -> None:
+        should_retry = False
         try:
+            if delay > 0:
+                await asyncio.sleep(delay)
+
             await self.wait_until_ready()
             max_attempts = 3
             retry_delay = 10.0
@@ -474,8 +496,14 @@ class ModeratorBot(commands.Bot):
             print(
                 f"[WARN] Command tree sync abandoned after {max_attempts} attempts; commands may be outdated."
             )
+            should_retry = True
         finally:
             self._command_tree_sync_task = None
+            if should_retry and not self.is_closed():
+                self._schedule_command_tree_sync(
+                    delay=self._command_tree_sync_retry_seconds,
+                    force=False,
+                )
 
     async def on_ready(self) -> None:  # type: ignore[override]
         shard_label = (
