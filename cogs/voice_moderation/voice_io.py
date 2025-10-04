@@ -80,40 +80,69 @@ async def _ensure_connected(
 ) -> Optional[voice_recv.VoiceRecvClient]:
     """Ensure we’re connected to `channel` with VoiceRecvClient (self_deaf=False)."""
     try:
-        current = guild.voice_client or voice
-        if current and current.is_connected():
+        async def _safe_disconnect(vc: discord.VoiceClient) -> None:
             try:
-                current_ch = getattr(current, "channel", None)
-                if current_ch and getattr(current_ch, "id", None) == channel.id:
-                    if isinstance(current, voice_recv.VoiceRecvClient):
-                        return current
-                    try:
-                        await current.disconnect(force=True)
-                    except Exception:
-                        pass
-                    return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
+                await vc.disconnect(force=True)
             except Exception:
                 pass
 
-            # Move, or reconnect if needed
+        def _channel_id(vc: discord.VoiceClient) -> Optional[int]:
+            ch = getattr(vc, "channel", None)
+            return getattr(ch, "id", None)
+
+        current = guild.voice_client or voice
+        me_state = getattr(getattr(guild, "me", None), "voice", None)
+        actual_channel_id = getattr(getattr(me_state, "channel", None), "id", None)
+
+        if current and (not current.is_connected() or actual_channel_id is None):
+            await _safe_disconnect(current)
+            current = None
+            voice = None
+
+        # If we appear to be in the target channel already, reuse the existing client.
+        if current and _channel_id(current) == channel.id:
+            if isinstance(current, voice_recv.VoiceRecvClient):
+                return current
+            await _safe_disconnect(current)
+            current = None
+            voice = None
+
+        # Attempt to move if we are connected elsewhere.
+        if current and current.is_connected() and _channel_id(current) != channel.id:
             try:
                 await current.move_to(channel)
+            except Exception:
+                await _safe_disconnect(current)
+                current = None
+                voice = None
+            else:
                 if isinstance(current, voice_recv.VoiceRecvClient):
                     return current
-                try:
-                    await current.disconnect(force=True)
-                except Exception:
-                    pass
-                return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
-            except Exception:
-                try:
-                    await current.disconnect(force=True)
-                except Exception:
-                    pass
-                return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
+                await _safe_disconnect(current)
+                current = None
+                voice = None
 
-        # Fresh connect
-        return await channel.connect(self_deaf=False, self_mute=True, cls=voice_recv.VoiceRecvClient)
+        if current and current.is_connected() and isinstance(current, voice_recv.VoiceRecvClient):
+            return current
+
+        # Fresh connect with a retry if Discord still thinks we're attached elsewhere.
+        for _ in range(2):
+            try:
+                return await channel.connect(
+                    self_deaf=False,
+                    self_mute=True,
+                    cls=voice_recv.VoiceRecvClient,
+                )
+            except discord.ClientException as e:
+                if "Already connected" not in str(e):
+                    raise
+                existing = guild.voice_client or voice
+                if existing:
+                    await _safe_disconnect(existing)
+                    voice = None
+                await asyncio.sleep(0.5)
+                continue
+        return None
     except Exception as e:
         print(f"[VC IO] failed to connect/move in guild {guild.id}, channel {channel.id}: {e}")
         return None
