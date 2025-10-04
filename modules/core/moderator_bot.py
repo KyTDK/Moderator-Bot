@@ -409,17 +409,22 @@ class ModeratorBot(commands.Bot):
             _logger.exception("Failed to update shard status (%s)", status)
 
     async def setup_hook(self) -> None:  # type: ignore[override]
+        print("[STARTUP] setup_hook invoked")
         await self.ensure_command_tree_translator()
+        print("[STARTUP] Command tree translator ensured")
 
         try:
             await mysql.initialise_and_get_pool()
+            print("[STARTUP] MySQL connection pool initialised")
         except Exception as exc:
             print(f"[FATAL] MySQL init failed: {exc}")
             raise
 
         await self._preload_guild_locale_cache()
+        print("[STARTUP] Guild locale cache preloaded")
 
         await mysql.update_instance_heartbeat(self._instance_id)
+        print("[STARTUP] Instance heartbeat registered")
 
         for loop_task in (self.cleanup_task, self.shard_heartbeat, self.instance_heartbeat):
             if not loop_task.is_running():
@@ -427,11 +432,14 @@ class ModeratorBot(commands.Bot):
                     loop_task.start()
                 except RuntimeError:
                     pass
+        print("[STARTUP] Core background loops ensured (cleanup/shard/instance)")
 
         await self._load_extensions()
+        print("[STARTUP] Extension loader finished")
 
         try:
             start_topgg_poster(self)
+            print("[STARTUP] top.gg poster task started")
         except Exception as exc:
             print(f"[WARN] top.gg poster could not start: {exc}")
 
@@ -441,17 +449,22 @@ class ModeratorBot(commands.Bot):
 
     def _schedule_command_tree_sync(self, *, delay: float = 0.0, force: bool = False) -> None:
         if self.is_closed():
+            print("[STARTUP] Command tree sync scheduling skipped; bot is closed")
             return
 
         current = self._command_tree_sync_task
         if current is not None:
             if current.done():
+                print("[STARTUP] Previous command tree sync task finished; scheduling fresh run")
                 self._command_tree_sync_task = None
             elif not force:
+                print("[STARTUP] Command tree sync already pending; ignoring duplicate schedule request")
                 return
             else:
                 current.cancel()
+                print("[STARTUP] Cancelling in-flight command tree sync for forced reschedule")
 
+        print(f"[STARTUP] Scheduling command tree sync (delay={delay:.1f}s, force={force})")
         self._command_tree_sync_task = asyncio.create_task(
             self._run_command_tree_sync(delay=delay)
         )
@@ -460,18 +473,23 @@ class ModeratorBot(commands.Bot):
         should_retry = False
         try:
             if delay > 0:
+                print(f"[STARTUP] Command tree sync sleeping for {delay:.1f}s before running")
                 await asyncio.sleep(delay)
 
             await self.wait_until_ready()
+            print("[STARTUP] Command tree sync coroutine has bot ready; beginning attempts")
             max_attempts = 3
             retry_delay = 10.0
             timeout = 45.0
 
             for attempt in range(1, max_attempts + 1):
+                print(f"[STARTUP] Command tree sync attempt {attempt}/{max_attempts}")
                 if self.is_closed():
+                    print("[STARTUP] Command tree sync aborting; bot is closed before completion")
                     return
                 try:
                     await self.ensure_command_tree_translator()
+                    print("[STARTUP] Command tree translator ensured before sync")
                     await asyncio.wait_for(self.tree.sync(guild=None), timeout=timeout)
                 except asyncio.TimeoutError:
                     print(
@@ -500,6 +518,7 @@ class ModeratorBot(commands.Bot):
         finally:
             self._command_tree_sync_task = None
             if should_retry and not self.is_closed():
+                print(f"[STARTUP] Command tree sync retry scheduled in {self._command_tree_sync_retry_seconds:.1f}s")
                 self._schedule_command_tree_sync(
                     delay=self._command_tree_sync_retry_seconds,
                     force=False,
