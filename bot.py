@@ -11,9 +11,22 @@ from modules.utils import mysql
 print(f"[BOOT] Starting Moderator Bot at {time.strftime('%X')}")
 
 async def _main() -> None:
+    print("[TRACE] Loading runtime config...")
     config = load_runtime_config()
+    print("[TRACE] Runtime config loaded")
     configure_logging(config.log_level)
-    logger = logging.getLogger(__name__)
+    print(f"[TRACE] Logging configured at level {config.log_level}")
+    logger = logging.getLogger("moderator.startup")
+    logger.info("Log level resolved to %s", config.log_level)
+    logger.info("Shard settings: instance=%s total=%s preferred=%s heartbeat=%ss instance_heartbeat=%ss standby=%s poll_interval=%ss",
+                config.shard.instance_id,
+                config.shard.total_shards,
+                config.shard.preferred_shard,
+                config.shard.heartbeat_seconds,
+                config.shard.instance_heartbeat_seconds,
+                config.shard.standby_when_full,
+                config.shard.standby_poll_seconds)
+    logger.info("Cog load logging enabled: %s", config.log_cog_loads)
 
     if not config.token:
         print("[FATAL] DISCORD_TOKEN is not set. Exiting.")
@@ -30,7 +43,11 @@ async def _main() -> None:
     )
 
     try:
+        logger.info("Initialising MySQL connection pool")
+        print("[TRACE] Initialising MySQL pool...")
         await mysql.initialise_and_get_pool()
+        logger.info("MySQL pool initialised successfully")
+        print("[TRACE] MySQL pool initialised")
         failover_after_seconds = max(config.shard.heartbeat_seconds * 2, 30)
         stale_after_seconds = max(
             30,
@@ -41,13 +58,30 @@ async def _main() -> None:
             config.shard.instance_heartbeat_seconds + 3,
             6,
         )
+        logger.info("Recovery windows: failover=%ss stale=%ss instance_failover=%ss",
+                    failover_after_seconds,
+                    stale_after_seconds,
+                    instance_failover_after_seconds)
+        print(
+            f"[TRACE] Shard timing windows -> failover={failover_after_seconds}s, stale={stale_after_seconds}s, instance={instance_failover_after_seconds}s"
+        )
+        logger.info("Recovering stale shard assignments before claiming")
+        print("[TRACE] Running shard recovery pass...")
         await mysql.recover_stuck_shards(
             stale_after_seconds,
             instance_stale_after_seconds=instance_failover_after_seconds,
         )
         while True:
             try:
+                logger.info("Updating heartbeat for instance %s", config.shard.instance_id)
+                print(f"[TRACE] Updating heartbeat for {config.shard.instance_id}")
                 await mysql.update_instance_heartbeat(config.shard.instance_id)
+                logger.info("Heartbeat update persisted for %s", config.shard.instance_id)
+                print(f"[TRACE] Heartbeat updated for {config.shard.instance_id}")
+                logger.info("Attempting shard claim (preferred=%s, total=%s)",
+                            config.shard.preferred_shard,
+                            config.shard.total_shards)
+                print(f"[TRACE] Attempting shard claim (preferred={config.shard.preferred_shard})")
                 shard_assignment = await mysql.claim_shard(
                     config.shard.instance_id,
                     total_shards=config.shard.total_shards,
@@ -55,6 +89,10 @@ async def _main() -> None:
                     stale_after_seconds=stale_after_seconds,
                     instance_stale_after_seconds=instance_failover_after_seconds,
                 )
+                logger.info("Shard claim succeeded: shard=%s/%s",
+                            shard_assignment.shard_id,
+                            shard_assignment.shard_count)
+                print(f"[TRACE] Shard claim succeeded: {shard_assignment.shard_id}/{shard_assignment.shard_count}")
                 break
             except mysql.ShardClaimError as exc:
                 if not config.shard.standby_when_full:
