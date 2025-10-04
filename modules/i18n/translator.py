@@ -70,7 +70,7 @@ class Translator:
                     logger.info("Translation for key '%s' satisfied by locale '%s'", key, code)
                 if isinstance(value, str):
                     return self._apply_format(value, placeholders)
-                return self._normalize_structure(value)
+                return self._normalize_structure(value, placeholders)
 
         if fallback is not None:
             logger.warning(
@@ -106,21 +106,24 @@ class Translator:
         return Translator._normalize_escapes(formatted)
 
     @staticmethod
-    def _normalize_structure(value: Any) -> Any:
-        """Return a deep copy of *value* with escaped newlines normalised."""
+    def _normalize_structure(value: Any, placeholders: Mapping[str, Any]) -> Any:
+        """Recursively apply formatting and newline normalisation to nested values."""
 
         if isinstance(value, str):
-            return Translator._normalize_escapes(value)
+            return Translator._apply_format(value, placeholders)
         if isinstance(value, Mapping):
-            return {key: Translator._normalize_structure(inner) for key, inner in value.items()}
+            return {
+                key: Translator._normalize_structure(inner, placeholders)
+                for key, inner in value.items()
+            }
         if isinstance(value, list):
-            return [Translator._normalize_structure(item) for item in value]
+            return [Translator._normalize_structure(item, placeholders) for item in value]
         if isinstance(value, tuple):
-            return tuple(Translator._normalize_structure(item) for item in value)
+            return tuple(Translator._normalize_structure(item, placeholders) for item in value)
         if isinstance(value, set):
-            return {Translator._normalize_structure(item) for item in value}
+            return {Translator._normalize_structure(item, placeholders) for item in value}
         if isinstance(value, frozenset):
-            return frozenset(Translator._normalize_structure(item) for item in value)
+            return frozenset(Translator._normalize_structure(item, placeholders) for item in value)
         return deepcopy(value)
 
     @staticmethod
