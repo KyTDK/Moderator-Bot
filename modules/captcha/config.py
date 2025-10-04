@@ -25,6 +25,7 @@ class CaptchaStreamConfig:
     start_id: str
     shared_secret: bytes | None
     pending_auto_claim_ms: int
+    max_concurrency: int = 5
 
     @classmethod
     def from_env(cls) -> "CaptchaStreamConfig":
@@ -50,6 +51,9 @@ class CaptchaStreamConfig:
                 parsed_pending = None
             if parsed_pending is not None:
                 pending_auto_claim_ms = max(parsed_pending, 0)
+
+        max_concurrency = _coerce_positive_int(os.getenv("CAPTCHA_STREAM_MAX_CONCURRENCY")) or 5
+        max_concurrency = max(1, max_concurrency)
 
         shared_secret = _resolve_shared_secret()
         start_id = _resolve_stream_start_id(os.getenv("CAPTCHA_STREAM_START_ID"))
@@ -81,6 +85,7 @@ class CaptchaStreamConfig:
             start_id=start_id,
             shared_secret=shared_secret,
             pending_auto_claim_ms=pending_auto_claim_ms,
+            max_concurrency=max_concurrency,
         )
 
 

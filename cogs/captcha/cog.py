@@ -65,6 +65,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         self._public_verify_url = resolve_public_verify_url()
         self._settings_listener_registered = False
         self._embed_sync_task: asyncio.Task[None] | None = None
+        self._stream_start_task: asyncio.Task[None] | None = None
         self._expiry_tasks: dict[tuple[int, int], asyncio.Task[None]] = {}
         self._config_cache: dict[int, CaptchaGuildConfig] = {}
         self._config_cache_expiry: dict[int, float] = {}
@@ -163,16 +164,19 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         )
 
     async def cog_load(self) -> None:
-        started = await self._stream_listener.start()
-        if started:
-            print(
-                "[CAPTCHA] Redis stream listener subscribed to "
-                f"{self._stream_config.stream} as "
-                f"{self._stream_config.group}/{self._stream_config.consumer_name} (start={self._stream_config.start_id})"
-            )
-        else:
-            print(
-                "[CAPTCHA] Captcha Redis stream listener disabled; callbacks will not be processed."
+        if self._stream_start_task is None or self._stream_start_task.done():
+            try:
+                task = asyncio.create_task(
+                    self._start_stream_listener(),
+                    name="captcha-stream-start",
+                )
+            except TypeError:
+                task = asyncio.create_task(self._start_stream_listener())
+            self._stream_start_task = task
+            task.add_done_callback(
+                lambda t, *, owner=self: setattr(owner, "_stream_start_task", None)
+                if owner._stream_start_task is t
+                else None
             )
 
         if not self._settings_listener_registered:
@@ -183,6 +187,45 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
             self._embed_sync_task = asyncio.create_task(self._initial_sync_embeds())
 
     async def cog_unload(self) -> None:
+        if self._stream_start_task is not None:
+            self._stream_start_task.cancel()
+            try:
+                await self._stream_start_task
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self._stream_start_task = None
+
+        await self._stream_listener.stop()
+        await self._api_client.close()
+        if self._settings_listener_registered:
+            mysql.remove_settings_listener(self._handle_setting_update)
+            self._settings_listener_registered = False
+
+    async def _start_stream_listener(self) -> None:
+        try:
+            started = await self._stream_listener.start()
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            _logger.exception("Failed to start captcha Redis stream listener")
+            print(
+                "[CAPTCHA] Failed to start captcha Redis stream listener; see logs for details."
+            )
+            return
+
+        if started:
+            print(
+                "[CAPTCHA] Redis stream listener subscribed to "
+                f"{self._stream_config.stream} as "
+                f"{self._stream_config.group}/{self._stream_config.consumer_name}"
+                f" (start={self._stream_config.start_id})"
+            )
+        else:
+            print(
+                "[CAPTCHA] Captcha Redis stream listener disabled; callbacks will not be processed."
+            )
+
         await self._stream_listener.stop()
         await self._api_client.close()
         if self._settings_listener_registered:

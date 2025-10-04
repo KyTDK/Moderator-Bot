@@ -75,6 +75,9 @@ class CaptchaStreamListener:
         self._supports_xautoclaim = True
         self._autoclaim_warning_emitted = False
         self._last_message_id: str = config.start_id
+        self._max_concurrency = max(1, config.max_concurrency)
+        self._worker_semaphore = asyncio.Semaphore(self._max_concurrency)
+        self._inflight_tasks: set[asyncio.Task[None]] = set()
 
     async def start(self) -> bool:
         _ensure_logger_configured()
@@ -117,6 +120,8 @@ class CaptchaStreamListener:
             raise
 
         self._stopped.clear()
+        self._worker_semaphore = asyncio.Semaphore(self._max_concurrency)
+        self._inflight_tasks.clear()
         self._task = asyncio.create_task(self._run_loop(), name="captcha-stream-listener")
         _logger.info(
             "Subscribed to captcha callback stream %s as consumer %s/%s (start=%s)",
@@ -138,7 +143,18 @@ class CaptchaStreamListener:
                 pass
             self._task = None
 
+        await self._wait_for_workers()
         await self._close_redis()
+
+    async def _wait_for_workers(self) -> None:
+        if not self._inflight_tasks:
+            return
+
+        pending = [task for task in self._inflight_tasks if not task.done()]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+
+        self._inflight_tasks.clear()
 
     async def _close_redis(self) -> None:
         if self._redis is None:
@@ -288,6 +304,7 @@ class CaptchaStreamListener:
             for claimed_id, fields in claimed:
                 await self._handle_message(self._config.stream, claimed_id, fields)
 
+
     async def _run_loop(self) -> None:
         assert self._redis is not None
         streams = {self._config.stream: ">"}
@@ -359,7 +376,49 @@ class CaptchaStreamListener:
                 )
 
             for stream_name, message_id, fields in batch_entries:
-                await self._handle_message(stream_name, message_id, fields)
+                try:
+                    await self._dispatch_message(stream_name, message_id, fields)
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    _logger.exception(
+                        "Failed to dispatch captcha callback %s from stream %s",
+                        message_id,
+                        stream_name,
+                    )
+
+    async def _dispatch_message(self, stream: str, message_id: str, fields: Any) -> None:
+        await self._worker_semaphore.acquire()
+        try:
+            task_coro = self._process_dispatched_message(stream, message_id, fields)
+            task_name = f"captcha-callback:{message_id}"
+            try:
+                task = asyncio.create_task(task_coro, name=task_name)
+            except TypeError:
+                task = asyncio.create_task(task_coro)
+        except Exception:
+            self._worker_semaphore.release()
+            raise
+
+        self._inflight_tasks.add(task)
+        task.add_done_callback(self._on_worker_done)
+
+    async def _process_dispatched_message(self, stream: str, message_id: str, fields: Any) -> None:
+        try:
+            await self._handle_message(stream, message_id, fields)
+        finally:
+            self._worker_semaphore.release()
+
+    def _on_worker_done(self, task: asyncio.Task[None]) -> None:
+        self._inflight_tasks.discard(task)
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc is not None:
+            _logger.error(
+                "Captcha callback worker raised unexpected error",
+                exc_info=exc,
+            )
 
     async def _handle_message(self, stream: str, message_id: str, fields: Any) -> None:
         should_ack = True
