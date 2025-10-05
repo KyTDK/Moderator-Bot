@@ -11,7 +11,14 @@ import numpy as np
 import torch
 from PIL import Image
 from dotenv import load_dotenv
-from pymilvus import Collection, connections
+from pymilvus import (
+    Collection,
+    CollectionSchema,
+    FieldSchema,
+    DataType,
+    connections,
+    utility,
+)
 try:
     from pymilvus.exceptions import MilvusException
 except ImportError:  # pragma: no cover - older pymilvus versions
@@ -59,6 +66,38 @@ def _initialize_collection() -> None:
 
     try:
         connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
+        if not utility.has_collection(COLLECTION_NAME):
+            log.info("Milvus collection '%s' missing; creating", COLLECTION_NAME)
+            schema = CollectionSchema(
+                fields=[
+                    FieldSchema(
+                        name="id",
+                        dtype=DataType.INT64,
+                        is_primary=True,
+                        auto_id=True,
+                    ),
+                    FieldSchema(
+                        name="vector",
+                        dtype=DataType.FLOAT_VECTOR,
+                        dim=768,
+                    ),
+                    FieldSchema(
+                        name="category",
+                        dtype=DataType.VARCHAR,
+                        max_length=32,
+                    ),
+                    FieldSchema(
+                        name="meta",
+                        dtype=DataType.VARCHAR,
+                        max_length=8192,
+                    ),
+                ]
+            )
+            Collection(
+                name=COLLECTION_NAME,
+                schema=schema,
+                description="CLIP embeddings for content moderation",
+            )
         coll = Collection(COLLECTION_NAME)
         n_vectors = coll.num_entities
         NLIST, NPROBE = _suggest_ivf_params(n_vectors)
