@@ -8,8 +8,21 @@ from PIL import Image
 from cogs.nsfw import NSFW_CATEGORY_SETTING
 from modules.utils import api, clip_vectors, mysql
 
-from ..constants import ADD_SFW_VECTOR
+from ..constants import ADD_SFW_VECTOR, SFW_VECTOR_MAX_SIMILARITY
 from ..utils import file_to_b64, is_allowed_category
+
+
+def _should_add_sfw_vector(
+    flagged_any: bool,
+    skip_vector_add: bool,
+    max_similarity: float | None,
+) -> bool:
+    if flagged_any or skip_vector_add:
+        return False
+    if max_similarity is None:
+        return True
+    return max_similarity <= SFW_VECTOR_MAX_SIMILARITY
+
 
 async def moderator_api(
     scanner,
@@ -19,6 +32,7 @@ async def moderator_api(
     guild_id: int | None = None,
     max_attempts: int = 3,
     skip_vector_add: bool = False,
+    max_similarity: float | None = None,
 ) -> dict[str, Any]:
     result: dict[str, Any] = {
         "is_nsfw": None,
@@ -114,8 +128,16 @@ async def moderator_api(
 
             guild_flagged_categories.append((normalized_category, score))
 
-        if ADD_SFW_VECTOR and not flagged_any and not skip_vector_add:
-            await asyncio.to_thread(clip_vectors.add_vector, image, metadata={"category": None, "score": 0})
+        if (
+            ADD_SFW_VECTOR
+            and image is not None
+            and _should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
+        ):
+            await asyncio.to_thread(
+                clip_vectors.add_vector,
+                image,
+                metadata={"category": None, "score": 0},
+            )
 
         if guild_flagged_categories:
             guild_flagged_categories.sort(key=lambda item: item[1], reverse=True)

@@ -115,6 +115,7 @@ async def process_image(
                 guild_id=guild_id,
                 image=image,
                 skip_vector_add=skip_vector,
+                max_similarity=max_similarity,
             )
             if isinstance(response, dict):
                 response.setdefault("max_similarity", max_similarity)

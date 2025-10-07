@@ -23,7 +23,8 @@ MAX_CONCURRENT_FRAMES = 5
 ACCELERATED_MAX_CONCURRENT_FRAMES = 10
 ACCELERATED_PRO_CONCURRENT_FRAMES = 20
 ACCELERATED_ULTRA_CONCURRENT_FRAMES = 50
-ADD_SFW_VECTOR = False  # Add SFW vectors to the index
+ADD_SFW_VECTOR = True  # Add SFW vectors to the index
+SFW_VECTOR_MAX_SIMILARITY = 0.7  # Only add SFW vectors when similarity is low
 try:
     VECTOR_REFRESH_DIVISOR = int(os.getenv("VECTOR_REFRESH_DIVISOR", "0"))
 except (TypeError, ValueError):
