@@ -14,6 +14,9 @@
         "nsfw-channel": {
           "description": "Channel where NSFW violations are logged with a preview of the media."
         },
+        "nsfw-channel-notify": {
+          "description": "Send a notification embed to the channel when NSFW content is removed."
+        },
         "nsfw-enabled": {
           "description": "Enable NSFW scanning for messages, reactions, and avatars (other toggles still apply)."
         },

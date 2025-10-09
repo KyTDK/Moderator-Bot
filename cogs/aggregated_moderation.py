@@ -104,6 +104,9 @@ class AggregatedModerationCog(commands.Cog):
                 nsfw_callback=handle_nsfw_content
             )
             if flagged:
+                notify_channel = await mysql.get_settings(guild_id, "nsfw-channel-notify")
+                if not notify_channel:
+                    return
                 try:
                     nsfw_texts = self.bot.translate("cogs.aggregated_moderation.nsfw_detection", 
                                                     placeholders={"mention": message.author.mention},

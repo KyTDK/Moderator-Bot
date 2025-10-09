@@ -156,6 +156,14 @@ SETTINGS_SCHEMA = {
         hidden=True,
         description_key="modules.config.settings_schema.nsfw-channel.description",
     ),
+    "nsfw-channel-notify": Setting(
+        name="nsfw-channel-notify",
+        description="Send a notification embed to the channel when NSFW content is removed.",
+        setting_type=bool,
+        default=True,
+        choices=["true", "false"],
+        description_key="modules.config.settings_schema.nsfw-channel-notify.description",
+    ),
     "nsfw-enabled": Setting(
         name="nsfw-enabled",
         description="Enable NSFW scanning for messages, reactions, and avatars (other toggles still apply).",
@@ -668,5 +676,4 @@ SETTINGS_SCHEMA = {
         description_key="modules.config.settings_schema.captcha-failure-actions.description",
     ),
 }
-
 
