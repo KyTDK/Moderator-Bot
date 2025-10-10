@@ -1,6 +1,12 @@
+version: 1
 projects:
   - slug: modbot
     name: Modbot
+    source_language: en
+    vcs:
+      type: git
+      url: https://github.com/KyTDK/Moderator-Bot.git
+      branch: l10n_main
     components:
       - slug: modules-captcha-processor
         name: Modules: Captcha Processor
