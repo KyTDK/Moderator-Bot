@@ -16,7 +16,7 @@ projects:
         template: locales/en/modules.utils.mod_logging.json
         new_base: locales/en/modules.utils.mod_logging.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: bot
         name: Bot
@@ -24,7 +24,7 @@ projects:
         template: locales/en/bot.json
         new_base: locales/en/bot.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-accelerated
         name: Cogs: accelerated
@@ -32,7 +32,7 @@ projects:
         template: locales/en/cogs.accelerated.json
         new_base: locales/en/cogs.accelerated.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-aggregated_moderation
         name: Cogs: aggregated_moderation
@@ -40,7 +40,7 @@ projects:
         template: locales/en/cogs.aggregated_moderation.json
         new_base: locales/en/cogs.aggregated_moderation.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-api_pool
         name: Cogs: api_pool
@@ -48,7 +48,7 @@ projects:
         template: locales/en/cogs.api_pool.json
         new_base: locales/en/cogs.api_pool.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-autonomous_moderation
         name: Cogs: autonomous_moderation
@@ -56,7 +56,7 @@ projects:
         template: locales/en/cogs.autonomous_moderation.json
         new_base: locales/en/cogs.autonomous_moderation.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-banned_urls
         name: Cogs: banned_urls
@@ -64,7 +64,7 @@ projects:
         template: locales/en/cogs.banned_urls.json
         new_base: locales/en/cogs.banned_urls.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-banned_words
         name: Cogs: banned_words
@@ -72,7 +72,7 @@ projects:
         template: locales/en/cogs.banned_words.json
         new_base: locales/en/cogs.banned_words.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-captcha
         name: Cogs: captcha
@@ -80,7 +80,7 @@ projects:
         template: locales/en/cogs.captcha.json
         new_base: locales/en/cogs.captcha.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-channel_config
         name: Cogs: channel_config
@@ -88,7 +88,7 @@ projects:
         template: locales/en/cogs.channel_config.json
         new_base: locales/en/cogs.channel_config.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-dashboard
         name: Cogs: dashboard
@@ -96,7 +96,7 @@ projects:
         template: locales/en/cogs.dashboard.json
         new_base: locales/en/cogs.dashboard.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-debug
         name: Cogs: debug
@@ -104,7 +104,7 @@ projects:
         template: locales/en/cogs.debug.json
         new_base: locales/en/cogs.debug.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-monitoring
         name: Cogs: monitoring
@@ -112,7 +112,7 @@ projects:
         template: locales/en/cogs.monitoring.json
         new_base: locales/en/cogs.monitoring.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-nsfw
         name: Cogs: nsfw
@@ -120,7 +120,7 @@ projects:
         template: locales/en/cogs.nsfw.json
         new_base: locales/en/cogs.nsfw.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-scam_detection
         name: Cogs: scam_detection
@@ -128,7 +128,7 @@ projects:
         template: locales/en/cogs.scam_detection.json
         new_base: locales/en/cogs.scam_detection.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-settings
         name: Cogs: settings
@@ -136,7 +136,7 @@ projects:
         template: locales/en/cogs.settings.json
         new_base: locales/en/cogs.settings.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-strikes
         name: Cogs: strikes
@@ -144,7 +144,7 @@ projects:
         template: locales/en/cogs.strikes.json
         new_base: locales/en/cogs.strikes.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: cogs-voice_moderation
         name: Cogs: voice_moderation
@@ -152,7 +152,7 @@ projects:
         template: locales/en/cogs.voice_moderation.json
         new_base: locales/en/cogs.voice_moderation.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-moderation-strike
         name: Modules: moderation.strike
@@ -160,7 +160,7 @@ projects:
         template: locales/en/modules.moderation.strike.json
         new_base: locales/en/modules.moderation.strike.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-utils-action_manager
         name: Modules: utils.action_manager
@@ -168,7 +168,7 @@ projects:
         template: locales/en/modules.utils.action_manager.json
         new_base: locales/en/modules.utils.action_manager.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-utils-actions
         name: Modules: utils.actions
@@ -176,7 +176,7 @@ projects:
         template: locales/en/modules.utils.actions.json
         new_base: locales/en/modules.utils.actions.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-utils-api
         name: Modules: utils.api
@@ -184,7 +184,7 @@ projects:
         template: locales/en/modules.utils.api.json
         new_base: locales/en/modules.utils.api.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-utils-discord_utils
         name: Modules: utils.discord_utils
@@ -192,7 +192,7 @@ projects:
         template: locales/en/modules.utils.discord_utils.json
         new_base: locales/en/modules.utils.discord_utils.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-utils-event_manager
         name: Modules: utils.event_manager
@@ -200,7 +200,7 @@ projects:
         template: locales/en/modules.utils.event_manager.json
         new_base: locales/en/modules.utils.event_manager.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-utils-list_manager
         name: Modules: utils.list_manager
@@ -208,7 +208,7 @@ projects:
         template: locales/en/modules.utils.list_manager.json
         new_base: locales/en/modules.utils.list_manager.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-utils-mysql-settings
         name: Modules: utils.mysql.settings
@@ -216,7 +216,7 @@ projects:
         template: locales/en/modules.utils.mysql.settings.json
         new_base: locales/en/modules.utils.mysql.settings.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-utils-strike
         name: Modules: utils.strike
@@ -224,7 +224,7 @@ projects:
         template: locales/en/modules.utils.strike.json
         new_base: locales/en/modules.utils.strike.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-variables-time_string
         name: Modules: variables.time_string
@@ -232,7 +232,7 @@ projects:
         template: locales/en/modules.variables.time_string.json
         new_base: locales/en/modules.variables.time_string.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-config-premium_plans
         name: Modules: config.premium_plans
@@ -240,7 +240,7 @@ projects:
         template: locales/en/modules.config.premium_plans.json
         new_base: locales/en/modules.config.premium_plans.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-config-settings_schema
         name: Modules: config.settings_schema
@@ -248,7 +248,7 @@ projects:
         template: locales/en/modules.config.settings_schema.json
         new_base: locales/en/modules.config.settings_schema.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
 
       - slug: modules-nsfw_scanner
         name: Modules: nsfw_scanner
@@ -256,4 +256,4 @@ projects:
         template: locales/en/modules.nsfw_scanner.json
         new_base: locales/en/modules.nsfw_scanner.json
         language_code_style: bcp
-        file_format: json-nested
+        file_format: i18next-v4
