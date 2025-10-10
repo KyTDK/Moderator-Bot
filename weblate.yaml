@@ -1,0 +1,259 @@
+projects:
+  - slug: modbot
+    name: Modbot
+    components:
+      - slug: modules-captcha-processor
+        name: Modules: Captcha Processor
+        filemask: locales/*/modules.captcha.processor.json
+        template: locales/en/modules.captcha.processor.json
+        new_base: locales/en/modules.captcha.processor.json
+        language_code_style: bcp
+        file_format: i18next-v4
+
+      - slug: modules-utils-mod_logging
+        name: Modules: Utils: mod_logging
+        filemask: locales/*/modules.utils.mod_logging.json
+        template: locales/en/modules.utils.mod_logging.json
+        new_base: locales/en/modules.utils.mod_logging.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: bot
+        name: Bot
+        filemask: locales/*/bot.json
+        template: locales/en/bot.json
+        new_base: locales/en/bot.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-accelerated
+        name: Cogs: accelerated
+        filemask: locales/*/cogs.accelerated.json
+        template: locales/en/cogs.accelerated.json
+        new_base: locales/en/cogs.accelerated.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-aggregated_moderation
+        name: Cogs: aggregated_moderation
+        filemask: locales/*/cogs.aggregated_moderation.json
+        template: locales/en/cogs.aggregated_moderation.json
+        new_base: locales/en/cogs.aggregated_moderation.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-api_pool
+        name: Cogs: api_pool
+        filemask: locales/*/cogs.api_pool.json
+        template: locales/en/cogs.api_pool.json
+        new_base: locales/en/cogs.api_pool.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-autonomous_moderation
+        name: Cogs: autonomous_moderation
+        filemask: locales/*/cogs.autonomous_moderation.json
+        template: locales/en/cogs.autonomous_moderation.json
+        new_base: locales/en/cogs.autonomous_moderation.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-banned_urls
+        name: Cogs: banned_urls
+        filemask: locales/*/cogs.banned_urls.json
+        template: locales/en/cogs.banned_urls.json
+        new_base: locales/en/cogs.banned_urls.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-banned_words
+        name: Cogs: banned_words
+        filemask: locales/*/cogs.banned_words.json
+        template: locales/en/cogs.banned_words.json
+        new_base: locales/en/cogs.banned_words.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-captcha
+        name: Cogs: captcha
+        filemask: locales/*/cogs.captcha.json
+        template: locales/en/cogs.captcha.json
+        new_base: locales/en/cogs.captcha.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-channel_config
+        name: Cogs: channel_config
+        filemask: locales/*/cogs.channel_config.json
+        template: locales/en/cogs.channel_config.json
+        new_base: locales/en/cogs.channel_config.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-dashboard
+        name: Cogs: dashboard
+        filemask: locales/*/cogs.dashboard.json
+        template: locales/en/cogs.dashboard.json
+        new_base: locales/en/cogs.dashboard.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-debug
+        name: Cogs: debug
+        filemask: locales/*/cogs.debug.json
+        template: locales/en/cogs.debug.json
+        new_base: locales/en/cogs.debug.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-monitoring
+        name: Cogs: monitoring
+        filemask: locales/*/cogs.monitoring.json
+        template: locales/en/cogs.monitoring.json
+        new_base: locales/en/cogs.monitoring.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-nsfw
+        name: Cogs: nsfw
+        filemask: locales/*/cogs.nsfw.json
+        template: locales/en/cogs.nsfw.json
+        new_base: locales/en/cogs.nsfw.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-scam_detection
+        name: Cogs: scam_detection
+        filemask: locales/*/cogs.scam_detection.json
+        template: locales/en/cogs.scam_detection.json
+        new_base: locales/en/cogs.scam_detection.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-settings
+        name: Cogs: settings
+        filemask: locales/*/cogs.settings.json
+        template: locales/en/cogs.settings.json
+        new_base: locales/en/cogs.settings.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-strikes
+        name: Cogs: strikes
+        filemask: locales/*/cogs.strikes.json
+        template: locales/en/cogs.strikes.json
+        new_base: locales/en/cogs.strikes.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: cogs-voice_moderation
+        name: Cogs: voice_moderation
+        filemask: locales/*/cogs.voice_moderation.json
+        template: locales/en/cogs.voice_moderation.json
+        new_base: locales/en/cogs.voice_moderation.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-moderation-strike
+        name: Modules: moderation.strike
+        filemask: locales/*/modules.moderation.strike.json
+        template: locales/en/modules.moderation.strike.json
+        new_base: locales/en/modules.moderation.strike.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-utils-action_manager
+        name: Modules: utils.action_manager
+        filemask: locales/*/modules.utils.action_manager.json
+        template: locales/en/modules.utils.action_manager.json
+        new_base: locales/en/modules.utils.action_manager.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-utils-actions
+        name: Modules: utils.actions
+        filemask: locales/*/modules.utils.actions.json
+        template: locales/en/modules.utils.actions.json
+        new_base: locales/en/modules.utils.actions.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-utils-api
+        name: Modules: utils.api
+        filemask: locales/*/modules.utils.api.json
+        template: locales/en/modules.utils.api.json
+        new_base: locales/en/modules.utils.api.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-utils-discord_utils
+        name: Modules: utils.discord_utils
+        filemask: locales/*/modules.utils.discord_utils.json
+        template: locales/en/modules.utils.discord_utils.json
+        new_base: locales/en/modules.utils.discord_utils.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-utils-event_manager
+        name: Modules: utils.event_manager
+        filemask: locales/*/modules.utils.event_manager.json
+        template: locales/en/modules.utils.event_manager.json
+        new_base: locales/en/modules.utils.event_manager.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-utils-list_manager
+        name: Modules: utils.list_manager
+        filemask: locales/*/modules.utils.list_manager.json
+        template: locales/en/modules.utils.list_manager.json
+        new_base: locales/en/modules.utils.list_manager.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-utils-mysql-settings
+        name: Modules: utils.mysql.settings
+        filemask: locales/*/modules.utils.mysql.settings.json
+        template: locales/en/modules.utils.mysql.settings.json
+        new_base: locales/en/modules.utils.mysql.settings.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-utils-strike
+        name: Modules: utils.strike
+        filemask: locales/*/modules.utils.strike.json
+        template: locales/en/modules.utils.strike.json
+        new_base: locales/en/modules.utils.strike.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-variables-time_string
+        name: Modules: variables.time_string
+        filemask: locales/*/modules.variables.time_string.json
+        template: locales/en/modules.variables.time_string.json
+        new_base: locales/en/modules.variables.time_string.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-config-premium_plans
+        name: Modules: config.premium_plans
+        filemask: locales/*/modules.config.premium_plans.json
+        template: locales/en/modules.config.premium_plans.json
+        new_base: locales/en/modules.config.premium_plans.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-config-settings_schema
+        name: Modules: config.settings_schema
+        filemask: locales/*/modules.config.settings_schema.json
+        template: locales/en/modules.config.settings_schema.json
+        new_base: locales/en/modules.config.settings_schema.json
+        language_code_style: bcp
+        file_format: json-nested
+
+      - slug: modules-nsfw_scanner
+        name: Modules: nsfw_scanner
+        filemask: locales/*/modules.nsfw_scanner.json
+        template: locales/en/modules.nsfw_scanner.json
+        new_base: locales/en/modules.nsfw_scanner.json
+        language_code_style: bcp
+        file_format: json-nested

@@ -14,6 +14,20 @@ class MonitoringCog(commands.Cog):
         self.bot = bot
         self._monitor_blocked_channels: set[int] = set()
 
+    @staticmethod
+    def _truncate_embed_value(value: str, limit: int = 1024) -> str:
+        """Ensure embed field values stay within Discord's 1024 char limit."""
+        if not value:
+            return ""
+        if len(value) <= limit:
+            return value
+        suffix = "... (truncated)"
+        available = max(limit - len(suffix), 0)
+        truncated = value[:available].rstrip()
+        if not truncated:
+            return suffix[:limit]
+        return truncated + suffix
+
     def _texts(self, section: str, guild_id: int):
         return self.bot.translate(f"cogs.monitoring.{section}",
                                     guild_id=guild_id
@@ -431,12 +445,12 @@ class MonitoringCog(commands.Cog):
         no_content = texts["no_content"]
         embed.add_field(
             name=texts["fields"]["before"],
-            value=cached_before.content or no_content,
+            value=self._truncate_embed_value(cached_before.content or no_content),
             inline=False,
         )
         embed.add_field(
             name=texts["fields"]["after"],
-            value=after.content or no_content,
+            value=self._truncate_embed_value(after.content or no_content),
             inline=False,
         )
         embed.set_footer(text=texts["footer"].format(user_id=after.author.id))
