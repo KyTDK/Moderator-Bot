@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Captcha-ellenőrzés sikeres",
-          "embed": {
-            "title": "Captcha ellenőrzés sikerült",
-            "description": "{mention} ({user_id}) sikeresen átment a captcha-ellenőrzésen.",
-            "fields": {
-              "actions": "Alkalmazott műveletek",
-              "attempts": "Kísérletek",
-              "provider": "Szolgáltató",
-              "challenge": "Kihívás",
-              "review": "Értékelés"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Captcha-ellenőrzés sikeres",
+                    "embed": {
+                        "title": "Captcha ellenőrzés sikerült",
+                        "description": "{mention} ({user_id}) sikeresen átment a captcha-ellenőrzésen.",
+                        "fields": {
+                            "actions": "Alkalmazott műveletek",
+                            "attempts": "Kísérletek",
+                            "provider": "Szolgáltató",
+                            "challenge": "Kihívás",
+                            "review": "Értékelés"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Captcha ellenőrzés sikertelen.",
+                    "notes": {
+                        "deferred_generic": "Hiba műveletek elhalasztva; további captcha próbálkozások szükségesek.",
+                        "deferred_remaining": "Hiba műveletek elhalasztva; {remaining} {attempts_word} maradt.",
+                        "member_left": "A tag már nincs a céhben; a konfigurált hiba műveletek kihagyásra kerültek."
+                    },
+                    "attempts": {
+                        "unlimited": "Korlátlan kísérletek maradtak.",
+                        "additional": "További próbálkozások maradtak.",
+                        "remaining": "{count} {attempts_word} maradt.",
+                        "word_one": "próba",
+                        "word_other": "próbák"
+                    },
+                    "embed": {
+                        "title_failed": "Captcha ellenőrzés sikertelen",
+                        "title_attempt": "Captcha próbálkozás sikertelen",
+                        "description_failed": "{mention} ({user_id}) nem sikerült a captcha-ellenőrzés.",
+                        "description_attempt": "{mention} ({user_id}) nem sikerült egy captcha-próbálkozás.",
+                        "fields": {
+                            "actions": "Alkalmazott műveletek",
+                            "notes": "Megjegyzések",
+                            "attempts": "Kísérletek",
+                            "remaining": "Megmaradt próbálkozások",
+                            "challenge": "Kihívás",
+                            "reason": "Ok",
+                            "review": "Értékelés"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Sikerült alkalmazni a captcha siker műveleteket a Discord API hiba miatt.",
+                    "unknown_token": "Nem található folyamatban lévő captcha-ellenőrzés ehhez a felhasználóhoz.",
+                    "token_mismatch": "A captcha token nem egyezik meg a folyamatban lévő ellenőrzéssel.",
+                    "missing_permissions": "A botnak nincsenek engedélyei a captcha hiba műveletek alkalmazásához.",
+                    "action_failed": "A captcha hiba műveletek alkalmazása sikertelen a Discord API hiba miatt.",
+                    "guild_not_found": "A {guild_id} céh nem hozzáférhető ehhez a bothoz.",
+                    "guild_fetch_failed": "A {guild_id} céh lekérése a Discordból sikertelen.",
+                    "member_not_found": "A {user_id} tag nem található a {guild_id} céhben.",
+                    "member_fetch_failed": "A {user_id} tag lekérése a {guild_id} céhből sikertelen."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Captcha ellenőrzés sikertelen.",
-          "notes": {
-            "deferred_generic": "Hiba műveletek elhalasztva; további captcha próbálkozások szükségesek.",
-            "deferred_remaining": "Hiba műveletek elhalasztva; {remaining} {attempts_word} maradt.",
-            "member_left": "A tag már nincs a céhben; a konfigurált hiba műveletek kihagyásra kerültek."
-          },
-          "attempts": {
-            "unlimited": "Korlátlan kísérletek maradtak.",
-            "additional": "További próbálkozások maradtak.",
-            "remaining": "{count} {attempts_word} maradt.",
-            "word_one": "próba",
-            "word_other": "próbák"
-          },
-          "embed": {
-            "title_failed": "Captcha ellenőrzés sikertelen",
-            "title_attempt": "Captcha próbálkozás sikertelen",
-            "description_failed": "{mention} ({user_id}) nem sikerült a captcha-ellenőrzés.",
-            "description_attempt": "{mention} ({user_id}) nem sikerült egy captcha-próbálkozás.",
-            "fields": {
-              "actions": "Alkalmazott műveletek",
-              "notes": "Megjegyzések",
-              "attempts": "Kísérletek",
-              "remaining": "Megmaradt próbálkozások",
-              "challenge": "Kihívás",
-              "reason": "Ok",
-              "review": "Értékelés"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Sikerült alkalmazni a captcha siker műveleteket a Discord API hiba miatt.",
-          "unknown_token": "Nem található folyamatban lévő captcha-ellenőrzés ehhez a felhasználóhoz.",
-          "token_mismatch": "A captcha token nem egyezik meg a folyamatban lévő ellenőrzéssel.",
-          "missing_permissions": "A botnak nincsenek engedélyei a captcha hiba műveletek alkalmazásához.",
-          "action_failed": "A captcha hiba műveletek alkalmazása sikertelen a Discord API hiba miatt.",
-          "guild_not_found": "A {guild_id} céh nem hozzáférhető ehhez a bothoz.",
-          "guild_fetch_failed": "A {guild_id} céh lekérése a Discordból sikertelen.",
-          "member_not_found": "A {user_id} tag nem található a {guild_id} céhben.",
-          "member_fetch_failed": "A {user_id} tag lekérése a {guild_id} céhből sikertelen."
         }
-      }
     }
-  }
 }
