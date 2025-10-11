@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "YAZAR",
-        "utterance_label": "KONUŞMA",
-        "divider": "---",
-        "unknown_speaker": "Bilinmeyen konuşmacı",
-        "unknown_prefix": "Bilinmeyen",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transkripti",
-        "title_part": "VC Transkripti (bölüm {index}/{total})",
-        "field_channel": "Kanal",
-        "field_utterances": "Konuşmalar",
-        "footer_high": "Yüksek hassasiyetli transkript",
-        "footer_normal": "Normal hassasiyetli transkript"
-      },
-      "budget": {
-        "title": "VC Moderasyon Bütçesi Sınırına Ulaşıldı",
-        "description": "Bütçe limiti nedeniyle bu döngü için analiz atlanıyor."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "YAZAR",
+                "utterance_label": "KONUŞMA",
+                "divider": "---",
+                "unknown_speaker": "Bilinmeyen konuşmacı",
+                "unknown_prefix": "Bilinmeyen",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC Transkripti",
+                "title_part": "VC Transkripti (bölüm {index}/{total})",
+                "field_channel": "Kanal",
+                "field_utterances": "Konuşmalar",
+                "footer_high": "Yüksek hassasiyetli transkript",
+                "footer_normal": "Normal hassasiyetli transkript"
+            },
+            "budget": {
+                "title": "VC Moderasyon Bütçesi Sınırına Ulaşıldı",
+                "description": "Bütçe limiti nedeniyle bu döngü için analiz atlanıyor."
+            }
+        }
     }
-  }
 }
