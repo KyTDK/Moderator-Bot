@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Đình công",
-          "kick": "Đá",
-          "ban": "Cấm",
-          "timeout": "Thời gian chờ",
-          "delete": "Xóa tin nhắn",
-          "give_role": "Cấp quyền",
-          "take_role": "Gỡ quyền",
-          "warn": "Cảnh báo người dùng",
-          "broadcast": "Phát tin nhắn",
-          "auto": "Tự động"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Đình công",
+                    "kick": "Đá",
+                    "ban": "Cấm",
+                    "timeout": "Thời gian chờ",
+                    "delete": "Xóa tin nhắn",
+                    "give_role": "Cấp quyền",
+                    "take_role": "Gỡ quyền",
+                    "warn": "Cảnh báo người dùng",
+                    "broadcast": "Phát tin nhắn",
+                    "auto": "Tự động"
+                }
+            }
         }
-      }
     }
-  }
 }
