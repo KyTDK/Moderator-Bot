@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Ütés",
-          "kick": "Rúgás",
-          "ban": "Tiltás",
-          "timeout": "Időkérés",
-          "delete": "Üzenet törlése",
-          "give_role": "Szerepkör adása",
-          "take_role": "Szerepkör eltávolítása",
-          "warn": "Felhasználó figyelmeztetése",
-          "broadcast": "Üzenet sugárzása",
-          "auto": "Automatikus"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Ütés",
+                    "kick": "Rúgás",
+                    "ban": "Tiltás",
+                    "timeout": "Időkérés",
+                    "delete": "Üzenet törlése",
+                    "give_role": "Szerepkör adása",
+                    "take_role": "Szerepkör eltávolítása",
+                    "warn": "Felhasználó figyelmeztetése",
+                    "broadcast": "Üzenet sugárzása",
+                    "auto": "Automatikus"
+                }
+            }
         }
-      }
     }
-  }
 }
