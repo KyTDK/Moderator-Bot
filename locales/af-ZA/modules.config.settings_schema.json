@@ -20,7 +20,8 @@
                         "2. Geen NSFW of obskure inhoud nie.",
                         "3. Geen strooipos of oormatige self-promosie nie.",
                         "4. Volg Discord se Diensvoorwaardes."
-                    ]
+                    ],
+                    "description": "Die bedienerreëls wat vir outonome moderering gebruik word."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -101,8 +102,128 @@
                     "description": "Die boodskap om te stuur wanneer ’n speler se profielfoto gemerk is.",
                     "default": "Daar is eksplisiete inhoud in jou profielfoto opgespoor",
                     "choices": [
-                        "Daar is eksplisiete inhoud in jou profielfoto opgespoor"
+                        "Daar is eksplisiete inhoud in jou profielfoto opgespoor",
+                        "Jou profielfoto is nie geskik vir hierdie bediener nie.",
+                        "Jou profielfoto is as NSFW gemerk."
                     ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Verwyder die timeout van 'n gebruiker sodra hulle hul profielfoto na iets geskik verander het."
+                },
+                "scan-age-restricted": {
+                    "description": "Skandeer ouderdomsbeperkte (NSFW) kanale. Wanneer af, word NSFW-kanale oorgeslaan."
+                },
+                "check-tenor-gifs": {
+                    "description": "Pas strawwe toe wanneer NSFW-inhoud in Tenor-GIF's opgespoor word."
+                },
+                "use-default-banned-words": {
+                    "description": "Gebruik die ingeboude vloekwoordelys vir hierdie bediener."
+                },
+                "exclude-channels": {
+                    "description": "Kanale om van opsporing uit te sluit."
+                },
+                "delete-scam-messages": {
+                    "description": "Verwyder outomaties boodskappe wat by bedrogpatrone of URL's pas."
+                },
+                "scam-detection-action": {
+                    "description": "Aksie om te neem wanneer 'n bedrogboodskap opgespoor word."
+                },
+                "check-links": {
+                    "description": "Kontroleer skakels in boodskappe vir malware, uitvissing, bedrog, ens."
+                },
+                "exclude-scam-channels": {
+                    "description": "Kanale om van bedrogopsporing uit te sluit."
+                },
+                "aimod-detection-action": {
+                    "description": "Aksie om te neem wanneer die outonome moderator 'n oortreding opspoor. Gebruik auto vir die KI om die besluit te neem."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Gebruik hoër-noukeurigheid KI-moderering met gpt-5-mini (ongeveer 2.25 USD per 1M tokens). Verbruik die maandelikse begroting vinniger as die verstek."
+                },
+                "autonomous-mod": {
+                    "description": "Gebruik KI om jou hele bediener outomaties te modereer."
+                },
+                "aimod-check-interval": {
+                    "description": "Hoe gereeld die KI-modereringsbondelproses moet loop."
+                },
+                "aimod-mode": {
+                    "description": "Kies hoe KI-moderering geaktiveer word: `report`-modus (slegs op vermelding), `interval`-modus (outomatiese agtergrondskandering), of `adaptive`-modus (skakel dinamies oor op grond van bedieneraktiwiteit, gebeurtenisse of konfigurasie)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Konfigureer watter gebeurtenisse oorskakeling tussen KI-modereringsmodusse aktiveer."
+                },
+                "no-forward-from-role": {
+                    "description": "Keer dat 'n spesifieke rol boodskappe deurstuur."
+                },
+                "banned-urls": {
+                    "description": "Presiese URL's of domeine wat geblokkeer moet word."
+                },
+                "url-detection-action": {
+                    "description": "Aksie om te neem wanneer 'n geblokkeerde URL opgespoor word."
+                },
+                "exclude-url-channels": {
+                    "description": "Kanale wat van verbode URL's uitgesluit moet word."
+                },
+                "vcmod-enabled": {
+                    "description": "Aktiveer stemkanaal-moderering en transkripsie."
+                },
+                "vcmod-channels": {
+                    "description": "Stemkanale om te moniteer (as leeg, word geen gemoniteer nie)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Hoe lank daar aktief per stemkanaal geluister moet word tydens 'n siklus (bv. 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Hoe lank om te pouseer tussen elke transkripsie in Spaarmodus."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Spaarmodus: die bot skakel tussen stemkanale om aktief te lyk, maar neem meestal nie op of luister nie."
+                },
+                "vcmod-rules": {
+                    "description": "Reëls wat op stemkanaal-moderering toegepas word (afsonderlik van teksreëls).",
+                    "default": [
+                        "1. Geen teistering, haatspraak of dreigemente nie.",
+                        "2. Geen skeldwoorde of diskriminerende taal nie.",
+                        "3. Geen aanhitsing tot geweld of onwettige aktiwiteite nie.",
+                        "4. Geen seksuele inhoud of eksplisiete opmerkings nie.",
+                        "5. Volg Discord se Diensbepalings."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Aksie om te neem wanneer stemkanaal-moderering 'n oortreding opspoor. Gebruik auto vir die KI om te besluit."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Gebruik KI-analise met hoër akkuraatheid vir VC-moderering (gebruik meer token-begroting)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Skakel duideliker stemtranskripsies in met premium-verwerking (hoër koste)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Kanaal waar VC-transkripsies geplaas word."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Wanneer dit geaktiveer is, sal die bot slegs stemgesprekke transkribeer sonder om KI-reëlkontroles of modereringsaksies toe te pas. Dit verminder begrotingsgebruik aansienlik."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Vereis dat nuwelinge 'n captcha-uitdaging slaag voordat hulle toegang kry."
+                },
+                "captcha-grace-period": {
+                    "description": "Hoe lank nuwelinge het om captcha-verifikasie te voltooi (bv. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Aksies wat outomaties uitgevoer word na suksesvolle verifikasie."
+                },
+                "captcha-delivery-method": {
+                    "description": "Hoe captcha-verifikasieskakels aan nuwe lede gelewer word (DM of embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Kanaal waar die captcha-verifikasie-embed geplaas word wanneer embed-aflewering gebruik word."
+                },
+                "pre-captcha-roles": {
+                    "description": "Rolle wat aan nuwelinge toegeken word voordat hulle captcha-verifikasie voltooi."
+                },
+                "captcha-failure-actions": {
+                    "description": "Aksies om outomaties uit te voer wanneer 'n lid captcha-verifikasie misluk."
                 }
             }
         }
