@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "תוכן NSFW זוהה",
-          "description": "**משתמש:** {user_mention} ({user_display})\n**סיבה:** {reason}",
-          "footer": "מזהה משתמש: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "דוח סריקת NSFW",
-            "description": {
-              "user": "משתמש: {user}",
-              "file": "קובץ: `{filename}`",
-              "type": "סוג: `{file_type}`",
-              "decision": "החלטה: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "תוכן NSFW זוהה",
+                    "description": "**משתמש:** {user_mention} ({user_display})\n**סיבה:** {reason}",
+                    "footer": "מזהה משתמש: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "תמונה",
-              "video": "וידאו",
-              "unknown": "לא ידוע"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "דוח סריקת NSFW",
+                        "description": {
+                            "user": "משתמש: {user}",
+                            "file": "קובץ: `{filename}`",
+                            "type": "סוג: `{file_type}`",
+                            "decision": "החלטה: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "תמונה",
+                            "video": "וידאו",
+                            "unknown": "לא ידוע"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "בטוח",
+                            "unknown": "לא ידוע"
+                        },
+                        "fields": {
+                            "reason": "סיבה",
+                            "category": "קטגוריה",
+                            "score": "ניקוד",
+                            "flagged_any": "סומן כחלקי",
+                            "summary_categories": "קטגוריות סיכום",
+                            "max_similarity": "דמיון מקסימלי",
+                            "max_category": "קטגוריית דמיון מקסימלית",
+                            "similarity": "דמיון תואם",
+                            "high_accuracy": "דיוק גבוה",
+                            "clip_threshold": "סף CLIP",
+                            "moderation_threshold": "סף פיקוח",
+                            "video_frames": "מסגרות וידאו"
+                        },
+                        "reasons": {
+                            "openai_moderation": "מדיניות OpenAI",
+                            "similarity_match": "התאמת דמיון",
+                            "no_frames_extracted": "לא נשלפו מסגרות",
+                            "no_nsfw_frames_detected": "לא זוהו מסגרות NSFW"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "בטוח",
-              "unknown": "לא ידוע"
-            },
-            "fields": {
-              "reason": "סיבה",
-              "category": "קטגוריה",
-              "score": "ניקוד",
-              "flagged_any": "סומן כחלקי",
-              "summary_categories": "קטגוריות סיכום",
-              "max_similarity": "דמיון מקסימלי",
-              "max_category": "קטגוריית דמיון מקסימלית",
-              "similarity": "דמיון תואם",
-              "high_accuracy": "דיוק גבוה",
-              "clip_threshold": "סף CLIP",
-              "moderation_threshold": "סף פיקוח",
-              "video_frames": "מסגרות וידאו"
-            },
-            "reasons": {
-              "openai_moderation": "מדיניות OpenAI",
-              "similarity_match": "התאמת דמיון",
-              "no_frames_extracted": "לא נשלפו מסגרות",
-              "no_nsfw_frames_detected": "לא זוהו מסגרות NSFW"
+            "shared": {
+                "confidence": {
+                    "name": "ביטחון",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "ניקוד",
+                        "similarity": "דמיון"
+                    }
+                },
+                "boolean": {
+                    "true": "אמת",
+                    "false": "שקר"
+                },
+                "category": {
+                    "unspecified": "לא מוגדר"
+                },
+                "policy_violation": "זוהה פוטנציאל להפרת מדיניות (קטגוריה: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "ביטחון",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "ניקוד",
-            "similarity": "דמיון"
-          }
-        },
-        "boolean": {
-          "true": "אמת",
-          "false": "שקר"
-        },
-        "category": {
-          "unspecified": "לא מוגדר"
-        },
-        "policy_violation": "זוהה פוטנציאל להפרת מדיניות (קטגוריה: **{category}**)"
-      }
     }
-  }
 }

@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Streik",
-          "kick": "Spark",
-          "ban": "Ban",
-          "timeout": "Timeout",
-          "delete": "Slett Melding",
-          "give_role": "Gi Rolle",
-          "take_role": "Fjern Rolle",
-          "warn": "Advar Bruker",
-          "broadcast": "Send Melding",
-          "auto": "Auto"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Streik",
+                    "kick": "Spark",
+                    "ban": "Ban",
+                    "timeout": "Timeout",
+                    "delete": "Slett Melding",
+                    "give_role": "Gi Rolle",
+                    "take_role": "Fjern Rolle",
+                    "warn": "Advar Bruker",
+                    "broadcast": "Send Melding",
+                    "auto": "Auto"
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Zweryfikowano poprawność captcha",
-          "embed": {
-            "title": "Weryfikacja Captcha Zakończona Sukcesem",
-            "description": "{mention} ({user_id}) poprawnie zweryfikowano captcha.",
-            "fields": {
-              "actions": "Zastosowane działania",
-              "attempts": "Próby",
-              "provider": "Dostawca",
-              "challenge": "Wyzwanie",
-              "review": "Przejrzyj"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Zweryfikowano poprawność captcha",
+                    "embed": {
+                        "title": "Weryfikacja Captcha Zakończona Sukcesem",
+                        "description": "{mention} ({user_id}) poprawnie zweryfikowano captcha.",
+                        "fields": {
+                            "actions": "Zastosowane działania",
+                            "attempts": "Próby",
+                            "provider": "Dostawca",
+                            "challenge": "Wyzwanie",
+                            "review": "Przejrzyj"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Nie udało się zweryfikować captcha.",
+                    "notes": {
+                        "deferred_generic": "Działania końcowe odroczone; próby weryfikacji captcha pozostały.",
+                        "deferred_remaining": "Działania końcowe odroczone; pozostało {remaining} {attempts_word}.",
+                        "member_left": "Członek już nie jest w gildii; skonfigurowane działania końcowe zostały pominięte."
+                    },
+                    "attempts": {
+                        "unlimited": "Pozostało nieograniczenie prób.",
+                        "additional": "Pozostały dodatkowe próby.",
+                        "remaining": "Pozostało {count} {attempts_word}.",
+                        "word_one": "próba",
+                        "word_other": "próby"
+                    },
+                    "embed": {
+                        "title_failed": "Weryfikacja Captcha Niepowiodła Się",
+                        "title_attempt": "Próba Captcha Nieudana",
+                        "description_failed": "{mention} ({user_id}) nie udało się zweryfikować captcha.",
+                        "description_attempt": "{mention} ({user_id}) nie udało się przeprowadzić próby captcha.",
+                        "fields": {
+                            "actions": "Zastosowane działania",
+                            "notes": "Notatki",
+                            "attempts": "Próby",
+                            "remaining": "Pozostałe Próby",
+                            "challenge": "Wyzwanie",
+                            "reason": "Powód",
+                            "review": "Przejrzyj"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Nie udało się zastosować działań sukcesu captcha z powodu błędu API Discord.",
+                    "unknown_token": "Nie znaleziono oczekującej weryfikacji captcha dla tego użytkownika.",
+                    "token_mismatch": "Token captcha nie pasuje do oczekującej weryfikacji.",
+                    "missing_permissions": "Botowi brakuje uprawnień do zastosowania działań końcowych captcha.",
+                    "action_failed": "Nie udało się zastosować działań końcowych captcha z powodu błędu API Discord.",
+                    "guild_not_found": "Gildia {guild_id} nie jest dostępna dla tego bota.",
+                    "guild_fetch_failed": "Nie udało się pobrać gildii {guild_id} z Discord.",
+                    "member_not_found": "Członek {user_id} nie znaleziony w gildii {guild_id}.",
+                    "member_fetch_failed": "Nie udało się pobrać członka {user_id} z gildii {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Nie udało się zweryfikować captcha.",
-          "notes": {
-            "deferred_generic": "Działania końcowe odroczone; próby weryfikacji captcha pozostały.",
-            "deferred_remaining": "Działania końcowe odroczone; pozostało {remaining} {attempts_word}.",
-            "member_left": "Członek już nie jest w gildii; skonfigurowane działania końcowe zostały pominięte."
-          },
-          "attempts": {
-            "unlimited": "Pozostało nieograniczenie prób.",
-            "additional": "Pozostały dodatkowe próby.",
-            "remaining": "Pozostało {count} {attempts_word}.",
-            "word_one": "próba",
-            "word_other": "próby"
-          },
-          "embed": {
-            "title_failed": "Weryfikacja Captcha Niepowiodła Się",
-            "title_attempt": "Próba Captcha Nieudana",
-            "description_failed": "{mention} ({user_id}) nie udało się zweryfikować captcha.",
-            "description_attempt": "{mention} ({user_id}) nie udało się przeprowadzić próby captcha.",
-            "fields": {
-              "actions": "Zastosowane działania",
-              "notes": "Notatki",
-              "attempts": "Próby",
-              "remaining": "Pozostałe Próby",
-              "challenge": "Wyzwanie",
-              "reason": "Powód",
-              "review": "Przejrzyj"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Nie udało się zastosować działań sukcesu captcha z powodu błędu API Discord.",
-          "unknown_token": "Nie znaleziono oczekującej weryfikacji captcha dla tego użytkownika.",
-          "token_mismatch": "Token captcha nie pasuje do oczekującej weryfikacji.",
-          "missing_permissions": "Botowi brakuje uprawnień do zastosowania działań końcowych captcha.",
-          "action_failed": "Nie udało się zastosować działań końcowych captcha z powodu błędu API Discord.",
-          "guild_not_found": "Gildia {guild_id} nie jest dostępna dla tego bota.",
-          "guild_fetch_failed": "Nie udało się pobrać gildii {guild_id} z Discord.",
-          "member_not_found": "Członek {user_id} nie znaleziony w gildii {guild_id}.",
-          "member_fetch_failed": "Nie udało się pobrać członka {user_id} z gildii {guild_id}."
         }
-      }
     }
-  }
 }

@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "SZERZŐ",
-        "utterance_label": "HANGZÁS",
-        "divider": "---",
-        "unknown_speaker": "Ismeretlen előadó",
-        "unknown_prefix": "Ismeretlen",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC átírás",
-        "title_part": "VC átírás (rész {index}/{total})",
-        "field_channel": "Csatorna",
-        "field_utterances": "Hangzások",
-        "footer_high": "Kiváló pontosságú átírás",
-        "footer_normal": "Normál pontosságú átírás"
-      },
-      "budget": {
-        "title": "VC Moderációs Költségvetés Elérve",
-        "description": "Ezt a ciklust kihagyjuk a költségvetési korlát miatt."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "SZERZŐ",
+                "utterance_label": "HANGZÁS",
+                "divider": "---",
+                "unknown_speaker": "Ismeretlen előadó",
+                "unknown_prefix": "Ismeretlen",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC átírás",
+                "title_part": "VC átírás (rész {index}/{total})",
+                "field_channel": "Csatorna",
+                "field_utterances": "Hangzások",
+                "footer_high": "Kiváló pontosságú átírás",
+                "footer_normal": "Normál pontosságú átírás"
+            },
+            "budget": {
+                "title": "VC Moderációs Költségvetés Elérve",
+                "description": "Ezt a ciklust kihagyjuk a költségvetési korlát miatt."
+            }
+        }
     }
-  }
 }

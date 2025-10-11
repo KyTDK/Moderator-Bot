@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFW obsah detekován",
-          "description": "**Uživatel:** {user_mention} ({user_display})\n**Důvod:** {reason}",
-          "footer": "ID uživatele: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Zpráva o skenování NSFW",
-            "description": {
-              "user": "Uživatel: {user}",
-              "file": "Soubor: `{filename}`",
-              "type": "Typ: `{file_type}`",
-              "decision": "Rozhodnutí: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFW obsah detekován",
+                    "description": "**Uživatel:** {user_mention} ({user_display})\n**Důvod:** {reason}",
+                    "footer": "ID uživatele: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Obrázek",
-              "video": "Video",
-              "unknown": "Neznámý"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Zpráva o skenování NSFW",
+                        "description": {
+                            "user": "Uživatel: {user}",
+                            "file": "Soubor: `{filename}`",
+                            "type": "Typ: `{file_type}`",
+                            "decision": "Rozhodnutí: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Obrázek",
+                            "video": "Video",
+                            "unknown": "Neznámý"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Bezpečné",
+                            "unknown": "Neznámé"
+                        },
+                        "fields": {
+                            "reason": "Důvod",
+                            "category": "Kategorie",
+                            "score": "Skóre",
+                            "flagged_any": "Označeno jakýmkoli",
+                            "summary_categories": "Souhrnná kategorie",
+                            "max_similarity": "Maximální podobnost",
+                            "max_category": "Kategorie maximální podobnosti",
+                            "similarity": "Shodná podobnost",
+                            "high_accuracy": "Vysoká přesnost",
+                            "clip_threshold": "Prahová hodnota CLIP",
+                            "moderation_threshold": "Prahová hodnota moderace",
+                            "video_frames": "Video rámy"
+                        },
+                        "reasons": {
+                            "openai_moderation": "Moderace OpenAI",
+                            "similarity_match": "Shoda podobnosti",
+                            "no_frames_extracted": "Žádné snímky nebyly extrahovány",
+                            "no_nsfw_frames_detected": "Nebyl detekován žádný snímek NSFW"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Bezpečné",
-              "unknown": "Neznámé"
-            },
-            "fields": {
-              "reason": "Důvod",
-              "category": "Kategorie",
-              "score": "Skóre",
-              "flagged_any": "Označeno jakýmkoli",
-              "summary_categories": "Souhrnná kategorie",
-              "max_similarity": "Maximální podobnost",
-              "max_category": "Kategorie maximální podobnosti",
-              "similarity": "Shodná podobnost",
-              "high_accuracy": "Vysoká přesnost",
-              "clip_threshold": "Prahová hodnota CLIP",
-              "moderation_threshold": "Prahová hodnota moderace",
-              "video_frames": "Video rámy"
-            },
-            "reasons": {
-              "openai_moderation": "Moderace OpenAI",
-              "similarity_match": "Shoda podobnosti",
-              "no_frames_extracted": "Žádné snímky nebyly extrahovány",
-              "no_nsfw_frames_detected": "Nebyl detekován žádný snímek NSFW"
+            "shared": {
+                "confidence": {
+                    "name": "Důvěra",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Skóre",
+                        "similarity": "Podobnost"
+                    }
+                },
+                "boolean": {
+                    "true": "pravda",
+                    "false": "nepravda"
+                },
+                "category": {
+                    "unspecified": "Nespecifikováno"
+                },
+                "policy_violation": "Detekováno potenciální porušení zásad (Kategorie: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Důvěra",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Skóre",
-            "similarity": "Podobnost"
-          }
-        },
-        "boolean": {
-          "true": "pravda",
-          "false": "nepravda"
-        },
-        "category": {
-          "unspecified": "Nespecifikováno"
-        },
-        "policy_violation": "Detekováno potenciální porušení zásad (Kategorie: **{category}**)"
-      }
     }
-  }
 }

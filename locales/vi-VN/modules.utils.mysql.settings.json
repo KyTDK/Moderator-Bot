@@ -1,11 +1,11 @@
 {
-  "modules": {
-    "utils": {
-      "mysql": {
-        "settings": {
-          "plan_required": "Thiết lập này yêu cầu {requirement}."
+    "modules": {
+        "utils": {
+            "mysql": {
+                "settings": {
+                    "plan_required": "Thiết lập này yêu cầu {requirement}."
+                }
+            }
         }
-      }
     }
-  }
 }

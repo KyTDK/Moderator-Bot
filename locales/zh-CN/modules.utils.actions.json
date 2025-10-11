@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "打击",
-          "kick": "踢",
-          "ban": "封禁",
-          "timeout": "超时",
-          "delete": "删除消息",
-          "give_role": "授予角色",
-          "take_role": "移除角色",
-          "warn": "警告用户",
-          "broadcast": "广播消息",
-          "auto": "自动"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "打击",
+                    "kick": "踢",
+                    "ban": "封禁",
+                    "timeout": "超时",
+                    "delete": "删除消息",
+                    "give_role": "授予角色",
+                    "take_role": "移除角色",
+                    "warn": "警告用户",
+                    "broadcast": "广播消息",
+                    "auto": "自动"
+                }
+            }
         }
-      }
     }
-  }
 }

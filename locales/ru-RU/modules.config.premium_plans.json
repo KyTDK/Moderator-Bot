@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Бесплатно",
-          "core": "Основной",
-          "pro": "Про",
-          "ultra": "Ультра"
-        },
-        "requirements": {
-          "any": "активный премиум план",
-          "single": "активный план {plan}",
-          "double": "активный план {plan_a} или {plan_b}",
-          "list": "активные планы {plans}, или план {last}"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Бесплатно",
+                    "core": "Основной",
+                    "pro": "Про",
+                    "ultra": "Ультра"
+                },
+                "requirements": {
+                    "any": "активный премиум план",
+                    "single": "активный план {plan}",
+                    "double": "активный план {plan_a} или {plan_b}",
+                    "list": "активные планы {plans}, или план {last}"
+                }
+            }
         }
-      }
     }
-  }
 }

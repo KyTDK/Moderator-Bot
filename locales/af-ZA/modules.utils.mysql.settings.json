@@ -1,11 +1,11 @@
 {
-  "modules": {
-    "utils": {
-      "mysql": {
-        "settings": {
-          "plan_required": "Hierdie instelling vereis {requirement}."
+    "modules": {
+        "utils": {
+            "mysql": {
+                "settings": {
+                    "plan_required": "Hierdie instelling vereis {requirement}."
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "АВТОР",
-        "utterance_label": "ВЫСКАЗЫВАНИЕ",
-        "divider": "---",
-        "unknown_speaker": "Неизвестный спикер",
-        "unknown_prefix": "Неизвестно",
-        "user_fallback": "<@{id}> (идентификатор = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "Стенограмма ВК",
-        "title_part": "Стенограмма ВК (часть {index}/{total})",
-        "field_channel": "Канал",
-        "field_utterances": "Высказывания",
-        "footer_high": "Стенограмма с высокой точностью",
-        "footer_normal": "Стенограмма с нормальной точностью"
-      },
-      "budget": {
-        "title": "Достигнут лимит бюджета на модерацию ВК",
-        "description": "Пропускаем анализ на этом цикле из-за ограничений бюджета."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "АВТОР",
+                "utterance_label": "ВЫСКАЗЫВАНИЕ",
+                "divider": "---",
+                "unknown_speaker": "Неизвестный спикер",
+                "unknown_prefix": "Неизвестно",
+                "user_fallback": "<@{id}> (идентификатор = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "Стенограмма ВК",
+                "title_part": "Стенограмма ВК (часть {index}/{total})",
+                "field_channel": "Канал",
+                "field_utterances": "Высказывания",
+                "footer_high": "Стенограмма с высокой точностью",
+                "footer_normal": "Стенограмма с нормальной точностью"
+            },
+            "budget": {
+                "title": "Достигнут лимит бюджета на модерацию ВК",
+                "description": "Пропускаем анализ на этом цикле из-за ограничений бюджета."
+            }
+        }
     }
-  }
 }

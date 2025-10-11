@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` 已经设置为 `{event}`。",
-          "success": "已添加 `{action}` 到 `{event}`。"
-        },
-        "remove": {
-          "missing": "`{action}` 未设置为 `{event}`。",
-          "success": "已从 `{event}` 移除 `{action}`。"
-        },
-        "clear": {
-          "success": "所有自适应事件已被清除。"
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` 已经设置为 `{event}`。",
+                    "success": "已添加 `{action}` 到 `{event}`。"
+                },
+                "remove": {
+                    "missing": "`{action}` 未设置为 `{event}`。",
+                    "success": "已从 `{event}` 移除 `{action}`。"
+                },
+                "clear": {
+                    "success": "所有自适应事件已被清除。"
+                }
+            }
         }
-      }
     }
-  }
 }

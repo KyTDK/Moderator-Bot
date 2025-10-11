@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "作者",
-        "utterance_label": "話語",
-        "divider": "---",
-        "unknown_speaker": "未知講者",
-        "unknown_prefix": "未知",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC轉錄",
-        "title_part": "VC轉錄 (部份 {index}/{total})",
-        "field_channel": "頻道",
-        "field_utterances": "話語",
-        "footer_high": "高精度轉錄",
-        "footer_normal": "正常精度轉錄"
-      },
-      "budget": {
-        "title": "VC審核預算已達上限",
-        "description": "由於預算限制，跳過此循環的分析。"
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "作者",
+                "utterance_label": "話語",
+                "divider": "---",
+                "unknown_speaker": "未知講者",
+                "unknown_prefix": "未知",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC轉錄",
+                "title_part": "VC轉錄 (部份 {index}/{total})",
+                "field_channel": "頻道",
+                "field_utterances": "話語",
+                "footer_high": "高精度轉錄",
+                "footer_normal": "正常精度轉錄"
+            },
+            "budget": {
+                "title": "VC審核預算已達上限",
+                "description": "由於預算限制，跳過此循環的分析。"
+            }
+        }
     }
-  }
 }

@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFWコンテンツが検出されました",
-          "description": "**ユーザー：** {user_mention} ({user_display})\n**理由：** {reason}",
-          "footer": "ユーザーID：{user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "NSFWスキャンレポート",
-            "description": {
-              "user": "ユーザー：{user}",
-              "file": "ファイル： `{filename}`",
-              "type": "タイプ： `{file_type}`",
-              "decision": "決定：**{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFWコンテンツが検出されました",
+                    "description": "**ユーザー：** {user_mention} ({user_display})\n**理由：** {reason}",
+                    "footer": "ユーザーID：{user_id}"
+                }
             },
-            "file_types": {
-              "image": "画像",
-              "video": "ビデオ",
-              "unknown": "不明"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "NSFWスキャンレポート",
+                        "description": {
+                            "user": "ユーザー：{user}",
+                            "file": "ファイル： `{filename}`",
+                            "type": "タイプ： `{file_type}`",
+                            "decision": "決定：**{decision}**"
+                        },
+                        "file_types": {
+                            "image": "画像",
+                            "video": "ビデオ",
+                            "unknown": "不明"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "安全",
+                            "unknown": "不明"
+                        },
+                        "fields": {
+                            "reason": "理由",
+                            "category": "カテゴリ",
+                            "score": "スコア",
+                            "flagged_any": "いずれかにフラグされました",
+                            "summary_categories": "要約カテゴリ",
+                            "max_similarity": "最大類似性",
+                            "max_category": "最大類似カテゴリ",
+                            "similarity": "一致した類似性",
+                            "high_accuracy": "高精度",
+                            "clip_threshold": "CLIPしきい値",
+                            "moderation_threshold": "モデレーションしきい値",
+                            "video_frames": "ビデオフレーム"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAIのモデレーション",
+                            "similarity_match": "類似性の一致",
+                            "no_frames_extracted": "フレームが抽出されていません",
+                            "no_nsfw_frames_detected": "NSFWフレームが検出されていません"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "安全",
-              "unknown": "不明"
-            },
-            "fields": {
-              "reason": "理由",
-              "category": "カテゴリ",
-              "score": "スコア",
-              "flagged_any": "いずれかにフラグされました",
-              "summary_categories": "要約カテゴリ",
-              "max_similarity": "最大類似性",
-              "max_category": "最大類似カテゴリ",
-              "similarity": "一致した類似性",
-              "high_accuracy": "高精度",
-              "clip_threshold": "CLIPしきい値",
-              "moderation_threshold": "モデレーションしきい値",
-              "video_frames": "ビデオフレーム"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAIのモデレーション",
-              "similarity_match": "類似性の一致",
-              "no_frames_extracted": "フレームが抽出されていません",
-              "no_nsfw_frames_detected": "NSFWフレームが検出されていません"
+            "shared": {
+                "confidence": {
+                    "name": "信頼度",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "スコア",
+                        "similarity": "類似性"
+                    }
+                },
+                "boolean": {
+                    "true": "true",
+                    "false": "false"
+                },
+                "category": {
+                    "unspecified": "未指定"
+                },
+                "policy_violation": "潜在的なポリシー違反を検出しました（カテゴリ：**{category}**）"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "信頼度",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "スコア",
-            "similarity": "類似性"
-          }
-        },
-        "boolean": {
-          "true": "true",
-          "false": "false"
-        },
-        "category": {
-          "unspecified": "未指定"
-        },
-        "policy_violation": "潜在的なポリシー違反を検出しました（カテゴリ：**{category}**）"
-      }
     }
-  }
 }

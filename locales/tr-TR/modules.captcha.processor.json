@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Captcha doğrulaması başarılı",
-          "embed": {
-            "title": "Captcha Doğrulaması Geçildi",
-            "description": "{mention} ({user_id}) captcha doğrulamasından geçti.",
-            "fields": {
-              "actions": "Uygulanan Eylemler",
-              "attempts": "Denemeler",
-              "provider": "Sağlayıcı",
-              "challenge": "Meydan Okuma",
-              "review": "İnceleme"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Captcha doğrulaması başarılı",
+                    "embed": {
+                        "title": "Captcha Doğrulaması Geçildi",
+                        "description": "{mention} ({user_id}) captcha doğrulamasından geçti.",
+                        "fields": {
+                            "actions": "Uygulanan Eylemler",
+                            "attempts": "Denemeler",
+                            "provider": "Sağlayıcı",
+                            "challenge": "Meydan Okuma",
+                            "review": "İnceleme"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Captcha doğrulaması başarısız oldu.",
+                    "notes": {
+                        "deferred_generic": "Başarısızlık eylemleri ertelendi; captcha denemeleri devam ediyor.",
+                        "deferred_remaining": "Başarısızlık eylemleri ertelendi; {remaining} {attempts_word} kaldı.",
+                        "member_left": "Üye artık toplulukta yok; yapılandırılmış başarısızlık eylemleri atlandı."
+                    },
+                    "attempts": {
+                        "unlimited": "Sınırsız deneme hakkı kaldı.",
+                        "additional": "Ek deneme hakkı kaldı.",
+                        "remaining": "{count} {attempts_word} kaldı.",
+                        "word_one": "deneme",
+                        "word_other": "denemeler"
+                    },
+                    "embed": {
+                        "title_failed": "Captcha Doğrulaması Başarısız",
+                        "title_attempt": "Captcha Denemesi Başarısız",
+                        "description_failed": "{mention} ({user_id}) captcha doğrulamasında başarısız oldu.",
+                        "description_attempt": "{mention} ({user_id}) captcha denemesinde başarısız oldu.",
+                        "fields": {
+                            "actions": "Uygulanan Eylemler",
+                            "notes": "Notlar",
+                            "attempts": "Denemeler",
+                            "remaining": "Kalan Denemeler",
+                            "challenge": "Meydan Okuma",
+                            "reason": "Sebep",
+                            "review": "İnceleme"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Discord API hatası nedeniyle captcha başarı eylemleri uygulanamadı.",
+                    "unknown_token": "Bu kullanıcı için bekleyen captcha doğrulaması bulunamadı.",
+                    "token_mismatch": "Captcha token'ı, bekleyen doğrulama ile uyuşmuyor.",
+                    "missing_permissions": "Bot, captcha başarısızlık eylemlerini uygulamak için gereken izinlere sahip değil.",
+                    "action_failed": "Discord API hatası nedeniyle captcha başarısızlık eylemleri uygulanamadı.",
+                    "guild_not_found": "Botun bu gizli sunucuya erişimi yok: {guild_id}.",
+                    "guild_fetch_failed": "Discord'dan {guild_id} topluluğu alınamadı.",
+                    "member_not_found": "Üye {user_id}, {guild_id} topluluğunda bulunamadı.",
+                    "member_fetch_failed": "Üye {user_id}, {guild_id} topluluğundan alınamadı."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Captcha doğrulaması başarısız oldu.",
-          "notes": {
-            "deferred_generic": "Başarısızlık eylemleri ertelendi; captcha denemeleri devam ediyor.",
-            "deferred_remaining": "Başarısızlık eylemleri ertelendi; {remaining} {attempts_word} kaldı.",
-            "member_left": "Üye artık toplulukta yok; yapılandırılmış başarısızlık eylemleri atlandı."
-          },
-          "attempts": {
-            "unlimited": "Sınırsız deneme hakkı kaldı.",
-            "additional": "Ek deneme hakkı kaldı.",
-            "remaining": "{count} {attempts_word} kaldı.",
-            "word_one": "deneme",
-            "word_other": "denemeler"
-          },
-          "embed": {
-            "title_failed": "Captcha Doğrulaması Başarısız",
-            "title_attempt": "Captcha Denemesi Başarısız",
-            "description_failed": "{mention} ({user_id}) captcha doğrulamasında başarısız oldu.",
-            "description_attempt": "{mention} ({user_id}) captcha denemesinde başarısız oldu.",
-            "fields": {
-              "actions": "Uygulanan Eylemler",
-              "notes": "Notlar",
-              "attempts": "Denemeler",
-              "remaining": "Kalan Denemeler",
-              "challenge": "Meydan Okuma",
-              "reason": "Sebep",
-              "review": "İnceleme"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Discord API hatası nedeniyle captcha başarı eylemleri uygulanamadı.",
-          "unknown_token": "Bu kullanıcı için bekleyen captcha doğrulaması bulunamadı.",
-          "token_mismatch": "Captcha token'ı, bekleyen doğrulama ile uyuşmuyor.",
-          "missing_permissions": "Bot, captcha başarısızlık eylemlerini uygulamak için gereken izinlere sahip değil.",
-          "action_failed": "Discord API hatası nedeniyle captcha başarısızlık eylemleri uygulanamadı.",
-          "guild_not_found": "Botun bu gizli sunucuya erişimi yok: {guild_id}.",
-          "guild_fetch_failed": "Discord'dan {guild_id} topluluğu alınamadı.",
-          "member_not_found": "Üye {user_id}, {guild_id} topluluğunda bulunamadı.",
-          "member_fetch_failed": "Üye {user_id}, {guild_id} topluluğundan alınamadı."
         }
-      }
     }
-  }
 }

@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Ngôn ngữ không hợp lệ. Các ngôn ngữ được hỗ trợ: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Ảnh hồ sơ của bạn bị phát hiện có nội dung phản cảm",
-          "choices": [
-            "Ảnh hồ sơ của bạn bị phát hiện có nội dung phản cảm",
-            "Ảnh hồ sơ của bạn không phù hợp với máy chủ này.",
-            "Ảnh hồ sơ của bạn đã bị gắn cờ là NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Hãy tôn trọng — không quấy rối hoặc phát ngôn thù hận.",
-            "2. Không có nội dung NSFW hoặc khiêu dâm.",
-            "3. Không spam hoặc tự quảng cáo quá mức.",
-            "4. Tuân theo Điều khoản Dịch vụ của Discord."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Không quấy rối, phát ngôn thù hận hoặc đe doạ.",
-            "2. Không có những từ ngữ xúc phạm hoặc phân biệt đối xử.",
-            "3. Không kích động bạo lực hoặc hoạt động phi pháp.",
-            "4. Không có nội dung tình dục hoặc lời lẽ tục tĩu.",
-            "5. Tuân theo Điều khoản Dịch vụ của Discord."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Ngôn ngữ không hợp lệ. Các ngôn ngữ được hỗ trợ: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Ảnh hồ sơ của bạn bị phát hiện có nội dung phản cảm",
+                    "choices": [
+                        "Ảnh hồ sơ của bạn bị phát hiện có nội dung phản cảm",
+                        "Ảnh hồ sơ của bạn không phù hợp với máy chủ này.",
+                        "Ảnh hồ sơ của bạn đã bị gắn cờ là NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Hãy tôn trọng — không quấy rối hoặc phát ngôn thù hận.",
+                        "2. Không có nội dung NSFW hoặc khiêu dâm.",
+                        "3. Không spam hoặc tự quảng cáo quá mức.",
+                        "4. Tuân theo Điều khoản Dịch vụ của Discord."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Không quấy rối, phát ngôn thù hận hoặc đe doạ.",
+                        "2. Không có những từ ngữ xúc phạm hoặc phân biệt đối xử.",
+                        "3. Không kích động bạo lực hoặc hoạt động phi pháp.",
+                        "4. Không có nội dung tình dục hoặc lời lẽ tục tĩu.",
+                        "5. Tuân theo Điều khoản Dịch vụ của Discord."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Érvénytelen területi beállítás. Támogatott területek: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "A profilképedet explicit tartalommal jelölték meg.",
-          "choices": [
-            "A profilképedet explicit tartalommal jelölték meg.",
-            "A profilképed nem megfelelő erre a szerverre.",
-            "A profilképed NSFW-ként lett megjelölve."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Légy tisztelettudó — nincs zaklatás vagy gyűlöletbeszéd.",
-            "2. Nincs NSFW vagy obszcén tartalom.",
-            "3. Nincs spam vagy túlzott önreklám.",
-            "4. Kövesd a Discord szolgáltatási feltételeit."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Nincs zaklatás, gyűlöletbeszéd vagy fenyegetés.",
-            "2. Nincs rágalmazás vagy diszkriminatív nyelvezet.",
-            "3. Nincs erőszakra vagy illegális tevékenységre buzdítás.",
-            "4. Nincs szexuális tartalom vagy explicit megjegyzések.",
-            "5. Kövesd a Discord szolgáltatási feltételeit."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Érvénytelen területi beállítás. Támogatott területek: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "A profilképedet explicit tartalommal jelölték meg.",
+                    "choices": [
+                        "A profilképedet explicit tartalommal jelölték meg.",
+                        "A profilképed nem megfelelő erre a szerverre.",
+                        "A profilképed NSFW-ként lett megjelölve."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Légy tisztelettudó — nincs zaklatás vagy gyűlöletbeszéd.",
+                        "2. Nincs NSFW vagy obszcén tartalom.",
+                        "3. Nincs spam vagy túlzott önreklám.",
+                        "4. Kövesd a Discord szolgáltatási feltételeit."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Nincs zaklatás, gyűlöletbeszéd vagy fenyegetés.",
+                        "2. Nincs rágalmazás vagy diszkriminatív nyelvezet.",
+                        "3. Nincs erőszakra vagy illegális tevékenységre buzdítás.",
+                        "4. Nincs szexuális tartalom vagy explicit megjegyzések.",
+                        "5. Kövesd a Discord szolgáltatási feltételeit."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

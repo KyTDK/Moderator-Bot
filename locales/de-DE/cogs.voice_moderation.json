@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "AUTOR",
-        "utterance_label": "ÄUSSERUNG",
-        "divider": "---",
-        "unknown_speaker": "Unbekannter Sprecher",
-        "unknown_prefix": "Unbekannt",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transkript",
-        "title_part": "VC Transkript (Teil {index}/{total})",
-        "field_channel": "Kanal",
-        "field_utterances": "Äußerungen",
-        "footer_high": "Transkript mit hoher Genauigkeit",
-        "footer_normal": "Transkript mit normaler Genauigkeit"
-      },
-      "budget": {
-        "title": "VC Moderationsbudget erreicht",
-        "description": "Analyse dieser Runde aufgrund des Budgetlimits übersprungen."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "AUTOR",
+                "utterance_label": "ÄUSSERUNG",
+                "divider": "---",
+                "unknown_speaker": "Unbekannter Sprecher",
+                "unknown_prefix": "Unbekannt",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC Transkript",
+                "title_part": "VC Transkript (Teil {index}/{total})",
+                "field_channel": "Kanal",
+                "field_utterances": "Äußerungen",
+                "footer_high": "Transkript mit hoher Genauigkeit",
+                "footer_normal": "Transkript mit normaler Genauigkeit"
+            },
+            "budget": {
+                "title": "VC Moderationsbudget erreicht",
+                "description": "Analyse dieser Runde aufgrund des Budgetlimits übersprungen."
+            }
+        }
     }
-  }
 }

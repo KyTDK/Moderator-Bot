@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Streik",
-          "kick": "Tritt",
-          "ban": "Sperren",
-          "timeout": "Auszeit",
-          "delete": "Nachricht löschen",
-          "give_role": "Rolle zuweisen",
-          "take_role": "Rolle entfernen",
-          "warn": "Benutzer verwarnen",
-          "broadcast": "Nachricht übertragen",
-          "auto": "Automatisch"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Streik",
+                    "kick": "Tritt",
+                    "ban": "Sperren",
+                    "timeout": "Auszeit",
+                    "delete": "Nachricht löschen",
+                    "give_role": "Rolle zuweisen",
+                    "take_role": "Rolle entfernen",
+                    "warn": "Benutzer verwarnen",
+                    "broadcast": "Nachricht übertragen",
+                    "auto": "Automatisch"
+                }
+            }
         }
-      }
     }
-  }
 }

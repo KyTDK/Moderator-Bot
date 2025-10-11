@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Neplatné místní nastavení. Podporovaná nastavení: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Vaše profilová fotka byla detekována jako obsahující explicitní obsah",
-          "choices": [
-            "Vaše profilová fotka byla detekována jako obsahující explicitní obsah",
-            "Vaše profilová fotka není vhodná pro tento server.",
-            "Vaše profilová fotka byla označena jako NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Buďte ohleduplní — žádné obtěžování nebo nenávistné projevy.",
-            "2. Žádný NSFW nebo obscénní obsah.",
-            "3. Žádný spam nebo nadměrná propagace sebe sama.",
-            "4. Dodržujte podmínky služby Discordu."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Žádné obtěžování, nenávistné projevy nebo výhrůžky.",
-            "2. Žádné nadávky nebo diskriminační jazyk.",
-            "3. Žádné podněcování k násilí nebo nelegální činnosti.",
-            "4. Žádný sexuální obsah nebo explicitní poznámky.",
-            "5. Dodržujte podmínky služby Discordu."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Neplatné místní nastavení. Podporovaná nastavení: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Vaše profilová fotka byla detekována jako obsahující explicitní obsah",
+                    "choices": [
+                        "Vaše profilová fotka byla detekována jako obsahující explicitní obsah",
+                        "Vaše profilová fotka není vhodná pro tento server.",
+                        "Vaše profilová fotka byla označena jako NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Buďte ohleduplní — žádné obtěžování nebo nenávistné projevy.",
+                        "2. Žádný NSFW nebo obscénní obsah.",
+                        "3. Žádný spam nebo nadměrná propagace sebe sama.",
+                        "4. Dodržujte podmínky služby Discordu."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Žádné obtěžování, nenávistné projevy nebo výhrůžky.",
+                        "2. Žádné nadávky nebo diskriminační jazyk.",
+                        "3. Žádné podněcování k násilí nebo nelegální činnosti.",
+                        "4. Žádný sexuální obsah nebo explicitní poznámky.",
+                        "5. Dodržujte podmínky služby Discordu."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

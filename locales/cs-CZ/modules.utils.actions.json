@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Úder",
-          "kick": "Kop",
-          "ban": "Zákaz",
-          "timeout": "Časový limit",
-          "delete": "Smazat zprávu",
-          "give_role": "Přidat roli",
-          "take_role": "Odstranit roli",
-          "warn": "Varovat uživatele",
-          "broadcast": "Rozeslat zprávu",
-          "auto": "Automaticky"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Úder",
+                    "kick": "Kop",
+                    "ban": "Zákaz",
+                    "timeout": "Časový limit",
+                    "delete": "Smazat zprávu",
+                    "give_role": "Přidat roli",
+                    "take_role": "Odstranit roli",
+                    "warn": "Varovat uživatele",
+                    "broadcast": "Rozeslat zprávu",
+                    "auto": "Automaticky"
+                }
+            }
         }
-      }
     }
-  }
 }

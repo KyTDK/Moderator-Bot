@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "罷工",
-          "kick": "踢",
-          "ban": "禁止",
-          "timeout": "暫停",
-          "delete": "刪除消息",
-          "give_role": "賦予角色",
-          "take_role": "移除角色",
-          "warn": "警告用戶",
-          "broadcast": "廣播消息",
-          "auto": "自動"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "罷工",
+                    "kick": "踢",
+                    "ban": "禁止",
+                    "timeout": "暫停",
+                    "delete": "刪除消息",
+                    "give_role": "賦予角色",
+                    "take_role": "移除角色",
+                    "warn": "警告用戶",
+                    "broadcast": "廣播消息",
+                    "auto": "自動"
+                }
+            }
         }
-      }
     }
-  }
 }

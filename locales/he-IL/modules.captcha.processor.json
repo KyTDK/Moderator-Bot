@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "אימות Captcha הצליח",
-          "embed": {
-            "title": "אימות Captcha עבר",
-            "description": "{mention} ({user_id}) עבר אימות Captcha.",
-            "fields": {
-              "actions": "פעולות שהופעלו",
-              "attempts": "ניסיונות",
-              "provider": "ספק",
-              "challenge": "אתגר",
-              "review": "סקירה"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "אימות Captcha הצליח",
+                    "embed": {
+                        "title": "אימות Captcha עבר",
+                        "description": "{mention} ({user_id}) עבר אימות Captcha.",
+                        "fields": {
+                            "actions": "פעולות שהופעלו",
+                            "attempts": "ניסיונות",
+                            "provider": "ספק",
+                            "challenge": "אתגר",
+                            "review": "סקירה"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "אימות Captcha נכשל.",
+                    "notes": {
+                        "deferred_generic": "פעולות כשל מחכות; ניסיונות Captcha נותרו.",
+                        "deferred_remaining": "פעולות כשל מחכות; נותרו {remaining} {attempts_word}.",
+                        "member_left": "חבר זה כבר לא נמצא בגילדה; פעולות הכשל שהוגדרו דוולגו."
+                    },
+                    "attempts": {
+                        "unlimited": "נותרו ניסיונות ללא הגבלה.",
+                        "additional": "נותרו ניסיונות נוספים.",
+                        "remaining": "נותרו {count} {attempts_word}.",
+                        "word_one": "ניסיון",
+                        "word_other": "ניסיונות"
+                    },
+                    "embed": {
+                        "title_failed": "אימות Captcha נכשל",
+                        "title_attempt": "ניסיון אימות Captcha נכשל",
+                        "description_failed": "{mention} ({user_id}) נכשל באימות Captcha.",
+                        "description_attempt": "{mention} ({user_id}) נכשל בניסיון Captcha.",
+                        "fields": {
+                            "actions": "פעולות שהופעלו",
+                            "notes": "הערות",
+                            "attempts": "ניסיונות",
+                            "remaining": "נותרו ניסיונות",
+                            "challenge": "אתגר",
+                            "reason": "סיבה",
+                            "review": "סקירה"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "לא ניתן להפעיל פעולות הצלחה של Captcha עקב שגיאת API של דיסקורד.",
+                    "unknown_token": "לא נמצא אימות Captcha ממתין עבור משתמש זה.",
+                    "token_mismatch": "מפתח Captcha לא תואם את האימות הממתין.",
+                    "missing_permissions": "לרובוט חסרות הרשאות להפעיל פעולות כשל של Captcha.",
+                    "action_failed": "לא ניתן להפעיל פעולות כשל של Captcha עקב שגיאת API של דיסקורד.",
+                    "guild_not_found": "הגילדה {guild_id} אינה זמינה לרובוט זה.",
+                    "guild_fetch_failed": "לא ניתן להביא את הגילדה {guild_id} מדיסקורד.",
+                    "member_not_found": "חבר {user_id} לא נמצא בגילדה {guild_id}.",
+                    "member_fetch_failed": "לא ניתן להביא את החבר {user_id} מהגילדה {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "אימות Captcha נכשל.",
-          "notes": {
-            "deferred_generic": "פעולות כשל מחכות; ניסיונות Captcha נותרו.",
-            "deferred_remaining": "פעולות כשל מחכות; נותרו {remaining} {attempts_word}.",
-            "member_left": "חבר זה כבר לא נמצא בגילדה; פעולות הכשל שהוגדרו דוולגו."
-          },
-          "attempts": {
-            "unlimited": "נותרו ניסיונות ללא הגבלה.",
-            "additional": "נותרו ניסיונות נוספים.",
-            "remaining": "נותרו {count} {attempts_word}.",
-            "word_one": "ניסיון",
-            "word_other": "ניסיונות"
-          },
-          "embed": {
-            "title_failed": "אימות Captcha נכשל",
-            "title_attempt": "ניסיון אימות Captcha נכשל",
-            "description_failed": "{mention} ({user_id}) נכשל באימות Captcha.",
-            "description_attempt": "{mention} ({user_id}) נכשל בניסיון Captcha.",
-            "fields": {
-              "actions": "פעולות שהופעלו",
-              "notes": "הערות",
-              "attempts": "ניסיונות",
-              "remaining": "נותרו ניסיונות",
-              "challenge": "אתגר",
-              "reason": "סיבה",
-              "review": "סקירה"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "לא ניתן להפעיל פעולות הצלחה של Captcha עקב שגיאת API של דיסקורד.",
-          "unknown_token": "לא נמצא אימות Captcha ממתין עבור משתמש זה.",
-          "token_mismatch": "מפתח Captcha לא תואם את האימות הממתין.",
-          "missing_permissions": "לרובוט חסרות הרשאות להפעיל פעולות כשל של Captcha.",
-          "action_failed": "לא ניתן להפעיל פעולות כשל של Captcha עקב שגיאת API של דיסקורד.",
-          "guild_not_found": "הגילדה {guild_id} אינה זמינה לרובוט זה.",
-          "guild_fetch_failed": "לא ניתן להביא את הגילדה {guild_id} מדיסקורד.",
-          "member_not_found": "חבר {user_id} לא נמצא בגילדה {guild_id}.",
-          "member_fetch_failed": "לא ניתן להביא את החבר {user_id} מהגילדה {guild_id}."
         }
-      }
     }
-  }
 }

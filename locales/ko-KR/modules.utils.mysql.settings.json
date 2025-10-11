@@ -1,11 +1,11 @@
 {
-  "modules": {
-    "utils": {
-      "mysql": {
-        "settings": {
-          "plan_required": "이 설정은 {requirement}가 필요합니다."
+    "modules": {
+        "utils": {
+            "mysql": {
+                "settings": {
+                    "plan_required": "이 설정은 {requirement}가 필요합니다."
+                }
+            }
         }
-      }
     }
-  }
 }

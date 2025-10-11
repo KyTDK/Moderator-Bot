@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "Обнаружен контент NSFW",
-          "description": "**Пользователь:** {user_mention} ({user_display})\n**Причина:** {reason}",
-          "footer": "ID пользователя: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Отчёт о сканировании NSFW",
-            "description": {
-              "user": "Пользователь: {user}",
-              "file": "Файл: `{filename}`",
-              "type": "Тип: `{file_type}`",
-              "decision": "Решение: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "Обнаружен контент NSFW",
+                    "description": "**Пользователь:** {user_mention} ({user_display})\n**Причина:** {reason}",
+                    "footer": "ID пользователя: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Изображение",
-              "video": "Видео",
-              "unknown": "Неизвестный"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Отчёт о сканировании NSFW",
+                        "description": {
+                            "user": "Пользователь: {user}",
+                            "file": "Файл: `{filename}`",
+                            "type": "Тип: `{file_type}`",
+                            "decision": "Решение: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Изображение",
+                            "video": "Видео",
+                            "unknown": "Неизвестный"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Безопасно",
+                            "unknown": "Неизвестно"
+                        },
+                        "fields": {
+                            "reason": "Причина",
+                            "category": "Категория",
+                            "score": "Оценка",
+                            "flagged_any": "Помечено любое",
+                            "summary_categories": "Резюме категорий",
+                            "max_similarity": "Максимальное сходство",
+                            "max_category": "Категория максимального сходства",
+                            "similarity": "Совпадение сходства",
+                            "high_accuracy": "Высокая точность",
+                            "clip_threshold": "Порог CLIP",
+                            "moderation_threshold": "Порог модерации",
+                            "video_frames": "Кадры видео"
+                        },
+                        "reasons": {
+                            "openai_moderation": "Модерация OpenAI",
+                            "similarity_match": "Совпадение по сходству",
+                            "no_frames_extracted": "Кадры не извлечены",
+                            "no_nsfw_frames_detected": "Кадры NSFW не обнаружены"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Безопасно",
-              "unknown": "Неизвестно"
-            },
-            "fields": {
-              "reason": "Причина",
-              "category": "Категория",
-              "score": "Оценка",
-              "flagged_any": "Помечено любое",
-              "summary_categories": "Резюме категорий",
-              "max_similarity": "Максимальное сходство",
-              "max_category": "Категория максимального сходства",
-              "similarity": "Совпадение сходства",
-              "high_accuracy": "Высокая точность",
-              "clip_threshold": "Порог CLIP",
-              "moderation_threshold": "Порог модерации",
-              "video_frames": "Кадры видео"
-            },
-            "reasons": {
-              "openai_moderation": "Модерация OpenAI",
-              "similarity_match": "Совпадение по сходству",
-              "no_frames_extracted": "Кадры не извлечены",
-              "no_nsfw_frames_detected": "Кадры NSFW не обнаружены"
+            "shared": {
+                "confidence": {
+                    "name": "Уверенность",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Оценка",
+                        "similarity": "Сходство"
+                    }
+                },
+                "boolean": {
+                    "true": "правда",
+                    "false": "ложь"
+                },
+                "category": {
+                    "unspecified": "Не указано"
+                },
+                "policy_violation": "Обнаружено потенциальное нарушение политики (Категория: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Уверенность",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Оценка",
-            "similarity": "Сходство"
-          }
-        },
-        "boolean": {
-          "true": "правда",
-          "false": "ложь"
-        },
-        "category": {
-          "unspecified": "Не указано"
-        },
-        "policy_violation": "Обнаружено потенциальное нарушение политики (Категория: **{category}**)"
-      }
     }
-  }
 }

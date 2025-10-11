@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "免费",
-          "core": "核心",
-          "pro": "专业版",
-          "ultra": "超高版"
-        },
-        "requirements": {
-          "any": "一个活跃的高级计划",
-          "single": "一个活跃的{plan}计划",
-          "double": "一个活跃的{plan_a}或{plan_b}计划",
-          "list": "一个活跃的{plans}，或{last}计划"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "免费",
+                    "core": "核心",
+                    "pro": "专业版",
+                    "ultra": "超高版"
+                },
+                "requirements": {
+                    "any": "一个活跃的高级计划",
+                    "single": "一个活跃的{plan}计划",
+                    "double": "一个活跃的{plan_a}或{plan_b}计划",
+                    "list": "一个活跃的{plans}，或{last}计划"
+                }
+            }
         }
-      }
     }
-  }
 }

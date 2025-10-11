@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Ilmainen",
-          "core": "Ydin",
-          "pro": "Pro",
-          "ultra": "Ultra"
-        },
-        "requirements": {
-          "any": "aktiivinen premium-suunnitelma",
-          "single": "aktiivinen {plan} suunnitelma",
-          "double": "aktiivinen {plan_a} tai {plan_b} suunnitelma",
-          "list": "aktiivinen {plans}, tai {last} suunnitelma"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Ilmainen",
+                    "core": "Ydin",
+                    "pro": "Pro",
+                    "ultra": "Ultra"
+                },
+                "requirements": {
+                    "any": "aktiivinen premium-suunnitelma",
+                    "single": "aktiivinen {plan} suunnitelma",
+                    "double": "aktiivinen {plan_a} tai {plan_b} suunnitelma",
+                    "list": "aktiivinen {plans}, tai {last} suunnitelma"
+                }
+            }
         }
-      }
     }
-  }
 }

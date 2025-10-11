@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` is reeds ingestel vir `{event}`.",
-          "success": "`{action}` bygevoeg tot `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` is nie ingestel vir `{event}` nie.",
-          "success": "`{action}` verwyder van `{event}`."
-        },
-        "clear": {
-          "success": "Alle aanpasbare gebeurtenisse is skoongemaak."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` is reeds ingestel vir `{event}`.",
+                    "success": "`{action}` bygevoeg tot `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` is nie ingestel vir `{event}` nie.",
+                    "success": "`{action}` verwyder van `{event}`."
+                },
+                "clear": {
+                    "success": "Alle aanpasbare gebeurtenisse is skoongemaak."
+                }
+            }
         }
-      }
     }
-  }
 }

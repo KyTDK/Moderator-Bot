@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "Nội dung NSFW Đã Phát Hiện",
-          "description": "**Người dùng:** {user_mention} ({user_display})\n**Lý do:** {reason}",
-          "footer": "ID người dùng: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Báo cáo Quét NSFW",
-            "description": {
-              "user": "Người dùng: {user}",
-              "file": "Tệp: `{filename}`",
-              "type": "Loại: `{file_type}`",
-              "decision": "Quyết định: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "Nội dung NSFW Đã Phát Hiện",
+                    "description": "**Người dùng:** {user_mention} ({user_display})\n**Lý do:** {reason}",
+                    "footer": "ID người dùng: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Hình ảnh",
-              "video": "Video",
-              "unknown": "Không xác định"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Báo cáo Quét NSFW",
+                        "description": {
+                            "user": "Người dùng: {user}",
+                            "file": "Tệp: `{filename}`",
+                            "type": "Loại: `{file_type}`",
+                            "decision": "Quyết định: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Hình ảnh",
+                            "video": "Video",
+                            "unknown": "Không xác định"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "An toàn",
+                            "unknown": "Không xác định"
+                        },
+                        "fields": {
+                            "reason": "Lý do",
+                            "category": "Danh mục",
+                            "score": "Điểm số",
+                            "flagged_any": "Đánh dấu Bất kỳ",
+                            "summary_categories": "Danh mục Tổng hợp",
+                            "max_similarity": "Độ giống tối đa",
+                            "max_category": "Danh mục Độ giống Tối đa",
+                            "similarity": "Độ giống Khớp",
+                            "high_accuracy": "Độ chính xác Cao",
+                            "clip_threshold": "Ngưỡng CLIP",
+                            "moderation_threshold": "Ngưỡng Kiểm duyệt",
+                            "video_frames": "Các Khung Hình Video"
+                        },
+                        "reasons": {
+                            "openai_moderation": "kiểm duyệt của OpenAI",
+                            "similarity_match": "khớp tương tự",
+                            "no_frames_extracted": "Không có khung hình được trích xuất",
+                            "no_nsfw_frames_detected": "Không phát hiện khung hình NSFW"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "An toàn",
-              "unknown": "Không xác định"
-            },
-            "fields": {
-              "reason": "Lý do",
-              "category": "Danh mục",
-              "score": "Điểm số",
-              "flagged_any": "Đánh dấu Bất kỳ",
-              "summary_categories": "Danh mục Tổng hợp",
-              "max_similarity": "Độ giống tối đa",
-              "max_category": "Danh mục Độ giống Tối đa",
-              "similarity": "Độ giống Khớp",
-              "high_accuracy": "Độ chính xác Cao",
-              "clip_threshold": "Ngưỡng CLIP",
-              "moderation_threshold": "Ngưỡng Kiểm duyệt",
-              "video_frames": "Các Khung Hình Video"
-            },
-            "reasons": {
-              "openai_moderation": "kiểm duyệt của OpenAI",
-              "similarity_match": "khớp tương tự",
-              "no_frames_extracted": "Không có khung hình được trích xuất",
-              "no_nsfw_frames_detected": "Không phát hiện khung hình NSFW"
+            "shared": {
+                "confidence": {
+                    "name": "Độ tin cậy",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Điểm số",
+                        "similarity": "Độ giống nhau"
+                    }
+                },
+                "boolean": {
+                    "true": "đúng",
+                    "false": "sai"
+                },
+                "category": {
+                    "unspecified": "Chưa xác định"
+                },
+                "policy_violation": "Phát hiện vi phạm chính sách tiềm ẩn (Danh mục: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Độ tin cậy",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Điểm số",
-            "similarity": "Độ giống nhau"
-          }
-        },
-        "boolean": {
-          "true": "đúng",
-          "false": "sai"
-        },
-        "category": {
-          "unspecified": "Chưa xác định"
-        },
-        "policy_violation": "Phát hiện vi phạm chính sách tiềm ẩn (Danh mục: **{category}**)"
-      }
     }
-  }
 }

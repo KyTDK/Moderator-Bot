@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "免費",
-          "core": "核心",
-          "pro": "專業版",
-          "ultra": "超極版"
-        },
-        "requirements": {
-          "any": "有效的高級計劃",
-          "single": "有效的{plan}計劃",
-          "double": "有效的{plan_a}或{plan_b}計劃",
-          "list": "有效的{plans}，或{last}計劃"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "免費",
+                    "core": "核心",
+                    "pro": "專業版",
+                    "ultra": "超極版"
+                },
+                "requirements": {
+                    "any": "有效的高級計劃",
+                    "single": "有效的{plan}計劃",
+                    "double": "有效的{plan_a}或{plan_b}計劃",
+                    "list": "有效的{plans}，或{last}計劃"
+                }
+            }
         }
-      }
     }
-  }
 }

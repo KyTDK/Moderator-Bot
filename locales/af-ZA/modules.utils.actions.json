@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Slaan",
-          "kick": "Skop",
-          "ban": "Ban",
-          "timeout": "Oomblik",
-          "delete": "Vee Boodskap uit",
-          "give_role": "Gee Rol",
-          "take_role": "Verwyder Rol",
-          "warn": "Waarsku Gebruiker",
-          "broadcast": "Uitsaai Boodskap",
-          "auto": "Outomaties"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Slaan",
+                    "kick": "Skop",
+                    "ban": "Ban",
+                    "timeout": "Oomblik",
+                    "delete": "Vee Boodskap uit",
+                    "give_role": "Gee Rol",
+                    "take_role": "Verwyder Rol",
+                    "warn": "Waarsku Gebruiker",
+                    "broadcast": "Uitsaai Boodskap",
+                    "auto": "Outomaties"
+                }
+            }
         }
-      }
     }
-  }
 }

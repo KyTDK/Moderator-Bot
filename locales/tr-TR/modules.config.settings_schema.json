@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Geçersiz yerel ayar. Desteklenen yerel ayarlar: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Profil resminizin uygunsuz bir içerik içerdiği tespit edildi.",
-          "choices": [
-            "Profil resminizin uygunsuz bir içerik içerdiği tespit edildi.",
-            "Profil resminiz bu sunucu için uygun değil.",
-            "Profil resminiz NSFW olarak işaretlendi."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Saygılı olun — hakaret veya nefret söylemi yok.",
-            "2. NSFW veya müstehcen içerik yok.",
-            "3. Spam veya aşırı kendini tanıtma yok.",
-            "4. Discord'un Hizmet Şartları'na uyun."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Hakaret, nefret söylemi veya tehdit yok.",
-            "2. Küfür veya ayrımcı dil kullanımı yok.",
-            "3. Şiddete veya yasadışı faaliyete teşvik yok.",
-            "4. Cinsel içerik veya açık ifadeler yok.",
-            "5. Discord'un Hizmet Şartları'na uyun."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Geçersiz yerel ayar. Desteklenen yerel ayarlar: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Profil resminizin uygunsuz bir içerik içerdiği tespit edildi.",
+                    "choices": [
+                        "Profil resminizin uygunsuz bir içerik içerdiği tespit edildi.",
+                        "Profil resminiz bu sunucu için uygun değil.",
+                        "Profil resminiz NSFW olarak işaretlendi."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Saygılı olun — hakaret veya nefret söylemi yok.",
+                        "2. NSFW veya müstehcen içerik yok.",
+                        "3. Spam veya aşırı kendini tanıtma yok.",
+                        "4. Discord'un Hizmet Şartları'na uyun."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Hakaret, nefret söylemi veya tehdit yok.",
+                        "2. Küfür veya ayrımcı dil kullanımı yok.",
+                        "3. Şiddete veya yasadışı faaliyete teşvik yok.",
+                        "4. Cinsel içerik veya açık ifadeler yok.",
+                        "5. Discord'un Hizmet Şartları'na uyun."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

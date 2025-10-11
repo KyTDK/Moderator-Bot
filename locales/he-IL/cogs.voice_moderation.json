@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "מחבר",
-        "utterance_label": "היגוי",
-        "divider": "---",
-        "unknown_speaker": "דובר לא ידוע",
-        "unknown_prefix": "לא ידוע",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "תמליל VC",
-        "title_part": "תמליל VC (חלק {index}/{total})",
-        "field_channel": "ערוץ",
-        "field_utterances": "היגויים",
-        "footer_high": "תמליל דיוק גבוה",
-        "footer_normal": "תמליל דיוק נורמלי"
-      },
-      "budget": {
-        "title": "התקציב למתן עדכוני VC הגיעה",
-        "description": "דילוג על ניתוח למחזור זה עקב מגבלת תקציב."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "מחבר",
+                "utterance_label": "היגוי",
+                "divider": "---",
+                "unknown_speaker": "דובר לא ידוע",
+                "unknown_prefix": "לא ידוע",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "תמליל VC",
+                "title_part": "תמליל VC (חלק {index}/{total})",
+                "field_channel": "ערוץ",
+                "field_utterances": "היגויים",
+                "footer_high": "תמליל דיוק גבוה",
+                "footer_normal": "תמליל דיוק נורמלי"
+            },
+            "budget": {
+                "title": "התקציב למתן עדכוני VC הגיעה",
+                "description": "דילוג על ניתוח למחזור זה עקב מגבלת תקציב."
+            }
+        }
     }
-  }
 }

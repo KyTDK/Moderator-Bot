@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFW-innhold oppdaget",
-          "description": "**Bruker:** {user_mention} ({user_display})\n**Årsak:** {reason}",
-          "footer": "Bruker-ID: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "NSFW-skannerapport",
-            "description": {
-              "user": "Bruker: {user}",
-              "file": "Fil: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Beslutning: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFW-innhold oppdaget",
+                    "description": "**Bruker:** {user_mention} ({user_display})\n**Årsak:** {reason}",
+                    "footer": "Bruker-ID: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Bilde",
-              "video": "Video",
-              "unknown": "Ukjent"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "NSFW-skannerapport",
+                        "description": {
+                            "user": "Bruker: {user}",
+                            "file": "Fil: `{filename}`",
+                            "type": "Type: `{file_type}`",
+                            "decision": "Beslutning: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Bilde",
+                            "video": "Video",
+                            "unknown": "Ukjent"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Trygg",
+                            "unknown": "Ukjent"
+                        },
+                        "fields": {
+                            "reason": "Årsak",
+                            "category": "Kategori",
+                            "score": "Poengsum",
+                            "flagged_any": "Flagget en",
+                            "summary_categories": "Sammendragskategorier",
+                            "max_similarity": "Maksimal likhet",
+                            "max_category": "Kategori for maksimal likhet",
+                            "similarity": "Matchet likhet",
+                            "high_accuracy": "Høy nøyaktighet",
+                            "clip_threshold": "CLIP-grense",
+                            "moderation_threshold": "Moderasjonsgrense",
+                            "video_frames": "Videorammer"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI-moderering",
+                            "similarity_match": "Likhetsmatch",
+                            "no_frames_extracted": "Ingen rammer ekstrahert",
+                            "no_nsfw_frames_detected": "Ingen NSFW-rammer oppdaget"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Trygg",
-              "unknown": "Ukjent"
-            },
-            "fields": {
-              "reason": "Årsak",
-              "category": "Kategori",
-              "score": "Poengsum",
-              "flagged_any": "Flagget en",
-              "summary_categories": "Sammendragskategorier",
-              "max_similarity": "Maksimal likhet",
-              "max_category": "Kategori for maksimal likhet",
-              "similarity": "Matchet likhet",
-              "high_accuracy": "Høy nøyaktighet",
-              "clip_threshold": "CLIP-grense",
-              "moderation_threshold": "Moderasjonsgrense",
-              "video_frames": "Videorammer"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI-moderering",
-              "similarity_match": "Likhetsmatch",
-              "no_frames_extracted": "Ingen rammer ekstrahert",
-              "no_nsfw_frames_detected": "Ingen NSFW-rammer oppdaget"
+            "shared": {
+                "confidence": {
+                    "name": "Tillit",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Poengsum",
+                        "similarity": "Likhet"
+                    }
+                },
+                "boolean": {
+                    "true": "true",
+                    "false": "false"
+                },
+                "category": {
+                    "unspecified": "Uspesifisert"
+                },
+                "policy_violation": "Oppdaget potensiell policybrudd (Kategori: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Tillit",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Poengsum",
-            "similarity": "Likhet"
-          }
-        },
-        "boolean": {
-          "true": "true",
-          "false": "false"
-        },
-        "category": {
-          "unspecified": "Uspesifisert"
-        },
-        "policy_violation": "Oppdaget potensiell policybrudd (Kategori: **{category}**)"
-      }
     }
-  }
 }

@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFW-indhold registreret",
-          "description": "**Bruger:** {user_mention} ({user_display})\n**Årsag:** {reason}",
-          "footer": "Bruger ID: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "NSFW-scanningsrapport",
-            "description": {
-              "user": "Bruger: {user}",
-              "file": "Fil: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Beslutning: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFW-indhold registreret",
+                    "description": "**Bruger:** {user_mention} ({user_display})\n**Årsag:** {reason}",
+                    "footer": "Bruger ID: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Billede",
-              "video": "Video",
-              "unknown": "Ukendt"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "NSFW-scanningsrapport",
+                        "description": {
+                            "user": "Bruger: {user}",
+                            "file": "Fil: `{filename}`",
+                            "type": "Type: `{file_type}`",
+                            "decision": "Beslutning: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Billede",
+                            "video": "Video",
+                            "unknown": "Ukendt"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Sikker",
+                            "unknown": "Ukendt"
+                        },
+                        "fields": {
+                            "reason": "Årsag",
+                            "category": "Kategori",
+                            "score": "Score",
+                            "flagged_any": "Markeret Enhver",
+                            "summary_categories": "Opsummeringskategorier",
+                            "max_similarity": "Maksimal lighed",
+                            "max_category": "Maksimal lighedskategori",
+                            "similarity": "Matchet lighed",
+                            "high_accuracy": "Høj præcision",
+                            "clip_threshold": "CLIP Tærskel",
+                            "moderation_threshold": "Moderation Tærskel",
+                            "video_frames": "Video rammer"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI moderation",
+                            "similarity_match": "Ligheds match",
+                            "no_frames_extracted": "Ingen rammer udtrukket",
+                            "no_nsfw_frames_detected": "Ingen NSFW-rammer registreret"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Sikker",
-              "unknown": "Ukendt"
-            },
-            "fields": {
-              "reason": "Årsag",
-              "category": "Kategori",
-              "score": "Score",
-              "flagged_any": "Markeret Enhver",
-              "summary_categories": "Opsummeringskategorier",
-              "max_similarity": "Maksimal lighed",
-              "max_category": "Maksimal lighedskategori",
-              "similarity": "Matchet lighed",
-              "high_accuracy": "Høj præcision",
-              "clip_threshold": "CLIP Tærskel",
-              "moderation_threshold": "Moderation Tærskel",
-              "video_frames": "Video rammer"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI moderation",
-              "similarity_match": "Ligheds match",
-              "no_frames_extracted": "Ingen rammer udtrukket",
-              "no_nsfw_frames_detected": "Ingen NSFW-rammer registreret"
+            "shared": {
+                "confidence": {
+                    "name": "Tillid",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Score",
+                        "similarity": "Lighed"
+                    }
+                },
+                "boolean": {
+                    "true": "sand",
+                    "false": "falsk"
+                },
+                "category": {
+                    "unspecified": "Uspecificeret"
+                },
+                "policy_violation": "Registreret potentiel politikovertrædelse (Kategori: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Tillid",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Score",
-            "similarity": "Lighed"
-          }
-        },
-        "boolean": {
-          "true": "sand",
-          "false": "falsk"
-        },
-        "category": {
-          "unspecified": "Uspecificeret"
-        },
-        "policy_violation": "Registreret potentiel politikovertrædelse (Kategori: **{category}**)"
-      }
     }
-  }
 }

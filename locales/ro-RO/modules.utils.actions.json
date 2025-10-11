@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Greva",
-          "kick": "Lovitură",
-          "ban": "Interdicție",
-          "timeout": "Pauză",
-          "delete": "Șterge Mesajul",
-          "give_role": "Atribuie Rol",
-          "take_role": "Elimină Rolul",
-          "warn": "Avertizează Utilizatorul",
-          "broadcast": "Transmite Mesajul",
-          "auto": "Automat"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Greva",
+                    "kick": "Lovitură",
+                    "ban": "Interdicție",
+                    "timeout": "Pauză",
+                    "delete": "Șterge Mesajul",
+                    "give_role": "Atribuie Rol",
+                    "take_role": "Elimină Rolul",
+                    "warn": "Avertizează Utilizatorul",
+                    "broadcast": "Transmite Mesajul",
+                    "auto": "Automat"
+                }
+            }
         }
-      }
     }
-  }
 }

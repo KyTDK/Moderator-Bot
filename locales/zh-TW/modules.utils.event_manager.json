@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` 已設定為 `{event}`。",
-          "success": "已將 `{action}` 加入到 `{event}`。"
-        },
-        "remove": {
-          "missing": "`{action}` 未設定為 `{event}`。",
-          "success": "已將 `{action}` 從 `{event}` 移除。"
-        },
-        "clear": {
-          "success": "所有自適應事件已清除。"
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` 已設定為 `{event}`。",
+                    "success": "已將 `{action}` 加入到 `{event}`。"
+                },
+                "remove": {
+                    "missing": "`{action}` 未設定為 `{event}`。",
+                    "success": "已將 `{action}` 從 `{event}` 移除。"
+                },
+                "clear": {
+                    "success": "所有自適應事件已清除。"
+                }
+            }
         }
-      }
     }
-  }
 }

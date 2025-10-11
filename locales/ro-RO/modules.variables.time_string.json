@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "Format invalid de durată. Folosiți formate precum 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Secunde, minute, ore, zile, săptămâni, luni și ani, respectiv."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "Format invalid de durată. Folosiți formate precum 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Secunde, minute, ore, zile, săptămâni, luni și ani, respectiv."
+            }
+        }
     }
-  }
 }

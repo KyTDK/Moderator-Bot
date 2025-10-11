@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Slaan",
-          "kick": "Schoppen",
-          "ban": "Verbannen",
-          "timeout": "Time-out",
-          "delete": "Bericht verwijderen",
-          "give_role": "Rol geven",
-          "take_role": "Rol verwijderen",
-          "warn": "Gebruiker waarschuwen",
-          "broadcast": "Bericht uitzenden",
-          "auto": "Auto"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Slaan",
+                    "kick": "Schoppen",
+                    "ban": "Verbannen",
+                    "timeout": "Time-out",
+                    "delete": "Bericht verwijderen",
+                    "give_role": "Rol geven",
+                    "take_role": "Rol verwijderen",
+                    "warn": "Gebruiker waarschuwen",
+                    "broadcast": "Bericht uitzenden",
+                    "auto": "Auto"
+                }
+            }
         }
-      }
     }
-  }
 }

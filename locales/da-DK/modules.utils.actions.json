@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Slå",
-          "kick": "Spark",
-          "ban": "Forbyd",
-          "timeout": "Timeout",
-          "delete": "Slet besked",
-          "give_role": "Giv rolle",
-          "take_role": "Fjern rolle",
-          "warn": "Advar bruger",
-          "broadcast": "Udsend besked",
-          "auto": "Automatisk"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Slå",
+                    "kick": "Spark",
+                    "ban": "Forbyd",
+                    "timeout": "Timeout",
+                    "delete": "Slet besked",
+                    "give_role": "Giv rolle",
+                    "take_role": "Fjern rolle",
+                    "warn": "Advar bruger",
+                    "broadcast": "Udsend besked",
+                    "auto": "Automatisk"
+                }
+            }
         }
-      }
     }
-  }
 }

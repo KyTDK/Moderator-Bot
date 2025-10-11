@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "Nieprawidłowy format czasu. Użyj formatów takich jak 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Odpowiednio sekundy, minuty, godziny, dni, tygodnie, miesiące i lata."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "Nieprawidłowy format czasu. Użyj formatów takich jak 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Odpowiednio sekundy, minuty, godziny, dni, tygodnie, miesiące i lata."
+            }
+        }
     }
-  }
 }

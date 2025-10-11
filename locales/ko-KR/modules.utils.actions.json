@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "타격",
-          "kick": "킥",
-          "ban": "차단",
-          "timeout": "타임아웃",
-          "delete": "메시지 삭제",
-          "give_role": "역할 부여",
-          "take_role": "역할 제거",
-          "warn": "사용자 경고",
-          "broadcast": "메시지 방송",
-          "auto": "자동"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "타격",
+                    "kick": "킥",
+                    "ban": "차단",
+                    "timeout": "타임아웃",
+                    "delete": "메시지 삭제",
+                    "give_role": "역할 부여",
+                    "take_role": "역할 제거",
+                    "warn": "사용자 경고",
+                    "broadcast": "메시지 방송",
+                    "auto": "자동"
+                }
+            }
         }
-      }
     }
-  }
 }

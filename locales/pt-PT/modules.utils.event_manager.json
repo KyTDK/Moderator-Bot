@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` já está definido para `{event}`.",
-          "success": "Adicionado `{action}` a `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` não está definido para `{event}`.",
-          "success": "Removido `{action}` de `{event}`."
-        },
-        "clear": {
-          "success": "Todos os eventos adaptativos foram limpos."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` já está definido para `{event}`.",
+                    "success": "Adicionado `{action}` a `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` não está definido para `{event}`.",
+                    "success": "Removido `{action}` de `{event}`."
+                },
+                "clear": {
+                    "success": "Todos os eventos adaptativos foram limpos."
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "AUTOR",
-        "utterance_label": "DECLARAÇÃO",
-        "divider": "---",
-        "unknown_speaker": "Falante desconhecido",
-        "unknown_prefix": "Desconhecido",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefixo} ({nome}): {texto}",
-        "title_single": "Transcrição de VC",
-        "title_part": "Transcrição de VC (parte {index}/{total})",
-        "field_channel": "Canal",
-        "field_utterances": "Declarações",
-        "footer_high": "Transcrição de alta precisão",
-        "footer_normal": "Transcrição de precisão normal"
-      },
-      "budget": {
-        "title": "Orçamento de Moderação de VC Atingido",
-        "description": "Ignorando análise para este ciclo devido ao limite de orçamento."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "AUTOR",
+                "utterance_label": "DECLARAÇÃO",
+                "divider": "---",
+                "unknown_speaker": "Falante desconhecido",
+                "unknown_prefix": "Desconhecido",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefixo} ({nome}): {texto}",
+                "title_single": "Transcrição de VC",
+                "title_part": "Transcrição de VC (parte {index}/{total})",
+                "field_channel": "Canal",
+                "field_utterances": "Declarações",
+                "footer_high": "Transcrição de alta precisão",
+                "footer_normal": "Transcrição de precisão normal"
+            },
+            "budget": {
+                "title": "Orçamento de Moderação de VC Atingido",
+                "description": "Ignorando análise para este ciclo devido ao limite de orçamento."
+            }
+        }
     }
-  }
 }

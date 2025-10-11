@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` is al ingesteld voor `{event}`.",
-          "success": "`{action}` toegevoegd aan `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` is niet ingesteld voor `{event}`.",
-          "success": "`{action}` verwijderd van `{event}`."
-        },
-        "clear": {
-          "success": "Alle adaptieve evenementen zijn gewist."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` is al ingesteld voor `{event}`.",
+                    "success": "`{action}` toegevoegd aan `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` is niet ingesteld voor `{event}`.",
+                    "success": "`{action}` verwijderd van `{event}`."
+                },
+                "clear": {
+                    "success": "Alle adaptieve evenementen zijn gewist."
+                }
+            }
         }
-      }
     }
-  }
 }

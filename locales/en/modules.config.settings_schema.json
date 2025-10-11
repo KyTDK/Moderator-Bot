@@ -212,7 +212,5 @@
         "captcha-failure-actions": {
           "description": "Actions to perform automatically when a member fails captcha verification."
         }
-      }
     }
-  }
 }

@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "AUTOR",
-        "utterance_label": "ENUNCIAT",
-        "divider": "---",
-        "unknown_speaker": "Parlante desconegut",
-        "unknown_prefix": "Desconegut",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "Transcripció VC",
-        "title_part": "Transcripció VC (part {index}/{total})",
-        "field_channel": "Canal",
-        "field_utterances": "Enunciats",
-        "footer_high": "Transcripció d'alta precisió",
-        "footer_normal": "Transcripció de precisió normal"
-      },
-      "budget": {
-        "title": "Pressupost de moderació de VC assolit",
-        "description": "S'està saltant l'anàlisi d'aquest cicle a causa del límit de pressupost."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "AUTOR",
+                "utterance_label": "ENUNCIAT",
+                "divider": "---",
+                "unknown_speaker": "Parlante desconegut",
+                "unknown_prefix": "Desconegut",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "Transcripció VC",
+                "title_part": "Transcripció VC (part {index}/{total})",
+                "field_channel": "Canal",
+                "field_utterances": "Enunciats",
+                "footer_high": "Transcripció d'alta precisió",
+                "footer_normal": "Transcripció de precisió normal"
+            },
+            "budget": {
+                "title": "Pressupost de moderació de VC assolit",
+                "description": "S'està saltant l'anàlisi d'aquest cicle a causa del límit de pressupost."
+            }
+        }
     }
-  }
 }

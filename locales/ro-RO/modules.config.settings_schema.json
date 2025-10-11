@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Local nevalid. Locale acceptate: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Fotografia de profil a fost detectată cu conținut explicit",
-          "choices": [
-            "Fotografia de profil a fost detectată cu conținut explicit",
-            "Fotografia de profil nu este potrivită pentru acest server.",
-            "Fotografia de profil a fost marcată ca NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Fii respectuos — fără hărțuire sau discurs de ură.",
-            "2. Fără conținut NSFW sau obscen.",
-            "3. Fără spam sau autopromovare excesivă.",
-            "4. Respectă Termenii de Serviciu ai Discord."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Fără hărțuire, discurs de ură sau amenințări.",
-            "2. Fără cuvinte jignitoare sau limbaj discriminatoriu.",
-            "3. Fără incitari la violență sau activitate ilegală.",
-            "4. Fără conținut sexual sau remarci explicite.",
-            "5. Respectă Termenii de Serviciu ai Discord."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Local nevalid. Locale acceptate: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Fotografia de profil a fost detectată cu conținut explicit",
+                    "choices": [
+                        "Fotografia de profil a fost detectată cu conținut explicit",
+                        "Fotografia de profil nu este potrivită pentru acest server.",
+                        "Fotografia de profil a fost marcată ca NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Fii respectuos — fără hărțuire sau discurs de ură.",
+                        "2. Fără conținut NSFW sau obscen.",
+                        "3. Fără spam sau autopromovare excesivă.",
+                        "4. Respectă Termenii de Serviciu ai Discord."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Fără hărțuire, discurs de ură sau amenințări.",
+                        "2. Fără cuvinte jignitoare sau limbaj discriminatoriu.",
+                        "3. Fără incitari la violență sau activitate ilegală.",
+                        "4. Fără conținut sexual sau remarci explicite.",
+                        "5. Respectă Termenii de Serviciu ai Discord."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Virheellinen alueasetus. Tuetut alueasetukset: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Profiilikuvasi havaittiin sisältävän sopimatonta sisältöä",
-          "choices": [
-            "Profiilikuvasi havaittiin sisältävän sopimatonta sisältöä",
-            "Profiilikuvasi ei ole sopiva tälle palvelimelle.",
-            "Profiilikuvasi on merkitty sopimattomaksi (NSFW)."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Ole kunnioittava — ei häirintää tai vihapuhetta.",
-            "2. Ei sopimatonta tai säädytöntä sisältöä.",
-            "3. Ei roskapostia tai liiallista itsensä mainostamista.",
-            "4. Noudata Discordin palveluehtoja."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Ei häirintää, vihapuhetta tai uhkailua.",
-            "2. Ei loukkaavaa tai syrjivää kielenkäyttöä.",
-            "3. Ei väkivaltaan tai laittomaan toimintaan yllyttämistä.",
-            "4. Ei seksuaalista sisältöä tai sopimattomia kommentteja.",
-            "5. Noudata Discordin palveluehtoja."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Virheellinen alueasetus. Tuetut alueasetukset: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Profiilikuvasi havaittiin sisältävän sopimatonta sisältöä",
+                    "choices": [
+                        "Profiilikuvasi havaittiin sisältävän sopimatonta sisältöä",
+                        "Profiilikuvasi ei ole sopiva tälle palvelimelle.",
+                        "Profiilikuvasi on merkitty sopimattomaksi (NSFW)."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Ole kunnioittava — ei häirintää tai vihapuhetta.",
+                        "2. Ei sopimatonta tai säädytöntä sisältöä.",
+                        "3. Ei roskapostia tai liiallista itsensä mainostamista.",
+                        "4. Noudata Discordin palveluehtoja."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Ei häirintää, vihapuhetta tai uhkailua.",
+                        "2. Ei loukkaavaa tai syrjivää kielenkäyttöä.",
+                        "3. Ei väkivaltaan tai laittomaan toimintaan yllyttämistä.",
+                        "4. Ei seksuaalista sisältöä tai sopimattomia kommentteja.",
+                        "5. Noudata Discordin palveluehtoja."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

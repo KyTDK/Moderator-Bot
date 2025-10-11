@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "キャプチャの認証に成功しました。",
-          "embed": {
-            "title": "キャプチャ認証を通過しました。",
-            "description": "{mention} ({user_id})がキャプチャの認証に成功しました。",
-            "fields": {
-              "actions": "適用されたアクション",
-              "attempts": "試行",
-              "provider": "プロバイダー",
-              "challenge": "チャレンジ",
-              "review": "レビュー"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "キャプチャの認証に成功しました。",
+                    "embed": {
+                        "title": "キャプチャ認証を通過しました。",
+                        "description": "{mention} ({user_id})がキャプチャの認証に成功しました。",
+                        "fields": {
+                            "actions": "適用されたアクション",
+                            "attempts": "試行",
+                            "provider": "プロバイダー",
+                            "challenge": "チャレンジ",
+                            "review": "レビュー"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "キャプチャの認証に失敗しました。",
+                    "notes": {
+                        "deferred_generic": "失敗アクションが延期されましたが、キャプチャ試行は続いています。",
+                        "deferred_remaining": "失敗アクションが延期されました；{remaining} {attempts_word} が残っています。",
+                        "member_left": "メンバーはギルドにいなくなったため、設定された失敗アクションがスキップされました。"
+                    },
+                    "attempts": {
+                        "unlimited": "無制限の試行が残っています。",
+                        "additional": "追加の試行が残っています。",
+                        "remaining": "{count} {attempts_word} が残っています。",
+                        "word_one": "試行",
+                        "word_other": "試行"
+                    },
+                    "embed": {
+                        "title_failed": "キャプチャ認証に失敗しました。",
+                        "title_attempt": "キャプチャ試行に失敗しました。",
+                        "description_failed": "{mention} ({user_id})がキャプチャの認証に失敗しました。",
+                        "description_attempt": "{mention} ({user_id})がキャプチャ試行に失敗しました。",
+                        "fields": {
+                            "actions": "適用されたアクション",
+                            "notes": "メモ",
+                            "attempts": "試行",
+                            "remaining": "残りの試行",
+                            "challenge": "チャレンジ",
+                            "reason": "理由",
+                            "review": "レビュー"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Discord APIエラーのためキャプチャ成功のアクションに失敗しました。",
+                    "unknown_token": "このユーザーのための保留中のキャプチャ認証が見つかりません。",
+                    "token_mismatch": "キャプチャトークンが保留中の認証と一致しません。",
+                    "missing_permissions": "ボットにキャプチャ失敗アクションを適用する権限が不足しています。",
+                    "action_failed": "Discord APIエラーのためキャプチャ失敗のアクションに失敗しました。",
+                    "guild_not_found": "ギルド {guild_id} はこのボットに利用できません。",
+                    "guild_fetch_failed": "Discordからギルド {guild_id} を取得できませんでした。",
+                    "member_not_found": "メンバー {user_id} がギルド {guild_id} に見つかりません。",
+                    "member_fetch_failed": "ギルド {guild_id} からメンバー {user_id} を取得できませんでした。"
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "キャプチャの認証に失敗しました。",
-          "notes": {
-            "deferred_generic": "失敗アクションが延期されましたが、キャプチャ試行は続いています。",
-            "deferred_remaining": "失敗アクションが延期されました；{remaining} {attempts_word} が残っています。",
-            "member_left": "メンバーはギルドにいなくなったため、設定された失敗アクションがスキップされました。"
-          },
-          "attempts": {
-            "unlimited": "無制限の試行が残っています。",
-            "additional": "追加の試行が残っています。",
-            "remaining": "{count} {attempts_word} が残っています。",
-            "word_one": "試行",
-            "word_other": "試行"
-          },
-          "embed": {
-            "title_failed": "キャプチャ認証に失敗しました。",
-            "title_attempt": "キャプチャ試行に失敗しました。",
-            "description_failed": "{mention} ({user_id})がキャプチャの認証に失敗しました。",
-            "description_attempt": "{mention} ({user_id})がキャプチャ試行に失敗しました。",
-            "fields": {
-              "actions": "適用されたアクション",
-              "notes": "メモ",
-              "attempts": "試行",
-              "remaining": "残りの試行",
-              "challenge": "チャレンジ",
-              "reason": "理由",
-              "review": "レビュー"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Discord APIエラーのためキャプチャ成功のアクションに失敗しました。",
-          "unknown_token": "このユーザーのための保留中のキャプチャ認証が見つかりません。",
-          "token_mismatch": "キャプチャトークンが保留中の認証と一致しません。",
-          "missing_permissions": "ボットにキャプチャ失敗アクションを適用する権限が不足しています。",
-          "action_failed": "Discord APIエラーのためキャプチャ失敗のアクションに失敗しました。",
-          "guild_not_found": "ギルド {guild_id} はこのボットに利用できません。",
-          "guild_fetch_failed": "Discordからギルド {guild_id} を取得できませんでした。",
-          "member_not_found": "メンバー {user_id} がギルド {guild_id} に見つかりません。",
-          "member_fetch_failed": "ギルド {guild_id} からメンバー {user_id} を取得できませんでした。"
         }
-      }
     }
-  }
 }

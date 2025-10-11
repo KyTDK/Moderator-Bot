@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "FÖRFATTARE",
-        "utterance_label": "YTTRANDE",
-        "divider": "---",
-        "unknown_speaker": "Okänd talare",
-        "unknown_prefix": "Okänd",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transkript",
-        "title_part": "VC Transkript (del {index}/{total})",
-        "field_channel": "Kanal",
-        "field_utterances": "Yttranden",
-        "footer_high": "Transkript med hög noggrannhet",
-        "footer_normal": "Transkript med normal noggrannhet"
-      },
-      "budget": {
-        "title": "VC Moderingsbudget nådd",
-        "description": "Hoppa över analysen för denna cykel på grund av budgetgräns."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "FÖRFATTARE",
+                "utterance_label": "YTTRANDE",
+                "divider": "---",
+                "unknown_speaker": "Okänd talare",
+                "unknown_prefix": "Okänd",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC Transkript",
+                "title_part": "VC Transkript (del {index}/{total})",
+                "field_channel": "Kanal",
+                "field_utterances": "Yttranden",
+                "footer_high": "Transkript med hög noggrannhet",
+                "footer_normal": "Transkript med normal noggrannhet"
+            },
+            "budget": {
+                "title": "VC Moderingsbudget nådd",
+                "description": "Hoppa över analysen för denna cykel på grund av budgetgräns."
+            }
+        }
     }
-  }
 }

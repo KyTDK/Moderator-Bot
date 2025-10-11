@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Vuruş",
-          "kick": "Tekme",
-          "ban": "Yasakla",
-          "timeout": "Zaman Aşımı",
-          "delete": "Mesajı Sil",
-          "give_role": "Rol Ver",
-          "take_role": "Rolü Kaldır",
-          "warn": "Kullanıcıyı Uyar",
-          "broadcast": "Mesaj Yayınla",
-          "auto": "Otomatik"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Vuruş",
+                    "kick": "Tekme",
+                    "ban": "Yasakla",
+                    "timeout": "Zaman Aşımı",
+                    "delete": "Mesajı Sil",
+                    "give_role": "Rol Ver",
+                    "take_role": "Rolü Kaldır",
+                    "warn": "Kullanıcıyı Uyar",
+                    "broadcast": "Mesaj Yayınla",
+                    "auto": "Otomatik"
+                }
+            }
         }
-      }
     }
-  }
 }

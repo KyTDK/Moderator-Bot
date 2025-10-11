@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Δωρεάν",
-          "core": "Πυρήνας",
-          "pro": "Επαγγελματικό",
-          "ultra": "Υπέρτατο"
-        },
-        "requirements": {
-          "any": "ένα ενεργό premium σχέδιο",
-          "single": "ένα ενεργό σχέδιο {plan}",
-          "double": "ένα ενεργό σχέδιο {plan_a} ή {plan_b}",
-          "list": "ένα ενεργό σχέδιο {plans}, ή {last}"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Δωρεάν",
+                    "core": "Πυρήνας",
+                    "pro": "Επαγγελματικό",
+                    "ultra": "Υπέρτατο"
+                },
+                "requirements": {
+                    "any": "ένα ενεργό premium σχέδιο",
+                    "single": "ένα ενεργό σχέδιο {plan}",
+                    "double": "ένα ενεργό σχέδιο {plan_a} ή {plan_b}",
+                    "list": "ένα ενεργό σχέδιο {plans}, ή {last}"
+                }
+            }
         }
-      }
     }
-  }
 }

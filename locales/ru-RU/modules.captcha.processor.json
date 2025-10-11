@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Проверка капчи прошла успешно",
-          "embed": {
-            "title": "Проверка капчи пройдена",
-            "description": "{mention} ({user_id}) прошел(а) проверку капчи.",
-            "fields": {
-              "actions": "Применены действия",
-              "attempts": "Попытки",
-              "provider": "Провайдер",
-              "challenge": "Вызов",
-              "review": "Обзор"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Проверка капчи прошла успешно",
+                    "embed": {
+                        "title": "Проверка капчи пройдена",
+                        "description": "{mention} ({user_id}) прошел(а) проверку капчи.",
+                        "fields": {
+                            "actions": "Применены действия",
+                            "attempts": "Попытки",
+                            "provider": "Провайдер",
+                            "challenge": "Вызов",
+                            "review": "Обзор"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Проверка капчи не удалась.",
+                    "notes": {
+                        "deferred_generic": "Действия в случае сбоя отложены; остаются попытки проверки капчи.",
+                        "deferred_remaining": "Действия в случае сбоя отложены; {remaining} {attempts_word} остаётся.",
+                        "member_left": "Участника больше нет в гильдии; настроенные действия в случае сбоя были пропущены."
+                    },
+                    "attempts": {
+                        "unlimited": "Оставшиеся попытки не ограничены.",
+                        "additional": "Остаются дополнительные попытки.",
+                        "remaining": "Остаётся {count} {attempts_word}.",
+                        "word_one": "попытка",
+                        "word_other": "попытки"
+                    },
+                    "embed": {
+                        "title_failed": "Проверка капчи не выполнена",
+                        "title_attempt": "Неудачная попытка капчи",
+                        "description_failed": "{mention} ({user_id}) не прошел(а) проверку капчи.",
+                        "description_attempt": "{mention} ({user_id}) неудачно попытался(ась) пройти проверку капчи.",
+                        "fields": {
+                            "actions": "Применены действия",
+                            "notes": "Заметки",
+                            "attempts": "Попытки",
+                            "remaining": "Оставшиеся попытки",
+                            "challenge": "Вызов",
+                            "reason": "Причина",
+                            "review": "Обзор"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Не удалось применить действия успеха проверки капчи из-за ошибки Discord API.",
+                    "unknown_token": "Для этого пользователя не найдено ожидающей проверки капчи.",
+                    "token_mismatch": "Токен капчи не соответствует ожидаемой проверке.",
+                    "missing_permissions": "У бота отсутствуют разрешения для применения действий в случае сбоя капчи.",
+                    "action_failed": "Не удалось применить действия в случае сбоя капчи из-за ошибки Discord API.",
+                    "guild_not_found": "Гильдия {guild_id} недоступна для этого бота.",
+                    "guild_fetch_failed": "Не удалось получить гильдию {guild_id} из Discord.",
+                    "member_not_found": "Участник {user_id} не найден в гильдии {guild_id}.",
+                    "member_fetch_failed": "Не удалось получить участника {user_id} из гильдии {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Проверка капчи не удалась.",
-          "notes": {
-            "deferred_generic": "Действия в случае сбоя отложены; остаются попытки проверки капчи.",
-            "deferred_remaining": "Действия в случае сбоя отложены; {remaining} {attempts_word} остаётся.",
-            "member_left": "Участника больше нет в гильдии; настроенные действия в случае сбоя были пропущены."
-          },
-          "attempts": {
-            "unlimited": "Оставшиеся попытки не ограничены.",
-            "additional": "Остаются дополнительные попытки.",
-            "remaining": "Остаётся {count} {attempts_word}.",
-            "word_one": "попытка",
-            "word_other": "попытки"
-          },
-          "embed": {
-            "title_failed": "Проверка капчи не выполнена",
-            "title_attempt": "Неудачная попытка капчи",
-            "description_failed": "{mention} ({user_id}) не прошел(а) проверку капчи.",
-            "description_attempt": "{mention} ({user_id}) неудачно попытался(ась) пройти проверку капчи.",
-            "fields": {
-              "actions": "Применены действия",
-              "notes": "Заметки",
-              "attempts": "Попытки",
-              "remaining": "Оставшиеся попытки",
-              "challenge": "Вызов",
-              "reason": "Причина",
-              "review": "Обзор"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Не удалось применить действия успеха проверки капчи из-за ошибки Discord API.",
-          "unknown_token": "Для этого пользователя не найдено ожидающей проверки капчи.",
-          "token_mismatch": "Токен капчи не соответствует ожидаемой проверке.",
-          "missing_permissions": "У бота отсутствуют разрешения для применения действий в случае сбоя капчи.",
-          "action_failed": "Не удалось применить действия в случае сбоя капчи из-за ошибки Discord API.",
-          "guild_not_found": "Гильдия {guild_id} недоступна для этого бота.",
-          "guild_fetch_failed": "Не удалось получить гильдию {guild_id} из Discord.",
-          "member_not_found": "Участник {user_id} не найден в гильдии {guild_id}.",
-          "member_fetch_failed": "Не удалось получить участника {user_id} из гильдии {guild_id}."
         }
-      }
     }
-  }
 }

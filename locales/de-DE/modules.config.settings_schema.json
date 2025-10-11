@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Ungültige Gebietsschema. Unterstützte Gebietsschema: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Dein Profilbild wurde als expliziter Inhalt erkannt.",
-          "choices": [
-            "Dein Profilbild wurde als expliziter Inhalt erkannt.",
-            "Dein Profilbild ist nicht angemessen für diesen Server.",
-            "Dein Profilbild wurde als NSFW markiert."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Respektiere andere — kein Mobbing oder Hassrede.",
-            "2. Kein NSFW oder obszöner Inhalt.",
-            "3. Kein Spam oder übermäßige Eigenwerbung.",
-            "4. Beachte die Discord-Nutzungsbedingungen."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Kein Mobbing, keine Hassrede oder Drohungen.",
-            "2. Keine Schimpfwörter oder diskriminierende Sprache.",
-            "3. Keine Aufforderungen zu Gewalt oder illegalen Aktivitäten.",
-            "4. Kein sexueller Inhalt oder explizite Bemerkungen.",
-            "5. Beachte die Discord-Nutzungsbedingungen."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Ungültige Gebietsschema. Unterstützte Gebietsschema: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Dein Profilbild wurde als expliziter Inhalt erkannt.",
+                    "choices": [
+                        "Dein Profilbild wurde als expliziter Inhalt erkannt.",
+                        "Dein Profilbild ist nicht angemessen für diesen Server.",
+                        "Dein Profilbild wurde als NSFW markiert."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Respektiere andere — kein Mobbing oder Hassrede.",
+                        "2. Kein NSFW oder obszöner Inhalt.",
+                        "3. Kein Spam oder übermäßige Eigenwerbung.",
+                        "4. Beachte die Discord-Nutzungsbedingungen."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Kein Mobbing, keine Hassrede oder Drohungen.",
+                        "2. Keine Schimpfwörter oder diskriminierende Sprache.",
+                        "3. Keine Aufforderungen zu Gewalt oder illegalen Aktivitäten.",
+                        "4. Kein sexueller Inhalt oder explizite Bemerkungen.",
+                        "5. Beachte die Discord-Nutzungsbedingungen."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

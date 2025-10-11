@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "FORFATTER",
-        "utterance_label": "YTRING",
-        "divider": "---",
-        "unknown_speaker": "Ukendt taler",
-        "unknown_prefix": "Ukendt",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transkript",
-        "title_part": "VC Transkript (del {index}/{total})",
-        "field_channel": "Kanal",
-        "field_utterances": "Ytringer",
-        "footer_high": "Transkript med høj nøjagtighed",
-        "footer_normal": "Transkript med normal nøjagtighed"
-      },
-      "budget": {
-        "title": "VC Moderation Budget Opnået",
-        "description": "Springer analysen over for denne cyklus på grund af budgetgrænse."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "FORFATTER",
+                "utterance_label": "YTRING",
+                "divider": "---",
+                "unknown_speaker": "Ukendt taler",
+                "unknown_prefix": "Ukendt",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC Transkript",
+                "title_part": "VC Transkript (del {index}/{total})",
+                "field_channel": "Kanal",
+                "field_utterances": "Ytringer",
+                "footer_high": "Transkript med høj nøjagtighed",
+                "footer_normal": "Transkript med normal nøjagtighed"
+            },
+            "budget": {
+                "title": "VC Moderation Budget Opnået",
+                "description": "Springer analysen over for denne cyklus på grund af budgetgrænse."
+            }
+        }
     }
-  }
 }

@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Greve",
-          "kick": "Chute",
-          "ban": "Banir",
-          "timeout": "Tempo de Espera",
-          "delete": "Excluir Mensagem",
-          "give_role": "Conceder Função",
-          "take_role": "Remover Função",
-          "warn": "Avisar Usuário",
-          "broadcast": "Transmitir Mensagem",
-          "auto": "Automático"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Greve",
+                    "kick": "Chute",
+                    "ban": "Banir",
+                    "timeout": "Tempo de Espera",
+                    "delete": "Excluir Mensagem",
+                    "give_role": "Conceder Função",
+                    "take_role": "Remover Função",
+                    "warn": "Avisar Usuário",
+                    "broadcast": "Transmitir Mensagem",
+                    "auto": "Automático"
+                }
+            }
         }
-      }
     }
-  }
 }

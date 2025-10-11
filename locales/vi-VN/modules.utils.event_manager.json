@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` đã được cài đặt cho `{event}`.",
-          "success": "Đã thêm `{action}` vào `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` chưa được cài đặt cho `{event}`.",
-          "success": "Đã gỡ bỏ `{action}` khỏi `{event}`."
-        },
-        "clear": {
-          "success": "Đã xóa tất cả sự kiện thích ứng."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` đã được cài đặt cho `{event}`.",
+                    "success": "Đã thêm `{action}` vào `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` chưa được cài đặt cho `{event}`.",
+                    "success": "Đã gỡ bỏ `{action}` khỏi `{event}`."
+                },
+                "clear": {
+                    "success": "Đã xóa tất cả sự kiện thích ứng."
+                }
+            }
         }
-      }
     }
-  }
 }

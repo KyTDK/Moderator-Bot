@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Verifica del captcha riuscita",
-          "embed": {
-            "title": "Verifica Captcha Superata",
-            "description": "{mention} ({user_id}) ha superato la verifica captcha.",
-            "fields": {
-              "actions": "Azioni Applicate",
-              "attempts": "Tentativi",
-              "provider": "Fornitore",
-              "challenge": "Sfida",
-              "review": "Revisione"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Verifica del captcha riuscita",
+                    "embed": {
+                        "title": "Verifica Captcha Superata",
+                        "description": "{mention} ({user_id}) ha superato la verifica captcha.",
+                        "fields": {
+                            "actions": "Azioni Applicate",
+                            "attempts": "Tentativi",
+                            "provider": "Fornitore",
+                            "challenge": "Sfida",
+                            "review": "Revisione"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Verifica captcha fallita.",
+                    "notes": {
+                        "deferred_generic": "Azioni di fallimento rinviate; tentativi captcha rimanenti.",
+                        "deferred_remaining": "Azioni di fallimento rinviate; {remaining} {attempts_word} rimanenti.",
+                        "member_left": "Il membro non è più nella gilda; le azioni di fallimento configurate sono state saltate."
+                    },
+                    "attempts": {
+                        "unlimited": "Tentativi illimitati rimanenti.",
+                        "additional": "Tentativi aggiuntivi rimanenti.",
+                        "remaining": "{count} {attempts_word} rimanenti.",
+                        "word_one": "tentativo",
+                        "word_other": "tentativi"
+                    },
+                    "embed": {
+                        "title_failed": "Verifica Captcha Fallita",
+                        "title_attempt": "Tentativo di Captcha Fallito",
+                        "description_failed": "{mention} ({user_id}) ha fallito la verifica captcha.",
+                        "description_attempt": "{mention} ({user_id}) ha fallito un tentativo di captcha.",
+                        "fields": {
+                            "actions": "Azioni Applicate",
+                            "notes": "Note",
+                            "attempts": "Tentativi",
+                            "remaining": "Tentativi Rimasti",
+                            "challenge": "Sfida",
+                            "reason": "Motivo",
+                            "review": "Revisione"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Non è stato possibile applicare le azioni di successo del captcha a causa di un errore API di Discord.",
+                    "unknown_token": "Nessuna verifica captcha in sospeso trovata per questo utente.",
+                    "token_mismatch": "Il token captcha non corrisponde alla verifica pendente.",
+                    "missing_permissions": "Il bot non ha i permessi necessari per applicare le azioni di fallimento captcha.",
+                    "action_failed": "Non è stato possibile applicare le azioni di fallimento captcha a causa di un errore API di Discord.",
+                    "guild_not_found": "La gilda {guild_id} non è disponibile per questo bot.",
+                    "guild_fetch_failed": "Impossibile recuperare la gilda {guild_id} da Discord.",
+                    "member_not_found": "Il membro {user_id} non trovato nella gilda {guild_id}.",
+                    "member_fetch_failed": "Impossibile recuperare il membro {user_id} dalla gilda {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Verifica captcha fallita.",
-          "notes": {
-            "deferred_generic": "Azioni di fallimento rinviate; tentativi captcha rimanenti.",
-            "deferred_remaining": "Azioni di fallimento rinviate; {remaining} {attempts_word} rimanenti.",
-            "member_left": "Il membro non è più nella gilda; le azioni di fallimento configurate sono state saltate."
-          },
-          "attempts": {
-            "unlimited": "Tentativi illimitati rimanenti.",
-            "additional": "Tentativi aggiuntivi rimanenti.",
-            "remaining": "{count} {attempts_word} rimanenti.",
-            "word_one": "tentativo",
-            "word_other": "tentativi"
-          },
-          "embed": {
-            "title_failed": "Verifica Captcha Fallita",
-            "title_attempt": "Tentativo di Captcha Fallito",
-            "description_failed": "{mention} ({user_id}) ha fallito la verifica captcha.",
-            "description_attempt": "{mention} ({user_id}) ha fallito un tentativo di captcha.",
-            "fields": {
-              "actions": "Azioni Applicate",
-              "notes": "Note",
-              "attempts": "Tentativi",
-              "remaining": "Tentativi Rimasti",
-              "challenge": "Sfida",
-              "reason": "Motivo",
-              "review": "Revisione"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Non è stato possibile applicare le azioni di successo del captcha a causa di un errore API di Discord.",
-          "unknown_token": "Nessuna verifica captcha in sospeso trovata per questo utente.",
-          "token_mismatch": "Il token captcha non corrisponde alla verifica pendente.",
-          "missing_permissions": "Il bot non ha i permessi necessari per applicare le azioni di fallimento captcha.",
-          "action_failed": "Non è stato possibile applicare le azioni di fallimento captcha a causa di un errore API di Discord.",
-          "guild_not_found": "La gilda {guild_id} non è disponibile per questo bot.",
-          "guild_fetch_failed": "Impossibile recuperare la gilda {guild_id} da Discord.",
-          "member_not_found": "Il membro {user_id} non trovato nella gilda {guild_id}.",
-          "member_fetch_failed": "Impossibile recuperare il membro {user_id} dalla gilda {guild_id}."
         }
-      }
     }
-  }
 }

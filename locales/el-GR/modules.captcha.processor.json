@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Επιτυχής επαλήθευση Captcha",
-          "embed": {
-            "title": "Επαλήθευση Captcha Επιτυχής",
-            "description": "{mention} ({user_id}) πέρασε την επαλήθευση Captcha.",
-            "fields": {
-              "actions": "Εφαρμοσμένες Ενέργειες",
-              "attempts": "Προσπάθειες",
-              "provider": "Πάροχος",
-              "challenge": "Πρόκληση",
-              "review": "Ανασκόπηση"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Επιτυχής επαλήθευση Captcha",
+                    "embed": {
+                        "title": "Επαλήθευση Captcha Επιτυχής",
+                        "description": "{mention} ({user_id}) πέρασε την επαλήθευση Captcha.",
+                        "fields": {
+                            "actions": "Εφαρμοσμένες Ενέργειες",
+                            "attempts": "Προσπάθειες",
+                            "provider": "Πάροχος",
+                            "challenge": "Πρόκληση",
+                            "review": "Ανασκόπηση"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Αποτυχία επαλήθευσης Captcha.",
+                    "notes": {
+                        "deferred_generic": "Οι αποτυχημένες ενέργειες αναβλήθηκαν· οι προσπάθειες Captcha παραμένουν.",
+                        "deferred_remaining": "Οι αποτυχημένες ενέργειες αναβλήθηκαν· απομένουν {remaining} {attempts_word}.",
+                        "member_left": "Το μέλος δεν είναι πλέον στην ομάδα· παρακάμφθηκαν οι ρυθμισμένες αποτυχημένες ενέργειες."
+                    },
+                    "attempts": {
+                        "unlimited": "Απεριόριστες προσπάθειες παραμένουν.",
+                        "additional": "Πρόσθετες προσπάθειες παραμένουν.",
+                        "remaining": "{count} {attempts_word} παραμένουν.",
+                        "word_one": "προσπάθεια",
+                        "word_other": "προσπάθειες"
+                    },
+                    "embed": {
+                        "title_failed": "Η Εκτε^απώσι LocalTime Captcha Απέτυχε",
+                        "title_attempt": "Αποτυχία Προσπάθειας Captcha",
+                        "description_failed": "{mention} ({user_id}) απέτυχε στην επαλήθευση Captcha.",
+                        "description_attempt": "{mention} ({user_id}) απέτυχε σε μια προσπάθεια Captcha.",
+                        "fields": {
+                            "actions": "Εφαρμοσμένες Ενέργειες",
+                            "notes": "Σημειώσεις",
+                            "attempts": "Προσπάθειες",
+                            "remaining": "Εναπομείναντες Προσπάθειες",
+                            "challenge": "Πρόκληση",
+                            "reason": "Λόγος",
+                            "review": "Ανασκόπηση"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Αποτυχία στην εφαρμογή των επιτυχημένων ενεργειών Captcha λόγω λάθους στο API του Discord.",
+                    "unknown_token": "Δε βρέθηκε εκκρεμής επαλήθευση Captcha για αυτόν τον χρήστη.",
+                    "token_mismatch": "Το διακριτικό Captcha δεν ταιριάζει με την εκκρεμή επαλήθευση.",
+                    "missing_permissions": "Το bot δεν έχει δικαιώματα για την εφαρμογή αποτυχημένων ενεργειών Captcha.",
+                    "action_failed": "Αποτυχία εφαρμογής των αποτυχημένων ενεργειών Captcha λόγω λάθους στο API του Discord.",
+                    "guild_not_found": "Η συντεχνία {guild_id} δεν είναι διαθέσιμη σε αυτό το bot.",
+                    "guild_fetch_failed": "Απέτυχε η ανάκτηση της συντεχνίας {guild_id} από το Discord.",
+                    "member_not_found": "Το μέλος {user_id} δεν βρέθηκε στη συντεχνία {guild_id}.",
+                    "member_fetch_failed": "Απέτυχε η ανάκτηση του μέλους {user_id} από τη συντεχνία {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Αποτυχία επαλήθευσης Captcha.",
-          "notes": {
-            "deferred_generic": "Οι αποτυχημένες ενέργειες αναβλήθηκαν· οι προσπάθειες Captcha παραμένουν.",
-            "deferred_remaining": "Οι αποτυχημένες ενέργειες αναβλήθηκαν· απομένουν {remaining} {attempts_word}.",
-            "member_left": "Το μέλος δεν είναι πλέον στην ομάδα· παρακάμφθηκαν οι ρυθμισμένες αποτυχημένες ενέργειες."
-          },
-          "attempts": {
-            "unlimited": "Απεριόριστες προσπάθειες παραμένουν.",
-            "additional": "Πρόσθετες προσπάθειες παραμένουν.",
-            "remaining": "{count} {attempts_word} παραμένουν.",
-            "word_one": "προσπάθεια",
-            "word_other": "προσπάθειες"
-          },
-          "embed": {
-            "title_failed": "Η Εκτε^απώσι LocalTime Captcha Απέτυχε",
-            "title_attempt": "Αποτυχία Προσπάθειας Captcha",
-            "description_failed": "{mention} ({user_id}) απέτυχε στην επαλήθευση Captcha.",
-            "description_attempt": "{mention} ({user_id}) απέτυχε σε μια προσπάθεια Captcha.",
-            "fields": {
-              "actions": "Εφαρμοσμένες Ενέργειες",
-              "notes": "Σημειώσεις",
-              "attempts": "Προσπάθειες",
-              "remaining": "Εναπομείναντες Προσπάθειες",
-              "challenge": "Πρόκληση",
-              "reason": "Λόγος",
-              "review": "Ανασκόπηση"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Αποτυχία στην εφαρμογή των επιτυχημένων ενεργειών Captcha λόγω λάθους στο API του Discord.",
-          "unknown_token": "Δε βρέθηκε εκκρεμής επαλήθευση Captcha για αυτόν τον χρήστη.",
-          "token_mismatch": "Το διακριτικό Captcha δεν ταιριάζει με την εκκρεμή επαλήθευση.",
-          "missing_permissions": "Το bot δεν έχει δικαιώματα για την εφαρμογή αποτυχημένων ενεργειών Captcha.",
-          "action_failed": "Αποτυχία εφαρμογής των αποτυχημένων ενεργειών Captcha λόγω λάθους στο API του Discord.",
-          "guild_not_found": "Η συντεχνία {guild_id} δεν είναι διαθέσιμη σε αυτό το bot.",
-          "guild_fetch_failed": "Απέτυχε η ανάκτηση της συντεχνίας {guild_id} από το Discord.",
-          "member_not_found": "Το μέλος {user_id} δεν βρέθηκε στη συντεχνία {guild_id}.",
-          "member_fetch_failed": "Απέτυχε η ανάκτηση του μέλους {user_id} από τη συντεχνία {guild_id}."
         }
-      }
     }
-  }
 }

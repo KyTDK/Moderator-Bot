@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Colpo",
-          "kick": "Calcio",
-          "ban": "Ban",
-          "timeout": "Sospensione",
-          "delete": "Elimina Messaggio",
-          "give_role": "Assegna Ruolo",
-          "take_role": "Rimuovi Ruolo",
-          "warn": "Avverti Utente",
-          "broadcast": "Trasmetti Messaggio",
-          "auto": "Auto"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Colpo",
+                    "kick": "Calcio",
+                    "ban": "Ban",
+                    "timeout": "Sospensione",
+                    "delete": "Elimina Messaggio",
+                    "give_role": "Assegna Ruolo",
+                    "take_role": "Rimuovi Ruolo",
+                    "warn": "Avverti Utente",
+                    "broadcast": "Trasmetti Messaggio",
+                    "auto": "Auto"
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Grátis",
-          "core": "Núcleo",
-          "pro": "Pro",
-          "ultra": "Ultra"
-        },
-        "requirements": {
-          "any": "um plano premium ativo",
-          "single": "um plano {plan} ativo",
-          "double": "um plano {plan_a} ou {plan_b} ativo",
-          "list": "um plano {plans} ativo, ou {last}"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Grátis",
+                    "core": "Núcleo",
+                    "pro": "Pro",
+                    "ultra": "Ultra"
+                },
+                "requirements": {
+                    "any": "um plano premium ativo",
+                    "single": "um plano {plan} ativo",
+                    "double": "um plano {plan_a} ou {plan_b} ativo",
+                    "list": "um plano {plans} ativo, ou {last}"
+                }
+            }
         }
-      }
     }
-  }
 }

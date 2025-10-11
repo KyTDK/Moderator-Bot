@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Darmowy",
-          "core": "Podstawowy",
-          "pro": "Pro",
-          "ultra": "Ultra"
-        },
-        "requirements": {
-          "any": "aktywny plan premium",
-          "single": "aktywny plan {plan}",
-          "double": "aktywny plan {plan_a} lub {plan_b}",
-          "list": "aktywny plan {plans}, lub {last}"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Darmowy",
+                    "core": "Podstawowy",
+                    "pro": "Pro",
+                    "ultra": "Ultra"
+                },
+                "requirements": {
+                    "any": "aktywny plan premium",
+                    "single": "aktywny plan {plan}",
+                    "double": "aktywny plan {plan_a} lub {plan_b}",
+                    "list": "aktywny plan {plans}, lub {last}"
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFW-sisältöä havaittu",
-          "description": "**Käyttäjä:** {user_mention} ({user_display})\n**Syy:** {reason}",
-          "footer": "Käyttäjän tunnus: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "NSFW-tarkastusraportti",
-            "description": {
-              "user": "Käyttäjä: {user}",
-              "file": "Tiedosto: `{filename}`",
-              "type": "Tyyppi: `{file_type}`",
-              "decision": "Päätös: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFW-sisältöä havaittu",
+                    "description": "**Käyttäjä:** {user_mention} ({user_display})\n**Syy:** {reason}",
+                    "footer": "Käyttäjän tunnus: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Kuva",
-              "video": "Video",
-              "unknown": "Tuntematon"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "NSFW-tarkastusraportti",
+                        "description": {
+                            "user": "Käyttäjä: {user}",
+                            "file": "Tiedosto: `{filename}`",
+                            "type": "Tyyppi: `{file_type}`",
+                            "decision": "Päätös: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Kuva",
+                            "video": "Video",
+                            "unknown": "Tuntematon"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Turvallinen",
+                            "unknown": "Tuntematon"
+                        },
+                        "fields": {
+                            "reason": "Syy",
+                            "category": "Kategoria",
+                            "score": "Pistemäärä",
+                            "flagged_any": "Merkitty mikä tahansa",
+                            "summary_categories": "Yhteenvetoluokat",
+                            "max_similarity": "Maksimi samanlaisuus",
+                            "max_category": "Maksimi samanlaisuuden kategoria",
+                            "similarity": "Yhteensopiva samanlaisuus",
+                            "high_accuracy": "Korkea tarkkuus",
+                            "clip_threshold": "CLIP-kynnys",
+                            "moderation_threshold": "Moderointikynnys",
+                            "video_frames": "Videokehykset"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI-moderointi",
+                            "similarity_match": "Samanlaisuusottelu",
+                            "no_frames_extracted": "Kehyksiä ei saatu irrotettua",
+                            "no_nsfw_frames_detected": "Ei havaittuja NSFW-kehyksiä"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Turvallinen",
-              "unknown": "Tuntematon"
-            },
-            "fields": {
-              "reason": "Syy",
-              "category": "Kategoria",
-              "score": "Pistemäärä",
-              "flagged_any": "Merkitty mikä tahansa",
-              "summary_categories": "Yhteenvetoluokat",
-              "max_similarity": "Maksimi samanlaisuus",
-              "max_category": "Maksimi samanlaisuuden kategoria",
-              "similarity": "Yhteensopiva samanlaisuus",
-              "high_accuracy": "Korkea tarkkuus",
-              "clip_threshold": "CLIP-kynnys",
-              "moderation_threshold": "Moderointikynnys",
-              "video_frames": "Videokehykset"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI-moderointi",
-              "similarity_match": "Samanlaisuusottelu",
-              "no_frames_extracted": "Kehyksiä ei saatu irrotettua",
-              "no_nsfw_frames_detected": "Ei havaittuja NSFW-kehyksiä"
+            "shared": {
+                "confidence": {
+                    "name": "Luottamus",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Pisteet",
+                        "similarity": "Samanlaisuus"
+                    }
+                },
+                "boolean": {
+                    "true": "true",
+                    "false": "false"
+                },
+                "category": {
+                    "unspecified": "Määrittelemätön"
+                },
+                "policy_violation": "Mahdollinen sääntörikkomus havaittu (Kategoria: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Luottamus",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Pisteet",
-            "similarity": "Samanlaisuus"
-          }
-        },
-        "boolean": {
-          "true": "true",
-          "false": "false"
-        },
-        "category": {
-          "unspecified": "Määrittelemätön"
-        },
-        "policy_violation": "Mahdollinen sääntörikkomus havaittu (Kategoria: **{category}**)"
-      }
     }
-  }
 }

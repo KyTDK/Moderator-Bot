@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` zaten `{event}` için ayarlandı.",
-          "success": "`{action}` eklendi `{event}` için."
-        },
-        "remove": {
-          "missing": "`{action}`, `{event}` için ayarlanmadı.",
-          "success": "`{event}` tan `{action}` kaldırıldı."
-        },
-        "clear": {
-          "success": "Tüm uyarlanabilir etkinlikler temizlendi."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` zaten `{event}` için ayarlandı.",
+                    "success": "`{action}` eklendi `{event}` için."
+                },
+                "remove": {
+                    "missing": "`{action}`, `{event}` için ayarlanmadı.",
+                    "success": "`{event}` tan `{action}` kaldırıldı."
+                },
+                "clear": {
+                    "success": "Tüm uyarlanabilir etkinlikler temizlendi."
+                }
+            }
         }
-      }
     }
-  }
 }

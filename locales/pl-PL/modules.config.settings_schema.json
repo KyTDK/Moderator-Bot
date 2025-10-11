@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Nieprawidłowy region. Obsługiwane regiony: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Wykryto, że Twoje zdjęcie profilowe zawiera treści explicite",
-          "choices": [
-            "Wykryto, że Twoje zdjęcie profilowe zawiera treści explicite",
-            "Twoje zdjęcie profilowe nie jest odpowiednie dla tego serwera.",
-            "Twoje zdjęcie profilowe zostało oznaczone jako NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Bądź uprzejmy — żadnego nękania ani mowy nienawiści.",
-            "2. Żadnych treści NSFW ani obscenicznych.",
-            "3. Żadnego spamu ani nadmiernej autopromocji.",
-            "4. Przestrzegaj Warunków Użytkowania Discorda."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Bez nękania, mowy nienawiści ani gróźb.",
-            "2. Bez obelg ani dyskryminacyjnego języka.",
-            "3. Bez nawoływania do przemocy lub działań niezgodnych z prawem.",
-            "4. Żadnych treści seksualnych ani explicite.",
-            "5. Przestrzegaj Warunków Użytkowania Discorda."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Nieprawidłowy region. Obsługiwane regiony: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Wykryto, że Twoje zdjęcie profilowe zawiera treści explicite",
+                    "choices": [
+                        "Wykryto, że Twoje zdjęcie profilowe zawiera treści explicite",
+                        "Twoje zdjęcie profilowe nie jest odpowiednie dla tego serwera.",
+                        "Twoje zdjęcie profilowe zostało oznaczone jako NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Bądź uprzejmy — żadnego nękania ani mowy nienawiści.",
+                        "2. Żadnych treści NSFW ani obscenicznych.",
+                        "3. Żadnego spamu ani nadmiernej autopromocji.",
+                        "4. Przestrzegaj Warunków Użytkowania Discorda."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Bez nękania, mowy nienawiści ani gróźb.",
+                        "2. Bez obelg ani dyskryminacyjnego języka.",
+                        "3. Bez nawoływania do przemocy lub działań niezgodnych z prawem.",
+                        "4. Żadnych treści seksualnych ani explicite.",
+                        "5. Przestrzegaj Warunków Użytkowania Discorda."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

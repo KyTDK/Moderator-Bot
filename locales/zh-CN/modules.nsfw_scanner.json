@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "检测到不当内容 (NSFW)",
-          "description": "**用户：** {user_mention} ({user_display})\n**原因：** {reason}",
-          "footer": "用户 ID：{user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "不当内容扫描报告",
-            "description": {
-              "user": "用户：{user}",
-              "file": "文件：`{filename}`",
-              "type": "类型：`{file_type}`",
-              "decision": "决策：**{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "检测到不当内容 (NSFW)",
+                    "description": "**用户：** {user_mention} ({user_display})\n**原因：** {reason}",
+                    "footer": "用户 ID：{user_id}"
+                }
             },
-            "file_types": {
-              "image": "图片",
-              "video": "视频",
-              "unknown": "未知"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "不当内容扫描报告",
+                        "description": {
+                            "user": "用户：{user}",
+                            "file": "文件：`{filename}`",
+                            "type": "类型：`{file_type}`",
+                            "decision": "决策：**{decision}**"
+                        },
+                        "file_types": {
+                            "image": "图片",
+                            "video": "视频",
+                            "unknown": "未知"
+                        },
+                        "decision": {
+                            "nsfw": "不当内容 (NSFW)",
+                            "safe": "安全",
+                            "unknown": "未知"
+                        },
+                        "fields": {
+                            "reason": "理由",
+                            "category": "类别",
+                            "score": "得分",
+                            "flagged_any": "标记任何",
+                            "summary_categories": "总结类别",
+                            "max_similarity": "最大相似度",
+                            "max_category": "最大相似度类别",
+                            "similarity": "匹配相似度",
+                            "high_accuracy": "高精度",
+                            "clip_threshold": "CLIP 阈值",
+                            "moderation_threshold": "审核阈值",
+                            "video_frames": "视频帧"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI 审核",
+                            "similarity_match": "相似度匹配",
+                            "no_frames_extracted": "未提取帧",
+                            "no_nsfw_frames_detected": "未检测到不当内容帧"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "不当内容 (NSFW)",
-              "safe": "安全",
-              "unknown": "未知"
-            },
-            "fields": {
-              "reason": "理由",
-              "category": "类别",
-              "score": "得分",
-              "flagged_any": "标记任何",
-              "summary_categories": "总结类别",
-              "max_similarity": "最大相似度",
-              "max_category": "最大相似度类别",
-              "similarity": "匹配相似度",
-              "high_accuracy": "高精度",
-              "clip_threshold": "CLIP 阈值",
-              "moderation_threshold": "审核阈值",
-              "video_frames": "视频帧"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI 审核",
-              "similarity_match": "相似度匹配",
-              "no_frames_extracted": "未提取帧",
-              "no_nsfw_frames_detected": "未检测到不当内容帧"
+            "shared": {
+                "confidence": {
+                    "name": "置信度",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "得分",
+                        "similarity": "相似度"
+                    }
+                },
+                "boolean": {
+                    "true": "真",
+                    "false": "假"
+                },
+                "category": {
+                    "unspecified": "未指定"
+                },
+                "policy_violation": "检测到潜在政策违规（类别：**{category}**）"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "置信度",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "得分",
-            "similarity": "相似度"
-          }
-        },
-        "boolean": {
-          "true": "真",
-          "false": "假"
-        },
-        "category": {
-          "unspecified": "未指定"
-        },
-        "policy_violation": "检测到潜在政策违规（类别：**{category}**）"
-      }
     }
-  }
 }

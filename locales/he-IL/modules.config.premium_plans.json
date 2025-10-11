@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "חינם",
-          "core": "ליבה",
-          "pro": "מקצועי",
-          "ultra": "אולטרה"
-        },
-        "requirements": {
-          "any": "תוכנית פרימיום פעילה",
-          "single": "תכנית {plan} פעילה",
-          "double": "תכנית {plan_a} פעילה או תכנית {plan_b}",
-          "list": "תכנית {plans} פעילה, או תכנית {last}"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "חינם",
+                    "core": "ליבה",
+                    "pro": "מקצועי",
+                    "ultra": "אולטרה"
+                },
+                "requirements": {
+                    "any": "תוכנית פרימיום פעילה",
+                    "single": "תכנית {plan} פעילה",
+                    "double": "תכנית {plan_a} פעילה או תכנית {plan_b}",
+                    "list": "תכנית {plans} פעילה, או תכנית {last}"
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Localidade inválida. Localidades suportadas: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Sua foto de perfil foi detectada como conteúdo explícito",
-          "choices": [
-            "Sua foto de perfil foi detectada como conteúdo explícito",
-            "Sua foto de perfil não é apropriada para este servidor.",
-            "Sua foto de perfil foi sinalizada como NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Seja respeitoso — sem assédio ou discurso de ódio.",
-            "2. Sem conteúdo NSFW ou obsceno.",
-            "3. Sem spam ou auto-promoção excessiva.",
-            "4. Siga os Termos de Serviço do Discord."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Sem assédio, discurso de ódio ou ameaças.",
-            "2. Sem xingamentos ou linguagem discriminatória.",
-            "3. Sem incitação à violência ou atividades ilegais.",
-            "4. Sem conteúdo sexual ou comentários explícitos.",
-            "5. Siga os Termos de Serviço do Discord."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Localidade inválida. Localidades suportadas: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Sua foto de perfil foi detectada como conteúdo explícito",
+                    "choices": [
+                        "Sua foto de perfil foi detectada como conteúdo explícito",
+                        "Sua foto de perfil não é apropriada para este servidor.",
+                        "Sua foto de perfil foi sinalizada como NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Seja respeitoso — sem assédio ou discurso de ódio.",
+                        "2. Sem conteúdo NSFW ou obsceno.",
+                        "3. Sem spam ou auto-promoção excessiva.",
+                        "4. Siga os Termos de Serviço do Discord."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Sem assédio, discurso de ódio ou ameaças.",
+                        "2. Sem xingamentos ou linguagem discriminatória.",
+                        "3. Sem incitação à violência ou atividades ilegais.",
+                        "4. Sem conteúdo sexual ou comentários explícitos.",
+                        "5. Siga os Termos de Serviço do Discord."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

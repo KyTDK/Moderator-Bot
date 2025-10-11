@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` ist bereits für `{event}` gesetzt.",
-          "success": "`{action}` wurde zu `{event}` hinzugefügt."
-        },
-        "remove": {
-          "missing": "`{action}` ist nicht für `{event}` gesetzt.",
-          "success": "`{action}` wurde von `{event}` entfernt."
-        },
-        "clear": {
-          "success": "Alle adaptiven Ereignisse wurden gelöscht."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` ist bereits für `{event}` gesetzt.",
+                    "success": "`{action}` wurde zu `{event}` hinzugefügt."
+                },
+                "remove": {
+                    "missing": "`{action}` ist nicht für `{event}` gesetzt.",
+                    "success": "`{action}` wurde von `{event}` entfernt."
+                },
+                "clear": {
+                    "success": "Alle adaptiven Ereignisse wurden gelöscht."
+                }
+            }
         }
-      }
     }
-  }
 }

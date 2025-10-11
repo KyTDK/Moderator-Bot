@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "作者",
-        "utterance_label": "讲话",
-        "divider": "---",
-        "unknown_speaker": "未知的发言人",
-        "unknown_prefix": "未知",
-        "user_fallback": "<@{id}> ({id}号)",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "语音聊天室记录",
-        "title_part": "语音聊天室记录（第{index}/{total}部分）",
-        "field_channel": "频道",
-        "field_utterances": "讲话内容",
-        "footer_high": "高精确度的记录",
-        "footer_normal": "正常精确度的记录"
-      },
-      "budget": {
-        "title": "语音聊天室管理预算已达上限",
-        "description": "由于预算限制，跳过本周期分析。"
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "作者",
+                "utterance_label": "讲话",
+                "divider": "---",
+                "unknown_speaker": "未知的发言人",
+                "unknown_prefix": "未知",
+                "user_fallback": "<@{id}> ({id}号)",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "语音聊天室记录",
+                "title_part": "语音聊天室记录（第{index}/{total}部分）",
+                "field_channel": "频道",
+                "field_utterances": "讲话内容",
+                "footer_high": "高精确度的记录",
+                "footer_normal": "正常精确度的记录"
+            },
+            "budget": {
+                "title": "语音聊天室管理预算已达上限",
+                "description": "由于预算限制，跳过本周期分析。"
+            }
+        }
     }
-  }
 }

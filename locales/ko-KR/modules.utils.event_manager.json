@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}`이(가) 이미 `{event}`에 설정되어 있습니다.",
-          "success": "`{action}`이(가) `{event}`에 추가되었습니다."
-        },
-        "remove": {
-          "missing": "`{action}`이(가) `{event}`에 설정되어 있지 않습니다.",
-          "success": "`{action}`이(가) `{event}`에서 제거되었습니다."
-        },
-        "clear": {
-          "success": "모든 적응형 이벤트가 지워졌습니다."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}`이(가) 이미 `{event}`에 설정되어 있습니다.",
+                    "success": "`{action}`이(가) `{event}`에 추가되었습니다."
+                },
+                "remove": {
+                    "missing": "`{action}`이(가) `{event}`에 설정되어 있지 않습니다.",
+                    "success": "`{action}`이(가) `{event}`에서 제거되었습니다."
+                },
+                "clear": {
+                    "success": "모든 적응형 이벤트가 지워졌습니다."
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFW-inhoud Gedetecteerd",
-          "description": "**Gebruiker:** {user_mention} ({user_display})\n**Reden:** {reason}",
-          "footer": "Gebruikers-ID: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "NSFW Scan Rapport",
-            "description": {
-              "user": "Gebruiker: {user}",
-              "file": "Bestand: `{filename}`",
-              "type": "Type: `{file_type}`",
-              "decision": "Beslissing: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFW-inhoud Gedetecteerd",
+                    "description": "**Gebruiker:** {user_mention} ({user_display})\n**Reden:** {reason}",
+                    "footer": "Gebruikers-ID: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Afbeelding",
-              "video": "Video",
-              "unknown": "Onbekend"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "NSFW Scan Rapport",
+                        "description": {
+                            "user": "Gebruiker: {user}",
+                            "file": "Bestand: `{filename}`",
+                            "type": "Type: `{file_type}`",
+                            "decision": "Beslissing: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Afbeelding",
+                            "video": "Video",
+                            "unknown": "Onbekend"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Veilig",
+                            "unknown": "Onbekend"
+                        },
+                        "fields": {
+                            "reason": "Reden",
+                            "category": "Categorie",
+                            "score": "Score",
+                            "flagged_any": "Iets gemarkeerd",
+                            "summary_categories": "Samenvattingscategorieën",
+                            "max_similarity": "Maximale Gelijkenis",
+                            "max_category": "Maximale Gelijkeniscategorie",
+                            "similarity": "Overeenkomende Gelijkenis",
+                            "high_accuracy": "Hoge Nauwkeurigheid",
+                            "clip_threshold": "CLIP Drempelwaarde",
+                            "moderation_threshold": "Moderatie Drempelwaarde",
+                            "video_frames": "Videoframes"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI-moderatie",
+                            "similarity_match": "Gelijkheidsmatch",
+                            "no_frames_extracted": "Geen frames geëxtraheerd",
+                            "no_nsfw_frames_detected": "Geen NSFW-frames gedetecteerd"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Veilig",
-              "unknown": "Onbekend"
-            },
-            "fields": {
-              "reason": "Reden",
-              "category": "Categorie",
-              "score": "Score",
-              "flagged_any": "Iets gemarkeerd",
-              "summary_categories": "Samenvattingscategorieën",
-              "max_similarity": "Maximale Gelijkenis",
-              "max_category": "Maximale Gelijkeniscategorie",
-              "similarity": "Overeenkomende Gelijkenis",
-              "high_accuracy": "Hoge Nauwkeurigheid",
-              "clip_threshold": "CLIP Drempelwaarde",
-              "moderation_threshold": "Moderatie Drempelwaarde",
-              "video_frames": "Videoframes"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI-moderatie",
-              "similarity_match": "Gelijkheidsmatch",
-              "no_frames_extracted": "Geen frames geëxtraheerd",
-              "no_nsfw_frames_detected": "Geen NSFW-frames gedetecteerd"
+            "shared": {
+                "confidence": {
+                    "name": "Vertrouwen",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Score",
+                        "similarity": "Gelijkenis"
+                    }
+                },
+                "boolean": {
+                    "true": "waar",
+                    "false": "onwaar"
+                },
+                "category": {
+                    "unspecified": "Niet gespecificeerd"
+                },
+                "policy_violation": "Potentiële beleidsoverschrijding gedetecteerd (Categorie: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Vertrouwen",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Score",
-            "similarity": "Gelijkenis"
-          }
-        },
-        "boolean": {
-          "true": "waar",
-          "false": "onwaar"
-        },
-        "category": {
-          "unspecified": "Niet gespecificeerd"
-        },
-        "policy_violation": "Potentiële beleidsoverschrijding gedetecteerd (Categorie: **{category}**)"
-      }
     }
-  }
 }

@@ -1,11 +1,11 @@
 {
-  "modules": {
-    "utils": {
-      "mysql": {
-        "settings": {
-          "plan_required": "Ово подешавање захтева {requirement}."
+    "modules": {
+        "utils": {
+            "mysql": {
+                "settings": {
+                    "plan_required": "Ово подешавање захтева {requirement}."
+                }
+            }
         }
-      }
     }
-  }
 }

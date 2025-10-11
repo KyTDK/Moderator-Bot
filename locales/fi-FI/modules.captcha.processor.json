@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Captcha vahvistus onnistui",
-          "embed": {
-            "title": "Captcha-tarkistus läpäisty",
-            "description": "{mention} ({user_id}) läpäisi captcha-vahvistuksen.",
-            "fields": {
-              "actions": "Toimenpiteet Toteutettu",
-              "attempts": "Yritykset",
-              "provider": "Palveluntarjoaja",
-              "challenge": "Haaste",
-              "review": "Arvio"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Captcha vahvistus onnistui",
+                    "embed": {
+                        "title": "Captcha-tarkistus läpäisty",
+                        "description": "{mention} ({user_id}) läpäisi captcha-vahvistuksen.",
+                        "fields": {
+                            "actions": "Toimenpiteet Toteutettu",
+                            "attempts": "Yritykset",
+                            "provider": "Palveluntarjoaja",
+                            "challenge": "Haaste",
+                            "review": "Arvio"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Captcha-vahvistus epäonnistui.",
+                    "notes": {
+                        "deferred_generic": "Epäonnistumisen toimenpiteet viivästytetty; jää vielä yrityksiä.",
+                        "deferred_remaining": "Epäonnistumisen toimenpiteet viivästytetty; {remaining} {attempts_word} jäljellä.",
+                        "member_left": "Jäsen ei ole enää kilta; konfiguroidut epäonnistumistoimenpiteet ohitettiin."
+                    },
+                    "attempts": {
+                        "unlimited": "Rajoittamattomasti yrityksiä jäljellä.",
+                        "additional": "Lisää yrityksiä jäljellä.",
+                        "remaining": "{count} {attempts_word} jäljellä.",
+                        "word_one": "yritys",
+                        "word_other": "yrityksiä"
+                    },
+                    "embed": {
+                        "title_failed": "Captcha-vahvistus epäonnistui",
+                        "title_attempt": "Captcha-yritys epäonnistui",
+                        "description_failed": "{mention} ({user_id}) epäonnistui captcha-vahvistuksessa.",
+                        "description_attempt": "{mention} ({user_id}) epäonnistui captcha-yrityksessä.",
+                        "fields": {
+                            "actions": "Toimenpiteet Toteutettu",
+                            "notes": "Huomautuksia",
+                            "attempts": "Yritykset",
+                            "remaining": "Jäljellä olevat Yritykset",
+                            "challenge": "Haaste",
+                            "reason": "Syy",
+                            "review": "Arvio"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Epäonnistuttiin soveltamaan captcha-vahvistuksen toimia Discord API-virheen vuoksi.",
+                    "unknown_token": "Tälle käyttäjälle ei löydy odottavaa captcha-vahvistusta.",
+                    "token_mismatch": "Captcha-tunnus ei vastaa odottavaa vahvistusta.",
+                    "missing_permissions": "Botilta puuttuu oikeudet soveltaa captcha-epäonnistumisen toimia.",
+                    "action_failed": "Epäonnistuttiin soveltamaan captcha-epäonnistumisen toimia Discord API-virheen vuoksi.",
+                    "guild_not_found": "Kilta {guild_id} ei ole saatavilla tälle bottille.",
+                    "guild_fetch_failed": "Epäonnistuttiin hakemaan kiltaa {guild_id} Discordista.",
+                    "member_not_found": "Jäsentä {user_id} ei löydy killasta {guild_id}.",
+                    "member_fetch_failed": "Epäonnistuttiin hakemaan jäsentä {user_id} killasta {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Captcha-vahvistus epäonnistui.",
-          "notes": {
-            "deferred_generic": "Epäonnistumisen toimenpiteet viivästytetty; jää vielä yrityksiä.",
-            "deferred_remaining": "Epäonnistumisen toimenpiteet viivästytetty; {remaining} {attempts_word} jäljellä.",
-            "member_left": "Jäsen ei ole enää kilta; konfiguroidut epäonnistumistoimenpiteet ohitettiin."
-          },
-          "attempts": {
-            "unlimited": "Rajoittamattomasti yrityksiä jäljellä.",
-            "additional": "Lisää yrityksiä jäljellä.",
-            "remaining": "{count} {attempts_word} jäljellä.",
-            "word_one": "yritys",
-            "word_other": "yrityksiä"
-          },
-          "embed": {
-            "title_failed": "Captcha-vahvistus epäonnistui",
-            "title_attempt": "Captcha-yritys epäonnistui",
-            "description_failed": "{mention} ({user_id}) epäonnistui captcha-vahvistuksessa.",
-            "description_attempt": "{mention} ({user_id}) epäonnistui captcha-yrityksessä.",
-            "fields": {
-              "actions": "Toimenpiteet Toteutettu",
-              "notes": "Huomautuksia",
-              "attempts": "Yritykset",
-              "remaining": "Jäljellä olevat Yritykset",
-              "challenge": "Haaste",
-              "reason": "Syy",
-              "review": "Arvio"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Epäonnistuttiin soveltamaan captcha-vahvistuksen toimia Discord API-virheen vuoksi.",
-          "unknown_token": "Tälle käyttäjälle ei löydy odottavaa captcha-vahvistusta.",
-          "token_mismatch": "Captcha-tunnus ei vastaa odottavaa vahvistusta.",
-          "missing_permissions": "Botilta puuttuu oikeudet soveltaa captcha-epäonnistumisen toimia.",
-          "action_failed": "Epäonnistuttiin soveltamaan captcha-epäonnistumisen toimia Discord API-virheen vuoksi.",
-          "guild_not_found": "Kilta {guild_id} ei ole saatavilla tälle bottille.",
-          "guild_fetch_failed": "Epäonnistuttiin hakemaan kiltaa {guild_id} Discordista.",
-          "member_not_found": "Jäsentä {user_id} ei löydy killasta {guild_id}.",
-          "member_fetch_failed": "Epäonnistuttiin hakemaan jäsentä {user_id} killasta {guild_id}."
         }
-      }
     }
-  }
 }

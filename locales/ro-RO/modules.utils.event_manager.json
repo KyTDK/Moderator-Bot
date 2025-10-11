@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "'{action}' este deja setat pentru '{event}'.",
-          "success": "'{action}' a fost adăugat la '{event}'."
-        },
-        "remove": {
-          "missing": "'{action}' nu este setat pentru '{event}'.",
-          "success": "'{action}' a fost eliminat din '{event}'."
-        },
-        "clear": {
-          "success": "Toate evenimentele adaptive au fost eliminate."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "'{action}' este deja setat pentru '{event}'.",
+                    "success": "'{action}' a fost adăugat la '{event}'."
+                },
+                "remove": {
+                    "missing": "'{action}' nu este setat pentru '{event}'.",
+                    "success": "'{action}' a fost eliminat din '{event}'."
+                },
+                "clear": {
+                    "success": "Toate evenimentele adaptive au fost eliminate."
+                }
+            }
         }
-      }
     }
-  }
 }

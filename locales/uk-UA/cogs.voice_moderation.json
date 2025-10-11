@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "АВТОР",
-        "utterance_label": "ВИСЛОВЛЮВАННЯ",
-        "divider": "---",
-        "unknown_speaker": "Невідомий промовець",
-        "unknown_prefix": "Невідомо",
-        "user_fallback": "<@{id}> (ID = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "Розшифровка VC",
-        "title_part": "Розшифровка VC (частина {index}/{total})",
-        "field_channel": "Канал",
-        "field_utterances": "Висловлювання",
-        "footer_high": "Розшифровка високої точності",
-        "footer_normal": "Розшифровка звичайної точності"
-      },
-      "budget": {
-        "title": "Досягнуто бюджету модерації VC",
-        "description": "Пропуск аналізу для цього циклу через обмеження бюджету."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "АВТОР",
+                "utterance_label": "ВИСЛОВЛЮВАННЯ",
+                "divider": "---",
+                "unknown_speaker": "Невідомий промовець",
+                "unknown_prefix": "Невідомо",
+                "user_fallback": "<@{id}> (ID = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "Розшифровка VC",
+                "title_part": "Розшифровка VC (частина {index}/{total})",
+                "field_channel": "Канал",
+                "field_utterances": "Висловлювання",
+                "footer_high": "Розшифровка високої точності",
+                "footer_normal": "Розшифровка звичайної точності"
+            },
+            "budget": {
+                "title": "Досягнуто бюджету модерації VC",
+                "description": "Пропуск аналізу для цього циклу через обмеження бюджету."
+            }
+        }
     }
-  }
 }

@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "著者",
-        "utterance_label": "発話",
-        "divider": "---",
-        "unknown_speaker": "不明な発言者",
-        "unknown_prefix": "不明",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VCトランスクリプト",
-        "title_part": "VCトランスクリプト (パート {index}/{total})",
-        "field_channel": "チャンネル",
-        "field_utterances": "発話",
-        "footer_high": "高精度のトランスクリプト",
-        "footer_normal": "通常精度のトランスクリプト"
-      },
-      "budget": {
-        "title": "VCモデレーション予算到達",
-        "description": "予算制限のため、このサイクルの分析をスキップします。"
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "著者",
+                "utterance_label": "発話",
+                "divider": "---",
+                "unknown_speaker": "不明な発言者",
+                "unknown_prefix": "不明",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VCトランスクリプト",
+                "title_part": "VCトランスクリプト (パート {index}/{total})",
+                "field_channel": "チャンネル",
+                "field_utterances": "発話",
+                "footer_high": "高精度のトランスクリプト",
+                "footer_normal": "通常精度のトランスクリプト"
+            },
+            "budget": {
+                "title": "VCモデレーション予算到達",
+                "description": "予算制限のため、このサイクルの分析をスキップします。"
+            }
+        }
     }
-  }
 }

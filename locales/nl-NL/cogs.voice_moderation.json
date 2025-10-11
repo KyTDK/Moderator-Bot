@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "AUTEUR",
-        "utterance_label": "UITSPRAAK",
-        "divider": "---",
-        "unknown_speaker": "Onbekende spreker",
-        "unknown_prefix": "Onbekend",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transcript",
-        "title_part": "VC Transcript (deel {index}/{total})",
-        "field_channel": "Kanaal",
-        "field_utterances": "Uitspraken",
-        "footer_high": "Transcript met hoge nauwkeurigheid",
-        "footer_normal": "Transcript met normale nauwkeurigheid"
-      },
-      "budget": {
-        "title": "VC Moderatie Budget Bereikt",
-        "description": "Analyse voor deze cyclus wordt overgeslagen wegens budgetlimiet."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "AUTEUR",
+                "utterance_label": "UITSPRAAK",
+                "divider": "---",
+                "unknown_speaker": "Onbekende spreker",
+                "unknown_prefix": "Onbekend",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC Transcript",
+                "title_part": "VC Transcript (deel {index}/{total})",
+                "field_channel": "Kanaal",
+                "field_utterances": "Uitspraken",
+                "footer_high": "Transcript met hoge nauwkeurigheid",
+                "footer_normal": "Transcript met normale nauwkeurigheid"
+            },
+            "budget": {
+                "title": "VC Moderatie Budget Bereikt",
+                "description": "Analyse voor deze cyclus wordt overgeslagen wegens budgetlimiet."
+            }
+        }
     }
-  }
 }

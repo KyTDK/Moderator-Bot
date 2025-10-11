@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "TÁC GIẢ",
-        "utterance_label": "PHÁT NGÔN",
-        "divider": "---",
-        "unknown_speaker": "Người nói không xác định",
-        "unknown_prefix": "Không Xác Định",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "Bản Ghi Âm VC",
-        "title_part": "Bản Ghi Âm VC (phần {index}/{total})",
-        "field_channel": "Kênh",
-        "field_utterances": "Phát Ngôn",
-        "footer_high": "Bản ghi âm độ chính xác cao",
-        "footer_normal": "Bản ghi âm độ chính xác bình thường"
-      },
-      "budget": {
-        "title": "Đã Đạt Ngân Sách Kiểm Duyệt VC",
-        "description": "Bỏ qua phân tích trong chu kỳ này do giới hạn ngân sách."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "TÁC GIẢ",
+                "utterance_label": "PHÁT NGÔN",
+                "divider": "---",
+                "unknown_speaker": "Người nói không xác định",
+                "unknown_prefix": "Không Xác Định",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "Bản Ghi Âm VC",
+                "title_part": "Bản Ghi Âm VC (phần {index}/{total})",
+                "field_channel": "Kênh",
+                "field_utterances": "Phát Ngôn",
+                "footer_high": "Bản ghi âm độ chính xác cao",
+                "footer_normal": "Bản ghi âm độ chính xác bình thường"
+            },
+            "budget": {
+                "title": "Đã Đạt Ngân Sách Kiểm Duyệt VC",
+                "description": "Bỏ qua phân tích trong chu kỳ này do giới hạn ngân sách."
+            }
+        }
     }
-  }
 }

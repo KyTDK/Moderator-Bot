@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFW 콘텐츠 감지됨",
-          "description": "**사용자:** {user_mention} ({user_display})\n**이유:** {reason}",
-          "footer": "사용자 ID: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "NSFW 스캔 보고서",
-            "description": {
-              "user": "사용자: {user}",
-              "file": "파일: `{filename}`",
-              "type": "타입: `{file_type}`",
-              "decision": "결정: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFW 콘텐츠 감지됨",
+                    "description": "**사용자:** {user_mention} ({user_display})\n**이유:** {reason}",
+                    "footer": "사용자 ID: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "이미지",
-              "video": "비디오",
-              "unknown": "알 수 없음"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "NSFW 스캔 보고서",
+                        "description": {
+                            "user": "사용자: {user}",
+                            "file": "파일: `{filename}`",
+                            "type": "타입: `{file_type}`",
+                            "decision": "결정: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "이미지",
+                            "video": "비디오",
+                            "unknown": "알 수 없음"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "안전",
+                            "unknown": "알 수 없음"
+                        },
+                        "fields": {
+                            "reason": "이유",
+                            "category": "카테고리",
+                            "score": "점수",
+                            "flagged_any": "모든 항목 플래그 지정됨",
+                            "summary_categories": "요약 카테고리",
+                            "max_similarity": "최대 유사도",
+                            "max_category": "최대 유사도 카테고리",
+                            "similarity": "일치하는 유사도",
+                            "high_accuracy": "높은 정확도",
+                            "clip_threshold": "CLIP 임계값",
+                            "moderation_threshold": "관리 임계값",
+                            "video_frames": "영상 프레임"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI 모더레이션",
+                            "similarity_match": "유사도 일치",
+                            "no_frames_extracted": "프레임을 추출하지 않음",
+                            "no_nsfw_frames_detected": "NSFW 프레임이 감지되지 않음"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "안전",
-              "unknown": "알 수 없음"
-            },
-            "fields": {
-              "reason": "이유",
-              "category": "카테고리",
-              "score": "점수",
-              "flagged_any": "모든 항목 플래그 지정됨",
-              "summary_categories": "요약 카테고리",
-              "max_similarity": "최대 유사도",
-              "max_category": "최대 유사도 카테고리",
-              "similarity": "일치하는 유사도",
-              "high_accuracy": "높은 정확도",
-              "clip_threshold": "CLIP 임계값",
-              "moderation_threshold": "관리 임계값",
-              "video_frames": "영상 프레임"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI 모더레이션",
-              "similarity_match": "유사도 일치",
-              "no_frames_extracted": "프레임을 추출하지 않음",
-              "no_nsfw_frames_detected": "NSFW 프레임이 감지되지 않음"
+            "shared": {
+                "confidence": {
+                    "name": "신뢰도",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "점수",
+                        "similarity": "유사도"
+                    }
+                },
+                "boolean": {
+                    "true": "참",
+                    "false": "거짓"
+                },
+                "category": {
+                    "unspecified": "명시되지 않음"
+                },
+                "policy_violation": "잠재적인 정책 위반 감지됨 (카테고리: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "신뢰도",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "점수",
-            "similarity": "유사도"
-          }
-        },
-        "boolean": {
-          "true": "참",
-          "false": "거짓"
-        },
-        "category": {
-          "unspecified": "명시되지 않음"
-        },
-        "policy_violation": "잠재적인 정책 위반 감지됨 (카테고리: **{category}**)"
-      }
     }
-  }
 }

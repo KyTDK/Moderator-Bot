@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "Contenu NSFW détecté",
-          "description": "**Utilisateur :** {user_mention} ({user_display})\n**Raison :** {reason}",
-          "footer": "ID utilisateur : {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Rapport de Scan NSFW",
-            "description": {
-              "user": "Utilisateur : {user}",
-              "file": "Fichier : `{filename}`",
-              "type": "Type : `{file_type}`",
-              "decision": "Décision : **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "Contenu NSFW détecté",
+                    "description": "**Utilisateur :** {user_mention} ({user_display})\n**Raison :** {reason}",
+                    "footer": "ID utilisateur : {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Image",
-              "video": "Vidéo",
-              "unknown": "Inconnu"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Rapport de Scan NSFW",
+                        "description": {
+                            "user": "Utilisateur : {user}",
+                            "file": "Fichier : `{filename}`",
+                            "type": "Type : `{file_type}`",
+                            "decision": "Décision : **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Image",
+                            "video": "Vidéo",
+                            "unknown": "Inconnu"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Sûr",
+                            "unknown": "Inconnu"
+                        },
+                        "fields": {
+                            "reason": "Raison",
+                            "category": "Catégorie",
+                            "score": "Score",
+                            "flagged_any": "Marqué n’importe lequel",
+                            "summary_categories": "Catégories Résumées",
+                            "max_similarity": "Similitude Max",
+                            "max_category": "Catégorie de Similitude Max",
+                            "similarity": "Similitude Correspondante",
+                            "high_accuracy": "Précision Élevée",
+                            "clip_threshold": "Seuil CLIP",
+                            "moderation_threshold": "Seuil de Modération",
+                            "video_frames": "Trames Vidéo"
+                        },
+                        "reasons": {
+                            "openai_moderation": "modération OpenAI",
+                            "similarity_match": "Correspondance de similitude",
+                            "no_frames_extracted": "Pas de trames extraites",
+                            "no_nsfw_frames_detected": "Pas de trames NSFW détectées"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Sûr",
-              "unknown": "Inconnu"
-            },
-            "fields": {
-              "reason": "Raison",
-              "category": "Catégorie",
-              "score": "Score",
-              "flagged_any": "Marqué n’importe lequel",
-              "summary_categories": "Catégories Résumées",
-              "max_similarity": "Similitude Max",
-              "max_category": "Catégorie de Similitude Max",
-              "similarity": "Similitude Correspondante",
-              "high_accuracy": "Précision Élevée",
-              "clip_threshold": "Seuil CLIP",
-              "moderation_threshold": "Seuil de Modération",
-              "video_frames": "Trames Vidéo"
-            },
-            "reasons": {
-              "openai_moderation": "modération OpenAI",
-              "similarity_match": "Correspondance de similitude",
-              "no_frames_extracted": "Pas de trames extraites",
-              "no_nsfw_frames_detected": "Pas de trames NSFW détectées"
+            "shared": {
+                "confidence": {
+                    "name": "Confiance",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Score",
+                        "similarity": "Similitude"
+                    }
+                },
+                "boolean": {
+                    "true": "vrai",
+                    "false": "faux"
+                },
+                "category": {
+                    "unspecified": "Non spécifié"
+                },
+                "policy_violation": "Violation potentielle de la politique détectée (Catégorie : **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Confiance",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Score",
-            "similarity": "Similitude"
-          }
-        },
-        "boolean": {
-          "true": "vrai",
-          "false": "faux"
-        },
-        "category": {
-          "unspecified": "Non spécifié"
-        },
-        "policy_violation": "Violation potentielle de la politique détectée (Catégorie : **{category}**)"
-      }
     }
-  }
 }
