@@ -1,11 +1,11 @@
 {
-  "modules": {
-    "utils": {
-      "mysql": {
-        "settings": {
-          "plan_required": "Tämä asetus edellyttää {requirement}."
+    "modules": {
+        "utils": {
+            "mysql": {
+                "settings": {
+                    "plan_required": "Tämä asetus edellyttää {requirement}."
+                }
+            }
         }
-      }
     }
-  }
 }
