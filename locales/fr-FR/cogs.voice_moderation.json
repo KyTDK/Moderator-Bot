@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "AUTEUR",
-        "utterance_label": "ÉNONCÉ",
-        "divider": "---",
-        "unknown_speaker": "Interlocuteur inconnu",
-        "unknown_prefix": "Inconnu",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}) : {text}",
-        "title_single": "Transcription VC",
-        "title_part": "Transcription VC (partie {index}/{total})",
-        "field_channel": "Canal",
-        "field_utterances": "Énoncés",
-        "footer_high": "Transcription de haute précision",
-        "footer_normal": "Transcription de précision normale"
-      },
-      "budget": {
-        "title": "Budget de modération VC atteint",
-        "description": "Analyse sautée pour ce cycle en raison de la limite de budget."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "AUTEUR",
+                "utterance_label": "ÉNONCÉ",
+                "divider": "---",
+                "unknown_speaker": "Interlocuteur inconnu",
+                "unknown_prefix": "Inconnu",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}) : {text}",
+                "title_single": "Transcription VC",
+                "title_part": "Transcription VC (partie {index}/{total})",
+                "field_channel": "Canal",
+                "field_utterances": "Énoncés",
+                "footer_high": "Transcription de haute précision",
+                "footer_normal": "Transcription de précision normale"
+            },
+            "budget": {
+                "title": "Budget de modération VC atteint",
+                "description": "Analyse sautée pour ce cycle en raison de la limite de budget."
+            }
+        }
     }
-  }
 }
