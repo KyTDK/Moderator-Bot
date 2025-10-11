@@ -1,19 +1,19 @@
 ﻿{
-    "modules": {
-        "utils": {
-            "event_manager": {
-                "add": {
-                    "duplicate": "`{action}` is already set for `{event}`.",
-                    "success": "Added `{action}` to `{event}`."
-                },
-                "remove": {
-                    "missing": "`{action}` is not set for `{event}`.",
-                    "success": "Removed `{action}` from `{event}`."
-                },
-                "clear": {
-                    "success": "All adaptive events have been cleared."
-                }
-            }
+  "modules": {
+    "utils": {
+      "event_manager": {
+        "add": {
+          "duplicate": "`{action}` is already set for `{event}`.",
+          "success": "Added `{action}` to `{event}`."
+        },
+        "remove": {
+          "missing": "`{action}` is not set for `{event}`.",
+          "success": "Removed `{action}` from `{event}`."
+        },
+        "clear": {
+          "success": "All adaptive events have been cleared."
         }
+      }
     }
+  }
 }
