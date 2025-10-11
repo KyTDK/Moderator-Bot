@@ -20,7 +20,8 @@
                         "2. No es permet contingut NSFW o obscé.",
                         "3. No es permet spam ni autopromoció excessiva.",
                         "4. Segueix les Condicions del Servei de Discord."
-                    ]
+                    ],
+                    "description": "Les normes del servidor utilitzades per a la moderació autònoma."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -105,6 +106,124 @@
                         "La teva imatge de perfil no és adequada per a aquest servidor.",
                         "La teva imatge de perfil ha estat marcada com a NSFW."
                     ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Elimina el silenci temporal d’un usuari un cop hagi canviat la seva imatge de perfil per una d’adequada."
+                },
+                "scan-age-restricted": {
+                    "description": "Analitza els canals amb restricció d’edat (NSFW). Quan està desactivat, els canals NSFW s’ometen."
+                },
+                "check-tenor-gifs": {
+                    "description": "Aplica sancions quan es detecti contingut NSFW en GIFs de Tenor."
+                },
+                "use-default-banned-words": {
+                    "description": "Utilitza la llista integrada de paraules ofensives per a aquest servidor."
+                },
+                "exclude-channels": {
+                    "description": "Canals a excloure de la detecció."
+                },
+                "delete-scam-messages": {
+                    "description": "Suprimeix automàticament els missatges que coincideixin amb patrons d’estafa o URL."
+                },
+                "scam-detection-action": {
+                    "description": "Acció a dur a terme quan es detecti un missatge d’estafa."
+                },
+                "check-links": {
+                    "description": "Comprova els enllaços dels missatges per detectar programari maliciós, phishing, estafes, etc."
+                },
+                "exclude-scam-channels": {
+                    "description": "Canals a excloure de la detecció d’estafes."
+                },
+                "aimod-detection-action": {
+                    "description": "Acció a dur a terme quan el moderador autònom detecti una infracció. Utilitza auto perquè la IA prengui la decisió."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Utilitza moderació amb IA de més precisió amb gpt-5-mini (aprox. 2,25 USD per 1M tokens). Consumeix el pressupost mensual més ràpidament en comparació amb la configuració per defecte."
+                },
+                "autonomous-mod": {
+                    "description": "Utilitza la IA per moderar automàticament tot el servidor."
+                },
+                "aimod-check-interval": {
+                    "description": "Cada quan s’ha d’executar el procés per lots de moderació amb IA."
+                },
+                "aimod-mode": {
+                    "description": "Tria com s’activa la moderació amb IA: mode `report` (només quan es mencioni), mode `interval` (escaneig automàtic en segon pla) o mode `adaptive` (canvia dinàmicament segons l’activitat del servidor, els esdeveniments o la configuració)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Configura quins esdeveniments desencadenen el canvi de modes de moderació amb IA."
+                },
+                "no-forward-from-role": {
+                    "description": "Impedeix que un rol específic reenviï missatges."
+                },
+                "banned-urls": {
+                    "description": "URL o dominis exactes a bloquejar."
+                },
+                "url-detection-action": {
+                    "description": "Acció a dur a terme quan es detecti un URL bloquejat."
+                },
+                "exclude-url-channels": {
+                    "description": "Canals a excloure del bloqueig d’URL."
+                },
+                "vcmod-enabled": {
+                    "description": "Habilita la moderació i la transcripció de canals de veu."
+                },
+                "vcmod-channels": {
+                    "description": "Canals de veu a supervisar (quan estigui buit, no se'n supervisa cap)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Quant de temps cal escoltar activament per canal de veu durant un cicle (p. ex., 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Quant de temps cal fer una pausa entre cada transcripció en Mode Estalvi."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Mode estalvi: el bot va passant pels canals de veu per semblar actiu, però la major part del temps no enregistra ni escolta."
+                },
+                "vcmod-rules": {
+                    "description": "Normes aplicades a la moderació del xat de veu (separades de les normes de text).",
+                    "default": [
+                        "1. No assetjament, discurs d'odi ni amenaces.",
+                        "2. No insults ni llenguatge discriminatori.",
+                        "3. No incitació a la violència ni a activitats il·legals.",
+                        "4. No contingut sexual ni comentaris explícits.",
+                        "5. Segueix les Condicions del Servei de Discord."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Acció a dur a terme quan la moderació de canals de veu detecti una infracció. Usa auto perquè la IA decideixi."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Utilitza una anàlisi d'IA de més precisió per a la moderació de canals de veu (fa servir més pressupost de tokens)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Habilita transcripcions de veu més clares amb processament premium (cost més elevat)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Canal on es publiquen les transcripcions de veu."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Quan estigui habilitat, el bot només transcriurà el xat de veu sense aplicar comprovacions de normes amb IA ni accions de moderació. Això redueix significativament l'ús del pressupost."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Exigeix que els nous membres superin un repte captcha abans d'obtenir accés."
+                },
+                "captcha-grace-period": {
+                    "description": "Quant de temps tenen els nous membres per acabar la verificació captcha (p. ex. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Accions realitzades automàticament després d'una verificació correcta."
+                },
+                "captcha-delivery-method": {
+                    "description": "Com s'envien els enllaços de verificació captcha als nous membres (DM o embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Canal on es publica el missatge incrustat de verificació del captcha quan s'utilitza l'enviament amb missatges incrustats."
+                },
+                "pre-captcha-roles": {
+                    "description": "Rols assignats als nous membres abans de completar la verificació del captcha."
+                },
+                "captcha-failure-actions": {
+                    "description": "Accions a dur a terme automàticament quan un membre no supera la verificació del captcha."
                 }
             }
         }
