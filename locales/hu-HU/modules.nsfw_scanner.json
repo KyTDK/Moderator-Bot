@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFW tartalom észlelve",
-          "description": "**Felhasználó:** {user_mention} ({user_display})\n**Ok:** {reason}",
-          "footer": "Felhasználó ID: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "NSFW vizsgálati jelentés",
-            "description": {
-              "user": "Felhasználó: {user}",
-              "file": "Fájl: `{filename}`",
-              "type": "Típus: `{file_type}`",
-              "decision": "Döntés: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFW tartalom észlelve",
+                    "description": "**Felhasználó:** {user_mention} ({user_display})\n**Ok:** {reason}",
+                    "footer": "Felhasználó ID: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Kép",
-              "video": "Videó",
-              "unknown": "Ismeretlen"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "NSFW vizsgálati jelentés",
+                        "description": {
+                            "user": "Felhasználó: {user}",
+                            "file": "Fájl: `{filename}`",
+                            "type": "Típus: `{file_type}`",
+                            "decision": "Döntés: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Kép",
+                            "video": "Videó",
+                            "unknown": "Ismeretlen"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Biztonságos",
+                            "unknown": "Ismeretlen"
+                        },
+                        "fields": {
+                            "reason": "Ok",
+                            "category": "Kategória",
+                            "score": "Pontszám",
+                            "flagged_any": "Bármely megjelölve",
+                            "summary_categories": "Összefoglaló kategóriák",
+                            "max_similarity": "Maximális hasonlóság",
+                            "max_category": "Maximális hasonlósági kategória",
+                            "similarity": "Egyező hasonlóság",
+                            "high_accuracy": "Magas pontosság",
+                            "clip_threshold": "CLIP küszöb",
+                            "moderation_threshold": "Mérsékelt küszöb",
+                            "video_frames": "Videó keretek"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI moderáció",
+                            "similarity_match": "Hasonlósági egyezés",
+                            "no_frames_extracted": "Nincs kivont keret",
+                            "no_nsfw_frames_detected": "Nincs észlelt NSFW keret"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Biztonságos",
-              "unknown": "Ismeretlen"
-            },
-            "fields": {
-              "reason": "Ok",
-              "category": "Kategória",
-              "score": "Pontszám",
-              "flagged_any": "Bármely megjelölve",
-              "summary_categories": "Összefoglaló kategóriák",
-              "max_similarity": "Maximális hasonlóság",
-              "max_category": "Maximális hasonlósági kategória",
-              "similarity": "Egyező hasonlóság",
-              "high_accuracy": "Magas pontosság",
-              "clip_threshold": "CLIP küszöb",
-              "moderation_threshold": "Mérsékelt küszöb",
-              "video_frames": "Videó keretek"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI moderáció",
-              "similarity_match": "Hasonlósági egyezés",
-              "no_frames_extracted": "Nincs kivont keret",
-              "no_nsfw_frames_detected": "Nincs észlelt NSFW keret"
+            "shared": {
+                "confidence": {
+                    "name": "Bizalom",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Pontszám",
+                        "similarity": "Hasonlóság"
+                    }
+                },
+                "boolean": {
+                    "true": "igaz",
+                    "false": "hamis"
+                },
+                "category": {
+                    "unspecified": "Meghatározatlan"
+                },
+                "policy_violation": "Potenciális szabályszegés észlelve (Kategória: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Bizalom",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Pontszám",
-            "similarity": "Hasonlóság"
-          }
-        },
-        "boolean": {
-          "true": "igaz",
-          "false": "hamis"
-        },
-        "category": {
-          "unspecified": "Meghatározatlan"
-        },
-        "policy_violation": "Potenciális szabályszegés észlelve (Kategória: **{category}**)"
-      }
     }
-  }
 }
