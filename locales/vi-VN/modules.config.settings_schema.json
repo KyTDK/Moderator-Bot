@@ -57,6 +57,60 @@
                 },
                 "nsfw-detection-categories": {
                     "description": "Các danh mục được coi là NSFW cho việc phát hiện."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Bật quét NSFW độ chính xác cao để phát hiện đáng tin cậy hơn. Chỉ dành cho Accelerated."
+                },
+                "threshold": {
+                    "description": "Ngưỡng độ tin cậy phát hiện NSFW. Giá trị thấp hơn sẽ nhạy hơn."
+                },
+                "banned-words-action": {
+                    "description": "Hành động cần thực hiện khi người dùng đăng một từ bị cấm."
+                },
+                "monitor-channel": {
+                    "description": "Kênh để ghi nhật ký tất cả hoạt động của máy chủ, bao gồm chỉnh sửa, xóa tin nhắn và sự kiện người dùng tham gia/rời đi."
+                },
+                "captcha-log-channel": {
+                    "description": "Kênh nơi đăng nhật ký xác minh captcha và cập nhật hoạt động."
+                },
+                "aimod-channel": {
+                    "description": "Kênh để đăng nhật ký vi phạm AI."
+                },
+                "cycle-strike-actions": {
+                    "description": "Xoay vòng các hành động xử phạt khi đã hết hành động có thể áp dụng cho người dùng."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Các kênh cần loại trừ khỏi phát hiện từ cấm."
+                },
+                "strike-actions": {
+                    "description": "Hành động cần thực hiện cho từng mức vi phạm."
+                },
+                "strike-expiry": {
+                    "description": "Thời lượng của một cảnh cáo. Sử dụng các định dạng như 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Tương ứng là giây, phút, giờ, ngày, tuần, tháng và năm."
+                },
+                "dm-on-strike": {
+                    "description": "Gửi DM cho người dùng khi họ nhận một cảnh cáo."
+                },
+                "check-pfp": {
+                    "description": "Kiểm tra ảnh đại diện của người dùng để phát hiện nội dung NSFW."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Hành động cần thực hiện khi người dùng đặt ảnh đại diện NSFW."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Tin nhắn để gửi khi ảnh đại diện của người chơi bị gắn cờ.",
+                    "default": "Ảnh đại diện của bạn đã được phát hiện có nội dung phản cảm",
+                    "choices": [
+                        "Ảnh đại diện của bạn đã được phát hiện có nội dung phản cảm",
+                        "Ảnh đại diện của bạn không thích hợp với máy chủ này.",
+                        "Ảnh đại diện của bạn đã bị đánh dấu là NSFW."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Gỡ bỏ tạm khóa người dùng sau khi họ đã đổi ảnh đại diện sang ảnh phù hợp."
+                },
+                "scan-age-restricted": {
+                    "description": "Quét các kênh giới hạn độ tuổi (NSFW). Khi tắt, các kênh NSFW sẽ bị bỏ qua."
                 }
             }
         }
