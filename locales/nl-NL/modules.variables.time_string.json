@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "Ongeldig duurformaat. Gebruik formaten zoals 20s, 30m, 2u, 30d, 2w, 5mnd, 1j. Seconden, minuten, uren, dagen, weken, maanden en jaren respectievelijk."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "Ongeldig duurformaat. Gebruik formaten zoals 20s, 30m, 2u, 30d, 2w, 5mnd, 1j. Seconden, minuten, uren, dagen, weken, maanden en jaren respectievelijk."
+            }
+        }
     }
-  }
 }
