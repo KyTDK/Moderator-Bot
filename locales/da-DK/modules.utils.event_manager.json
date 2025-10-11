@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` er allerede sat for `{event}`.",
-          "success": "Tilføjede `{action}` til `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` er ikke sat for `{event}`.",
-          "success": "Fjernede `{action}` fra `{event}`."
-        },
-        "clear": {
-          "success": "Alle adaptive hændelser er blevet ryddet."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` er allerede sat for `{event}`.",
+                    "success": "Tilføjede `{action}` til `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` er ikke sat for `{event}`.",
+                    "success": "Fjernede `{action}` fra `{event}`."
+                },
+                "clear": {
+                    "success": "Alle adaptive hændelser er blevet ryddet."
+                }
+            }
         }
-      }
     }
-  }
 }
