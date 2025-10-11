@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` již je nastaveno pro `{event}`.",
-          "success": "Přidáno `{action}` k `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` není nastaveno pro `{event}`.",
-          "success": "Odstraněno `{action}` z `{event}`."
-        },
-        "clear": {
-          "success": "Všechny adaptivní události byly odstraněny."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` již je nastaveno pro `{event}`.",
+                    "success": "Přidáno `{action}` k `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` není nastaveno pro `{event}`.",
+                    "success": "Odstraněno `{action}` z `{event}`."
+                },
+                "clear": {
+                    "success": "Všechny adaptivní události byly odstraněny."
+                }
+            }
         }
-      }
     }
-  }
 }
