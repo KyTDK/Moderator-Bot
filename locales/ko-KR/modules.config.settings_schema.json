@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "유효하지 않은 로케일입니다. 지원되는 로케일: {supported}"
+                    "invalid": "유효하지 않은 로케일입니다. 지원되는 로케일: {supported}",
+                    "description": "자동 로케일 감지를 특정 로케일 코드로 재정의합니다."
                 },
                 "nsfw_pfp_message": {
                     "default": "프로필 사진이 명시적 콘텐츠를 포함한 것으로 감지되었습니다.",
@@ -19,7 +20,8 @@
                         "2. NSFW 또는 외설적인 콘텐츠 금지.",
                         "3. 스팸 또는 과도한 자기 홍보 금지.",
                         "4. Discord의 서비스 약관을 따르세요."
-                    ]
+                    ],
+                    "description": "자동 모더레이션에 사용되는 서버 규칙."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. 성적 콘텐츠 또는 명시적 발언 금지.",
                         "5. Discord의 서비스 약관을 따르세요."
                     ]
+                },
+                "strike-channel": {
+                    "description": "스트라이크가 기록되는 채널."
+                },
+                "aimod-debug": {
+                    "description": "플래그된 메시지, AI 판단, 적용된 조치를 포함한 자세한 AI 모더레이션 디버그 메시지를 AI 위반 채널로 항상 전송합니다."
+                },
+                "nsfw-verbose": {
+                    "description": "스캔된 미디어와 동일한 채널에 상세 스캔 보고서 임베드를 게시합니다."
+                },
+                "nsfw-channel": {
+                    "description": "미디어 미리보기와 함께 NSFW 위반이 기록되는 채널."
+                },
+                "nsfw-channel-notify": {
+                    "description": "NSFW 콘텐츠가 제거되면 채널로 알림 임베드를 전송합니다."
+                },
+                "nsfw-enabled": {
+                    "description": "메시지, 리액션, 아바타에 대한 NSFW 스캔을 활성화합니다(다른 토글은 그대로 적용됩니다)."
+                },
+                "monitor-events": {
+                    "description": "모니터링되는 각 이벤트 유형에 대한 로깅을 활성화/비활성화합니다."
+                },
+                "nsfw-detection-action": {
+                    "description": "사용자가 NSFW 콘텐츠를 게시했을 때 취할 조치."
+                },
+                "nsfw-detection-categories": {
+                    "description": "감지 시 NSFW로 간주할 카테고리."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "더 신뢰할 수 있는 감지를 위해 고정확도 NSFW 스캔을 활성화합니다. 가속 전용."
+                },
+                "threshold": {
+                    "description": "NSFW 감지 신뢰도 임계값. 낮을수록 더 민감합니다."
+                },
+                "banned-words-action": {
+                    "description": "사용자가 금지어를 게시했을 때 취할 조치."
+                },
+                "monitor-channel": {
+                    "description": "메시지 수정, 삭제, 사용자 입장/퇴장 이벤트를 포함한 모든 서버 활동을 기록할 채널."
+                },
+                "captcha-log-channel": {
+                    "description": "캡차 인증 로그와 활동 업데이트가 게시되는 채널."
+                },
+                "aimod-channel": {
+                    "description": "AI 위반 로그가 게시되는 채널."
+                },
+                "cycle-strike-actions": {
+                    "description": "사용자에게 부여할 조치가 소진되면 스트라이크 조치를 순환 적용합니다."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "금지어 감지에서 제외할 채널."
+                },
+                "strike-actions": {
+                    "description": "각 스트라이크 단계에서 취할 조치."
+                },
+                "strike-expiry": {
+                    "description": "스트라이크 지속 시간. 20s, 30m, 2h, 30d, 2w, 5mo, 1y와 같은 형식을 사용하세요. 각각 초, 분, 시간, 일, 주, 개월, 년을 의미합니다."
+                },
+                "dm-on-strike": {
+                    "description": "사용자가 경고를 받으면 DM을 보냅니다."
+                },
+                "check-pfp": {
+                    "description": "사용자의 프로필 사진에서 NSFW 콘텐츠를 확인합니다."
+                },
+                "nsfw-pfp-action": {
+                    "description": "사용자가 NSFW 프로필 사진을 설정했을 때 취할 조치."
+                },
+                "nsfw-pfp-message": {
+                    "description": "사용자의 프로필 사진이 플래그 처리되었을 때 보낼 메시지.",
+                    "default": "프로필 사진에 노골적인 콘텐츠가 감지되었습니다",
+                    "choices": [
+                        "프로필 사진에 노골적인 콘텐츠가 감지되었습니다",
+                        "프로필 사진은 이 서버에 적합하지 않습니다.",
+                        "프로필 사진이 NSFW로 플래그 처리되었습니다."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "사용자가 프로필 사진을 적절한 것으로 변경하면 타임아웃을 해제합니다."
+                },
+                "scan-age-restricted": {
+                    "description": "연령 제한(NSFW) 채널을 스캔합니다. 비활성화하면 NSFW 채널은 건너뜁니다."
+                },
+                "check-tenor-gifs": {
+                    "description": "Tenor GIF에서 NSFW 콘텐츠가 감지되면 제재를 적용합니다."
+                },
+                "use-default-banned-words": {
+                    "description": "이 서버에서 기본 제공 비속어 목록을 사용합니다."
+                },
+                "exclude-channels": {
+                    "description": "탐지에서 제외할 채널."
+                },
+                "delete-scam-messages": {
+                    "description": "사기 패턴 또는 URL과 일치하는 메시지를 자동으로 삭제합니다."
+                },
+                "scam-detection-action": {
+                    "description": "사기성 메시지가 감지되었을 때 취할 조치."
+                },
+                "check-links": {
+                    "description": "메시지의 링크에 악성코드, 피싱, 사기 등이 있는지 확인합니다."
+                },
+                "exclude-scam-channels": {
+                    "description": "사기 탐지에서 제외할 채널."
+                },
+                "aimod-detection-action": {
+                    "description": "자동 모더레이터가 위반을 감지했을 때 취할 조치. AI가 결정하도록 하려면 auto를 사용하세요."
+                },
+                "aimod-high-accuracy": {
+                    "description": "gpt-5-mini로 더 높은 정확도의 AI 모더레이션을 사용합니다(약 1M 토큰당 2.25 USD). 기본값보다 월 예산을 더 빠르게 소모합니다."
+                },
+                "autonomous-mod": {
+                    "description": "AI를 사용해 서버 전체를 자동으로 모더레이션하세요."
+                },
+                "aimod-check-interval": {
+                    "description": "AI 모더레이션 배치 프로세스 실행 빈도."
+                },
+                "aimod-mode": {
+                    "description": "AI 모더레이션이 트리거되는 방식을 선택하세요: `report` 모드(멘션될 때만), `interval` 모드(자동 백그라운드 스캔), 또는 `adaptive` 모드(서버 활동, 이벤트, 설정에 따라 동적으로 전환)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "AI 모더레이션 모드 전환을 트리거하는 이벤트를 구성하세요."
+                },
+                "no-forward-from-role": {
+                    "description": "특정 역할의 메시지 포워딩을 금지합니다."
+                },
+                "banned-urls": {
+                    "description": "차단할 정확한 URL 또는 도메인."
+                },
+                "url-detection-action": {
+                    "description": "차단된 URL이 감지되었을 때 취할 조치."
+                },
+                "exclude-url-channels": {
+                    "description": "금지 URL 적용에서 제외할 채널."
+                },
+                "vcmod-enabled": {
+                    "description": "음성 채널 모더레이션 및 전사를 활성화합니다."
+                },
+                "vcmod-channels": {
+                    "description": "모니터링할 음성 채널(비워두면 모니터링하지 않음)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "주기당 각 음성 채널에서 적극적으로 듣는 시간(예: 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Saver 모드에서 각 전사 사이에 일시 중지할 시간."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Saver 모드: 봇이 활성 상태로 보이도록 음성 채널(VC)을 순환하지만, 대부분의 시간에는 녹음하거나 듣지 않습니다."
+                },
+                "vcmod-rules": {
+                    "description": "음성 채팅 모더레이션에 적용되는 규칙(텍스트 규칙과 별도).",
+                    "default": [
+                        "1. 괴롭힘, 증오 발언, 위협 금지.",
+                        "2. 비속어 및 차별적 언어 금지.",
+                        "3. 폭력 또는 불법 행위 선동 금지.",
+                        "4. 성적 콘텐츠 또는 노골적인 발언 금지.",
+                        "5. Discord의 서비스 약관을 준수하세요."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "음성 채널 모더레이션에서 위반을 감지했을 때 취할 조치. AI가 결정하도록 하려면 auto를 사용하세요."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "VC 모더레이션에 더 높은 정확도의 AI 분석을 사용합니다(더 많은 토큰 예산을 사용합니다)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "프리미엄 처리로 더 선명한 음성 전사본을 활성화합니다(비용이 더 높습니다)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "VC 전사본이 게시되는 채널."
+                },
+                "vcmod-transcript-only": {
+                    "description": "활성화하면 봇은 AI 규칙 검사나 모더레이션 조치를 적용하지 않고 음성 채팅만 전사합니다. 이는 예산 사용량을 크게 줄입니다."
+                },
+                "captcha-verification-enabled": {
+                    "description": "신규 멤버가 접근 권한을 얻기 전에 캡차 인증을 통과하도록 요구합니다."
+                },
+                "captcha-grace-period": {
+                    "description": "신규 멤버가 캡차 인증을 완료해야 하는 시간(예: 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "성공적으로 인증되면 자동으로 수행되는 작업."
+                },
+                "captcha-delivery-method": {
+                    "description": "캡차 인증 링크가 신규 멤버에게 전달되는 방식(DM 또는 임베드)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "임베드 방식을 사용할 때 캡차 인증 임베드가 게시되는 채널."
+                },
+                "pre-captcha-roles": {
+                    "description": "신규 멤버가 캡차 인증을 완료하기 전 부여되는 역할."
+                },
+                "captcha-failure-actions": {
+                    "description": "멤버가 캡차 인증에 실패했을 때 자동으로 수행할 작업."
                 }
             }
         }
