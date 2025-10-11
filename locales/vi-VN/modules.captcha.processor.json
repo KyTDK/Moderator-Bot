@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Xác minh Captcha thành công",
-          "embed": {
-            "title": "Đã vượt qua Xác minh Captcha",
-            "description": "{mention} ({user_id}) đã vượt qua xác minh captcha.",
-            "fields": {
-              "actions": "Các hành động đã được áp dụng",
-              "attempts": "Nỗ lực",
-              "provider": "Nhà cung cấp",
-              "challenge": "Thách thức",
-              "review": "Đánh giá"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Xác minh Captcha thành công",
+                    "embed": {
+                        "title": "Đã vượt qua Xác minh Captcha",
+                        "description": "{mention} ({user_id}) đã vượt qua xác minh captcha.",
+                        "fields": {
+                            "actions": "Các hành động đã được áp dụng",
+                            "attempts": "Nỗ lực",
+                            "provider": "Nhà cung cấp",
+                            "challenge": "Thách thức",
+                            "review": "Đánh giá"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Xác minh captcha thất bại.",
+                    "notes": {
+                        "deferred_generic": "Hành động thất bại bị hoãn lại; vẫn còn nỗ lực captcha.",
+                        "deferred_remaining": "Hành động thất bại bị hoãn lại; {remaining} {attempts_word} còn lại.",
+                        "member_left": "Thành viên không còn trong guild; các hành động thất bại đã được bỏ qua."
+                    },
+                    "attempts": {
+                        "unlimited": "Không giới hạn nỗ lực còn lại.",
+                        "additional": "Các nỗ lực bổ sung còn lại.",
+                        "remaining": "{count} {attempts_word} còn lại.",
+                        "word_one": "nỗ lực",
+                        "word_other": "nỗ lực"
+                    },
+                    "embed": {
+                        "title_failed": "Xác minh Captcha Thất bại",
+                        "title_attempt": "Thử nỗ lực xác minh Captcha Thất bại",
+                        "description_failed": "{mention} ({user_id}) thất bại trong xác minh captcha.",
+                        "description_attempt": "{mention} ({user_id}) đã thất bại một nỗ lực captcha.",
+                        "fields": {
+                            "actions": "Các hành động đã được áp dụng",
+                            "notes": "Ghi chú",
+                            "attempts": "Nỗ lực",
+                            "remaining": "Các nỗ lực còn lại",
+                            "challenge": "Thách thức",
+                            "reason": "Lý do",
+                            "review": "Đánh giá"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Không thể áp dụng các hành động thành công captcha vì lỗi API Discord.",
+                    "unknown_token": "Không tìm thấy xác minh captcha đang chờ xử lý cho người dùng này.",
+                    "token_mismatch": "Token captcha không khớp với quá trình xác minh đang chờ xử lý.",
+                    "missing_permissions": "Bot thiếu quyền để áp dụng các hành động thất bại captcha.",
+                    "action_failed": "Không thể áp dụng các hành động thất bại captcha vì lỗi API Discord.",
+                    "guild_not_found": "Guild {guild_id} không có sẵn cho bot này.",
+                    "guild_fetch_failed": "Không thể truy xuất guild {guild_id} từ Discord.",
+                    "member_not_found": "Thành viên {user_id} không tìm thấy trong guild {guild_id}.",
+                    "member_fetch_failed": "Không thể truy xuất thành viên {user_id} từ guild {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Xác minh captcha thất bại.",
-          "notes": {
-            "deferred_generic": "Hành động thất bại bị hoãn lại; vẫn còn nỗ lực captcha.",
-            "deferred_remaining": "Hành động thất bại bị hoãn lại; {remaining} {attempts_word} còn lại.",
-            "member_left": "Thành viên không còn trong guild; các hành động thất bại đã được bỏ qua."
-          },
-          "attempts": {
-            "unlimited": "Không giới hạn nỗ lực còn lại.",
-            "additional": "Các nỗ lực bổ sung còn lại.",
-            "remaining": "{count} {attempts_word} còn lại.",
-            "word_one": "nỗ lực",
-            "word_other": "nỗ lực"
-          },
-          "embed": {
-            "title_failed": "Xác minh Captcha Thất bại",
-            "title_attempt": "Thử nỗ lực xác minh Captcha Thất bại",
-            "description_failed": "{mention} ({user_id}) thất bại trong xác minh captcha.",
-            "description_attempt": "{mention} ({user_id}) đã thất bại một nỗ lực captcha.",
-            "fields": {
-              "actions": "Các hành động đã được áp dụng",
-              "notes": "Ghi chú",
-              "attempts": "Nỗ lực",
-              "remaining": "Các nỗ lực còn lại",
-              "challenge": "Thách thức",
-              "reason": "Lý do",
-              "review": "Đánh giá"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Không thể áp dụng các hành động thành công captcha vì lỗi API Discord.",
-          "unknown_token": "Không tìm thấy xác minh captcha đang chờ xử lý cho người dùng này.",
-          "token_mismatch": "Token captcha không khớp với quá trình xác minh đang chờ xử lý.",
-          "missing_permissions": "Bot thiếu quyền để áp dụng các hành động thất bại captcha.",
-          "action_failed": "Không thể áp dụng các hành động thất bại captcha vì lỗi API Discord.",
-          "guild_not_found": "Guild {guild_id} không có sẵn cho bot này.",
-          "guild_fetch_failed": "Không thể truy xuất guild {guild_id} từ Discord.",
-          "member_not_found": "Thành viên {user_id} không tìm thấy trong guild {guild_id}.",
-          "member_fetch_failed": "Không thể truy xuất thành viên {user_id} từ guild {guild_id}."
         }
-      }
     }
-  }
 }
