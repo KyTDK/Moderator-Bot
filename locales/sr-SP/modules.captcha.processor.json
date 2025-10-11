@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Провера Captcha успешна",
-          "embed": {
-            "title": "Captcha Проверa Успешнa",
-            "description": "{mention} ({user_id}) је прошао проверу Captcha.",
-            "fields": {
-              "actions": "Примењене акције",
-              "attempts": "Покушаји",
-              "provider": "Провајдер",
-              "challenge": "Изазов",
-              "review": "Преглед"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Провера Captcha успешна",
+                    "embed": {
+                        "title": "Captcha Проверa Успешнa",
+                        "description": "{mention} ({user_id}) је прошао проверу Captcha.",
+                        "fields": {
+                            "actions": "Примењене акције",
+                            "attempts": "Покушаји",
+                            "provider": "Провајдер",
+                            "challenge": "Изазов",
+                            "review": "Преглед"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Неуспешна провера Captcha.",
+                    "notes": {
+                        "deferred_generic": "Акције неуспеха су одложене; покушаји за Captcha још остају.",
+                        "deferred_remaining": "Акције неуспеха су одложене; {remaining} {attempts_word} остаје.",
+                        "member_left": "Члан више није у гиљди; конфигурисане акције неуспеха су прескочене."
+                    },
+                    "attempts": {
+                        "unlimited": "Неограничени покушаји остају.",
+                        "additional": "Додатни покушаји остају.",
+                        "remaining": "{count} {attempts_word} преостало.",
+                        "word_one": "покушај",
+                        "word_other": "покушаји"
+                    },
+                    "embed": {
+                        "title_failed": "Неуспела провера Captcha",
+                        "title_attempt": "Неуспешан покушај за Captcha",
+                        "description_failed": "{mention} ({user_id}) није прошао проверу Captcha.",
+                        "description_attempt": "{mention} ({user_id}) није успео на покушају Captcha.",
+                        "fields": {
+                            "actions": "Примењене акције",
+                            "notes": "Напомене",
+                            "attempts": "Покушаји",
+                            "remaining": "Преостали покушаји",
+                            "challenge": "Изазов",
+                            "reason": "Разлог",
+                            "review": "Преглед"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Неуспех у примени акција успеха за Captcha због грешке у Discord API.",
+                    "unknown_token": "Није пронађена чекана провера Captcha за овог корисника.",
+                    "token_mismatch": "Токен Captcha се не поклапа са чеканом верификацијом.",
+                    "missing_permissions": "Боту недостају дозволе да примени акције неуспеха за Captcha.",
+                    "action_failed": "Неуспех у примени акција неуспеха за Captcha због грешке у Discord API.",
+                    "guild_not_found": "Гиљда {guild_id} није доступна овом боту.",
+                    "guild_fetch_failed": "Неуспех при дохватању гиљде {guild_id} са Discord.",
+                    "member_not_found": "Члан {user_id} није пронађен у гиљди {guild_id}.",
+                    "member_fetch_failed": "Неуспех при дохватању члана {user_id} из гиљде {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Неуспешна провера Captcha.",
-          "notes": {
-            "deferred_generic": "Акције неуспеха су одложене; покушаји за Captcha још остају.",
-            "deferred_remaining": "Акције неуспеха су одложене; {remaining} {attempts_word} остаје.",
-            "member_left": "Члан више није у гиљди; конфигурисане акције неуспеха су прескочене."
-          },
-          "attempts": {
-            "unlimited": "Неограничени покушаји остају.",
-            "additional": "Додатни покушаји остају.",
-            "remaining": "{count} {attempts_word} преостало.",
-            "word_one": "покушај",
-            "word_other": "покушаји"
-          },
-          "embed": {
-            "title_failed": "Неуспела провера Captcha",
-            "title_attempt": "Неуспешан покушај за Captcha",
-            "description_failed": "{mention} ({user_id}) није прошао проверу Captcha.",
-            "description_attempt": "{mention} ({user_id}) није успео на покушају Captcha.",
-            "fields": {
-              "actions": "Примењене акције",
-              "notes": "Напомене",
-              "attempts": "Покушаји",
-              "remaining": "Преостали покушаји",
-              "challenge": "Изазов",
-              "reason": "Разлог",
-              "review": "Преглед"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Неуспех у примени акција успеха за Captcha због грешке у Discord API.",
-          "unknown_token": "Није пронађена чекана провера Captcha за овог корисника.",
-          "token_mismatch": "Токен Captcha се не поклапа са чеканом верификацијом.",
-          "missing_permissions": "Боту недостају дозволе да примени акције неуспеха за Captcha.",
-          "action_failed": "Неуспех у примени акција неуспеха за Captcha због грешке у Discord API.",
-          "guild_not_found": "Гиљда {guild_id} није доступна овом боту.",
-          "guild_fetch_failed": "Неуспех при дохватању гиљде {guild_id} са Discord.",
-          "member_not_found": "Члан {user_id} није пронађен у гиљди {guild_id}.",
-          "member_fetch_failed": "Неуспех при дохватању члана {user_id} из гиљде {guild_id}."
         }
-      }
     }
-  }
 }
