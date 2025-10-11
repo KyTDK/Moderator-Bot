@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Invalid locale. Supported locales: {supported}"
+                    "invalid": "Invalid locale. Supported locales: {supported}",
+                    "description": "Override automatic locale detection with a specific locale code."
                 },
                 "nsfw_pfp_message": {
                     "default": "Your profile picture was detected as containing explicit content",
@@ -19,7 +20,8 @@
                         "2. No NSFW or obscene content.",
                         "3. No spam or excessive self-promotion.",
                         "4. Follow Discord's Terms of Service."
-                    ]
+                    ],
+                    "description": "The server rules used for autonomous moderation."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -44,6 +46,102 @@
                 },
                 "nsfw-channel-notify": {
                     "description": "Send a notification embed to the channel when NSFW content is removed."
+                },
+                "nsfw-enabled": {
+                    "description": "Enable NSFW scanning for messages, reactions, and avatars (other toggles still apply)."
+                },
+                "monitor-events": {
+                    "description": "Enable/disable logging for each type of monitored event."
+                },
+                "nsfw-detection-action": {
+                    "description": "Action to take when a user posts NSFW content."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Categories considered NSFW for detection."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Enable high-accuracy NSFW scans for more reliable detection. Accelerated only."
+                },
+                "threshold": {
+                    "description": "Threshold for NSFW detection confidence. Lower values are more sensitive."
+                },
+                "banned-words-action": {
+                    "description": "Action to take when a user posts a banned word."
+                },
+                "monitor-channel": {
+                    "description": "Channel to log all server activities, including message edits, deletions, and user join/leave events."
+                },
+                "captcha-log-channel": {
+                    "description": "Channel where captcha verification logs and activity updates are posted."
+                },
+                "aimod-channel": {
+                    "description": "Channel where AI violation logs are posted."
+                },
+                "cycle-strike-actions": {
+                    "description": "Cycle through strike actions when you run out of actions to give a user."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Channels to exclude from banned words detection."
+                },
+                "strike-actions": {
+                    "description": "Actions to take for each strike level."
+                },
+                "strike-expiry": {
+                    "description": "How long a strike lasts. Use formats like 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconds, minutes, hours, days, weeks, months and years respectively."
+                },
+                "dm-on-strike": {
+                    "description": "DM the user when they receive a strike."
+                },
+                "check-pfp": {
+                    "description": "Check the user's profile picture for NSFW content."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Action to take when a user sets an NSFW profile picture."
+                },
+                "nsfw-pfp-message": {
+                    "description": "The message to send when a player has had their profile picture flagged.",
+                    "default": "Your profile picture was found to contain explicit content",
+                    "choices": [
+                        "Your profile picture was found to contain explicit content",
+                        "Your profile picture is not appropriate for this server.",
+                        "Your profile picture has been flagged as NSFW."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Remove the timeout for a user once they have changed their profile picture to something appropriate."
+                },
+                "scan-age-restricted": {
+                    "description": "Scan age-restricted (NSFW) channels. When off, NSFW channels are skipped."
+                },
+                "check-tenor-gifs": {
+                    "description": "Apply penalties when NSFW content is detected in Tenor GIFs."
+                },
+                "use-default-banned-words": {
+                    "description": "Use the built-in profanity list for this server."
+                },
+                "exclude-channels": {
+                    "description": "Channels to exclude from detection."
+                },
+                "delete-scam-messages": {
+                    "description": "Automatically delete messages that match scam patterns or URLs."
+                },
+                "scam-detection-action": {
+                    "description": "Action to take when a scam message is detected."
+                },
+                "check-links": {
+                    "description": "Check links in messages for malware, phishing, scams etc."
+                },
+                "exclude-scam-channels": {
+                    "description": "Channels to exclude from scam detection."
+                },
+                "aimod-detection-action": {
+                    "description": "Action to take when the autonomous moderator detects a violation. Use auto for the AI to make the decision."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Use higher-accuracy AI moderation with gpt-5-mini (approx. 2.25 USD per 1M tokens). Consumes the monthly budget faster compared to the default."
+                },
+                "autonomous-mod": {
+                    "description": "Use AI to automatically moderate your entire server."
                 }
             }
         }

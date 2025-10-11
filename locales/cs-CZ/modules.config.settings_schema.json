@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Neplatné místní nastavení. Podporovaná nastavení: {supported}"
+                    "invalid": "Neplatné místní nastavení. Podporovaná nastavení: {supported}",
+                    "description": "Přebít automatickou detekci místního nastavení pomocí konkrétního kódu."
                 },
                 "nsfw_pfp_message": {
                     "default": "Vaše profilová fotka byla detekována jako obsahující explicitní obsah",
@@ -29,6 +30,70 @@
                         "4. Žádný sexuální obsah nebo explicitní poznámky.",
                         "5. Dodržujte podmínky služby Discordu."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Kanál, do kterého se zaznamenávají napomenutí."
+                },
+                "nsfw-verbose": {
+                    "description": "Odešlete podrobnou vloženou zprávu o skenu ve stejném kanálu jako skenovaná média."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Odeslat do kanálu embed s oznámením, když je odstraněn NSFW obsah."
+                },
+                "nsfw-enabled": {
+                    "description": "Povolit detekci obsahu NSFW ve zprávách, reakcích a profilových obrázcích (ostatní přepínače stále platí)."
+                },
+                "monitor-events": {
+                    "description": "Povolit/zakázat protokolování pro každý typ sledované události."
+                },
+                "nsfw-detection-action": {
+                    "description": "Akce, která se má provést, když uživatel zveřejní NSFW obsah."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Kategorie považované za NSFW pro detekci."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Povolit vysoce přesné skenování NSFW pro spolehlivější detekci. Pouze pro Accelerated."
+                },
+                "threshold": {
+                    "description": "Prahová hodnota jistoty detekce NSFW. Nižší hodnoty jsou citlivější."
+                },
+                "banned-words-action": {
+                    "description": "Akce, která se má provést, když uživatel odešle zakázané slovo."
+                },
+                "monitor-channel": {
+                    "description": "Kanál pro protokolování všech aktivit serveru, včetně úprav a mazání zpráv a událostí připojení/odchodu uživatelů."
+                },
+                "captcha-log-channel": {
+                    "description": "Kanál, kde se zveřejňují záznamy o ověřování captcha a aktualizace aktivity."
+                },
+                "aimod-channel": {
+                    "description": "Kanál, kam se zveřejňují záznamy o porušeních detekovaných AI."
+                },
+                "cycle-strike-actions": {
+                    "description": "Cyklicky opakovat akce za trestné body, když dojdou akce, které lze uživateli udělit."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Kanály k vyloučení z detekce zakázaných slov."
+                },
+                "strike-actions": {
+                    "description": "Akce k provedení pro každou úroveň varování."
+                },
+                "strike-expiry": {
+                    "description": "Doba trvání postihu. Použijte formáty jako 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekundy, minuty, hodiny, dny, týdny, měsíce a roky v uvedeném pořadí."
+                },
+                "dm-on-strike": {
+                    "description": "Poslat uživateli DM, když obdrží napomenutí."
+                },
+                "check-pfp": {
+                    "description": "Zkontrolujte profilovou fotku uživatele na NSFW obsah."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Akce, která se má provést, když si uživatel nastaví NSFW profilový obrázek."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Zpráva, která se odešle, když byl profilový obrázek hráče nahlášen.",
+                    "default": "Bylo zjištěno, že vaše profilová fotka obsahuje explicitní obsah"
                 }
             }
         }

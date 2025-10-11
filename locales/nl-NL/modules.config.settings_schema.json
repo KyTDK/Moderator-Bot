@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Ongeldige landinstelling. Ondersteunde landinstellingen: {supported}"
+                    "invalid": "Ongeldige landinstelling. Ondersteunde landinstellingen: {supported}",
+                    "description": "Automatische detectie van het taalgebied overschrijven met een specifieke taalgebiedcode"
                 },
                 "nsfw_pfp_message": {
                     "default": "Uw profielfoto bevat naar schatting expliciete inhoud",
@@ -41,6 +42,81 @@
                 },
                 "nsfw-channel": {
                     "description": "Kanaal waarin NSFW-overtredingen worden gelogd met een voorbeeld van de media."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Stuur een meldings-embed naar het kanaal wanneer NSFW-inhoud wordt verwijderd."
+                },
+                "nsfw-enabled": {
+                    "description": "Schakel NSFW-scanning voor berichten, reacties, en avatars in (andere schakelaars blijven van toepassing)."
+                },
+                "monitor-events": {
+                    "description": "Logging in- of uitschakelen voor elk type bewaakte gebeurtenis."
+                },
+                "nsfw-detection-action": {
+                    "description": "Actie die moet worden uitgevoerd wanneer een gebruiker NSFW-content plaatst."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Categorieën die voor detectie als NSFW worden beschouwd."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Schakel NSFW-scans met hoge nauwkeurigheid in voor betrouwbaardere detectie. Alleen versneld."
+                },
+                "threshold": {
+                    "description": "Drempel voor de betrouwbaarheid van NSFW-detectie. Lagere waarden zijn gevoeliger."
+                },
+                "banned-words-action": {
+                    "description": "Actie die moet worden uitgevoerd wanneer een gebruiker een verboden woord plaatst."
+                },
+                "monitor-channel": {
+                    "description": "Kanaal om alle serveractiviteiten te loggen, inclusief bewerkingen en verwijderingen van berichten en gebeurtenissen waarbij gebruikers de server betreden of verlaten."
+                },
+                "captcha-log-channel": {
+                    "description": "Kanaal waar captcha-verificatielogboeken en activiteitsupdates worden geplaatst."
+                },
+                "aimod-channel": {
+                    "description": "Kanaal waar AI-overtredingslogberichten worden geplaatst."
+                },
+                "cycle-strike-actions": {
+                    "description": "Doorloop strike-acties wanneer er geen acties meer beschikbaar zijn om aan een gebruiker te geven."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Kanalen om uit te sluiten van detectie van verboden woorden."
+                },
+                "strike-actions": {
+                    "description": "Acties om te nemen voor elk strikeniveau."
+                },
+                "strike-expiry": {
+                    "description": "Tijd dat een strike duurt. Gebruik formaten zoals 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Seconden, minuten, uren, dagen, weken, maanden en jaren respectievelijk."
+                },
+                "dm-on-strike": {
+                    "description": "DM de gebruiker wanneer deze een strike ontvangt."
+                },
+                "check-pfp": {
+                    "description": "Controleer de profielfoto van de gebruiker op NSFW-inhoud."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Actie die moet worden uitgevoerd wanneer een gebruiker een NSFW-profielfoto instelt."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Het bericht dat wordt verzonden wanneer de profielfoto van een speler is gemarkeerd.",
+                    "default": "Er is gedetecteerd dat je profielfoto expliciete inhoud bevat",
+                    "choices": [
+                        "Er is gedetecteerd dat je profielfoto expliciete inhoud bevat",
+                        "Je profielfoto is niet geschikt voor deze server.",
+                        "Je profielfoto is gemarkeerd als NSFW."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Verwijder de time-out van een gebruiker zodra de profielfoto is gewijzigd naar iets passends."
+                },
+                "scan-age-restricted": {
+                    "description": "Scan leeftijdsbeperkte (NSFW) kanalen. Wanneer uitgeschakeld, worden NSFW-kanalen overgeslagen."
+                },
+                "check-tenor-gifs": {
+                    "description": "Sancties toepassen wanneer NSFW-inhoud wordt gedetecteerd in Tenor GIFs."
+                },
+                "use-default-banned-words": {
+                    "description": "Gebruik de ingebouwde lijst met ongepaste woorden voor deze server."
                 }
             }
         }
