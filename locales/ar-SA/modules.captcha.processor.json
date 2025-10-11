@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "تمت عملية التحقق من CAPTCHA بنجاح",
-          "embed": {
-            "title": "تم اجتياز التحقق من CAPTCHA",
-            "description": "{mention} ({user_id}) اجتاز التحقق من CAPTCHA.",
-            "fields": {
-              "actions": "الإجراءات المطبقة",
-              "attempts": "محاولات",
-              "provider": "مزود الخدمة",
-              "challenge": "تحدي",
-              "review": "مراجعة"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "تمت عملية التحقق من CAPTCHA بنجاح",
+                    "embed": {
+                        "title": "تم اجتياز التحقق من CAPTCHA",
+                        "description": "{mention} ({user_id}) اجتاز التحقق من CAPTCHA.",
+                        "fields": {
+                            "actions": "الإجراءات المطبقة",
+                            "attempts": "محاولات",
+                            "provider": "مزود الخدمة",
+                            "challenge": "تحدي",
+                            "review": "مراجعة"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "فشلت عملية التحقق من CAPTCHA.",
+                    "notes": {
+                        "deferred_generic": "تم تأجيل إجراءات الفشل؛ وتبقت محاولات التحقق.",
+                        "deferred_remaining": "تم تأجيل إجراءات الفشل؛ {remaining} {attempts_word} متبقية.",
+                        "member_left": "العضو لم يعد في النقابة؛ تم تخطي إجراءات الفشل المُعدة."
+                    },
+                    "attempts": {
+                        "unlimited": "تبقت محاولات غير محدودة.",
+                        "additional": "تبقت محاولات إضافية.",
+                        "remaining": "تبقى {count} {attempts_word}.",
+                        "word_one": "محاولة",
+                        "word_other": "محاولات"
+                    },
+                    "embed": {
+                        "title_failed": "فشل التحقق من CAPTCHA",
+                        "title_attempt": "فشلت محاولة CAPTCHA",
+                        "description_failed": "{mention} ({user_id}) فشل في التحقق من CAPTCHA.",
+                        "description_attempt": "{mention} ({user_id}) فشل في محاولة CAPTCHA.",
+                        "fields": {
+                            "actions": "الإجراءات المطبقة",
+                            "notes": "ملاحظات",
+                            "attempts": "محاولات",
+                            "remaining": "المحاولات المتبقية",
+                            "challenge": "تحدي",
+                            "reason": "السبب",
+                            "review": "مراجعة"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "فشل تطبيق إجراءات نجاح CAPTCHA بسبب خطأ في واجهة برمجة تطبيقات Discord.",
+                    "unknown_token": "لم يتم العثور على تحقق CAPTCHA معلق لهذا المستخدم.",
+                    "token_mismatch": "رمز CAPTCHA لا يتطابق مع التحقق المعلق.",
+                    "missing_permissions": "الروبوت يفتقر إلى الأذونات لتطبيق إجراءات فشل CAPTCHA.",
+                    "action_failed": "فشل تطبيق إجراءات فشل CAPTCHA بسبب خطأ في واجهة برمجة تطبيقات Discord.",
+                    "guild_not_found": "النقابة {guild_id} غير متاحة لهذا الروبوت.",
+                    "guild_fetch_failed": "فشل في جلب النقابة {guild_id} من Discord.",
+                    "member_not_found": "لم يتم العثور على العضو {user_id} في النقابة {guild_id}.",
+                    "member_fetch_failed": "فشل في جلب العضو {user_id} من النقابة {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "فشلت عملية التحقق من CAPTCHA.",
-          "notes": {
-            "deferred_generic": "تم تأجيل إجراءات الفشل؛ وتبقت محاولات التحقق.",
-            "deferred_remaining": "تم تأجيل إجراءات الفشل؛ {remaining} {attempts_word} متبقية.",
-            "member_left": "العضو لم يعد في النقابة؛ تم تخطي إجراءات الفشل المُعدة."
-          },
-          "attempts": {
-            "unlimited": "تبقت محاولات غير محدودة.",
-            "additional": "تبقت محاولات إضافية.",
-            "remaining": "تبقى {count} {attempts_word}.",
-            "word_one": "محاولة",
-            "word_other": "محاولات"
-          },
-          "embed": {
-            "title_failed": "فشل التحقق من CAPTCHA",
-            "title_attempt": "فشلت محاولة CAPTCHA",
-            "description_failed": "{mention} ({user_id}) فشل في التحقق من CAPTCHA.",
-            "description_attempt": "{mention} ({user_id}) فشل في محاولة CAPTCHA.",
-            "fields": {
-              "actions": "الإجراءات المطبقة",
-              "notes": "ملاحظات",
-              "attempts": "محاولات",
-              "remaining": "المحاولات المتبقية",
-              "challenge": "تحدي",
-              "reason": "السبب",
-              "review": "مراجعة"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "فشل تطبيق إجراءات نجاح CAPTCHA بسبب خطأ في واجهة برمجة تطبيقات Discord.",
-          "unknown_token": "لم يتم العثور على تحقق CAPTCHA معلق لهذا المستخدم.",
-          "token_mismatch": "رمز CAPTCHA لا يتطابق مع التحقق المعلق.",
-          "missing_permissions": "الروبوت يفتقر إلى الأذونات لتطبيق إجراءات فشل CAPTCHA.",
-          "action_failed": "فشل تطبيق إجراءات فشل CAPTCHA بسبب خطأ في واجهة برمجة تطبيقات Discord.",
-          "guild_not_found": "النقابة {guild_id} غير متاحة لهذا الروبوت.",
-          "guild_fetch_failed": "فشل في جلب النقابة {guild_id} من Discord.",
-          "member_not_found": "لم يتم العثور على العضو {user_id} في النقابة {guild_id}.",
-          "member_fetch_failed": "فشل في جلب العضو {user_id} من النقابة {guild_id}."
         }
-      }
     }
-  }
 }
