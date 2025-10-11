@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` вже встановлено для `{event}`.",
-          "success": "Додано `{action}` до `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` не встановлено для `{event}`.",
-          "success": "Видалено `{action}` з `{event}`."
-        },
-        "clear": {
-          "success": "Усі адаптивні події очищено."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` вже встановлено для `{event}`.",
+                    "success": "Додано `{action}` до `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` не встановлено для `{event}`.",
+                    "success": "Видалено `{action}` з `{event}`."
+                },
+                "clear": {
+                    "success": "Усі адаптивні події очищено."
+                }
+            }
         }
-      }
     }
-  }
 }
