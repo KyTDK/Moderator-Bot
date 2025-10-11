@@ -1,0 +1,63 @@
+{
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "",
+                    "embed": {
+                        "title": "",
+                        "description": "",
+                        "fields": {
+                            "actions": "",
+                            "attempts": "",
+                            "provider": "",
+                            "challenge": "",
+                            "review": ""
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "",
+                    "notes": {
+                        "deferred_generic": "",
+                        "deferred_remaining": "",
+                        "member_left": ""
+                    },
+                    "attempts": {
+                        "unlimited": "",
+                        "additional": "",
+                        "remaining": "",
+                        "word_one": "",
+                        "word_other": ""
+                    },
+                    "embed": {
+                        "title_failed": "",
+                        "title_attempt": "",
+                        "description_failed": "",
+                        "description_attempt": "",
+                        "fields": {
+                            "actions": "",
+                            "notes": "",
+                            "attempts": "",
+                            "remaining": "",
+                            "challenge": "",
+                            "reason": "",
+                            "review": ""
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "",
+                    "unknown_token": "",
+                    "token_mismatch": "",
+                    "missing_permissions": "",
+                    "action_failed": "",
+                    "guild_not_found": "",
+                    "guild_fetch_failed": "",
+                    "member_not_found": "",
+                    "member_fetch_failed": ""
+                }
+            }
+        }
+    }
+}
