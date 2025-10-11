@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Ongeldige landinstelling. Ondersteunde landinstellingen: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Uw profielfoto bevat naar schatting expliciete inhoud",
-          "choices": [
-            "Uw profielfoto bevat naar schatting expliciete inhoud",
-            "Uw profielfoto is niet geschikt voor deze server.",
-            "Uw profielfoto is gemarkeerd als NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Wees respectvol — geen intimidatie of haatzaaiende uitspraken.",
-            "2. Geen NSFW of obscene inhoud.",
-            "3. Geen spam of buitensporige zelfpromotie.",
-            "4. Volg de Servicevoorwaarden van Discord."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Geen intimidatie, haatzaaiende uitspraken of bedreigingen.",
-            "2. Geen beledigingen of discriminerende taal.",
-            "3. Geen opruiing tot geweld of illegale activiteiten.",
-            "4. Geen seksuele inhoud of expliciete opmerkingen.",
-            "5. Volg de Servicevoorwaarden van Discord."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Ongeldige landinstelling. Ondersteunde landinstellingen: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Uw profielfoto bevat naar schatting expliciete inhoud",
+                    "choices": [
+                        "Uw profielfoto bevat naar schatting expliciete inhoud",
+                        "Uw profielfoto is niet geschikt voor deze server.",
+                        "Uw profielfoto is gemarkeerd als NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Wees respectvol — geen intimidatie of haatzaaiende uitspraken.",
+                        "2. Geen NSFW of obscene inhoud.",
+                        "3. Geen spam of buitensporige zelfpromotie.",
+                        "4. Volg de Servicevoorwaarden van Discord."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Geen intimidatie, haatzaaiende uitspraken of bedreigingen.",
+                        "2. Geen beledigingen of discriminerende taal.",
+                        "3. Geen opruiing tot geweld of illegale activiteiten.",
+                        "4. Geen seksuele inhoud of expliciete opmerkingen.",
+                        "5. Volg de Servicevoorwaarden van Discord."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }
