@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Ingyenes",
-          "core": "Alap",
-          "pro": "Pro",
-          "ultra": "Ultra"
-        },
-        "requirements": {
-          "any": "egy aktív prémium csomag",
-          "single": "egy aktív {plan} csomag",
-          "double": "egy aktív {plan_a} vagy {plan_b} csomag",
-          "list": "egy aktív {plans}, vagy {last} csomag"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Ingyenes",
+                    "core": "Alap",
+                    "pro": "Pro",
+                    "ultra": "Ultra"
+                },
+                "requirements": {
+                    "any": "egy aktív prémium csomag",
+                    "single": "egy aktív {plan} csomag",
+                    "double": "egy aktív {plan_a} vagy {plan_b} csomag",
+                    "list": "egy aktív {plans}, vagy {last} csomag"
+                }
+            }
         }
-      }
     }
-  }
 }
