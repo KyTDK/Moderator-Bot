@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Captcha-verifikasie suksesvol",
-          "embed": {
-            "title": "Captcha Verifikasie Geslaag",
-            "description": "{mention} ({user_id}) het captcha-verifikasie geslaag.",
-            "fields": {
-              "actions": "Aksies toegepas",
-              "attempts": "Pogings",
-              "provider": "Verskaffer",
-              "challenge": "Uitdaging",
-              "review": "Oorsig"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Captcha-verifikasie suksesvol",
+                    "embed": {
+                        "title": "Captcha Verifikasie Geslaag",
+                        "description": "{mention} ({user_id}) het captcha-verifikasie geslaag.",
+                        "fields": {
+                            "actions": "Aksies toegepas",
+                            "attempts": "Pogings",
+                            "provider": "Verskaffer",
+                            "challenge": "Uitdaging",
+                            "review": "Oorsig"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Captcha-verifikasie misluk.",
+                    "notes": {
+                        "deferred_generic": "Mislukkingsaksies uitgestel; captcha pogings bly oor.",
+                        "deferred_remaining": "Mislukkingsaksies uitgestel; {remaining} {attempts_word} oor.",
+                        "member_left": "Lid is nie meer in die gilde nie; gekonfigureerde mislukkingsaksies is oorgeslaan."
+                    },
+                    "attempts": {
+                        "unlimited": "Ongelimiteerde pogings bly oor.",
+                        "additional": "Ekstra pogings bly oor.",
+                        "remaining": "{count} {attempts_word} oor.",
+                        "word_one": "poging",
+                        "word_other": "pogings"
+                    },
+                    "embed": {
+                        "title_failed": "Captcha Verifikasie Misluk",
+                        "title_attempt": "Captcha Poging Misluk",
+                        "description_failed": "{mention} ({user_id}) het captcha-verifikasie misluk.",
+                        "description_attempt": "{mention} ({user_id}) het 'n captcha-poging misluk.",
+                        "fields": {
+                            "actions": "Aksies toegepas",
+                            "notes": "Notas",
+                            "attempts": "Pogings",
+                            "remaining": "Oorblywende Pogings",
+                            "challenge": "Uitdaging",
+                            "reason": "Rede",
+                            "review": "Oorsig"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Kon nie captcha suksesaksies toepas nie weens 'n Discord API-fout.",
+                    "unknown_token": "Geen hangende captcha-verifikasie gevind vir hierdie gebruiker nie.",
+                    "token_mismatch": "Captcha-token stem nie ooreen met die hangende verifikasie nie.",
+                    "missing_permissions": "Bot het nie die regte om captcha-mislukkingsaksies toe te pas nie.",
+                    "action_failed": "Kon nie captcha-mislukkingsaksies toepas nie weens 'n Discord API-fout.",
+                    "guild_not_found": "Gilde {guild_id} is nie beskikbaar vir hierdie bot nie.",
+                    "guild_fetch_failed": "Kon nie gilde {guild_id} van Discord haal nie.",
+                    "member_not_found": "Lid {user_id} nie in gilde {guild_id} gevind nie.",
+                    "member_fetch_failed": "Kon nie lid {user_id} van gilde {guild_id} haal nie."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Captcha-verifikasie misluk.",
-          "notes": {
-            "deferred_generic": "Mislukkingsaksies uitgestel; captcha pogings bly oor.",
-            "deferred_remaining": "Mislukkingsaksies uitgestel; {remaining} {attempts_word} oor.",
-            "member_left": "Lid is nie meer in die gilde nie; gekonfigureerde mislukkingsaksies is oorgeslaan."
-          },
-          "attempts": {
-            "unlimited": "Ongelimiteerde pogings bly oor.",
-            "additional": "Ekstra pogings bly oor.",
-            "remaining": "{count} {attempts_word} oor.",
-            "word_one": "poging",
-            "word_other": "pogings"
-          },
-          "embed": {
-            "title_failed": "Captcha Verifikasie Misluk",
-            "title_attempt": "Captcha Poging Misluk",
-            "description_failed": "{mention} ({user_id}) het captcha-verifikasie misluk.",
-            "description_attempt": "{mention} ({user_id}) het 'n captcha-poging misluk.",
-            "fields": {
-              "actions": "Aksies toegepas",
-              "notes": "Notas",
-              "attempts": "Pogings",
-              "remaining": "Oorblywende Pogings",
-              "challenge": "Uitdaging",
-              "reason": "Rede",
-              "review": "Oorsig"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Kon nie captcha suksesaksies toepas nie weens 'n Discord API-fout.",
-          "unknown_token": "Geen hangende captcha-verifikasie gevind vir hierdie gebruiker nie.",
-          "token_mismatch": "Captcha-token stem nie ooreen met die hangende verifikasie nie.",
-          "missing_permissions": "Bot het nie die regte om captcha-mislukkingsaksies toe te pas nie.",
-          "action_failed": "Kon nie captcha-mislukkingsaksies toepas nie weens 'n Discord API-fout.",
-          "guild_not_found": "Gilde {guild_id} is nie beskikbaar vir hierdie bot nie.",
-          "guild_fetch_failed": "Kon nie gilde {guild_id} van Discord haal nie.",
-          "member_not_found": "Lid {user_id} nie in gilde {guild_id} gevind nie.",
-          "member_fetch_failed": "Kon nie lid {user_id} van gilde {guild_id} haal nie."
         }
-      }
     }
-  }
 }
