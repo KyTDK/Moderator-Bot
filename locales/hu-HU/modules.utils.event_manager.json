@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` már be van állítva `{event}` számára.",
-          "success": "`{action}` hozzáadva `{event}` nevű eseményhez."
-        },
-        "remove": {
-          "missing": "`{action}` nincs beállítva `{event}` számára.",
-          "success": "`{action}` eltávolítva a `{event}` nevű eseményből."
-        },
-        "clear": {
-          "success": "Az összes adaptív esemény törölve lett."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` már be van állítva `{event}` számára.",
+                    "success": "`{action}` hozzáadva `{event}` nevű eseményhez."
+                },
+                "remove": {
+                    "missing": "`{action}` nincs beállítva `{event}` számára.",
+                    "success": "`{action}` eltávolítva a `{event}` nevű eseményből."
+                },
+                "clear": {
+                    "success": "Az összes adaptív esemény törölve lett."
+                }
+            }
         }
-      }
     }
-  }
 }
