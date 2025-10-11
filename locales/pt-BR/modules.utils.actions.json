@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Expulsão",
-          "kick": "Expulsar",
-          "ban": "Banir",
-          "timeout": "Tempo de espera",
-          "delete": "Excluir Mensagem",
-          "give_role": "Atribuir Função",
-          "take_role": "Remover Função",
-          "warn": "Avisar Usuário",
-          "broadcast": "Transmitir Mensagem",
-          "auto": "Automático"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Expulsão",
+                    "kick": "Expulsar",
+                    "ban": "Banir",
+                    "timeout": "Tempo de espera",
+                    "delete": "Excluir Mensagem",
+                    "give_role": "Atribuir Função",
+                    "take_role": "Remover Função",
+                    "warn": "Avisar Usuário",
+                    "broadcast": "Transmitir Mensagem",
+                    "auto": "Automático"
+                }
+            }
         }
-      }
     }
-  }
 }
