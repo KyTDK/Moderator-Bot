@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "АУТОР",
-        "utterance_label": "ИЗЈАВА",
-        "divider": "---",
-        "unknown_speaker": "Непознати говорник",
-        "unknown_prefix": "Непознато",
-        "user_fallback": "<@{id}> (ид = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "ВЦ Преписка",
-        "title_part": "ВЦ Преписка (део {index}/{total})",
-        "field_channel": "Канал",
-        "field_utterances": "Изјаве",
-        "footer_high": "Тачна преписка",
-        "footer_normal": "Нормална тачност преписке"
-      },
-      "budget": {
-        "title": "Достигнут буџет за ВЦ модерацију",
-        "description": "Прескакање анализе за овај циклус због ограничења буџета."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "АУТОР",
+                "utterance_label": "ИЗЈАВА",
+                "divider": "---",
+                "unknown_speaker": "Непознати говорник",
+                "unknown_prefix": "Непознато",
+                "user_fallback": "<@{id}> (ид = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "ВЦ Преписка",
+                "title_part": "ВЦ Преписка (део {index}/{total})",
+                "field_channel": "Канал",
+                "field_utterances": "Изјаве",
+                "footer_high": "Тачна преписка",
+                "footer_normal": "Нормална тачност преписке"
+            },
+            "budget": {
+                "title": "Достигнут буџет за ВЦ модерацију",
+                "description": "Прескакање анализе за овај циклус због ограничења буџета."
+            }
+        }
     }
-  }
 }
