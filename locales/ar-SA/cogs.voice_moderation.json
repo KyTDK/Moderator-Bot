@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "المؤلف",
-        "utterance_label": "النص المنطوق",
-        "divider": "---",
-        "unknown_speaker": "متحدث غير معروف",
-        "unknown_prefix": "غير معروف",
-        "user_fallback": "<@{id}> (المعرف = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "نص الصوت",
-        "title_part": "نص صوتي (جزء {index}/{total})",
-        "field_channel": "القناة",
-        "field_utterances": "النصوص المنطوقة",
-        "footer_high": "نص دقيق عالي",
-        "footer_normal": "نص دقيق عادي"
-      },
-      "budget": {
-        "title": "تم الوصول إلى ميزانية التحكم في الصوت",
-        "description": "تخطي التحليل لهذه الدورة بسبب الحد الأقصى للميزانية."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "المؤلف",
+                "utterance_label": "النص المنطوق",
+                "divider": "---",
+                "unknown_speaker": "متحدث غير معروف",
+                "unknown_prefix": "غير معروف",
+                "user_fallback": "<@{id}> (المعرف = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "نص الصوت",
+                "title_part": "نص صوتي (جزء {index}/{total})",
+                "field_channel": "القناة",
+                "field_utterances": "النصوص المنطوقة",
+                "footer_high": "نص دقيق عالي",
+                "footer_normal": "نص دقيق عادي"
+            },
+            "budget": {
+                "title": "تم الوصول إلى ميزانية التحكم في الصوت",
+                "description": "تخطي التحليل لهذه الدورة بسبب الحد الأقصى للميزانية."
+            }
+        }
     }
-  }
 }
