@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Ücretsiz",
-          "core": "Çekirdek",
-          "pro": "Pro",
-          "ultra": "Ultra"
-        },
-        "requirements": {
-          "any": "aktif bir premium plan",
-          "single": "aktif bir {plan} planı",
-          "double": "aktif bir {plan_a} veya {plan_b} planı",
-          "list": "aktif bir {plans} veya {last} planı"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Ücretsiz",
+                    "core": "Çekirdek",
+                    "pro": "Pro",
+                    "ultra": "Ultra"
+                },
+                "requirements": {
+                    "any": "aktif bir premium plan",
+                    "single": "aktif bir {plan} planı",
+                    "double": "aktif bir {plan_a} veya {plan_b} planı",
+                    "list": "aktif bir {plans} veya {last} planı"
+                }
+            }
         }
-      }
     }
-  }
 }
