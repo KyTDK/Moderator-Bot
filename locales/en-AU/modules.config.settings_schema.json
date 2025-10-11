@@ -3,14 +3,14 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": ""
+                    "invalid": "Invalid locale. Supported locales: {supported}"
                 },
                 "nsfw_pfp_message": {
-                    "default": "",
+                    "default": "Your profile picture was found to contain explicit content",
                     "choices": [
-                        "",
-                        "",
-                        ""
+                        "Your profile picture was found to contain explicit content",
+                        "Your profile picture is not appropriate for this server.",
+                        "Your profile picture has been flagged as NSFW."
                     ]
                 },
                 "rules": {
