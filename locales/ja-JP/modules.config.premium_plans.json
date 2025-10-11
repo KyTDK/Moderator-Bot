@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "無料",
-          "core": "コア",
-          "pro": "プロ",
-          "ultra": "ウルトラ"
-        },
-        "requirements": {
-          "any": "有効なプレミアムプラン",
-          "single": "有効な{plan}プラン",
-          "double": "有効な{plan_a}または{plan_b}プラン",
-          "list": "有効な{plans}または{last}プラン"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "無料",
+                    "core": "コア",
+                    "pro": "プロ",
+                    "ultra": "ウルトラ"
+                },
+                "requirements": {
+                    "any": "有効なプレミアムプラン",
+                    "single": "有効な{plan}プラン",
+                    "double": "有効な{plan_a}または{plan_b}プラン",
+                    "list": "有効な{plans}または{last}プラン"
+                }
+            }
         }
-      }
     }
-  }
 }
