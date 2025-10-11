@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "ΣΥΓΓΡΑΦΕΑΣ",
-        "utterance_label": "ΕΚΦΡΑΣΗ",
-        "divider": "---",
-        "unknown_speaker": "Άγνωστος ομιλητής",
-        "unknown_prefix": "Άγνωστος",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "Απομαγνητοφώνηση VC",
-        "title_part": "Απομαγνητοφώνηση VC (μέρος {index}/{total})",
-        "field_channel": "Κανάλι",
-        "field_utterances": "Εκφράσεις",
-        "footer_high": "Απομαγνητοφώνηση υψηλής ακρίβειας",
-        "footer_normal": "Απομαγνητοφώνηση κανονικής ακρίβειας"
-      },
-      "budget": {
-        "title": "Οικονομικός Προϋπολογισμός VC Έχει Εξαντληθεί",
-        "description": "Παράλειψη ανάλυσης για αυτόν τον κύκλο λόγω ορίου προϋπολογισμού."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "ΣΥΓΓΡΑΦΕΑΣ",
+                "utterance_label": "ΕΚΦΡΑΣΗ",
+                "divider": "---",
+                "unknown_speaker": "Άγνωστος ομιλητής",
+                "unknown_prefix": "Άγνωστος",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "Απομαγνητοφώνηση VC",
+                "title_part": "Απομαγνητοφώνηση VC (μέρος {index}/{total})",
+                "field_channel": "Κανάλι",
+                "field_utterances": "Εκφράσεις",
+                "footer_high": "Απομαγνητοφώνηση υψηλής ακρίβειας",
+                "footer_normal": "Απομαγνητοφώνηση κανονικής ακρίβειας"
+            },
+            "budget": {
+                "title": "Οικονομικός Προϋπολογισμός VC Έχει Εξαντληθεί",
+                "description": "Παράλειψη ανάλυσης για αυτόν τον κύκλο λόγω ορίου προϋπολογισμού."
+            }
+        }
     }
-  }
 }
