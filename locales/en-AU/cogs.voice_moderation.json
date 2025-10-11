@@ -2,23 +2,23 @@
     "cogs": {
         "voice_moderation": {
             "transcript": {
-                "author_label": "",
-                "utterance_label": "",
-                "divider": "",
-                "unknown_speaker": "",
-                "unknown_prefix": "",
-                "user_fallback": "",
-                "line": "",
-                "title_single": "",
-                "title_part": "",
-                "field_channel": "",
-                "field_utterances": "",
-                "footer_high": "",
-                "footer_normal": ""
+                "author_label": "AUTHOR",
+                "utterance_label": "UTTERANCE",
+                "divider": "---",
+                "unknown_speaker": "Unknown speaker",
+                "unknown_prefix": "Unknown",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC Transcript",
+                "title_part": "VC Transcript (part {index}/{total})",
+                "field_channel": "Channel",
+                "field_utterances": "Utterances",
+                "footer_high": "High accuracy transcript",
+                "footer_normal": "Normal accuracy transcript"
             },
             "budget": {
-                "title": "",
-                "description": ""
+                "title": "VC Moderation Budget Reached",
+                "description": "Skipping analysis for this cycle due to budget limit."
             }
         }
     }
