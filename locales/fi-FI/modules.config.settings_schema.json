@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Virheellinen alueasetus. Tuetut alueasetukset: {supported}"
+                    "invalid": "Virheellinen alueasetus. Tuetut alueasetukset: {supported}",
+                    "description": "Ohita automaattinen kielialueen tunnistus tietyllä kielialuekoodilla."
                 },
                 "nsfw_pfp_message": {
                     "default": "Profiilikuvasi havaittiin sisältävän sopimatonta sisältöä",
@@ -29,6 +30,79 @@
                         "4. Ei seksuaalista sisältöä tai sopimattomia kommentteja.",
                         "5. Noudata Discordin palveluehtoja."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Kanava, johon varoitukset lokitetaan."
+                },
+                "aimod-debug": {
+                    "description": "Lähetä aina yksityiskohtainen AI-moderoinnin debug-viesti AI violations -kanavalle, mukaan lukien liputetut viestit, AI:n päätös ja toteutetut toimenpiteet."
+                },
+                "nsfw-verbose": {
+                    "description": "Lähetä yksityiskohtainen tarkistusraportti upotuksena samaan kanavaan kuin tarkistettu media."
+                },
+                "nsfw-channel": {
+                    "description": "Kanava, johon NSFW-rikkomukset kirjataan ja jossa näytetään median esikatselu."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Lähetä ilmoitusupotus kanavalle, kun NSFW-sisältö poistetaan."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Ota käyttöön korkean tarkkuuden NSFW-skannaukset luotettavampaa tunnistusta varten. Vain Accelerated."
+                },
+                "nsfw-enabled": {
+                    "description": "Ota käyttöön NSFW-tarkistus viesteille, reaktioille ja profiilikuville (muut asetukset pätevät edelleen)."
+                },
+                "monitor-events": {
+                    "description": "Ota käyttöön/poista käytöstä lokitus kullekin seurattavalle tapahtumatyypille."
+                },
+                "nsfw-detection-action": {
+                    "description": "Toimenpide, kun käyttäjä julkaisee NSFW-sisältöä."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Tunnistuksessa NSFW:ksi katsotut kategoriat."
+                },
+                "threshold": {
+                    "description": "NSFW-tunnistuksen varmuuden kynnysarvo. Pienemmät arvot ovat herkempiä."
+                },
+                "banned-words-action": {
+                    "description": "Toimenpide, joka suoritetaan, kun käyttäjä lähettää viestin, jossa on kielletty sana."
+                },
+                "nsfw-pfp-message": {
+                    "choices": [
+                        "Profiilikuvasi havaittiin sisältävän sopimatonta sisältöä"
+                    ],
+                    "description": "Viesti, joka lähetetään, kun pelaajan profiilikuva on liputettu.",
+                    "default": "Profiilikuvasi havaittiin sisältävän sopimatonta sisältöä"
+                },
+                "monitor-channel": {
+                    "description": "Kanava, johon kirjataan kaikki palvelimen tapahtumat, mukaan lukien viestien muokkaukset, poistot ja käyttäjien liittymis- ja poistumistapahtumat."
+                },
+                "captcha-log-channel": {
+                    "description": "Kanava, jossa captcha-varmennuksen lokit ja aktiivisuuspäivitykset julkaistaan."
+                },
+                "aimod-channel": {
+                    "description": "Kanava, johon AI-rikkomuslokit julkaistaan."
+                },
+                "cycle-strike-actions": {
+                    "description": "Kierrätä rikemerkintätoimet, kun käyttäjälle annettavat toimet loppuvat."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Kanavat, jotka jätetään kiellettyjen sanojen tunnistuksen ulkopuolelle."
+                },
+                "strike-actions": {
+                    "description": "Toimenpiteet kullekin varoitustasolle."
+                },
+                "strike-expiry": {
+                    "description": "Rangaistuksen kesto. Käytä muotoja kuten 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekunnit, minuutit, tunnit, päivät, viikot, kuukaudet ja vuodet tässä järjestyksessä."
+                },
+                "dm-on-strike": {
+                    "description": "Lähetä käyttäjälle yksityisviesti, kun hän saa varoituksen."
+                },
+                "check-pfp": {
+                    "description": "Tarkista käyttäjän profiilikuva NSFW-sisällön varalta."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Toimenpide, joka tehdään, kun käyttäjä asettaa NSFW-profiilikuvan."
                 }
             }
         }
