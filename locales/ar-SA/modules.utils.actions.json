@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "ضربة",
-          "kick": "ركلة",
-          "ban": "حظر",
-          "timeout": "مهلة",
-          "delete": "حذف الرسالة",
-          "give_role": "إعطاء دور",
-          "take_role": "إزالة الدور",
-          "warn": "تحذير المستخدم",
-          "broadcast": "بث الرسالة",
-          "auto": "تلقائي"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "ضربة",
+                    "kick": "ركلة",
+                    "ban": "حظر",
+                    "timeout": "مهلة",
+                    "delete": "حذف الرسالة",
+                    "give_role": "إعطاء دور",
+                    "take_role": "إزالة الدور",
+                    "warn": "تحذير المستخدم",
+                    "broadcast": "بث الرسالة",
+                    "auto": "تلقائي"
+                }
+            }
         }
-      }
     }
-  }
 }
