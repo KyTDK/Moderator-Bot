@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "캡차 인증 성공",
-          "embed": {
-            "title": "캡차 인증 통과",
-            "description": "{mention} ({user_id})가 캡차 인증을 통과했습니다.",
-            "fields": {
-              "actions": "적용된 작업",
-              "attempts": "시도",
-              "provider": "제공자",
-              "challenge": "도전 과제",
-              "review": "검토"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "캡차 인증 성공",
+                    "embed": {
+                        "title": "캡차 인증 통과",
+                        "description": "{mention} ({user_id})가 캡차 인증을 통과했습니다.",
+                        "fields": {
+                            "actions": "적용된 작업",
+                            "attempts": "시도",
+                            "provider": "제공자",
+                            "challenge": "도전 과제",
+                            "review": "검토"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "캡차 인증 실패.",
+                    "notes": {
+                        "deferred_generic": "실패 작업이 유예되었습니다; 캡차 시도가 남아 있습니다.",
+                        "deferred_remaining": "실패 작업이 유예되었습니다; {remaining} {attempts_word} 남았습니다.",
+                        "member_left": "회원이 더 이상 길드에 없습니다; 구성된 실패 작업이 건너뜁니다."
+                    },
+                    "attempts": {
+                        "unlimited": "무제한 시도가 남아 있습니다.",
+                        "additional": "추가 시도가 남아 있습니다.",
+                        "remaining": "{count} {attempts_word} 남았습니다.",
+                        "word_one": "시도",
+                        "word_other": "시도들"
+                    },
+                    "embed": {
+                        "title_failed": "캡차 인증 실패",
+                        "title_attempt": "캡차 시도 실패",
+                        "description_failed": "{mention} ({user_id})가 캡차 인증에 실패했습니다.",
+                        "description_attempt": "{mention} ({user_id})가 캡차 시도에 실패했습니다.",
+                        "fields": {
+                            "actions": "적용된 작업",
+                            "notes": "메모",
+                            "attempts": "시도",
+                            "remaining": "남은 시도",
+                            "challenge": "도전 과제",
+                            "reason": "이유",
+                            "review": "검토"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "디스코드 API 오류로 인해 캡차 성공 작업을 적용하지 못했습니다.",
+                    "unknown_token": "이 사용자에 대한 대기 중인 캡차 인증을 찾을 수 없습니다.",
+                    "token_mismatch": "캡차 토큰이 대기 중인 인증과 일치하지 않습니다.",
+                    "missing_permissions": "봇이 캡차 실패 작업을 적용할 권한이 없습니다.",
+                    "action_failed": "디스코드 API 오류로 인해 캡차 실패 작업을 적용하지 못했습니다.",
+                    "guild_not_found": "길드 {guild_id}는 이 봇에 사용할 수 없습니다.",
+                    "guild_fetch_failed": "디스코드에서 길드 {guild_id}를 가져오지 못했습니다.",
+                    "member_not_found": "멤버 {user_id}를 길드 {guild_id}에서 찾을 수 없습니다.",
+                    "member_fetch_failed": "길드 {guild_id}에서 멤버 {user_id}를 가져오지 못했습니다."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "캡차 인증 실패.",
-          "notes": {
-            "deferred_generic": "실패 작업이 유예되었습니다; 캡차 시도가 남아 있습니다.",
-            "deferred_remaining": "실패 작업이 유예되었습니다; {remaining} {attempts_word} 남았습니다.",
-            "member_left": "회원이 더 이상 길드에 없습니다; 구성된 실패 작업이 건너뜁니다."
-          },
-          "attempts": {
-            "unlimited": "무제한 시도가 남아 있습니다.",
-            "additional": "추가 시도가 남아 있습니다.",
-            "remaining": "{count} {attempts_word} 남았습니다.",
-            "word_one": "시도",
-            "word_other": "시도들"
-          },
-          "embed": {
-            "title_failed": "캡차 인증 실패",
-            "title_attempt": "캡차 시도 실패",
-            "description_failed": "{mention} ({user_id})가 캡차 인증에 실패했습니다.",
-            "description_attempt": "{mention} ({user_id})가 캡차 시도에 실패했습니다.",
-            "fields": {
-              "actions": "적용된 작업",
-              "notes": "메모",
-              "attempts": "시도",
-              "remaining": "남은 시도",
-              "challenge": "도전 과제",
-              "reason": "이유",
-              "review": "검토"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "디스코드 API 오류로 인해 캡차 성공 작업을 적용하지 못했습니다.",
-          "unknown_token": "이 사용자에 대한 대기 중인 캡차 인증을 찾을 수 없습니다.",
-          "token_mismatch": "캡차 토큰이 대기 중인 인증과 일치하지 않습니다.",
-          "missing_permissions": "봇이 캡차 실패 작업을 적용할 권한이 없습니다.",
-          "action_failed": "디스코드 API 오류로 인해 캡차 실패 작업을 적용하지 못했습니다.",
-          "guild_not_found": "길드 {guild_id}는 이 봇에 사용할 수 없습니다.",
-          "guild_fetch_failed": "디스코드에서 길드 {guild_id}를 가져오지 못했습니다.",
-          "member_not_found": "멤버 {user_id}를 길드 {guild_id}에서 찾을 수 없습니다.",
-          "member_fetch_failed": "길드 {guild_id}에서 멤버 {user_id}를 가져오지 못했습니다."
         }
-      }
     }
-  }
 }
