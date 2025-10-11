@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Ugyldig område. Understøttede områder: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Dit profilbillede blev fundet at indeholde eksplicit indhold",
-          "choices": [
-            "Dit profilbillede blev fundet at indeholde eksplicit indhold",
-            "Dit profilbillede er ikke passende til denne server.",
-            "Dit profilbillede er blevet markeret som NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Vær respektfuld — ingen chikane eller hadefuldt sprog.",
-            "2. Ingen NSFW eller uanstændigt indhold.",
-            "3. Ingen spam eller overdreven selvpromovering.",
-            "4. Følg Discord's servicevilkår."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Ingen chikane, hadefuldt sprog, eller trusler.",
-            "2. Ingen nedsættende eller diskriminerende sprog.",
-            "3. Ingen tilskyndelse til vold eller ulovlig aktivitet.",
-            "4. Ingen seksuelt indhold eller eksplicitte bemærkninger.",
-            "5. Følg Discord's servicevilkår."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Ugyldig område. Understøttede områder: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Dit profilbillede blev fundet at indeholde eksplicit indhold",
+                    "choices": [
+                        "Dit profilbillede blev fundet at indeholde eksplicit indhold",
+                        "Dit profilbillede er ikke passende til denne server.",
+                        "Dit profilbillede er blevet markeret som NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Vær respektfuld — ingen chikane eller hadefuldt sprog.",
+                        "2. Ingen NSFW eller uanstændigt indhold.",
+                        "3. Ingen spam eller overdreven selvpromovering.",
+                        "4. Følg Discord's servicevilkår."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Ingen chikane, hadefuldt sprog, eller trusler.",
+                        "2. Ingen nedsættende eller diskriminerende sprog.",
+                        "3. Ingen tilskyndelse til vold eller ulovlig aktivitet.",
+                        "4. Ingen seksuelt indhold eller eksplicitte bemærkninger.",
+                        "5. Følg Discord's servicevilkår."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }
