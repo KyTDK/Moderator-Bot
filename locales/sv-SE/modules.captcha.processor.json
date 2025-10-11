@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Captcha-verifiering lyckades",
-          "embed": {
-            "title": "Captcha-verifiering Godkänd",
-            "description": "{mention} ({user_id}) klarade captcha-verifieringen.",
-            "fields": {
-              "actions": "Åtgärder Tillämpade",
-              "attempts": "Försök",
-              "provider": "Leverantör",
-              "challenge": "Utmaning",
-              "review": "Granska"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Captcha-verifiering lyckades",
+                    "embed": {
+                        "title": "Captcha-verifiering Godkänd",
+                        "description": "{mention} ({user_id}) klarade captcha-verifieringen.",
+                        "fields": {
+                            "actions": "Åtgärder Tillämpade",
+                            "attempts": "Försök",
+                            "provider": "Leverantör",
+                            "challenge": "Utmaning",
+                            "review": "Granska"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Misslyckades med captcha-verifiering.",
+                    "notes": {
+                        "deferred_generic": "Misslyckande åtgärder uppskjutna; captcha-försök återstår.",
+                        "deferred_remaining": "Misslyckande åtgärder uppskjutna; {remaining} {attempts_word} kvar.",
+                        "member_left": "Medlem är inte längre i guilden; konfigurerade misslyckandeåtgärder hoppades över."
+                    },
+                    "attempts": {
+                        "unlimited": "Obegränsade försök återstår.",
+                        "additional": "Ytterligare försök återstår.",
+                        "remaining": "{count} {attempts_word} kvar.",
+                        "word_one": "försök",
+                        "word_other": "försök"
+                    },
+                    "embed": {
+                        "title_failed": "Captcha-verifiering Misslyckades",
+                        "title_attempt": "Captcha-försök Misslyckades",
+                        "description_failed": "{mention} ({user_id}) misslyckades med captcha-verifieringen.",
+                        "description_attempt": "{mention} ({user_id}) misslyckades med ett captcha-försök.",
+                        "fields": {
+                            "actions": "Åtgärder Tillämpade",
+                            "notes": "Noteringar",
+                            "attempts": "Försök",
+                            "remaining": "Återstående Försök",
+                            "challenge": "Utmaning",
+                            "reason": "Anledning",
+                            "review": "Granska"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Misslyckades med att tillämpa åtgärder vid captcha-success på grund av ett Discord API-fel.",
+                    "unknown_token": "Ingen pågående captcha-verifiering hittades för denna användare.",
+                    "token_mismatch": "Captcha-token matchar inte den väntande verifieringen.",
+                    "missing_permissions": "Bot saknar behörighet att tillämpa åtgärder vid captcha-misslyckande.",
+                    "action_failed": "Misslyckades med att tillämpa åtgärder vid captcha-misslyckande på grund av ett Discord API-fel.",
+                    "guild_not_found": "Guild {guild_id} är inte tillgänglig för denna bot.",
+                    "guild_fetch_failed": "Misslyckades med att hämta guild {guild_id} från Discord.",
+                    "member_not_found": "Medlem {user_id} hittades inte i guild {guild_id}.",
+                    "member_fetch_failed": "Misslyckades med att hämta medlem {user_id} från guild {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Misslyckades med captcha-verifiering.",
-          "notes": {
-            "deferred_generic": "Misslyckande åtgärder uppskjutna; captcha-försök återstår.",
-            "deferred_remaining": "Misslyckande åtgärder uppskjutna; {remaining} {attempts_word} kvar.",
-            "member_left": "Medlem är inte längre i guilden; konfigurerade misslyckandeåtgärder hoppades över."
-          },
-          "attempts": {
-            "unlimited": "Obegränsade försök återstår.",
-            "additional": "Ytterligare försök återstår.",
-            "remaining": "{count} {attempts_word} kvar.",
-            "word_one": "försök",
-            "word_other": "försök"
-          },
-          "embed": {
-            "title_failed": "Captcha-verifiering Misslyckades",
-            "title_attempt": "Captcha-försök Misslyckades",
-            "description_failed": "{mention} ({user_id}) misslyckades med captcha-verifieringen.",
-            "description_attempt": "{mention} ({user_id}) misslyckades med ett captcha-försök.",
-            "fields": {
-              "actions": "Åtgärder Tillämpade",
-              "notes": "Noteringar",
-              "attempts": "Försök",
-              "remaining": "Återstående Försök",
-              "challenge": "Utmaning",
-              "reason": "Anledning",
-              "review": "Granska"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Misslyckades med att tillämpa åtgärder vid captcha-success på grund av ett Discord API-fel.",
-          "unknown_token": "Ingen pågående captcha-verifiering hittades för denna användare.",
-          "token_mismatch": "Captcha-token matchar inte den väntande verifieringen.",
-          "missing_permissions": "Bot saknar behörighet att tillämpa åtgärder vid captcha-misslyckande.",
-          "action_failed": "Misslyckades med att tillämpa åtgärder vid captcha-misslyckande på grund av ett Discord API-fel.",
-          "guild_not_found": "Guild {guild_id} är inte tillgänglig för denna bot.",
-          "guild_fetch_failed": "Misslyckades med att hämta guild {guild_id} från Discord.",
-          "member_not_found": "Medlem {user_id} hittades inte i guild {guild_id}.",
-          "member_fetch_failed": "Misslyckades med att hämta medlem {user_id} från guild {guild_id}."
         }
-      }
     }
-  }
 }
