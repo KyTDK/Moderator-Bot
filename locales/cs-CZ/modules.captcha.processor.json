@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Ověření Captcha bylo úspěšné",
-          "embed": {
-            "title": "Ověření Captcha prošlo",
-            "description": "{mention} ({user_id}) prošel ověřením Captcha.",
-            "fields": {
-              "actions": "Aplikované akce",
-              "attempts": "Pokusy",
-              "provider": "Poskytovatel",
-              "challenge": "Výzva",
-              "review": "Recenze"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Ověření Captcha bylo úspěšné",
+                    "embed": {
+                        "title": "Ověření Captcha prošlo",
+                        "description": "{mention} ({user_id}) prošel ověřením Captcha.",
+                        "fields": {
+                            "actions": "Aplikované akce",
+                            "attempts": "Pokusy",
+                            "provider": "Poskytovatel",
+                            "challenge": "Výzva",
+                            "review": "Recenze"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Ověření Captcha selhalo.",
+                    "notes": {
+                        "deferred_generic": "Selhaly akce pozdržené; pokusy ověření zůstávají.",
+                        "deferred_remaining": "Selhaly akce pozdržené; {remaining} {attempts_word} zbývá.",
+                        "member_left": "Člen již není v cechu; konfigurované selhání akcí bylo přeskočeno."
+                    },
+                    "attempts": {
+                        "unlimited": "Neomezený počet pokusů zůstává.",
+                        "additional": "Další pokusy zůstávají.",
+                        "remaining": "{count} {attempts_word} zbývá.",
+                        "word_one": "pokus",
+                        "word_other": "pokusy"
+                    },
+                    "embed": {
+                        "title_failed": "Ověření Captcha selhalo",
+                        "title_attempt": "Pokus o ověření Captcha selhal",
+                        "description_failed": "{mention} ({user_id}) selhal ověřením Captcha.",
+                        "description_attempt": "{mention} ({user_id}) selhal při pokusu o ověření Captcha.",
+                        "fields": {
+                            "actions": "Aplikované akce",
+                            "notes": "Poznámky",
+                            "attempts": "Pokusy",
+                            "remaining": "Zbývající pokusy",
+                            "challenge": "Výzva",
+                            "reason": "Důvod",
+                            "review": "Recenze"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Nepodařilo se aplikovat úspěšné akce ověření Captcha kvůli chybě API Discord.",
+                    "unknown_token": "Pro tohoto uživatele nebylo nalezeno žádné čekající ověření Captcha.",
+                    "token_mismatch": "Token Captcha neodpovídá čekajícímu ověření.",
+                    "missing_permissions": "Bot nemá oprávnění k provádění akce selhání Captcha.",
+                    "action_failed": "Nepodařilo se aplikovat akce selhání Captcha kvůli chybě API Discord.",
+                    "guild_not_found": "Cech {guild_id} není k dispozici pro tohoto bota.",
+                    "guild_fetch_failed": "Nezdařilo se načíst cech {guild_id} z Discord.",
+                    "member_not_found": "Člen {user_id} nebyl nalezen v cechu {guild_id}.",
+                    "member_fetch_failed": "Nepodařilo se načíst člena {user_id} z cechu {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Ověření Captcha selhalo.",
-          "notes": {
-            "deferred_generic": "Selhaly akce pozdržené; pokusy ověření zůstávají.",
-            "deferred_remaining": "Selhaly akce pozdržené; {remaining} {attempts_word} zbývá.",
-            "member_left": "Člen již není v cechu; konfigurované selhání akcí bylo přeskočeno."
-          },
-          "attempts": {
-            "unlimited": "Neomezený počet pokusů zůstává.",
-            "additional": "Další pokusy zůstávají.",
-            "remaining": "{count} {attempts_word} zbývá.",
-            "word_one": "pokus",
-            "word_other": "pokusy"
-          },
-          "embed": {
-            "title_failed": "Ověření Captcha selhalo",
-            "title_attempt": "Pokus o ověření Captcha selhal",
-            "description_failed": "{mention} ({user_id}) selhal ověřením Captcha.",
-            "description_attempt": "{mention} ({user_id}) selhal při pokusu o ověření Captcha.",
-            "fields": {
-              "actions": "Aplikované akce",
-              "notes": "Poznámky",
-              "attempts": "Pokusy",
-              "remaining": "Zbývající pokusy",
-              "challenge": "Výzva",
-              "reason": "Důvod",
-              "review": "Recenze"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Nepodařilo se aplikovat úspěšné akce ověření Captcha kvůli chybě API Discord.",
-          "unknown_token": "Pro tohoto uživatele nebylo nalezeno žádné čekající ověření Captcha.",
-          "token_mismatch": "Token Captcha neodpovídá čekajícímu ověření.",
-          "missing_permissions": "Bot nemá oprávnění k provádění akce selhání Captcha.",
-          "action_failed": "Nepodařilo se aplikovat akce selhání Captcha kvůli chybě API Discord.",
-          "guild_not_found": "Cech {guild_id} není k dispozici pro tohoto bota.",
-          "guild_fetch_failed": "Nezdařilo se načíst cech {guild_id} z Discord.",
-          "member_not_found": "Člen {user_id} nebyl nalezen v cechu {guild_id}.",
-          "member_fetch_failed": "Nepodařilo se načíst člena {user_id} z cechu {guild_id}."
         }
-      }
     }
-  }
 }
