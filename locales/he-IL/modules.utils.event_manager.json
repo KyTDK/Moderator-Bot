@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` כבר מוגדר עבור `{event}`.",
-          "success": "`{action}` נוסף ל-`{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` לא מוגדר עבור `{event}`.",
-          "success": "`{action}` הוסר מ-`{event}`."
-        },
-        "clear": {
-          "success": "כל האירועים המותאמים למחיקה הוסרו."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` כבר מוגדר עבור `{event}`.",
+                    "success": "`{action}` נוסף ל-`{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` לא מוגדר עבור `{event}`.",
+                    "success": "`{action}` הוסר מ-`{event}`."
+                },
+                "clear": {
+                    "success": "כל האירועים המותאמים למחיקה הוסרו."
+                }
+            }
         }
-      }
     }
-  }
 }
