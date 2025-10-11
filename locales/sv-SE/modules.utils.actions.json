@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Slå",
-          "kick": "Sparka",
-          "ban": "Bannlys",
-          "timeout": "Timeout",
-          "delete": "Ta bort meddelande",
-          "give_role": "Tilldela roll",
-          "take_role": "Ta bort roll",
-          "warn": "Varna användare",
-          "broadcast": "Skicka meddelande",
-          "auto": "Auto"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Slå",
+                    "kick": "Sparka",
+                    "ban": "Bannlys",
+                    "timeout": "Timeout",
+                    "delete": "Ta bort meddelande",
+                    "give_role": "Tilldela roll",
+                    "take_role": "Ta bort roll",
+                    "warn": "Varna användare",
+                    "broadcast": "Skicka meddelande",
+                    "auto": "Auto"
+                }
+            }
         }
-      }
     }
-  }
 }
