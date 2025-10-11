@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "Format de durada incorrecte. Utilitzeu formats com ara 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Segons, minuts, hores, dies, setmanes, mesos i anys respectivament."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "Format de durada incorrecte. Utilitzeu formats com ara 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Segons, minuts, hores, dies, setmanes, mesos i anys respectivament."
+            }
+        }
     }
-  }
 }
