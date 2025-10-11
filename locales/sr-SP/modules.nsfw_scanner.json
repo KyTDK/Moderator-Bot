@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "Откривен НСФВ садржај",
-          "description": "**Корисник:** {user_mention} ({user_display})\n**Разлог:** {reason}",
-          "footer": "Кориснички ИД: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Извештај НСФВ скенирања",
-            "description": {
-              "user": "Корисник: {user}",
-              "file": "Фајл: `{filename}`",
-              "type": "Тип: `{file_type}`",
-              "decision": "Одлука: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "Откривен НСФВ садржај",
+                    "description": "**Корисник:** {user_mention} ({user_display})\n**Разлог:** {reason}",
+                    "footer": "Кориснички ИД: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Слика",
-              "video": "Видео",
-              "unknown": "Непознато"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Извештај НСФВ скенирања",
+                        "description": {
+                            "user": "Корисник: {user}",
+                            "file": "Фајл: `{filename}`",
+                            "type": "Тип: `{file_type}`",
+                            "decision": "Одлука: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Слика",
+                            "video": "Видео",
+                            "unknown": "Непознато"
+                        },
+                        "decision": {
+                            "nsfw": "НСФВ",
+                            "safe": "Безбедно",
+                            "unknown": "Непознато"
+                        },
+                        "fields": {
+                            "reason": "Разлог",
+                            "category": "Категорија",
+                            "score": "Оцена",
+                            "flagged_any": "Означено било шта",
+                            "summary_categories": "Резиме категорија",
+                            "max_similarity": "Максимална сличност",
+                            "max_category": "Категорија максималне сличности",
+                            "similarity": "Поклапање сличности",
+                            "high_accuracy": "Висока тачност",
+                            "clip_threshold": "CLIP праг",
+                            "moderation_threshold": "Праг умерености",
+                            "video_frames": "Видео оквири"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI модерација",
+                            "similarity_match": "Поклапање сличности",
+                            "no_frames_extracted": "Није издвојен ниједан оквир",
+                            "no_nsfw_frames_detected": "Није откривен НСФВ садржај"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "НСФВ",
-              "safe": "Безбедно",
-              "unknown": "Непознато"
-            },
-            "fields": {
-              "reason": "Разлог",
-              "category": "Категорија",
-              "score": "Оцена",
-              "flagged_any": "Означено било шта",
-              "summary_categories": "Резиме категорија",
-              "max_similarity": "Максимална сличност",
-              "max_category": "Категорија максималне сличности",
-              "similarity": "Поклапање сличности",
-              "high_accuracy": "Висока тачност",
-              "clip_threshold": "CLIP праг",
-              "moderation_threshold": "Праг умерености",
-              "video_frames": "Видео оквири"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI модерација",
-              "similarity_match": "Поклапање сличности",
-              "no_frames_extracted": "Није издвојен ниједан оквир",
-              "no_nsfw_frames_detected": "Није откривен НСФВ садржај"
+            "shared": {
+                "confidence": {
+                    "name": "Поузданост",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Оцена",
+                        "similarity": "Сличност"
+                    }
+                },
+                "boolean": {
+                    "true": "истина",
+                    "false": "нетачно"
+                },
+                "category": {
+                    "unspecified": "Неспецификовано"
+                },
+                "policy_violation": "Детектовано могуће кршење политике (Категорија: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Поузданост",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Оцена",
-            "similarity": "Сличност"
-          }
-        },
-        "boolean": {
-          "true": "истина",
-          "false": "нетачно"
-        },
-        "category": {
-          "unspecified": "Неспецификовано"
-        },
-        "policy_violation": "Детектовано могуће кршење политике (Категорија: **{category}**)"
-      }
     }
-  }
 }
