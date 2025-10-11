@@ -1,0 +1,11 @@
+{
+    "modules": {
+        "utils": {
+            "mysql": {
+                "settings": {
+                    "plan_required": "This setting requires {requirement}."
+                }
+            }
+        }
+    }
+}
