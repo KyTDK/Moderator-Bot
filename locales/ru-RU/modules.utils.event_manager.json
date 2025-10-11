@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` уже установлено для `{event}`.",
-          "success": "Добавлено `{action}` в `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` не установлено для `{event}`.",
-          "success": "Удалено `{action}` из `{event}`."
-        },
-        "clear": {
-          "success": "Все адаптивные события были очищены."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` уже установлено для `{event}`.",
+                    "success": "Добавлено `{action}` в `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` не установлено для `{event}`.",
+                    "success": "Удалено `{action}` из `{event}`."
+                },
+                "clear": {
+                    "success": "Все адаптивные события были очищены."
+                }
+            }
         }
-      }
     }
-  }
 }
