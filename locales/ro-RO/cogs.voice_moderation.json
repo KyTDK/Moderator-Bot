@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "AUTOR",
-        "utterance_label": "ÎNREGISTRARE",
-        "divider": "---",
-        "unknown_speaker": "Vorbit necunoscut",
-        "unknown_prefix": "Necunoscut",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "Transcriere VC",
-        "title_part": "Transcriere VC (partea {index}/{total})",
-        "field_channel": "Canal",
-        "field_utterances": "Înregistrări",
-        "footer_high": "Transcriere cu acuratețe mare",
-        "footer_normal": "Transcriere cu acuratețe normală"
-      },
-      "budget": {
-        "title": "Buget de moderare VC atins",
-        "description": "Sărim analiza pentru acest ciclu din cauza limitelor de buget."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "AUTOR",
+                "utterance_label": "ÎNREGISTRARE",
+                "divider": "---",
+                "unknown_speaker": "Vorbit necunoscut",
+                "unknown_prefix": "Necunoscut",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "Transcriere VC",
+                "title_part": "Transcriere VC (partea {index}/{total})",
+                "field_channel": "Canal",
+                "field_utterances": "Înregistrări",
+                "footer_high": "Transcriere cu acuratețe mare",
+                "footer_normal": "Transcriere cu acuratețe normală"
+            },
+            "budget": {
+                "title": "Buget de moderare VC atins",
+                "description": "Sărim analiza pentru acest ciclu din cauza limitelor de buget."
+            }
+        }
     }
-  }
 }
