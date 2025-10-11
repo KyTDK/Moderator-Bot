@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Gratis",
-          "core": "Kärna",
-          "pro": "Proffs",
-          "ultra": "Ultra"
-        },
-        "requirements": {
-          "any": "ett aktivt prem Ium abonnemang",
-          "single": "ett aktivt {plan} abonnemang",
-          "double": "ett aktivt {plan_a} eller {plan_b} abonnemang",
-          "list": "ett aktivt {plans}, eller {last} abonnemang"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Gratis",
+                    "core": "Kärna",
+                    "pro": "Proffs",
+                    "ultra": "Ultra"
+                },
+                "requirements": {
+                    "any": "ett aktivt prem Ium abonnemang",
+                    "single": "ett aktivt {plan} abonnemang",
+                    "double": "ett aktivt {plan_a} eller {plan_b} abonnemang",
+                    "list": "ett aktivt {plans}, eller {last} abonnemang"
+                }
+            }
         }
-      }
     }
-  }
 }
