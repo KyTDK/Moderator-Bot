@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Cop",
-          "kick": "Cop de peu",
-          "ban": "Prohibir",
-          "timeout": "Temps d'espera",
-          "delete": "Esborrar missatge",
-          "give_role": "Assignar rol",
-          "take_role": "Eliminar rol",
-          "warn": "Advertir usuari",
-          "broadcast": "Difondre missatge",
-          "auto": "Automàtic"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Cop",
+                    "kick": "Cop de peu",
+                    "ban": "Prohibir",
+                    "timeout": "Temps d'espera",
+                    "delete": "Esborrar missatge",
+                    "give_role": "Assignar rol",
+                    "take_role": "Eliminar rol",
+                    "warn": "Advertir usuari",
+                    "broadcast": "Difondre missatge",
+                    "auto": "Automàtic"
+                }
+            }
         }
-      }
     }
-  }
 }
