@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "تم الكشف عن محتوى NSFW",
-          "description": "**المستخدم:** {user_mention} ({user_display})\n**السبب:** {reason}",
-          "footer": "معرف المستخدم: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "تقرير فحص NSFW",
-            "description": {
-              "user": "المستخدم: {user}",
-              "file": "الملف: `{filename}`",
-              "type": "النوع: `{file_type}`",
-              "decision": "القرار: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "تم الكشف عن محتوى NSFW",
+                    "description": "**المستخدم:** {user_mention} ({user_display})\n**السبب:** {reason}",
+                    "footer": "معرف المستخدم: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "صورة",
-              "video": "فيديو",
-              "unknown": "غير معروف"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "تقرير فحص NSFW",
+                        "description": {
+                            "user": "المستخدم: {user}",
+                            "file": "الملف: `{filename}`",
+                            "type": "النوع: `{file_type}`",
+                            "decision": "القرار: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "صورة",
+                            "video": "فيديو",
+                            "unknown": "غير معروف"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "آمن",
+                            "unknown": "غير معروف"
+                        },
+                        "fields": {
+                            "reason": "السبب",
+                            "category": "الفئة",
+                            "score": "الدرجة",
+                            "flagged_any": "تم الإبلاغ عن أي شيء",
+                            "summary_categories": "ملخص الفئات",
+                            "max_similarity": "أقصى تشابه",
+                            "max_category": "فئة أعلى تشابه",
+                            "similarity": "التشابه المطابق",
+                            "high_accuracy": "دقة عالية",
+                            "clip_threshold": "عتبة CLIP",
+                            "moderation_threshold": "عتبة الاعتدال",
+                            "video_frames": "إطارات الفيديو"
+                        },
+                        "reasons": {
+                            "openai_moderation": "تقييم OpenAI",
+                            "similarity_match": "مطابقة التشابه",
+                            "no_frames_extracted": "لم يتم استخراج إطارات",
+                            "no_nsfw_frames_detected": "لم يتم اكتشاف إطارات NSFW"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "آمن",
-              "unknown": "غير معروف"
-            },
-            "fields": {
-              "reason": "السبب",
-              "category": "الفئة",
-              "score": "الدرجة",
-              "flagged_any": "تم الإبلاغ عن أي شيء",
-              "summary_categories": "ملخص الفئات",
-              "max_similarity": "أقصى تشابه",
-              "max_category": "فئة أعلى تشابه",
-              "similarity": "التشابه المطابق",
-              "high_accuracy": "دقة عالية",
-              "clip_threshold": "عتبة CLIP",
-              "moderation_threshold": "عتبة الاعتدال",
-              "video_frames": "إطارات الفيديو"
-            },
-            "reasons": {
-              "openai_moderation": "تقييم OpenAI",
-              "similarity_match": "مطابقة التشابه",
-              "no_frames_extracted": "لم يتم استخراج إطارات",
-              "no_nsfw_frames_detected": "لم يتم اكتشاف إطارات NSFW"
+            "shared": {
+                "confidence": {
+                    "name": "الثقة",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "النتيجة",
+                        "similarity": "التشابه"
+                    }
+                },
+                "boolean": {
+                    "true": "صحيح",
+                    "false": "خطأ"
+                },
+                "category": {
+                    "unspecified": "غير محدد"
+                },
+                "policy_violation": "تم اكتشاف انتهاك محتمل للسياسة (الفئة: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "الثقة",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "النتيجة",
-            "similarity": "التشابه"
-          }
-        },
-        "boolean": {
-          "true": "صحيح",
-          "false": "خطأ"
-        },
-        "category": {
-          "unspecified": "غير محدد"
-        },
-        "policy_violation": "تم اكتشاف انتهاك محتمل للسياسة (الفئة: **{category}**)"
-      }
     }
-  }
 }
