@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "AUTOR",
-        "utterance_label": "WYPOWIEDŹ",
-        "divider": "---",
-        "unknown_speaker": "Nieznany mówca",
-        "unknown_prefix": "Nieznany",
-        "user_fallback": "<@{id}> (ID = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "Transkrypcja VC",
-        "title_part": "Transkrypcja VC (część {index}/{total})",
-        "field_channel": "Kanał",
-        "field_utterances": "Wypowiedzi",
-        "footer_high": "Transkrypt o wysokiej dokładności",
-        "footer_normal": "Transkrypt o normalnej dokładności"
-      },
-      "budget": {
-        "title": "Osiągnięto budżet Moderacji VC",
-        "description": "Pomijanie analizy w tym cyklu ze względu na limity budżetu."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "AUTOR",
+                "utterance_label": "WYPOWIEDŹ",
+                "divider": "---",
+                "unknown_speaker": "Nieznany mówca",
+                "unknown_prefix": "Nieznany",
+                "user_fallback": "<@{id}> (ID = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "Transkrypcja VC",
+                "title_part": "Transkrypcja VC (część {index}/{total})",
+                "field_channel": "Kanał",
+                "field_utterances": "Wypowiedzi",
+                "footer_high": "Transkrypt o wysokiej dokładności",
+                "footer_normal": "Transkrypt o normalnej dokładności"
+            },
+            "budget": {
+                "title": "Osiągnięto budżet Moderacji VC",
+                "description": "Pomijanie analizy w tym cyklu ze względu na limity budżetu."
+            }
+        }
     }
-  }
 }
