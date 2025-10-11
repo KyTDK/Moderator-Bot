@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "무료",
-          "core": "코어",
-          "pro": "프로",
-          "ultra": "울트라"
-        },
-        "requirements": {
-          "any": "활성 프리미엄 플랜",
-          "single": "활성 {plan} 플랜",
-          "double": "활성 {plan_a} 또는 {plan_b} 플랜",
-          "list": "활성 {plans}, 또는 {last} 플랜"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "무료",
+                    "core": "코어",
+                    "pro": "프로",
+                    "ultra": "울트라"
+                },
+                "requirements": {
+                    "any": "활성 프리미엄 플랜",
+                    "single": "활성 {plan} 플랜",
+                    "double": "활성 {plan_a} 또는 {plan_b} 플랜",
+                    "list": "활성 {plans}, 또는 {last} 플랜"
+                }
+            }
         }
-      }
     }
-  }
 }
