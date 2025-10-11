@@ -6,28 +6,28 @@
                     "invalid": "Invalid locale. Supported locales: {supported}"
                 },
                 "nsfw_pfp_message": {
-                    "default": "Your profile picture was found to contain explicit content",
+                    "default": "Your profile picture was detected as containing explicit content",
                     "choices": [
-                        "Your profile picture was found to contain explicit content",
+                        "Your profile picture was detected as containing explicit content",
                         "Your profile picture is not appropriate for this server.",
                         "Your profile picture has been flagged as NSFW."
                     ]
                 },
                 "rules": {
                     "default": [
-                        "",
-                        "",
-                        "",
-                        ""
+                        "1. Be respectful — no harassment or hate speech.",
+                        "2. No NSFW or obscene content.",
+                        "3. No spam or excessive self-promotion.",
+                        "4. Follow Discord's Terms of Service."
                     ]
                 },
                 "vcmod_rules": {
                     "default": [
-                        "",
-                        "",
-                        "",
-                        "",
-                        ""
+                        "1. No harassment, hate speech, or threats.",
+                        "2. No slurs or discriminatory language.",
+                        "3. No incitement to violence or illegal activity.",
+                        "4. No sexual content or explicit remarks.",
+                        "5. Follow Discord's Terms of Service."
                     ]
                 }
             }
