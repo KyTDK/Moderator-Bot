@@ -20,7 +20,8 @@
                         "2. 不允许 NSFW 或淫秽内容。",
                         "3. 不允许垃圾信息或过度的自我宣传。",
                         "4. 遵循 Discord 的服务条款。"
-                    ]
+                    ],
+                    "description": "用于自主审核的服务器规则。"
                 },
                 "vcmod_rules": {
                     "default": [
@@ -99,7 +100,130 @@
                 },
                 "nsfw-pfp-message": {
                     "description": "当玩家的头像被标记时要发送的消息。",
-                    "default": "你的头像被检测到包含露骨内容"
+                    "default": "你的头像被检测到包含露骨内容",
+                    "choices": [
+                        "检测到你的头像包含露骨内容",
+                        "你的头像不适合此服务器。",
+                        "你的头像已被标记为 NSFW。"
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "当用户将头像更改为合适的内容后，移除其超时状态。"
+                },
+                "scan-age-restricted": {
+                    "description": "扫描受年龄限制（NSFW）的频道。关闭时，将跳过 NSFW 频道。"
+                },
+                "check-tenor-gifs": {
+                    "description": "当在 Tenor GIF 中检测到 NSFW 内容时应用惩罚。"
+                },
+                "use-default-banned-words": {
+                    "description": "在此服务器中使用内置不雅词列表。"
+                },
+                "exclude-channels": {
+                    "description": "从检测中排除的频道。"
+                },
+                "delete-scam-messages": {
+                    "description": "自动删除与诈骗模式或 URL 匹配的消息。"
+                },
+                "scam-detection-action": {
+                    "description": "检测到诈骗消息时采取的操作。"
+                },
+                "check-links": {
+                    "description": "检查消息中的链接是否包含恶意软件、钓鱼、诈骗等。"
+                },
+                "exclude-scam-channels": {
+                    "description": "从诈骗检测中排除的频道。"
+                },
+                "aimod-detection-action": {
+                    "description": "当自主审核检测到违规时采取的操作。使用 auto 以由 AI 作出决定。"
+                },
+                "aimod-high-accuracy": {
+                    "description": "使用 gpt-5-mini 进行更高准确度的 AI 审核（约 2.25 美元/100 万 tokens）。相比默认设置，会更快消耗每月预算。"
+                },
+                "autonomous-mod": {
+                    "description": "使用 AI 自动审核你的整个服务器。"
+                },
+                "aimod-check-interval": {
+                    "description": "AI 审核批处理的运行频率。"
+                },
+                "aimod-mode": {
+                    "description": "选择 AI 审核的触发方式：`report` 模式（仅在被提及时），`interval` 模式（自动后台扫描），或 `adaptive` 模式（根据服务器活动、事件或配置动态切换）。"
+                },
+                "aimod-adaptive-events": {
+                    "description": "配置哪些事件会触发切换 AI 审核模式。"
+                },
+                "no-forward-from-role": {
+                    "description": "阻止特定角色转发消息。"
+                },
+                "banned-urls": {
+                    "description": "要屏蔽的精确 URL 或域名。"
+                },
+                "url-detection-action": {
+                    "description": "检测到被屏蔽的 URL 时采取的操作。"
+                },
+                "exclude-url-channels": {
+                    "description": "从 URL 封禁中排除的频道。"
+                },
+                "vcmod-enabled": {
+                    "description": "启用语音频道审核与转录。"
+                },
+                "vcmod-channels": {
+                    "description": "要监控的语音频道（留空则不监控）。"
+                },
+                "vcmod-listen-duration": {
+                    "description": "每轮对每个语音频道主动监听的时长（例如：2m、5m）。"
+                },
+                "vcmod-idle-duration": {
+                    "description": "Saver 模式下每次转录之间的暂停时长。"
+                },
+                "vcmod-saver-mode": {
+                    "description": "Saver 模式：机器人在语音频道间循环切换以显得活跃，但大部分时间不录音也不监听。"
+                },
+                "vcmod-rules": {
+                    "description": "用于语音聊天审核的规则（独立于文本规则）。",
+                    "default": [
+                        "1. 禁止骚扰、仇恨言论或威胁。",
+                        "2. 禁止辱骂或歧视性语言。",
+                        "3. 禁止煽动暴力或非法活动。",
+                        "4. 禁止性内容或露骨言论。",
+                        "5. 遵守 Discord 的服务条款。"
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "当语音聊天审核检测到违规时采取的操作。将其设为 auto 以让 AI 决定。"
+                },
+                "vcmod-high-accuracy": {
+                    "description": "为语音聊天审核使用更高精度的 AI 分析（会使用更多令牌预算）。"
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "启用高级处理以获得更清晰的语音聊天转录（成本更高）。"
+                },
+                "vcmod-transcript-channel": {
+                    "description": "发布语音聊天转录的频道。"
+                },
+                "vcmod-transcript-only": {
+                    "description": "启用后，机器人将仅转录语音聊天，不进行 AI 规则检查或审核操作。这将显著降低预算消耗。"
+                },
+                "captcha-verification-enabled": {
+                    "description": "要求新成员在获得访问权限前通过验证码挑战。"
+                },
+                "captcha-grace-period": {
+                    "description": "新成员完成人机验证的时间限制（例如 10m、1h）。"
+                },
+                "captcha-success-actions": {
+                    "description": "人机验证成功后自动执行的操作。"
+                },
+                "captcha-delivery-method": {
+                    "description": "向新成员发送人机验证链接的方式（私信或嵌入）。"
+                },
+                "captcha-embed-channel-id": {
+                    "description": "使用嵌入方式时发布人机验证嵌入消息的频道。"
+                },
+                "pre-captcha-roles": {
+                    "description": "在完成人机验证之前分配给新成员的角色。"
+                },
+                "captcha-failure-actions": {
+                    "description": "成员未通过人机验证时自动执行的操作。"
                 }
             }
         }
