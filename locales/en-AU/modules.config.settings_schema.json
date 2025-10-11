@@ -1,0 +1,36 @@
+{
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": ""
+                },
+                "nsfw_pfp_message": {
+                    "default": "",
+                    "choices": [
+                        "",
+                        "",
+                        ""
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "",
+                        "",
+                        "",
+                        ""
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "",
+                        "",
+                        "",
+                        "",
+                        ""
+                    ]
+                }
+            }
+        }
+    }
+}
