@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "Виявлено NSFW контент",
-          "description": "**Користувач:** {user_mention} ({user_display})\n**Причина:** {reason}",
-          "footer": "ID користувача: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Звіт NSFW сканування",
-            "description": {
-              "user": "Користувач: {user}",
-              "file": "Файл: `{filename}`",
-              "type": "Тип: `{file_type}`",
-              "decision": "Рішення: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "Виявлено NSFW контент",
+                    "description": "**Користувач:** {user_mention} ({user_display})\n**Причина:** {reason}",
+                    "footer": "ID користувача: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Зображення",
-              "video": "Відео",
-              "unknown": "Невідомо"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Звіт NSFW сканування",
+                        "description": {
+                            "user": "Користувач: {user}",
+                            "file": "Файл: `{filename}`",
+                            "type": "Тип: `{file_type}`",
+                            "decision": "Рішення: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Зображення",
+                            "video": "Відео",
+                            "unknown": "Невідомо"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Безпечно",
+                            "unknown": "Невідомо"
+                        },
+                        "fields": {
+                            "reason": "Причина",
+                            "category": "Категорія",
+                            "score": "Рахунок",
+                            "flagged_any": "Позначено будь-який",
+                            "summary_categories": "Категорії підсумку",
+                            "max_similarity": "Максимальна схожість",
+                            "max_category": "Категорія максимальної схожості",
+                            "similarity": "Збіг схожості",
+                            "high_accuracy": "Висока точність",
+                            "clip_threshold": "Поріг CLIP",
+                            "moderation_threshold": "Поріг модерування",
+                            "video_frames": "Кадри відео"
+                        },
+                        "reasons": {
+                            "openai_moderation": "Модерація OpenAI",
+                            "similarity_match": "Збіг схожості",
+                            "no_frames_extracted": "Кадри не витягнуто",
+                            "no_nsfw_frames_detected": "NSFW кадри не виявлено"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Безпечно",
-              "unknown": "Невідомо"
-            },
-            "fields": {
-              "reason": "Причина",
-              "category": "Категорія",
-              "score": "Рахунок",
-              "flagged_any": "Позначено будь-який",
-              "summary_categories": "Категорії підсумку",
-              "max_similarity": "Максимальна схожість",
-              "max_category": "Категорія максимальної схожості",
-              "similarity": "Збіг схожості",
-              "high_accuracy": "Висока точність",
-              "clip_threshold": "Поріг CLIP",
-              "moderation_threshold": "Поріг модерування",
-              "video_frames": "Кадри відео"
-            },
-            "reasons": {
-              "openai_moderation": "Модерація OpenAI",
-              "similarity_match": "Збіг схожості",
-              "no_frames_extracted": "Кадри не витягнуто",
-              "no_nsfw_frames_detected": "NSFW кадри не виявлено"
+            "shared": {
+                "confidence": {
+                    "name": "Впевненість",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Рахунок",
+                        "similarity": "Схожість"
+                    }
+                },
+                "boolean": {
+                    "true": "істина",
+                    "false": "неправда"
+                },
+                "category": {
+                    "unspecified": "Не вказано"
+                },
+                "policy_violation": "Виявлено потенційне порушення політики (Категорія: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Впевненість",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Рахунок",
-            "similarity": "Схожість"
-          }
-        },
-        "boolean": {
-          "true": "істина",
-          "false": "неправда"
-        },
-        "category": {
-          "unspecified": "Не вказано"
-        },
-        "policy_violation": "Виявлено потенційне порушення політики (Категорія: **{category}**)"
-      }
     }
-  }
 }
