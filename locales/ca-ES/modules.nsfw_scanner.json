@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "Contingut NSFW detectat",
-          "description": "**Usuari:** {user_mention} ({user_display})\n**Raó:** {reason}",
-          "footer": "ID Usuari: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Informe d'escaneig NSFW",
-            "description": {
-              "user": "Usuari: {user}",
-              "file": "Fitxer: `{filename}`",
-              "type": "Tipus: `{file_type}`",
-              "decision": "Decisió: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "Contingut NSFW detectat",
+                    "description": "**Usuari:** {user_mention} ({user_display})\n**Raó:** {reason}",
+                    "footer": "ID Usuari: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Imatge",
-              "video": "Vídeo",
-              "unknown": "Desconegut"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Informe d'escaneig NSFW",
+                        "description": {
+                            "user": "Usuari: {user}",
+                            "file": "Fitxer: `{filename}`",
+                            "type": "Tipus: `{file_type}`",
+                            "decision": "Decisió: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Imatge",
+                            "video": "Vídeo",
+                            "unknown": "Desconegut"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Segur",
+                            "unknown": "Desconegut"
+                        },
+                        "fields": {
+                            "reason": "Raó",
+                            "category": "Categoria",
+                            "score": "Puntuació",
+                            "flagged_any": "Qualsevol marcat",
+                            "summary_categories": "Categories Resum",
+                            "max_similarity": "Similitud màxima",
+                            "max_category": "Categoria de similitud màxima",
+                            "similarity": "Similitud trobada",
+                            "high_accuracy": "Alta precisió",
+                            "clip_threshold": "Límit CLIP",
+                            "moderation_threshold": "Límit de moderació",
+                            "video_frames": "Fotogrames de vídeo"
+                        },
+                        "reasons": {
+                            "openai_moderation": "Moderació OpenAI",
+                            "similarity_match": "Coincidència de similitud",
+                            "no_frames_extracted": "No s'han extret fotogrames",
+                            "no_nsfw_frames_detected": "No s'han detectat fotogrames NSFW"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Segur",
-              "unknown": "Desconegut"
-            },
-            "fields": {
-              "reason": "Raó",
-              "category": "Categoria",
-              "score": "Puntuació",
-              "flagged_any": "Qualsevol marcat",
-              "summary_categories": "Categories Resum",
-              "max_similarity": "Similitud màxima",
-              "max_category": "Categoria de similitud màxima",
-              "similarity": "Similitud trobada",
-              "high_accuracy": "Alta precisió",
-              "clip_threshold": "Límit CLIP",
-              "moderation_threshold": "Límit de moderació",
-              "video_frames": "Fotogrames de vídeo"
-            },
-            "reasons": {
-              "openai_moderation": "Moderació OpenAI",
-              "similarity_match": "Coincidència de similitud",
-              "no_frames_extracted": "No s'han extret fotogrames",
-              "no_nsfw_frames_detected": "No s'han detectat fotogrames NSFW"
+            "shared": {
+                "confidence": {
+                    "name": "Confiança",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Puntuació",
+                        "similarity": "Similitud"
+                    }
+                },
+                "boolean": {
+                    "true": "veritable",
+                    "false": "fals"
+                },
+                "category": {
+                    "unspecified": "No especificat"
+                },
+                "policy_violation": "Detectada possible violació de política (Categoria: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Confiança",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Puntuació",
-            "similarity": "Similitud"
-          }
-        },
-        "boolean": {
-          "true": "veritable",
-          "false": "fals"
-        },
-        "category": {
-          "unspecified": "No especificat"
-        },
-        "policy_violation": "Detectada possible violació de política (Categoria: **{category}**)"
-      }
     }
-  }
 }
