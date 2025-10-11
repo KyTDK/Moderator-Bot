@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "Định dạng thời lượng không hợp lệ. Sử dụng các định dạng như 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Lần lượt là giây, phút, giờ, ngày, tuần, tháng và năm."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "Định dạng thời lượng không hợp lệ. Sử dụng các định dạng như 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Lần lượt là giây, phút, giờ, ngày, tuần, tháng và năm."
+            }
+        }
     }
-  }
 }
