@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Ongeldige lokaal. Ondersteunde lokale: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Jou profielfoto is as eksplisiete inhoud bespeur",
-          "choices": [
-            "Jou profielfoto is as eksplisiete inhoud bespeur",
-            "Jou profielfoto is nie geskik vir hierdie bediener nie.",
-            "Jou profielfoto is as NSFW gemerk."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Wees respekvol — geen teistering of haatspraak nie.",
-            "2. Geen NSFW of obskure inhoud nie.",
-            "3. Geen strooipos of oormatige self-promosie nie.",
-            "4. Volg Discord se Diensvoorwaardes."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Geen teistering, haatspraak, of dreigemente nie.",
-            "2. Geen beledigings of diskriminerende taal nie.",
-            "3. Geen aanhitsing tot geweld of onwettige aktiwiteit nie.",
-            "4. Geen seksuele inhoud of eksplisiete opmerkings nie.",
-            "5. Volg Discord se Diensvoorwaardes."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Ongeldige lokaal. Ondersteunde lokale: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Jou profielfoto is as eksplisiete inhoud bespeur",
+                    "choices": [
+                        "Jou profielfoto is as eksplisiete inhoud bespeur",
+                        "Jou profielfoto is nie geskik vir hierdie bediener nie.",
+                        "Jou profielfoto is as NSFW gemerk."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Wees respekvol — geen teistering of haatspraak nie.",
+                        "2. Geen NSFW of obskure inhoud nie.",
+                        "3. Geen strooipos of oormatige self-promosie nie.",
+                        "4. Volg Discord se Diensvoorwaardes."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Geen teistering, haatspraak, of dreigemente nie.",
+                        "2. Geen beledigings of diskriminerende taal nie.",
+                        "3. Geen aanhitsing tot geweld of onwettige aktiwiteit nie.",
+                        "4. Geen seksuele inhoud of eksplisiete opmerkings nie.",
+                        "5. Volg Discord se Diensvoorwaardes."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }
