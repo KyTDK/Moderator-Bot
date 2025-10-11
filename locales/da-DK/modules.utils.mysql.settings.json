@@ -1,11 +1,11 @@
 {
-  "modules": {
-    "utils": {
-      "mysql": {
-        "settings": {
-          "plan_required": "Denne indstilling kræver {requirement}."
+    "modules": {
+        "utils": {
+            "mysql": {
+                "settings": {
+                    "plan_required": "Denne indstilling kræver {requirement}."
+                }
+            }
         }
-      }
     }
-  }
 }
