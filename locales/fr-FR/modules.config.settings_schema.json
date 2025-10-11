@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Langue locale invalide. Langues prises en charge : {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Votre photo de profil a été détectée comme contenant du contenu explicite",
-          "choices": [
-            "Votre photo de profil a été détectée comme contenant du contenu explicite",
-            "Votre photo de profil n'est pas appropriée pour ce serveur.",
-            "Votre photo de profil a été marquée comme NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Soyez respectueux — pas de harcèlement ni de discours de haine.",
-            "2. Pas de contenu NSFW ou obscène.",
-            "3. Pas de spam ni d'auto-promotion excessive.",
-            "4. Respectez les Conditions d'utilisation de Discord."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Pas de harcèlement, discours haineux ou menaces.",
-            "2. Pas d'insultes ou de langage discriminatoire.",
-            "3. Pas d'incitation à la violence ou à des activités illégales.",
-            "4. Pas de contenu sexuel ou de remarques explicites.",
-            "5. Respectez les Conditions d'utilisation de Discord."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Langue locale invalide. Langues prises en charge : {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Votre photo de profil a été détectée comme contenant du contenu explicite",
+                    "choices": [
+                        "Votre photo de profil a été détectée comme contenant du contenu explicite",
+                        "Votre photo de profil n'est pas appropriée pour ce serveur.",
+                        "Votre photo de profil a été marquée comme NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Soyez respectueux — pas de harcèlement ni de discours de haine.",
+                        "2. Pas de contenu NSFW ou obscène.",
+                        "3. Pas de spam ni d'auto-promotion excessive.",
+                        "4. Respectez les Conditions d'utilisation de Discord."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Pas de harcèlement, discours haineux ou menaces.",
+                        "2. Pas d'insultes ou de langage discriminatoire.",
+                        "3. Pas d'incitation à la violence ou à des activités illégales.",
+                        "4. Pas de contenu sexuel ou de remarques explicites.",
+                        "5. Respectez les Conditions d'utilisation de Discord."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }
