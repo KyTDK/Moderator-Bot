@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "SKRYWER",
-        "utterance_label": "UITSPRAAK",
-        "divider": "---",
-        "unknown_speaker": "Onbekende spreker",
-        "unknown_prefix": "Onbekend",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transkripsie",
-        "title_part": "VC Transkripsie (deel {index}/{total})",
-        "field_channel": "Kanaal",
-        "field_utterances": "Uitsprake",
-        "footer_high": "Hoë akkuraatheid transkripsie",
-        "footer_normal": "Normale akkuraatheid transkripsie"
-      },
-      "budget": {
-        "title": "VC Moderasie Begroting Bereik",
-        "description": "Oorslaan van analise vir hierdie siklus as gevolg van begrotingslimiet."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "SKRYWER",
+                "utterance_label": "UITSPRAAK",
+                "divider": "---",
+                "unknown_speaker": "Onbekende spreker",
+                "unknown_prefix": "Onbekend",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC Transkripsie",
+                "title_part": "VC Transkripsie (deel {index}/{total})",
+                "field_channel": "Kanaal",
+                "field_utterances": "Uitsprake",
+                "footer_high": "Hoë akkuraatheid transkripsie",
+                "footer_normal": "Normale akkuraatheid transkripsie"
+            },
+            "budget": {
+                "title": "VC Moderasie Begroting Bereik",
+                "description": "Oorslaan van analise vir hierdie siklus as gevolg van begrotingslimiet."
+            }
+        }
     }
-  }
 }
