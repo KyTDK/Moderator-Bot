@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "無效的區域設置。支援的區域設置：{supported}"
+                    "invalid": "無效的區域設置。支援的區域設置：{supported}",
+                    "description": "以特定的語系代碼覆寫自動語系偵測。"
                 },
                 "nsfw_pfp_message": {
                     "default": "您的個人檔案圖片被檢測到包含不雅內容",
@@ -28,6 +29,81 @@
                         "3. 不得煽動暴力或非法活動。",
                         "4. 不得發佈色情內容或明示言論。",
                         "5. 遵循 Discord 的服務條款。"
+                    ]
+                },
+                "strike-channel": {
+                    "description": "記錄處分的頻道。"
+                },
+                "aimod-debug": {
+                    "description": "一律將詳細的 AI 內容審核偵錯訊息傳送至 AI 違規頻道，包含被標記的訊息、AI 的判定與已採取的動作."
+                },
+                "nsfw-verbose": {
+                    "description": "在與被掃描的媒體同一個頻道中發佈詳細的掃描報告嵌入訊息。"
+                },
+                "nsfw-channel": {
+                    "description": "用於記錄 NSFW 違規並附帶媒體預覽的頻道。"
+                },
+                "nsfw-channel-notify": {
+                    "description": "當 NSFW 內容被移除時，向頻道傳送通知嵌入訊息."
+                },
+                "nsfw-enabled": {
+                    "description": "啟用對訊息、反應和頭像的 NSFW 掃描 (其他開關仍然適用)."
+                },
+                "monitor-events": {
+                    "description": "為每種受監控的事件類型啟用/停用日誌。"
+                },
+                "nsfw-detection-action": {
+                    "description": "當使用者發布 NSFW 內容時應採取的動作."
+                },
+                "nsfw-detection-categories": {
+                    "description": "在偵測時視為 NSFW 的類別。"
+                },
+                "nsfw-high-accuracy": {
+                    "description": "啟用高準確度 NSFW 掃描，以獲得更可靠的偵測。僅限 Accelerated."
+                },
+                "threshold": {
+                    "description": "NSFW 偵測置信度的閾值。數值越低越敏感。"
+                },
+                "banned-words-action": {
+                    "description": "當使用者張貼禁用字詞時要採取的動作。"
+                },
+                "monitor-channel": {
+                    "description": "用於記錄所有伺服器活動的頻道，包括訊息編輯、刪除，以及使用者加入/離開事件。"
+                },
+                "captcha-log-channel": {
+                    "description": "用於發佈驗證碼驗證記錄和活動更新的頻道。"
+                },
+                "aimod-channel": {
+                    "description": "張貼 AI 違規日誌的頻道。"
+                },
+                "cycle-strike-actions": {
+                    "description": "當可對使用者採取的動作用盡時，循環套用記點動作。"
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "從違禁字詞偵測中排除的頻道。"
+                },
+                "strike-actions": {
+                    "description": "每個警告等級要採取的動作。"
+                },
+                "strike-expiry": {
+                    "description": "警告的持續時間。請使用 20s、30m、2h、30d、2w、5mo、1y 等格式。分別代表秒、分鐘、小時、天、週、月和年。"
+                },
+                "dm-on-strike": {
+                    "description": "在使用者收到一次警告時，發送私訊。"
+                },
+                "check-pfp": {
+                    "description": "檢查該用戶的個人頭像是否包含 NSFW 內容。"
+                },
+                "nsfw-pfp-action": {
+                    "description": "當使用者設定 NSFW 個人頭像時要採取的動作。"
+                },
+                "nsfw-pfp-message": {
+                    "description": "當玩家的個人頭像被標記時要發送的訊息。",
+                    "default": "你的個人頭像被檢測到包含露骨內容",
+                    "choices": [
+                        "你的個人頭像被檢測到包含露骨內容",
+                        "您的個人頭像不適合此伺服器.",
+                        "你的個人頭像已被標記為 NSFW。"
                     ]
                 }
             }
