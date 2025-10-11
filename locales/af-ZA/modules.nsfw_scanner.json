@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFW Inhoud Gevond",
-          "description": "**Gebruiker:** {user_mention} ({user_display})\n**Rede:** {reason}",
-          "footer": "Gebruiker ID: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "NSFW Skandering Verslag",
-            "description": {
-              "user": "Gebruiker: {user}",
-              "file": "Lêer: `{filename}`",
-              "type": "Tipe: `{file_type}`",
-              "decision": "Besluit: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFW Inhoud Gevond",
+                    "description": "**Gebruiker:** {user_mention} ({user_display})\n**Rede:** {reason}",
+                    "footer": "Gebruiker ID: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Beeld",
-              "video": "Video",
-              "unknown": "Onbekend"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "NSFW Skandering Verslag",
+                        "description": {
+                            "user": "Gebruiker: {user}",
+                            "file": "Lêer: `{filename}`",
+                            "type": "Tipe: `{file_type}`",
+                            "decision": "Besluit: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Beeld",
+                            "video": "Video",
+                            "unknown": "Onbekend"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Veilig",
+                            "unknown": "Onbekend"
+                        },
+                        "fields": {
+                            "reason": "Rede",
+                            "category": "Kategorie",
+                            "score": "Puntetelling",
+                            "flagged_any": "Iets gemerk",
+                            "summary_categories": "Opsomming Kategorieë",
+                            "max_similarity": "Maksimum Ooreenkoms",
+                            "max_category": "Maksimum Ooreenkoms Kategorie",
+                            "similarity": "Gepaste Ooreenkoms",
+                            "high_accuracy": "Hoë Akkuraatheid",
+                            "clip_threshold": "CLIP Drempel",
+                            "moderation_threshold": "Matigingsdrempel",
+                            "video_frames": "Video Rame"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI-matigings",
+                            "similarity_match": "Ooreenkoms Tref",
+                            "no_frames_extracted": "Geen rame onttrek",
+                            "no_nsfw_frames_detected": "Geen NSFW rame opgespoor nie"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Veilig",
-              "unknown": "Onbekend"
-            },
-            "fields": {
-              "reason": "Rede",
-              "category": "Kategorie",
-              "score": "Puntetelling",
-              "flagged_any": "Iets gemerk",
-              "summary_categories": "Opsomming Kategorieë",
-              "max_similarity": "Maksimum Ooreenkoms",
-              "max_category": "Maksimum Ooreenkoms Kategorie",
-              "similarity": "Gepaste Ooreenkoms",
-              "high_accuracy": "Hoë Akkuraatheid",
-              "clip_threshold": "CLIP Drempel",
-              "moderation_threshold": "Matigingsdrempel",
-              "video_frames": "Video Rame"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI-matigings",
-              "similarity_match": "Ooreenkoms Tref",
-              "no_frames_extracted": "Geen rame onttrek",
-              "no_nsfw_frames_detected": "Geen NSFW rame opgespoor nie"
+            "shared": {
+                "confidence": {
+                    "name": "Vertroue",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Puntetelling",
+                        "similarity": "Ooreenkoms"
+                    }
+                },
+                "boolean": {
+                    "true": "waar",
+                    "false": "vals"
+                },
+                "category": {
+                    "unspecified": "Ongespesifiseerd"
+                },
+                "policy_violation": "Moontlike beleidsoortreding opgespoor (Kategorie: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Vertroue",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Puntetelling",
-            "similarity": "Ooreenkoms"
-          }
-        },
-        "boolean": {
-          "true": "waar",
-          "false": "vals"
-        },
-        "category": {
-          "unspecified": "Ongespesifiseerd"
-        },
-        "policy_violation": "Moontlike beleidsoortreding opgespoor (Kategorie: **{category}**)"
-      }
     }
-  }
 }
