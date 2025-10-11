@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` on jo asetettu ` {event}`.",
-          "success": "Lisättiin `{action}` tapahtumaan `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` ei ole asetettu tapahtumalle `{event}`.",
-          "success": "Poistettu `{action}` tapahtumasta `{event}`."
-        },
-        "clear": {
-          "success": "Kaikki mukautuvat tapahtumat on tyhjennetty."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` on jo asetettu ` {event}`.",
+                    "success": "Lisättiin `{action}` tapahtumaan `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` ei ole asetettu tapahtumalle `{event}`.",
+                    "success": "Poistettu `{action}` tapahtumasta `{event}`."
+                },
+                "clear": {
+                    "success": "Kaikki mukautuvat tapahtumat on tyhjennetty."
+                }
+            }
         }
-      }
     }
-  }
 }
