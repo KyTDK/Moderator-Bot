@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "AUTOR",
-        "utterance_label": "VÝROK",
-        "divider": "---",
-        "unknown_speaker": "Neznámý mluvčí",
-        "unknown_prefix": "Neznámý",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC Transkript",
-        "title_part": "VC Transkript (část {index}/{total})",
-        "field_channel": "Kanál",
-        "field_utterances": "Věty",
-        "footer_high": "Transkript s vysokou přesností",
-        "footer_normal": "Transkript s normální přesností"
-      },
-      "budget": {
-        "title": "Rozpočet moderace VC dosažen",
-        "description": "Analýza pro tento cyklus přeskočena kvůli limitu rozpočtu."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "AUTOR",
+                "utterance_label": "VÝROK",
+                "divider": "---",
+                "unknown_speaker": "Neznámý mluvčí",
+                "unknown_prefix": "Neznámý",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC Transkript",
+                "title_part": "VC Transkript (část {index}/{total})",
+                "field_channel": "Kanál",
+                "field_utterances": "Věty",
+                "footer_high": "Transkript s vysokou přesností",
+                "footer_normal": "Transkript s normální přesností"
+            },
+            "budget": {
+                "title": "Rozpočet moderace VC dosažen",
+                "description": "Analýza pro tento cyklus přeskočena kvůli limitu rozpočtu."
+            }
+        }
     }
-  }
 }
