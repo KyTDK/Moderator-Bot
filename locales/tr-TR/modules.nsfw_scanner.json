@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "NSFW İçeriği Tespit Edildi",
-          "description": "**Kullanıcı:** {user_mention} ({user_display})\n**Sebep:** {reason}",
-          "footer": "Kullanıcı Kimliği: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "NSFW Tarama Raporu",
-            "description": {
-              "user": "Kullanıcı: {user}",
-              "file": "Dosya: `{filename}`",
-              "type": "Tür: `{file_type}`",
-              "decision": "Karar: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "NSFW İçeriği Tespit Edildi",
+                    "description": "**Kullanıcı:** {user_mention} ({user_display})\n**Sebep:** {reason}",
+                    "footer": "Kullanıcı Kimliği: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Görüntü",
-              "video": "Video",
-              "unknown": "Bilinmeyen"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "NSFW Tarama Raporu",
+                        "description": {
+                            "user": "Kullanıcı: {user}",
+                            "file": "Dosya: `{filename}`",
+                            "type": "Tür: `{file_type}`",
+                            "decision": "Karar: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Görüntü",
+                            "video": "Video",
+                            "unknown": "Bilinmeyen"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Güvenli",
+                            "unknown": "Bilinmeyen"
+                        },
+                        "fields": {
+                            "reason": "Sebep",
+                            "category": "Kategori",
+                            "score": "Puan",
+                            "flagged_any": "Herhangi Birini Bayrakla",
+                            "summary_categories": "Özet Kategoriler",
+                            "max_similarity": "Maksimum Benzerlik",
+                            "max_category": "Maksimum Benzerlik Kategorisi",
+                            "similarity": "Eşleşen Benzerlik",
+                            "high_accuracy": "Yüksek Doğruluk",
+                            "clip_threshold": "CLIP Eşiği",
+                            "moderation_threshold": "Moderasyon Eşiği",
+                            "video_frames": "Video Kareleri"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI moderasyonu",
+                            "similarity_match": "Benzerlik eşleşmesi",
+                            "no_frames_extracted": "Kareler çıkarılamadı",
+                            "no_nsfw_frames_detected": "NSFW kareleri tespit edilmedi"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Güvenli",
-              "unknown": "Bilinmeyen"
-            },
-            "fields": {
-              "reason": "Sebep",
-              "category": "Kategori",
-              "score": "Puan",
-              "flagged_any": "Herhangi Birini Bayrakla",
-              "summary_categories": "Özet Kategoriler",
-              "max_similarity": "Maksimum Benzerlik",
-              "max_category": "Maksimum Benzerlik Kategorisi",
-              "similarity": "Eşleşen Benzerlik",
-              "high_accuracy": "Yüksek Doğruluk",
-              "clip_threshold": "CLIP Eşiği",
-              "moderation_threshold": "Moderasyon Eşiği",
-              "video_frames": "Video Kareleri"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI moderasyonu",
-              "similarity_match": "Benzerlik eşleşmesi",
-              "no_frames_extracted": "Kareler çıkarılamadı",
-              "no_nsfw_frames_detected": "NSFW kareleri tespit edilmedi"
+            "shared": {
+                "confidence": {
+                    "name": "Güven",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Puan",
+                        "similarity": "Benzerlik"
+                    }
+                },
+                "boolean": {
+                    "true": "doğru",
+                    "false": "yanlış"
+                },
+                "category": {
+                    "unspecified": "Belirtilmemiş"
+                },
+                "policy_violation": "Potansiyel politika ihlali tespit edildi (Kategori: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Güven",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Puan",
-            "similarity": "Benzerlik"
-          }
-        },
-        "boolean": {
-          "true": "doğru",
-          "false": "yanlış"
-        },
-        "category": {
-          "unspecified": "Belirtilmemiş"
-        },
-        "policy_violation": "Potansiyel politika ihlali tespit edildi (Kategori: **{category}**)"
-      }
     }
-  }
 }
