@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Ugyldig lokalisering. Støttede lokaliseringer: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Profilbildet ditt ble oppdaget å inneholde eksplisitt innhold",
-          "choices": [
-            "Profilbildet ditt ble oppdaget å inneholde eksplisitt innhold",
-            "Profilbildet ditt er ikke passende for denne serveren.",
-            "Profilbildet ditt har blitt markert som NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Vær respektfull — ingen trakassering eller hatefulle ytringer.",
-            "2. Ingen NSFW eller uanstendig innhold.",
-            "3. Ingen spam eller overdreven egenpromotering.",
-            "4. Følg Discords brukervilkår."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Ingen trakassering, hatefulle ytringer eller trusler.",
-            "2. Ingen slur eller diskriminerende språk.",
-            "3. Ingen oppfordring til vold eller ulovlig aktivitet.",
-            "4. Ingen seksuelt innhold eller eksplisitte bemerkninger.",
-            "5. Følg Discords brukervilkår."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Ugyldig lokalisering. Støttede lokaliseringer: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Profilbildet ditt ble oppdaget å inneholde eksplisitt innhold",
+                    "choices": [
+                        "Profilbildet ditt ble oppdaget å inneholde eksplisitt innhold",
+                        "Profilbildet ditt er ikke passende for denne serveren.",
+                        "Profilbildet ditt har blitt markert som NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Vær respektfull — ingen trakassering eller hatefulle ytringer.",
+                        "2. Ingen NSFW eller uanstendig innhold.",
+                        "3. Ingen spam eller overdreven egenpromotering.",
+                        "4. Følg Discords brukervilkår."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Ingen trakassering, hatefulle ytringer eller trusler.",
+                        "2. Ingen slur eller diskriminerende språk.",
+                        "3. Ingen oppfordring til vold eller ulovlig aktivitet.",
+                        "4. Ingen seksuelt innhold eller eksplisitte bemerkninger.",
+                        "5. Følg Discords brukervilkår."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }
