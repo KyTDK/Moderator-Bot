@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "偵測到不適宜內容",
-          "description": "**使用者：** {user_mention} ({user_display})\n**原因：** {reason}",
-          "footer": "使用者編號：{user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "不適宜內容掃描報告",
-            "description": {
-              "user": "使用者：{user}",
-              "file": "檔案：`{filename}`",
-              "type": "類型：`{file_type}`",
-              "decision": "決策：**{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "偵測到不適宜內容",
+                    "description": "**使用者：** {user_mention} ({user_display})\n**原因：** {reason}",
+                    "footer": "使用者編號：{user_id}"
+                }
             },
-            "file_types": {
-              "image": "圖片",
-              "video": "影片",
-              "unknown": "未知"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "不適宜內容掃描報告",
+                        "description": {
+                            "user": "使用者：{user}",
+                            "file": "檔案：`{filename}`",
+                            "type": "類型：`{file_type}`",
+                            "decision": "決策：**{decision}**"
+                        },
+                        "file_types": {
+                            "image": "圖片",
+                            "video": "影片",
+                            "unknown": "未知"
+                        },
+                        "decision": {
+                            "nsfw": "不適宜",
+                            "safe": "安全",
+                            "unknown": "未知"
+                        },
+                        "fields": {
+                            "reason": "原因",
+                            "category": "類別",
+                            "score": "評分",
+                            "flagged_any": "標記任意",
+                            "summary_categories": "摘要類別",
+                            "max_similarity": "最大相似度",
+                            "max_category": "最大相似度類別",
+                            "similarity": "匹配相似度",
+                            "high_accuracy": "高準確度",
+                            "clip_threshold": "CLIP 門檻",
+                            "moderation_threshold": "管理門檻",
+                            "video_frames": "影片幀"
+                        },
+                        "reasons": {
+                            "openai_moderation": "OpenAI 審查",
+                            "similarity_match": "相似度匹配",
+                            "no_frames_extracted": "沒有提取幀",
+                            "no_nsfw_frames_detected": "未檢測到不適宜影片幀"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "不適宜",
-              "safe": "安全",
-              "unknown": "未知"
-            },
-            "fields": {
-              "reason": "原因",
-              "category": "類別",
-              "score": "評分",
-              "flagged_any": "標記任意",
-              "summary_categories": "摘要類別",
-              "max_similarity": "最大相似度",
-              "max_category": "最大相似度類別",
-              "similarity": "匹配相似度",
-              "high_accuracy": "高準確度",
-              "clip_threshold": "CLIP 門檻",
-              "moderation_threshold": "管理門檻",
-              "video_frames": "影片幀"
-            },
-            "reasons": {
-              "openai_moderation": "OpenAI 審查",
-              "similarity_match": "相似度匹配",
-              "no_frames_extracted": "沒有提取幀",
-              "no_nsfw_frames_detected": "未檢測到不適宜影片幀"
+            "shared": {
+                "confidence": {
+                    "name": "信心度",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "評分",
+                        "similarity": "相似度"
+                    }
+                },
+                "boolean": {
+                    "true": "true",
+                    "false": "false"
+                },
+                "category": {
+                    "unspecified": "未指定"
+                },
+                "policy_violation": "檢測到潛在政策違規 (類別：**{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "信心度",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "評分",
-            "similarity": "相似度"
-          }
-        },
-        "boolean": {
-          "true": "true",
-          "false": "false"
-        },
-        "category": {
-          "unspecified": "未指定"
-        },
-        "policy_violation": "檢測到潛在政策違規 (類別：**{category}**)"
-      }
     }
-  }
 }
