@@ -29,6 +29,21 @@
                         "4. No sexual content or explicit remarks.",
                         "5. Follow Discord's Terms of Service."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Channel where strikes are logged."
+                },
+                "aimod-debug": {
+                    "description": "Always send a detailed AI moderation debug message to the AI violations channel, including flagged messages, AI decision, and applied actions."
+                },
+                "nsfw-verbose": {
+                    "description": "Post a detailed scan report embed in the same channel as the scanned media."
+                },
+                "nsfw-channel": {
+                    "description": "Channel where NSFW violations are logged with a preview of the media."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Send a notification embed to the channel when NSFW content is removed."
                 }
             }
         }
