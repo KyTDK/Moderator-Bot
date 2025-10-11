@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` تم تعيينه بالفعل لـ `{event}`.",
-          "success": "تمت إضافة `{action}` إلى `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` لم يتم تعيينه لـ `{event}`.",
-          "success": "تمت إزالة `{action}` من `{event}`."
-        },
-        "clear": {
-          "success": "تم مسح جميع الأحداث التكيفية."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` تم تعيينه بالفعل لـ `{event}`.",
+                    "success": "تمت إضافة `{action}` إلى `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` لم يتم تعيينه لـ `{event}`.",
+                    "success": "تمت إزالة `{action}` من `{event}`."
+                },
+                "clear": {
+                    "success": "تم مسح جميع الأحداث التكيفية."
+                }
+            }
         }
-      }
     }
-  }
 }
