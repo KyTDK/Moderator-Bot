@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "مجاني",
-          "core": "أساسي",
-          "pro": "محترف",
-          "ultra": "فائق"
-        },
-        "requirements": {
-          "any": "خطة متميزة نشطة",
-          "single": "خطة {plan} نشطة",
-          "double": "خطة {plan_a} أو {plan_b} نشطة",
-          "list": "خطة {plans}, أو {last} نشطة"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "مجاني",
+                    "core": "أساسي",
+                    "pro": "محترف",
+                    "ultra": "فائق"
+                },
+                "requirements": {
+                    "any": "خطة متميزة نشطة",
+                    "single": "خطة {plan} نشطة",
+                    "double": "خطة {plan_a} أو {plan_b} نشطة",
+                    "list": "خطة {plans}, أو {last} نشطة"
+                }
+            }
         }
-      }
     }
-  }
 }
