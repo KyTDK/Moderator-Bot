@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` је већ подешен за `{event}`.",
-          "success": "Додато `{action}` за `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` није подешен за `{event}`.",
-          "success": "Уклоњено `{action}` из `{event}`."
-        },
-        "clear": {
-          "success": "Сви адаптивни догађаји су уклоњени."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` је већ подешен за `{event}`.",
+                    "success": "Додато `{action}` за `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` није подешен за `{event}`.",
+                    "success": "Уклоњено `{action}` из `{event}`."
+                },
+                "clear": {
+                    "success": "Сви адаптивни догађаји су уклоњени."
+                }
+            }
         }
-      }
     }
-  }
 }
