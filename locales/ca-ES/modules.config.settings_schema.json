@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Idioma no vàlid. Idiomes admesos: {supported}"
+                    "invalid": "Idioma no vàlid. Idiomes admesos: {supported}",
+                    "description": "Anul·la la detecció automàtica de la configuració regional amb un codi de configuració regional específic."
                 },
                 "nsfw_pfp_message": {
                     "default": "S'ha detectat que la teva imatge de perfil conté contingut explícit",
@@ -28,6 +29,81 @@
                         "3. No es permet incitar a la violència o activitats il·legals.",
                         "4. No es permet contingut sexual o comentaris explícits.",
                         "5. Segueix les Condicions del Servei de Discord."
+                    ]
+                },
+                "strike-channel": {
+                    "description": "Canal on es registren les amonestacions."
+                },
+                "aimod-debug": {
+                    "description": "Envia sempre un missatge de depuració detallat de la moderació de la IA al canal d’infraccions de la IA, incloent els missatges marcats, la decisió de la IA i les accions aplicades."
+                },
+                "nsfw-verbose": {
+                    "description": "Envia una incrustació amb un informe d'escaneig detallat al mateix canal que el contingut escanejat."
+                },
+                "nsfw-channel": {
+                    "description": "Canal on es registren les infraccions NSFW amb una vista prèvia del contingut multimèdia."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Envia un missatge incrustat de notificació al canal quan s'elimini contingut NSFW."
+                },
+                "nsfw-enabled": {
+                    "description": "Activa la detecció NSFW de missatges, reaccions i avatars (els altres commutadors encara s'apliquen)."
+                },
+                "monitor-events": {
+                    "description": "Activa/desactiva el registre per a cada tipus d'esdeveniment supervisat."
+                },
+                "nsfw-detection-action": {
+                    "description": "Acció a dur a terme quan un usuari publica contingut NSFW."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Categories considerades NSFW per a la detecció."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Habilita escaneigs NSFW d'alta precisió per a una detecció més fiable. Només Accelerated."
+                },
+                "threshold": {
+                    "description": "Llindar de confiança per a la detecció de contingut NSFW. Els valors més baixos són més sensibles."
+                },
+                "banned-words-action": {
+                    "description": "Acció a dur a terme quan un usuari publica una paraula prohibida."
+                },
+                "monitor-channel": {
+                    "description": "Canal per registrar totes les activitats del servidor, incloent-hi edicions i eliminacions de missatges, i esdeveniments d'entrada/sortida d'usuaris."
+                },
+                "captcha-log-channel": {
+                    "description": "Canal on es publiquen els registres de verificació del captcha i les actualitzacions d'activitat."
+                },
+                "aimod-channel": {
+                    "description": "Canal on es publiquen els registres d’infraccions d’IA."
+                },
+                "cycle-strike-actions": {
+                    "description": "Alterna entre les accions de strike quan s’esgotin les accions per aplicar a un usuari."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Canals a excloure de la detecció de paraules prohibides."
+                },
+                "strike-actions": {
+                    "description": "Accions a prendre per a cada nivell d’advertiment."
+                },
+                "strike-expiry": {
+                    "description": "Temps que dura un strike. Utilitza formats com 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Segons, minuts, hores, dies, setmanes, mesos i anys respectivament."
+                },
+                "dm-on-strike": {
+                    "description": "Envia un DM a l'usuari quan rebi una amonestació."
+                },
+                "check-pfp": {
+                    "description": "Comprova la imatge de perfil de l'usuari per detectar contingut NSFW."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Acció a realitzar quan un usuari configura una imatge de perfil NSFW."
+                },
+                "nsfw-pfp-message": {
+                    "description": "El missatge que s'enviarà quan s'hagi marcat la foto de perfil d'un jugador.",
+                    "default": "S'ha detectat que la teva foto de perfil conté contingut explícit",
+                    "choices": [
+                        "S'ha detectat que la teva foto de perfil conté contingut explícit",
+                        "La teva imatge de perfil no és adequada per a aquest servidor.",
+                        "La teva imatge de perfil ha estat marcada com a NSFW."
                     ]
                 }
             }
