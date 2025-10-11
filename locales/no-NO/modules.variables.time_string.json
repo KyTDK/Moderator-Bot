@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "Ugyldig varighetsformat. Bruk formater som 20s, 30m, 2t, 30d, 2u, 5md, 1å. Sekunder, minutter, timer, dager, uker, måneder og år henholdsvis."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "Ugyldig varighetsformat. Bruk formater som 20s, 30m, 2t, 30d, 2u, 5md, 1å. Sekunder, minutter, timer, dager, uker, måneder og år henholdsvis."
+            }
+        }
     }
-  }
 }
