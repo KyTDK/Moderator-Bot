@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "无效的区域设置。支持的区域: {supported}"
+                    "invalid": "无效的区域设置。支持的区域: {supported}",
+                    "description": "使用特定的区域设置代码覆盖自动检测。"
                 },
                 "nsfw_pfp_message": {
                     "default": "检测到您的个人资料图片包含不当内容",
@@ -29,6 +30,76 @@
                         "4. 不允许色情内容或露骨言论。",
                         "5. 遵循 Discord 的服务条款。"
                     ]
+                },
+                "strike-channel": {
+                    "description": "用于记录警告的频道。"
+                },
+                "aimod-debug": {
+                    "description": "始终向 AI 违规频道发送详细的 AI 审核调试消息，包括被标记的消息，AI 判定，以及已采取的操作。"
+                },
+                "nsfw-verbose": {
+                    "description": "在与已扫描媒体同一频道内发布详细的扫描报告嵌入消息."
+                },
+                "nsfw-channel": {
+                    "description": "用于记录 NSFW 违规并提供媒体预览的频道。"
+                },
+                "nsfw-channel-notify": {
+                    "description": "当 NSFW 内容被移除时，向频道发送通知嵌入消息。"
+                },
+                "nsfw-enabled": {
+                    "description": "为消息、反应和头像启用 NSFW 检测 (其他开关仍然生效)."
+                },
+                "monitor-events": {
+                    "description": "为每种监控事件类型启用/禁用日志记录。"
+                },
+                "nsfw-detection-action": {
+                    "description": "当用户发布 NSFW 内容时采取的操作."
+                },
+                "nsfw-detection-categories": {
+                    "description": "在检测中被视为 NSFW 的类别."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "启用高准确性的 NSFW 扫描，以提升检测可靠性。仅限加速版。"
+                },
+                "threshold": {
+                    "description": "NSFW 检测置信度阈值。数值越低越敏感。"
+                },
+                "banned-words-action": {
+                    "description": "当用户发送违禁词时采取的操作."
+                },
+                "monitor-channel": {
+                    "description": "用于记录所有服务器活动的频道，包括消息编辑、删除以及用户加入/离开事件。"
+                },
+                "captcha-log-channel": {
+                    "description": "用于发布验证码验证日志和活动更新的频道。"
+                },
+                "aimod-channel": {
+                    "description": "用于发布 AI 违规日志的频道。"
+                },
+                "cycle-strike-actions": {
+                    "description": "用尽对用户可执行的操作后，循环执行惩戒措施"
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "从违禁词检测中排除的频道。"
+                },
+                "strike-actions": {
+                    "description": "每个惩罚等级对应的操作."
+                },
+                "strike-expiry": {
+                    "description": "一次处罚持续的时长。使用类似 20s, 30m, 2h, 30d, 2w, 5mo, 1y 的格式。分别表示秒, 分钟, 小时, 天, 周, 月和年。"
+                },
+                "dm-on-strike": {
+                    "description": "当用户收到警告时向其发送私信."
+                },
+                "check-pfp": {
+                    "description": "检查用户的头像是否包含 NSFW 内容。"
+                },
+                "nsfw-pfp-action": {
+                    "description": "当用户设置 NSFW 个人头像时采取的操作。"
+                },
+                "nsfw-pfp-message": {
+                    "description": "当玩家的头像被标记时要发送的消息。",
+                    "default": "你的头像被检测到包含露骨内容"
                 }
             }
         }
