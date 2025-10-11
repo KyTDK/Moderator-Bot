@@ -29,6 +29,18 @@
                         "4. Kein sexueller Inhalt oder explizite Bemerkungen.",
                         "5. Beachte die Discord-Nutzungsbedingungen."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Kanal, in dem Strikes protokolliert werden."
+                },
+                "aimod-debug": {
+                    "description": "Sende immer eine detaillierte Debug-Nachricht zur KI-Moderation an den KI-Verstöße-Kanal, einschließlich der markierten Nachrichten, der KI-Entscheidung und der angewendeten Maßnahmen."
+                },
+                "nsfw-verbose": {
+                    "description": "Poste einen detaillierten Scanbericht als Embed im selben Kanal wie die gescannten Medien."
+                },
+                "nsfw-channel": {
+                    "description": "Kanal, in dem NSFW-Verstöße mit einer Medienvorschau protokolliert werden."
                 }
             }
         }
