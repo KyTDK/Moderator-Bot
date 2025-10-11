@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "שביתה",
-          "kick": "בעיטה",
-          "ban": "חסום",
-          "timeout": "זמן השבתה",
-          "delete": "מחק הודעה",
-          "give_role": "הענק תפקיד",
-          "take_role": "הסר תפקיד",
-          "warn": "הזהר משתמש",
-          "broadcast": "שדר הודעה",
-          "auto": "אוטומטי"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "שביתה",
+                    "kick": "בעיטה",
+                    "ban": "חסום",
+                    "timeout": "זמן השבתה",
+                    "delete": "מחק הודעה",
+                    "give_role": "הענק תפקיד",
+                    "take_role": "הסר תפקיד",
+                    "warn": "הזהר משתמש",
+                    "broadcast": "שדר הודעה",
+                    "auto": "אוטומטי"
+                }
+            }
         }
-      }
     }
-  }
 }
