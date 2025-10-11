@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Érvénytelen területi beállítás. Támogatott területek: {supported}"
+                    "invalid": "Érvénytelen területi beállítás. Támogatott területek: {supported}",
+                    "description": "Az automatikus locale-felismerés felülbírálása egy megadott locale-kóddal."
                 },
                 "nsfw_pfp_message": {
                     "default": "A profilképedet explicit tartalommal jelölték meg.",
@@ -19,7 +20,8 @@
                         "2. Nincs NSFW vagy obszcén tartalom.",
                         "3. Nincs spam vagy túlzott önreklám.",
                         "4. Kövesd a Discord szolgáltatási feltételeit."
-                    ]
+                    ],
+                    "description": "Az autonóm moderáláshoz használt szerver-szabályok."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. Nincs szexuális tartalom vagy explicit megjegyzések.",
                         "5. Kövesd a Discord szolgáltatási feltételeit."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Csatorna a figyelmeztetések naplózásához."
+                },
+                "aimod-debug": {
+                    "description": "Mindig küldjön részletes AI moderálási hibakeresési üzenetet az AI szabálysértések csatornára, beleértve a megjelölt üzeneteket, az AI döntését és az alkalmazott műveleteket."
+                },
+                "nsfw-verbose": {
+                    "description": "Tegyen közzé egy részletes vizsgálati jelentést beágyazott üzenetként ugyanabban a csatornában, mint a vizsgált média."
+                },
+                "nsfw-channel": {
+                    "description": "Csatorna, ahová az NSFW-szabálysértéseket médiaelőnézettel naplózzuk."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Küldjön értesítő beágyazott üzenetet a csatornára, amikor az NSFW tartalmat eltávolítjuk."
+                },
+                "nsfw-enabled": {
+                    "description": "Engedélyezze az NSFW-ellenőrzést az üzenetekre, reakciókra és profilképekre (más kapcsolók továbbra is érvényesek)."
+                },
+                "monitor-events": {
+                    "description": "A naplózás engedélyezése/letiltása az egyes figyelt eseménytípusoknál."
+                },
+                "nsfw-detection-action": {
+                    "description": "Végrehajtandó művelet, amikor egy felhasználó NSFW tartalmat tesz közzé."
+                },
+                "nsfw-detection-categories": {
+                    "description": "NSFW-nek tekintett kategóriák az észleléshez."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Engedélyezze a nagy pontosságú NSFW-ellenőrzéseket a megbízhatóbb észlelés érdekében. Csak Accelerated."
+                },
+                "threshold": {
+                    "description": "Az NSFW-észlelés bizonyossági küszöbértéke. Az alacsonyabb értékek érzékenyebbek."
+                },
+                "banned-words-action": {
+                    "description": "Végrehajtandó művelet, amikor egy felhasználó tiltott szót tesz közzé."
+                },
+                "monitor-channel": {
+                    "description": "Csatorna az összes szervertevékenység naplózásához, beleértve az üzenetek szerkesztését, törlését és a felhasználók csatlakozását/kilépését."
+                },
+                "captcha-log-channel": {
+                    "description": "Csatorna, ahová a CAPTCHA-ellenőrzési naplók és a tevékenységfrissítések kerülnek közzétételre."
+                },
+                "aimod-channel": {
+                    "description": "Csatorna, ahová az AI-szabálysértési naplók kerülnek közzétételre."
+                },
+                "cycle-strike-actions": {
+                    "description": "A figyelmeztetési műveletek körkörös alkalmazása, ha elfogynak a felhasználónak adható műveletek."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Csatornák, amelyeket ki kell zárni a tiltott szavak észleléséből."
+                },
+                "strike-actions": {
+                    "description": "Az egyes figyelmeztetési szintekhez tartozó műveletek."
+                },
+                "strike-expiry": {
+                    "description": "Egy figyelmeztetés időtartama. Használjon olyan formátumokat, mint: 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sorrendben: másodpercek, percek, órák, napok, hetek, hónapok és évek."
+                },
+                "dm-on-strike": {
+                    "description": "Küldj privát üzenetet a felhasználónak, amikor figyelmeztetést kap."
+                },
+                "check-pfp": {
+                    "description": "Ellenőrizd a felhasználó profilképét NSFW-tartalomra."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Művelet, ha a felhasználó NSFW profilképet állít be."
+                },
+                "nsfw-pfp-message": {
+                    "description": "A küldendő üzenet, amikor egy játékos profilképét megjelöltük.",
+                    "default": "A profilképedben explicit tartalmat észleltünk",
+                    "choices": [
+                        "A profilképedben explicit tartalmat észleltünk",
+                        "A profilképed nem megfelelő ezen a szerveren.",
+                        "A profilképed NSFW-ként lett megjelölve."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Vedd le a felhasználó időkorlátozását, miután a profilképét megfelelőre cserélte."
+                },
+                "scan-age-restricted": {
+                    "description": "Életkorhoz korlátozott (NSFW) csatornák vizsgálata. Kikapcsolva az NSFW csatornákat kihagyjuk."
+                },
+                "check-tenor-gifs": {
+                    "description": "Büntetések alkalmazása, ha NSFW tartalmat észlelünk a Tenor GIF-ekben."
+                },
+                "use-default-banned-words": {
+                    "description": "Használd a beépített trágárságlistát ezen a szerveren."
+                },
+                "exclude-channels": {
+                    "description": "Észlelésből kizárt csatornák."
+                },
+                "delete-scam-messages": {
+                    "description": "Automatikusan töröld az üzeneteket, amelyek átverési mintáknak vagy URL-eknek felelnek meg."
+                },
+                "scam-detection-action": {
+                    "description": "Művelet, ha átverésre utaló üzenetet észlelünk."
+                },
+                "check-links": {
+                    "description": "Ellenőrizd az üzenetekben található linkeket kártevők, adathalászat, átverések stb. szempontjából."
+                },
+                "exclude-scam-channels": {
+                    "description": "Átverés-észlelésből kizárt csatornák."
+                },
+                "aimod-detection-action": {
+                    "description": "Művelet, ha az autonóm moderátor szabálysértést észlel. Használd az auto beállítást, hogy az MI hozzon döntést."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Használj nagyobb pontosságú MI-moderálást a gpt-5-mini modellel (kb. 2.25 USD / 1M token). Gyorsabban fogyasztja a havi keretet az alapértelmezett beállításhoz képest."
+                },
+                "autonomous-mod": {
+                    "description": "Használd az AI-t a teljes szerver automatikus moderálásához."
+                },
+                "aimod-check-interval": {
+                    "description": "Milyen gyakran fusson az AI moderáció kötegelt folyamata."
+                },
+                "aimod-mode": {
+                    "description": "Válaszd ki, hogyan induljon az AI moderáció: `report` mód (csak említésre), `interval` mód (automatikus háttérszkennelés), vagy `adaptive` mód (dinamikusan vált a szerveraktivitás, események vagy konfiguráció alapján)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Konfiguráld, mely események váltják ki az AI moderációs módváltást."
+                },
+                "no-forward-from-role": {
+                    "description": "Tiltsd meg egy adott szerepnek az üzenetek továbbítását."
+                },
+                "banned-urls": {
+                    "description": "Letiltandó pontos URL-ek vagy domainek."
+                },
+                "url-detection-action": {
+                    "description": "Végrehajtandó művelet, ha blokkolt URL-t észlelünk."
+                },
+                "exclude-url-channels": {
+                    "description": "Tiltott URL-ek alól kivételt képező csatornák."
+                },
+                "vcmod-enabled": {
+                    "description": "Hangcsatorna-moderáció és átírás engedélyezése."
+                },
+                "vcmod-channels": {
+                    "description": "Figyelt hangcsatornák (ha üres, egyik sem kerül figyelésre)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Mennyi ideig hallgasson aktívan egy ciklusban hangcsatornánként (pl. 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Mennyi ideig tartson a szünet az egyes átírások között Saver Mode-ban."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Saver mode: a bot körbejár a hangcsatornákon, hogy aktívnak tűnjön, de a legtöbb időben nem rögzít és nem hallgat."
+                },
+                "vcmod-rules": {
+                    "description": "A hangcsatorna-moderációra alkalmazott szabályok (külön a szöveges szabályoktól).",
+                    "default": [
+                        "1. Zaklatás, gyűlöletbeszéd és fenyegetés tilos.",
+                        "2. Tilos a szitokszavak és a diszkriminatív nyelvezet.",
+                        "3. Tilos erőszakra vagy illegális tevékenységre buzdítani.",
+                        "4. Tilos a szexuális tartalom és az explicit megjegyzések.",
+                        "5. Tartsd be a Discord szolgáltatási feltételeit."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Végrehajtandó művelet, ha a hangcsatorna-moderáció szabálysértést észlel. Az AI döntéséhez használd az auto opciót."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Nagyobb pontosságú MI-elemzés használata a hangcsatorna moderálásához (nagyobb tokenköltséggel jár)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Tisztább hangátiratok engedélyezése prémium feldolgozással (magasabb költséggel jár)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Csatorna, ahová a hangátiratok kerülnek közzétételre."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Ha engedélyezve van, a bot csak átírja a hangbeszélgetést, anélkül, hogy MI-alapú szabályellenőrzéseket vagy moderációs műveleteket alkalmazna. Ez jelentősen csökkenti a költségeket."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Captcha-kihívás megkövetelése az új tagoktól a hozzáférés előtt."
+                },
+                "captcha-grace-period": {
+                    "description": "Mennyi idejük van az új tagoknak a captcha-ellenőrzés befejezésére (pl. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Sikeres ellenőrzést követően automatikusan végrehajtott műveletek."
+                },
+                "captcha-delivery-method": {
+                    "description": "Hogyan kerülnek kézbesítésre a captcha-ellenőrzés hivatkozásai az új tagoknak (DM vagy beágyazott üzenet)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Csatorna, ahová a captcha-ellenőrzés beágyazott üzenete kerül közzétételre, ha a kézbesítés beágyazott üzenettel történik."
+                },
+                "pre-captcha-roles": {
+                    "description": "Az új tagoknak a captcha-ellenőrzés befejezése előtt hozzárendelt szerepek."
+                },
+                "captcha-failure-actions": {
+                    "description": "Automatikusan végrehajtandó műveletek, ha egy tag nem teljesíti a captcha-ellenőrzést."
                 }
             }
         }
