@@ -1,0 +1,20 @@
+{
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "",
+                    "core": "",
+                    "pro": "",
+                    "ultra": ""
+                },
+                "requirements": {
+                    "any": "",
+                    "single": "",
+                    "double": "",
+                    "list": ""
+                }
+            }
+        }
+    }
+}
