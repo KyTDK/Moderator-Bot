@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "验证码验证成功",
-          "embed": {
-            "title": "验证码验证通过",
-            "description": "{mention} ({user_id}) 验证码验证通过。",
-            "fields": {
-              "actions": "已执行操作",
-              "attempts": "尝试次数",
-              "provider": "提供者",
-              "challenge": "挑战",
-              "review": "审查"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "验证码验证成功",
+                    "embed": {
+                        "title": "验证码验证通过",
+                        "description": "{mention} ({user_id}) 验证码验证通过。",
+                        "fields": {
+                            "actions": "已执行操作",
+                            "attempts": "尝试次数",
+                            "provider": "提供者",
+                            "challenge": "挑战",
+                            "review": "审查"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "验证码验证失败。",
+                    "notes": {
+                        "deferred_generic": "失败操作已延迟；验证码尝试次数仍有剩余。",
+                        "deferred_remaining": "失败操作已延迟；剩余 {remaining} {attempts_word}。",
+                        "member_left": "成员已不在公会中；跳过了配置的失败操作。"
+                    },
+                    "attempts": {
+                        "unlimited": "剩余无限制尝试次数。",
+                        "additional": "剩余额外尝试次数。",
+                        "remaining": "剩余 {count} {attempts_word}。",
+                        "word_one": "尝试",
+                        "word_other": "尝试次数"
+                    },
+                    "embed": {
+                        "title_failed": "验证码验证失败",
+                        "title_attempt": "验证码尝试失败",
+                        "description_failed": "{mention} ({user_id}) 验证码验证失败。",
+                        "description_attempt": "{mention} ({user_id}) 验证码尝试失败。",
+                        "fields": {
+                            "actions": "已执行操作",
+                            "notes": "备注",
+                            "attempts": "尝试次数",
+                            "remaining": "剩余尝试次数",
+                            "challenge": "挑战",
+                            "reason": "原因",
+                            "review": "审查"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "由于 Discord API 错误，未能应用验证码成功操作。",
+                    "unknown_token": "未找到此用户的待处理验证码验证。",
+                    "token_mismatch": "验证码令牌与待处理验证不匹配。",
+                    "missing_permissions": "机器人缺少应用验证码失败操作的权限。",
+                    "action_failed": "由于 Discord API 错误，未能应用验证码失败操作。",
+                    "guild_not_found": "公会 {guild_id} 对此机器人不可用。",
+                    "guild_fetch_failed": "未能从 Discord 获取公会 {guild_id}。",
+                    "member_not_found": "在公会 {guild_id} 中未找到成员 {user_id}。",
+                    "member_fetch_failed": "未能从公会 {guild_id} 获取成员 {user_id}。"
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "验证码验证失败。",
-          "notes": {
-            "deferred_generic": "失败操作已延迟；验证码尝试次数仍有剩余。",
-            "deferred_remaining": "失败操作已延迟；剩余 {remaining} {attempts_word}。",
-            "member_left": "成员已不在公会中；跳过了配置的失败操作。"
-          },
-          "attempts": {
-            "unlimited": "剩余无限制尝试次数。",
-            "additional": "剩余额外尝试次数。",
-            "remaining": "剩余 {count} {attempts_word}。",
-            "word_one": "尝试",
-            "word_other": "尝试次数"
-          },
-          "embed": {
-            "title_failed": "验证码验证失败",
-            "title_attempt": "验证码尝试失败",
-            "description_failed": "{mention} ({user_id}) 验证码验证失败。",
-            "description_attempt": "{mention} ({user_id}) 验证码尝试失败。",
-            "fields": {
-              "actions": "已执行操作",
-              "notes": "备注",
-              "attempts": "尝试次数",
-              "remaining": "剩余尝试次数",
-              "challenge": "挑战",
-              "reason": "原因",
-              "review": "审查"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "由于 Discord API 错误，未能应用验证码成功操作。",
-          "unknown_token": "未找到此用户的待处理验证码验证。",
-          "token_mismatch": "验证码令牌与待处理验证不匹配。",
-          "missing_permissions": "机器人缺少应用验证码失败操作的权限。",
-          "action_failed": "由于 Discord API 错误，未能应用验证码失败操作。",
-          "guild_not_found": "公会 {guild_id} 对此机器人不可用。",
-          "guild_fetch_failed": "未能从 Discord 获取公会 {guild_id}。",
-          "member_not_found": "在公会 {guild_id} 中未找到成员 {user_id}。",
-          "member_fetch_failed": "未能从公会 {guild_id} 获取成员 {user_id}。"
         }
-      }
     }
-  }
 }
