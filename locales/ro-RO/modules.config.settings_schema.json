@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Local nevalid. Locale acceptate: {supported}"
+                    "invalid": "Local nevalid. Locale acceptate: {supported}",
+                    "description": "Suprascrie detectarea automată a limbii cu un cod de limbă specific."
                 },
                 "nsfw_pfp_message": {
                     "default": "Fotografia de profil a fost detectată cu conținut explicit",
@@ -19,7 +20,8 @@
                         "2. Fără conținut NSFW sau obscen.",
                         "3. Fără spam sau autopromovare excesivă.",
                         "4. Respectă Termenii de Serviciu ai Discord."
-                    ]
+                    ],
+                    "description": "Regulile serverului folosite pentru moderare autonomă."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. Fără conținut sexual sau remarci explicite.",
                         "5. Respectă Termenii de Serviciu ai Discord."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Canalul în care sunt înregistrate penalizările."
+                },
+                "aimod-debug": {
+                    "description": "Trimite întotdeauna un mesaj detaliat de depanare pentru moderarea AI către canalul pentru încălcări AI, incluzând mesajele marcate, decizia AI, și acțiunile aplicate."
+                },
+                "nsfw-verbose": {
+                    "description": "Publică un embed cu un raport de scanare detaliat în același canal ca media scanată."
+                },
+                "nsfw-channel": {
+                    "description": "Canal în care sunt înregistrate încălcările NSFW, cu o previzualizare a conținutului media."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Trimite un embed de notificare în canal când conținutul NSFW este eliminat."
+                },
+                "nsfw-enabled": {
+                    "description": "Activează scanarea NSFW pentru mesaje, reacții și avataruri (celelalte comutatoare se aplică în continuare)."
+                },
+                "monitor-events": {
+                    "description": "Activează/dezactivează jurnalizarea pentru fiecare tip de eveniment monitorizat."
+                },
+                "nsfw-detection-action": {
+                    "description": "Acțiune de luat când un utilizator postează conținut NSFW."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Categorii considerate NSFW pentru detectare."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Activează scanări NSFW cu precizie ridicată pentru o detectare mai fiabilă. Doar pentru Accelerated."
+                },
+                "threshold": {
+                    "description": "Prag pentru nivelul de încredere al detectării NSFW. Valori mai mici sunt mai sensibile."
+                },
+                "banned-words-action": {
+                    "description": "Acțiune de aplicat când un utilizator postează un cuvânt interzis."
+                },
+                "monitor-channel": {
+                    "description": "Canal pentru înregistrarea tuturor activităților serverului, inclusiv editări de mesaje, ștergeri și evenimente de alăturare/părăsire ale utilizatorilor."
+                },
+                "captcha-log-channel": {
+                    "description": "Canalul în care sunt postate jurnalele de verificare captcha și actualizările de activitate."
+                },
+                "aimod-channel": {
+                    "description": "Canalul în care sunt postate jurnalele privind încălcările AI."
+                },
+                "cycle-strike-actions": {
+                    "description": "Parcurge în buclă acțiunile pentru strike-uri atunci când se epuizează acțiunile de aplicat unui utilizator"
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Canale de exclus din detectarea cuvintelor interzise."
+                },
+                "strike-actions": {
+                    "description": "Acțiuni de luat pentru fiecare nivel de avertisment."
+                },
+                "strike-expiry": {
+                    "description": "Durata unei sancțiuni. Folosește formate precum 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Secunde, minute, ore, zile, săptămâni, luni și ani, respectiv."
+                },
+                "dm-on-strike": {
+                    "description": "Trimite utilizatorului un DM când primește un strike."
+                },
+                "check-pfp": {
+                    "description": "Verifică imaginea de profil a utilizatorului pentru conținut NSFW."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Acțiune de efectuat când un utilizator își setează o imagine de profil NSFW."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Mesajul de trimis atunci când poza de profil a unui jucător a fost semnalată.",
+                    "default": "S-a detectat conținut explicit în fotografia ta de profil",
+                    "choices": [
+                        "S-a detectat conținut explicit în fotografia ta de profil",
+                        "Poza ta de profil nu este potrivită pentru acest server.",
+                        "Fotografia ta de profil a fost marcată ca NSFW."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Elimină timeout-ul unui utilizator odată ce își schimbă poza de profil într-una adecvată."
+                },
+                "scan-age-restricted": {
+                    "description": "Scanează canalele cu restricții de vârstă (NSFW). Când este oprit, canalele NSFW sunt omise."
+                },
+                "check-tenor-gifs": {
+                    "description": "Aplică sancțiuni când este detectat conținut NSFW în GIF-uri de pe Tenor."
+                },
+                "use-default-banned-words": {
+                    "description": "Folosește lista încorporată de cuvinte vulgare pentru acest server."
+                },
+                "exclude-channels": {
+                    "description": "Canale de exclus de la detecție."
+                },
+                "delete-scam-messages": {
+                    "description": "Șterge automat mesajele care corespund tiparelor de înșelătorie sau adreselor URL."
+                },
+                "scam-detection-action": {
+                    "description": "Acțiune de efectuat la detectarea unui mesaj de înșelătorie."
+                },
+                "check-links": {
+                    "description": "Verifică linkurile din mesaje pentru malware, phishing, escrocherii etc."
+                },
+                "exclude-scam-channels": {
+                    "description": "Canale de exclus din detectarea înșelătoriilor."
+                },
+                "aimod-detection-action": {
+                    "description": "Acțiunea de întreprins când moderatorul autonom detectează o încălcare. Folosește auto pentru ca AI-ul să ia decizia."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Folosește moderare AI mai precisă cu gpt-5-mini (aprox. 2.25 USD per 1M de tokenuri). Consumă bugetul lunar mai rapid comparativ cu setarea implicită."
+                },
+                "autonomous-mod": {
+                    "description": "Folosește IA pentru a-ți modera automat întregul server."
+                },
+                "aimod-check-interval": {
+                    "description": "Cât de des să ruleze procesul batch de moderare AI."
+                },
+                "aimod-mode": {
+                    "description": "Alege cum se declanșează moderarea AI: modul `report` (doar la menționare), modul `interval` (scanare automată în fundal), sau modul `adaptive` (comută dinamic în funcție de activitatea serverului, evenimente sau configurație)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Configurează care evenimente declanșează comutarea modurilor de moderare AI."
+                },
+                "no-forward-from-role": {
+                    "description": "Împiedică un rol specific să redirecționeze mesaje."
+                },
+                "banned-urls": {
+                    "description": "URL-uri sau domenii exacte de blocat."
+                },
+                "url-detection-action": {
+                    "description": "Acțiunea de efectuat când este detectat un URL blocat."
+                },
+                "exclude-url-channels": {
+                    "description": "Canale exceptate de la URL-urile interzise."
+                },
+                "vcmod-enabled": {
+                    "description": "Activează moderarea și transcrierea canalului vocal."
+                },
+                "vcmod-channels": {
+                    "description": "Canale vocale de monitorizat (când e gol, nu se monitorizează niciunul)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Durata de ascultare activă pentru fiecare canal vocal într-un ciclu (de ex., 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Cât de lungă să fie pauza între fiecare transcriere în Saver Mode."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Mod de economisire: botul parcurge canalele vocale pentru a părea activ dar nu înregistrează și nu ascultă de cele mai multe ori."
+                },
+                "vcmod-rules": {
+                    "description": "Reguli aplicate moderării chatului vocal (separate de regulile pentru text).",
+                    "default": [
+                        "1. Fără hărțuire, discurs instigator la ură, sau amenințări.",
+                        "2. Fără termeni jignitori sau limbaj discriminatoriu.",
+                        "3. Fără instigare la violență sau activități ilegale.",
+                        "4. Fără conținut sexual sau remarci explicite.",
+                        "5. Respectă Termenii de Serviciu ai Discord."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Acțiunea de luat când moderarea VC detectează o încălcare. Folosește auto pentru ca IA să decidă."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Utilizați analiză IA cu precizie mai mare pentru moderarea VC (consumă mai mult din bugetul de tokeni)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Activează transcrieri vocale mai clare prin procesare premium (cost mai mare)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Canal în care sunt postate transcrierile VC."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Când este activat, botul va transcrie doar chatul vocal fără a aplica verificări ale regulilor AI sau acțiuni de moderare. Acest lucru reduce semnificativ utilizarea bugetului."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Cere noilor membri să treacă o verificare captcha înainte de a primi acces."
+                },
+                "captcha-grace-period": {
+                    "description": "Timpul pe care noii membri îl au pentru a finaliza verificarea captcha (de ex. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Acțiuni efectuate automat după verificare cu succes."
+                },
+                "captcha-delivery-method": {
+                    "description": "Cum sunt trimise linkurile de verificare captcha noilor membri (DM sau embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Canalul în care este postat embedul de verificare captcha atunci când se folosește livrarea prin embed."
+                },
+                "pre-captcha-roles": {
+                    "description": "Roluri atribuite membrilor noi înainte de a finaliza verificarea captcha."
+                },
+                "captcha-failure-actions": {
+                    "description": "Acțiuni de efectuat automat când un membru eșuează verificarea captcha."
                 }
             }
         }
