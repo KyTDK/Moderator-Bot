@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "FORFATTER",
-        "utterance_label": "YTRING",
-        "divider": "---",
-        "unknown_speaker": "Ukjent taler",
-        "unknown_prefix": "Ukjent",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC-utskrift",
-        "title_part": "VC-utskrift (del {index}/{total})",
-        "field_channel": "Kanal",
-        "field_utterances": "Ytringer",
-        "footer_high": "Utskrift med høy nøyaktighet",
-        "footer_normal": "Utskrift med normal nøyaktighet"
-      },
-      "budget": {
-        "title": "VC-moderasjon budsjett nådd",
-        "description": "Hopper over analyse for denne syklusen på grunn av budsjettgrense."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "FORFATTER",
+                "utterance_label": "YTRING",
+                "divider": "---",
+                "unknown_speaker": "Ukjent taler",
+                "unknown_prefix": "Ukjent",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC-utskrift",
+                "title_part": "VC-utskrift (del {index}/{total})",
+                "field_channel": "Kanal",
+                "field_utterances": "Ytringer",
+                "footer_high": "Utskrift med høy nøyaktighet",
+                "footer_normal": "Utskrift med normal nøyaktighet"
+            },
+            "budget": {
+                "title": "VC-moderasjon budsjett nådd",
+                "description": "Hopper over analyse for denne syklusen på grunn av budsjettgrense."
+            }
+        }
     }
-  }
 }
