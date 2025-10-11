@@ -1,0 +1,25 @@
+{
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "",
+                "utterance_label": "",
+                "divider": "",
+                "unknown_speaker": "",
+                "unknown_prefix": "",
+                "user_fallback": "",
+                "line": "",
+                "title_single": "",
+                "title_part": "",
+                "field_channel": "",
+                "field_utterances": "",
+                "footer_high": "",
+                "footer_normal": ""
+            },
+            "budget": {
+                "title": "",
+                "description": ""
+            }
+        }
+    }
+}
