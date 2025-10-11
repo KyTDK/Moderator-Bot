@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Bezplatné",
-          "core": "Jádro",
-          "pro": "Pro",
-          "ultra": "Ultra"
-        },
-        "requirements": {
-          "any": "aktivní prémiový plán",
-          "single": "aktivní plán {plan}",
-          "double": "aktivní plán {plan_a} nebo {plan_b}",
-          "list": "aktivní plány {plans}, nebo plán {last}"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Bezplatné",
+                    "core": "Jádro",
+                    "pro": "Pro",
+                    "ultra": "Ultra"
+                },
+                "requirements": {
+                    "any": "aktivní prémiový plán",
+                    "single": "aktivní plán {plan}",
+                    "double": "aktivní plán {plan_a} nebo {plan_b}",
+                    "list": "aktivní plány {plans}, nebo plán {last}"
+                }
+            }
         }
-      }
     }
-  }
 }
