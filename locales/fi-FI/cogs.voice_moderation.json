@@ -1,25 +1,25 @@
 {
-  "cogs": {
-    "voice_moderation": {
-      "transcript": {
-        "author_label": "TEKIJÄ",
-        "utterance_label": "LAUSUMA",
-        "divider": "---",
-        "unknown_speaker": "Tuntematon puhuja",
-        "unknown_prefix": "Tuntematon",
-        "user_fallback": "<@{id}> (id = {id})",
-        "line": "[{timestamp}] {prefix} ({name}): {text}",
-        "title_single": "VC-Transkripti",
-        "title_part": "VC-Transkripti (osa {index}/{total})",
-        "field_channel": "Kanava",
-        "field_utterances": "Lausumat",
-        "footer_high": "Korkean tarkkuuden transkriptio",
-        "footer_normal": "Normaali tarkkuuden transkriptio"
-      },
-      "budget": {
-        "title": "VC-Moderointi Budjetti Tavoitettu",
-        "description": "Analyysi ohitetaan tässä jaksossa budjettirajoituksen vuoksi."
-      }
+    "cogs": {
+        "voice_moderation": {
+            "transcript": {
+                "author_label": "TEKIJÄ",
+                "utterance_label": "LAUSUMA",
+                "divider": "---",
+                "unknown_speaker": "Tuntematon puhuja",
+                "unknown_prefix": "Tuntematon",
+                "user_fallback": "<@{id}> (id = {id})",
+                "line": "[{timestamp}] {prefix} ({name}): {text}",
+                "title_single": "VC-Transkripti",
+                "title_part": "VC-Transkripti (osa {index}/{total})",
+                "field_channel": "Kanava",
+                "field_utterances": "Lausumat",
+                "footer_high": "Korkean tarkkuuden transkriptio",
+                "footer_normal": "Normaali tarkkuuden transkriptio"
+            },
+            "budget": {
+                "title": "VC-Moderointi Budjetti Tavoitettu",
+                "description": "Analyysi ohitetaan tässä jaksossa budjettirajoituksen vuoksi."
+            }
+        }
     }
-  }
 }
