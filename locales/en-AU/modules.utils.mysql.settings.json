@@ -3,7 +3,7 @@
         "utils": {
             "mysql": {
                 "settings": {
-                    "plan_required": ""
+                    "plan_required": "This setting requires {requirement}."
                 }
             }
         }
