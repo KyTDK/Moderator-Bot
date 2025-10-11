@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "Contenido NSFW Detectado",
-          "description": "**Usuario:** {user_mention} ({user_display})\n**Razón:** {reason}",
-          "footer": "ID del Usuario: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Informe de Escaneo NSFW",
-            "description": {
-              "user": "Usuario: {user}",
-              "file": "Archivo: `{filename}`",
-              "type": "Tipo: `{file_type}`",
-              "decision": "Decisión: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "Contenido NSFW Detectado",
+                    "description": "**Usuario:** {user_mention} ({user_display})\n**Razón:** {reason}",
+                    "footer": "ID del Usuario: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Imagen",
-              "video": "Vídeo",
-              "unknown": "Desconocido"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Informe de Escaneo NSFW",
+                        "description": {
+                            "user": "Usuario: {user}",
+                            "file": "Archivo: `{filename}`",
+                            "type": "Tipo: `{file_type}`",
+                            "decision": "Decisión: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Imagen",
+                            "video": "Vídeo",
+                            "unknown": "Desconocido"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Seguro",
+                            "unknown": "Desconocido"
+                        },
+                        "fields": {
+                            "reason": "Razón",
+                            "category": "Categoría",
+                            "score": "Puntuación",
+                            "flagged_any": "Cualquier Marcado",
+                            "summary_categories": "Resumen de Categorías",
+                            "max_similarity": "Máxima Similitud",
+                            "max_category": "Categoría de Máxima Similitud",
+                            "similarity": "Similitud Coincidente",
+                            "high_accuracy": "Alta Precisión",
+                            "clip_threshold": "Umbral CLIP",
+                            "moderation_threshold": "Umbral de Moderación",
+                            "video_frames": "Fotogramas de Video"
+                        },
+                        "reasons": {
+                            "openai_moderation": "moderación de OpenAI",
+                            "similarity_match": "coincidencia de similitud",
+                            "no_frames_extracted": "No se extrajeron fotogramas",
+                            "no_nsfw_frames_detected": "No se detectaron fotogramas NSFW"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Seguro",
-              "unknown": "Desconocido"
-            },
-            "fields": {
-              "reason": "Razón",
-              "category": "Categoría",
-              "score": "Puntuación",
-              "flagged_any": "Cualquier Marcado",
-              "summary_categories": "Resumen de Categorías",
-              "max_similarity": "Máxima Similitud",
-              "max_category": "Categoría de Máxima Similitud",
-              "similarity": "Similitud Coincidente",
-              "high_accuracy": "Alta Precisión",
-              "clip_threshold": "Umbral CLIP",
-              "moderation_threshold": "Umbral de Moderación",
-              "video_frames": "Fotogramas de Video"
-            },
-            "reasons": {
-              "openai_moderation": "moderación de OpenAI",
-              "similarity_match": "coincidencia de similitud",
-              "no_frames_extracted": "No se extrajeron fotogramas",
-              "no_nsfw_frames_detected": "No se detectaron fotogramas NSFW"
+            "shared": {
+                "confidence": {
+                    "name": "Confianza",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Puntuación",
+                        "similarity": "Similitud"
+                    }
+                },
+                "boolean": {
+                    "true": "verdadero",
+                    "false": "falso"
+                },
+                "category": {
+                    "unspecified": "No especificado"
+                },
+                "policy_violation": "Detectada violación potencial de política (Categoría: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Confianza",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Puntuación",
-            "similarity": "Similitud"
-          }
-        },
-        "boolean": {
-          "true": "verdadero",
-          "false": "falso"
-        },
-        "category": {
-          "unspecified": "No especificado"
-        },
-        "policy_violation": "Detectada violación potencial de política (Categoría: **{category}**)"
-      }
     }
-  }
 }
