@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "Ανιχνεύθηκε Περιεχόμενο NSFW",
-          "description": "**Χρήστης:** {user_mention} ({user_display})\n**Λόγος:** {reason}",
-          "footer": "ID Χρήστη: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Αναφορά Σάρωσης NSFW",
-            "description": {
-              "user": "Χρήστης: {user}",
-              "file": "Αρχείο: `{filename}`",
-              "type": "Τύπος: `{file_type}`",
-              "decision": "Απόφαση: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "Ανιχνεύθηκε Περιεχόμενο NSFW",
+                    "description": "**Χρήστης:** {user_mention} ({user_display})\n**Λόγος:** {reason}",
+                    "footer": "ID Χρήστη: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Εικόνα",
-              "video": "Βίντεο",
-              "unknown": "Άγνωστο"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Αναφορά Σάρωσης NSFW",
+                        "description": {
+                            "user": "Χρήστης: {user}",
+                            "file": "Αρχείο: `{filename}`",
+                            "type": "Τύπος: `{file_type}`",
+                            "decision": "Απόφαση: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Εικόνα",
+                            "video": "Βίντεο",
+                            "unknown": "Άγνωστο"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Ασφαλής",
+                            "unknown": "Άγνωστο"
+                        },
+                        "fields": {
+                            "reason": "Λόγος",
+                            "category": "Κατηγορία",
+                            "score": "Βαθμολογία",
+                            "flagged_any": "Σημειώθηκε",
+                            "summary_categories": "Κατηγορίες Περίληψης",
+                            "max_similarity": "Μέγιστη Ομοιότητα",
+                            "max_category": "Κατηγορία Μέγιστης Ομοιότητας",
+                            "similarity": "Ομοιότητα Αντιστοιχίας",
+                            "high_accuracy": "Υψηλή Ακρίβεια",
+                            "clip_threshold": "Όριο CLIP",
+                            "moderation_threshold": "Όριο Εγκράτειας",
+                            "video_frames": "Καρέ Βίντεο"
+                        },
+                        "reasons": {
+                            "openai_moderation": "εποπτεία OpenAI",
+                            "similarity_match": "Αντιστοιχία Ομοιότητας",
+                            "no_frames_extracted": "Δεν εξήχθησαν καρέ",
+                            "no_nsfw_frames_detected": "Δεν εντοπίστηκαν καρέ NSFW"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Ασφαλής",
-              "unknown": "Άγνωστο"
-            },
-            "fields": {
-              "reason": "Λόγος",
-              "category": "Κατηγορία",
-              "score": "Βαθμολογία",
-              "flagged_any": "Σημειώθηκε",
-              "summary_categories": "Κατηγορίες Περίληψης",
-              "max_similarity": "Μέγιστη Ομοιότητα",
-              "max_category": "Κατηγορία Μέγιστης Ομοιότητας",
-              "similarity": "Ομοιότητα Αντιστοιχίας",
-              "high_accuracy": "Υψηλή Ακρίβεια",
-              "clip_threshold": "Όριο CLIP",
-              "moderation_threshold": "Όριο Εγκράτειας",
-              "video_frames": "Καρέ Βίντεο"
-            },
-            "reasons": {
-              "openai_moderation": "εποπτεία OpenAI",
-              "similarity_match": "Αντιστοιχία Ομοιότητας",
-              "no_frames_extracted": "Δεν εξήχθησαν καρέ",
-              "no_nsfw_frames_detected": "Δεν εντοπίστηκαν καρέ NSFW"
+            "shared": {
+                "confidence": {
+                    "name": "Εμπιστοσύνη",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Βαθμολογία",
+                        "similarity": "Ομοιότητα"
+                    }
+                },
+                "boolean": {
+                    "true": "αληθές",
+                    "false": "ψευδές"
+                },
+                "category": {
+                    "unspecified": "Μη Καθορισμένη"
+                },
+                "policy_violation": "Ανιχνεύθηκε πιθανή παραβίαση πολιτικής (Κατηγορία: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Εμπιστοσύνη",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Βαθμολογία",
-            "similarity": "Ομοιότητα"
-          }
-        },
-        "boolean": {
-          "true": "αληθές",
-          "false": "ψευδές"
-        },
-        "category": {
-          "unspecified": "Μη Καθορισμένη"
-        },
-        "policy_violation": "Ανιχνεύθηκε πιθανή παραβίαση πολιτικής (Κατηγορία: **{category}**)"
-      }
     }
-  }
 }
