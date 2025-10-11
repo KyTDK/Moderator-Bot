@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "Virheellinen keston muoto. Käytä muotoja kuten 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekunnit, minuutit, tunnit, päivät, viikot, kuukaudet ja vuodet vastaavasti."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "Virheellinen keston muoto. Käytä muotoja kuten 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekunnit, minuutit, tunnit, päivät, viikot, kuukaudet ja vuodet vastaavasti."
+            }
+        }
     }
-  }
 }
