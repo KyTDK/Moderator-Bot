@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "Golpear",
-          "kick": "Patada",
-          "ban": "Prohibir",
-          "timeout": "Tiempo de espera",
-          "delete": "Eliminar mensaje",
-          "give_role": "Asignar rol",
-          "take_role": "Quitar rol",
-          "warn": "Advertir al usuario",
-          "broadcast": "Emitir mensaje",
-          "auto": "Automático"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "Golpear",
+                    "kick": "Patada",
+                    "ban": "Prohibir",
+                    "timeout": "Tiempo de espera",
+                    "delete": "Eliminar mensaje",
+                    "give_role": "Asignar rol",
+                    "take_role": "Quitar rol",
+                    "warn": "Advertir al usuario",
+                    "broadcast": "Emitir mensaje",
+                    "auto": "Automático"
+                }
+            }
         }
-      }
     }
-  }
 }
