@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "无效的持续时间格式。请使用例如20s, 30m, 2h, 30d, 2w, 5mo, 1y等格式。分别对应秒、分钟、小时、天、周、月和年。"
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "无效的持续时间格式。请使用例如20s, 30m, 2h, 30d, 2w, 5mo, 1y等格式。分别对应秒、分钟、小时、天、周、月和年。"
+            }
+        }
     }
-  }
 }
