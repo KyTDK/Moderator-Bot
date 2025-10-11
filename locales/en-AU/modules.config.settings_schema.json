@@ -142,6 +142,88 @@
                 },
                 "autonomous-mod": {
                     "description": "Use AI to automatically moderate your entire server."
+                },
+                "aimod-check-interval": {
+                    "description": "How often to run the AI moderation batch process."
+                },
+                "aimod-mode": {
+                    "description": "Choose how AI moderation is triggered: `report` mode (only on mention), `interval` mode (automatic background scanning), or `adaptive` mode (dynamically switches based on server activity, events, or configuration)."
+                },
+                "no-forward-from-role": {
+                    "description": "Stop a specific role from forwarding messages."
+                },
+                "banned-urls": {
+                    "description": "Exact URLs or domains to block."
+                },
+                "vcmod-enabled": {
+                    "description": "Enable voice channel moderation and transcription."
+                },
+                "vcmod-channels": {
+                    "description": "Voice channels to monitor (when empty, none are monitored)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "How long to actively listen to each voice channel during a cycle (e.g., 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "How long to pause between each transcription in Saver Mode."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Saver mode: bot cycles through VCs to appear active but does not record or listen most of the time."
+                },
+                "vcmod-rules": {
+                    "description": "Rules applied to voice chat moderation (separate from text rules).",
+                    "default": [
+                        "1. No harassment, hate speech, or threats.",
+                        "2. No slurs or discriminatory language.",
+                        "3. No incitement to violence or illegal activity.",
+                        "4. No sexual content or explicit remarks.",
+                        "5. Follow Discord's Terms of Service."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Action to take when VC moderation detects a breach. Use auto for the AI to decide."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Use higher-accuracy AI analysis for VC moderation (uses a larger token budget)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Enable clearer voice transcripts with premium processing (higher cost)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Channel where VC transcripts are posted."
+                },
+                "vcmod-transcript-only": {
+                    "description": "When enabled, the bot will only transcribe voice chat without applying AI rule checks or moderation actions. This significantly reduces budget usage."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Require newcomers to pass a captcha challenge before they gain access."
+                },
+                "captcha-grace-period": {
+                    "description": "How long newcomers have to finish captcha verification (e.g. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Actions performed automatically after successful verification."
+                },
+                "captcha-delivery-method": {
+                    "description": "How captcha verification links are delivered to new members (DM or embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Channel where the captcha verification embed is posted when using embed delivery."
+                },
+                "pre-captcha-roles": {
+                    "description": "Roles assigned to newcomers before they complete captcha verification."
+                },
+                "captcha-failure-actions": {
+                    "description": "Actions to perform automatically when a member fails captcha verification."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Configure which events trigger switching between AI moderation modes."
+                },
+                "url-detection-action": {
+                    "description": "Action to take when a blocked URL is detected."
+                },
+                "exclude-url-channels": {
+                    "description": "Channels to exclude from banned URLs."
                 }
             }
         }

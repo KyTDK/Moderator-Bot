@@ -20,7 +20,8 @@
                         "2. Không có nội dung NSFW hoặc khiêu dâm.",
                         "3. Không spam hoặc tự quảng cáo quá mức.",
                         "4. Tuân theo Điều khoản Dịch vụ của Discord."
-                    ]
+                    ],
+                    "description": "Các quy tắc của máy chủ được dùng cho kiểm duyệt tự động."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -111,6 +112,118 @@
                 },
                 "scan-age-restricted": {
                     "description": "Quét các kênh giới hạn độ tuổi (NSFW). Khi tắt, các kênh NSFW sẽ bị bỏ qua."
+                },
+                "check-tenor-gifs": {
+                    "description": "Áp dụng biện pháp xử phạt khi phát hiện nội dung NSFW trong GIF của Tenor."
+                },
+                "use-default-banned-words": {
+                    "description": "Sử dụng danh sách từ ngữ tục tĩu tích hợp sẵn cho máy chủ này."
+                },
+                "exclude-channels": {
+                    "description": "Các kênh cần loại trừ khỏi phát hiện."
+                },
+                "delete-scam-messages": {
+                    "description": "Tự động xóa các tin nhắn khớp với mẫu lừa đảo hoặc URL."
+                },
+                "scam-detection-action": {
+                    "description": "Hành động cần thực hiện khi phát hiện tin nhắn lừa đảo."
+                },
+                "check-links": {
+                    "description": "Kiểm tra các liên kết trong tin nhắn để phát hiện mã độc, lừa đảo giả mạo, gian lận, v.v."
+                },
+                "exclude-scam-channels": {
+                    "description": "Các kênh cần loại trừ khỏi phát hiện lừa đảo."
+                },
+                "aimod-detection-action": {
+                    "description": "Hành động cần thực hiện khi trình kiểm duyệt tự động phát hiện vi phạm. Sử dụng auto để AI đưa ra quyết định."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Sử dụng kiểm duyệt AI có độ chính xác cao hơn với gpt-5-mini (xấp xỉ 2.25 USD mỗi 1M tokens). Tiêu tốn ngân sách hàng tháng nhanh hơn so với mặc định."
+                },
+                "autonomous-mod": {
+                    "description": "Sử dụng AI để tự động kiểm duyệt toàn bộ máy chủ của bạn."
+                },
+                "aimod-check-interval": {
+                    "description": "Tần suất chạy quy trình xử lý hàng loạt kiểm duyệt AI."
+                },
+                "aimod-mode": {
+                    "description": "Chọn cách kiểm duyệt AI được kích hoạt: chế độ `report` (chỉ khi được nhắc đến), chế độ `interval` (quét nền tự động), hoặc chế độ `adaptive` (tự động chuyển đổi dựa trên hoạt động, sự kiện hoặc cấu hình của máy chủ)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Cấu hình các sự kiện kích hoạt việc chuyển đổi chế độ kiểm duyệt AI."
+                },
+                "no-forward-from-role": {
+                    "description": "Ngăn một vai trò cụ thể chuyển tiếp tin nhắn."
+                },
+                "banned-urls": {
+                    "description": "Các URL hoặc tên miền chính xác để chặn."
+                },
+                "url-detection-action": {
+                    "description": "Hành động cần thực hiện khi phát hiện URL bị chặn."
+                },
+                "exclude-url-channels": {
+                    "description": "Các kênh cần loại trừ khỏi các URL bị cấm."
+                },
+                "vcmod-enabled": {
+                    "description": "Bật kiểm duyệt kênh thoại và chuyển giọng nói thành văn bản."
+                },
+                "vcmod-channels": {
+                    "description": "Kênh thoại cần theo dõi (khi để trống, không kênh nào được theo dõi)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Thời lượng nghe chủ động cho mỗi kênh thoại trong một chu kỳ (e.g., 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Thời gian tạm dừng giữa mỗi lần phiên âm trong Saver Mode."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Chế độ tiết kiệm: bot luân phiên vào các kênh thoại để trông như đang hoạt động nhưng hầu hết thời gian không ghi âm hoặc lắng nghe."
+                },
+                "vcmod-rules": {
+                    "description": "Các quy tắc áp dụng cho việc kiểm duyệt trò chuyện thoại (tách biệt với các quy tắc văn bản).",
+                    "default": [
+                        "1. Không quấy rối, ngôn từ thù ghét hoặc đe dọa.",
+                        "2. Không dùng lời lẽ miệt thị hoặc phân biệt đối xử.",
+                        "3. Không kích động bạo lực hoặc hoạt động bất hợp pháp.",
+                        "4. Không có nội dung tình dục hoặc lời lẽ thô tục.",
+                        "5. Thực hiện đúng Điều khoản Dịch vụ của Discord."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Hành động cần thực hiện khi kiểm duyệt VC phát hiện vi phạm. Dùng auto để AI quyết định."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Sử dụng phân tích AI có độ chính xác cao hơn cho kiểm duyệt VC (tiêu tốn nhiều token hơn)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Bật bản phiên âm giọng nói rõ hơn với xử lý cao cấp (chi phí cao hơn)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Kênh nơi đăng bản chép lời VC."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Khi bật, bot sẽ chỉ tạo bản chép lời cho kênh thoại mà không áp dụng kiểm tra quy tắc bằng AI hoặc hành động kiểm duyệt. Điều này giảm đáng kể mức sử dụng ngân sách."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Yêu cầu người mới vượt qua bài kiểm tra captcha trước khi họ có quyền truy cập."
+                },
+                "captcha-grace-period": {
+                    "description": "Thời gian thành viên mới có để hoàn tất xác minh captcha (e.g. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Các hành động được thực hiện tự động sau khi xác minh thành công."
+                },
+                "captcha-delivery-method": {
+                    "description": "Cách liên kết xác minh captcha được gửi tới thành viên mới (DM hoặc embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Kênh nơi embed xác minh captcha được đăng khi sử dụng phương thức gửi embed."
+                },
+                "pre-captcha-roles": {
+                    "description": "Các vai trò được gán cho thành viên mới trước khi họ hoàn thành xác minh captcha."
+                },
+                "captcha-failure-actions": {
+                    "description": "Các hành động được thực hiện tự động khi một thành viên không vượt qua xác minh captcha."
                 }
             }
         }

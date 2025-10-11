@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "無効なロケールです。サポートされているロケール: {supported}"
+                    "invalid": "無効なロケールです。サポートされているロケール: {supported}",
+                    "description": "自動ロケール検出を特定のロケールコードで上書きします。"
                 },
                 "nsfw_pfp_message": {
                     "default": "プロファイル画像に不適切なコンテンツが含まれていると検出されました。",
@@ -19,7 +20,8 @@
                         "2. NSFWまたは卑猥なコンテンツを禁止します。",
                         "3. スパムまたは過度な自己宣伝を禁止します。",
                         "4. Discordの利用規約を遵守してください。"
-                    ]
+                    ],
+                    "description": "自動モデレーションで使用するサーバールール。"
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. 性的コンテンツや露骨な発言は禁止します。",
                         "5. Discordの利用規約を遵守してください。"
                     ]
+                },
+                "strike-channel": {
+                    "description": "ストライクが記録されるチャンネル。"
+                },
+                "aimod-debug": {
+                    "description": "フラグされたメッセージ、AIの判断、適用されたアクションを含む詳細なAIモデレーションのデバッグメッセージを、常にAI違反チャンネルに送信します。"
+                },
+                "nsfw-verbose": {
+                    "description": "スキャン対象のメディアと同じチャンネルに、詳細なスキャンレポートの埋め込みを投稿します。"
+                },
+                "nsfw-channel": {
+                    "description": "NSFW違反をメディアのプレビュー付きで記録するチャンネル。"
+                },
+                "nsfw-channel-notify": {
+                    "description": "NSFWコンテンツが削除されたとき、チャンネルに通知の埋め込みを送信します。"
+                },
+                "nsfw-enabled": {
+                    "description": "メッセージ、リアクション、アバターのNSFWスキャンを有効にします（他のトグルは引き続き適用されます）。"
+                },
+                "monitor-events": {
+                    "description": "監視対象の各イベントタイプごとに、ログの有効/無効を切り替えます。"
+                },
+                "nsfw-detection-action": {
+                    "description": "ユーザーがNSFWコンテンツを投稿した際に実行するアクション。"
+                },
+                "nsfw-detection-categories": {
+                    "description": "検出時にNSFWと見なすカテゴリ。"
+                },
+                "nsfw-high-accuracy": {
+                    "description": "より信頼性の高い検出のために、高精度のNSFWスキャンを有効にします。Acceleratedのみ。"
+                },
+                "threshold": {
+                    "description": "NSFW検出の確信度のしきい値。値が低いほど感度が高くなります。"
+                },
+                "banned-words-action": {
+                    "description": "ユーザーが禁止ワードを投稿した際に実行するアクション。"
+                },
+                "monitor-channel": {
+                    "description": "メッセージの編集や削除、ユーザーの参加/退出など、すべてのサーバーアクティビティを記録するチャンネル。"
+                },
+                "captcha-log-channel": {
+                    "description": "captcha認証のログとアクティビティ更新が投稿されるチャンネル。"
+                },
+                "aimod-channel": {
+                    "description": "AI違反のログが投稿されるチャンネル。"
+                },
+                "cycle-strike-actions": {
+                    "description": "ユーザーに付与できるアクションが尽きた場合、ストライクアクションを循環実行します。"
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "禁止ワード検出から除外するチャンネル。"
+                },
+                "strike-actions": {
+                    "description": "各ストライクレベルで実行するアクション。"
+                },
+                "strike-expiry": {
+                    "description": "ストライクの有効期間。20s、30m、2h、30d、2w、5mo、1y のような形式を使用します。秒、分、時間、日、週、月、年の順に対応します。"
+                },
+                "dm-on-strike": {
+                    "description": "ユーザーが違反ポイントを受けたときにDMを送信します。"
+                },
+                "check-pfp": {
+                    "description": "ユーザーのプロフィール画像にNSFWコンテンツがないか確認します。"
+                },
+                "nsfw-pfp-action": {
+                    "description": "ユーザーがNSFWのプロフィール画像を設定したときの対応。"
+                },
+                "nsfw-pfp-message": {
+                    "description": "ユーザーのプロフィール画像が不適切と判定されたときに送信するメッセージ。",
+                    "default": "あなたのプロフィール画像に露骨な内容が含まれていると検出されました",
+                    "choices": [
+                        "あなたのプロフィール画像に露骨な内容が含まれていると検出されました",
+                        "あなたのプロフィール画像はこのサーバーにふさわしくありません。",
+                        "あなたのプロフィール画像はNSFWとして判定されました。"
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "適切なプロフィール画像に変更したら、ユーザーのタイムアウトを解除します。"
+                },
+                "scan-age-restricted": {
+                    "description": "年齢制限（NSFW）のチャンネルをスキャンします。オフの場合、NSFWチャンネルはスキップされます。"
+                },
+                "check-tenor-gifs": {
+                    "description": "TenorのGIFでNSFWコンテンツが検出された場合に処分を適用します。"
+                },
+                "use-default-banned-words": {
+                    "description": "このサーバーで内蔵の不適切表現リストを使用します。"
+                },
+                "exclude-channels": {
+                    "description": "検出から除外するチャンネル。"
+                },
+                "delete-scam-messages": {
+                    "description": "詐欺のパターンやURLに一致するメッセージを自動的に削除します。"
+                },
+                "scam-detection-action": {
+                    "description": "詐欺メッセージが検出されたときの対応。"
+                },
+                "check-links": {
+                    "description": "メッセージ内のリンクにマルウェア、フィッシング、詐欺などがないか確認します。"
+                },
+                "exclude-scam-channels": {
+                    "description": "詐欺検出から除外するチャンネル。"
+                },
+                "aimod-detection-action": {
+                    "description": "自動モデレーターが違反を検出したときの対応。AIに決定させるには auto を使用します。"
+                },
+                "aimod-high-accuracy": {
+                    "description": "gpt-5-mini（約2.25 USD/100万トークン）による高精度のAIモデレーションを使用します。デフォルトよりも月間予算の消費が早くなります。"
+                },
+                "autonomous-mod": {
+                    "description": "AIでサーバー全体を自動モデレーションします。"
+                },
+                "aimod-check-interval": {
+                    "description": "AIモデレーションのバッチ処理を実行する頻度。"
+                },
+                "aimod-mode": {
+                    "description": "AIモデレーションのトリガー方法を選択します: `report` モード（メンション時のみ）、`interval` モード（自動バックグラウンドスキャン）、`adaptive` モード（サーバーのアクティビティ、イベント、または設定に基づき動的に切り替え）。"
+                },
+                "aimod-adaptive-events": {
+                    "description": "どのイベントでAIモデレーションのモードを切り替えるかを設定します。"
+                },
+                "no-forward-from-role": {
+                    "description": "特定のロールによるメッセージの転送を禁止する。"
+                },
+                "banned-urls": {
+                    "description": "ブロックするURLまたはドメイン（完全一致）。"
+                },
+                "url-detection-action": {
+                    "description": "ブロック対象のURLを検出したときのアクション。"
+                },
+                "exclude-url-channels": {
+                    "description": "禁止URLの対象外にするチャンネル。"
+                },
+                "vcmod-enabled": {
+                    "description": "ボイスチャンネルのモデレーションと文字起こしを有効にする。"
+                },
+                "vcmod-channels": {
+                    "description": "監視するボイスチャンネル（未指定の場合、監視しません）。"
+                },
+                "vcmod-listen-duration": {
+                    "description": "サイクル中に各ボイスチャンネルを積極的に聴取する時間（例: 2m, 5m）。"
+                },
+                "vcmod-idle-duration": {
+                    "description": "Saver Mode で各文字起こしの間に一時停止する時間。"
+                },
+                "vcmod-saver-mode": {
+                    "description": "Saver mode: ボットはボイスチャンネルを巡回してアクティブに見せかけますが、ほとんどの時間は録音や聴取を行いません。"
+                },
+                "vcmod-rules": {
+                    "description": "ボイスチャットのモデレーションに適用されるルール（テキストとは別）。",
+                    "default": [
+                        "1. いやがらせ、ヘイトスピーチ、脅迫を禁止。",
+                        "2. 侮辱語や差別的な表現を禁止。",
+                        "3. 暴力や違法行為の扇動を禁止。",
+                        "4. 性的コンテンツや露骨な発言を禁止。",
+                        "5. Discordの利用規約に従うこと。"
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "VCモデレーションが違反を検出したときのアクション。AIに判断させるには auto を使用。"
+                },
+                "vcmod-high-accuracy": {
+                    "description": "VCモデレーションに高精度のAI解析を使用します（トークン予算を多く消費します）。"
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "プレミアム処理で音声の書き起こしをより明瞭にします（高コスト）。"
+                },
+                "vcmod-transcript-channel": {
+                    "description": "VCの書き起こしが投稿されるチャンネル。"
+                },
+                "vcmod-transcript-only": {
+                    "description": "有効にすると、ボットはAIのルールチェックやモデレーションアクションを適用せず、ボイスチャットの書き起こしのみを行います。これにより、予算の使用量を大幅に削減します。"
+                },
+                "captcha-verification-enabled": {
+                    "description": "新規メンバーがアクセスを得る前に、captchaチャレンジの合格を必須にします。"
+                },
+                "captcha-grace-period": {
+                    "description": "新規メンバーがcaptcha認証を完了するまでの猶予時間（例: 10m、1h）。"
+                },
+                "captcha-success-actions": {
+                    "description": "認証に成功した後に自動で実行するアクション。"
+                },
+                "captcha-delivery-method": {
+                    "description": "captcha認証リンクを新規メンバーにどのように送信するか（DMまたは埋め込み）。"
+                },
+                "captcha-embed-channel-id": {
+                    "description": "埋め込みで配信する場合に、captcha認証の埋め込みを投稿するチャンネル。"
+                },
+                "pre-captcha-roles": {
+                    "description": "新規メンバーがcaptcha認証を完了する前に付与するロール。"
+                },
+                "captcha-failure-actions": {
+                    "description": "メンバーがcaptcha認証に失敗したときに自動で実行するアクション。"
                 }
             }
         }

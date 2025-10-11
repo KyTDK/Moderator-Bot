@@ -20,7 +20,8 @@
                         "2. Žádný NSFW nebo obscénní obsah.",
                         "3. Žádný spam nebo nadměrná propagace sebe sama.",
                         "4. Dodržujte podmínky služby Discordu."
-                    ]
+                    ],
+                    "description": "Pravidla serveru používaná pro autonomní moderování."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -93,7 +94,136 @@
                 },
                 "nsfw-pfp-message": {
                     "description": "Zpráva, která se odešle, když byl profilový obrázek hráče nahlášen.",
-                    "default": "Bylo zjištěno, že vaše profilová fotka obsahuje explicitní obsah"
+                    "default": "Bylo zjištěno, že vaše profilová fotka obsahuje explicitní obsah",
+                    "choices": [
+                        "Bylo zjištěno, že vaše profilová fotka obsahuje explicitní obsah",
+                        "Váš profilový obrázek není vhodný pro tento server.",
+                        "Váš profilový obrázek byl označen jako NSFW."
+                    ]
+                },
+                "aimod-debug": {
+                    "description": "Vždy odesílat podrobnou ladicí zprávu moderace AI do kanálu porušení AI, včetně označených zpráv, rozhodnutí AI, a provedených akcí."
+                },
+                "nsfw-channel": {
+                    "description": "Kanál, kam se zaznamenávají porušení NSFW včetně náhledu média."
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Zrušit timeout uživatele, jakmile si změní profilový obrázek na něco vhodného."
+                },
+                "scan-age-restricted": {
+                    "description": "Skenovat kanály s věkovým omezením (NSFW). Je-li vypnuto, NSFW kanály se vynechají."
+                },
+                "check-tenor-gifs": {
+                    "description": "Uplatnit sankce při detekci NSFW obsahu v GIFech z Tenoru."
+                },
+                "use-default-banned-words": {
+                    "description": "Použít vestavěný seznam vulgárních výrazů pro tento server."
+                },
+                "exclude-channels": {
+                    "description": "Kanály k vyloučení z detekce."
+                },
+                "delete-scam-messages": {
+                    "description": "Automaticky mazat zprávy, které odpovídají vzorcům podvodů nebo URL adresám."
+                },
+                "scam-detection-action": {
+                    "description": "Akce, která se provede při detekci podvodné zprávy."
+                },
+                "check-links": {
+                    "description": "Kontrolovat odkazy ve zprávách na malware, phishing, podvody apod."
+                },
+                "exclude-scam-channels": {
+                    "description": "Kanály k vyloučení z detekce podvodů."
+                },
+                "aimod-detection-action": {
+                    "description": "Akce, která se má provést, když autonomní moderátor zjistí porušení. Použijte auto, aby o tom rozhodla AI."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Použijte přesnější moderování AI s gpt-5-mini (přibližně 2.25 USD za 1M tokenů). Čerpá měsíční rozpočet rychleji než výchozí."
+                },
+                "autonomous-mod": {
+                    "description": "Využijte AI k automatickému moderování celého serveru."
+                },
+                "aimod-check-interval": {
+                    "description": "Jak často spouštět dávkový proces moderace pomocí AI."
+                },
+                "aimod-mode": {
+                    "description": "Vyberte, jak se spouští AI moderování: `report` režim (pouze při zmínce), `interval` režim (automatické skenování na pozadí), nebo `adaptive` režim (dynamicky se přepíná na základě aktivity serveru, událostí nebo konfigurace)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Nastavte, které události spustí přepnutí režimů moderování AI."
+                },
+                "no-forward-from-role": {
+                    "description": "Zastavte přeposílání zpráv u konkrétní role."
+                },
+                "banned-urls": {
+                    "description": "Přesné adresy URL nebo domény k zablokování."
+                },
+                "url-detection-action": {
+                    "description": "Akce, která se má provést při detekci blokované adresy URL."
+                },
+                "exclude-url-channels": {
+                    "description": "Kanály k vyloučení ze zákazu adres URL."
+                },
+                "vcmod-enabled": {
+                    "description": "Povolit moderování hlasových kanálů a přepis."
+                },
+                "vcmod-channels": {
+                    "description": "Hlasové kanály ke sledování (pokud je prázdné, nesledují se žádné)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Jak dlouho během cyklu aktivně poslouchat v jednom hlasovém kanálu (např. 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Jak dlouhá má být pauza mezi jednotlivými přepisy v režimu Saver Mode."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Úsporný režim: bot přepíná mezi hlasovými kanály, aby působil aktivně, ale většinu času nenahrává ani neposlouchá."
+                },
+                "vcmod-rules": {
+                    "description": "Pravidla platná pro moderování hlasového chatu (oddělená od textových pravidel).",
+                    "default": [
+                        "1. Žádné obtěžování, nenávistné projevy ani hrozby.",
+                        "2. Žádné hanlivé nebo diskriminační výrazy.",
+                        "3. Žádné podněcování k násilí ani k nezákonné činnosti.",
+                        "4. Žádný sexuální obsah ani explicitní komentáře.",
+                        "5. Dodržujte Podmínky služby Discordu."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Akce, která se provede, když moderace ve VC detekuje porušení. Použijte auto, aby rozhodla AI."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Použít analýzu AI s vyšší přesností pro moderaci hlasových kanálů (spotřebuje více tokenů)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Povolit přesnější přepisy hlasu s prémiovým zpracováním (vyšší cena)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Kanál, kde se zveřejňují přepisy hlasového chatu."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Po zapnutí bude bot pouze přepisovat hlasový chat bez použití kontrol pravidel AI ani moderátorských zásahů. Tím se výrazně snižuje využití rozpočtu."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Vyžadovat, aby nově příchozí před získáním přístupu prošli ověřením CAPTCHA."
+                },
+                "captcha-grace-period": {
+                    "description": "Jak dlouho mají noví členové na dokončení ověření CAPTCHA (např. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Akce prováděné automaticky po úspěšném ověření."
+                },
+                "captcha-delivery-method": {
+                    "description": "Jak jsou novým členům doručovány odkazy pro ověření captcha (DM nebo embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Kanál, kde se při použití doručení formou vložené zprávy zveřejní vložená zpráva pro ověření captcha."
+                },
+                "pre-captcha-roles": {
+                    "description": "Role přiřazené novým členům před dokončením ověření CAPTCHA."
+                },
+                "captcha-failure-actions": {
+                    "description": "Akce, které se provedou automaticky, když člen neprojde ověřením captcha."
                 }
             }
         }

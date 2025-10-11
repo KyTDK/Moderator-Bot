@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "שפה לא חוקית. שפות נתמכות: {supported}"
+                    "invalid": "שפה לא חוקית. שפות נתמכות: {supported}",
+                    "description": "עקוף את זיהוי האזור האוטומטי באמצעות קוד שפה/אזור ספציפי."
                 },
                 "nsfw_pfp_message": {
                     "default": "התמונה בפרופיל שלך זוהתה ככוללת תוכן בוטה",
@@ -19,7 +20,8 @@
                         "2. אין תוכן למבוגרים או תוכן מגונה.",
                         "3. אין ספאם או קידום עצמי מוגזם.",
                         "4. עקוב אחרי התנאים לשירות של דיסקורד."
-                    ]
+                    ],
+                    "description": "כללי השרת המשמשים למודרציה אוטונומית."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. אין תוכן מיני או הערות בוטות.",
                         "5. עקוב אחרי התנאים לשירות של דיסקורד."
                     ]
+                },
+                "strike-channel": {
+                    "description": "ערוץ שבו נרשמות אזהרות."
+                },
+                "aimod-debug": {
+                    "description": "תמיד שלח הודעת ניפוי שגיאות מפורטת של מודרציית AI לערוץ הפרות ה-AI, כולל הודעות שסומנו, החלטת ה-AI והפעולות שבוצעו."
+                },
+                "nsfw-verbose": {
+                    "description": "פרסם הודעה מוטמעת עם דו״ח סריקה מפורט באותו ערוץ כמו המדיה שנסרקה."
+                },
+                "nsfw-channel": {
+                    "description": "ערוץ שבו נרשמות הפרות NSFW עם תצוגה מקדימה של המדיה."
+                },
+                "nsfw-channel-notify": {
+                    "description": "שלח הודעה מוטמעת לערוץ כאשר תוכן NSFW מוסר."
+                },
+                "nsfw-enabled": {
+                    "description": "הפעל סריקת NSFW להודעות, תגובות אמוג׳י ותמונות פרופיל (מתגים אחרים עדיין חלים)."
+                },
+                "monitor-events": {
+                    "description": "הפעל/השבת רישום לכל סוג אירוע מנוטר."
+                },
+                "nsfw-detection-action": {
+                    "description": "פעולה לביצוע כאשר משתמש מפרסם תוכן NSFW."
+                },
+                "nsfw-detection-categories": {
+                    "description": "קטגוריות הנחשבות ל-NSFW לצורכי זיהוי."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "הפעל סריקות NSFW עתירות-דיוק לזיהוי אמין יותר. זמין רק במצב מואץ."
+                },
+                "threshold": {
+                    "description": "סף לביטחון בזיהוי NSFW. ערכים נמוכים רגישים יותר."
+                },
+                "banned-words-action": {
+                    "description": "פעולה לביצוע כאשר משתמש מפרסם מילה אסורה."
+                },
+                "monitor-channel": {
+                    "description": "ערוץ לרישום כל פעילויות השרת, כולל עריכת הודעות, מחיקות ואירועי הצטרפות/עזיבה של משתמשים."
+                },
+                "captcha-log-channel": {
+                    "description": "ערוץ שבו מפורסמים יומני אימות captcha ועדכוני פעילות."
+                },
+                "aimod-channel": {
+                    "description": "ערוץ שבו מפורסמים יומני הפרות AI."
+                },
+                "cycle-strike-actions": {
+                    "description": "בצע סבב בין פעולות האזהרה כאשר נגמרות הפעולות שניתן להטיל על משתמש."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "ערוצים להחרגה מזיהוי מילים אסורות."
+                },
+                "strike-actions": {
+                    "description": "פעולות לביצוע עבור כל רמת אזהרה."
+                },
+                "strike-expiry": {
+                    "description": "משך הזמן שבו אזהרה נשמרת. השתמשו בפורמטים כמו 20s, 30m, 2h, 30d, 2w, 5mo, 1y. שניות, דקות, שעות, ימים, שבועות, חודשים ושנים בהתאמה."
+                },
+                "dm-on-strike": {
+                    "description": "שלח הודעה פרטית למשתמש כאשר הוא מקבל אזהרה."
+                },
+                "check-pfp": {
+                    "description": "בדוק אם יש בתמונת הפרופיל של המשתמש תוכן NSFW."
+                },
+                "nsfw-pfp-action": {
+                    "description": "פעולה לביצוע כאשר משתמש מגדיר תמונת פרופיל NSFW."
+                },
+                "nsfw-pfp-message": {
+                    "description": "ההודעה לשליחה כאשר תמונת הפרופיל של משתמש סומנה.",
+                    "default": "זוהה כי תמונת הפרופיל שלך מכילה תוכן מפורש",
+                    "choices": [
+                        "זוהה כי תמונת הפרופיל שלך מכילה תוכן מפורש",
+                        "תמונת הפרופיל שלך אינה מתאימה לשרת זה.",
+                        "תמונת הפרופיל שלך סומנה כ-NSFW."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "הסר את ההשהיה של משתמש לאחר שהוא שינה את תמונת הפרופיל שלו למשהו הולם."
+                },
+                "scan-age-restricted": {
+                    "description": "סרוק ערוצים עם הגבלת גיל (NSFW). כאשר מכובה, ערוצי NSFW לא ייסרקו."
+                },
+                "check-tenor-gifs": {
+                    "description": "החל סנקציות כאשר מזוהה תוכן NSFW ב-GIFים של Tenor."
+                },
+                "use-default-banned-words": {
+                    "description": "השתמש ברשימת המילים הגסות המובנית עבור שרת זה."
+                },
+                "exclude-channels": {
+                    "description": "ערוצים להחרגה מהזיהוי."
+                },
+                "delete-scam-messages": {
+                    "description": "מחק אוטומטית הודעות שתואמות דפוסי הונאה או כתובות URL."
+                },
+                "scam-detection-action": {
+                    "description": "פעולה לביצוע כאשר מתגלה הודעת הונאה."
+                },
+                "check-links": {
+                    "description": "בדוק קישורים בהודעות עבור תוכנות זדוניות, פישינג, הונאות וכו'."
+                },
+                "exclude-scam-channels": {
+                    "description": "ערוצים להחרגה מזיהוי הונאות."
+                },
+                "aimod-detection-action": {
+                    "description": "פעולה לביצוע כאשר המודרטור האוטונומי מזהה הפרה. השתמש ב-auto כדי שה-AI יקבל את ההחלטה."
+                },
+                "aimod-high-accuracy": {
+                    "description": "השתמש במודרציית AI מדויקת יותר עם gpt-5-mini (כ-2.25 דולר לכל 1M אסימונים). אפשרות זו צורכת את התקציב החודשי מהר יותר בהשוואה לברירת המחדל."
+                },
+                "autonomous-mod": {
+                    "description": "בצעו מודרציה אוטומטית לכל השרת באמצעות AI."
+                },
+                "aimod-check-interval": {
+                    "description": "באיזו תדירות להפעיל את תהליך האצווה של מודרציית ה-AI."
+                },
+                "aimod-mode": {
+                    "description": "בחרו כיצד מופעלת מודרציית ה-AI: מצב `report` (רק בעת אזכור), מצב `interval` (סריקה אוטומטית ברקע), או מצב `adaptive` (מתחלף דינמית בהתאם לפעילות השרת, לאירועים או להגדרות)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "הגדירו אילו אירועים יגרמו למעבר בין מצבי מודרציית ה-AI."
+                },
+                "no-forward-from-role": {
+                    "description": "מנעו מתפקיד מסוים להעביר הודעות."
+                },
+                "banned-urls": {
+                    "description": "כתובות URL או דומיינים מדויקים לחסימה."
+                },
+                "url-detection-action": {
+                    "description": "פעולה לביצוע בעת זיהוי כתובת URL חסומה."
+                },
+                "exclude-url-channels": {
+                    "description": "ערוצים להחרגה מכתובות URL אסורות."
+                },
+                "vcmod-enabled": {
+                    "description": "הפעלת מודרציה ותמלול בערוצי קול."
+                },
+                "vcmod-channels": {
+                    "description": "ערוצי קול לניטור (כאשר ריק, לא יתבצע ניטור של ערוצים)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "משך ההאזנה הפעילה לכל ערוץ קול בכל מחזור (למשל, 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "משך ההשהיה בין כל תמלול ב-Saver Mode."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Saver mode: הבוט עובר בין ערוצי קול כדי להיראות פעיל, אך רוב הזמן אינו מקליט או מאזין."
+                },
+                "vcmod-rules": {
+                    "description": "כללים החלים על מודרציית צ'אט קולי (בנפרד מכללי הטקסט).",
+                    "default": [
+                        "1. אין הטרדה, דברי שטנה או איומים.",
+                        "2. אין כינויי גנאי או שפה מפלה.",
+                        "3. אין הסתה לאלימות או לפעילות בלתי חוקית.",
+                        "4. אין תוכן מיני או הערות מפורשות.",
+                        "5. יש לפעול לפי תנאי השירות של Discord."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "פעולה לביצוע כאשר מודרציית צ'אט קולי מזהה הפרה. השתמשו ב-auto כדי שה-AI יחליט."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "השתמשו בניתוח בינה מלאכותית מדויק יותר למודרציה של צ'אט קולי (משתמש ביותר מתקציב הטוקנים)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "הפעילו תמלילים קוליים ברורים יותר עם עיבוד פרימיום (עלות גבוהה יותר)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "הערוץ שבו מתפרסמים תמלילי הצ'אט הקולי."
+                },
+                "vcmod-transcript-only": {
+                    "description": "כאשר האפשרות פעילה, הבוט יתמלל רק את הצ'אט הקולי, ללא החלת בדיקות כללים מבוססות בינה מלאכותית או פעולות מודרציה. הדבר מפחית משמעותית את צריכת תקציב הטוקנים."
+                },
+                "captcha-verification-enabled": {
+                    "description": "חייבו מצטרפים חדשים לעבור אתגר CAPTCHA לפני קבלת גישה."
+                },
+                "captcha-grace-period": {
+                    "description": "כמה זמן עומד לרשות מצטרפים חדשים כדי להשלים אימות CAPTCHA (לדוגמה: 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "פעולות שמתבצעות אוטומטית לאחר אימות מוצלח."
+                },
+                "captcha-delivery-method": {
+                    "description": "כיצד נשלחים קישורי אימות CAPTCHA לחברים חדשים (DM או embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "הערוץ שבו מתפרסם ה-embed של אימות CAPTCHA בעת שימוש במסירת embed."
+                },
+                "pre-captcha-roles": {
+                    "description": "תפקידים שמוקצים למצטרפים חדשים לפני שהם משלימים את אימות ה-CAPTCHA."
+                },
+                "captcha-failure-actions": {
+                    "description": "פעולות לביצוע אוטומטי כאשר חבר נכשל באימות ה-CAPTCHA."
                 }
             }
         }

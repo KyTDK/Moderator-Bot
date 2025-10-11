@@ -20,7 +20,8 @@
                         "2. Geen NSFW of obscene inhoud.",
                         "3. Geen spam of buitensporige zelfpromotie.",
                         "4. Volg de Servicevoorwaarden van Discord."
-                    ]
+                    ],
+                    "description": "De serverregels die worden gebruikt voor autonome moderatie."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -117,6 +118,112 @@
                 },
                 "use-default-banned-words": {
                     "description": "Gebruik de ingebouwde lijst met ongepaste woorden voor deze server."
+                },
+                "exclude-channels": {
+                    "description": "Kanalen om uit te sluiten van detectie."
+                },
+                "delete-scam-messages": {
+                    "description": "Verwijder automatisch berichten die overeenkomen met oplichtingspatronen of URL's."
+                },
+                "scam-detection-action": {
+                    "description": "Actie die moet worden ondernomen wanneer een oplichtingsbericht wordt gedetecteerd."
+                },
+                "check-links": {
+                    "description": "Controleer links in berichten op malware, phishing, oplichting, enz."
+                },
+                "exclude-scam-channels": {
+                    "description": "Kanalen om uit te sluiten van oplichtingsdetectie."
+                },
+                "aimod-detection-action": {
+                    "description": "Actie die moet worden ondernomen wanneer de autonome moderator een overtreding detecteert. Gebruik auto zodat de AI de beslissing neemt."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Gebruik nauwkeurigere AI-moderatie met gpt-5-mini (ca. 2.25 USD per 1M tokens). Verbruikt het maandelijkse budget sneller dan de standaard."
+                },
+                "autonomous-mod": {
+                    "description": "Gebruik AI om de hele server automatisch te modereren."
+                },
+                "aimod-check-interval": {
+                    "description": "Hoe vaak het batchproces voor AI-moderatie moet worden uitgevoerd."
+                },
+                "aimod-mode": {
+                    "description": "Kies hoe AI-moderatie wordt geactiveerd: modus `report` (alleen bij vermelding), modus `interval` (automatische achtergrondscan), of modus `adaptive` (schakelt dynamisch op basis van serveractiviteit, gebeurtenissen of configuratie)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Configureer welke gebeurtenissen het schakelen tussen AI-moderatiemodi activeren."
+                },
+                "no-forward-from-role": {
+                    "description": "Voorkom dat een specifieke rol berichten doorstuurt."
+                },
+                "banned-urls": {
+                    "description": "Exacte URL's of domeinen om te blokkeren."
+                },
+                "url-detection-action": {
+                    "description": "Actie die moet worden ondernomen wanneer een geblokkeerde URL wordt gedetecteerd."
+                },
+                "exclude-url-channels": {
+                    "description": "Kanalen om uit te sluiten van verboden URL's."
+                },
+                "vcmod-enabled": {
+                    "description": "Schakel moderatie en transcriptie voor spraakkanalen in."
+                },
+                "vcmod-channels": {
+                    "description": "Spraakkanalen om te monitoren (indien leeg, wordt geen enkel kanaal gemonitord)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Hoelang er tijdens een cyclus per spraakkanaal actief wordt meegeluisterd (bijv. 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Hoelang er wordt gepauzeerd tussen elke transcriptie in Saver Mode."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Besparingsmodus: de bot wisselt tussen VC's om actief te lijken, maar neemt het grootste deel van de tijd niet op en luistert ook niet."
+                },
+                "vcmod-rules": {
+                    "description": "Regels die worden toegepast op moderatie van spraakchat (afzonderlijk van tekstregels).",
+                    "default": [
+                        "1. Geen intimidatie, haatdragende taal of bedreigingen.",
+                        "2. Geen scheldwoorden of discriminerende taal.",
+                        "3. Geen aanzetten tot geweld of illegale activiteiten.",
+                        "4. Geen seksuele inhoud of expliciete opmerkingen.",
+                        "5. Volg de Servicevoorwaarden van Discord."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Actie die moet worden ondernomen wanneer VC-moderatie een overtreding detecteert. Gebruik auto zodat de AI beslist."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Gebruik AI-analyse met hogere nauwkeurigheid voor VC-moderatie (gebruikt meer tokenbudget)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Schakel duidelijkere spraaktranscripties in met premiumverwerking (hogere kosten)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Kanaal waar VC-transcripties worden geplaatst."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Wanneer ingeschakeld, transcribeert de bot alleen spraakchat zonder AI-regelcontroles of moderatieacties toe te passen. Dit verlaagt het budgetverbruik aanzienlijk."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Vereis dat nieuwkomers een captcha-uitdaging voltooien voordat ze toegang krijgen."
+                },
+                "captcha-grace-period": {
+                    "description": "Hoe lang nieuwkomers hebben om de captcha-verificatie te voltooien (bijv. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Acties die automatisch worden uitgevoerd na succesvolle verificatie."
+                },
+                "captcha-delivery-method": {
+                    "description": "Hoe links voor captcha-verificatie aan nieuwe leden worden geleverd (DM of embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Kanaal waar de captcha-verificatie-embed wordt geplaatst bij levering via embed."
+                },
+                "pre-captcha-roles": {
+                    "description": "Rollen die aan nieuwkomers worden toegewezen voordat ze de captcha-verificatie voltooien."
+                },
+                "captcha-failure-actions": {
+                    "description": "Acties die automatisch worden uitgevoerd wanneer een lid de captcha-verificatie niet doorstaat."
                 }
             }
         }

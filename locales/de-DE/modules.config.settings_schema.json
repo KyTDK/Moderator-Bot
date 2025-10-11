@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Ungültige Gebietsschema. Unterstützte Gebietsschema: {supported}"
+                    "invalid": "Ungültige Gebietsschema. Unterstützte Gebietsschema: {supported}",
+                    "description": "Automatische Gebietsschema-Erkennung mit einem bestimmten Locale-Code überschreiben."
                 },
                 "nsfw_pfp_message": {
                     "default": "Dein Profilbild wurde als expliziter Inhalt erkannt.",
@@ -19,7 +20,8 @@
                         "2. Kein NSFW oder obszöner Inhalt.",
                         "3. Kein Spam oder übermäßige Eigenwerbung.",
                         "4. Beachte die Discord-Nutzungsbedingungen."
-                    ]
+                    ],
+                    "description": "Die Serverregeln, die für die autonome Moderation verwendet werden."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. Kein sexueller Inhalt oder explizite Bemerkungen.",
                         "5. Beachte die Discord-Nutzungsbedingungen."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Kanal, in dem Strikes protokolliert werden."
+                },
+                "aimod-debug": {
+                    "description": "Sende immer eine detaillierte Debug-Nachricht zur KI-Moderation an den KI-Verstöße-Kanal, einschließlich der markierten Nachrichten, der KI-Entscheidung und der angewendeten Maßnahmen."
+                },
+                "nsfw-verbose": {
+                    "description": "Poste einen detaillierten Scanbericht als Embed im selben Kanal wie die gescannten Medien."
+                },
+                "nsfw-channel": {
+                    "description": "Kanal, in dem NSFW-Verstöße mit einer Medienvorschau protokolliert werden."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Beim Entfernen von NSFW-Inhalten ein Benachrichtigungs-Embed in den Kanal senden."
+                },
+                "nsfw-enabled": {
+                    "description": "NSFW-Scans für Nachrichten, Reaktionen und Avatare aktivieren (andere Umschalter gelten weiterhin)."
+                },
+                "monitor-events": {
+                    "description": "Protokollierung für jeden überwachten Ereignistyp aktivieren/deaktivieren."
+                },
+                "nsfw-detection-action": {
+                    "description": "Aktion, die ausgeführt wird, wenn ein Nutzer NSFW-Inhalte postet."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Kategorien, die für die Erkennung als NSFW gelten."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Hochpräzise NSFW-Scans für eine zuverlässigere Erkennung aktivieren. Nur Accelerated."
+                },
+                "threshold": {
+                    "description": "Schwellenwert für die Zuverlässigkeit der NSFW-Erkennung. Niedrigere Werte sind empfindlicher."
+                },
+                "banned-words-action": {
+                    "description": "Aktion, die ausgeführt wird, wenn ein Nutzer ein verbotenes Wort postet."
+                },
+                "monitor-channel": {
+                    "description": "Kanal zum Protokollieren aller Serveraktivitäten, einschließlich Nachrichtenbearbeitungen, Löschungen und Beitritts-/Austrittsereignissen von Nutzern."
+                },
+                "captcha-log-channel": {
+                    "description": "Kanal, in dem Captcha-Verifizierungsprotokolle und Aktivitätsupdates veröffentlicht werden."
+                },
+                "aimod-channel": {
+                    "description": "Kanal, in dem Protokolle zu KI-Verstößen veröffentlicht werden."
+                },
+                "cycle-strike-actions": {
+                    "description": "Verwarnungsaktionen zyklisch wiederholen, wenn keine weiteren Maßnahmen für einen Nutzer verfügbar sind."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Kanäle, die von der Erkennung verbotener Wörter ausgenommen werden."
+                },
+                "strike-actions": {
+                    "description": "Maßnahmen für jede Verwarnungsstufe."
+                },
+                "strike-expiry": {
+                    "description": "Dauer einer Verwarnung. Verwende Formate wie 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekunden, Minuten, Stunden, Tage, Wochen, Monate bzw. Jahre."
+                },
+                "dm-on-strike": {
+                    "description": "Dem Benutzer eine DM senden, wenn er einen Strike erhält."
+                },
+                "check-pfp": {
+                    "description": "Das Profilbild des Benutzers auf NSFW-Inhalte überprüfen."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Aktion, die ausgeführt wird, wenn ein Benutzer ein NSFW-Profilbild setzt."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Die Nachricht, die gesendet wird, wenn das Profilbild eines Spielers gekennzeichnet wurde.",
+                    "default": "In deinem Profilbild wurde expliziter Inhalt erkannt",
+                    "choices": [
+                        "In deinem Profilbild wurde expliziter Inhalt erkannt",
+                        "Dein Profilbild ist für diesen Server nicht geeignet.",
+                        "Dein Profilbild wurde als NSFW gekennzeichnet."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Den Timeout eines Benutzers aufheben, sobald er sein Profilbild in ein geeignetes Bild geändert hat."
+                },
+                "scan-age-restricted": {
+                    "description": "Altersbeschränkte (NSFW) Kanäle scannen. Wenn deaktiviert, werden NSFW-Kanäle übersprungen."
+                },
+                "check-tenor-gifs": {
+                    "description": "Strafen anwenden, wenn in Tenor GIFs NSFW-Inhalte erkannt werden."
+                },
+                "use-default-banned-words": {
+                    "description": "Die integrierte Schimpfwortliste für diesen Server verwenden."
+                },
+                "exclude-channels": {
+                    "description": "Kanäle, die von der Erkennung ausgeschlossen werden sollen."
+                },
+                "delete-scam-messages": {
+                    "description": "Nachrichten, die Betrugsmustern oder -URLs entsprechen, automatisch löschen."
+                },
+                "scam-detection-action": {
+                    "description": "Aktion, die ausgeführt wird, wenn eine Betrugsnachricht erkannt wird."
+                },
+                "check-links": {
+                    "description": "Links in Nachrichten auf Malware, Phishing, Betrug usw. prüfen."
+                },
+                "exclude-scam-channels": {
+                    "description": "Kanäle, die von der Betrugserkennung ausgeschlossen werden sollen."
+                },
+                "aimod-detection-action": {
+                    "description": "Aktion, die ausgeführt wird, wenn der autonome Moderator einen Verstoß erkennt. Verwenden Sie auto, damit die KI die Entscheidung trifft."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Genauere KI-Moderation mit gpt-5-mini verwenden (ca. 2,25 USD pro 1 Mio. Tokens). Verbraucht das Monatsbudget schneller als die Standardeinstellung."
+                },
+                "autonomous-mod": {
+                    "description": "Verwende KI, um deinen gesamten Server automatisch zu moderieren."
+                },
+                "aimod-check-interval": {
+                    "description": "Wie oft der KI-Moderations-Batch-Prozess ausgeführt wird."
+                },
+                "aimod-mode": {
+                    "description": "Wähle, wie die KI-Moderation ausgelöst wird: `report`-Modus (nur bei Erwähnung), `interval`-Modus (automatisches Scannen im Hintergrund) oder `adaptive`-Modus (wechselt dynamisch basierend auf Serveraktivität, Ereignissen oder Konfiguration)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Konfiguriere, welche Ereignisse das Umschalten der KI-Moderationsmodi auslösen."
+                },
+                "no-forward-from-role": {
+                    "description": "Verhindere, dass eine bestimmte Rolle Nachrichten weiterleitet."
+                },
+                "banned-urls": {
+                    "description": "Genaue URLs oder Domains zum Blockieren."
+                },
+                "url-detection-action": {
+                    "description": "Aktion bei Erkennung einer blockierten URL."
+                },
+                "exclude-url-channels": {
+                    "description": "Kanäle, die von der URL-Sperre ausgenommen sind."
+                },
+                "vcmod-enabled": {
+                    "description": "Sprachkanal-Moderation und Transkription aktivieren."
+                },
+                "vcmod-channels": {
+                    "description": "Sprachkanäle zur Überwachung (wenn leer, werden keine überwacht)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Wie lange während eines Zyklus pro Sprachkanal aktiv zugehört wird (z. B. 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Wie lange im Sparmodus zwischen den einzelnen Transkriptionen pausiert wird."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Sparmodus: Der Bot wechselt zwischen Sprachkanälen, um aktiv zu wirken, zeichnet jedoch die meiste Zeit nicht auf und hört nicht zu."
+                },
+                "vcmod-rules": {
+                    "description": "Regeln für die Sprachchat-Moderation (separat von Textrichtlinien).",
+                    "default": [
+                        "1. Keine Belästigung, keine Hassrede und keine Drohungen.",
+                        "2. Keine Verunglimpfungen oder diskriminierende Sprache.",
+                        "3. Keine Aufstachelung zu Gewalt oder illegalen Aktivitäten.",
+                        "4. Keine sexuellen Inhalte oder expliziten Äußerungen.",
+                        "5. Befolge die Discord-Nutzungsbedingungen."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Aktion, wenn die Sprachchat-Moderation einen Verstoß erkennt. Verwende auto, damit die KI entscheidet."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Hochpräzise KI-Analyse für VC-Moderation verwenden (nutzt mehr Token-Budget)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Klarere Sprachtranskripte mit Premium-Verarbeitung aktivieren (höhere Kosten)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Kanal, in dem VC-Transkripte veröffentlicht werden."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Wenn aktiviert, transkribiert der Bot nur den Sprachchat, ohne KI-Regelprüfungen oder Moderationsaktionen anzuwenden. Dies reduziert den Budgetverbrauch erheblich."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Von neuen Mitgliedern verlangen, eine captcha-Prüfung zu bestehen, bevor sie Zugriff erhalten."
+                },
+                "captcha-grace-period": {
+                    "description": "Wie lange neue Mitglieder Zeit haben, die captcha-Verifizierung abzuschließen (z. B. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Aktionen, die nach erfolgreicher Verifizierung automatisch ausgeführt werden."
+                },
+                "captcha-delivery-method": {
+                    "description": "Wie Links zur captcha-Verifizierung an neue Mitglieder zugestellt werden (DM oder embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Kanal, in dem das embed zur captcha-verifizierung bei Zustellung per embed veröffentlicht wird."
+                },
+                "pre-captcha-roles": {
+                    "description": "Rollen, die neuen Mitgliedern zugewiesen werden, bevor sie die captcha-Verifizierung abschließen."
+                },
+                "captcha-failure-actions": {
+                    "description": "Aktionen, die automatisch ausgeführt werden, wenn ein Mitglied die captcha-Verifizierung nicht besteht."
                 }
             }
         }

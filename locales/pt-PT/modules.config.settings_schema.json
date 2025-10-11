@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Localidade inválida. Localidades suportadas: {supported}"
+                    "invalid": "Localidade inválida. Localidades suportadas: {supported}",
+                    "description": "Substituir a deteção automática de idioma e região por um código de idioma e região específico."
                 },
                 "nsfw_pfp_message": {
                     "default": "Sua foto de perfil foi detectada como conteúdo explícito",
@@ -19,7 +20,8 @@
                         "2. Sem conteúdo NSFW ou obsceno.",
                         "3. Sem spam ou autopromoção excessiva.",
                         "4. Siga os Termos de Serviço do Discord."
-                    ]
+                    ],
+                    "description": "As regras do servidor usadas para moderação autónoma."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. Sem conteúdo sexual ou comentários explícitos.",
                         "5. Siga os Termos de Serviço do Discord."
                     ]
+                },
+                "captcha-failure-actions": {
+                    "description": "Ações a executar automaticamente quando um membro falhar a verificação de captcha."
+                },
+                "strike-channel": {
+                    "description": "Canal onde as advertências são registadas."
+                },
+                "aimod-debug": {
+                    "description": "Envie sempre uma mensagem de depuração detalhada da moderação de IA para o canal de violações de IA, incluindo as mensagens assinaladas, a decisão da IA, e as ações aplicadas."
+                },
+                "nsfw-verbose": {
+                    "description": "Publicar um embed com um relatório de análise detalhado no mesmo canal que o conteúdo multimédia analisado."
+                },
+                "nsfw-channel": {
+                    "description": "Canal onde as violações NSFW são registadas com uma pré-visualização do conteúdo multimédia."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Enviar um embed de notificação para o canal quando o conteúdo NSFW for removido."
+                },
+                "nsfw-enabled": {
+                    "description": "Ativar a deteção de conteúdo NSFW para mensagens, reações e avatares (os outros controlos ainda se aplicam)."
+                },
+                "monitor-events": {
+                    "description": "Ativar/desativar o registo para cada tipo de evento monitorizado."
+                },
+                "nsfw-detection-action": {
+                    "description": "Ação a tomar quando um utilizador publica conteúdo NSFW."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Categorias consideradas NSFW para deteção."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Ativar análises NSFW de alta precisão para deteção mais fiável. Exclusivo do Accelerated."
+                },
+                "threshold": {
+                    "description": "Limiar para a confiança na deteção de NSFW. Valores mais baixos são mais sensíveis."
+                },
+                "banned-words-action": {
+                    "description": "Ação a executar quando um utilizador publica uma palavra proibida."
+                },
+                "monitor-channel": {
+                    "description": "Canal para registar todas as atividades do servidor, incluindo edições de mensagens, eliminações de mensagens, e eventos de entrada/saída de utilizadores."
+                },
+                "captcha-log-channel": {
+                    "description": "Canal onde são publicados os registos de verificação de captcha e as atualizações de atividade."
+                },
+                "aimod-channel": {
+                    "description": "Canal onde são publicados os registos de violações de IA."
+                },
+                "cycle-strike-actions": {
+                    "description": "Alternar entre as ações de advertência quando não houver mais ações para atribuir a um utilizador."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Canais a excluir da deteção de palavras proibidas."
+                },
+                "strike-actions": {
+                    "description": "Ações a tomar para cada nível de advertência."
+                },
+                "strike-expiry": {
+                    "description": "Tempo que um strike dura. Use formatos como 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Segundos, minutos, horas, dias, semanas, meses e anos, respetivamente."
+                },
+                "dm-on-strike": {
+                    "description": "Enviar mensagem direta ao utilizador quando receber uma advertência."
+                },
+                "check-pfp": {
+                    "description": "Verifique a foto de perfil do utilizador quanto a conteúdo NSFW."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Ação a executar quando um utilizador define uma imagem de perfil NSFW."
+                },
+                "nsfw-pfp-message": {
+                    "description": "A mensagem a enviar quando a imagem de perfil de um jogador for sinalizada.",
+                    "default": "A sua imagem de perfil foi detetada como contendo conteúdo explícito",
+                    "choices": [
+                        "A sua imagem de perfil foi detetada como contendo conteúdo explícito",
+                        "A sua foto de perfil não é apropriada para este servidor.",
+                        "A tua imagem de perfil foi sinalizada como NSFW."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Remover a suspensão temporária de um utilizador assim que este alterar a imagem de perfil para algo adequado."
+                },
+                "scan-age-restricted": {
+                    "description": "Analisar canais com restrição etária (NSFW). Quando desativado, os canais NSFW são ignorados."
+                },
+                "check-tenor-gifs": {
+                    "description": "Aplicar punições quando for detetado conteúdo NSFW em GIFs do Tenor."
+                },
+                "use-default-banned-words": {
+                    "description": "Use a lista de palavrões integrada para este servidor."
+                },
+                "exclude-channels": {
+                    "description": "Canais a excluir da deteção."
+                },
+                "delete-scam-messages": {
+                    "description": "Eliminar automaticamente mensagens que correspondam a padrões de burla ou URLs."
+                },
+                "scam-detection-action": {
+                    "description": "Ação a executar quando é detetada uma mensagem fraudulenta."
+                },
+                "check-links": {
+                    "description": "Verificar ligações nas mensagens para detetar malware, phishing, burlas, etc."
+                },
+                "exclude-scam-channels": {
+                    "description": "Canais a excluir da deteção de fraude."
+                },
+                "aimod-detection-action": {
+                    "description": "Ação a tomar quando o moderador autónomo detetar uma violação. Use auto para que a IA tome a decisão."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Use moderação de IA de maior precisão com o gpt-5-mini (aprox. 2,25 USD por 1M de tokens). Consome o orçamento mensal mais rapidamente do que a predefinição."
+                },
+                "autonomous-mod": {
+                    "description": "Use IA para moderar automaticamente todo o seu servidor."
+                },
+                "aimod-check-interval": {
+                    "description": "Com que frequência executar o processo em lote de moderação com IA."
+                },
+                "aimod-mode": {
+                    "description": "Escolha como a moderação por IA é despoletada: modo `report` (apenas mediante menção), modo `interval` (análise automática em segundo plano), ou modo `adaptive` (alterna dinamicamente com base na atividade do servidor, eventos ou configuração)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Configure quais os eventos que acionam a mudança entre modos de moderação de IA."
+                },
+                "no-forward-from-role": {
+                    "description": "Impedir que um cargo específico encaminhe mensagens."
+                },
+                "banned-urls": {
+                    "description": "URLs ou domínios exatos a bloquear."
+                },
+                "url-detection-action": {
+                    "description": "Ação a tomar quando um URL bloqueado for detetado."
+                },
+                "exclude-url-channels": {
+                    "description": "Canais a excluir dos URLs bloqueados."
+                },
+                "vcmod-enabled": {
+                    "description": "Ativar a moderação e a transcrição de canais de voz."
+                },
+                "vcmod-channels": {
+                    "description": "Canais de voz a monitorizar (quando vazio, nenhum é monitorizado)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Durante quanto tempo ouvir ativamente por canal de voz em cada ciclo (por exemplo, 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Durante quanto tempo pausar entre cada transcrição no Modo de Poupança."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Modo de poupança: o bot alterna entre canais de voz para parecer ativo mas não grava nem ouve na maior parte do tempo."
+                },
+                "vcmod-rules": {
+                    "description": "Regras aplicadas à moderação do chat de voz (separadas das regras de texto).",
+                    "default": [
+                        "1. Sem assédio, discurso de ódio, ou ameaças.",
+                        "2. Sem insultos ou linguagem discriminatória.",
+                        "3. Sem incitamento à violência ou à atividade ilegal.",
+                        "4. Sem conteúdo sexual ou comentários explícitos.",
+                        "5. Cumpre os Termos de Serviço do Discord."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Ação a tomar quando a moderação de canais de voz deteta uma infração. Use auto para a IA decidir."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Usar análise de IA de maior precisão para moderação de VC (consome mais orçamento de tokens)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Ativar transcrições de voz mais claras com processamento premium (custo mais elevado)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Canal onde as transcrições do canal de voz são publicadas."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Quando ativado, o bot apenas transcreve o chat de voz sem aplicar verificações de regras de IA ou ações de moderação. Isto reduz significativamente o consumo de orçamento."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Exigir que os novos membros passem no desafio de captcha antes de obterem acesso."
+                },
+                "captcha-grace-period": {
+                    "description": "Quanto tempo os novos membros têm para concluir a verificação de captcha (p. ex., 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Ações executadas automaticamente após verificação bem-sucedida."
+                },
+                "captcha-delivery-method": {
+                    "description": "Como os links de verificação de captcha são enviados aos novos membros (DM ou embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Canal onde o embed de verificação de captcha é publicado ao usar a entrega por embed."
+                },
+                "pre-captcha-roles": {
+                    "description": "Cargos atribuídos a novos membros antes de concluírem a verificação de captcha."
                 }
             }
         }

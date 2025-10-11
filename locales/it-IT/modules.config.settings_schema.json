@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Locale non valido. Locali supportati: {supported}"
+                    "invalid": "Locale non valido. Locali supportati: {supported}",
+                    "description": "Sostituisci il rilevamento automatico della lingua con un codice locale specifico."
                 },
                 "nsfw_pfp_message": {
                     "default": "La tua immagine del profilo è stata rilevata contenere contenuto esplicito",
@@ -19,7 +20,8 @@
                         "2. Nessun contenuto NSFW o osceno.",
                         "3. Nessuna spam o auto-promozione eccessiva.",
                         "4. Segui i Termini di Servizio di Discord."
-                    ]
+                    ],
+                    "description": "Le regole del server utilizzate per la moderazione autonoma."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. Nessun contenuto sessuale o commenti espliciti.",
                         "5. Segui i Termini di Servizio di Discord."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Canale in cui vengono registrati gli strike."
+                },
+                "aimod-debug": {
+                    "description": "Invia sempre un messaggio di debug dettagliato della moderazione AI al canale delle violazioni AI, includendo i messaggi segnalati, la decisione dell'AI e le azioni applicate."
+                },
+                "nsfw-verbose": {
+                    "description": "Pubblica un embed con un report di scansione dettagliato nello stesso canale dei media scansionati."
+                },
+                "nsfw-channel": {
+                    "description": "Canale in cui vengono registrate le violazioni NSFW con un'anteprima dei media."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Invia un embed di notifica nel canale quando vengono rimossi contenuti NSFW."
+                },
+                "nsfw-enabled": {
+                    "description": "Abilita la scansione NSFW per messaggi, reazioni e avatar (gli altri toggle si applicano comunque)."
+                },
+                "monitor-events": {
+                    "description": "Abilita/disabilita il logging per ogni tipo di evento monitorato."
+                },
+                "nsfw-detection-action": {
+                    "description": "Azione da intraprendere quando un utente pubblica contenuti NSFW."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Categorie considerate NSFW ai fini del rilevamento."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Abilita scansioni NSFW ad alta precisione per un rilevamento più affidabile. Solo Accelerated."
+                },
+                "threshold": {
+                    "description": "Soglia di confidenza per il rilevamento NSFW. Valori più bassi sono più sensibili."
+                },
+                "banned-words-action": {
+                    "description": "Azione da intraprendere quando un utente pubblica una parola vietata."
+                },
+                "monitor-channel": {
+                    "description": "Canale in cui registrare tutte le attività del server, incluse modifiche ai messaggi, eliminazioni ed eventi di ingresso/uscita degli utenti."
+                },
+                "captcha-log-channel": {
+                    "description": "Canale in cui vengono pubblicati i log di verifica captcha e gli aggiornamenti delle attività."
+                },
+                "aimod-channel": {
+                    "description": "Canale in cui vengono pubblicati i log delle violazioni AI."
+                },
+                "cycle-strike-actions": {
+                    "description": "Ripeti ciclicamente le azioni degli strike quando si esauriscono le azioni da assegnare a un utente."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Canali da escludere dal rilevamento di parole vietate."
+                },
+                "strike-actions": {
+                    "description": "Azioni da intraprendere per ogni livello di strike."
+                },
+                "strike-expiry": {
+                    "description": "Durata di uno strike. Usa formati come 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Secondi, minuti, ore, giorni, settimane, mesi e anni rispettivamente."
+                },
+                "dm-on-strike": {
+                    "description": "Invia un DM all'utente quando riceve uno strike."
+                },
+                "check-pfp": {
+                    "description": "Controlla l'immagine del profilo dell'utente per contenuti NSFW."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Azione da intraprendere quando un utente imposta un'immagine del profilo NSFW."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Messaggio da inviare quando l'immagine del profilo di un utente è stata contrassegnata.",
+                    "default": "È stato rilevato che la tua immagine del profilo contiene contenuti espliciti",
+                    "choices": [
+                        "È stato rilevato che la tua immagine del profilo contiene contenuti espliciti",
+                        "La tua immagine del profilo non è appropriata per questo server.",
+                        "La tua immagine del profilo è stata contrassegnata come NSFW."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Rimuovi il timeout di un utente dopo che ha cambiato l'immagine del profilo con qualcosa di appropriato."
+                },
+                "scan-age-restricted": {
+                    "description": "Scansiona i canali con limiti di età (NSFW). Se disattivato, i canali NSFW vengono ignorati."
+                },
+                "check-tenor-gifs": {
+                    "description": "Applica sanzioni quando vengono rilevati contenuti NSFW nelle GIF di Tenor."
+                },
+                "use-default-banned-words": {
+                    "description": "Usa l'elenco di volgarità integrato per questo server."
+                },
+                "exclude-channels": {
+                    "description": "Canali da escludere dal rilevamento."
+                },
+                "delete-scam-messages": {
+                    "description": "Elimina automaticamente i messaggi che corrispondono a schemi o URL di truffa."
+                },
+                "scam-detection-action": {
+                    "description": "Azione da intraprendere quando viene rilevato un messaggio di truffa."
+                },
+                "check-links": {
+                    "description": "Controlla i link nei messaggi per malware, phishing, truffe, ecc."
+                },
+                "exclude-scam-channels": {
+                    "description": "Canali da escludere dal rilevamento delle truffe."
+                },
+                "aimod-detection-action": {
+                    "description": "Azione da intraprendere quando il moderatore autonomo rileva una violazione. Usa auto per lasciare decidere all'IA."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Usa la moderazione IA a maggiore accuratezza con gpt-5-mini (circa 2,25 USD per 1M di token). Consuma il budget mensile più rapidamente rispetto all'impostazione predefinita."
+                },
+                "autonomous-mod": {
+                    "description": "Utilizza l'IA per moderare automaticamente l'intero server."
+                },
+                "aimod-check-interval": {
+                    "description": "Con quale frequenza eseguire il processo batch di moderazione dell'IA."
+                },
+                "aimod-mode": {
+                    "description": "Scegli come viene attivata la moderazione dell'IA: modalità `report` (solo su menzione), modalità `interval` (scansione automatica in background) o modalità `adaptive` (passa dinamicamente in base all'attività del server, agli eventi o alla configurazione)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Configura quali eventi provocano il passaggio tra le modalità di moderazione dell'IA."
+                },
+                "no-forward-from-role": {
+                    "description": "Impedisci a un ruolo specifico di inoltrare messaggi."
+                },
+                "banned-urls": {
+                    "description": "URL o domini esatti da bloccare."
+                },
+                "url-detection-action": {
+                    "description": "Azione da intraprendere quando viene rilevato un URL bloccato."
+                },
+                "exclude-url-channels": {
+                    "description": "Canali da escludere dagli URL vietati."
+                },
+                "vcmod-enabled": {
+                    "description": "Abilita la moderazione e la trascrizione dei canali vocali."
+                },
+                "vcmod-channels": {
+                    "description": "Canali vocali da monitorare (se vuoto, nessuno viene monitorato)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Per quanto tempo ascoltare attivamente per ciascun canale vocale durante un ciclo (es.: 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Durata della pausa tra ogni trascrizione in Modalità Saver."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Modalità Saver: il bot ruota tra i canali vocali per sembrare attivo ma non registra né ascolta per la maggior parte del tempo."
+                },
+                "vcmod-rules": {
+                    "description": "Regole applicate alla moderazione della chat vocale (separate dalle regole del testo).",
+                    "default": [
+                        "1. Niente molestie, discorsi d'odio o minacce.",
+                        "2. Niente insulti o linguaggio discriminatorio.",
+                        "3. Niente incitamento alla violenza o ad attività illegali.",
+                        "4. Niente contenuti sessuali o commenti espliciti.",
+                        "5. Rispetta i Termini di Servizio di Discord."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Azione da intraprendere quando la moderazione dei canali vocali rileva una violazione. Usa auto per lasciare decidere all'IA."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Usa un'analisi IA più accurata per la moderazione VC (utilizza più budget di token)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Abilita trascrizioni vocali più chiare con l'elaborazione premium (costo maggiore)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Canale in cui vengono pubblicate le trascrizioni della VC."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Quando abilitato, il bot trascriverà solo la chat vocale senza applicare controlli delle regole tramite IA o azioni di moderazione. Questo riduce significativamente l'uso del budget."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Richiedi ai nuovi membri di superare la verifica captcha prima di ottenere l'accesso."
+                },
+                "captcha-grace-period": {
+                    "description": "Per quanto tempo i nuovi membri hanno per completare la verifica captcha (ad es. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Azioni eseguite automaticamente dopo la verifica riuscita."
+                },
+                "captcha-delivery-method": {
+                    "description": "Come vengono recapitati ai nuovi membri i link per la verifica captcha (DM o embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Canale in cui viene pubblicato l'embed di verifica captcha quando si utilizza la modalità embed."
+                },
+                "pre-captcha-roles": {
+                    "description": "Ruoli assegnati ai nuovi membri prima che completino la verifica captcha."
+                },
+                "captcha-failure-actions": {
+                    "description": "Azioni da eseguire automaticamente quando un membro non supera la verifica captcha."
                 }
             }
         }
