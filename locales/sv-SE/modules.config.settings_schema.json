@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Ogiltigt språk. Stödda språk: {supported}"
+                    "invalid": "Ogiltigt språk. Stödda språk: {supported}",
+                    "description": "Åsidosätt automatisk identifiering av språk och region med en specifik språk- och regionskod."
                 },
                 "nsfw_pfp_message": {
                     "default": "Din profilbild innehåller explicit innehåll.",
@@ -19,7 +20,8 @@
                         "2. Inget NSFW- eller oanständigt innehåll.",
                         "3. Inget spam eller överdriven självfrämjande.",
                         "4. Följ Discords användarvillkor."
-                    ]
+                    ],
+                    "description": "Serverreglerna som används för autonom moderering."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. Inget sexuellt eller explicit språk.",
                         "5. Följ Discords användarvillkor."
                     ]
+                },
+                "aimod-adaptive-events": {
+                    "description": "Konfigurera vilka händelser som utlöser växling mellan AI-modereringslägen."
+                },
+                "exclude-url-channels": {
+                    "description": "Kanaler att undanta från förbjudna URL:er."
+                },
+                "strike-channel": {
+                    "description": "Kanal där varningar loggas."
+                },
+                "aimod-debug": {
+                    "description": "Skicka alltid ett detaljerat felsökningsmeddelande för AI-moderering till kanalen för AI-överträdelser, inklusive flaggade meddelanden, AI-beslut och vidtagna åtgärder."
+                },
+                "nsfw-verbose": {
+                    "description": "Publicera en detaljerad skanningsrapport som inbäddning i samma kanal som det skannade mediet"
+                },
+                "nsfw-channel": {
+                    "description": "Kanal där NSFW-överträdelser loggas med förhandsvisning av mediet."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Skicka en inbäddad avisering till kanalen när NSFW-innehåll tas bort."
+                },
+                "nsfw-enabled": {
+                    "description": "Aktivera NSFW-skanning för meddelanden, reaktioner, och avatarer (andra omkopplare gäller fortfarande)."
+                },
+                "monitor-events": {
+                    "description": "Aktivera/inaktivera loggning för varje typ av övervakad händelse."
+                },
+                "nsfw-detection-action": {
+                    "description": "Åtgärd att vidta när en användare publicerar NSFW-innehåll."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Kategorier som anses vara NSFW vid detektering."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Aktivera NSFW-skanningar med hög precision för mer tillförlitlig detektering. Endast Accelerated."
+                },
+                "threshold": {
+                    "description": "Tröskelvärde för konfidensnivå vid NSFW-detektering. Lägre värden är mer känsliga."
+                },
+                "banned-words-action": {
+                    "description": "Åtgärd som ska vidtas när en användare skriver ett förbjudet ord."
+                },
+                "monitor-channel": {
+                    "description": "Kanal för att logga all serveraktivitet, inklusive redigeringar och raderingar av meddelanden samt händelser när användare går med i/lämnar servern."
+                },
+                "captcha-log-channel": {
+                    "description": "Kanal där loggar för captcha-verifiering och aktivitetsuppdateringar publiceras."
+                },
+                "aimod-channel": {
+                    "description": "Kanal där loggar för AI-överträdelser publiceras."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Kanaler att undanta från detektering av förbjudna ord."
+                },
+                "strike-actions": {
+                    "description": "Åtgärder som ska vidtas för varje varningsnivå."
+                },
+                "dm-on-strike": {
+                    "description": "Skicka ett DM till användaren när de får en strike."
+                },
+                "check-pfp": {
+                    "description": "Kontrollera användarens profilbild för NSFW-innehåll."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Åtgärd när en användare ställer in en NSFW-profilbild."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Meddelandet som ska skickas när en spelares profilbild har markerats.",
+                    "choices": [
+                        "Din profilbild upptäcktes innehålla explicit innehåll",
+                        "Din profilbild är inte lämplig för den här servern.",
+                        "Din profilbild har markerats som NSFW."
+                    ],
+                    "default": "Din profilbild upptäcktes innehålla explicit innehåll"
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Ta bort en användares tidsavstängning när de har ändrat sin profilbild till något lämpligt."
+                },
+                "scan-age-restricted": {
+                    "description": "Skanna åldersbegränsade (NSFW) kanaler. När avstängt, utelämnas NSFW-kanaler."
+                },
+                "check-tenor-gifs": {
+                    "description": "Tillämpa påföljder när NSFW-innehåll upptäcks i Tenor-GIF:ar."
+                },
+                "use-default-banned-words": {
+                    "description": "Använd den inbyggda svordomslistan för den här servern."
+                },
+                "exclude-channels": {
+                    "description": "Kanaler att utesluta från detektering."
+                },
+                "delete-scam-messages": {
+                    "description": "Ta automatiskt bort meddelanden som matchar bedrägerimönster eller URL:er."
+                },
+                "scam-detection-action": {
+                    "description": "Åtgärd att vidta när ett bedrägerimeddelande upptäcks."
+                },
+                "check-links": {
+                    "description": "Kontrollera länkar i meddelanden efter skadlig programvara, nätfiske, bedrägerier etc."
+                },
+                "exclude-scam-channels": {
+                    "description": "Kanaler att undanta från bedrägeriupptäckt."
+                },
+                "aimod-detection-action": {
+                    "description": "Åtgärd som ska vidtas när den autonoma moderatorn upptäcker en överträdelse. Använd auto för att låta AI:n fatta beslutet."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Använd AI-moderering med högre noggrannhet med gpt-5-mini (ca 2.25 USD per 1M tokens). Förbrukar den månatliga budgeten snabbare jämfört med standardalternativet."
+                },
+                "autonomous-mod": {
+                    "description": "Använd AI för att automatiskt moderera hela din server."
+                },
+                "aimod-check-interval": {
+                    "description": "Hur ofta batchprocessen för AI-moderering ska köras."
+                },
+                "aimod-mode": {
+                    "description": "Välj hur AI-moderering aktiveras: `report`-läge (endast vid omnämnande), `interval`-läge (automatisk bakgrundsskanning), eller `adaptive`-läge (växlar dynamiskt baserat på serveraktivitet, händelser, eller konfiguration)."
+                },
+                "no-forward-from-role": {
+                    "description": "Stoppa en specifik roll från att vidarebefordra meddelanden."
+                },
+                "banned-urls": {
+                    "description": "Exakta URL:er eller domäner att blockera."
+                },
+                "url-detection-action": {
+                    "description": "Åtgärd som ska vidtas när en blockerad URL upptäcks."
+                },
+                "vcmod-enabled": {
+                    "description": "Aktivera röstkanalsmoderering och transkribering."
+                },
+                "cycle-strike-actions": {
+                    "description": "Växla mellan varningsåtgärder när det inte finns fler åtgärder att ge en användare"
+                },
+                "strike-expiry": {
+                    "description": "Hur länge en strike varar. Använd format som 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekunder, minuter, timmar, dagar, veckor, månader och år i nämnd ordning."
+                },
+                "vcmod-channels": {
+                    "description": "Röstkanaler som ska övervakas (om tomt, övervakas inga)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Tidslängd för aktiv lyssning per röstkanal under en cykel (t.ex., 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Hur lång paus mellan varje transkribering i Sparläge."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Sparläge: boten roterar mellan röstkanaler för att se aktiv ut men spelar oftast inte in eller lyssnar."
+                },
+                "vcmod-rules": {
+                    "description": "Regler som gäller för moderering av röstchatt (separata från textregler).",
+                    "default": [
+                        "1. Inga trakasserier, hatiskt språk eller hot.",
+                        "2. Inga nedsättande uttryck eller diskriminerande språk.",
+                        "3. Ingen uppmaning till våld eller olaglig aktivitet.",
+                        "4. Inget sexuellt innehåll eller explicita kommentarer.",
+                        "5. Följ Discords användarvillkor."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Åtgärd som ska vidtas när VC-moderering upptäcker en överträdelse. Använd auto för att AI:n ska avgöra."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Använd AI-analys med högre precision för VC-moderering (använder mer tokenbudget)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Aktivera tydligare taltranskriptioner med premiumbearbetning (högre kostnad)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Kanal där röstchatt-transkriptioner publiceras."
+                },
+                "vcmod-transcript-only": {
+                    "description": "När den är aktiverad kommer boten endast att transkribera röstchatt utan att tillämpa AI-regelkontroller eller modereringsåtgärder. Detta minskar budgetåtgången avsevärt."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Kräv att nya medlemmar klarar en captcha-utmaning innan de får åtkomst."
+                },
+                "captcha-grace-period": {
+                    "description": "Hur lång tid nya medlemmar har på sig att slutföra captcha-verifieringen (t.ex. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Åtgärder som utförs automatiskt efter lyckad verifiering."
+                },
+                "captcha-delivery-method": {
+                    "description": "Hur captcha-verifieringslänkar skickas till nya medlemmar (DM eller inbäddat meddelande)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Kanal där det inbäddade meddelandet för captcha-verifiering skickas när leverans via inbäddning används."
+                },
+                "pre-captcha-roles": {
+                    "description": "Roller som tilldelas nya medlemmar innan de slutför captcha-verifiering."
+                },
+                "captcha-failure-actions": {
+                    "description": "Åtgärder som ska utföras automatiskt när en medlem misslyckas med captcha-verifieringen."
                 }
             }
         }
