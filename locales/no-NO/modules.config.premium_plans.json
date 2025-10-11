@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Gratis",
-          "core": "Kjerne",
-          "pro": "Pro",
-          "ultra": "Ultra"
-        },
-        "requirements": {
-          "any": "et aktivt premium-abonnement",
-          "single": "et aktivt {plan} abonnement",
-          "double": "et aktivt {plan_a} eller {plan_b} abonnement",
-          "list": "et aktivt {plans}, eller {last} abonnement"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Gratis",
+                    "core": "Kjerne",
+                    "pro": "Pro",
+                    "ultra": "Ultra"
+                },
+                "requirements": {
+                    "any": "et aktivt premium-abonnement",
+                    "single": "et aktivt {plan} abonnement",
+                    "double": "et aktivt {plan_a} eller {plan_b} abonnement",
+                    "list": "et aktivt {plans}, eller {last} abonnement"
+                }
+            }
         }
-      }
     }
-  }
 }
