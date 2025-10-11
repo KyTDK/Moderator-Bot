@@ -1,11 +1,11 @@
 {
-  "modules": {
-    "utils": {
-      "mysql": {
-        "settings": {
-          "plan_required": "Це налаштування вимагає {requirement}."
+    "modules": {
+        "utils": {
+            "mysql": {
+                "settings": {
+                    "plan_required": "Це налаштування вимагає {requirement}."
+                }
+            }
         }
-      }
     }
-  }
 }
