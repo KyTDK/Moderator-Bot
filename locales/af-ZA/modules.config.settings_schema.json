@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Ongeldige lokaal. Ondersteunde lokale: {supported}"
+                    "invalid": "Ongeldige lokaal. Ondersteunde lokale: {supported}",
+                    "description": "Oorskryf outomatiese locale-opsporing met ’n spesifieke locale-kode."
                 },
                 "nsfw_pfp_message": {
                     "default": "Jou profielfoto is as eksplisiete inhoud bespeur",
@@ -28,6 +29,79 @@
                         "3. Geen aanhitsing tot geweld of onwettige aktiwiteit nie.",
                         "4. Geen seksuele inhoud of eksplisiete opmerkings nie.",
                         "5. Volg Discord se Diensvoorwaardes."
+                    ]
+                },
+                "strike-channel": {
+                    "description": "Kanaal waar strafpunte gelog word."
+                },
+                "aimod-debug": {
+                    "description": "Stuur altyd 'n gedetailleerde ontfoutboodskap vir AI-moderering na die AI-oortredingskanaal, insluitend gemerkte boodskappe, AI-besluit, en toegepaste aksies."
+                },
+                "nsfw-verbose": {
+                    "description": "Plaas 'n gedetailleerde skanderingsverslag-inbedding in dieselfde kanaal as die geskandeerde media."
+                },
+                "nsfw-channel": {
+                    "description": "Kanaal waar NSFW-oortredings gelog word met 'n voorskou van die media."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Stuur 'n kennisgewing-inbedding na die kanaal wanneer NSFW-inhoud verwyder word."
+                },
+                "nsfw-enabled": {
+                    "description": "Aktiveer NSFW-skandering vir boodskappe, reaksies, en profielprente (ander skakelaars is steeds van toepassing)."
+                },
+                "monitor-events": {
+                    "description": "Skakel logregistrasie aan/af vir elke tipe gebeurtenis wat gemonitor word."
+                },
+                "nsfw-detection-action": {
+                    "description": "Aksie om te neem wanneer 'n gebruiker NSFW-inhoud plaas."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Kategorieë wat as NSFW beskou word vir opsporing."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Aktiveer hoë-akkuraatheid NSFW-skanderings vir meer betroubare opsporing. Slegs Accelerated."
+                },
+                "threshold": {
+                    "description": "Drempel vir NSFW-deteksievertroue. Laer waardes is sensitiewer."
+                },
+                "banned-words-action": {
+                    "description": "Aksie om te neem wanneer 'n gebruiker 'n verbode woord plaas."
+                },
+                "monitor-channel": {
+                    "description": "Kanaal om alle bedieneraktiwiteite aan te teken, insluitend boodskapwysigings, verwyderings, en gebruikers se aansluit-/verlaat-gebeure."
+                },
+                "captcha-log-channel": {
+                    "description": "Kanaal waar captcha-verifikasie-logboeke en aktiwiteitsopdaterings geplaas word."
+                },
+                "aimod-channel": {
+                    "description": "Kanaal waar AI-oortredingslogs geplaas word."
+                },
+                "cycle-strike-actions": {
+                    "description": "Herhaal die strafpuntaksies wanneer daar geen aksies meer oor is om aan ’n gebruiker te gee nie."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Kanale om van verbode-woorde-opsporing uit te sluit."
+                },
+                "strike-actions": {
+                    "description": "Aksies wat vir elke strafvlak geneem moet word."
+                },
+                "strike-expiry": {
+                    "description": "Duur van 'n strafpunt. Gebruik formate soos 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekondes, minute, ure, dae, weke, maande en jare onderskeidelik."
+                },
+                "dm-on-strike": {
+                    "description": "DM die gebruiker wanneer hulle 'n strafpunt ontvang."
+                },
+                "check-pfp": {
+                    "description": "Kontroleer die profielfoto van die gebruiker vir NSFW-inhoud."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Aksie om te neem wanneer 'n gebruiker 'n NSFW-profielfoto instel."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Die boodskap om te stuur wanneer ’n speler se profielfoto gemerk is.",
+                    "default": "Daar is eksplisiete inhoud in jou profielfoto opgespoor",
+                    "choices": [
+                        "Daar is eksplisiete inhoud in jou profielfoto opgespoor"
                     ]
                 }
             }
