@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}`は`{event}`に既に設定されています。",
-          "success": "`{event}`に`{action}`を追加しました。"
-        },
-        "remove": {
-          "missing": "`{action}`は`{event}`に設定されていません。",
-          "success": "`{event}`から`{action}`を削除しました。"
-        },
-        "clear": {
-          "success": "全ての適応イベントがクリアされました。"
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}`は`{event}`に既に設定されています。",
+                    "success": "`{event}`に`{action}`を追加しました。"
+                },
+                "remove": {
+                    "missing": "`{action}`は`{event}`に設定されていません。",
+                    "success": "`{event}`から`{action}`を削除しました。"
+                },
+                "clear": {
+                    "success": "全ての適応イベントがクリアされました。"
+                }
+            }
         }
-      }
     }
-  }
 }
