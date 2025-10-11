@@ -29,6 +29,18 @@
                         "4. Geen seksuele inhoud of expliciete opmerkingen.",
                         "5. Volg de Servicevoorwaarden van Discord."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Kanaal waar strafpunten worden gelogd."
+                },
+                "aimod-debug": {
+                    "description": "Stuur altijd een gedetailleerd AI-moderatie-debugbericht naar het kanaal voor AI-overtredingen, inclusief gemarkeerde berichten, AI-beslissing, en toegepaste acties."
+                },
+                "nsfw-verbose": {
+                    "description": "Plaats een embed met een gedetailleerd scanrapport in hetzelfde kanaal als de gescande media."
+                },
+                "nsfw-channel": {
+                    "description": "Kanaal waarin NSFW-overtredingen worden gelogd met een voorbeeld van de media."
                 }
             }
         }

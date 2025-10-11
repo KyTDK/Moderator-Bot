@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Ngôn ngữ không hợp lệ. Các ngôn ngữ được hỗ trợ: {supported}"
+                    "invalid": "Ngôn ngữ không hợp lệ. Các ngôn ngữ được hỗ trợ: {supported}",
+                    "description": "Ghi đè phát hiện locale tự động bằng một mã locale cụ thể."
                 },
                 "nsfw_pfp_message": {
                     "default": "Ảnh hồ sơ của bạn bị phát hiện có nội dung phản cảm",
@@ -29,6 +30,33 @@
                         "4. Không có nội dung tình dục hoặc lời lẽ tục tĩu.",
                         "5. Tuân theo Điều khoản Dịch vụ của Discord."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Kênh nơi các lần xử phạt được ghi lại."
+                },
+                "aimod-debug": {
+                    "description": "Luôn gửi một tin nhắn gỡ lỗi kiểm duyệt AI chi tiết đến kênh vi phạm AI, bao gồm các tin nhắn bị gắn cờ, quyết định của AI, và các hành động đã áp dụng."
+                },
+                "nsfw-verbose": {
+                    "description": "Gửi embed báo cáo quét chi tiết trong cùng kênh với phương tiện đã được quét."
+                },
+                "nsfw-channel": {
+                    "description": "Kênh nơi các vi phạm NSFW được ghi lại kèm bản xem trước của phương tiện."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Gửi một embed thông báo tới kênh khi nội dung NSFW bị xóa."
+                },
+                "nsfw-enabled": {
+                    "description": "Bật quét NSFW cho tin nhắn, phản ứng và ảnh đại diện (các tùy chọn bật/tắt khác vẫn áp dụng)."
+                },
+                "monitor-events": {
+                    "description": "Bật/tắt ghi nhật ký cho từng loại sự kiện được theo dõi."
+                },
+                "nsfw-detection-action": {
+                    "description": "Hành động cần thực hiện khi người dùng đăng nội dung NSFW."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Các danh mục được coi là NSFW cho việc phát hiện."
                 }
             }
         }
