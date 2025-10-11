@@ -3,72 +3,72 @@
         "nsfw_scanner": {
             "actions": {
                 "embed": {
-                    "title": "",
-                    "description": "",
-                    "footer": ""
+                    "title": "NSFW Content Detected",
+                    "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
+                    "footer": "User ID: {user_id}"
                 }
             },
             "helpers": {
                 "attachments": {
                     "report": {
-                        "title": "",
+                        "title": "NSFW Scan Report",
                         "description": {
-                            "user": "",
-                            "file": "",
-                            "type": "",
-                            "decision": ""
+                            "user": "User: {user}",
+                            "file": "File: `{filename}`",
+                            "type": "Type: `{file_type}`",
+                            "decision": "Decision: **{decision}**"
                         },
                         "file_types": {
-                            "image": "",
-                            "video": "",
-                            "unknown": ""
+                            "image": "Image",
+                            "video": "Video",
+                            "unknown": "Unknown"
                         },
                         "decision": {
-                            "nsfw": "",
-                            "safe": "",
-                            "unknown": ""
+                            "nsfw": "NSFW",
+                            "safe": "Safe",
+                            "unknown": "Unknown"
                         },
                         "fields": {
-                            "reason": "",
-                            "category": "",
-                            "score": "",
-                            "flagged_any": "",
-                            "summary_categories": "",
-                            "max_similarity": "",
-                            "max_category": "",
-                            "similarity": "",
-                            "high_accuracy": "",
-                            "clip_threshold": "",
-                            "moderation_threshold": "",
-                            "video_frames": ""
+                            "reason": "Reason",
+                            "category": "Category",
+                            "score": "Score",
+                            "flagged_any": "Flagged Any",
+                            "summary_categories": "Summary Categories",
+                            "max_similarity": "Max Similarity",
+                            "max_category": "Max Similarity Category",
+                            "similarity": "Matched Similarity",
+                            "high_accuracy": "High Accuracy",
+                            "clip_threshold": "CLIP Threshold",
+                            "moderation_threshold": "Moderation Threshold",
+                            "video_frames": "Video Frames"
                         },
                         "reasons": {
-                            "openai_moderation": "",
-                            "similarity_match": "",
-                            "no_frames_extracted": "",
-                            "no_nsfw_frames_detected": ""
+                            "openai_moderation": "OpenAI moderation",
+                            "similarity_match": "Similarity match",
+                            "no_frames_extracted": "No frames extracted",
+                            "no_nsfw_frames_detected": "No NSFW frames detected"
                         }
                     }
                 }
             },
             "shared": {
                 "confidence": {
-                    "name": "",
-                    "value": "",
-                    "source_suffix": "",
+                    "name": "Confidence",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
                     "sources": {
-                        "score": "",
-                        "similarity": ""
+                        "score": "Score",
+                        "similarity": "Similarity"
                     }
                 },
                 "boolean": {
-                    "true": "",
-                    "false": ""
+                    "true": "true",
+                    "false": "false"
                 },
                 "category": {
-                    "unspecified": ""
+                    "unspecified": "Unspecified"
                 },
-                "policy_violation": ""
+                "policy_violation": "Detected potential policy violation (Category: **{category}**)"
             }
         }
     }
