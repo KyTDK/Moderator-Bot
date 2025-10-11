@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` är redan inställt för `{event}`.",
-          "success": "Lade till `{action}` för `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` är inte inställt för `{event}`.",
-          "success": "Tog bort `{action}` från `{event}`."
-        },
-        "clear": {
-          "success": "Alla adaptiva händelser har rensats."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` är redan inställt för `{event}`.",
+                    "success": "Lade till `{action}` för `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` är inte inställt för `{event}`.",
+                    "success": "Tog bort `{action}` från `{event}`."
+                },
+                "clear": {
+                    "success": "Alla adaptiva händelser har rensats."
+                }
+            }
         }
-      }
     }
-  }
 }
