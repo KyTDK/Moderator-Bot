@@ -1,9 +1,0 @@
-﻿{
-  "modules": {
-    "utils": {
-      "api": {
-        "key_failed_notice": "**Warning:** Your OpenAI API key failed a moderation check.\n\nThis usually means your account does not have active billing or is temporarily rate-limited.\n\nPlease check your [OpenAI Billing Dashboard](https://platform.openai.com/account/billing/overview) to ensure your account has payment info and at least $5 in credits.\n\nOnce that is resolved, your key will automatically start working again - no need to re-add it."
-      }
-    }
-  }
-}
