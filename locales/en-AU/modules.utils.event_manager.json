@@ -1,0 +1,19 @@
+﻿{
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "",
+                    "success": ""
+                },
+                "remove": {
+                    "missing": "",
+                    "success": ""
+                },
+                "clear": {
+                    "success": ""
+                }
+            }
+        }
+    }
+}
