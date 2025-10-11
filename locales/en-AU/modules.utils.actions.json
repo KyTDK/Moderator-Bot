@@ -1,0 +1,20 @@
+{
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "",
+                    "kick": "",
+                    "ban": "",
+                    "timeout": "",
+                    "delete": "",
+                    "give_role": "",
+                    "take_role": "",
+                    "warn": "",
+                    "broadcast": "",
+                    "auto": ""
+                }
+            }
+        }
+    }
+}
