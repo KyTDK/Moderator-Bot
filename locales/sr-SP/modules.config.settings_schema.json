@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Неважећа локала. Подржане локале: {supported}"
+                    "invalid": "Неважећа локала. Подржане локале: {supported}",
+                    "description": "Nadjačaj automatsko prepoznavanje lokala određenim kodom lokala."
                 },
                 "nsfw_pfp_message": {
                     "default": "Ваша профилна слика је откривена да садржи експлицитан садржај",
@@ -19,7 +20,8 @@
                         "2. Нема НСФВ или непристојног садржаја.",
                         "3. Нема спама или прекомерне самопромоције.",
                         "4. Пратите Discord-ове Услове коришћења услуге."
-                    ]
+                    ],
+                    "description": "Pravila servera koja se koriste za autonomnu moderaciju."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. Нема сексуалног садржаја или експлицитних примедби.",
                         "5. Пратите Discord-ове Услове коришћења услуге."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Kanal u kojem se beleže opomene."
+                },
+                "aimod-debug": {
+                    "description": "Uvek šalji detaljnu poruku za otklanjanje grešaka AI moderacije u kanal za AI prekršaje, uključujući označene poruke, AI odluku i primenjene radnje."
+                },
+                "nsfw-verbose": {
+                    "description": "Pošalji detaljan izveštaj o skeniranju kao ugrađenu poruku u istom kanalu kao i skenirani medij."
+                },
+                "nsfw-channel": {
+                    "description": "Kanal u kojem se beleže NSFW prekršaji uz pregled medija."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Pošalji embed obaveštenja u kanal kada se ukloni NSFW sadržaj."
+                },
+                "nsfw-enabled": {
+                    "description": "Omogući NSFW skeniranje za poruke, reakcije i avatare (ostali prekidači se i dalje primenjuju)."
+                },
+                "monitor-events": {
+                    "description": "Omogući/onemogući beleženje za svaku vrstu praćenog događaja."
+                },
+                "nsfw-detection-action": {
+                    "description": "Radnja koja se preduzima kada korisnik objavi NSFW sadržaj."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Kategorije koje se smatraju NSFW pri detekciji."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Omogući NSFW skeniranje visoke tačnosti za pouzdaniju detekciju. Samo za Accelerated."
+                },
+                "threshold": {
+                    "description": "Prag pouzdanja za otkrivanje NSFW sadržaja. Niže vrednosti su osetljivije."
+                },
+                "banned-words-action": {
+                    "description": "Radnja koja se preduzima kada korisnik pošalje zabranjenu reč."
+                },
+                "monitor-channel": {
+                    "description": "Kanal za beleženje svih aktivnosti na serveru, uključujući izmene poruka, brisanja, i događaje pridruživanja/napuštanja korisnika."
+                },
+                "captcha-log-channel": {
+                    "description": "Kanal u kojem se objavljuju zapisi o verifikaciji CAPTCHA i ažuriranja aktivnosti."
+                },
+                "aimod-channel": {
+                    "description": "Kanal u kojem se objavljuju dnevnici o kršenjima AI."
+                },
+                "cycle-strike-actions": {
+                    "description": "Cikliraj kroz radnje za opomene kada ponestane radnji koje se mogu dodeliti korisniku."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Kanali koje treba izuzeti iz otkrivanja zabranjenih reči."
+                },
+                "strike-actions": {
+                    "description": "Radnje koje treba preduzeti za svaki nivo opomene."
+                },
+                "strike-expiry": {
+                    "description": "Vreme trajanja opomene. Koristite formate kao što su 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekunde, minuti, sati, dani, nedelje, meseci i godine redom."
+                },
+                "dm-on-strike": {
+                    "description": "Pošalji korisniku DM kada dobije opomenu."
+                },
+                "check-pfp": {
+                    "description": "Proveri da li profilna slika korisnika sadrži NSFW sadržaj."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Radnja koja će se preduzeti kada korisnik postavi NSFW profilnu sliku."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Poruka koja se šalje kada je profilna slika igrača prijavljena.",
+                    "default": "Otkriveno je da vaša profilna slika sadrži eksplicitan sadržaj",
+                    "choices": [
+                        "Otkriveno je da vaša profilna slika sadrži eksplicitan sadržaj",
+                        "Vaša profilna slika nije prikladna za ovaj server.",
+                        "Vaša profilna slika je označena kao NSFW."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Uklonite privremeno ograničenje korisniku nakon što promeni svoju profilnu sliku u odgovarajuću."
+                },
+                "scan-age-restricted": {
+                    "description": "Skeniraj kanale sa starosnim ograničenjem (NSFW). Kada je isključeno, NSFW kanali se preskaču."
+                },
+                "check-tenor-gifs": {
+                    "description": "Primeni kazne kada se otkrije NSFW sadržaj u Tenor GIF-ovima."
+                },
+                "use-default-banned-words": {
+                    "description": "Koristi ugrađenu listu psovki za ovaj server."
+                },
+                "exclude-channels": {
+                    "description": "Kanali koje treba izuzeti iz detekcije."
+                },
+                "delete-scam-messages": {
+                    "description": "Automatski briši poruke koje se poklapaju sa obrascima prevara ili URL-ovima."
+                },
+                "scam-detection-action": {
+                    "description": "Radnja koja će se preduzeti kada se otkrije prevarantska poruka."
+                },
+                "check-links": {
+                    "description": "Proveri linkove u porukama na zlonamerni softver, fišing, prevare itd."
+                },
+                "exclude-scam-channels": {
+                    "description": "Kanali koje treba izuzeti iz otkrivanja prevara."
+                },
+                "aimod-detection-action": {
+                    "description": "Radnja koja se preduzima kada autonomni moderator otkrije kršenje. Koristite auto da AI donese odluku."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Koristite precizniju AI moderaciju uz gpt-5-mini (približno 2,25 USD po 1M tokena). Troši mesečni budžet brže u odnosu na podrazumevanu opciju."
+                },
+                "autonomous-mod": {
+                    "description": "Koristite AI za automatsku moderaciju celog vašeg servera."
+                },
+                "aimod-check-interval": {
+                    "description": "Koliko često pokretati proces grupne obrade za AI moderaciju."
+                },
+                "aimod-mode": {
+                    "description": "Izaberite kako se pokreće AI moderacija: režim `report` (samo na pominjanje), režim `interval` (automatsko skeniranje u pozadini), ili režim `adaptive` (dinamički se prebacuje na osnovu aktivnosti servera, događaja ili konfiguracije)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Podesite koji događaji pokreću prebacivanje AI režima moderacije."
+                },
+                "no-forward-from-role": {
+                    "description": "Onemogućite određenoj ulozi prosleđivanje poruka."
+                },
+                "banned-urls": {
+                    "description": "Tačni URL-ovi ili domeni za blokiranje."
+                },
+                "url-detection-action": {
+                    "description": "Radnja koju treba preduzeti kada se otkrije blokirani URL."
+                },
+                "exclude-url-channels": {
+                    "description": "Канали који се изузимају из забрањених URL-ова."
+                },
+                "vcmod-enabled": {
+                    "description": "Omogući moderaciju i transkripciju glasovnih kanala."
+                },
+                "vcmod-channels": {
+                    "description": "Glasovni kanali za praćenje (kada je prazno, nijedan se ne prati)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Koliko dugo aktivno slušati po glasovnom kanalu tokom ciklusa (npr., 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Koliko dugo pauzirati između svake transkripcije u režimu Saver Mode."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Režim štednje: bot se prebacuje između glasovnih kanala da bi delovao aktivno ali većinu vremena ne snima niti sluša."
+                },
+                "vcmod-rules": {
+                    "description": "Pravila primenjena na moderaciju glasovnog razgovora (odvojena od tekstualnih pravila).",
+                    "default": [
+                        "1. Nema uznemiravanja, govora mržnje ili pretnji.",
+                        "2. Bez pogrdnih izraza ili diskriminatornog jezika.",
+                        "3. Bez podsticanja na nasilje ili nezakonite aktivnosti.",
+                        "4. Bez seksualnog sadržaja ili eksplicitnih komentara.",
+                        "5. Poštujte Discordove Uslove korišćenja."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Radnja koja će se preduzeti kada moderacija glasovnog kanala otkrije kršenje. Koristite auto da AI odluči."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Koristi precizniju AI analizu za moderaciju glasovnih kanala (troši više tokena)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Omogući jasnije glasovne transkripcije uz premium obradu (veći trošak)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Kanal u kojem se objavljuju transkripti VC-a."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Kada je omogućeno, bot će samo transkribovati glasovni razgovor bez primene provera pravila pomoću AI ili moderacionih radnji. Ovo značajno smanjuje potrošnju budžeta."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Zahtevaj da novi članovi prođu captcha proveru pre nego što dobiju pristup."
+                },
+                "captcha-grace-period": {
+                    "description": "Koliko vremena novi članovi imaju da završe captcha verifikaciju (npr. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Radnje koje se automatski izvršavaju nakon uspešne verifikacije."
+                },
+                "captcha-delivery-method": {
+                    "description": "Kako se linkovi za captcha verifikaciju šalju novim članovima (DM ili embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Kanal u koji se objavljuje embed sa captcha verifikacijom kada se koristi isporuka putem embed-a."
+                },
+                "pre-captcha-roles": {
+                    "description": "Uloge dodeljene novim članovima pre nego što dovrše captcha verifikaciju."
+                },
+                "captcha-failure-actions": {
+                    "description": "Radnje koje se automatski izvršavaju kada član ne prođe captcha verifikaciju."
                 }
             }
         }
