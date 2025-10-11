@@ -1,11 +1,11 @@
 {
-  "modules": {
-    "utils": {
-      "mysql": {
-        "settings": {
-          "plan_required": "Această setare necesită {requirement}."
+    "modules": {
+        "utils": {
+            "mysql": {
+                "settings": {
+                    "plan_required": "Această setare necesită {requirement}."
+                }
+            }
         }
-      }
     }
-  }
 }
