@@ -1,36 +1,36 @@
 {
-  "modules": {
-    "config": {
-      "settings_schema": {
-        "locale": {
-          "invalid": "Ogiltigt språk. Stödda språk: {supported}"
-        },
-        "nsfw_pfp_message": {
-          "default": "Din profilbild innehåller explicit innehåll.",
-          "choices": [
-            "Din profilbild innehåller explicit innehåll.",
-            "Din profilbild är inte lämplig för denna server.",
-            "Din profilbild har markerats som NSFW."
-          ]
-        },
-        "rules": {
-          "default": [
-            "1. Visa respekt — ingen trakassering eller hatretorik.",
-            "2. Inget NSFW- eller oanständigt innehåll.",
-            "3. Inget spam eller överdriven självfrämjande.",
-            "4. Följ Discords användarvillkor."
-          ]
-        },
-        "vcmod_rules": {
-          "default": [
-            "1. Ingen trakassering, hatretorik eller hot.",
-            "2. Inga kränkande eller diskriminerande språk.",
-            "3. Ingen uppmaning till våld eller olaglig verksamhet.",
-            "4. Inget sexuellt eller explicit språk.",
-            "5. Följ Discords användarvillkor."
-          ]
+    "modules": {
+        "config": {
+            "settings_schema": {
+                "locale": {
+                    "invalid": "Ogiltigt språk. Stödda språk: {supported}"
+                },
+                "nsfw_pfp_message": {
+                    "default": "Din profilbild innehåller explicit innehåll.",
+                    "choices": [
+                        "Din profilbild innehåller explicit innehåll.",
+                        "Din profilbild är inte lämplig för denna server.",
+                        "Din profilbild har markerats som NSFW."
+                    ]
+                },
+                "rules": {
+                    "default": [
+                        "1. Visa respekt — ingen trakassering eller hatretorik.",
+                        "2. Inget NSFW- eller oanständigt innehåll.",
+                        "3. Inget spam eller överdriven självfrämjande.",
+                        "4. Följ Discords användarvillkor."
+                    ]
+                },
+                "vcmod_rules": {
+                    "default": [
+                        "1. Ingen trakassering, hatretorik eller hot.",
+                        "2. Inga kränkande eller diskriminerande språk.",
+                        "3. Ingen uppmaning till våld eller olaglig verksamhet.",
+                        "4. Inget sexuellt eller explicit språk.",
+                        "5. Följ Discords användarvillkor."
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }
