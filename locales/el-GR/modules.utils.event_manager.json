@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` έχει ήδη οριστεί για το `{event}`.",
-          "success": "Προστέθηκε το `{action}` στο `{event}` ."
-        },
-        "remove": {
-          "missing": "`{action}` δεν έχει οριστεί για το `{event}` .",
-          "success": "Αφαιρέθηκε το `{action}` από το `{event}` ."
-        },
-        "clear": {
-          "success": "Όλα τα προσαρμοστικά γεγονότα έχουν διαγραφεί."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` έχει ήδη οριστεί για το `{event}`.",
+                    "success": "Προστέθηκε το `{action}` στο `{event}` ."
+                },
+                "remove": {
+                    "missing": "`{action}` δεν έχει οριστεί για το `{event}` .",
+                    "success": "Αφαιρέθηκε το `{action}` από το `{event}` ."
+                },
+                "clear": {
+                    "success": "Όλα τα προσαρμοστικά γεγονότα έχουν διαγραφεί."
+                }
+            }
         }
-      }
     }
-  }
 }
