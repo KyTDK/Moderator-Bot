@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "잘못된 지속 시간 형식입니다. 20s, 30m, 2h, 30d, 2w, 5mo, 1y와 같은 형식을 사용하십시오. 각각 초, 분, 시간, 일, 주, 월, 년을 의미합니다."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "잘못된 지속 시간 형식입니다. 20s, 30m, 2h, 30d, 2w, 5mo, 1y와 같은 형식을 사용하십시오. 각각 초, 분, 시간, 일, 주, 월, 년을 의미합니다."
+            }
+        }
     }
-  }
 }
