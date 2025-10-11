@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Vérification Captcha réussie",
-          "embed": {
-            "title": "Vérification Captcha réussie",
-            "description": "{mention} ({user_id}) a réussi la vérification du captcha.",
-            "fields": {
-              "actions": "Actions appliquées",
-              "attempts": "Tentatives",
-              "provider": "Fournisseur",
-              "challenge": "Défi",
-              "review": "Revoir"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Vérification Captcha réussie",
+                    "embed": {
+                        "title": "Vérification Captcha réussie",
+                        "description": "{mention} ({user_id}) a réussi la vérification du captcha.",
+                        "fields": {
+                            "actions": "Actions appliquées",
+                            "attempts": "Tentatives",
+                            "provider": "Fournisseur",
+                            "challenge": "Défi",
+                            "review": "Revoir"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Vérification du captcha échouée.",
+                    "notes": {
+                        "deferred_generic": "Échec des actions reportées ; des tentatives de captcha restent.",
+                        "deferred_remaining": "Échec des actions reportées ; {remaining} {attempts_word} restantes.",
+                        "member_left": "Le membre n'est plus dans la guilde ; les actions configurées pour l'échec ont été ignorées."
+                    },
+                    "attempts": {
+                        "unlimited": "Tentatives illimitées restent.",
+                        "additional": "Des tentatives supplémentaires restent.",
+                        "remaining": "{count} {attempts_word} restants.",
+                        "word_one": "tentative",
+                        "word_other": "tentatives"
+                    },
+                    "embed": {
+                        "title_failed": "Vérification du Captcha échouée",
+                        "title_attempt": "Échec de la tentative de Captcha",
+                        "description_failed": "{mention} ({user_id}) a échoué à la vérification du captcha.",
+                        "description_attempt": "{mention} ({user_id}) a échoué une tentative de captcha.",
+                        "fields": {
+                            "actions": "Actions appliquées",
+                            "notes": "Notes",
+                            "attempts": "Tentatives",
+                            "remaining": "Tentatives restantes",
+                            "challenge": "Défi",
+                            "reason": "Raison",
+                            "review": "Revoir"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Échec de l'application des actions de réussite de captcha en raison d'une erreur de l'API Discord.",
+                    "unknown_token": "Aucune vérification de captcha en attente n'a été trouvée pour cet utilisateur.",
+                    "token_mismatch": "Le jeton de captcha ne correspond pas à la vérification en attente.",
+                    "missing_permissions": "Le bot n'a pas les permissions nécessaires pour appliquer les actions d'échec de captcha.",
+                    "action_failed": "Échec de l'application des actions d'échec de captcha en raison d'une erreur de l'API Discord.",
+                    "guild_not_found": "La guilde {guild_id} n'est pas disponible pour ce bot.",
+                    "guild_fetch_failed": "Échec de la récupération de la guilde {guild_id} depuis Discord.",
+                    "member_not_found": "Membre {user_id} non trouvé dans la guilde {guild_id}.",
+                    "member_fetch_failed": "Échec de la récupération du membre {user_id} depuis la guilde {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Vérification du captcha échouée.",
-          "notes": {
-            "deferred_generic": "Échec des actions reportées ; des tentatives de captcha restent.",
-            "deferred_remaining": "Échec des actions reportées ; {remaining} {attempts_word} restantes.",
-            "member_left": "Le membre n'est plus dans la guilde ; les actions configurées pour l'échec ont été ignorées."
-          },
-          "attempts": {
-            "unlimited": "Tentatives illimitées restent.",
-            "additional": "Des tentatives supplémentaires restent.",
-            "remaining": "{count} {attempts_word} restants.",
-            "word_one": "tentative",
-            "word_other": "tentatives"
-          },
-          "embed": {
-            "title_failed": "Vérification du Captcha échouée",
-            "title_attempt": "Échec de la tentative de Captcha",
-            "description_failed": "{mention} ({user_id}) a échoué à la vérification du captcha.",
-            "description_attempt": "{mention} ({user_id}) a échoué une tentative de captcha.",
-            "fields": {
-              "actions": "Actions appliquées",
-              "notes": "Notes",
-              "attempts": "Tentatives",
-              "remaining": "Tentatives restantes",
-              "challenge": "Défi",
-              "reason": "Raison",
-              "review": "Revoir"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Échec de l'application des actions de réussite de captcha en raison d'une erreur de l'API Discord.",
-          "unknown_token": "Aucune vérification de captcha en attente n'a été trouvée pour cet utilisateur.",
-          "token_mismatch": "Le jeton de captcha ne correspond pas à la vérification en attente.",
-          "missing_permissions": "Le bot n'a pas les permissions nécessaires pour appliquer les actions d'échec de captcha.",
-          "action_failed": "Échec de l'application des actions d'échec de captcha en raison d'une erreur de l'API Discord.",
-          "guild_not_found": "La guilde {guild_id} n'est pas disponible pour ce bot.",
-          "guild_fetch_failed": "Échec de la récupération de la guilde {guild_id} depuis Discord.",
-          "member_not_found": "Membre {user_id} non trouvé dans la guilde {guild_id}.",
-          "member_fetch_failed": "Échec de la récupération du membre {user_id} depuis la guilde {guild_id}."
         }
-      }
     }
-  }
 }
