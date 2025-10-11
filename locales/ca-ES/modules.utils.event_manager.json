@@ -1,19 +1,19 @@
 ﻿{
-  "modules": {
-    "utils": {
-      "event_manager": {
-        "add": {
-          "duplicate": "`{action}` ja està configurat per a `{event}`.",
-          "success": "Afegit `{action}` a `{event}`."
-        },
-        "remove": {
-          "missing": "`{action}` no està configurat per a `{event}`.",
-          "success": "Eliminat `{action}` de `{event}`."
-        },
-        "clear": {
-          "success": "Tots els esdeveniments adaptatius han estat esborrats."
+    "modules": {
+        "utils": {
+            "event_manager": {
+                "add": {
+                    "duplicate": "`{action}` ja està configurat per a `{event}`.",
+                    "success": "Afegit `{action}` a `{event}`."
+                },
+                "remove": {
+                    "missing": "`{action}` no està configurat per a `{event}`.",
+                    "success": "Eliminat `{action}` de `{event}`."
+                },
+                "clear": {
+                    "success": "Tots els esdeveniments adaptatius han estat esborrats."
+                }
+            }
         }
-      }
     }
-  }
 }
