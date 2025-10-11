@@ -1,75 +1,75 @@
 {
-  "modules": {
-    "nsfw_scanner": {
-      "actions": {
-        "embed": {
-          "title": "Conținut NSFW detectat",
-          "description": "**Utilizator:** {user_mention} ({user_display})\n**Motiv:** {reason}",
-          "footer": "ID Utilizator: {user_id}"
-        }
-      },
-      "helpers": {
-        "attachments": {
-          "report": {
-            "title": "Raport Scanare NSFW",
-            "description": {
-              "user": "Utilizator: {user}",
-              "file": "Fișier: `{filename}`",
-              "type": "Tip: `{file_type}`",
-              "decision": "Decizie: **{decision}**"
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "Conținut NSFW detectat",
+                    "description": "**Utilizator:** {user_mention} ({user_display})\n**Motiv:** {reason}",
+                    "footer": "ID Utilizator: {user_id}"
+                }
             },
-            "file_types": {
-              "image": "Imagine",
-              "video": "Video",
-              "unknown": "Necunoscut"
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "Raport Scanare NSFW",
+                        "description": {
+                            "user": "Utilizator: {user}",
+                            "file": "Fișier: `{filename}`",
+                            "type": "Tip: `{file_type}`",
+                            "decision": "Decizie: **{decision}**"
+                        },
+                        "file_types": {
+                            "image": "Imagine",
+                            "video": "Video",
+                            "unknown": "Necunoscut"
+                        },
+                        "decision": {
+                            "nsfw": "NSFW",
+                            "safe": "Sigur",
+                            "unknown": "Necunoscut"
+                        },
+                        "fields": {
+                            "reason": "Motiv",
+                            "category": "Categorie",
+                            "score": "Scor",
+                            "flagged_any": "Marcat Oricare",
+                            "summary_categories": "Categorii Sumare",
+                            "max_similarity": "Similaritate Maximă",
+                            "max_category": "Categorie Similaritate Maximă",
+                            "similarity": "Similaritate Potrivită",
+                            "high_accuracy": "Acuratețe Ridicată",
+                            "clip_threshold": "Prag CLIP",
+                            "moderation_threshold": "Prag Moderare",
+                            "video_frames": "Cadre Video"
+                        },
+                        "reasons": {
+                            "openai_moderation": "Moderare OpenAI",
+                            "similarity_match": "Potrivire Similaritate",
+                            "no_frames_extracted": "Fără cadre extrase",
+                            "no_nsfw_frames_detected": "Fără cadre NSFW detectate"
+                        }
+                    }
+                }
             },
-            "decision": {
-              "nsfw": "NSFW",
-              "safe": "Sigur",
-              "unknown": "Necunoscut"
-            },
-            "fields": {
-              "reason": "Motiv",
-              "category": "Categorie",
-              "score": "Scor",
-              "flagged_any": "Marcat Oricare",
-              "summary_categories": "Categorii Sumare",
-              "max_similarity": "Similaritate Maximă",
-              "max_category": "Categorie Similaritate Maximă",
-              "similarity": "Similaritate Potrivită",
-              "high_accuracy": "Acuratețe Ridicată",
-              "clip_threshold": "Prag CLIP",
-              "moderation_threshold": "Prag Moderare",
-              "video_frames": "Cadre Video"
-            },
-            "reasons": {
-              "openai_moderation": "Moderare OpenAI",
-              "similarity_match": "Potrivire Similaritate",
-              "no_frames_extracted": "Fără cadre extrase",
-              "no_nsfw_frames_detected": "Fără cadre NSFW detectate"
+            "shared": {
+                "confidence": {
+                    "name": "Încredere",
+                    "value": "{value}{source_suffix}",
+                    "source_suffix": " ({source_label})",
+                    "sources": {
+                        "score": "Scor",
+                        "similarity": "Similaritate"
+                    }
+                },
+                "boolean": {
+                    "true": "adevărat",
+                    "false": "fals"
+                },
+                "category": {
+                    "unspecified": "Nespecificat"
+                },
+                "policy_violation": "Detectată posibila încălcare a politicii (Categorie: **{category}**)"
             }
-          }
         }
-      },
-      "shared": {
-        "confidence": {
-          "name": "Încredere",
-          "value": "{value}{source_suffix}",
-          "source_suffix": " ({source_label})",
-          "sources": {
-            "score": "Scor",
-            "similarity": "Similaritate"
-          }
-        },
-        "boolean": {
-          "true": "adevărat",
-          "false": "fals"
-        },
-        "category": {
-          "unspecified": "Nespecificat"
-        },
-        "policy_violation": "Detectată posibila încălcare a politicii (Categorie: **{category}**)"
-      }
     }
-  }
 }
