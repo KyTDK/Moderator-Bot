@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Ugyldig område. Understøttede områder: {supported}"
+                    "invalid": "Ugyldig område. Understøttede områder: {supported}",
+                    "description": "Tilsidesæt automatisk registrering af landestandard med en specifik landestandardkode."
                 },
                 "nsfw_pfp_message": {
                     "default": "Dit profilbillede blev fundet at indeholde eksplicit indhold",
@@ -29,6 +30,78 @@
                         "4. Ingen seksuelt indhold eller eksplicitte bemærkninger.",
                         "5. Følg Discord's servicevilkår."
                     ]
+                },
+                "strike-channel": {
+                    "description": "Kanal, hvor strikes logges."
+                },
+                "nsfw-verbose": {
+                    "description": "Send en detaljeret scanningsrapport som embed i samme kanal som det scannede medie."
+                },
+                "nsfw-channel-notify": {
+                    "description": "Send et notifikations-embed til kanalen, når NSFW-indhold fjernes."
+                },
+                "nsfw-enabled": {
+                    "description": "Aktivér NSFW-scanning for beskeder, reaktioner og avatarer (andre indstillinger gælder stadig)."
+                },
+                "monitor-events": {
+                    "description": "Aktivér/deaktiver logning for hver type overvåget hændelse."
+                },
+                "nsfw-detection-action": {
+                    "description": "Handling der skal udføres når en bruger poster NSFW-indhold."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Kategorier, der betragtes som NSFW til detektion."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Aktivér NSFW-scanninger med høj nøjagtighed for mere pålidelig registrering. Kun accelereret."
+                },
+                "threshold": {
+                    "description": "Tærskel for NSFW-detektionens sikkerhedsniveau. Lavere værdier er mere følsomme."
+                },
+                "banned-words-action": {
+                    "description": "Handling, der skal udføres, når en bruger skriver et forbudt ord."
+                },
+                "monitor-channel": {
+                    "description": "Kanal til at logge al serveraktivitet, herunder redigeringer og sletninger af beskeder samt hændelser, hvor brugere tilslutter sig eller forlader serveren."
+                },
+                "captcha-log-channel": {
+                    "description": "Kanal, hvor logfiler for captcha-verifikation og aktivitetsopdateringer sendes."
+                },
+                "aimod-channel": {
+                    "description": "Kanal, hvor logge over AI-overtrædelser sendes."
+                },
+                "cycle-strike-actions": {
+                    "description": "Skift igennem strike-handlinger, når der ikke er flere handlinger tilbage at give en bruger."
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Kanaler, der skal udelukkes fra detektering af forbudte ord."
+                },
+                "strike-actions": {
+                    "description": "Handlinger der skal udføres for hvert advarselsniveau."
+                },
+                "strike-expiry": {
+                    "description": "Varighed af en strike. Brug formater som 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekunder, minutter, timer, dage, uger, måneder og år henholdsvis."
+                },
+                "dm-on-strike": {
+                    "description": "Send en DM til brugeren, når vedkommende modtager et strike."
+                },
+                "check-pfp": {
+                    "description": "Kontrollér brugerens profilbillede for NSFW-indhold."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Handling, der skal udføres, når en bruger sætter et NSFW-profilbillede."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Beskeden, der skal sendes, når en spiller har fået sit profilbillede markeret.",
+                    "default": "Der blev registreret, at dit profilbillede indeholder eksplicit indhold",
+                    "choices": [
+                        "Der blev registreret, at dit profilbillede indeholder eksplicit indhold",
+                        "Dit profilbillede er ikke passende for denne server.",
+                        "Dit profilbillede er blevet markeret som NSFW."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Fjern timeout for en bruger, så snart vedkommende har ændret sit profilbillede til noget passende."
                 }
             }
         }
