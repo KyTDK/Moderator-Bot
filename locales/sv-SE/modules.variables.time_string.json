@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "Ogiltigt tidsformat. Använd format som 20s, 30m, 2h, 30d, 2v, 5mån, 1år. Sekunder, minuter, timmar, dagar, veckor, månader och år respektive."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "Ogiltigt tidsformat. Använd format som 20s, 30m, 2h, 30d, 2v, 5mån, 1år. Sekunder, minuter, timmar, dagar, veckor, månader och år respektive."
+            }
+        }
     }
-  }
 }
