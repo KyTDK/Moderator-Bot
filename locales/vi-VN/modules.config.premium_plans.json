@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "config": {
-      "premium_plans": {
-        "plan_names": {
-          "free": "Miễn phí",
-          "core": "Cốt lõi",
-          "pro": "Chuyên nghiệp",
-          "ultra": "Siêu cấp"
-        },
-        "requirements": {
-          "any": "một gói cao cấp đang hoạt động",
-          "single": "một gói {plan} đang hoạt động",
-          "double": "một gói {plan_a} hoặc {plan_b} đang hoạt động",
-          "list": "một trong các gói {plans}, hoặc gói {last} đang hoạt động"
+    "modules": {
+        "config": {
+            "premium_plans": {
+                "plan_names": {
+                    "free": "Miễn phí",
+                    "core": "Cốt lõi",
+                    "pro": "Chuyên nghiệp",
+                    "ultra": "Siêu cấp"
+                },
+                "requirements": {
+                    "any": "một gói cao cấp đang hoạt động",
+                    "single": "một gói {plan} đang hoạt động",
+                    "double": "một gói {plan_a} hoặc {plan_b} đang hoạt động",
+                    "list": "một trong các gói {plans}, hoặc gói {last} đang hoạt động"
+                }
+            }
         }
-      }
     }
-  }
 }
