@@ -1,63 +1,63 @@
 {
-  "modules": {
-    "captcha": {
-      "processor": {
-        "success": {
-          "reason": "Captcha-Verifizierung erfolgreich",
-          "embed": {
-            "title": "Captcha-Verifizierung bestanden",
-            "description": "{mention} ({user_id}) hat die Captcha-Verifizierung bestanden.",
-            "fields": {
-              "actions": "Angewandte Aktionen",
-              "attempts": "Versuche",
-              "provider": "Anbieter",
-              "challenge": "Herausforderung",
-              "review": "Überprüfung"
+    "modules": {
+        "captcha": {
+            "processor": {
+                "success": {
+                    "reason": "Captcha-Verifizierung erfolgreich",
+                    "embed": {
+                        "title": "Captcha-Verifizierung bestanden",
+                        "description": "{mention} ({user_id}) hat die Captcha-Verifizierung bestanden.",
+                        "fields": {
+                            "actions": "Angewandte Aktionen",
+                            "attempts": "Versuche",
+                            "provider": "Anbieter",
+                            "challenge": "Herausforderung",
+                            "review": "Überprüfung"
+                        }
+                    }
+                },
+                "failure": {
+                    "reason_default": "Captcha-Verifizierung fehlgeschlagen.",
+                    "notes": {
+                        "deferred_generic": "Fehlgeschlagene Aktionen verschoben; weitere Captcha-Versuche verbleiben.",
+                        "deferred_remaining": "Fehlgeschlagene Aktionen verschoben; {remaining} {attempts_word} verbleiben.",
+                        "member_left": "Mitglied ist nicht mehr in der Gilde; die konfigurierten Fehlaktionen wurden übersprungen."
+                    },
+                    "attempts": {
+                        "unlimited": "Unbegrenzte Versuche verbleiben.",
+                        "additional": "Weitere Versuche verbleiben.",
+                        "remaining": "{count} {attempts_word} verbleiben.",
+                        "word_one": "Versuch",
+                        "word_other": "Versuche"
+                    },
+                    "embed": {
+                        "title_failed": "Captcha-Verifizierung fehlgeschlagen",
+                        "title_attempt": "Captcha-Versuch fehlgeschlagen",
+                        "description_failed": "{mention} ({user_id}) hat die Captcha-Verifizierung nicht bestanden.",
+                        "description_attempt": "{mention} ({user_id}) hat einen Captcha-Versuch nicht bestanden.",
+                        "fields": {
+                            "actions": "Angewandte Aktionen",
+                            "notes": "Notizen",
+                            "attempts": "Versuche",
+                            "remaining": "Verbleibende Versuche",
+                            "challenge": "Herausforderung",
+                            "reason": "Grund",
+                            "review": "Überprüfung"
+                        }
+                    }
+                },
+                "errors": {
+                    "role_assignment_failed": "Captcha-Erfolgsaktionen konnten aufgrund eines Discord-API-Fehlers nicht angewendet werden.",
+                    "unknown_token": "Keine ausstehende Captcha-Verifizierung für diesen Benutzer gefunden.",
+                    "token_mismatch": "Captcha-Token stimmt nicht mit der ausstehenden Verifizierung überein.",
+                    "missing_permissions": "Bot fehlen Berechtigungen, um Captcha-Fehlaktionen anzuwenden.",
+                    "action_failed": "Captcha-Fehlaktionen konnten aufgrund eines Discord-API-Fehlers nicht angewendet werden.",
+                    "guild_not_found": "Gilde {guild_id} ist für diesen Bot nicht verfügbar.",
+                    "guild_fetch_failed": "Fehler beim Abrufen der Gilde {guild_id} von Discord.",
+                    "member_not_found": "Mitglied {user_id} in der Gilde {guild_id} nicht gefunden.",
+                    "member_fetch_failed": "Fehler beim Abrufen des Mitglieds {user_id} von der Gilde {guild_id}."
+                }
             }
-          }
-        },
-        "failure": {
-          "reason_default": "Captcha-Verifizierung fehlgeschlagen.",
-          "notes": {
-            "deferred_generic": "Fehlgeschlagene Aktionen verschoben; weitere Captcha-Versuche verbleiben.",
-            "deferred_remaining": "Fehlgeschlagene Aktionen verschoben; {remaining} {attempts_word} verbleiben.",
-            "member_left": "Mitglied ist nicht mehr in der Gilde; die konfigurierten Fehlaktionen wurden übersprungen."
-          },
-          "attempts": {
-            "unlimited": "Unbegrenzte Versuche verbleiben.",
-            "additional": "Weitere Versuche verbleiben.",
-            "remaining": "{count} {attempts_word} verbleiben.",
-            "word_one": "Versuch",
-            "word_other": "Versuche"
-          },
-          "embed": {
-            "title_failed": "Captcha-Verifizierung fehlgeschlagen",
-            "title_attempt": "Captcha-Versuch fehlgeschlagen",
-            "description_failed": "{mention} ({user_id}) hat die Captcha-Verifizierung nicht bestanden.",
-            "description_attempt": "{mention} ({user_id}) hat einen Captcha-Versuch nicht bestanden.",
-            "fields": {
-              "actions": "Angewandte Aktionen",
-              "notes": "Notizen",
-              "attempts": "Versuche",
-              "remaining": "Verbleibende Versuche",
-              "challenge": "Herausforderung",
-              "reason": "Grund",
-              "review": "Überprüfung"
-            }
-          }
-        },
-        "errors": {
-          "role_assignment_failed": "Captcha-Erfolgsaktionen konnten aufgrund eines Discord-API-Fehlers nicht angewendet werden.",
-          "unknown_token": "Keine ausstehende Captcha-Verifizierung für diesen Benutzer gefunden.",
-          "token_mismatch": "Captcha-Token stimmt nicht mit der ausstehenden Verifizierung überein.",
-          "missing_permissions": "Bot fehlen Berechtigungen, um Captcha-Fehlaktionen anzuwenden.",
-          "action_failed": "Captcha-Fehlaktionen konnten aufgrund eines Discord-API-Fehlers nicht angewendet werden.",
-          "guild_not_found": "Gilde {guild_id} ist für diesen Bot nicht verfügbar.",
-          "guild_fetch_failed": "Fehler beim Abrufen der Gilde {guild_id} von Discord.",
-          "member_not_found": "Mitglied {user_id} in der Gilde {guild_id} nicht gefunden.",
-          "member_fetch_failed": "Fehler beim Abrufen des Mitglieds {user_id} von der Gilde {guild_id}."
         }
-      }
     }
-  }
 }
