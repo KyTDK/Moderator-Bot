@@ -20,7 +20,8 @@
                         "2. Ingen NSFW eller uanstændigt indhold.",
                         "3. Ingen spam eller overdreven selvpromovering.",
                         "4. Følg Discord's servicevilkår."
-                    ]
+                    ],
+                    "description": "De serverregler, der bruges til autonom moderering."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -102,6 +103,127 @@
                 },
                 "unmute-on-safe-pfp": {
                     "description": "Fjern timeout for en bruger, så snart vedkommende har ændret sit profilbillede til noget passende."
+                },
+                "aimod-debug": {
+                    "description": "Send altid en detaljeret fejlfindingsbesked for AI-moderation til AI-overtrædelseskanalen, inklusive markerede beskeder, AI-beslutning og anvendte handlinger."
+                },
+                "nsfw-channel": {
+                    "description": "Kanal, hvor NSFW-overtrædelser logges med en forhåndsvisning af mediet."
+                },
+                "scan-age-restricted": {
+                    "description": "Scan aldersbegrænsede (NSFW) kanaler. Når slået fra, springes NSFW-kanaler over."
+                },
+                "check-tenor-gifs": {
+                    "description": "Anvend sanktioner, når NSFW-indhold detekteres i Tenor-GIF'er."
+                },
+                "use-default-banned-words": {
+                    "description": "Brug den indbyggede bandeordsliste for denne server."
+                },
+                "exclude-channels": {
+                    "description": "Kanaler, der skal udelades fra detektering."
+                },
+                "delete-scam-messages": {
+                    "description": "Slet automatisk beskeder, der matcher svindelmønstre eller URL'er."
+                },
+                "scam-detection-action": {
+                    "description": "Handling, der skal udføres, når en svindelbesked detekteres."
+                },
+                "check-links": {
+                    "description": "Tjek links i beskeder for malware, phishing, svindel osv."
+                },
+                "exclude-scam-channels": {
+                    "description": "Kanaler, der skal udelades fra svindeldetektering."
+                },
+                "aimod-detection-action": {
+                    "description": "Handling, der skal udføres, når den autonome moderator detekterer en overtrædelse. Brug auto for at lade AI'en træffe beslutningen."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Brug AI-moderering med højere nøjagtighed med gpt-5-mini (ca. 2,25 USD pr. 1M tokens). Bruger det månedlige budget hurtigere end standarden."
+                },
+                "autonomous-mod": {
+                    "description": "Brug AI til automatisk at moderere hele din server."
+                },
+                "aimod-check-interval": {
+                    "description": "Hvor ofte AI-moderationens batchproces skal køre."
+                },
+                "aimod-mode": {
+                    "description": "Vælg, hvordan AI-moderation udløses: `report`-tilstand (kun ved omtale), `interval`-tilstand (automatisk baggrundsscanning) eller `adaptive`-tilstand (skifter dynamisk baseret på serveraktivitet, begivenheder eller konfiguration)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Konfigurer, hvilke begivenheder der udløser skift mellem AI-moderationstilstande."
+                },
+                "no-forward-from-role": {
+                    "description": "Forhindr en bestemt rolle i at videresende beskeder."
+                },
+                "banned-urls": {
+                    "description": "Præcise URL'er eller domæner, der skal blokeres."
+                },
+                "url-detection-action": {
+                    "description": "Handling der skal udføres, når en blokeret URL registreres."
+                },
+                "exclude-url-channels": {
+                    "description": "Kanaler, der skal undtages fra forbudte URL'er."
+                },
+                "vcmod-enabled": {
+                    "description": "Aktivér moderering og transskription af stemmekanaler."
+                },
+                "vcmod-channels": {
+                    "description": "Stemmekanaler, der skal overvåges (hvis tom, overvåges ingen)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Hvor længe der aktivt lyttes pr. stemmekanal i en cyklus (f.eks. 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Hvor længe der pauses mellem hver transskription i Sparetilstand."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Sparetilstand: botten skifter mellem stemmekanaler for at fremstå aktiv, men optager eller lytter ikke det meste af tiden."
+                },
+                "vcmod-rules": {
+                    "description": "Regler, der gælder for moderering af stemmekanaler (adskilt fra tekstregler).",
+                    "default": [
+                        "1. Ingen chikane, hadefuld tale eller trusler.",
+                        "2. Ingen nedsættende udtryk eller diskriminerende sprog.",
+                        "3. Ingen opfordring til vold eller ulovlig aktivitet.",
+                        "4. Ingen seksuelt indhold eller eksplicitte bemærkninger.",
+                        "5. Følg Discords Servicevilkår."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "Handling der skal udføres, når stemmekanalmoderation registrerer en overtrædelse. Brug auto for at lade AI'en beslutte."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "Brug AI-analyse med højere nøjagtighed til VC-moderation (bruger mere tokenbudget)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Aktivér tydeligere stemmetransskriptioner med premium-behandling (højere omkostninger)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "Kanal, hvor VC-transskriptioner opslås."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Når aktiveret, vil botten kun transskribere stemmechat uden at anvende AI-regeltjek eller moderationshandlinger. Dette reducerer budgetforbruget betydeligt."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Kræv, at nye medlemmer gennemfører en captcha-udfordring, før de får adgang."
+                },
+                "captcha-grace-period": {
+                    "description": "Hvor lang tid nye medlemmer har til at fuldføre captcha-verificering (f.eks. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Handlinger, der udføres automatisk efter vellykket verificering."
+                },
+                "captcha-delivery-method": {
+                    "description": "Hvordan links til captcha-verificering leveres til nye medlemmer (DM eller embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "Kanal, hvor captcha-verificerings-embed opslås, når der bruges embed-levering."
+                },
+                "pre-captcha-roles": {
+                    "description": "Roller tildelt nye medlemmer, før de fuldfører captcha-verificering."
+                },
+                "captcha-failure-actions": {
+                    "description": "Handlinger, der udføres automatisk, når et medlem ikke består captcha-verificeringen."
                 }
             }
         }
