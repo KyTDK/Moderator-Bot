@@ -3,7 +3,8 @@
         "config": {
             "settings_schema": {
                 "locale": {
-                    "invalid": "Geçersiz yerel ayar. Desteklenen yerel ayarlar: {supported}"
+                    "invalid": "Geçersiz yerel ayar. Desteklenen yerel ayarlar: {supported}",
+                    "description": "Otomatik yerel ayar algılamasını belirli bir yerel ayar koduyla geçersiz kılın."
                 },
                 "nsfw_pfp_message": {
                     "default": "Profil resminizin uygunsuz bir içerik içerdiği tespit edildi.",
@@ -19,7 +20,8 @@
                         "2. NSFW veya müstehcen içerik yok.",
                         "3. Spam veya aşırı kendini tanıtma yok.",
                         "4. Discord'un Hizmet Şartları'na uyun."
-                    ]
+                    ],
+                    "description": "Otonom moderasyon için kullanılan sunucu kuralları."
                 },
                 "vcmod_rules": {
                     "default": [
@@ -29,6 +31,199 @@
                         "4. Cinsel içerik veya açık ifadeler yok.",
                         "5. Discord'un Hizmet Şartları'na uyun."
                     ]
+                },
+                "strike-channel": {
+                    "description": "İhtarların kaydedildiği kanal."
+                },
+                "aimod-debug": {
+                    "description": "Her zaman AI ihlalleri kanalına, işaretlenen mesajlar, AI kararı ve uygulanan işlemler dahil olmak üzere ayrıntılı bir AI moderasyon hata ayıklama mesajı gönderin."
+                },
+                "nsfw-verbose": {
+                    "description": "Taranan medyayla aynı kanala ayrıntılı bir tarama raporunu gömülü mesaj olarak gönder."
+                },
+                "nsfw-channel": {
+                    "description": "NSFW ihlallerinin medya önizlemesiyle birlikte kaydedildiği kanal."
+                },
+                "nsfw-channel-notify": {
+                    "description": "NSFW içeriği kaldırıldığında kanala bir bildirim gömülü mesajı gönder."
+                },
+                "nsfw-enabled": {
+                    "description": "Mesajlar, tepkiler, ve avatarlar için NSFW taramasını etkinleştir (diğer açma/kapama seçenekleri yine de geçerlidir)."
+                },
+                "monitor-events": {
+                    "description": "İzlenen her olay türü için günlük kaydını etkinleştir/devre dışı bırak."
+                },
+                "nsfw-detection-action": {
+                    "description": "Bir kullanıcı NSFW içerik paylaştığında uygulanacak işlem."
+                },
+                "nsfw-detection-categories": {
+                    "description": "Tespit için NSFW olarak kabul edilen kategoriler."
+                },
+                "nsfw-high-accuracy": {
+                    "description": "Daha güvenilir algılama için yüksek doğruluklu NSFW taramalarını etkinleştir. Yalnızca Accelerated."
+                },
+                "threshold": {
+                    "description": "NSFW tespiti için güven eşiği. Daha düşük değerler daha hassastır."
+                },
+                "banned-words-action": {
+                    "description": "Bir kullanıcı yasaklı bir kelime gönderdiğinde yapılacak eylem."
+                },
+                "monitor-channel": {
+                    "description": "Tüm sunucu etkinliklerini, mesaj düzenlemeleri, silmeler ve kullanıcı katılma/ayrılma olayları dahil günlüğe kaydetmek için kanal."
+                },
+                "captcha-log-channel": {
+                    "description": "captcha doğrulama günlüklerinin ve aktivite güncellemelerinin paylaşıldığı kanal."
+                },
+                "aimod-channel": {
+                    "description": "Yapay zeka ihlali günlüklerinin gönderildiği kanal."
+                },
+                "cycle-strike-actions": {
+                    "description": "Bir kullanıcıya verilecek eylemler tükendiğinde ihtar eylemlerini döngüye al"
+                },
+                "exclude-bannedwords-channels": {
+                    "description": "Yasaklı kelime tespitinden hariç tutulacak kanallar."
+                },
+                "strike-actions": {
+                    "description": "Her ihtar seviyesi için uygulanacak eylemler."
+                },
+                "strike-expiry": {
+                    "description": "Bir ihtarın geçerli kalacağı süre. Şu formatları kullanın: 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sırasıyla saniye, dakika, saat, gün, hafta, ay ve yıl."
+                },
+                "dm-on-strike": {
+                    "description": "Kullanıcı bir ihtar aldığında kullanıcıya DM gönder."
+                },
+                "check-pfp": {
+                    "description": "Kullanıcının profil resmini NSFW içerik için kontrol et."
+                },
+                "nsfw-pfp-action": {
+                    "description": "Bir kullanıcı NSFW bir profil fotoğrafı ayarladığında yapılacak işlem."
+                },
+                "nsfw-pfp-message": {
+                    "description": "Bir oyuncunun profil fotoğrafı işaretlendiğinde gönderilecek mesaj.",
+                    "default": "Profil fotoğrafınızda müstehcen içerik tespit edildi",
+                    "choices": [
+                        "Profil fotoğrafınızda müstehcen içerik tespit edildi",
+                        "Profil fotoğrafınız bu sunucu için uygun değil.",
+                        "Profil resminiz NSFW olarak işaretlendi."
+                    ]
+                },
+                "unmute-on-safe-pfp": {
+                    "description": "Bir kullanıcı profil resmini uygun bir görselle değiştirdiğinde zaman aşımını kaldır."
+                },
+                "scan-age-restricted": {
+                    "description": "Yaş kısıtlamalı (NSFW) kanalları tara. Kapalıyken NSFW kanallar atlanır."
+                },
+                "check-tenor-gifs": {
+                    "description": "Tenor GIF'lerinde NSFW içerik algılandığında yaptırımları uygula."
+                },
+                "use-default-banned-words": {
+                    "description": "Bu sunucu için yerleşik küfür listesini kullanın."
+                },
+                "exclude-channels": {
+                    "description": "Tespitten hariç tutulacak kanallar."
+                },
+                "delete-scam-messages": {
+                    "description": "Dolandırıcılık kalıpları veya URL'lerle eşleşen mesajları otomatik olarak sil."
+                },
+                "scam-detection-action": {
+                    "description": "Dolandırıcılık mesajı tespit edildiğinde yapılacak işlem."
+                },
+                "check-links": {
+                    "description": "Mesajlardaki bağlantıları kötü amaçlı yazılım, kimlik avı, dolandırıcılık vb. için kontrol et."
+                },
+                "exclude-scam-channels": {
+                    "description": "Dolandırıcılık tespitinden hariç tutulacak kanallar."
+                },
+                "aimod-detection-action": {
+                    "description": "Otonom moderatör bir ihlal tespit ettiğinde yapılacak işlem. Kararı yapay zekânın vermesi için auto seçeneğini kullanın."
+                },
+                "aimod-high-accuracy": {
+                    "description": "Daha yüksek doğrulukta yapay zekâ moderasyonu için gpt-5-mini kullanın (approx. 2.25 USD per 1M tokens). Varsayılanla karşılaştırıldığında aylık bütçeyi daha hızlı tüketir."
+                },
+                "autonomous-mod": {
+                    "description": "Yapay zekâyı kullanarak tüm sunucunuzu otomatik olarak denetleyin."
+                },
+                "aimod-check-interval": {
+                    "description": "Yapay Zeka moderasyon toplu işlemini çalıştırma sıklığı."
+                },
+                "aimod-mode": {
+                    "description": "AI moderasyonunun nasıl tetikleneceğini seçin: `report` modu (yalnızca bahsedildiğinde), `interval` modu (otomatik arka plan taraması) veya `adaptive` modu (sunucu etkinliği, olaylar veya yapılandırmaya göre dinamik olarak geçiş yapar)."
+                },
+                "aimod-adaptive-events": {
+                    "description": "Hangi olayların AI moderasyon modları arasında geçişi tetikleyeceğini yapılandırın."
+                },
+                "no-forward-from-role": {
+                    "description": "Belirli bir rolün mesaj iletmesini engelle."
+                },
+                "banned-urls": {
+                    "description": "Engellenecek tam URL'ler veya alan adları."
+                },
+                "url-detection-action": {
+                    "description": "Engellenen bir URL tespit edildiğinde yapılacak işlem."
+                },
+                "exclude-url-channels": {
+                    "description": "Yasaklı URL'lerden muaf tutulacak kanallar."
+                },
+                "vcmod-enabled": {
+                    "description": "Ses kanalı moderasyonunu ve transkripsiyonu etkinleştir."
+                },
+                "vcmod-channels": {
+                    "description": "İzlenecek ses kanalları (boş bırakılırsa, hiçbiri izlenmez)."
+                },
+                "vcmod-listen-duration": {
+                    "description": "Bir döngü sırasında ses kanalı başına aktif olarak dinleme süresi ne kadar (örn., 2m, 5m)."
+                },
+                "vcmod-idle-duration": {
+                    "description": "Saver Mode'da her transkripsiyon arasında ne kadar süre ara verileceği."
+                },
+                "vcmod-saver-mode": {
+                    "description": "Tasarruf modu: bot aktif görünmek için ses kanalları arasında geçiş yapar ancak genellikle kaydetmez veya dinlemez."
+                },
+                "vcmod-rules": {
+                    "description": "Sesli sohbet moderasyonu için geçerli kurallar (metin kurallarından ayrı).",
+                    "default": [
+                        "1. Taciz, nefret söylemi veya tehdit yasaktır.",
+                        "2. Aşağılayıcı ifadeler veya ayrımcı dile izin verilmez.",
+                        "3. Şiddete veya yasa dışı faaliyetlere kışkırtma yok.",
+                        "4. Cinsel içerik veya müstehcen ifadeler yok.",
+                        "5. Discord'un Hizmet Koşulları'na uyun."
+                    ]
+                },
+                "vcmod-detection-action": {
+                    "description": "VC moderasyonu bir ihlal tespit ettiğinde yapılacak işlem. Yapay zekanın karar vermesi için auto seçeneğini kullanın."
+                },
+                "vcmod-high-accuracy": {
+                    "description": "VC moderasyonu için daha yüksek doğruluklu yapay zeka analizini kullan (daha fazla token bütçesi kullanır)."
+                },
+                "vcmod-high-quality-transcription": {
+                    "description": "Premium işleme ile daha net ses transkripsiyonlarını etkinleştir (daha yüksek maliyet)."
+                },
+                "vcmod-transcript-channel": {
+                    "description": "VC transkriptlerinin paylaşıldığı kanal."
+                },
+                "vcmod-transcript-only": {
+                    "description": "Etkinleştirildiğinde, bot yapay zekâ kural kontrolleri veya moderasyon işlemleri uygulamadan yalnızca sesli sohbeti metne dönüştürür. Bu, bütçe kullanımını önemli ölçüde azaltır."
+                },
+                "captcha-verification-enabled": {
+                    "description": "Erişim kazanmadan önce yeni katılanların bir captcha doğrulamasını geçmesini gerektir."
+                },
+                "captcha-grace-period": {
+                    "description": "Yeni katılanların captcha doğrulamasını tamamlaması için süre (örn. 10m, 1h)."
+                },
+                "captcha-success-actions": {
+                    "description": "Başarılı doğrulamadan sonra otomatik olarak gerçekleştirilen işlemler."
+                },
+                "captcha-delivery-method": {
+                    "description": "Yeni üyelere captcha doğrulama bağlantılarının nasıl gönderildiği (DM veya embed)."
+                },
+                "captcha-embed-channel-id": {
+                    "description": "embed gönderimi kullanılırken captcha doğrulama gömülü mesajının gönderildiği kanal."
+                },
+                "pre-captcha-roles": {
+                    "description": "Captcha doğrulamasını tamamlamadan önce yeni gelenlere atanan roller."
+                },
+                "captcha-failure-actions": {
+                    "description": "Bir üye captcha doğrulamasında başarısız olduğunda otomatik olarak gerçekleştirilecek işlemler."
                 }
             }
         }
