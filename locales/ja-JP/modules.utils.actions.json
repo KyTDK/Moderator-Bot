@@ -1,20 +1,20 @@
 {
-  "modules": {
-    "utils": {
-      "actions": {
-        "choices": {
-          "strike": "ストライク",
-          "kick": "キック",
-          "ban": "禁止",
-          "timeout": "タイムアウト",
-          "delete": "メッセージ削除",
-          "give_role": "ロールを付与",
-          "take_role": "ロールを削除",
-          "warn": "ユーザー警告",
-          "broadcast": "メッセージのブロードキャスト",
-          "auto": "自動"
+    "modules": {
+        "utils": {
+            "actions": {
+                "choices": {
+                    "strike": "ストライク",
+                    "kick": "キック",
+                    "ban": "禁止",
+                    "timeout": "タイムアウト",
+                    "delete": "メッセージ削除",
+                    "give_role": "ロールを付与",
+                    "take_role": "ロールを削除",
+                    "warn": "ユーザー警告",
+                    "broadcast": "メッセージのブロードキャスト",
+                    "auto": "自動"
+                }
+            }
         }
-      }
     }
-  }
 }
