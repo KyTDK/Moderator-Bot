@@ -1,9 +1,9 @@
 {
-  "modules": {
-    "variables": {
-      "time_string": {
-        "invalid_format": "Érvénytelen időtartam formátum. Használj olyan formátumokat, mint: 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Másodpercek, percek, órák, napok, hetek, hónapok és évek sorrendben."
-      }
+    "modules": {
+        "variables": {
+            "time_string": {
+                "invalid_format": "Érvénytelen időtartam formátum. Használj olyan formátumokat, mint: 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Másodpercek, percek, órák, napok, hetek, hónapok és évek sorrendben."
+            }
+        }
     }
-  }
 }
