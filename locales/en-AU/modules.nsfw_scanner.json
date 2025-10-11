@@ -1,0 +1,75 @@
+{
+    "modules": {
+        "nsfw_scanner": {
+            "actions": {
+                "embed": {
+                    "title": "",
+                    "description": "",
+                    "footer": ""
+                }
+            },
+            "helpers": {
+                "attachments": {
+                    "report": {
+                        "title": "",
+                        "description": {
+                            "user": "",
+                            "file": "",
+                            "type": "",
+                            "decision": ""
+                        },
+                        "file_types": {
+                            "image": "",
+                            "video": "",
+                            "unknown": ""
+                        },
+                        "decision": {
+                            "nsfw": "",
+                            "safe": "",
+                            "unknown": ""
+                        },
+                        "fields": {
+                            "reason": "",
+                            "category": "",
+                            "score": "",
+                            "flagged_any": "",
+                            "summary_categories": "",
+                            "max_similarity": "",
+                            "max_category": "",
+                            "similarity": "",
+                            "high_accuracy": "",
+                            "clip_threshold": "",
+                            "moderation_threshold": "",
+                            "video_frames": ""
+                        },
+                        "reasons": {
+                            "openai_moderation": "",
+                            "similarity_match": "",
+                            "no_frames_extracted": "",
+                            "no_nsfw_frames_detected": ""
+                        }
+                    }
+                }
+            },
+            "shared": {
+                "confidence": {
+                    "name": "",
+                    "value": "",
+                    "source_suffix": "",
+                    "sources": {
+                        "score": "",
+                        "similarity": ""
+                    }
+                },
+                "boolean": {
+                    "true": "",
+                    "false": ""
+                },
+                "category": {
+                    "unspecified": ""
+                },
+                "policy_violation": ""
+            }
+        }
+    }
+}
