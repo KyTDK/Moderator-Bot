@@ -1,7 +1,8 @@
 import asyncio
+import logging
 import os
-import uuid
 import re
+import uuid
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlparse
 
@@ -13,28 +14,103 @@ from discord.errors import NotFound
 from discord.ext import commands
 import pillow_avif  # registers AVIF support
 
-from modules.utils import mysql
+from modules.utils import clip_vectors, mysql
+from modules.utils.discord_utils import safe_get_channel
 
-from .constants import TMP_DIR
+from .constants import ALLOWED_USER_IDS, LOG_CHANNEL_ID, TMP_DIR
 from .helpers import (
     check_attachment as helper_check_attachment,
     temp_download as helper_temp_download,
 )
 from .utils import safe_delete
 
+log = logging.getLogger(__name__)
+
 class NSFWScanner:
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.session = None
         self.tmp_dir = TMP_DIR
+        self._clip_failure_callback_registered = False
+        self._last_reported_milvus_error_key: str | None = None
 
     async def start(self):
         self.session = aiohttp.ClientSession()
         os.makedirs(self.tmp_dir, exist_ok=True)
+        self._ensure_clip_failure_notifier()
 
     async def stop(self):
         if self.session:
             await self.session.close()
+
+    def _ensure_clip_failure_notifier(self) -> None:
+        if self._clip_failure_callback_registered:
+            return
+        clip_vectors.register_failure_callback(self._handle_milvus_failure)
+        self._clip_failure_callback_registered = True
+
+    async def _handle_milvus_failure(self, exc: Exception) -> None:
+        error_key = f"{type(exc).__name__}:{exc}"
+        if self._last_reported_milvus_error_key == error_key:
+            return
+
+        self._last_reported_milvus_error_key = error_key
+
+        if not LOG_CHANNEL_ID:
+            log.warning("Milvus failure detected but LOG_CHANNEL_ID is not configured")
+            return
+
+        mention = " ".join(f"<@{user_id}>" for user_id in ALLOWED_USER_IDS).strip()
+        description = (
+            "Failed to connect to Milvus at "
+            f"{clip_vectors.MILVUS_HOST}:{clip_vectors.MILVUS_PORT}. "
+            "Moderator Bot is falling back to the OpenAI `moderator_api` path until the vector index is available again."
+        )
+        embed = discord.Embed(
+            title="Milvus connection failure",
+            description=description,
+            color=discord.Color.red(),
+        )
+        embed.add_field(
+            name="Exception",
+            value=f"`{type(exc).__name__}: {exc}`",
+            inline=False,
+        )
+        embed.set_footer(text="OpenAI moderation fallback active")
+
+        try:
+            channel = await safe_get_channel(self.bot, LOG_CHANNEL_ID)
+        except Exception as lookup_exc:
+            log.warning(
+                "Milvus failure detected but log channel %s could not be resolved: %s",
+                LOG_CHANNEL_ID,
+                lookup_exc,
+            )
+            return
+
+        if channel is None:
+            log.warning(
+                "Milvus failure detected but log channel %s could not be found",
+                LOG_CHANNEL_ID,
+            )
+            return
+
+        try:
+            await channel.send(
+                content=mention or None,
+                embed=embed,
+            )
+        except Exception as send_exc:
+            log.warning(
+                "Failed to report Milvus failure to channel %s: %s",
+                LOG_CHANNEL_ID,
+                send_exc,
+            )
+        else:
+            log.warning(
+                "Milvus failure reported to channel %s; OpenAI moderation fallback active",
+                LOG_CHANNEL_ID,
+            )
 
     async def is_nsfw(
         self,
@@ -164,4 +240,3 @@ class NSFWScanner:
                 print(f"[emoji-scan] Failed to scan custom emoji {emoji_obj}: {e}")
 
         return False
-    
