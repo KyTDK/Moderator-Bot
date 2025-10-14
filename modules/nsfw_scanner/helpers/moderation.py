@@ -117,7 +117,7 @@ async def moderator_api(
             
             summary_categories[normalized_category] = score
 
-            if not skip_vector_add:
+            if not skip_vector_add and clip_vectors.is_available():
                 await asyncio.to_thread(clip_vectors.add_vector, image, metadata={"category": normalized_category, "score": score})
 
             if score < threshold:
@@ -131,6 +131,7 @@ async def moderator_api(
         if (
             ADD_SFW_VECTOR
             and image is not None
+            and clip_vectors.is_available()
             and _should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
         ):
             await asyncio.to_thread(

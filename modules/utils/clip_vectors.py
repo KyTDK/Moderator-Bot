@@ -1,11 +1,12 @@
 import asyncio
+import inspect
 import json
 import logging
 import math
 import os
 from collections import defaultdict
 from threading import Event, Lock, Thread
-from typing import Dict, Iterable, List, Optional
+from typing import Callable, Dict, Iterable, List, Optional
 
 import numpy as np
 import torch
@@ -43,6 +44,84 @@ NLIST = 1024
 NPROBE = 64
 _logged_ivf_params = False
 _collection_not_ready_warned = False
+_collection_error_logged = False
+_failure_callbacks: list[tuple[Callable[[Exception], object], Optional[asyncio.AbstractEventLoop]]] = []
+_last_notified_error_key: Optional[str] = None
+_fallback_active = False
+_vector_insert_warned = False
+_vector_search_warned = False
+_vector_delete_warned = False
+
+
+def _make_error_key(exc: Exception) -> str:
+    return f"{type(exc).__name__}:{exc}"
+
+
+def _run_failure_callback(
+    callback: Callable[[Exception], object],
+    loop: Optional[asyncio.AbstractEventLoop],
+    exc: Exception,
+) -> None:
+    try:
+        result = callback(exc)
+    except Exception:  # pragma: no cover - defensive logging
+        log.exception("Milvus failure callback raised")
+        return
+
+    if inspect.isawaitable(result):
+        if loop and not loop.is_closed():
+            asyncio.run_coroutine_threadsafe(result, loop)
+        else:
+            log.debug(
+                "Discarded Milvus failure coroutine callback; no running event loop available",
+            )
+
+
+def _notify_failure(exc: Exception, *, force: bool = False) -> None:
+    global _last_notified_error_key, _fallback_active
+    key = _make_error_key(exc)
+
+    with _collection_state_lock:
+        if not force and _last_notified_error_key == key:
+            return
+        _last_notified_error_key = key
+        callbacks = list(_failure_callbacks)
+        _fallback_active = True
+
+    for callback, loop in callbacks:
+        _run_failure_callback(callback, loop, exc)
+
+
+def register_failure_callback(callback: Callable[[Exception], object]) -> None:
+    """Register a callback that runs when the Milvus collection fails."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    with _collection_state_lock:
+        _failure_callbacks.append((callback, loop))
+        current_error = _collection_error
+
+    if current_error:
+        _run_failure_callback(callback, loop, current_error)
+
+
+def is_available() -> bool:
+    """Return True when the Milvus collection is ready for use."""
+    with _collection_state_lock:
+        return _collection is not None
+
+
+def is_fallback_active() -> bool:
+    """Return True if Milvus has failed and the OpenAI fallback should be used."""
+    with _collection_state_lock:
+        return _fallback_active
+
+
+def get_last_error() -> Optional[Exception]:
+    with _collection_state_lock:
+        return _collection_error
 
 _model = None
 _proc = None
@@ -62,7 +141,11 @@ def _suggest_ivf_params(n_vectors: int) -> tuple[int, int]:
 
 def _initialize_collection() -> None:
     """Connect to Milvus, ensure the index exists, and load the collection."""
-    global _collection, _collection_error, NLIST, NPROBE, _logged_ivf_params
+    global _collection
+    global _collection_error
+    global NLIST, NPROBE, _logged_ivf_params
+    global _collection_error_logged, _last_notified_error_key, _fallback_active
+    global _vector_insert_warned, _vector_search_warned, _vector_delete_warned
 
     try:
         connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
@@ -127,15 +210,26 @@ def _initialize_collection() -> None:
         with _collection_state_lock:
             _collection = coll
             _collection_error = None
+            _fallback_active = False
+            _collection_error_logged = False
+            _last_notified_error_key = None
+            _vector_insert_warned = False
+            _vector_search_warned = False
+            _vector_delete_warned = False
     except Exception as exc:  # pragma: no cover - defensive logging
         with _collection_state_lock:
             _collection = None
             _collection_error = exc
+            _collection_error_logged = False
+            _vector_insert_warned = False
+            _vector_search_warned = False
+            _vector_delete_warned = False
         log.exception(
             "Failed to initialize Milvus collection '%s': %s",
             COLLECTION_NAME,
             exc,
         )
+        _notify_failure(exc)
     finally:
         _collection_ready.set()
 
@@ -158,7 +252,7 @@ def _ensure_collection_initializer_started() -> None:
 
 def _get_collection(timeout: Optional[float] = 30.0) -> Optional[Collection]:
     """Return the Milvus collection when ready, or None if unavailable."""
-    global _collection_not_ready_warned
+    global _collection_not_ready_warned, _collection_error_logged
 
     _ensure_collection_initializer_started()
     ready = _collection_ready.wait(timeout)
@@ -176,11 +270,13 @@ def _get_collection(timeout: Optional[float] = 30.0) -> Optional[Collection]:
         if _collection is not None:
             return _collection
         if _collection_error is not None:
-            log.error(
-                "Milvus collection '%s' failed to initialize: %s",
-                COLLECTION_NAME,
-                _collection_error,
-            )
+            if not _collection_error_logged:
+                log.error(
+                    "Milvus collection '%s' failed to initialize: %s",
+                    COLLECTION_NAME,
+                    _collection_error,
+                )
+                _collection_error_logged = True
         return None
 
 
@@ -212,9 +308,12 @@ def embed(img: Image.Image) -> np.ndarray:
 
 
 def add_vector(img: Image.Image, metadata: dict) -> None:
+    global _vector_insert_warned
     coll = _get_collection(timeout=60.0)
     if coll is None:
-        log.warning("Skipping vector insert; Milvus collection is not ready")
+        if not _vector_insert_warned:
+            log.warning("Skipping vector insert; Milvus collection is not ready")
+            _vector_insert_warned = True
         return
     vec = embed(img)[0]
     category = metadata.get("category") or "safe"
@@ -226,9 +325,12 @@ def add_vector(img: Image.Image, metadata: dict) -> None:
 
 async def delete_vectors(ids: Iterable[int]) -> None:
     """Remove vectors identified by their primary keys."""
+    global _vector_delete_warned
     coll = _get_collection(timeout=30.0)
     if coll is None:
-        log.warning("Unable to delete vectors; Milvus collection is not ready")
+        if not _vector_delete_warned:
+            log.warning("Unable to delete vectors; Milvus collection is not ready")
+            _vector_delete_warned = True
         return
     normalized_ids = [int(value) for value in ids if value is not None]
     if not normalized_ids:
@@ -252,9 +354,12 @@ def query_similar(
     k: int = 20,
     min_votes: int = 1
 ) -> List[Dict]:
+    global _vector_search_warned
     coll = _get_collection(timeout=30.0)
     if coll is None:
-        log.warning("Vector search skipped; Milvus collection is not ready")
+        if not _vector_search_warned:
+            log.warning("Vector search skipped; Milvus collection is not ready")
+            _vector_search_warned = True
         return []
 
     vec = embed(img)[0]

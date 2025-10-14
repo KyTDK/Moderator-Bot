@@ -70,6 +70,8 @@ async def process_image(
                         except Exception as exc:
                             print(f"[process_image] Failed to delete vector {vector_id}: {exc}")
 
+            milvus_available = clip_vectors.is_available()
+
             if similarity_response and not refresh_triggered:
                 for item in similarity_response:
                     category = item.get("category")
@@ -108,7 +110,7 @@ async def process_image(
 
             # Skip vector when high-accuracy is enabled and we had a strong similarity match
             # dont skip if we are refreshing the vector
-            skip_vector = max_similarity >= CLIP_THRESHOLD and not refresh_triggered
+            skip_vector = (max_similarity >= CLIP_THRESHOLD and not refresh_triggered) or not milvus_available
             response = await moderator_api(
                 scanner,
                 image_path=png_converted_path,

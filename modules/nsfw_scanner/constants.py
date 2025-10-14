@@ -8,6 +8,24 @@ load_dotenv()
 GUILD_ID = int(os.getenv("GUILD_ID", 0))
 LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", 0))
 
+
+def _parse_allowed_user_ids(raw: str | None) -> list[int]:
+    if not raw:
+        return []
+    result: list[int] = []
+    for part in raw.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            result.append(int(part))
+        except ValueError:
+            continue
+    return result
+
+
+ALLOWED_USER_IDS = _parse_allowed_user_ids(os.getenv("ALLOWED_USER_IDS"))
+
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
