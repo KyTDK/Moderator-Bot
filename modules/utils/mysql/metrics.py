@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any
 
 from modules.metrics.models import ModerationMetric
@@ -27,6 +27,57 @@ def _parse_details(raw: str | bytes | None) -> dict[str, Any]:
     if isinstance(value, dict):
         return value
     return {"__raw__": value}
+
+
+def _metric_rollup_date(metric: ModerationMetric) -> date:
+    return metric.occurred_at.astimezone(timezone.utc).date()
+
+
+def _metric_rollup_guild(metric: ModerationMetric) -> int:
+    try:
+        return int(metric.guild_id or 0)
+    except Exception:
+        return 0
+
+
+async def _update_metric_rollup(metric: ModerationMetric) -> None:
+    flagged_increment = 1 if metric.was_flagged else 0
+    last_flagged_at = _normalise_timestamp(metric.occurred_at) if metric.was_flagged else None
+    last_reference = metric.reference if metric.was_flagged else None
+
+    await execute_query(
+        """
+        INSERT INTO moderation_metric_rollups (
+            metric_date,
+            guild_id,
+            content_type,
+            scans_count,
+            flagged_count,
+            last_flagged_at,
+            last_reference
+        )
+        VALUES (%s, %s, %s, 1, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            scans_count = scans_count + 1,
+            flagged_count = flagged_count + VALUES(flagged_count),
+            last_flagged_at = CASE
+                WHEN VALUES(flagged_count) > 0 THEN VALUES(last_flagged_at)
+                ELSE last_flagged_at
+            END,
+            last_reference = CASE
+                WHEN VALUES(flagged_count) > 0 THEN VALUES(last_reference)
+                ELSE last_reference
+            END
+        """,
+        (
+            _metric_rollup_date(metric),
+            _metric_rollup_guild(metric),
+            metric.content_type,
+            flagged_increment,
+            last_flagged_at,
+            last_reference,
+        ),
+    )
 
 
 async def insert_moderation_metric(metric: ModerationMetric) -> int:
@@ -61,6 +112,7 @@ async def insert_moderation_metric(metric: ModerationMetric) -> int:
             )
             await conn.commit()
             last_row_id = cur.lastrowid or 0
+    await _update_metric_rollup(metric)
     return int(last_row_id)
 
 
@@ -211,8 +263,82 @@ async def summarise_metrics(
     return summary
 
 
+async def fetch_metric_rollups(
+    *,
+    guild_id: int | None = None,
+    content_type: str | None = None,
+    since: date | datetime | None = None,
+    limit: int = 30,
+) -> list[dict[str, Any]]:
+    """Return pre-aggregated moderation rollups (per day, per guild/content type)."""
+
+    where_clauses: list[str] = []
+    params: list[Any] = []
+    if guild_id is not None:
+        where_clauses.append("guild_id = %s")
+        params.append(int(guild_id))
+    if content_type:
+        where_clauses.append("content_type = %s")
+        params.append(content_type)
+    if since is not None:
+        if isinstance(since, datetime):
+            metric_since = since.date()
+        else:
+            metric_since = since
+        where_clauses.append("metric_date >= %s")
+        params.append(metric_since)
+
+    where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+    params_with_limit = tuple(params + [int(limit)])
+    rows, _ = await execute_query(
+        f"""
+        SELECT
+            metric_date,
+            guild_id,
+            content_type,
+            scans_count,
+            flagged_count,
+            last_flagged_at,
+            last_reference
+        FROM moderation_metric_rollups
+        {where_sql}
+        ORDER BY metric_date DESC
+        LIMIT %s
+        """,
+        params_with_limit,
+        fetch_all=True,
+    )
+
+    rollups: list[dict[str, Any]] = []
+    for row in rows or []:
+        (
+            metric_date,
+            guild_raw,
+            content,
+            scans_count,
+            flagged_count,
+            last_flagged_at,
+            last_reference,
+        ) = row
+        rollups.append(
+            {
+                "metric_date": metric_date,
+                "guild_id": None if guild_raw in (None, 0) else int(guild_raw),
+                "content_type": content,
+                "scans_count": int(scans_count or 0),
+                "flagged_count": int(flagged_count or 0),
+                "last_flagged_at": last_flagged_at.replace(tzinfo=timezone.utc)
+                if isinstance(last_flagged_at, datetime)
+                else last_flagged_at,
+                "last_reference": last_reference,
+            }
+        )
+    return rollups
+
+
 __all__ = [
     "insert_moderation_metric",
     "fetch_recent_metrics",
     "summarise_metrics",
+    "fetch_metric_rollups",
 ]

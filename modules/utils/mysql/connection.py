@@ -217,6 +217,21 @@ async def _ensure_database_exists() -> None:
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS moderation_metric_rollups (
+                    metric_date DATE NOT NULL,
+                    guild_id BIGINT NOT NULL DEFAULT 0,
+                    content_type VARCHAR(32) NOT NULL,
+                    scans_count BIGINT NOT NULL DEFAULT 0,
+                    flagged_count BIGINT NOT NULL DEFAULT 0,
+                    last_flagged_at DATETIME NULL,
+                    last_reference VARCHAR(255) NULL,
+                    PRIMARY KEY (metric_date, guild_id, content_type),
+                    INDEX idx_rollups_guild_date (guild_id, metric_date)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
             await conn.commit()
         finally:
             conn.close()

@@ -163,8 +163,26 @@ async def get_media_metrics_summary(
     )
 
 
+async def get_media_metric_rollups(
+    *,
+    guild_id: int | None = None,
+    content_type: str | None = None,
+    since: datetime | None = None,
+    limit: int = 30,
+) -> list[dict[str, Any]]:
+    """Fetch pre-aggregated daily rollups for dashboards."""
+
+    return await mysql_metrics.fetch_metric_rollups(
+        guild_id=guild_id,
+        content_type=content_type,
+        since=since,
+        limit=limit,
+    )
+
+
 __all__ = [
     "log_media_scan",
     "get_recent_media_metrics",
     "get_media_metrics_summary",
+    "get_media_metric_rollups",
 ]

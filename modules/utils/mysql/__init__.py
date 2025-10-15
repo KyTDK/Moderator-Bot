@@ -29,6 +29,7 @@ from .captcha import (
 )
 from .metrics import (
     fetch_recent_metrics,
+    fetch_metric_rollups,
     insert_moderation_metric,
     summarise_metrics,
 )
@@ -78,6 +79,7 @@ __all__ = [
     "delete_captcha_embed_record",
     "insert_moderation_metric",
     "fetch_recent_metrics",
+    "fetch_metric_rollups",
     "summarise_metrics",
     "ShardAssignment",
     "ShardClaimError",

@@ -269,6 +269,7 @@ class VoiceModeratorCog(commands.Cog):
                     accelerated=await mysql.is_accelerated(guild_id=guild.id),
                     reference=f"voice:{guild.id}:{getattr(channel, 'id', 'unknown')}",
                     extra_context=extra_context,
+                    scanner="voice_moderation",
                 )
             except Exception as metrics_exc:
                 print(f"[metrics] Voice metrics logging failed for guild {guild.id}: {metrics_exc}")
