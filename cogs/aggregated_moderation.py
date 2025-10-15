@@ -166,6 +166,7 @@ class AggregatedModerationCog(commands.Cog):
         try:
             channel = await safe_get_channel(self.bot, payload.channel_id)
             if channel is None:
+                print(f"[raw] missing channel for reaction add {payload.channel_id}")
                 return
             message = await safe_get_message(channel, payload.message_id)
         except discord.NotFound:

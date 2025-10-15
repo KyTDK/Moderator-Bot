@@ -191,6 +191,32 @@ async def _ensure_database_exists() -> None:
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS moderation_metrics (
+                    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    occurred_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    guild_id BIGINT NULL,
+                    channel_id BIGINT NULL,
+                    user_id BIGINT NULL,
+                    message_id BIGINT NULL,
+                    content_type VARCHAR(32) NOT NULL,
+                    event_type VARCHAR(32) NOT NULL,
+                    was_flagged BOOLEAN NOT NULL DEFAULT FALSE,
+                    flags_count INT NOT NULL DEFAULT 0,
+                    primary_reason VARCHAR(64) NULL,
+                    details JSON NULL,
+                    scan_duration_ms INT NULL,
+                    scanner VARCHAR(64) NULL,
+                    source VARCHAR(64) NULL,
+                    reference VARCHAR(255) NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_metrics_guild_time (guild_id, occurred_at),
+                    INDEX idx_metrics_flagged (was_flagged, occurred_at),
+                    INDEX idx_metrics_content (content_type, occurred_at)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """
+            )
             await conn.commit()
         finally:
             conn.close()

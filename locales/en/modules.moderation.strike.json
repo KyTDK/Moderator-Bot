@@ -50,7 +50,8 @@
           "reason": "**Reason:** {reason}",
           "expires": "**Expires:** {expiry}",
           "issued_by": "Issued By",
-          "expiry_never": "Never"
+          "expiry_never": "Never",
+          "footer": "Server: {server}"
         },
         "warn_embed": {
           "title": "⚠️ You Have Been Warned",
