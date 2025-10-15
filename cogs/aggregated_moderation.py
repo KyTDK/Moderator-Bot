@@ -176,6 +176,7 @@ class AggregatedModerationCog(commands.Cog):
             return
 
         if message is None:
+            print(f"[raw] missing message {payload.message_id}; skipping reaction scan")
             return
 
         guild = self.bot.get_guild(payload.guild_id)
