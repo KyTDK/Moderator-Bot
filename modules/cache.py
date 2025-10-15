@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import diskcache as dc
 import os, tempfile
@@ -57,7 +58,7 @@ class CachedMessage:
         self.stickers = [CachedSticker(s) for s in data["stickers"]]
         self.reactions = [CachedReaction(r) for r in data["reactions"]]
 
-def cache_message(msg: discord.Message):
+async def cache_message(msg: discord.Message):
     key = f"{msg.guild.id}:{msg.id}"
     value = DEFAULT_CACHED_MESSAGE.copy()
 
@@ -98,7 +99,10 @@ def cache_message(msg: discord.Message):
         ] if msg.reactions else [],
     })
 
-    message_cache.set(key, value, expire=86400) # TTL 24 hours
+    try:
+        await asyncio.to_thread(message_cache.set, key, value, expire=86400)
+    except Exception as exc:
+        print(f"[cache] failed to persist message {msg.id} for guild {msg.guild.id if msg.guild else 'unknown'}: {exc}")
 
 def get_cached_message(guild_id: int, message_id: int) -> CachedMessage | None:
     data = message_cache.get(f"{guild_id}:{message_id}")

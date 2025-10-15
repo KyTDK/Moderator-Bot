@@ -52,6 +52,13 @@
           "issued_by": "Issued By",
           "expiry_never": "Never"
         },
+        "warn_embed": {
+          "title": "⚠️ You Have Been Warned",
+          "description": "{mention}, {message}\n\n{reason_block}{reminder}",
+          "reason_block": "**Reason:** {reason}\n\n",
+          "reminder": "Please follow the server rules to avoid further action such as timeouts, strikes, or bans.",
+          "footer": "Server: {server}"
+        },
         "errors": {
           "too_many_strikes": "You cannot give the same player more than 100 strikes. Use `/strikes clear <user>` to reset their strikes."
         }
