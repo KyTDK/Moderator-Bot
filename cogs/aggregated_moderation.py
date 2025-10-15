@@ -165,11 +165,16 @@ class AggregatedModerationCog(commands.Cog):
 
         try:
             channel = await safe_get_channel(self.bot, payload.channel_id)
+            if channel is None:
+                return
             message = await safe_get_message(channel, payload.message_id)
         except discord.NotFound:
             return
         except discord.HTTPException as e:
             print(f"[raw] fetch failed: {e}")
+            return
+
+        if message is None:
             return
 
         guild = self.bot.get_guild(payload.guild_id)
