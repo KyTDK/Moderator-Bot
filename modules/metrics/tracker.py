@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
-from modules.metrics.models import ModerationMetric
 from modules.utils.mysql import metrics as mysql_metrics
 
-MEDIA_EVENT = "media_scan"
+DEFAULT_STATUS = "scan_complete"
 
 
-def _sorted_summary(summary: dict[str, Any] | None) -> list[dict[str, Any]]:
+def _sorted_summary(summary: dict[str, Any] | None, limit: int = 5) -> list[dict[str, Any]]:
     if not isinstance(summary, dict):
         return []
     try:
@@ -20,10 +19,11 @@ def _sorted_summary(summary: dict[str, Any] | None) -> list[dict[str, Any]]:
         )
     except Exception:
         ordered = summary.items()
-    return [
+    collection = [
         {"category": str(name), "score": float(score) if isinstance(score, (int, float)) else score}
         for name, score in ordered
     ]
+    return collection[:limit]
 
 
 def _compute_flags_count(scan_result: dict[str, Any] | None) -> int:
@@ -42,7 +42,7 @@ def _compute_flags_count(scan_result: dict[str, Any] | None) -> int:
     return 1 if scan_result.get("is_nsfw") else 0
 
 
-def _build_scan_payload(scan_result: dict[str, Any] | None) -> dict[str, Any]:
+def _build_scan_payload(scan_result: dict[str, Any] | None, *, limit: int = 5) -> dict[str, Any]:
     if not isinstance(scan_result, dict):
         return {}
     primary_keys = {
@@ -66,6 +66,10 @@ def _build_scan_payload(scan_result: dict[str, Any] | None) -> dict[str, Any]:
         if key in scan_result:
             payload[key] = scan_result[key]
 
+    summary = payload.get("summary_categories")
+    if isinstance(summary, dict):
+        payload["top_summary_categories"] = _sorted_summary(summary, limit=limit)
+
     extras = {k: v for k, v in scan_result.items() if k not in primary_keys}
     if extras:
         payload["extras"] = extras
@@ -84,69 +88,53 @@ async def log_media_scan(
     file_size: int | None,
     source: str,
     scan_result: dict[str, Any] | None,
+    status: str = DEFAULT_STATUS,
     scan_duration_ms: int | None = None,
     accelerated: bool | None = None,
     reference: str | None = None,
     extra_context: dict[str, Any] | None = None,
     scanner: str = "nsfw_scanner",
     occurred_at: datetime | None = None,
-) -> int:
-    """Record a rich media scan metric."""
+) -> None:
+    """Accumulate media scan metrics into rollups."""
 
+    status = (status or DEFAULT_STATUS).strip() or DEFAULT_STATUS
+    if len(status) > 32:
+        status = status[:32]
     flags_count = _compute_flags_count(scan_result)
     was_flagged = bool(scan_result and scan_result.get("is_nsfw"))
-    primary_reason = scan_result.get("reason") if isinstance(scan_result, dict) else None
+    occurred = occurred_at or datetime.now(timezone.utc)
 
     details: dict[str, Any] = {
+        "scanner": scanner,
+        "source": source,
+        "channel_id": channel_id,
+        "user_id": user_id,
+        "message_id": message_id,
         "file": {
-            "filename": filename,
+            "name": filename,
             "mime": detected_mime,
             "size_bytes": file_size,
         },
         "scan": _build_scan_payload(scan_result),
-        "flags_breakdown": _sorted_summary(
-            scan_result.get("summary_categories") if isinstance(scan_result, dict) else None
-        ),
         "accelerated": accelerated,
+        "flags_count": flags_count,
     }
     if extra_context:
         details["context"] = extra_context
 
-    metric_kwargs = {
-        "event_type": MEDIA_EVENT,
-        "content_type": content_type,
-        "guild_id": guild_id,
-        "channel_id": channel_id,
-        "user_id": user_id,
-        "message_id": message_id,
-        "was_flagged": was_flagged,
-        "flags_count": flags_count,
-        "primary_reason": primary_reason,
-        "details": details,
-        "scan_duration_ms": scan_duration_ms,
-        "scanner": scanner,
-        "source": source,
-        "reference": reference or filename,
-    }
-    if occurred_at is not None:
-        metric_kwargs["occurred_at"] = occurred_at
-
-    metric = ModerationMetric(**metric_kwargs)
-    return await mysql_metrics.insert_moderation_metric(metric)
-
-
-async def get_recent_media_metrics(
-    *,
-    guild_id: int | None = None,
-    limit: int = 100,
-    since: datetime | None = None,
-) -> list[dict[str, Any]]:
-    """Fetch recent media scan metrics for dashboards or diagnostics."""
-
-    return await mysql_metrics.fetch_recent_metrics(
+    await mysql_metrics.accumulate_media_metric(
+        occurred_at=occurred,
         guild_id=guild_id,
-        limit=limit,
-        since=since,
+        content_type=content_type or "unknown",
+        status=status or DEFAULT_STATUS,
+        was_flagged=was_flagged,
+        flags_count=flags_count,
+        file_size=file_size,
+        scan_duration_ms=scan_duration_ms,
+        reference=reference or filename,
+        details=details,
+        store_last_details=was_flagged or status != DEFAULT_STATUS,
     )
 
 
@@ -157,7 +145,7 @@ async def get_media_metrics_summary(
 ) -> list[dict[str, Any]]:
     """Return aggregate metrics grouped by content type."""
 
-    return await mysql_metrics.summarise_metrics(
+    return await mysql_metrics.summarise_rollups(
         guild_id=guild_id,
         since=since,
     )
@@ -180,9 +168,15 @@ async def get_media_metric_rollups(
     )
 
 
+async def get_media_metrics_totals() -> dict[str, Any]:
+    """Fetch the global aggregate metrics record."""
+
+    return await mysql_metrics.fetch_metric_totals()
+
+
 __all__ = [
     "log_media_scan",
-    "get_recent_media_metrics",
     "get_media_metrics_summary",
     "get_media_metric_rollups",
+    "get_media_metrics_totals",
 ]

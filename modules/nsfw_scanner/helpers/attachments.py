@@ -206,6 +206,7 @@ async def check_attachment(
                 file_size=file_size,
                 source="attachment",
                 scan_result=result,
+                status=status,
                 scan_duration_ms=duration_ms,
                 accelerated=await _get_accelerated(),
                 reference=f"{message_id}:{filename}" if message_id else filename,

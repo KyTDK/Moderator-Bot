@@ -265,6 +265,7 @@ class VoiceModeratorCog(commands.Cog):
                     file_size=None,
                     source="voice_pipeline",
                     scan_result=scan_payload,
+                    status=status,
                     scan_duration_ms=duration_ms,
                     accelerated=await mysql.is_accelerated(guild_id=guild.id),
                     reference=f"voice:{guild.id}:{getattr(channel, 'id', 'unknown')}",
