@@ -1,8 +1,10 @@
 import os
+import time
 from typing import Any
 
 import discord
 
+from modules.metrics import log_media_scan
 from modules.utils import mod_logging, mysql
 from modules.utils.localization import TranslateFn, localize_message
 
@@ -147,8 +149,73 @@ async def check_attachment(
 ) -> bool:
     filename = os.path.basename(temp_filename)
     file_type, detected_mime = determine_file_type(temp_filename)
+    try:
+        file_size = os.path.getsize(temp_filename)
+    except OSError:
+        file_size = None
+
+    started_at = time.perf_counter()
+    metrics_recorded = False
+    accelerated_cache: dict[str, Any] = {"fetched": False, "value": None}
+
+    async def _get_accelerated() -> bool | None:
+        if accelerated_cache["fetched"]:
+            return accelerated_cache["value"]
+        accelerated_cache["fetched"] = True
+        if guild_id is None:
+            accelerated_cache["value"] = None
+            return None
+        try:
+            accelerated_cache["value"] = await mysql.is_accelerated(guild_id=guild_id)
+        except Exception:
+            accelerated_cache["value"] = None
+        return accelerated_cache["value"]
+
+    async def _emit_metrics(result: dict[str, Any] | None, status: str) -> None:
+        nonlocal metrics_recorded
+        if metrics_recorded:
+            return
+        metrics_recorded = True
+
+        duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
+        channel_id = getattr(getattr(message, "channel", None), "id", None) if message else None
+        user_id = getattr(author, "id", None) if author else None
+        message_id = getattr(message, "id", None) if message else None
+
+        extra_context = {
+            "status": status,
+            "detected_mime": detected_mime,
+            "file_type": file_type,
+            "perform_actions": bool(perform_actions),
+            "nsfw_callback": bool(nsfw_callback),
+        }
+        if message_id:
+            extra_context["message_id"] = message_id
+        if message and getattr(message, "jump_url", None):
+            extra_context["jump_url"] = message.jump_url
+
+        try:
+            await log_media_scan(
+                guild_id=guild_id,
+                channel_id=channel_id,
+                user_id=user_id,
+                message_id=message_id,
+                content_type=file_type or "unknown",
+                detected_mime=detected_mime,
+                filename=filename,
+                file_size=file_size,
+                source="attachment",
+                scan_result=result,
+                scan_duration_ms=duration_ms,
+                accelerated=await _get_accelerated(),
+                reference=f"{message_id}:{filename}" if message_id else filename,
+                extra_context=extra_context,
+            )
+        except Exception as metrics_exc:  # pragma: no cover - best effort logging
+            print(f"[metrics] Failed to record media scan metric for {filename}: {metrics_exc}")
 
     if guild_id is None:
+        await _emit_metrics(None, "missing_guild")
         print("[check_attachment] Guild_id is None")
         return False
 
@@ -169,12 +236,14 @@ async def check_attachment(
             guild_id=guild_id,
         )
     else:
+        await _emit_metrics(None, "unsupported_type")
         print(
             f"[check_attachment] Unsupported file type: {detected_mime or file_type} for {filename}"
         )
         return False
 
     translator = _resolve_translator(scanner)
+    await _emit_metrics(scan_result, "scan_complete")
 
     try:
         if message is not None and await mysql.get_settings(guild_id, "nsfw-verbose"):

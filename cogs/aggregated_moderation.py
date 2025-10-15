@@ -188,8 +188,13 @@ class AggregatedModerationCog(commands.Cog):
         member = await safe_get_member(guild, payload.user_id)
         emoji = payload.emoji
 
+        reactions = getattr(message, "reactions", None)
+        if reactions is None:
+            print(f"[raw] message {payload.message_id} missing reactions data; skipping reaction scan")
+            return
+
         # Avoid scanning again
-        for r in message.reactions:
+        for r in reactions:
             if str(r.emoji) == str(emoji) and r.count > 1:
                 return
 
