@@ -2,7 +2,7 @@ import asyncio
 import os
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional
 import time
 
 import discord
@@ -10,6 +10,7 @@ from discord.ext import commands, tasks
 
 from dotenv import load_dotenv
 
+from modules.metrics import log_media_scan
 from modules.utils import mysql, mod_logging
 from modules.utils.discord_utils import safe_get_member
 from modules.utils.time import parse_duration
@@ -206,6 +207,71 @@ class VoiceModeratorCog(commands.Cog):
         # Use the voice IO helper to handle connection and harvesting
         st = self._get_state(guild.id)
         utterances: list[tuple[int, str, datetime]] = []
+
+        async def _record_voice_metrics(
+            *,
+            status: str,
+            report_obj: VoiceModerationReport | None,
+            total_tokens: int,
+            request_cost: float,
+            usage_snapshot: dict[str, Any],
+            duration_ms: int,
+            error: str | None = None,
+        ) -> None:
+            violations_payload: list[dict[str, Any]] = []
+            if report_obj and getattr(report_obj, "violations", None):
+                for violation in list(report_obj.violations)[:10]:
+                    violations_payload.append(
+                        {
+                            "user_id": getattr(violation, "user_id", None),
+                            "rule": getattr(violation, "rule", None),
+                            "reason": getattr(violation, "reason", None),
+                            "actions": list(getattr(violation, "actions", []) or []),
+                        }
+                    )
+
+            scan_payload: dict[str, Any] = {
+                "is_nsfw": bool(violations_payload),
+                "reason": status,
+                "violations": violations_payload,
+                "violations_count": len(violations_payload),
+                "total_tokens": int(total_tokens),
+                "request_cost_usd": float(request_cost or 0),
+                "usage_snapshot": usage_snapshot or {},
+                "transcript_only": bool(transcript_only),
+                "high_accuracy": bool(high_accuracy),
+            }
+            if error:
+                scan_payload["error"] = error
+
+            extra_context = {
+                "status": status,
+                "utterance_count": len(utterances),
+                "listen_window_seconds": listen_delta.total_seconds(),
+                "idle_window_seconds": idle_delta.total_seconds(),
+                "transcript_only": bool(transcript_only),
+                "high_accuracy": bool(high_accuracy),
+            }
+
+            try:
+                await log_media_scan(
+                    guild_id=guild.id,
+                    channel_id=getattr(channel, "id", None),
+                    user_id=None,
+                    message_id=None,
+                    content_type="voice",
+                    detected_mime=None,
+                    filename=None,
+                    file_size=None,
+                    source="voice_pipeline",
+                    scan_result=scan_payload,
+                    scan_duration_ms=duration_ms,
+                    accelerated=await mysql.is_accelerated(guild_id=guild.id),
+                    reference=f"voice:{guild.id}:{getattr(channel, 'id', 'unknown')}",
+                    extra_context=extra_context,
+                )
+            except Exception as metrics_exc:
+                print(f"[metrics] Voice metrics logging failed for guild {guild.id}: {metrics_exc}")
         chunk_tasks: list[asyncio.Task] = []
         sem = asyncio.Semaphore(2)
         if do_listen:
@@ -389,6 +455,7 @@ class VoiceModeratorCog(commands.Cog):
         )
 
         # Run the shared moderation pipeline
+        pipeline_started = time.perf_counter()
         try:
             report, total_tokens, request_cost, usage, status = await run_moderation_pipeline_voice(
                 guild_id=guild.id,
@@ -406,8 +473,27 @@ class VoiceModeratorCog(commands.Cog):
             )
         except Exception as e:
             print(f"[VCMod] pipeline failed: {e}")
+            duration_ms = int(max((time.perf_counter() - pipeline_started) * 1000, 0))
+            await _record_voice_metrics(
+                status="exception",
+                report_obj=None,
+                total_tokens=0,
+                request_cost=0.0,
+                usage_snapshot={},
+                duration_ms=duration_ms,
+                error=str(e),
+            )
             await asyncio.sleep(idle_delta.total_seconds())
             return
+        duration_ms = int(max((time.perf_counter() - pipeline_started) * 1000, 0))
+        await _record_voice_metrics(
+            status=status,
+            report_obj=report,
+            total_tokens=total_tokens,
+            request_cost=request_cost,
+            usage_snapshot=usage,
+            duration_ms=duration_ms,
+        )
 
         # No violations
         if not report:
