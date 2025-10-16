@@ -63,6 +63,10 @@ async def process_image(
                 accelerated_flag = bool(accelerated_flag)
 
                 allowed_categories = settings_map.get(NSFW_CATEGORY_SETTING) or []
+                try:
+                    moderation_threshold = float(settings_map.get("threshold", 0.7))
+                except (TypeError, ValueError):
+                    moderation_threshold = 0.7
                 high_accuracy = bool(settings_map.get("nsfw-high-accuracy"))
                 similarity_response = await asyncio.to_thread(
                     clip_vectors.query_similar, image, threshold=0
@@ -142,6 +146,8 @@ async def process_image(
                     image=image,
                     skip_vector_add=skip_vector,
                     max_similarity=max_similarity,
+                    allowed_categories=allowed_categories,
+                    threshold=moderation_threshold,
                 )
                 if isinstance(response, dict):
                     response.setdefault("max_similarity", max_similarity)

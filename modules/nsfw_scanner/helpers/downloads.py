@@ -1,4 +1,3 @@
-import asyncio
 import os
 import uuid
 from contextlib import asynccontextmanager
@@ -46,7 +45,6 @@ async def temp_download(session, url: str, ext: str | None = None) -> AsyncItera
         async with session.get(url) as resp:
             resp.raise_for_status()
             chunk_size, buffer_limit = _resolve_stream_config(resp.content_length)
-            loop = asyncio.get_running_loop()
             with open(path, "wb") as file_obj:
                 buffer = bytearray()
                 async for chunk in resp.content.iter_chunked(chunk_size):
@@ -54,10 +52,10 @@ async def temp_download(session, url: str, ext: str | None = None) -> AsyncItera
                         continue
                     buffer.extend(chunk)
                     if len(buffer) >= buffer_limit:
-                        await loop.run_in_executor(None, file_obj.write, buffer)
+                        file_obj.write(buffer)
                         buffer = bytearray()
                 if buffer:
-                    await loop.run_in_executor(None, file_obj.write, buffer)
+                    file_obj.write(buffer)
     except Exception:
         try:
             os.remove(path)
