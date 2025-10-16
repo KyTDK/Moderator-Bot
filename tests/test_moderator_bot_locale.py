@@ -53,6 +53,7 @@ def bot(monkeypatch: pytest.MonkeyPatch) -> ModeratorBot:
         log_cog_loads=False,
         total_shards=1,
     )
+    asyncio.run(bot.ensure_i18n_ready())
     yield bot
     mysql.remove_settings_listener(bot._locale_settings_listener)
 
@@ -531,6 +532,7 @@ def test_initialises_with_bundled_locales_when_config_missing(
         log_cog_loads=False,
         total_shards=1,
     )
+    asyncio.run(bot.ensure_i18n_ready())
 
     try:
         expected_root = Path(__file__).resolve().parents[1] / "locales"
@@ -570,6 +572,7 @@ def test_translate_prefers_base_locale_before_default(
         log_cog_loads=False,
         total_shards=1,
     )
+    asyncio.run(bot.ensure_i18n_ready())
 
     try:
         assert bot.translate("label", locale="es-ES") == "Panel"
