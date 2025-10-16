@@ -18,6 +18,7 @@ from modules.utils.time import parse_duration
 from cogs.autonomous_moderation import helpers as am_helpers
 from cogs.voice_moderation.models import VoiceModerationReport
 from cogs.voice_moderation.prompt import VOICE_SYSTEM_PROMPT, BASE_SYSTEM_TOKENS
+from cogs.voice_moderation.transcribe_queue import TranscriptionWorkQueue
 from cogs.voice_moderation.voice_io import (
     HARVEST_WINDOW_SECONDS,
     harvest_pcm_chunk,
@@ -30,6 +31,9 @@ AUTOMOD_OPENAI_KEY = os.getenv("AUTOMOD_OPENAI_KEY")
 AIMOD_MODEL = os.getenv("AIMOD_MODEL", "gpt-5-nano")
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10))
+
+_TRANSCRIBE_WORKER_COUNT = 2
+_TRANSCRIBE_QUEUE_MAX = 4
 
 class _GuildVCState:
     def __init__(self) -> None:
@@ -274,13 +278,36 @@ class VoiceModeratorCog(commands.Cog):
                 )
             except Exception as metrics_exc:
                 print(f"[metrics] Voice metrics logging failed for guild {guild.id}: {metrics_exc}")
-        chunk_tasks: list[asyncio.Task] = []
-        sem = asyncio.Semaphore(2)
+        async def _transcribe_worker(
+            payload: tuple[dict[int, bytes], dict[int, datetime], dict[int, float]]
+        ) -> None:
+            eligible_map, end_ts_map, duration_map_s = payload
+            try:
+                chunk_utts, _ = await transcribe_harvest_chunk(
+                    guild_id=guild.id,
+                    api_key=AUTOMOD_OPENAI_KEY or "",
+                    eligible_map=eligible_map,
+                    end_ts_map=end_ts_map,
+                    duration_map_s=duration_map_s,
+                    high_quality=high_quality_transcription,
+                )
+                if chunk_utts:
+                    utterances.extend(chunk_utts)
+            except Exception as e:
+                print(f"[VCMod] transcribe task failed: {e}")
+
+        dispatcher = TranscriptionWorkQueue(
+            worker_count=_TRANSCRIBE_WORKER_COUNT,
+            max_queue_size=_TRANSCRIBE_QUEUE_MAX,
+            worker_fn=_transcribe_worker,
+        )
+
         if do_listen:
             # Harvest and transcribe repeatedly every window seconds during the listen duration
             start = time.monotonic()
-            next_tick = start
+            deadline = start + listen_delta.total_seconds()
             while True:
+                iteration_start = time.monotonic()
                 # Harvest only, fast path
                 st.voice, eligible_map, end_ts_map, duration_map_s = await harvest_pcm_chunk(
                     guild=guild,
@@ -291,39 +318,23 @@ class VoiceModeratorCog(commands.Cog):
                     window_seconds=HARVEST_WINDOW_SECONDS,
                 )
                 if eligible_map:
-                    # Spawn a background transcribe task, bounded by semaphore
-                    async def _do_transcribe(em=eligible_map, etm=end_ts_map, dmap=duration_map_s):
-                        async with sem:
-                            try:
-                                chunk_utts, _ = await transcribe_harvest_chunk(
-                                    guild_id=guild.id,
-                                    api_key=AUTOMOD_OPENAI_KEY or "",
-                                    eligible_map=em,
-                                    end_ts_map=etm,
-                                    duration_map_s=dmap,
-                                    high_quality=high_quality_transcription,
-                                )
-                                if chunk_utts:
-                                    utterances.extend(chunk_utts)
-                            except Exception as e:
-                                print(f"[VCMod] transcribe task failed: {e}")
+                    enqueue_wait = await dispatcher.submit((eligible_map, end_ts_map, duration_map_s))
+                    if enqueue_wait >= 0.5:
+                        print(
+                            f"[VCMod] Throttled harvest by {enqueue_wait:.2f}s while waiting for transcription backlog"
+                        )
 
-                    t = asyncio.create_task(_do_transcribe())
-                    chunk_tasks.append(t)
-                # schedule next harvest
-                next_tick += HARVEST_WINDOW_SECONDS
-                remaining = min(listen_delta.total_seconds(), next_tick - time.monotonic())
-                if remaining > 0:
-                    await asyncio.sleep(remaining)
-                else:
-                    # We overran the target tick; useful for debugging cadence
-                    print(f"[VCMod] Harvest overrun by {abs(remaining):.2f}s (transcribe backlog likely)")
                 # stop once listen window elapsed
-                if (time.monotonic() - start) >= listen_delta.total_seconds():
+                if time.monotonic() >= deadline:
                     break
-            # Wait for all chunk tasks to complete before processing results
-            if chunk_tasks:
-                await asyncio.gather(*chunk_tasks, return_exceptions=True)
+
+                elapsed = time.monotonic() - iteration_start
+                sleep_for = HARVEST_WINDOW_SECONDS - elapsed
+                if sleep_for > 0:
+                    # Respect the listen deadline even if window is longer
+                    await asyncio.sleep(min(sleep_for, max(0.0, deadline - time.monotonic())))
+            # Wait for all queued work to finish before processing results
+            await dispatcher.drain_and_close()
         else:
             # Saver mode: no listening/transcribing in this cycle
             await harvest_pcm_chunk(
