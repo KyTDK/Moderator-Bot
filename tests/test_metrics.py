@@ -86,10 +86,23 @@ from modules.utils.mysql.metrics_schema import METRIC_AGGREGATE_COLUMNS
 AGGREGATE_COLUMN_NAMES: tuple[str, ...] = tuple(
     column.name for column in METRIC_AGGREGATE_COLUMNS
 )
+AGGREGATE_COLUMN_DEFS = {column.name: column for column in METRIC_AGGREGATE_COLUMNS}
 
 
-def _default_aggregates() -> dict[str, int]:
-    return {name: 0 for name in AGGREGATE_COLUMN_NAMES}
+def _coerce_aggregate(name: str, value: Any) -> Any:
+    column = AGGREGATE_COLUMN_DEFS[name]
+    if value is None:
+        value = column.default
+    if value is None:
+        return column.value_type()
+    return column.value_type(value)
+
+
+def _default_aggregates() -> dict[str, Any]:
+    return {
+        name: _coerce_aggregate(name, AGGREGATE_COLUMN_DEFS[name].default)
+        for name in AGGREGATE_COLUMN_NAMES
+    }
 
 
 class FakeCursor:
@@ -114,7 +127,10 @@ class FakeCursor:
             key = (metric_date, int(guild_id), content_type)
             row = self.store.rollups.get(key)
             if row:
-                aggregate_values = tuple(int(row.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES)
+                aggregate_values = tuple(
+                    _coerce_aggregate(name, row.get(name))
+                    for name in AGGREGATE_COLUMN_NAMES
+                )
                 self._fetchone_result = (
                     *aggregate_values,
                     row["last_flagged_at"],
@@ -154,7 +170,7 @@ class FakeCursor:
                 },
             )
             for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values):
-                row[name] = int(value)
+                row[name] = _coerce_aggregate(name, value)
             row.update(
                 {
                     "last_flagged_at": last_flagged_at,
@@ -180,7 +196,10 @@ class FakeCursor:
             last_status = params[5 + aggregate_length]
             status_counts_json = params[6 + aggregate_length]
             last_details = params[7 + aggregate_length]
-            data = {name: int(value) for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values)}
+            data = {
+                name: _coerce_aggregate(name, value)
+                for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values)
+            }
             data.update(
                 {
                     "status_counts": json.loads(status_counts_json),
@@ -199,7 +218,10 @@ class FakeCursor:
         if "FROM moderation_metric_totals" in normalized and "FOR UPDATE" in normalized:
             row = self.store.totals
             if row:
-                aggregate_values = tuple(int(row.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES)
+                aggregate_values = tuple(
+                    _coerce_aggregate(name, row.get(name))
+                    for name in AGGREGATE_COLUMN_NAMES
+                )
                 self._fetchone_result = (
                     *aggregate_values,
                     row["last_flagged_at"],
@@ -225,7 +247,7 @@ class FakeCursor:
             last_details = params[aggregate_length + 4]
             row = self.store.totals or self.store.create_empty_totals()
             for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values):
-                row[name] = int(value)
+                row[name] = _coerce_aggregate(name, value)
             row.update(
                 {
                     "last_flagged_at": last_flagged_at,
@@ -251,7 +273,10 @@ class FakeCursor:
             status_counts_json = params[4 + aggregate_length]
             last_details = params[5 + aggregate_length]
             assert int(singleton_id) == 1
-            data = {name: int(value) for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values)}
+            data = {
+                name: _coerce_aggregate(name, value)
+                for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values)
+            }
             data.update(
                 {
                     "last_flagged_at": last_flagged_at,
@@ -398,7 +423,10 @@ class MetricsDataStore:
 
         result = []
         for metric_date, guild_id, content_type, data in rows:
-            aggregate_values = tuple(int(data.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES)
+            aggregate_values = tuple(
+                _coerce_aggregate(name, data.get(name))
+                for name in AGGREGATE_COLUMN_NAMES
+            )
             result.append(
                 (
                     metric_date,
@@ -466,7 +494,10 @@ class MetricsDataStore:
         row = self.totals
         if not row:
             return None
-        aggregate_values = tuple(int(row.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES)
+        aggregate_values = tuple(
+            _coerce_aggregate(name, row.get(name))
+            for name in AGGREGATE_COLUMN_NAMES
+        )
         return (
             *aggregate_values,
             row["last_flagged_at"],

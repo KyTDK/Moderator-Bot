@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from typing import Any, Sequence
 
-from ..metrics_schema import METRIC_AGGREGATE_COLUMNS
+from ..metrics_schema import ColumnDef, METRIC_AGGREGATE_COLUMNS
 
 
 def ensure_utc(dt: datetime | None) -> datetime:
@@ -78,11 +78,22 @@ class MetricUpdate:
 
 
 AGGREGATE_COLUMN_NAMES = tuple(column.name for column in METRIC_AGGREGATE_COLUMNS)
+AGGREGATE_COLUMN_DEFS: dict[str, ColumnDef] = {
+    column.name: column for column in METRIC_AGGREGATE_COLUMNS
+}
 
 
-def _default_aggregate_values() -> dict[str, int]:
+def _coerce_column_value(column: ColumnDef, value: Any) -> Any:
+    if value is None:
+        value = column.default
+    if value is None:
+        return column.value_type()
+    return column.value_type(value)
+
+
+def _default_aggregate_values() -> dict[str, Any]:
     return {
-        column.name: int(column.default or 0)
+        column.name: _coerce_column_value(column, column.default)
         for column in METRIC_AGGREGATE_COLUMNS
     }
 
@@ -125,7 +136,7 @@ AGGREGATE_UPDATE_HANDLERS: dict[str, Callable[[int, MetricUpdate], int]] = {
 
 @dataclass(slots=True)
 class MetricRow:
-    aggregates: dict[str, int] = field(default_factory=_default_aggregate_values)
+    aggregates: dict[str, Any] = field(default_factory=_default_aggregate_values)
     status_counts: dict[str, int] = field(default_factory=dict)
     last_flagged_at: datetime | None = None
     last_reference: str | None = None
@@ -140,8 +151,16 @@ class MetricRow:
             handler = AGGREGATE_UPDATE_HANDLERS.get(handler_name)
             if handler is None:
                 raise ValueError(f"Unknown aggregate update strategy: {handler_name}")
-            current_value = int(self.aggregates.get(column.name, column.default or 0))
+            current_value = _coerce_column_value(
+                column, self.aggregates.get(column.name, column.default)
+            )
             self.aggregates[column.name] = handler(current_value, update)
+
+        avg_column = AGGREGATE_COLUMN_DEFS.get("average_latency_ms")
+        if avg_column is not None:
+            self.aggregates["average_latency_ms"] = _coerce_column_value(
+                avg_column, self.average_latency_ms
+            )
 
         self.last_status = update.status
 
@@ -158,7 +177,13 @@ class MetricRow:
 
     def _value_tuple(self) -> tuple[Any, ...]:
         return (
-            *(int(self.aggregates.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES),
+            *(
+                _coerce_column_value(
+                    AGGREGATE_COLUMN_DEFS[name],
+                    self.aggregates.get(name),
+                )
+                for name in AGGREGATE_COLUMN_NAMES
+            ),
             self.last_flagged_at,
             self.last_reference,
             self.last_status,
@@ -176,7 +201,13 @@ class MetricRow:
         last_flagged = self.last_flagged_at
         if isinstance(last_flagged, datetime) and last_flagged.tzinfo is None:
             last_flagged = last_flagged.replace(tzinfo=timezone.utc)
-        payload = {name: int(self.aggregates.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES}
+        payload = {
+            name: _coerce_column_value(
+                AGGREGATE_COLUMN_DEFS[name],
+                self.aggregates.get(name),
+            )
+            for name in AGGREGATE_COLUMN_NAMES
+        }
         payload.update(
             {
                 "last_latency_ms": int(self.aggregates.get("last_duration_ms", 0)),
@@ -185,18 +216,22 @@ class MetricRow:
                 "last_status": self.last_status,
                 "last_reference": self.last_reference,
                 "last_details": decode_json_map(self.last_details_raw),
-                "average_latency_ms": self.average_latency_ms,
             }
         )
+        payload["average_latency_ms"] = float(self.average_latency_ms)
         return payload
 
     @property
     def scans_count(self) -> int:
-        return int(self.aggregates.get("scans_count", 0))
+        column = AGGREGATE_COLUMN_DEFS["scans_count"]
+        return int(_coerce_column_value(column, self.aggregates.get("scans_count")))
 
     @property
     def total_duration_ms(self) -> int:
-        return int(self.aggregates.get("total_duration_ms", 0))
+        column = AGGREGATE_COLUMN_DEFS["total_duration_ms"]
+        return int(
+            _coerce_column_value(column, self.aggregates.get("total_duration_ms"))
+        )
 
     @property
     def average_latency_ms(self) -> float:
@@ -207,11 +242,11 @@ class MetricRow:
 
     @classmethod
     def from_db_row(cls, values: Sequence[Any]) -> MetricRow:
-        aggregates: dict[str, int] = {}
+        aggregates: dict[str, Any] = {}
         offset = 0
         for column in METRIC_AGGREGATE_COLUMNS:
             raw_value = values[offset] if offset < len(values) else None
-            aggregates[column.name] = int(raw_value or 0)
+            aggregates[column.name] = _coerce_column_value(column, raw_value)
             offset += 1
         last_flagged_at = values[offset] if offset < len(values) else None
         offset += 1

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any, Sequence, Type
 
 
 @dataclass(frozen=True)
@@ -10,6 +10,7 @@ class ColumnDef:
     definition: str
     default: Any | None = None
     update_strategy: str | None = None
+    value_type: Type[Any] = int
 
     @property
     def ddl(self) -> str:
@@ -130,6 +131,12 @@ METRIC_AGGREGATE_COLUMNS: tuple[ColumnDef, ...] = (
         "BIGINT NOT NULL DEFAULT 0",
         default=0,
         update_strategy="assign_duration",
+    ),
+    ColumnDef(
+        "average_latency_ms",
+        "DOUBLE NOT NULL DEFAULT 0",
+        default=0.0,
+        value_type=float,
     ),
 )
 
