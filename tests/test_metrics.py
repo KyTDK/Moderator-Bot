@@ -538,6 +538,295 @@ def metrics_store(monkeypatch: pytest.MonkeyPatch) -> MetricsDataStore:
     return store
 
 
+def test_metrics_detail_status_handling(metrics_store: MetricsDataStore) -> None:
+    async def run() -> None:
+        base_time = datetime(2024, 5, 1, 9, 30, tzinfo=timezone.utc)
+        raw_status = "  custom-status-that-is-definitely-too-long  "
+        expected_status = raw_status.strip()[:32]
+        summary_categories = {
+            "cat1": 0.1,
+            "cat2": 0.95,
+            "cat3": 0.6,
+            "cat4": 0.4,
+            "cat5": 0.8,
+            "cat6": 0.7,
+        }
+
+        await log_media_scan(
+            guild_id=None,
+            channel_id=22,
+            user_id=501,
+            message_id=9001,
+            content_type="",
+            detected_mime="image/jpeg",
+            filename="first.jpg",
+            file_size=-10,
+            source="attachment",
+            scan_result=None,
+            status="",
+            scan_duration_ms=-5,
+            accelerated=None,
+            reference="first_ref",
+            occurred_at=base_time,
+        )
+
+        await log_media_scan(
+            guild_id=None,
+            channel_id=22,
+            user_id=502,
+            message_id=9002,
+            content_type="",
+            detected_mime="image/png",
+            filename="second.png",
+            file_size=100,
+            source="attachment",
+            scan_result={
+                "is_nsfw": False,
+                "reason": "model",
+                "summary_categories": summary_categories,
+                "score": 0.42,
+                "threshold": 0.98,
+                "debug_value": 12,
+            },
+            status=raw_status,
+            scan_duration_ms=50,
+            accelerated=True,
+            reference="second_ref",
+            extra_context={"moderation": "manual_override"},
+            occurred_at=base_time + timedelta(minutes=5),
+        )
+
+        rollups = await get_media_metric_rollups(content_type="unknown", limit=5)
+        assert len(rollups) == 1
+        rollup = rollups[0]
+
+        assert rollup["guild_id"] is None
+        assert rollup["metric_date"] == base_time.date()
+        assert rollup["scans_count"] == 2
+        assert rollup["flagged_count"] == 0
+        assert rollup["flags_sum"] == 0
+        assert rollup["total_bytes"] == 100
+        assert rollup["total_duration_ms"] == 50
+        assert rollup["average_latency_ms"] == pytest.approx(25.0)
+        assert rollup["last_latency_ms"] == 50
+        assert rollup["last_flagged_at"] is None
+        assert rollup["last_reference"] is None
+        assert rollup["last_status"] == expected_status
+        assert rollup["status_counts"]["scan_complete"] == 1
+        assert rollup["status_counts"][expected_status] == 1
+
+        details = rollup["last_details"]
+        assert details["status"] == expected_status
+        assert details["context"]["moderation"] == "manual_override"
+        assert details["file"]["name"] == "second.png"
+        assert details["file"]["size_bytes"] == 100
+        assert details["flags_count"] == 4
+        assert details["scan"]["summary_categories"] == summary_categories
+        assert details["scan"]["threshold"] == 0.98
+        assert details["scan"]["extras"]["debug_value"] == 12
+
+        top_categories = [entry["category"] for entry in details["scan"]["top_summary_categories"]]
+        assert top_categories == ["cat2", "cat5", "cat6", "cat3", "cat4"]
+
+        totals = await get_media_metrics_totals()
+        assert totals["scans_count"] == 2
+        assert totals["flagged_count"] == 0
+        assert totals["flags_sum"] == 0
+        assert totals["total_bytes"] == 100
+        assert totals["total_duration_ms"] == 50
+        assert totals["average_latency_ms"] == pytest.approx(25.0)
+        assert totals["last_latency_ms"] == 50
+        assert totals["last_flagged_at"] is None
+        assert totals["last_reference"] is None
+        assert totals["last_status"] == expected_status
+        assert totals["status_counts"]["scan_complete"] == 1
+        assert totals["status_counts"][expected_status] == 1
+        assert totals["last_details"]["status"] == expected_status
+        assert totals["last_details"]["scan"]["top_summary_categories"][0]["score"] == pytest.approx(0.95)
+        assert totals["last_details"]["flags_count"] == 4
+
+    asyncio.run(run())
+
+
+def test_metrics_rollups_filters(metrics_store: MetricsDataStore) -> None:
+    async def run() -> None:
+        base_time = datetime(2024, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        await log_media_scan(
+            guild_id=777,
+            channel_id=12,
+            user_id=200,
+            message_id=7001,
+            content_type="image",
+            detected_mime="image/png",
+            filename="historic.png",
+            file_size=1200,
+            source="attachment",
+            scan_result={"is_nsfw": True, "summary_categories": {"adult": 0.8}},
+            scan_duration_ms=30,
+            accelerated=True,
+            reference="historic-image",
+            occurred_at=base_time - timedelta(days=2),
+        )
+
+        await log_media_scan(
+            guild_id=777,
+            channel_id=13,
+            user_id=201,
+            message_id=7002,
+            content_type="video",
+            detected_mime="video/mp4",
+            filename="clip.mp4",
+            file_size=800,
+            source="attachment",
+            scan_result={"is_nsfw": False, "summary_categories": {"violence": 0.2}},
+            scan_duration_ms=20,
+            accelerated=False,
+            reference="video-ref",
+            occurred_at=base_time - timedelta(days=1),
+        )
+
+        await log_media_scan(
+            guild_id=777,
+            channel_id=14,
+            user_id=202,
+            message_id=7003,
+            content_type="image",
+            detected_mime="image/png",
+            filename="flagged.png",
+            file_size=2048,
+            source="attachment",
+            scan_result={
+                "is_nsfw": True,
+                "summary_categories": {"adult": 0.9, "violence": 0.7},
+            },
+            status="escalated_manual_review",
+            scan_duration_ms=30,
+            accelerated=True,
+            reference="flagged-image",
+            occurred_at=base_time,
+        )
+
+        await log_media_scan(
+            guild_id=777,
+            channel_id=14,
+            user_id=202,
+            message_id=7004,
+            content_type="image",
+            detected_mime="image/png",
+            filename="error.png",
+            file_size=1024,
+            source="attachment",
+            scan_result={
+                "is_nsfw": False,
+                "summary_categories": {"spam": 0.1},
+            },
+            status="scan_error",
+            scan_duration_ms=40,
+            accelerated=False,
+            reference="error-image",
+            extra_context={"error_code": 500},
+            occurred_at=base_time + timedelta(minutes=15),
+        )
+
+        rollups = await get_media_metric_rollups(guild_id=777, limit=2)
+        assert [entry["metric_date"] for entry in rollups] == [
+            base_time.date(),
+            (base_time - timedelta(days=1)).date(),
+        ]
+
+        latest = rollups[0]
+        assert latest["content_type"] == "image"
+        assert latest["scans_count"] == 2
+        assert latest["flagged_count"] == 1
+        assert latest["flags_sum"] == 2
+        assert latest["total_bytes"] == 3072
+        assert latest["total_duration_ms"] == 70
+        assert latest["average_latency_ms"] == pytest.approx(35.0)
+        assert latest["last_latency_ms"] == 40
+        assert latest["last_flagged_at"] == base_time
+        assert latest["last_reference"] == "flagged-image"
+        assert latest["last_status"] == "scan_error"
+        assert latest["status_counts"]["escalated_manual_review"] == 1
+        assert latest["status_counts"]["scan_error"] == 1
+        assert latest["last_details"]["context"]["error_code"] == 500
+
+        video_rollups = await get_media_metric_rollups(content_type="video", limit=5)
+        assert len(video_rollups) == 1
+        assert video_rollups[0]["metric_date"] == (base_time - timedelta(days=1)).date()
+        assert video_rollups[0]["guild_id"] == 777
+
+        image_rollups = await get_media_metric_rollups(content_type="image", limit=5)
+        assert len(image_rollups) == 2
+        assert image_rollups[0]["metric_date"] == base_time.date()
+        assert image_rollups[1]["metric_date"] == (base_time - timedelta(days=2)).date()
+
+        since_rollups = await get_media_metric_rollups(
+            guild_id=777,
+            since=base_time - timedelta(days=1),
+            limit=5,
+        )
+        assert [entry["metric_date"] for entry in since_rollups] == [
+            base_time.date(),
+            (base_time - timedelta(days=1)).date(),
+        ]
+
+        summary = await get_media_metrics_summary(
+            guild_id=777,
+            since=base_time - timedelta(days=1),
+        )
+        summary_map = {entry["content_type"]: entry for entry in summary}
+
+        assert summary_map["image"]["scans"] == 2
+        assert summary_map["image"]["flagged"] == 1
+        assert summary_map["image"]["flags_sum"] == 2
+        assert summary_map["image"]["bytes_total"] == 3072
+        assert summary_map["image"]["duration_total_ms"] == 70
+
+        assert summary_map["video"]["scans"] == 1
+        assert summary_map["video"]["flagged"] == 0
+        assert summary_map["video"]["bytes_total"] == 800
+        assert summary_map["video"]["duration_total_ms"] == 20
+
+        totals = await get_media_metrics_totals()
+        assert totals["scans_count"] == 4
+        assert totals["flagged_count"] == 2
+        assert totals["flags_sum"] == 3
+        assert totals["total_bytes"] == 5072
+        assert totals["total_duration_ms"] == 120
+        assert totals["average_latency_ms"] == pytest.approx(30.0)
+        assert totals["last_latency_ms"] == 40
+        assert totals["last_flagged_at"] == base_time
+        assert totals["last_reference"] == "flagged-image"
+        assert totals["last_status"] == "scan_error"
+        assert totals["status_counts"]["scan_complete"] == 2
+        assert totals["status_counts"]["escalated_manual_review"] == 1
+        assert totals["status_counts"]["scan_error"] == 1
+        assert totals["last_details"]["context"]["error_code"] == 500
+
+    asyncio.run(run())
+
+
+def test_metrics_totals_empty(metrics_store: MetricsDataStore) -> None:
+    async def run() -> None:
+        totals = await get_media_metrics_totals()
+
+        assert totals["scans_count"] == 0
+        assert totals["flagged_count"] == 0
+        assert totals["flags_sum"] == 0
+        assert totals["total_bytes"] == 0
+        assert totals["total_duration_ms"] == 0
+        assert totals["last_latency_ms"] == 0
+        assert totals["average_latency_ms"] == pytest.approx(0.0)
+        assert totals["status_counts"] == {}
+        assert totals["last_status"] is None
+        assert totals["last_flagged_at"] is None
+        assert totals["last_reference"] is None
+        assert totals["last_details"] == {}
+
+    asyncio.run(run())
+
+
 def test_metrics_totals_and_rollups(metrics_store: MetricsDataStore) -> None:
     async def run() -> None:
         base_time = datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc)
