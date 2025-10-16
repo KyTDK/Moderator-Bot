@@ -4,6 +4,7 @@ from typing import Any
 
 import discord
 
+from cogs.nsfw import NSFW_CATEGORY_SETTING
 from modules.metrics import log_media_scan
 from modules.utils import mod_logging, mysql
 from modules.utils.localization import TranslateFn, localize_message
@@ -224,17 +225,31 @@ async def check_attachment(
     scan_result: dict[str, Any] | None = None
 
     if file_type == FILE_TYPE_IMAGE:
+        settings = await mysql.get_settings(
+            guild_id,
+            [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
+        )
+        accelerated_value = await _get_accelerated()
         scan_result = await process_image(
             scanner,
             original_filename=temp_filename,
             guild_id=guild_id,
             clean_up=False,
+            settings=settings,
+            accelerated=accelerated_value,
         )
     elif file_type == FILE_TYPE_VIDEO:
+        settings = await mysql.get_settings(
+            guild_id,
+            [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
+        )
+        accelerated_value = await _get_accelerated()
         file, scan_result = await process_video(
             scanner,
             original_filename=temp_filename,
             guild_id=guild_id,
+            settings=settings,
+            accelerated=accelerated_value,
         )
     else:
         await _emit_metrics(None, "unsupported_type")

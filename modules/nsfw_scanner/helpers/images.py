@@ -25,6 +25,8 @@ async def process_image(
     original_filename: str,
     guild_id: int | None = None,
     clean_up: bool = True,
+    settings: dict[str, Any] | None = None,
+    accelerated: bool | None = None,
 ) -> dict[str, Any] | None:
     _, ext = os.path.splitext(original_filename)
     needs_conversion = ext.lower() != ".png"
@@ -47,15 +49,21 @@ async def process_image(
                 converted_image = image.convert("RGBA")
                 image = converted_image
             try:
-                settings = await mysql.get_settings(
-                    guild_id,
-                    [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
-                )
-                accelerated = False
-                if guild_id is not None:
-                    accelerated = await mysql.is_accelerated(guild_id=guild_id)
-                allowed_categories = settings.get(NSFW_CATEGORY_SETTING) or []
-                high_accuracy = bool(settings.get("nsfw-high-accuracy"))
+                settings_map = settings
+                if settings_map is None:
+                    settings_map = await mysql.get_settings(
+                        guild_id,
+                        [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
+                    )
+                settings_map = settings_map or {}
+
+                accelerated_flag = accelerated
+                if accelerated_flag is None and guild_id is not None:
+                    accelerated_flag = await mysql.is_accelerated(guild_id=guild_id)
+                accelerated_flag = bool(accelerated_flag)
+
+                allowed_categories = settings_map.get(NSFW_CATEGORY_SETTING) or []
+                high_accuracy = bool(settings_map.get("nsfw-high-accuracy"))
                 similarity_response = await asyncio.to_thread(
                     clip_vectors.query_similar, image, threshold=0
                 )
@@ -73,7 +81,7 @@ async def process_image(
 
                 refresh_triggered = (
                     best_match
-                    and not accelerated
+                    and not accelerated_flag
                     and VECTOR_REFRESH_DIVISOR > 0
                     and random.randint(1, VECTOR_REFRESH_DIVISOR) == 1
                 )

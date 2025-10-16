@@ -61,6 +61,8 @@ async def process_video(
     scanner,
     original_filename: str,
     guild_id: int,
+    settings: dict[str, Any] | None = None,
+    accelerated: bool | None = None,
 ) -> tuple[Optional[discord.File], dict[str, Any] | None]:
     frames_to_scan, max_concurrent_frames = await _resolve_video_limits(guild_id)
     temp_frames = await asyncio.to_thread(
@@ -85,6 +87,8 @@ async def process_video(
                     original_filename=path,
                     guild_id=guild_id,
                     clean_up=False,
+                    settings=settings,
+                    accelerated=accelerated,
                 )
                 if isinstance(scan, dict):
                     scan.setdefault("video_frames_scanned", None)

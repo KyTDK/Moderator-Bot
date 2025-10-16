@@ -203,3 +203,38 @@ async def test_process_image_converts_non_png(monkeypatch, tmp_path):
     assert result is not None
     assert result.get("is_nsfw") is False
     assert convert_calls["count"] == 1
+
+
+@pytest.mark.anyio
+async def test_process_image_uses_precomputed_settings(monkeypatch, tmp_path):
+    png_path = tmp_path / "precomputed.png"
+    Image.new("RGBA", (4, 4), (0, 0, 255, 255)).save(png_path)
+
+    monkeypatch.setattr(images_mod, "TMP_DIR", tmp_path)
+
+    async def fail_get_settings(*_args, **_kwargs):
+        raise AssertionError("get_settings should not be called when settings provided")
+
+    async def fail_is_accelerated(**_kwargs):
+        raise AssertionError("is_accelerated should not be called when accelerated provided")
+
+    monkeypatch.setattr(images_mod.mysql, "get_settings", fail_get_settings)
+    monkeypatch.setattr(images_mod.mysql, "is_accelerated", fail_is_accelerated)
+
+    settings = {
+        images_mod.NSFW_CATEGORY_SETTING: [],
+        "nsfw-high-accuracy": False,
+        "threshold": 0.7,
+    }
+
+    result = await images_mod.process_image(
+        scanner=types.SimpleNamespace(bot=None),
+        original_filename=str(png_path),
+        guild_id=789,
+        clean_up=False,
+        settings=settings,
+        accelerated=False,
+    )
+
+    assert result is not None
+    assert result.get("is_nsfw") is False
