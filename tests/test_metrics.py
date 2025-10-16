@@ -80,6 +80,16 @@ from modules.metrics import (
     get_media_metrics_totals,
     log_media_scan,
 )
+from modules.utils.mysql.metrics_schema import METRIC_AGGREGATE_COLUMNS
+
+
+AGGREGATE_COLUMN_NAMES: tuple[str, ...] = tuple(
+    column.name for column in METRIC_AGGREGATE_COLUMNS
+)
+
+
+def _default_aggregates() -> dict[str, int]:
+    return {name: 0 for name in AGGREGATE_COLUMN_NAMES}
 
 
 class FakeCursor:
@@ -104,13 +114,9 @@ class FakeCursor:
             key = (metric_date, int(guild_id), content_type)
             row = self.store.rollups.get(key)
             if row:
+                aggregate_values = tuple(int(row.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES)
                 self._fetchone_result = (
-                    row["scans_count"],
-                    row["flagged_count"],
-                    row["flags_sum"],
-                    row["total_bytes"],
-                    row["total_duration_ms"],
-                    row["last_duration_ms"],
+                    *aggregate_values,
                     row["last_flagged_at"],
                     row["last_reference"],
                     row["last_status"],
@@ -125,32 +131,21 @@ class FakeCursor:
             return
 
         if normalized.startswith("UPDATE moderation_metric_rollups"):
-            (
-                scans_count,
-                flagged_count,
-                flags_sum,
-                total_bytes,
-                total_duration_ms,
-                last_duration_ms,
-                last_flagged_at,
-                last_reference,
-                last_status,
-                status_counts_json,
-                last_details,
-                metric_date,
-                guild_id,
-                content_type,
-            ) = params
+            aggregate_length = len(AGGREGATE_COLUMN_NAMES)
+            aggregate_values = tuple(params[:aggregate_length])
+            last_flagged_at = params[aggregate_length]
+            last_reference = params[aggregate_length + 1]
+            last_status = params[aggregate_length + 2]
+            status_counts_json = params[aggregate_length + 3]
+            last_details = params[aggregate_length + 4]
+            metric_date = params[aggregate_length + 5]
+            guild_id = params[aggregate_length + 6]
+            content_type = params[aggregate_length + 7]
             key = (metric_date, int(guild_id), content_type)
             row = self.store.rollups.setdefault(
                 key,
                 {
-                    "scans_count": 0,
-                    "flagged_count": 0,
-                    "flags_sum": 0,
-                    "total_bytes": 0,
-                    "total_duration_ms": 0,
-                    "last_duration_ms": 0,
+                    **_default_aggregates(),
                     "status_counts": {},
                     "last_flagged_at": None,
                     "last_reference": None,
@@ -158,14 +153,10 @@ class FakeCursor:
                     "last_details": None,
                 },
             )
+            for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values):
+                row[name] = int(value)
             row.update(
                 {
-                    "scans_count": int(scans_count),
-                    "flagged_count": int(flagged_count),
-                    "flags_sum": int(flags_sum),
-                    "total_bytes": int(total_bytes),
-                    "total_duration_ms": int(total_duration_ms),
-                    "last_duration_ms": int(last_duration_ms),
                     "last_flagged_at": last_flagged_at,
                     "last_reference": last_reference,
                     "last_status": last_status,
@@ -179,35 +170,27 @@ class FakeCursor:
             return
 
         if normalized.startswith("INSERT INTO moderation_metric_rollups"):
-            (
-                metric_date,
-                guild_id,
-                content_type,
-                scans_count,
-                flagged_count,
-                flags_sum,
-                total_bytes,
-                total_duration_ms,
-                last_duration_ms,
-                last_flagged_at,
-                last_reference,
-                last_status,
-                status_counts_json,
-                last_details,
-            ) = params
-            self.store.rollups[(metric_date, int(guild_id), content_type)] = {
-                "scans_count": int(scans_count),
-                "flagged_count": int(flagged_count),
-                "flags_sum": int(flags_sum),
-                "total_bytes": int(total_bytes),
-                "total_duration_ms": int(total_duration_ms),
-                "last_duration_ms": int(last_duration_ms),
-                "status_counts": json.loads(status_counts_json),
-                "last_flagged_at": last_flagged_at,
-                "last_reference": last_reference,
-                "last_status": last_status,
-                "last_details": last_details,
-            }
+            aggregate_length = len(AGGREGATE_COLUMN_NAMES)
+            metric_date = params[0]
+            guild_id = params[1]
+            content_type = params[2]
+            aggregate_values = params[3 : 3 + aggregate_length]
+            last_flagged_at = params[3 + aggregate_length]
+            last_reference = params[4 + aggregate_length]
+            last_status = params[5 + aggregate_length]
+            status_counts_json = params[6 + aggregate_length]
+            last_details = params[7 + aggregate_length]
+            data = {name: int(value) for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values)}
+            data.update(
+                {
+                    "status_counts": json.loads(status_counts_json),
+                    "last_flagged_at": last_flagged_at,
+                    "last_reference": last_reference,
+                    "last_status": last_status,
+                    "last_details": last_details,
+                }
+            )
+            self.store.rollups[(metric_date, int(guild_id), content_type)] = data
             self.rowcount = 1
             self._fetchone_result = None
             self._fetchall_result = []
@@ -216,13 +199,9 @@ class FakeCursor:
         if "FROM moderation_metric_totals" in normalized and "FOR UPDATE" in normalized:
             row = self.store.totals
             if row:
+                aggregate_values = tuple(int(row.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES)
                 self._fetchone_result = (
-                    row["scans_count"],
-                    row["flagged_count"],
-                    row["flags_sum"],
-                    row["total_bytes"],
-                    row["total_duration_ms"],
-                    row["last_duration_ms"],
+                    *aggregate_values,
                     row["last_flagged_at"],
                     row["last_reference"],
                     row["last_status"],
@@ -237,28 +216,18 @@ class FakeCursor:
             return
 
         if normalized.startswith("UPDATE moderation_metric_totals"):
-            (
-                scans_count,
-                flagged_count,
-                flags_sum,
-                total_bytes,
-                total_duration_ms,
-                last_duration_ms,
-                last_flagged_at,
-                last_reference,
-                last_status,
-                status_counts_json,
-                last_details,
-            ) = params
+            aggregate_length = len(AGGREGATE_COLUMN_NAMES)
+            aggregate_values = tuple(params[:aggregate_length])
+            last_flagged_at = params[aggregate_length]
+            last_reference = params[aggregate_length + 1]
+            last_status = params[aggregate_length + 2]
+            status_counts_json = params[aggregate_length + 3]
+            last_details = params[aggregate_length + 4]
             row = self.store.totals or self.store.create_empty_totals()
+            for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values):
+                row[name] = int(value)
             row.update(
                 {
-                    "scans_count": int(scans_count),
-                    "flagged_count": int(flagged_count),
-                    "flags_sum": int(flags_sum),
-                    "total_bytes": int(total_bytes),
-                    "total_duration_ms": int(total_duration_ms),
-                    "last_duration_ms": int(last_duration_ms),
                     "last_flagged_at": last_flagged_at,
                     "last_reference": last_reference,
                     "last_status": last_status,
@@ -273,34 +242,26 @@ class FakeCursor:
             return
 
         if normalized.startswith("INSERT INTO moderation_metric_totals"):
-            (
-                singleton_id,
-                scans_count,
-                flagged_count,
-                flags_sum,
-                total_bytes,
-                total_duration_ms,
-                last_duration_ms,
-                last_flagged_at,
-                last_reference,
-                last_status,
-                status_counts_json,
-                last_details,
-            ) = params
+            aggregate_length = len(AGGREGATE_COLUMN_NAMES)
+            singleton_id = params[0]
+            aggregate_values = params[1 : 1 + aggregate_length]
+            last_flagged_at = params[1 + aggregate_length]
+            last_reference = params[2 + aggregate_length]
+            last_status = params[3 + aggregate_length]
+            status_counts_json = params[4 + aggregate_length]
+            last_details = params[5 + aggregate_length]
             assert int(singleton_id) == 1
-            self.store.totals = {
-                "scans_count": int(scans_count),
-                "flagged_count": int(flagged_count),
-                "flags_sum": int(flags_sum),
-                "total_bytes": int(total_bytes),
-                "total_duration_ms": int(total_duration_ms),
-                "last_duration_ms": int(last_duration_ms),
-                "last_flagged_at": last_flagged_at,
-                "last_reference": last_reference,
-                "last_status": last_status,
-                "status_counts": json.loads(status_counts_json),
-                "last_details": last_details,
-            }
+            data = {name: int(value) for name, value in zip(AGGREGATE_COLUMN_NAMES, aggregate_values)}
+            data.update(
+                {
+                    "last_flagged_at": last_flagged_at,
+                    "last_reference": last_reference,
+                    "last_status": last_status,
+                    "status_counts": json.loads(status_counts_json),
+                    "last_details": last_details,
+                }
+            )
+            self.store.totals = data
             self.rowcount = 1
             self._fetchone_result = None
             self._fetchall_result = []
@@ -357,19 +318,17 @@ class MetricsDataStore:
         self.totals: dict[str, Any] | None = None
 
     def create_empty_totals(self) -> dict[str, Any]:
-        return {
-            "scans_count": 0,
-            "flagged_count": 0,
-            "flags_sum": 0,
-            "total_bytes": 0,
-            "total_duration_ms": 0,
-            "last_duration_ms": 0,
-            "status_counts": {},
-            "last_flagged_at": None,
-            "last_status": None,
-            "last_reference": None,
-            "last_details": None,
-        }
+        data = _default_aggregates()
+        data.update(
+            {
+                "status_counts": {},
+                "last_flagged_at": None,
+                "last_status": None,
+                "last_reference": None,
+                "last_details": None,
+            }
+        )
+        return data
 
     async def get_pool(self) -> FakePool:
         return FakePool(self)
@@ -439,17 +398,13 @@ class MetricsDataStore:
 
         result = []
         for metric_date, guild_id, content_type, data in rows:
+            aggregate_values = tuple(int(data.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES)
             result.append(
                 (
                     metric_date,
                     guild_id,
                     content_type,
-                    data["scans_count"],
-                    data["flagged_count"],
-                    data["flags_sum"],
-                    data["total_bytes"],
-                    data["total_duration_ms"],
-                    data["last_duration_ms"],
+                    *aggregate_values,
                     data["last_flagged_at"],
                     data["last_reference"],
                     data["last_status"],
@@ -511,13 +466,9 @@ class MetricsDataStore:
         row = self.totals
         if not row:
             return None
+        aggregate_values = tuple(int(row.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES)
         return (
-            row["scans_count"],
-            row["flagged_count"],
-            row["flags_sum"],
-            row["total_bytes"],
-            row["total_duration_ms"],
-            row["last_duration_ms"],
+            *aggregate_values,
             row["last_flagged_at"],
             row["last_reference"],
             row["last_status"],

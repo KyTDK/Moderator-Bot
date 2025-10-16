@@ -12,6 +12,13 @@ from .base import (
     ensure_utc,
     normalise_since,
 )
+from .sql_utils import (
+    ROLLUP_DIMENSION_COLUMNS,
+    ROLLUP_VALUE_COLUMNS,
+    insert_columns_clause,
+    select_columns_clause,
+    update_assignments_clause,
+)
 from .totals import update_global_totals
 
 
@@ -34,7 +41,6 @@ async def accumulate_media_metric(
     occurred_naive = ensure_naive(occurred)
 
     guild_key = int(guild_id or 0)
-    flagged_increment = 1 if was_flagged else 0
     flags_increment = int(flags_count if was_flagged else 0)
     bytes_increment = max(int(file_size or 0), 0)
     duration_increment = max(int(scan_duration_ms or 0), 0)
@@ -61,24 +67,21 @@ async def accumulate_media_metric(
         occurred_at=occurred_naive,
     )
 
+    value_select_clause = select_columns_clause(ROLLUP_VALUE_COLUMNS)
+    update_clause = update_assignments_clause(ROLLUP_VALUE_COLUMNS)
+    insert_columns_sql, insert_placeholders = insert_columns_clause(
+        ROLLUP_DIMENSION_COLUMNS,
+        ROLLUP_VALUE_COLUMNS,
+    )
+
     async with pool.acquire() as conn:
         await conn.begin()
         try:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    """
+                    f"""
                     SELECT
-                        scans_count,
-                        flagged_count,
-                        flags_sum,
-                        total_bytes,
-                        total_duration_ms,
-                        last_duration_ms,
-                        last_flagged_at,
-                        last_reference,
-                        last_status,
-                        status_counts,
-                        last_details
+                        {value_select_clause}
                     FROM moderation_metric_rollups
                     WHERE metric_date = %s
                       AND guild_id = %s
@@ -92,19 +95,9 @@ async def accumulate_media_metric(
                     state = MetricRow.from_db_row(row)
                     state.apply_update(metric_update)
                     await cur.execute(
-                        """
+                        f"""
                         UPDATE moderation_metric_rollups
-                        SET scans_count = %s,
-                            flagged_count = %s,
-                            flags_sum = %s,
-                            total_bytes = %s,
-                            total_duration_ms = %s,
-                            last_duration_ms = %s,
-                            last_flagged_at = %s,
-                            last_reference = %s,
-                            last_status = %s,
-                            status_counts = %s,
-                            last_details = %s
+                        SET {update_clause}
                         WHERE metric_date = %s
                           AND guild_id = %s
                           AND content_type = %s
@@ -120,24 +113,11 @@ async def accumulate_media_metric(
                     state = MetricRow.empty()
                     state.apply_update(metric_update)
                     await cur.execute(
-                        """
+                        f"""
                         INSERT INTO moderation_metric_rollups (
-                            metric_date,
-                            guild_id,
-                            content_type,
-                            scans_count,
-                            flagged_count,
-                            flags_sum,
-                            total_bytes,
-                            total_duration_ms,
-                            last_duration_ms,
-                            last_flagged_at,
-                            last_reference,
-                            last_status,
-                            status_counts,
-                            last_details
+                            {insert_columns_sql}
                         )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        VALUES ({insert_placeholders})
                         """,
                         (
                             metric_date,
@@ -187,23 +167,14 @@ async def fetch_metric_rollups(
     where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
     params_with_limit = tuple(params + [int(limit)])
 
+    value_select_clause = select_columns_clause(ROLLUP_VALUE_COLUMNS)
     rows, _ = await execute_query(
         f"""
         SELECT
             metric_date,
             guild_id,
             content_type,
-            scans_count,
-            flagged_count,
-            flags_sum,
-            total_bytes,
-            total_duration_ms,
-            last_duration_ms,
-            last_flagged_at,
-            last_reference,
-            last_status,
-            status_counts,
-            last_details
+            {value_select_clause}
         FROM moderation_metric_rollups
         {where_sql}
         ORDER BY metric_date DESC

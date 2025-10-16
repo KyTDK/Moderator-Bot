@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Any, Sequence
 
 
 @dataclass(frozen=True)
 class ColumnDef:
     name: str
     definition: str
+    default: Any | None = None
+    update_strategy: str | None = None
 
     @property
     def ddl(self) -> str:
@@ -103,12 +105,32 @@ class TableSchema:
 
 
 METRIC_AGGREGATE_COLUMNS: tuple[ColumnDef, ...] = (
-    ColumnDef("scans_count", "BIGINT NOT NULL DEFAULT 0"),
-    ColumnDef("flagged_count", "BIGINT NOT NULL DEFAULT 0"),
-    ColumnDef("flags_sum", "BIGINT NOT NULL DEFAULT 0"),
-    ColumnDef("total_bytes", "BIGINT NOT NULL DEFAULT 0"),
-    ColumnDef("total_duration_ms", "BIGINT NOT NULL DEFAULT 0"),
-    ColumnDef("last_duration_ms", "BIGINT NOT NULL DEFAULT 0"),
+    ColumnDef("scans_count", "BIGINT NOT NULL DEFAULT 0", default=0, update_strategy="increment"),
+    ColumnDef(
+        "flagged_count",
+        "BIGINT NOT NULL DEFAULT 0",
+        default=0,
+        update_strategy="flagged_increment",
+    ),
+    ColumnDef(
+        "flags_sum",
+        "BIGINT NOT NULL DEFAULT 0",
+        default=0,
+        update_strategy="flags_sum",
+    ),
+    ColumnDef("total_bytes", "BIGINT NOT NULL DEFAULT 0", default=0, update_strategy="bytes_sum"),
+    ColumnDef(
+        "total_duration_ms",
+        "BIGINT NOT NULL DEFAULT 0",
+        default=0,
+        update_strategy="duration_sum",
+    ),
+    ColumnDef(
+        "last_duration_ms",
+        "BIGINT NOT NULL DEFAULT 0",
+        default=0,
+        update_strategy="assign_duration",
+    ),
 )
 
 ROLLUP_SCHEMA = TableSchema(

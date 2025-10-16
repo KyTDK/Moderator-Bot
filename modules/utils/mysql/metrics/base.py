@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from typing import Any, Sequence
+
+from ..metrics_schema import METRIC_AGGREGATE_COLUMNS
 
 
 def ensure_utc(dt: datetime | None) -> datetime:
@@ -74,14 +77,55 @@ class MetricUpdate:
     occurred_at: datetime | None
 
 
+AGGREGATE_COLUMN_NAMES = tuple(column.name for column in METRIC_AGGREGATE_COLUMNS)
+
+
+def _default_aggregate_values() -> dict[str, int]:
+    return {
+        column.name: int(column.default or 0)
+        for column in METRIC_AGGREGATE_COLUMNS
+    }
+
+
+def _apply_increment(current: int, update: MetricUpdate) -> int:
+    return current + 1
+
+
+def _apply_flagged_increment(current: int, update: MetricUpdate) -> int:
+    return current + (1 if update.was_flagged else 0)
+
+
+def _apply_flags_sum(current: int, update: MetricUpdate) -> int:
+    return current + int(update.flags_increment or 0)
+
+
+def _apply_bytes_sum(current: int, update: MetricUpdate) -> int:
+    increment = max(int(update.bytes_increment or 0), 0)
+    return current + increment
+
+
+def _apply_duration_sum(current: int, update: MetricUpdate) -> int:
+    increment = max(int(update.duration_increment or 0), 0)
+    return current + increment
+
+
+def _apply_assign_duration(_: int, update: MetricUpdate) -> int:
+    return max(int(update.duration_increment or 0), 0)
+
+
+AGGREGATE_UPDATE_HANDLERS: dict[str, Callable[[int, MetricUpdate], int]] = {
+    "increment": _apply_increment,
+    "flagged_increment": _apply_flagged_increment,
+    "flags_sum": _apply_flags_sum,
+    "bytes_sum": _apply_bytes_sum,
+    "duration_sum": _apply_duration_sum,
+    "assign_duration": _apply_assign_duration,
+}
+
+
 @dataclass(slots=True)
 class MetricRow:
-    scans_count: int = 0
-    flagged_count: int = 0
-    flags_sum: int = 0
-    total_bytes: int = 0
-    total_duration_ms: int = 0
-    last_duration_ms: int = 0
+    aggregates: dict[str, int] = field(default_factory=_default_aggregate_values)
     status_counts: dict[str, int] = field(default_factory=dict)
     last_flagged_at: datetime | None = None
     last_reference: str | None = None
@@ -89,13 +133,16 @@ class MetricRow:
     last_details_raw: str | None = None
 
     def apply_update(self, update: MetricUpdate) -> None:
-        self.scans_count += 1
-        if update.was_flagged:
-            self.flagged_count += 1
-        self.flags_sum += int(update.flags_increment or 0)
-        self.total_bytes += int(update.bytes_increment or 0)
-        self.total_duration_ms += int(update.duration_increment or 0)
-        self.last_duration_ms = int(update.duration_increment or 0)
+        for column in METRIC_AGGREGATE_COLUMNS:
+            handler_name = column.update_strategy
+            if not handler_name:
+                continue
+            handler = AGGREGATE_UPDATE_HANDLERS.get(handler_name)
+            if handler is None:
+                raise ValueError(f"Unknown aggregate update strategy: {handler_name}")
+            current_value = int(self.aggregates.get(column.name, column.default or 0))
+            self.aggregates[column.name] = handler(current_value, update)
+
         self.last_status = update.status
 
         status_key = update.status
@@ -109,14 +156,9 @@ class MetricRow:
         elif update.store_last_details:
             self.last_details_raw = update.detail_json
 
-    def as_update_tuple(self) -> tuple[Any, ...]:
+    def _value_tuple(self) -> tuple[Any, ...]:
         return (
-            self.scans_count,
-            self.flagged_count,
-            self.flags_sum,
-            self.total_bytes,
-            self.total_duration_ms,
-            self.last_duration_ms,
+            *(int(self.aggregates.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES),
             self.last_flagged_at,
             self.last_reference,
             self.last_status,
@@ -124,68 +166,65 @@ class MetricRow:
             self.last_details_raw,
         )
 
+    def as_update_tuple(self) -> tuple[Any, ...]:
+        return self._value_tuple()
+
     def as_insert_tuple(self) -> tuple[Any, ...]:
-        return (
-            self.scans_count,
-            self.flagged_count,
-            self.flags_sum,
-            self.total_bytes,
-            self.total_duration_ms,
-            self.last_duration_ms,
-            self.last_flagged_at,
-            self.last_reference,
-            self.last_status,
-            encode_json_map(self.status_counts),
-            self.last_details_raw,
-        )
+        return self._value_tuple()
 
     def to_public_dict(self) -> dict[str, Any]:
         last_flagged = self.last_flagged_at
         if isinstance(last_flagged, datetime) and last_flagged.tzinfo is None:
             last_flagged = last_flagged.replace(tzinfo=timezone.utc)
-        return {
-            "scans_count": int(self.scans_count),
-            "flagged_count": int(self.flagged_count),
-            "flags_sum": int(self.flags_sum),
-            "total_bytes": int(self.total_bytes),
-            "total_duration_ms": int(self.total_duration_ms),
-            "last_latency_ms": int(self.last_duration_ms),
-            "status_counts": dict(self.status_counts),
-            "last_flagged_at": last_flagged,
-            "last_status": self.last_status,
-            "last_reference": self.last_reference,
-            "last_details": decode_json_map(self.last_details_raw),
-            "average_latency_ms": self.average_latency_ms,
-        }
+        payload = {name: int(self.aggregates.get(name, 0)) for name in AGGREGATE_COLUMN_NAMES}
+        payload.update(
+            {
+                "last_latency_ms": int(self.aggregates.get("last_duration_ms", 0)),
+                "status_counts": dict(self.status_counts),
+                "last_flagged_at": last_flagged,
+                "last_status": self.last_status,
+                "last_reference": self.last_reference,
+                "last_details": decode_json_map(self.last_details_raw),
+                "average_latency_ms": self.average_latency_ms,
+            }
+        )
+        return payload
+
+    @property
+    def scans_count(self) -> int:
+        return int(self.aggregates.get("scans_count", 0))
+
+    @property
+    def total_duration_ms(self) -> int:
+        return int(self.aggregates.get("total_duration_ms", 0))
 
     @property
     def average_latency_ms(self) -> float:
-        if self.scans_count <= 0:
+        scans = self.scans_count
+        if scans <= 0:
             return 0.0
-        return float(self.total_duration_ms) / float(self.scans_count)
+        return float(self.total_duration_ms) / float(scans)
 
     @classmethod
     def from_db_row(cls, values: Sequence[Any]) -> MetricRow:
-        (
-            scans_count,
-            flagged_count,
-            flags_sum,
-            total_bytes,
-            total_duration_ms,
-            last_duration_ms,
-            last_flagged_at,
-            last_reference,
-            last_status,
-            status_counts_raw,
-            last_details_raw,
-        ) = values
+        aggregates: dict[str, int] = {}
+        offset = 0
+        for column in METRIC_AGGREGATE_COLUMNS:
+            raw_value = values[offset] if offset < len(values) else None
+            aggregates[column.name] = int(raw_value or 0)
+            offset += 1
+        last_flagged_at = values[offset] if offset < len(values) else None
+        offset += 1
+        last_reference = values[offset] if offset < len(values) else None
+        offset += 1
+        last_status = values[offset] if offset < len(values) else None
+        offset += 1
+        status_counts_raw = values[offset] if offset < len(values) else None
+        offset += 1
+        last_details_raw = values[offset] if offset < len(values) else None
+
         return cls(
-            scans_count=int(scans_count or 0),
-            flagged_count=int(flagged_count or 0),
-            flags_sum=int(flags_sum or 0),
-            total_bytes=int(total_bytes or 0),
-            total_duration_ms=int(total_duration_ms or 0),
-            last_duration_ms=int(last_duration_ms or 0),
+            aggregates=aggregates,
             last_flagged_at=last_flagged_at,
             last_reference=last_reference,
             last_status=last_status,

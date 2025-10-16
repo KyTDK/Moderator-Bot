@@ -5,6 +5,13 @@ from typing import Any
 
 from ..connection import execute_query, get_pool
 from .base import MetricRow, build_metric_update, ensure_naive
+from .sql_utils import (
+    TOTALS_DIMENSION_COLUMNS,
+    TOTALS_VALUE_COLUMNS,
+    insert_columns_clause,
+    select_columns_clause,
+    update_assignments_clause,
+)
 
 
 async def update_global_totals(
@@ -32,25 +39,22 @@ async def update_global_totals(
         occurred_at=occurred_naive,
     )
 
+    value_select_clause = select_columns_clause(TOTALS_VALUE_COLUMNS)
+    update_clause = update_assignments_clause(TOTALS_VALUE_COLUMNS)
+    insert_columns_sql, insert_placeholders = insert_columns_clause(
+        TOTALS_DIMENSION_COLUMNS,
+        TOTALS_VALUE_COLUMNS,
+    )
+
     pool = await get_pool()
     async with pool.acquire() as conn:
         await conn.begin()
         try:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    """
+                    f"""
                     SELECT
-                        scans_count,
-                        flagged_count,
-                        flags_sum,
-                        total_bytes,
-                        total_duration_ms,
-                        last_duration_ms,
-                        last_flagged_at,
-                        last_reference,
-                        last_status,
-                        status_counts,
-                        last_details
+                        {value_select_clause}
                     FROM moderation_metric_totals
                     WHERE singleton_id = 1
                     FOR UPDATE
@@ -61,19 +65,9 @@ async def update_global_totals(
                     state = MetricRow.from_db_row(row)
                     state.apply_update(metric_update)
                     await cur.execute(
-                        """
+                        f"""
                         UPDATE moderation_metric_totals
-                        SET scans_count = %s,
-                            flagged_count = %s,
-                            flags_sum = %s,
-                            total_bytes = %s,
-                            total_duration_ms = %s,
-                            last_duration_ms = %s,
-                            last_flagged_at = %s,
-                            last_reference = %s,
-                            last_status = %s,
-                            status_counts = %s,
-                            last_details = %s
+                        SET {update_clause}
                         WHERE singleton_id = 1
                         """,
                         (
@@ -84,22 +78,11 @@ async def update_global_totals(
                     state = MetricRow.empty()
                     state.apply_update(metric_update)
                     await cur.execute(
-                        """
+                        f"""
                         INSERT INTO moderation_metric_totals (
-                            singleton_id,
-                            scans_count,
-                            flagged_count,
-                            flags_sum,
-                            total_bytes,
-                            total_duration_ms,
-                            last_duration_ms,
-                            last_flagged_at,
-                            last_reference,
-                            last_status,
-                            status_counts,
-                            last_details
+                            {insert_columns_sql}
                         )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        VALUES ({insert_placeholders})
                         """,
                         (
                             1,
@@ -113,20 +96,11 @@ async def update_global_totals(
 
 
 async def fetch_metric_totals() -> dict[str, Any]:
+    value_select_clause = select_columns_clause(TOTALS_VALUE_COLUMNS)
     row, _ = await execute_query(
-        """
+        f"""
         SELECT
-            scans_count,
-            flagged_count,
-            flags_sum,
-            total_bytes,
-            total_duration_ms,
-            last_duration_ms,
-            last_flagged_at,
-            last_reference,
-            last_status,
-            status_counts,
-            last_details
+            {value_select_clause}
         FROM moderation_metric_totals
         WHERE singleton_id = 1
         """,
