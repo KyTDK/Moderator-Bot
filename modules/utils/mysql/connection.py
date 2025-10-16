@@ -4,6 +4,7 @@ from typing import Optional
 import aiomysql
 
 from .config import MYSQL_CONFIG
+from .metrics_schema import ensure_metrics_schema
 
 _pool: Optional[aiomysql.Pool] = None
 
@@ -191,45 +192,7 @@ async def _ensure_database_exists() -> None:
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
-            await cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS moderation_metric_rollups (
-                    metric_date DATE NOT NULL,
-                    guild_id BIGINT NOT NULL DEFAULT 0,
-                    content_type VARCHAR(32) NOT NULL,
-                    scans_count BIGINT NOT NULL DEFAULT 0,
-                    flagged_count BIGINT NOT NULL DEFAULT 0,
-                    flags_sum BIGINT NOT NULL DEFAULT 0,
-                    total_bytes BIGINT NOT NULL DEFAULT 0,
-                    total_duration_ms BIGINT NOT NULL DEFAULT 0,
-                    last_flagged_at DATETIME NULL,
-                    last_reference VARCHAR(255) NULL,
-                    last_status VARCHAR(32) NULL,
-                    status_counts JSON NULL,
-                    last_details JSON NULL,
-                    PRIMARY KEY (metric_date, guild_id, content_type),
-                    INDEX idx_rollups_guild_date (guild_id, metric_date)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-                """
-            )
-            await cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS moderation_metric_totals (
-                    singleton_id TINYINT UNSIGNED NOT NULL PRIMARY KEY DEFAULT 1,
-                    scans_count BIGINT NOT NULL DEFAULT 0,
-                    flagged_count BIGINT NOT NULL DEFAULT 0,
-                    flags_sum BIGINT NOT NULL DEFAULT 0,
-                    total_bytes BIGINT NOT NULL DEFAULT 0,
-                    total_duration_ms BIGINT NOT NULL DEFAULT 0,
-                    status_counts JSON NULL,
-                    last_flagged_at DATETIME NULL,
-                    last_status VARCHAR(32) NULL,
-                    last_reference VARCHAR(255) NULL,
-                    last_details JSON NULL,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-                """
-            )
+            await ensure_metrics_schema(cur)
             await conn.commit()
         finally:
             conn.close()

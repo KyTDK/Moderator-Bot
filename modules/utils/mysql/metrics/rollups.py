@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from typing import Any
 
 from ..connection import execute_query, get_pool
-from .base import decode_json_map, ensure_naive, ensure_utc, normalise_since
+from .base import (
+    MetricRow,
+    build_metric_update,
+    ensure_naive,
+    ensure_utc,
+    normalise_since,
+)
 from .totals import update_global_totals
 
 
@@ -43,6 +49,18 @@ async def accumulate_media_metric(
     detail_json = json.dumps(detail_payload, ensure_ascii=False)
 
     pool = await get_pool()
+    metric_update = build_metric_update(
+        status=status,
+        was_flagged=was_flagged,
+        flags_increment=flags_increment,
+        bytes_increment=bytes_increment,
+        duration_increment=duration_increment,
+        reference=reference,
+        detail_json=detail_json,
+        store_last_details=store_last_details,
+        occurred_at=occurred_naive,
+    )
+
     async with pool.acquire() as conn:
         await conn.begin()
         try:
@@ -55,10 +73,11 @@ async def accumulate_media_metric(
                         flags_sum,
                         total_bytes,
                         total_duration_ms,
-                        status_counts,
+                        last_duration_ms,
                         last_flagged_at,
                         last_reference,
                         last_status,
+                        status_counts,
                         last_details
                     FROM moderation_metric_rollups
                     WHERE metric_date = %s
@@ -70,39 +89,8 @@ async def accumulate_media_metric(
                 )
                 row = await cur.fetchone()
                 if row:
-                    (
-                        scans_count_raw,
-                        flagged_count_raw,
-                        flags_sum_raw,
-                        total_bytes_raw,
-                        total_duration_raw,
-                        status_counts_raw,
-                        last_flagged_at,
-                        last_reference,
-                        _last_status,
-                        last_details_raw,
-                    ) = row
-
-                    scans_count = int(scans_count_raw or 0) + 1
-                    flagged_count = int(flagged_count_raw or 0) + flagged_increment
-                    flags_sum = int(flags_sum_raw or 0) + flags_increment
-                    total_bytes = int(total_bytes_raw or 0) + bytes_increment
-                    total_duration_ms = int(total_duration_raw or 0) + duration_increment
-
-                    status_counts = decode_json_map(status_counts_raw)
-                    status_counts[status] = int(status_counts.get(status, 0) or 0) + 1
-
-                    new_last_flagged_at = last_flagged_at
-                    new_last_reference = last_reference
-                    new_last_details = last_details_raw
-
-                    if was_flagged:
-                        new_last_flagged_at = occurred_naive
-                        new_last_reference = reference
-                        new_last_details = detail_json
-                    elif store_last_details:
-                        new_last_details = detail_json
-
+                    state = MetricRow.from_db_row(row)
+                    state.apply_update(metric_update)
                     await cur.execute(
                         """
                         UPDATE moderation_metric_rollups
@@ -111,36 +99,26 @@ async def accumulate_media_metric(
                             flags_sum = %s,
                             total_bytes = %s,
                             total_duration_ms = %s,
-                            status_counts = %s,
+                            last_duration_ms = %s,
                             last_flagged_at = %s,
                             last_reference = %s,
                             last_status = %s,
+                            status_counts = %s,
                             last_details = %s
                         WHERE metric_date = %s
                           AND guild_id = %s
                           AND content_type = %s
                         """,
                         (
-                            scans_count,
-                            flagged_count,
-                            flags_sum,
-                            total_bytes,
-                            total_duration_ms,
-                            json.dumps(status_counts, ensure_ascii=False),
-                            new_last_flagged_at,
-                            new_last_reference,
-                            status,
-                            new_last_details,
+                            *state.as_update_tuple(),
                             metric_date,
                             guild_key,
                             content_type,
                         ),
                     )
                 else:
-                    status_counts_json = json.dumps({status: 1}, ensure_ascii=False)
-                    last_flagged_at_value = occurred_naive if was_flagged else None
-                    last_reference_value = reference if was_flagged else None
-                    last_details_value = detail_json if (was_flagged or store_last_details) else None
+                    state = MetricRow.empty()
+                    state.apply_update(metric_update)
                     await cur.execute(
                         """
                         INSERT INTO moderation_metric_rollups (
@@ -152,6 +130,7 @@ async def accumulate_media_metric(
                             flags_sum,
                             total_bytes,
                             total_duration_ms,
+                            last_duration_ms,
                             last_flagged_at,
                             last_reference,
                             last_status,
@@ -164,16 +143,7 @@ async def accumulate_media_metric(
                             metric_date,
                             guild_key,
                             content_type,
-                            1,
-                            flagged_increment,
-                            flags_increment,
-                            bytes_increment,
-                            duration_increment,
-                            last_flagged_at_value,
-                            last_reference_value,
-                            status,
-                            status_counts_json,
-                            last_details_value,
+                            *state.as_insert_tuple(),
                         ),
                     )
             await conn.commit()
@@ -228,6 +198,7 @@ async def fetch_metric_rollups(
             flags_sum,
             total_bytes,
             total_duration_ms,
+            last_duration_ms,
             last_flagged_at,
             last_reference,
             last_status,
@@ -244,40 +215,17 @@ async def fetch_metric_rollups(
 
     rollups: list[dict[str, Any]] = []
     for row in rows or []:
-        (
-            metric_date,
-            guild_raw,
-            content,
-            scans_count,
-            flagged_count,
-            flags_sum,
-            total_bytes,
-            total_duration_ms,
-            last_flagged_at,
-            last_reference,
-            last_status,
-            status_counts_raw,
-            last_details_raw,
-        ) = row
-        rollups.append(
+        metric_date_value, guild_raw, content = row[:3]
+        state = MetricRow.from_db_row(row[3:])
+        rollup_payload = state.to_public_dict()
+        rollup_payload.update(
             {
-                "metric_date": metric_date,
+                "metric_date": metric_date_value,
                 "guild_id": None if guild_raw in (None, 0) else int(guild_raw),
                 "content_type": content,
-                "scans_count": int(scans_count or 0),
-                "flagged_count": int(flagged_count or 0),
-                "flags_sum": int(flags_sum or 0),
-                "total_bytes": int(total_bytes or 0),
-                "total_duration_ms": int(total_duration_ms or 0),
-                "last_flagged_at": last_flagged_at.replace(tzinfo=timezone.utc)
-                if isinstance(last_flagged_at, datetime)
-                else last_flagged_at,
-                "last_reference": last_reference,
-                "last_status": last_status,
-                "status_counts": decode_json_map(status_counts_raw),
-                "last_details": decode_json_map(last_details_raw),
             }
         )
+        rollups.append(rollup_payload)
     return rollups
 
 

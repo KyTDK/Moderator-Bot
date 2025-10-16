@@ -110,10 +110,11 @@ class FakeCursor:
                     row["flags_sum"],
                     row["total_bytes"],
                     row["total_duration_ms"],
-                    json.dumps(row["status_counts"], ensure_ascii=False),
+                    row["last_duration_ms"],
                     row["last_flagged_at"],
                     row["last_reference"],
                     row["last_status"],
+                    json.dumps(row["status_counts"], ensure_ascii=False),
                     row["last_details"],
                 )
                 self.rowcount = 1
@@ -130,10 +131,11 @@ class FakeCursor:
                 flags_sum,
                 total_bytes,
                 total_duration_ms,
-                status_counts_json,
+                last_duration_ms,
                 last_flagged_at,
                 last_reference,
                 last_status,
+                status_counts_json,
                 last_details,
                 metric_date,
                 guild_id,
@@ -148,6 +150,7 @@ class FakeCursor:
                     "flags_sum": 0,
                     "total_bytes": 0,
                     "total_duration_ms": 0,
+                    "last_duration_ms": 0,
                     "status_counts": {},
                     "last_flagged_at": None,
                     "last_reference": None,
@@ -162,10 +165,11 @@ class FakeCursor:
                     "flags_sum": int(flags_sum),
                     "total_bytes": int(total_bytes),
                     "total_duration_ms": int(total_duration_ms),
-                    "status_counts": json.loads(status_counts_json),
+                    "last_duration_ms": int(last_duration_ms),
                     "last_flagged_at": last_flagged_at,
                     "last_reference": last_reference,
                     "last_status": last_status,
+                    "status_counts": json.loads(status_counts_json),
                     "last_details": last_details,
                 }
             )
@@ -184,6 +188,7 @@ class FakeCursor:
                 flags_sum,
                 total_bytes,
                 total_duration_ms,
+                last_duration_ms,
                 last_flagged_at,
                 last_reference,
                 last_status,
@@ -196,6 +201,7 @@ class FakeCursor:
                 "flags_sum": int(flags_sum),
                 "total_bytes": int(total_bytes),
                 "total_duration_ms": int(total_duration_ms),
+                "last_duration_ms": int(last_duration_ms),
                 "status_counts": json.loads(status_counts_json),
                 "last_flagged_at": last_flagged_at,
                 "last_reference": last_reference,
@@ -216,10 +222,11 @@ class FakeCursor:
                     row["flags_sum"],
                     row["total_bytes"],
                     row["total_duration_ms"],
-                    json.dumps(row["status_counts"], ensure_ascii=False),
+                    row["last_duration_ms"],
                     row["last_flagged_at"],
-                    row["last_status"],
                     row["last_reference"],
+                    row["last_status"],
+                    json.dumps(row["status_counts"], ensure_ascii=False),
                     row["last_details"],
                 )
                 self.rowcount = 1
@@ -236,10 +243,11 @@ class FakeCursor:
                 flags_sum,
                 total_bytes,
                 total_duration_ms,
-                status_counts_json,
+                last_duration_ms,
                 last_flagged_at,
-                last_status,
                 last_reference,
+                last_status,
+                status_counts_json,
                 last_details,
             ) = params
             row = self.store.totals or self.store.create_empty_totals()
@@ -250,10 +258,11 @@ class FakeCursor:
                     "flags_sum": int(flags_sum),
                     "total_bytes": int(total_bytes),
                     "total_duration_ms": int(total_duration_ms),
-                    "status_counts": json.loads(status_counts_json),
+                    "last_duration_ms": int(last_duration_ms),
                     "last_flagged_at": last_flagged_at,
-                    "last_status": last_status,
                     "last_reference": last_reference,
+                    "last_status": last_status,
+                    "status_counts": json.loads(status_counts_json),
                     "last_details": last_details,
                 }
             )
@@ -271,10 +280,11 @@ class FakeCursor:
                 flags_sum,
                 total_bytes,
                 total_duration_ms,
-                status_counts_json,
+                last_duration_ms,
                 last_flagged_at,
-                last_status,
                 last_reference,
+                last_status,
+                status_counts_json,
                 last_details,
             ) = params
             assert int(singleton_id) == 1
@@ -284,10 +294,11 @@ class FakeCursor:
                 "flags_sum": int(flags_sum),
                 "total_bytes": int(total_bytes),
                 "total_duration_ms": int(total_duration_ms),
-                "status_counts": json.loads(status_counts_json),
+                "last_duration_ms": int(last_duration_ms),
                 "last_flagged_at": last_flagged_at,
-                "last_status": last_status,
                 "last_reference": last_reference,
+                "last_status": last_status,
+                "status_counts": json.loads(status_counts_json),
                 "last_details": last_details,
             }
             self.rowcount = 1
@@ -352,6 +363,7 @@ class MetricsDataStore:
             "flags_sum": 0,
             "total_bytes": 0,
             "total_duration_ms": 0,
+            "last_duration_ms": 0,
             "status_counts": {},
             "last_flagged_at": None,
             "last_status": None,
@@ -437,6 +449,7 @@ class MetricsDataStore:
                     data["flags_sum"],
                     data["total_bytes"],
                     data["total_duration_ms"],
+                    data["last_duration_ms"],
                     data["last_flagged_at"],
                     data["last_reference"],
                     data["last_status"],
@@ -504,10 +517,11 @@ class MetricsDataStore:
             row["flags_sum"],
             row["total_bytes"],
             row["total_duration_ms"],
-            json.dumps(row["status_counts"], ensure_ascii=False),
+            row["last_duration_ms"],
             row["last_flagged_at"],
-            row["last_status"],
             row["last_reference"],
+            row["last_status"],
+            json.dumps(row["status_counts"], ensure_ascii=False),
             row["last_details"],
         )
 
@@ -618,6 +632,8 @@ def test_metrics_totals_and_rollups(metrics_store: MetricsDataStore) -> None:
         assert latest["flagged_count"] == 0
         assert latest["status_counts"]["unsupported_type"] == 1
         assert latest["last_status"] == "unsupported_type"
+        assert latest["last_latency_ms"] == 60
+        assert latest["average_latency_ms"] == pytest.approx(60.0)
         assert latest["last_details"]["context"]["reason"] == "mime_unsupported"
 
         day_one = rollups[1]
@@ -627,6 +643,8 @@ def test_metrics_totals_and_rollups(metrics_store: MetricsDataStore) -> None:
         assert day_one["flags_sum"] == 2
         assert day_one["total_bytes"] == 3000
         assert day_one["total_duration_ms"] == 200
+        assert day_one["last_latency_ms"] == 80
+        assert day_one["average_latency_ms"] == pytest.approx(100.0)
         assert day_one["status_counts"]["scan_complete"] == 2
         assert day_one["last_reference"] == "flagged_ref"
         assert day_one["last_flagged_at"] == base_time
@@ -649,6 +667,8 @@ def test_metrics_totals_and_rollups(metrics_store: MetricsDataStore) -> None:
         assert totals["flags_sum"] == 2
         assert totals["total_bytes"] == 3500
         assert totals["total_duration_ms"] == 260
+        assert totals["last_latency_ms"] == 60
+        assert totals["average_latency_ms"] == pytest.approx(86.6666666667)
         assert totals["status_counts"]["scan_complete"] == 2
         assert totals["status_counts"]["unsupported_type"] == 1
         assert totals["last_status"] == "unsupported_type"
