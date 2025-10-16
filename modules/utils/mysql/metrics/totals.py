@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+import aiomysql
+
 from ..connection import execute_query, get_pool
 from .base import MetricRow, build_metric_update, ensure_naive
 from .sql_utils import (
@@ -11,6 +13,7 @@ from .sql_utils import (
     insert_columns_clause,
     select_columns_clause,
     update_assignments_clause,
+    run_transaction_with_retry,
 )
 
 
@@ -47,52 +50,49 @@ async def update_global_totals(
     )
 
     pool = await get_pool()
-    async with pool.acquire() as conn:
-        await conn.begin()
-        try:
-            async with conn.cursor() as cur:
+
+    async def _execute(conn: aiomysql.Connection) -> None:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                f"""
+                SELECT
+                    {value_select_clause}
+                FROM moderation_metric_totals
+                WHERE singleton_id = 1
+                FOR UPDATE
+                """
+            )
+            row = await cur.fetchone()
+            if row:
+                state = MetricRow.from_db_row(row)
+                state.apply_update(metric_update)
                 await cur.execute(
                     f"""
-                    SELECT
-                        {value_select_clause}
-                    FROM moderation_metric_totals
+                    UPDATE moderation_metric_totals
+                    SET {update_clause}
                     WHERE singleton_id = 1
-                    FOR UPDATE
-                    """
+                    """,
+                    (
+                        *state.as_update_tuple(),
+                    ),
                 )
-                row = await cur.fetchone()
-                if row:
-                    state = MetricRow.from_db_row(row)
-                    state.apply_update(metric_update)
-                    await cur.execute(
-                        f"""
-                        UPDATE moderation_metric_totals
-                        SET {update_clause}
-                        WHERE singleton_id = 1
-                        """,
-                        (
-                            *state.as_update_tuple(),
-                        ),
+            else:
+                state = MetricRow.empty()
+                state.apply_update(metric_update)
+                await cur.execute(
+                    f"""
+                    INSERT INTO moderation_metric_totals (
+                        {insert_columns_sql}
                     )
-                else:
-                    state = MetricRow.empty()
-                    state.apply_update(metric_update)
-                    await cur.execute(
-                        f"""
-                        INSERT INTO moderation_metric_totals (
-                            {insert_columns_sql}
-                        )
-                        VALUES ({insert_placeholders})
-                        """,
-                        (
-                            1,
-                            *state.as_insert_tuple(),
-                        ),
-                    )
-            await conn.commit()
-        except Exception:
-            await conn.rollback()
-            raise
+                    VALUES ({insert_placeholders})
+                    """,
+                    (
+                        1,
+                        *state.as_insert_tuple(),
+                    ),
+                )
+
+    await run_transaction_with_retry(pool, _execute)
 
 
 async def fetch_metric_totals() -> dict[str, Any]:

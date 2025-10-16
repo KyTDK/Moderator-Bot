@@ -37,3 +37,13 @@ Call `modules.metrics.get_media_metrics_totals()` to fetch the current aggregate
 In addition to the stored counters, the helper exposes convenience fields: `last_latency_ms` mirrors the raw `last_duration_ms` column, and `average_latency_ms` is also stored in the table (computed as `total_duration_ms / scans_count`, defaulting to `0.0` when no scans have been recorded).
 
 Because only a single row is stored, queries are constant-time and the footprint remains tiny regardless of how many scans occur.
+
+## Adding a New Metric Field
+
+Most of the plumbing is schema-driven. To introduce another stored metric:
+
+1. Edit `modules/utils/mysql/metrics_schema.py` and append a `ColumnDef` to `METRIC_AGGREGATE_COLUMNS`, supplying the SQL definition, default value, type (`value_type`), and (optionally) an `update_strategy`. Existing strategies cover common patterns (increment, bytes_sum, duration_sum, etc.); add a new handler in `modules/utils/mysql/metrics/base.py` only if your metric needs different behaviour.
+2. (Optional) Update the “Table Schema” section above so documentation reflects the new column.
+3. Run the metrics tests with `pytest tests/test_metrics.py` to confirm the change.
+
+The transactional writers (`accumulate_media_metric` and `update_global_totals`) pull their column lists from the schema module, so no other edits are required. The retry-aware SQL helpers will propagate the new column everywhere automatically.

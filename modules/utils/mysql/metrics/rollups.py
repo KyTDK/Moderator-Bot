@@ -4,6 +4,8 @@ import json
 from datetime import date, datetime
 from typing import Any
 
+import aiomysql
+
 from ..connection import execute_query, get_pool
 from .base import (
     MetricRow,
@@ -18,6 +20,7 @@ from .sql_utils import (
     insert_columns_clause,
     select_columns_clause,
     update_assignments_clause,
+    run_transaction_with_retry,
 )
 from .totals import update_global_totals
 
@@ -74,62 +77,58 @@ async def accumulate_media_metric(
         ROLLUP_VALUE_COLUMNS,
     )
 
-    async with pool.acquire() as conn:
-        await conn.begin()
-        try:
-            async with conn.cursor() as cur:
+    async def _execute(conn: aiomysql.Connection) -> None:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                f"""
+                SELECT
+                    {value_select_clause}
+                FROM moderation_metric_rollups
+                WHERE metric_date = %s
+                  AND guild_id = %s
+                  AND content_type = %s
+                FOR UPDATE
+                """,
+                (metric_date, guild_key, content_type),
+            )
+            row = await cur.fetchone()
+            if row:
+                state = MetricRow.from_db_row(row)
+                state.apply_update(metric_update)
                 await cur.execute(
                     f"""
-                    SELECT
-                        {value_select_clause}
-                    FROM moderation_metric_rollups
+                    UPDATE moderation_metric_rollups
+                    SET {update_clause}
                     WHERE metric_date = %s
                       AND guild_id = %s
                       AND content_type = %s
-                    FOR UPDATE
                     """,
-                    (metric_date, guild_key, content_type),
+                    (
+                        *state.as_update_tuple(),
+                        metric_date,
+                        guild_key,
+                        content_type,
+                    ),
                 )
-                row = await cur.fetchone()
-                if row:
-                    state = MetricRow.from_db_row(row)
-                    state.apply_update(metric_update)
-                    await cur.execute(
-                        f"""
-                        UPDATE moderation_metric_rollups
-                        SET {update_clause}
-                        WHERE metric_date = %s
-                          AND guild_id = %s
-                          AND content_type = %s
-                        """,
-                        (
-                            *state.as_update_tuple(),
-                            metric_date,
-                            guild_key,
-                            content_type,
-                        ),
+            else:
+                state = MetricRow.empty()
+                state.apply_update(metric_update)
+                await cur.execute(
+                    f"""
+                    INSERT INTO moderation_metric_rollups (
+                        {insert_columns_sql}
                     )
-                else:
-                    state = MetricRow.empty()
-                    state.apply_update(metric_update)
-                    await cur.execute(
-                        f"""
-                        INSERT INTO moderation_metric_rollups (
-                            {insert_columns_sql}
-                        )
-                        VALUES ({insert_placeholders})
-                        """,
-                        (
-                            metric_date,
-                            guild_key,
-                            content_type,
-                            *state.as_insert_tuple(),
-                        ),
-                    )
-            await conn.commit()
-        except Exception:
-            await conn.rollback()
-            raise
+                    VALUES ({insert_placeholders})
+                    """,
+                    (
+                        metric_date,
+                        guild_key,
+                        content_type,
+                        *state.as_insert_tuple(),
+                    ),
+                )
+
+    await run_transaction_with_retry(pool, _execute)
 
     await update_global_totals(
         occurred=occurred,

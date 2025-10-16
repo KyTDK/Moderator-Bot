@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Sequence, Tuple
+import asyncio
+import random
+from typing import Awaitable, Callable, Sequence, Tuple
+
+import aiomysql
 
 from .base import AGGREGATE_COLUMN_NAMES
 
@@ -44,3 +47,42 @@ def insert_columns_clause(
     column_sql = ", ".join(all_columns)
     placeholders = ", ".join(["%s"] * len(all_columns))
     return column_sql, placeholders
+
+
+DEADLOCK_ERRORS = {1205, 1213}
+
+
+async def run_transaction_with_retry(
+    pool: aiomysql.Pool,
+    work: Callable[[aiomysql.Connection], Awaitable[None]],
+    *,
+    max_attempts: int = 5,
+    base_delay: float = 0.05,
+    backoff: float = 2.0,
+    jitter: float = 0.05,
+) -> None:
+    attempt = 0
+    while True:
+        async with pool.acquire() as conn:
+            try:
+                await conn.begin()
+                await work(conn)
+                await conn.commit()
+                return
+            except aiomysql.Error as exc:
+                await conn.rollback()
+                error_code = exc.args[0] if exc.args else None
+                if (
+                    error_code in DEADLOCK_ERRORS
+                    and attempt < max_attempts - 1
+                ):
+                    delay = base_delay * (backoff ** attempt)
+                    if jitter:
+                        delay += random.uniform(0, jitter)
+                    attempt += 1
+                    await asyncio.sleep(delay)
+                    continue
+                raise
+            except Exception:
+                await conn.rollback()
+                raise
