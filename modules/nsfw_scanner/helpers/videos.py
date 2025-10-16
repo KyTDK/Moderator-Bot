@@ -34,14 +34,19 @@ CONCURRENCY_LIMITS_BY_TIER = {
 DEFAULT_PREMIUM_TIER = "accelerated"
 
 
-async def _resolve_video_limits(guild_id: int | None) -> tuple[Optional[int], int]:
+async def _resolve_video_limits(
+    guild_id: int | None,
+    premium_status: Optional[dict[str, Any]] = None,
+) -> tuple[Optional[int], int]:
     frames_limit: Optional[int] = MAX_FRAMES_PER_VIDEO
     concurrency_limit = MAX_CONCURRENT_FRAMES
 
     if guild_id is None:
         return frames_limit, concurrency_limit
 
-    premium = await mysql.get_premium_status(guild_id)
+    premium = premium_status
+    if premium is None:
+        premium = await mysql.get_premium_status(guild_id)
     if not premium or not premium.get("is_active"):
         return frames_limit, concurrency_limit
 
@@ -63,8 +68,12 @@ async def process_video(
     guild_id: int,
     settings: dict[str, Any] | None = None,
     accelerated: bool | None = None,
+    premium_status: Optional[dict[str, Any]] = None,
 ) -> tuple[Optional[discord.File], dict[str, Any] | None]:
-    frames_to_scan, max_concurrent_frames = await _resolve_video_limits(guild_id)
+    frames_to_scan, max_concurrent_frames = await _resolve_video_limits(
+        guild_id,
+        premium_status=premium_status,
+    )
     temp_frames = await asyncio.to_thread(
         extract_frames_threaded, original_filename, frames_to_scan
     )
