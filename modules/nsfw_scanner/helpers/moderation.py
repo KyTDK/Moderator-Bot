@@ -110,15 +110,18 @@ async def moderator_api(
         for category, is_flagged in results.categories.__dict__.items():
             normalized_category = category.replace("/", "_").replace("-", "_")
             score = results.category_scores.__dict__.get(category, 0)
-            if not is_flagged:
-                continue
-            else:
+
+            if is_flagged:
                 flagged_any = True
-            
+
             summary_categories[normalized_category] = score
 
-            if not skip_vector_add and clip_vectors.is_available():
-                await asyncio.to_thread(clip_vectors.add_vector, image, metadata={"category": normalized_category, "score": score})
+            if is_flagged and not skip_vector_add and clip_vectors.is_available():
+                await asyncio.to_thread(
+                    clip_vectors.add_vector,
+                    image,
+                    metadata={"category": normalized_category, "score": score},
+                )
 
             if score < threshold:
                 continue
