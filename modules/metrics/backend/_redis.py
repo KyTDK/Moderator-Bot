@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urlparse
 
 from ..config import MetricsRedisConfig, get_metrics_redis_config
@@ -12,7 +12,10 @@ try:  # pragma: no cover - module availability depends on runtime environment
     from redis.asyncio import from_url as redis_from_url
     from redis.exceptions import RedisError
 except Exception:  # pragma: no cover - fallback when redis-py is unavailable
-    RedisClient = None  # type: ignore[assignment]
+    if TYPE_CHECKING:
+        from redis.asyncio import Redis as RedisClient  # pragma: no cover
+    else:
+        RedisClient = Any  # type: ignore[assignment]
     redis_from_url = None  # type: ignore[assignment]
 
     class RedisError(Exception):  # type: ignore[assignment]
