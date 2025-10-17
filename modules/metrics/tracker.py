@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from modules.utils.mysql import metrics as mysql_metrics
+from . import backend as metrics_backend
 
 DEFAULT_STATUS = "scan_complete"
 
@@ -123,7 +123,7 @@ async def log_media_scan(
     if extra_context:
         details["context"] = extra_context
 
-    await mysql_metrics.accumulate_media_metric(
+    await metrics_backend.accumulate_media_metric(
         occurred_at=occurred,
         guild_id=guild_id,
         content_type=content_type or "unknown",
@@ -145,7 +145,7 @@ async def get_media_metrics_summary(
 ) -> list[dict[str, Any]]:
     """Return aggregate metrics grouped by content type."""
 
-    return await mysql_metrics.summarise_rollups(
+    return await metrics_backend.summarise_rollups(
         guild_id=guild_id,
         since=since,
     )
@@ -160,7 +160,7 @@ async def get_media_metric_rollups(
 ) -> list[dict[str, Any]]:
     """Fetch pre-aggregated daily rollups for dashboards."""
 
-    return await mysql_metrics.fetch_metric_rollups(
+    return await metrics_backend.fetch_metric_rollups(
         guild_id=guild_id,
         content_type=content_type,
         since=since,
@@ -171,7 +171,7 @@ async def get_media_metric_rollups(
 async def get_media_metrics_totals() -> dict[str, Any]:
     """Fetch the global aggregate metrics record."""
 
-    return await mysql_metrics.fetch_metric_totals()
+    return await metrics_backend.fetch_metric_totals()
 
 
 __all__ = [
