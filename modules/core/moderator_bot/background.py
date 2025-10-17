@@ -77,6 +77,8 @@ class BackgroundTaskMixin(GuildLocaleMixin):
         await self._wait_for_mysql_ready()
         await self._ensure_i18n_ready()
         await self._load_extensions()
+        # Ensure the command tree is re-synchronised now that all extensions are loaded
+        self._schedule_command_tree_sync(force=True)
         print("[STARTUP] Extension loader finished (post-ready)")
 
     async def _start_topgg_poster_when_ready(self) -> None:
