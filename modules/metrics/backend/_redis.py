@@ -3,8 +3,9 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Optional
+from urllib.parse import urlparse
 
-from ..config import get_metrics_redis_config
+from ..config import MetricsRedisConfig, get_metrics_redis_config
 
 try:  # pragma: no cover - module availability depends on runtime environment
     from redis.asyncio import Redis as RedisClient
@@ -24,6 +25,7 @@ _logger = logging.getLogger(__name__)
 _redis_client: Optional["RedisClient"] = None
 _client_override: Optional["RedisClient"] = None
 _client_lock = asyncio.Lock()
+_ready_logged = False
 
 
 def set_client_override(client: "RedisClient | None") -> None:
@@ -66,7 +68,26 @@ async def get_redis_client() -> "RedisClient":
     async with _client_lock:
         if _redis_client is None:
             _redis_client = redis_from_url(config.url, decode_responses=True)
+            _log_backend_ready(config)
         return _redis_client
+
+
+def _log_backend_ready(config: MetricsRedisConfig) -> None:
+    global _ready_logged
+    if _ready_logged:
+        return
+    parsed = urlparse(config.url or "")
+    host = parsed.hostname or "unknown-host"
+    port = parsed.port or 6379
+    db_token = (parsed.path or "/0").lstrip("/") or "0"
+    _logger.info(
+        "metrics backend ready (stream=%s redis=%s:%s db=%s)",
+        config.stream_name,
+        host,
+        port,
+        db_token,
+    )
+    _ready_logged = True
 
 
 __all__ = [

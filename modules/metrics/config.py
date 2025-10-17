@@ -45,7 +45,7 @@ def _parse_bool(value: str | None, *, default: bool) -> bool:
 
 @lru_cache(maxsize=1)
 def get_metrics_redis_config() -> MetricsRedisConfig:
-    url = os.getenv("METRICS_REDIS_URL") or os.getenv("REDIS_URL")
+    url = os.getenv("METRICS_REDIS_URL")
     stream_name = os.getenv("METRICS_REDIS_STREAM", "moderator:metrics")
     maxlen_env = os.getenv("METRICS_REDIS_STREAM_MAXLEN")
     stream_maxlen = _parse_int(maxlen_env)
