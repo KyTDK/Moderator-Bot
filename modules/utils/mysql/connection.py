@@ -4,6 +4,7 @@ from typing import Optional
 import aiomysql
 
 from .config import MYSQL_CONFIG
+from .metrics_schema import ensure_metrics_schema
 
 _pool: Optional[aiomysql.Pool] = None
 
@@ -191,6 +192,7 @@ async def _ensure_database_exists() -> None:
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 """
             )
+            await ensure_metrics_schema(cur)
             await conn.commit()
         finally:
             conn.close()

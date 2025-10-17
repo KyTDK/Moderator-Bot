@@ -165,11 +165,18 @@ class AggregatedModerationCog(commands.Cog):
 
         try:
             channel = await safe_get_channel(self.bot, payload.channel_id)
+            if channel is None:
+                print(f"[raw] missing channel for reaction add {payload.channel_id}")
+                return
             message = await safe_get_message(channel, payload.message_id)
         except discord.NotFound:
             return
         except discord.HTTPException as e:
             print(f"[raw] fetch failed: {e}")
+            return
+
+        if message is None:
+            print(f"[raw] missing message {payload.message_id}; skipping reaction scan")
             return
 
         guild = self.bot.get_guild(payload.guild_id)
@@ -181,8 +188,13 @@ class AggregatedModerationCog(commands.Cog):
         member = await safe_get_member(guild, payload.user_id)
         emoji = payload.emoji
 
+        reactions = getattr(message, "reactions", None)
+        if reactions is None:
+            print(f"[raw] message {payload.message_id} missing reactions data; skipping reaction scan")
+            return
+
         # Avoid scanning again
-        for r in message.reactions:
+        for r in reactions:
             if str(r.emoji) == str(emoji) and r.count > 1:
                 return
 

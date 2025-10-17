@@ -33,6 +33,8 @@ async def moderator_api(
     max_attempts: int = 3,
     skip_vector_add: bool = False,
     max_similarity: float | None = None,
+    allowed_categories: list[str] | None = None,
+    threshold: float | None = None,
 ) -> dict[str, Any]:
     result: dict[str, Any] = {
         "is_nsfw": None,
@@ -67,6 +69,33 @@ async def moderator_api(
         print("[moderator_api] No inputs were provided")
         return result
 
+    resolved_allowed_categories = allowed_categories
+    resolved_threshold = threshold
+    settings_map: dict[str, Any] | None = None
+
+    if guild_id is not None and (
+        resolved_allowed_categories is None or resolved_threshold is None
+    ):
+        settings_map = await mysql.get_settings(
+            guild_id, [NSFW_CATEGORY_SETTING, "threshold"]
+        )
+
+    if resolved_allowed_categories is None:
+        resolved_allowed_categories = (settings_map or {}).get(
+            NSFW_CATEGORY_SETTING, []
+        ) or []
+
+    if resolved_threshold is None:
+        try:
+            resolved_threshold = float((settings_map or {}).get("threshold", 0.7))
+        except (TypeError, ValueError):
+            resolved_threshold = 0.7
+
+    if resolved_allowed_categories is None:
+        resolved_allowed_categories = []
+    if resolved_threshold is None:
+        resolved_threshold = 0.7
+
     for _ in range(max_attempts):
         client, encrypted_key = await api.get_api_client(guild_id)
         if not client:
@@ -98,12 +127,6 @@ async def moderator_api(
             await api.set_api_key_working(encrypted_key)
 
         results = response.results[0]
-        settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
-        allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
-        try:
-            threshold = float(settings.get("threshold", 0.7))
-        except (TypeError, ValueError):
-            threshold = 0.7
         guild_flagged_categories: list[tuple[str, float]] = []
         summary_categories = {} # category: score
         flagged_any = False
@@ -123,10 +146,12 @@ async def moderator_api(
                     metadata={"category": normalized_category, "score": score},
                 )
 
-            if score < threshold:
+            if score < resolved_threshold:
                 continue
 
-            if allowed_categories and not is_allowed_category(category, allowed_categories):
+            if resolved_allowed_categories and not is_allowed_category(
+                category, resolved_allowed_categories
+            ):
                 continue
 
             guild_flagged_categories.append((normalized_category, score))
@@ -151,7 +176,7 @@ async def moderator_api(
                 "category": best_category,
                 "score": best_score,
                 "reason": "openai_moderation",
-                "threshold": threshold,
+                "threshold": resolved_threshold,
                 "summary_categories": summary_categories,
             }
 
@@ -159,7 +184,7 @@ async def moderator_api(
             "is_nsfw": False,
             "reason": "openai_moderation",
             "flagged_any": flagged_any,
-            "threshold": threshold,
+            "threshold": resolved_threshold,
             "summary_categories": summary_categories,
         }
 

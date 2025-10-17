@@ -4,9 +4,29 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 from urllib.parse import urlparse
 
-import aiofiles
-
 from ..constants import TMP_DIR
+
+DEFAULT_CHUNK_SIZE = 1 << 17  # 128 KiB
+MIN_CHUNK_SIZE = 1 << 15  # 32 KiB
+MAX_CHUNK_SIZE = 1 << 20  # 1 MiB
+DEFAULT_BUFFER_SIZE = 1 << 20  # 1 MiB
+MAX_BUFFER_SIZE = 1 << 22  # 4 MiB
+TARGET_CHUNK_SPLIT = 12
+
+
+def _resolve_stream_config(content_length: int | None) -> tuple[int, int]:
+    """Determine chunk and buffer sizes for the incoming payload."""
+    if not content_length or content_length <= 0:
+        return DEFAULT_CHUNK_SIZE, DEFAULT_BUFFER_SIZE
+
+    approx_chunk = max(content_length // TARGET_CHUNK_SPLIT, MIN_CHUNK_SIZE)
+    chunk_size = max(MIN_CHUNK_SIZE, min(MAX_CHUNK_SIZE, approx_chunk))
+
+    buffer_limit = max(
+        chunk_size,
+        min(MAX_BUFFER_SIZE, max(DEFAULT_BUFFER_SIZE, chunk_size * 2)),
+    )
+    return chunk_size, buffer_limit
 
 @asynccontextmanager
 async def temp_download(session, url: str, ext: str | None = None) -> AsyncIterator[str]:
@@ -21,11 +41,27 @@ async def temp_download(session, url: str, ext: str | None = None) -> AsyncItera
 
     path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{ext}")
 
-    async with session.get(url) as resp:
-        resp.raise_for_status()
-        async with aiofiles.open(path, "wb") as file_obj:
-            async for chunk in resp.content.iter_chunked(1 << 14):
-                await file_obj.write(chunk)
+    try:
+        async with session.get(url) as resp:
+            resp.raise_for_status()
+            chunk_size, buffer_limit = _resolve_stream_config(resp.content_length)
+            with open(path, "wb") as file_obj:
+                buffer = bytearray()
+                async for chunk in resp.content.iter_chunked(chunk_size):
+                    if not chunk:
+                        continue
+                    buffer.extend(chunk)
+                    if len(buffer) >= buffer_limit:
+                        file_obj.write(buffer)
+                        buffer = bytearray()
+                if buffer:
+                    file_obj.write(buffer)
+    except Exception:
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass
+        raise
 
     try:
         yield path

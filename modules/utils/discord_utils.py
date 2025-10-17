@@ -129,7 +129,7 @@ async def safe_get_message(channel: discord.TextChannel, message_id: int) -> Opt
         return message
     try:
         message = await channel.fetch_message(message_id)
-        cache.cache_message(message)  # Cache the message for future use
+        await cache.cache_message(message)  # Cache the message for future use
         return message
     except (discord.NotFound, discord.Forbidden):
         return None

@@ -27,6 +27,12 @@ from .captcha import (
     get_captcha_embed_record,
     upsert_captcha_embed_record,
 )
+from .metrics import (
+    accumulate_media_metric,
+    fetch_metric_rollups,
+    fetch_metric_totals,
+    summarise_rollups,
+)
 
 from .shards import (
     ShardAssignment,
@@ -71,6 +77,10 @@ __all__ = [
     "get_captcha_embed_record",
     "upsert_captcha_embed_record",
     "delete_captcha_embed_record",
+    "accumulate_media_metric",
+    "fetch_metric_rollups",
+    "fetch_metric_totals",
+    "summarise_rollups",
     "ShardAssignment",
     "ShardClaimError",
     "claim_shard",

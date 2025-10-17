@@ -23,7 +23,7 @@ class EventDispatcherCog(commands.Cog):
         if message.author.bot or not message.guild:
             return
 
-        cache_message(message)
+        await cache_message(message)
         guild_id = message.guild.id
 
         cog_names = [

@@ -1,9 +1,13 @@
+import asyncio
+from collections import OrderedDict
 import discord
 import diskcache as dc
 import os, tempfile
 
 cache_dir = os.path.join(tempfile.gettempdir(), "modbot_messages")
 message_cache = dc.Cache(cache_dir, size_limit=10**9)
+MEMORY_FALLBACK_LIMIT = 512
+memory_fallback: "OrderedDict[str, dict]" = OrderedDict()
 
 DEFAULT_CACHED_MESSAGE = {
     "content": None,
@@ -57,7 +61,7 @@ class CachedMessage:
         self.stickers = [CachedSticker(s) for s in data["stickers"]]
         self.reactions = [CachedReaction(r) for r in data["reactions"]]
 
-def cache_message(msg: discord.Message):
+async def cache_message(msg: discord.Message):
     key = f"{msg.guild.id}:{msg.id}"
     value = DEFAULT_CACHED_MESSAGE.copy()
 
@@ -98,8 +102,20 @@ def cache_message(msg: discord.Message):
         ] if msg.reactions else [],
     })
 
-    message_cache.set(key, value, expire=86400) # TTL 24 hours
+    # Keep a small in-memory fallback so reaction handlers can still work if diskcache bails out.
+    memory_fallback[key] = value
+    memory_fallback.move_to_end(key)
+    if len(memory_fallback) > MEMORY_FALLBACK_LIMIT:
+        memory_fallback.popitem(last=False)
+
+    try:
+        await asyncio.to_thread(message_cache.set, key, value, expire=86400)
+    except Exception as exc:
+        print(f"[cache] failed to persist message {msg.id} for guild {msg.guild.id if msg.guild else 'unknown'}: {exc}")
 
 def get_cached_message(guild_id: int, message_id: int) -> CachedMessage | None:
-    data = message_cache.get(f"{guild_id}:{message_id}")
+    key = f"{guild_id}:{message_id}"
+    data = message_cache.get(key)
+    if data is None:
+        data = memory_fallback.get(key)
     return CachedMessage(data) if data else None
