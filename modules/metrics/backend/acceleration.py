@@ -2,13 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, Mapping, Tuple
 
-from .serialization import (
-    coerce_int,
-    compute_average,
-    compute_stddev,
-    json_loads,
-    parse_iso_datetime,
-)
+from .serialization import coerce_int, compute_average, compute_frame_metrics, compute_stddev, json_loads, parse_iso_datetime
 
 ACCELERATION_PREFIXES: Dict[str, str] = {
     "accelerated": "accelerated",
@@ -53,11 +47,12 @@ def hydrate_acceleration_metrics(prefix: str, source: Mapping[str, str]) -> dict
     bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans)
     flagged_rate = compute_average(flagged, scans)
     average_flags = compute_average(flags_sum, scans)
-    average_frames_per_scan = compute_average(total_frames_scanned, scans)
-    frame_denominator = total_frames_scanned if total_frames_scanned > 0 else scans
-    average_latency_per_frame = compute_average(total_duration, frame_denominator)
-    frames_per_second = (float(total_frames_scanned) / float(total_duration) * 1000.0) if total_duration > 0 else 0.0
-    frame_coverage_rate = compute_average(total_frames_scanned, total_frames_target)
+    average_frames_per_scan, average_latency_per_frame, frames_per_second, frame_coverage_rate = compute_frame_metrics(
+        total_duration_ms=total_duration,
+        total_frames_scanned=total_frames_scanned,
+        total_frames_target=total_frames_target,
+        scan_count=scans,
+    )
 
     return {
         "scans_count": scans,
@@ -118,17 +113,16 @@ def finalise_summary_acceleration_bucket(accel_bucket: dict[str, Any]) -> None:
     accel_bucket["bytes_std_dev"] = compute_stddev(accel_bucket["bytes_total"], accel_bucket["bytes_total_sq"], scans)
     accel_bucket["flagged_rate"] = compute_average(accel_bucket["flagged"], scans)
     accel_bucket["average_flags_per_scan"] = compute_average(accel_bucket["flags_sum"], scans)
-    accel_bucket["average_frames_per_scan"] = compute_average(accel_bucket["frames_total_scanned"], scans)
-    frame_denominator = accel_bucket["frames_total_scanned"] if accel_bucket["frames_total_scanned"] > 0 else scans
-    accel_bucket["average_latency_per_frame_ms"] = compute_average(accel_bucket["duration_total_ms"], frame_denominator)
-    accel_bucket["frames_per_second"] = (
-        float(accel_bucket["frames_total_scanned"]) / float(accel_bucket["duration_total_ms"]) * 1000.0
-        if accel_bucket["duration_total_ms"] > 0
-        else 0.0
-    )
-    accel_bucket["frame_coverage_rate"] = compute_average(
-        accel_bucket["frames_total_scanned"],
-        accel_bucket["frames_total_target"],
+    (
+        accel_bucket["average_frames_per_scan"],
+        accel_bucket["average_latency_per_frame_ms"],
+        accel_bucket["frames_per_second"],
+        accel_bucket["frame_coverage_rate"],
+    ) = compute_frame_metrics(
+        total_duration_ms=accel_bucket["duration_total_ms"],
+        total_frames_scanned=accel_bucket["frames_total_scanned"],
+        total_frames_target=accel_bucket["frames_total_target"],
+        scan_count=scans,
     )
 
 

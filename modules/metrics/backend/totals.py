@@ -6,7 +6,16 @@ from typing import Any, Mapping
 from ._redis import get_redis_client
 from .acceleration import ACCELERATION_PREFIXES, hydrate_acceleration_metrics
 from .keys import totals_key, totals_status_key
-from .serialization import coerce_int, compute_average, compute_stddev, ensure_utc, json_dumps, json_loads, parse_iso_datetime
+from .serialization import (
+    coerce_int,
+    compute_average,
+    compute_frame_metrics,
+    compute_stddev,
+    ensure_utc,
+    json_dumps,
+    json_loads,
+    parse_iso_datetime,
+)
 
 
 async def fetch_metric_totals() -> dict[str, Any]:
@@ -38,11 +47,12 @@ async def fetch_metric_totals() -> dict[str, Any]:
     bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans_count)
     flagged_rate = compute_average(flagged_count, scans_count)
     average_flags = compute_average(flags_sum, scans_count)
-    average_frames_per_scan = compute_average(total_frames_scanned, scans_count)
-    frame_denominator = total_frames_scanned if total_frames_scanned > 0 else scans_count
-    average_latency_per_frame = compute_average(total_duration, frame_denominator)
-    frames_per_second = (float(total_frames_scanned) / float(total_duration) * 1000.0) if total_duration > 0 else 0.0
-    frame_coverage_rate = compute_average(total_frames_scanned, total_frames_target)
+    average_frames_per_scan, average_latency_per_frame, frames_per_second, frame_coverage_rate = compute_frame_metrics(
+        total_duration_ms=total_duration,
+        total_frames_scanned=total_frames_scanned,
+        total_frames_target=total_frames_target,
+        scan_count=scans_count,
+    )
     acceleration_breakdown = {
         result_key: hydrate_acceleration_metrics(prefix, totals_hash)
         for result_key, prefix in ACCELERATION_PREFIXES.items()

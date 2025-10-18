@@ -18,7 +18,17 @@ from .keys import (
     rollup_key,
     rollup_status_key,
 )
-from .serialization import coerce_int, compute_average, compute_stddev, ensure_utc, json_dumps, json_loads, normalise_since, parse_iso_datetime
+from .serialization import (
+    coerce_int,
+    compute_average,
+    compute_stddev,
+    compute_frame_metrics,
+    ensure_utc,
+    json_dumps,
+    json_loads,
+    normalise_since,
+    parse_iso_datetime,
+)
 
 
 async def fetch_metric_rollups(
@@ -227,11 +237,12 @@ def _hydrate_rollup(
     bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans_count)
     flagged_rate = compute_average(flagged_count, scans_count)
     average_flags = compute_average(flags_sum, scans_count)
-    average_frames_per_scan = compute_average(total_frames_scanned, scans_count)
-    frame_denominator = total_frames_scanned if total_frames_scanned > 0 else scans_count
-    average_latency_per_frame = compute_average(total_duration, frame_denominator)
-    frames_per_second = (float(total_frames_scanned) / float(total_duration) * 1000.0) if total_duration > 0 else 0.0
-    frame_coverage_rate = compute_average(total_frames_scanned, total_frames_target)
+    average_frames_per_scan, average_latency_per_frame, frames_per_second, frame_coverage_rate = compute_frame_metrics(
+        total_duration_ms=total_duration,
+        total_frames_scanned=total_frames_scanned,
+        total_frames_target=total_frames_target,
+        scan_count=scans_count,
+    )
 
     acceleration_breakdown = {
         result_key: hydrate_acceleration_metrics(prefix, rollup_data)
@@ -310,18 +321,16 @@ def _finalise_summary_bucket(bucket: dict[str, Any]) -> None:
     bucket["bytes_std_dev"] = compute_stddev(bucket["bytes_total"], bucket["bytes_total_sq"], scans)
     bucket["flagged_rate"] = compute_average(bucket["flagged"], scans)
     bucket["average_flags_per_scan"] = compute_average(bucket["flags_sum"], scans)
-    bucket["average_frames_per_scan"] = compute_average(bucket["frames_total_scanned"], scans)
-
-    frame_denominator = bucket["frames_total_scanned"] if bucket["frames_total_scanned"] > 0 else scans
-    bucket["average_latency_per_frame_ms"] = compute_average(bucket["duration_total_ms"], frame_denominator)
-    bucket["frames_per_second"] = (
-        float(bucket["frames_total_scanned"]) / float(bucket["duration_total_ms"]) * 1000.0
-        if bucket["duration_total_ms"] > 0
-        else 0.0
-    )
-    bucket["frame_coverage_rate"] = compute_average(
-        bucket["frames_total_scanned"],
-        bucket["frames_total_target"],
+    (
+        bucket["average_frames_per_scan"],
+        bucket["average_latency_per_frame_ms"],
+        bucket["frames_per_second"],
+        bucket["frame_coverage_rate"],
+    ) = compute_frame_metrics(
+        total_duration_ms=bucket["duration_total_ms"],
+        total_frames_scanned=bucket["frames_total_scanned"],
+        total_frames_target=bucket["frames_total_target"],
+        scan_count=scans,
     )
 
     for accel_bucket in bucket["acceleration"].values():

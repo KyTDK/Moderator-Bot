@@ -77,10 +77,33 @@ def compute_stddev(total: int, total_squared: int, count: int) -> float:
     return math.sqrt(variance)
 
 
+def compute_frame_metrics(
+    *,
+    total_duration_ms: int,
+    total_frames_scanned: int,
+    total_frames_target: int,
+    scan_count: int,
+) -> tuple[float, float, float, float]:
+    frames = max(total_frames_scanned, 0)
+    scans = max(scan_count, 0)
+    average_frames_per_scan = compute_average(frames, scans)
+    frame_denominator = frames if frames > 0 else scans
+    average_latency_per_frame_ms = compute_average(total_duration_ms, frame_denominator)
+    frames_per_second = (float(frames) / float(total_duration_ms) * 1000.0) if total_duration_ms > 0 else 0.0
+    frame_coverage_rate = compute_average(frames, max(total_frames_target, 0))
+    return (
+        average_frames_per_scan,
+        average_latency_per_frame_ms,
+        frames_per_second,
+        frame_coverage_rate,
+    )
+
+
 __all__ = [
     "coerce_int",
     "compute_average",
     "compute_stddev",
+    "compute_frame_metrics",
     "ensure_naive",
     "ensure_utc",
     "json_dumps",
