@@ -28,6 +28,38 @@ async def fetch_metric_rollups(
     since: date | datetime | None = None,
     limit: int = 30,
 ) -> list[dict[str, Any]]:
+    return await _fetch_rollups(
+        guild_id=guild_id,
+        content_type=content_type,
+        since=since,
+        limit=limit,
+        fallback_to_global=True,
+    )
+
+
+async def fetch_global_rollups(
+    *,
+    content_type: str | None = None,
+    since: date | datetime | None = None,
+    limit: int = 30,
+) -> list[dict[str, Any]]:
+    return await _fetch_rollups(
+        guild_id=None,
+        content_type=content_type,
+        since=since,
+        limit=limit,
+        fallback_to_global=False,
+    )
+
+
+async def _fetch_rollups(
+    *,
+    guild_id: int | None,
+    content_type: str | None,
+    since: date | datetime | None,
+    limit: int,
+    fallback_to_global: bool,
+) -> list[dict[str, Any]]:
     client = await get_redis_client()
     since_date = normalise_since(since)
     min_score = float(since_date.toordinal()) if since_date else float("-inf")
@@ -35,19 +67,14 @@ async def fetch_metric_rollups(
     index_key = rollup_guild_index_key(guild_id)
     global_index = rollup_index_key()
 
-    candidates: list[str] = []
-    for key in (index_key, global_index):
-        if key == index_key or not candidates:
-            fetched = await client.zrevrangebyscore(
-                key,
-                "+inf",
-                min_score,
-                start=0,
-                num=max(limit * 5, 50),
-            )
-            candidates.extend(fetched)
-        if candidates:
-            break
+    candidates = await _collect_rollup_keys(
+        client,
+        index_key=index_key,
+        global_index=global_index,
+        min_score=min_score,
+        limit=limit,
+        fallback_to_global=fallback_to_global,
+    )
 
     results: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -273,6 +300,36 @@ def _finalise_summary_bucket(bucket: dict[str, Any]) -> None:
 
 __all__ = [
     "fetch_metric_rollups",
+    "fetch_global_rollups",
     "import_rollup_snapshot",
     "summarise_rollups",
 ]
+
+
+async def _collect_rollup_keys(
+    client: Any,
+    *,
+    index_key: str,
+    global_index: str,
+    min_score: float,
+    limit: int,
+    fallback_to_global: bool,
+) -> list[str]:
+    keys_to_try: list[str] = [index_key]
+    if fallback_to_global and global_index not in keys_to_try:
+        keys_to_try.append(global_index)
+
+    candidates: list[str] = []
+    fetch_size = max(limit * 5, 50)
+    for key in keys_to_try:
+        fetched = await client.zrevrangebyscore(
+            key,
+            "+inf",
+            min_score,
+            start=0,
+            num=fetch_size,
+        )
+        candidates.extend(fetched)
+        if candidates:
+            break
+    return candidates

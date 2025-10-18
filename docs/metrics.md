@@ -12,6 +12,7 @@ Moderator Bot now records moderation activity in Redis, pairing a realtime strea
   - Snapshots: `last_status`, `last_reference`, `last_flagged_at`, `last_details`, and `updated_at`.
   - Per-acceleration breakdowns (`accelerated_*`, `non_accelerated_*`, `unknown_acceleration_*`) mirroring the same counters, totals, and snapshots for each execution path.
   Status histograms are kept in a sibling hash that appends `:status` to the rollup key.
+- **Global daily rollups** reuse the same schema but set `guild_id` to `0`. They aggregate every scan across all guilds for each `content_type`, enabling dashboards to plot network-wide trends without re-summing per-guild data. Their rollup keys also live in the guild index `"{prefix}:rollups:index:guild:0"`.
 - **Global totals** sit in `"{prefix}:totals"`, mirroring the enriched rollup schema but aggregated across every guild and content type. Per-status counts live under `"{prefix}:totals:status"`, and `updated_at` reflects the last time any metric changed.
 - **Indexes** use sorted sets for fast scans: `"{prefix}:rollups:index"` contains every rollup key scored by `date.toordinal()`, and `"{prefix}:rollups:index:guild:{guild_id}"` scopes the index for guild-specific queries.
 
@@ -38,7 +39,7 @@ Each bucket contains:
 `modules/metrics/tracker.log_media_scan` remains the public entry point. It builds a normalised payload and delegates to `modules.metrics.backend.accumulate_media_metric`, which:
 
 1. Emits the raw scan to the Redis stream (respecting optional `METRICS_REDIS_STREAM_MAXLEN` bounds).
-2. Increments the relevant rollup hash, updating status snapshots and status-count hashes as needed.
+2. Increments the relevant per-guild rollup hash and the global daily rollup, updating status snapshots and status-count hashes as needed.
 3. Applies the same increments to the global totals hash.
 
 Because Redis operations are idempotent increments and hash updates, the write path stays low-latency even at high scan volumes.
@@ -46,6 +47,7 @@ Because Redis operations are idempotent increments and hash updates, the write p
 ### Reading Metrics
 
 - `modules.metrics.get_media_metric_rollups()` walks the sorted-set indexes to collect the latest rollups, returning the raw counters plus derived statistics (averages, standard deviations, flag rates, bytes stats) and per-acceleration breakdowns. Each rollup also includes `status_counts`, `updated_at`, and the latest flagged snapshot.
+- `modules.metrics.get_media_metric_global_rollups()` mirrors the structure above but retrieves the guild-agnostic daily rollups (`guild_id=0`) so dashboards can plot network-wide activity.
 - `modules.metrics.get_media_metrics_summary()` aggregates rollups by `content_type`, surfacing the same enriched metrics and acceleration splits for each content bucket.
 - `modules.metrics.get_media_metrics_totals()` fetches the global snapshot in the enriched format so existing consumers automatically gain the expanded measurements, including acceleration metrics and `status_counts`.
 
@@ -78,5 +80,4 @@ The script:
 3. Drops the legacy MySQL tables once all writes succeed.
 
 Ensure `METRICS_REDIS_URL` points at the production Redis instance before running the script. After the migration completes, realtime metrics use Redis exclusively and MySQL no longer stores any metrics-specific tables.
-
 

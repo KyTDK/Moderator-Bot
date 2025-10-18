@@ -169,6 +169,21 @@ async def get_media_metric_rollups(
     )
 
 
+async def get_media_metric_global_rollups(
+    *,
+    content_type: str | None = None,
+    since: datetime | None = None,
+    limit: int = 30,
+) -> list[dict[str, Any]]:
+    """Fetch daily rollups aggregated across every guild."""
+
+    return await metrics_backend.fetch_global_rollups(
+        content_type=content_type,
+        since=since,
+        limit=limit,
+    )
+
+
 async def get_media_metrics_totals() -> dict[str, Any]:
     """Fetch the global aggregate metrics record."""
 
@@ -179,5 +194,6 @@ __all__ = [
     "log_media_scan",
     "get_media_metrics_summary",
     "get_media_metric_rollups",
+    "get_media_metric_global_rollups",
     "get_media_metrics_totals",
 ]

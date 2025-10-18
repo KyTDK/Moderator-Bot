@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any
 
 from ..config import get_metrics_redis_config
@@ -44,6 +44,8 @@ async def accumulate_media_metric(
     metric_date = occurred.date()
     rollup_key_value = rollup_key(metric_date, guild_id, content_type)
     status_key = rollup_status_key(rollup_key_value)
+    global_rollup_key_value = rollup_key(metric_date, None, content_type)
+    global_status_key = rollup_status_key(global_rollup_key_value)
     acceleration_prefix = resolve_acceleration_prefix(accelerated)
 
     detail_payload: dict[str, Any] = {}
@@ -90,9 +92,12 @@ async def accumulate_media_metric(
     duration_value = max(int(scan_duration_ms), 0) if scan_duration_ms is not None else None
     duration_sq = duration_value * duration_value if duration_value is not None else None
 
-    await _apply_metric_updates(
+    await _record_rollup(
         client,
-        rollup_key_value,
+        rollup_key_value=rollup_key_value,
+        status_key=status_key,
+        guild_id=guild_id,
+        metric_date=metric_date,
         was_flagged=was_flagged,
         flags_increment=flags_increment,
         file_size=file_size_value,
@@ -105,14 +110,28 @@ async def accumulate_media_metric(
         detail_json=detail_json,
         store_last_details=store_last_details,
         acceleration_prefix=acceleration_prefix,
-        set_updated_at=True,
     )
 
-    await client.hincrby(status_key, status, 1)
-
-    index_score = float(metric_date.toordinal())
-    await client.zadd(rollup_index_key(), {rollup_key_value: index_score})
-    await client.zadd(rollup_guild_index_key(guild_id), {rollup_key_value: index_score})
+    if guild_id not in (None, 0):
+        await _record_rollup(
+            client,
+            rollup_key_value=global_rollup_key_value,
+            status_key=global_status_key,
+            guild_id=None,
+            metric_date=metric_date,
+            was_flagged=was_flagged,
+            flags_increment=flags_increment,
+            file_size=file_size_value,
+            file_size_sq=file_size_sq,
+            duration=duration_value,
+            duration_sq=duration_sq,
+            status=status,
+            reference=reference,
+            occurred_iso=occurred_iso,
+            detail_json=detail_json,
+            store_last_details=store_last_details,
+            acceleration_prefix=acceleration_prefix,
+        )
 
     totals_hash = totals_key()
     totals_status_hash = totals_status_key()
@@ -136,6 +155,48 @@ async def accumulate_media_metric(
     )
 
     await client.hincrby(totals_status_hash, status, 1)
+
+
+async def _record_rollup(
+    client: Any,
+    *,
+    rollup_key_value: str,
+    status_key: str,
+    guild_id: int | None,
+    metric_date: date,
+    was_flagged: bool,
+    flags_increment: int,
+    file_size: int | None,
+    file_size_sq: int | None,
+    duration: int | None,
+    duration_sq: int | None,
+    status: str,
+    reference: str | None,
+    occurred_iso: str,
+    detail_json: str,
+    store_last_details: bool,
+    acceleration_prefix: str,
+) -> None:
+    await _apply_metric_updates(
+        client,
+        rollup_key_value,
+        was_flagged=was_flagged,
+        flags_increment=flags_increment,
+        file_size=file_size,
+        file_size_sq=file_size_sq,
+        duration=duration,
+        duration_sq=duration_sq,
+        status=status,
+        reference=reference,
+        occurred_iso=occurred_iso,
+        detail_json=detail_json,
+        store_last_details=store_last_details,
+        acceleration_prefix=acceleration_prefix,
+        set_updated_at=True,
+    )
+
+    await client.hincrby(status_key, status, 1)
+    await _index_rollup(client, rollup_key_value, guild_id, metric_date)
 
 
 async def _apply_metric_updates(
@@ -253,6 +314,12 @@ async def _update_acceleration_bucket(
     if was_flagged:
         bucket_updates[f"{prefix}_last_flagged_at"] = occurred_iso
     await client.hset(hash_key, mapping=bucket_updates)
+
+
+async def _index_rollup(client: Any, rollup_key_value: str, guild_id: int | None, metric_date: datetime.date) -> None:
+    index_score = float(metric_date.toordinal())
+    await client.zadd(rollup_index_key(), {rollup_key_value: index_score})
+    await client.zadd(rollup_guild_index_key(guild_id), {rollup_key_value: index_score})
 
 
 __all__ = ["accumulate_media_metric"]

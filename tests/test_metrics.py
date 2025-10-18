@@ -13,6 +13,7 @@ import pytest
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from modules.metrics import (  # noqa: E402
+    get_media_metric_global_rollups,
     get_media_metric_rollups,
     get_media_metrics_summary,
     get_media_metrics_totals,
@@ -282,6 +283,11 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert summary_map["video"]["average_latency_ms"] == pytest.approx(60.0)
     assert summary_map["video"]["acceleration"]["non_accelerated"]["scans"] == 1
 
+    global_summary = await get_media_metrics_summary()
+    global_summary_map = {entry["content_type"]: entry for entry in global_summary}
+    assert global_summary_map["image"]["scans"] == 2
+    assert global_summary_map["video"]["scans"] == 1
+
     totals = await get_media_metrics_totals()
     assert totals["scans_count"] == 3
     assert totals["flagged_count"] == 1
@@ -310,6 +316,21 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert accel_totals["latency_std_dev_ms"] == pytest.approx(20.0)
     assert totals["acceleration"]["non_accelerated"]["scans_count"] == 1
     assert totals["acceleration"]["unknown"]["scans_count"] == 0
+
+    global_rollups = await get_media_metric_global_rollups(limit=10)
+    assert len(global_rollups) == 2
+
+    global_latest = global_rollups[0]
+    assert global_latest["content_type"] == "video"
+    assert global_latest["scans_count"] == 1
+    assert global_latest["total_duration_ms"] == 60
+    assert global_latest["acceleration"]["non_accelerated"]["scans_count"] == 1
+
+    global_day_one = global_rollups[1]
+    assert global_day_one["content_type"] == "image"
+    assert global_day_one["scans_count"] == 2
+    assert global_day_one["flagged_count"] == 1
+    assert global_day_one["acceleration"]["accelerated"]["flagged_rate"] == pytest.approx(0.5)
 
     recent = await get_media_metric_rollups(
         guild_id=123,
