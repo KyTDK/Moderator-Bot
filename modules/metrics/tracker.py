@@ -135,6 +135,7 @@ async def log_media_scan(
         reference=reference or filename,
         details=details,
         store_last_details=was_flagged or status != DEFAULT_STATUS,
+        accelerated=accelerated,
     )
 
 

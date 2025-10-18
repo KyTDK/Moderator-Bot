@@ -218,7 +218,18 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert latest["last_status"] == "unsupported_type"
     assert latest["last_latency_ms"] == 60
     assert latest["average_latency_ms"] == pytest.approx(60.0)
+    assert latest["latency_std_dev_ms"] == pytest.approx(0.0)
+    assert latest["total_duration_sq_ms"] == 60 * 60
+    assert latest["average_bytes"] == pytest.approx(500.0)
+    assert latest["bytes_std_dev"] == pytest.approx(0.0)
+    assert latest["flagged_rate"] == pytest.approx(0.0)
+    assert latest["average_flags_per_scan"] == pytest.approx(0.0)
     assert latest["last_details"]["context"]["reason"] == "mime_unsupported"
+    assert latest["acceleration"]["non_accelerated"]["scans_count"] == 1
+    assert latest["acceleration"]["non_accelerated"]["average_latency_ms"] == pytest.approx(60.0)
+    assert latest["acceleration"]["accelerated"]["scans_count"] == 0
+    assert latest["acceleration"]["unknown"]["scans_count"] == 0
+    assert latest["updated_at"] is not None
 
     day_one = rollups[1]
     assert day_one["content_type"] == "image"
@@ -229,9 +240,28 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert day_one["total_duration_ms"] == 200
     assert day_one["last_latency_ms"] == 80
     assert day_one["average_latency_ms"] == pytest.approx(100.0)
+    assert day_one["latency_std_dev_ms"] == pytest.approx(20.0)
+    assert day_one["total_duration_sq_ms"] == 20800
+    assert day_one["average_bytes"] == pytest.approx(1500.0)
+    assert day_one["bytes_std_dev"] == pytest.approx(0.0)
+    assert day_one["flagged_rate"] == pytest.approx(0.5)
+    assert day_one["average_flags_per_scan"] == pytest.approx(1.0)
     assert day_one["status_counts"]["scan_complete"] == 2
     assert day_one["last_reference"] == "flagged_ref"
     assert day_one["last_flagged_at"] == base_time
+    assert day_one["updated_at"] is not None
+    accel_day_one = day_one["acceleration"]["accelerated"]
+    assert accel_day_one["scans_count"] == 2
+    assert accel_day_one["flagged_count"] == 1
+    assert accel_day_one["total_duration_ms"] == 200
+    assert accel_day_one["total_duration_sq_ms"] == 20800
+    assert accel_day_one["average_latency_ms"] == pytest.approx(100.0)
+    assert accel_day_one["latency_std_dev_ms"] == pytest.approx(20.0)
+    assert accel_day_one["flagged_rate"] == pytest.approx(0.5)
+    assert accel_day_one["average_flags_per_scan"] == pytest.approx(1.0)
+    assert accel_day_one["last_reference"] == "safe_ref"
+    assert day_one["acceleration"]["non_accelerated"]["scans_count"] == 0
+    assert day_one["acceleration"]["unknown"]["scans_count"] == 0
 
     summary = await get_media_metrics_summary(guild_id=123)
     summary_map = {entry["content_type"]: entry for entry in summary}
@@ -239,9 +269,18 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert summary_map["image"]["flagged"] == 1
     assert summary_map["image"]["flags_sum"] == 2
     assert summary_map["image"]["bytes_total"] == 3000
+    assert summary_map["image"]["average_latency_ms"] == pytest.approx(100.0)
+    assert summary_map["image"]["latency_std_dev_ms"] == pytest.approx(20.0)
+    assert summary_map["image"]["flagged_rate"] == pytest.approx(0.5)
+    assert summary_map["image"]["average_flags_per_scan"] == pytest.approx(1.0)
+    assert summary_map["image"]["acceleration"]["accelerated"]["scans"] == 2
+    assert summary_map["image"]["acceleration"]["accelerated"]["average_latency_ms"] == pytest.approx(100.0)
+    assert summary_map["image"]["acceleration"]["non_accelerated"]["scans"] == 0
     assert summary_map["video"]["scans"] == 1
     assert summary_map["video"]["flagged"] == 0
     assert summary_map["video"]["bytes_total"] == 500
+    assert summary_map["video"]["average_latency_ms"] == pytest.approx(60.0)
+    assert summary_map["video"]["acceleration"]["non_accelerated"]["scans"] == 1
 
     totals = await get_media_metrics_totals()
     assert totals["scans_count"] == 3
@@ -251,12 +290,26 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert totals["total_duration_ms"] == 260
     assert totals["last_latency_ms"] == 60
     assert totals["average_latency_ms"] == pytest.approx(86.6666666667)
+    assert totals["latency_std_dev_ms"] == pytest.approx(24.958, rel=1e-3)
+    assert totals["total_duration_sq_ms"] == 24400
+    assert totals["average_bytes"] == pytest.approx(1166.6666666667)
+    assert totals["bytes_std_dev"] == pytest.approx(471.4045, rel=1e-4)
+    assert totals["flagged_rate"] == pytest.approx(1 / 3)
+    assert totals["average_flags_per_scan"] == pytest.approx(2 / 3)
     assert totals["status_counts"]["scan_complete"] == 2
     assert totals["status_counts"]["unsupported_type"] == 1
     assert totals["last_status"] == "unsupported_type"
     assert totals["last_reference"] == "flagged_ref"
     assert totals["last_flagged_at"] == base_time
     assert totals["last_details"]["file"]["name"] == "clip.mp4"
+    assert totals["updated_at"] is not None
+    accel_totals = totals["acceleration"]["accelerated"]
+    assert accel_totals["scans_count"] == 2
+    assert accel_totals["flagged_count"] == 1
+    assert accel_totals["total_duration_ms"] == 200
+    assert accel_totals["latency_std_dev_ms"] == pytest.approx(20.0)
+    assert totals["acceleration"]["non_accelerated"]["scans_count"] == 1
+    assert totals["acceleration"]["unknown"]["scans_count"] == 0
 
     recent = await get_media_metric_rollups(
         guild_id=123,
@@ -270,6 +323,9 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     stream_entries = client.streams["moderator:metrics"]
     assert len(stream_entries) == 3
     payloads = [entry[1]["event"] for entry in stream_entries]
+    accelerations = set()
     for raw in payloads:
         decoded = json.loads(raw)
         assert decoded["content_type"] in {"image", "video"}
+        accelerations.add(decoded.get("accelerated"))
+    assert accelerations == {True, False}

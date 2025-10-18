@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from datetime import date, datetime, timezone
 from typing import Any
 
@@ -67,9 +68,19 @@ def compute_average(total: int, count: int) -> float:
     return float(total) / float(count) if count > 0 else 0.0
 
 
+def compute_stddev(total: int, total_squared: int, count: int) -> float:
+    if count <= 1:
+        return 0.0
+    mean = float(total) / float(count)
+    mean_of_squares = float(total_squared) / float(count)
+    variance = max(mean_of_squares - (mean**2), 0.0)
+    return math.sqrt(variance)
+
+
 __all__ = [
     "coerce_int",
     "compute_average",
+    "compute_stddev",
     "ensure_naive",
     "ensure_utc",
     "json_dumps",

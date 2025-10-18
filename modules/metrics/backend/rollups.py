@@ -4,6 +4,13 @@ from datetime import date, datetime
 from typing import Any, Mapping
 
 from ._redis import get_redis_client
+from .acceleration import (
+    ACCELERATION_PREFIXES,
+    accumulate_summary_acceleration,
+    empty_summary_acceleration,
+    finalise_summary_acceleration_bucket,
+    hydrate_acceleration_metrics,
+)
 from .keys import (
     parse_rollup_key,
     rollup_guild_index_key,
@@ -11,15 +18,7 @@ from .keys import (
     rollup_key,
     rollup_status_key,
 )
-from .serialization import (
-    coerce_int,
-    compute_average,
-    ensure_utc,
-    json_dumps,
-    json_loads,
-    normalise_since,
-    parse_iso_datetime,
-)
+from .serialization import coerce_int, compute_average, compute_stddev, ensure_utc, json_dumps, json_loads, normalise_since, parse_iso_datetime
 
 
 async def fetch_metric_rollups(
@@ -112,28 +111,11 @@ async def summarise_rollups(
             continue
 
         rollup_data = await client.hgetall(key)
-        scans_count = coerce_int(rollup_data.get("scans_count"))
-        flagged_count = coerce_int(rollup_data.get("flagged_count"))
-        flags_sum = coerce_int(rollup_data.get("flags_sum"))
-        total_bytes = coerce_int(rollup_data.get("total_bytes"))
-        total_duration = coerce_int(rollup_data.get("total_duration_ms"))
+        bucket = summary.setdefault(content, _empty_summary_bucket(content))
+        _accumulate_summary_from_rollup(bucket, rollup_data)
 
-        bucket = summary.setdefault(
-            content,
-            {
-                "content_type": content,
-                "scans": 0,
-                "flagged": 0,
-                "flags_sum": 0,
-                "bytes_total": 0,
-                "duration_total_ms": 0,
-            },
-        )
-        bucket["scans"] += scans_count
-        bucket["flagged"] += flagged_count
-        bucket["flags_sum"] += flags_sum
-        bucket["bytes_total"] += total_bytes
-        bucket["duration_total_ms"] += total_duration
+    for bucket in summary.values():
+        _finalise_summary_bucket(bucket)
 
     ordered = sorted(summary.values(), key=lambda payload: payload["scans"], reverse=True)
     return ordered
@@ -199,15 +181,28 @@ def _hydrate_rollup(
     flags_sum = coerce_int(rollup_data.get("flags_sum"))
     total_bytes = coerce_int(rollup_data.get("total_bytes"))
     total_duration = coerce_int(rollup_data.get("total_duration_ms"))
+    total_bytes_sq = coerce_int(rollup_data.get("total_bytes_sq"))
+    total_duration_sq = coerce_int(rollup_data.get("total_duration_sq_ms"))
     last_duration = coerce_int(rollup_data.get("last_duration_ms"))
     last_status = rollup_data.get("last_status")
     last_reference_raw = rollup_data.get("last_reference")
     last_reference = last_reference_raw if last_reference_raw else None
     last_flagged_at = parse_iso_datetime(rollup_data.get("last_flagged_at"))
     last_details = json_loads(rollup_data.get("last_details"))
+    updated_at = parse_iso_datetime(rollup_data.get("updated_at"))
 
     status_counts = {name: coerce_int(value) for name, value in status_counts_raw.items()}
     average_latency = compute_average(total_duration, scans_count)
+    latency_std_dev = compute_stddev(total_duration, total_duration_sq, scans_count)
+    average_bytes = compute_average(total_bytes, scans_count)
+    bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans_count)
+    flagged_rate = compute_average(flagged_count, scans_count)
+    average_flags = compute_average(flags_sum, scans_count)
+
+    acceleration_breakdown = {
+        result_key: hydrate_acceleration_metrics(prefix, rollup_data)
+        for result_key, prefix in ACCELERATION_PREFIXES.items()
+    }
 
     return {
         "metric_date": metric_date,
@@ -216,16 +211,64 @@ def _hydrate_rollup(
         "scans_count": scans_count,
         "flagged_count": flagged_count,
         "flags_sum": flags_sum,
+        "flagged_rate": flagged_rate,
+        "average_flags_per_scan": average_flags,
         "total_bytes": total_bytes,
+        "total_bytes_sq": total_bytes_sq,
+        "average_bytes": average_bytes,
+        "bytes_std_dev": bytes_std_dev,
         "total_duration_ms": total_duration,
+        "total_duration_sq_ms": total_duration_sq,
         "last_latency_ms": last_duration,
         "average_latency_ms": average_latency,
+        "latency_std_dev_ms": latency_std_dev,
         "status_counts": status_counts,
         "last_flagged_at": last_flagged_at,
         "last_status": last_status,
         "last_reference": last_reference,
         "last_details": last_details,
+        "updated_at": updated_at,
+        "acceleration": acceleration_breakdown,
     }
+
+
+def _empty_summary_bucket(content: str) -> dict[str, Any]:
+    return {
+        "content_type": content,
+        "scans": 0,
+        "flagged": 0,
+        "flags_sum": 0,
+        "bytes_total": 0,
+        "bytes_total_sq": 0,
+        "duration_total_ms": 0,
+        "duration_total_sq_ms": 0,
+        "acceleration": empty_summary_acceleration(),
+    }
+
+
+def _accumulate_summary_from_rollup(bucket: dict[str, Any], rollup_data: Mapping[str, str]) -> None:
+    bucket["scans"] += coerce_int(rollup_data.get("scans_count"))
+    bucket["flagged"] += coerce_int(rollup_data.get("flagged_count"))
+    bucket["flags_sum"] += coerce_int(rollup_data.get("flags_sum"))
+    bucket["bytes_total"] += coerce_int(rollup_data.get("total_bytes"))
+    bucket["bytes_total_sq"] += coerce_int(rollup_data.get("total_bytes_sq"))
+    bucket["duration_total_ms"] += coerce_int(rollup_data.get("total_duration_ms"))
+    bucket["duration_total_sq_ms"] += coerce_int(rollup_data.get("total_duration_sq_ms"))
+
+    accumulate_summary_acceleration(bucket["acceleration"], rollup_data)
+
+
+def _finalise_summary_bucket(bucket: dict[str, Any]) -> None:
+    scans = bucket["scans"]
+    bucket["average_latency_ms"] = compute_average(bucket["duration_total_ms"], scans)
+    bucket["latency_std_dev_ms"] = compute_stddev(bucket["duration_total_ms"], bucket["duration_total_sq_ms"], scans)
+    bucket["average_bytes"] = compute_average(bucket["bytes_total"], scans)
+    bucket["bytes_std_dev"] = compute_stddev(bucket["bytes_total"], bucket["bytes_total_sq"], scans)
+    bucket["flagged_rate"] = compute_average(bucket["flagged"], scans)
+    bucket["average_flags_per_scan"] = compute_average(bucket["flags_sum"], scans)
+
+    for accel_bucket in bucket["acceleration"].values():
+        finalise_summary_acceleration_bucket(accel_bucket)
 
 
 __all__ = [

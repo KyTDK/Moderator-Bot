@@ -4,15 +4,9 @@ from datetime import datetime, timezone
 from typing import Any, Mapping
 
 from ._redis import get_redis_client
+from .acceleration import ACCELERATION_PREFIXES, hydrate_acceleration_metrics
 from .keys import totals_key, totals_status_key
-from .serialization import (
-    coerce_int,
-    compute_average,
-    ensure_utc,
-    json_dumps,
-    json_loads,
-    parse_iso_datetime,
-)
+from .serialization import coerce_int, compute_average, compute_stddev, ensure_utc, json_dumps, json_loads, parse_iso_datetime
 
 
 async def fetch_metric_totals() -> dict[str, Any]:
@@ -25,29 +19,50 @@ async def fetch_metric_totals() -> dict[str, Any]:
     flags_sum = coerce_int(totals_hash.get("flags_sum"))
     total_bytes = coerce_int(totals_hash.get("total_bytes"))
     total_duration = coerce_int(totals_hash.get("total_duration_ms"))
+    total_bytes_sq = coerce_int(totals_hash.get("total_bytes_sq"))
+    total_duration_sq = coerce_int(totals_hash.get("total_duration_sq_ms"))
     last_duration = coerce_int(totals_hash.get("last_duration_ms"))
     last_status = totals_hash.get("last_status")
     last_reference_raw = totals_hash.get("last_reference")
     last_reference = last_reference_raw if last_reference_raw else None
     last_flagged_at = parse_iso_datetime(totals_hash.get("last_flagged_at"))
     last_details = json_loads(totals_hash.get("last_details"))
+    updated_at = parse_iso_datetime(totals_hash.get("updated_at"))
 
     status_counts = {name: coerce_int(value) for name, value in status_counts_raw.items()}
     average_latency = compute_average(total_duration, scans_count)
+    latency_std_dev = compute_stddev(total_duration, total_duration_sq, scans_count)
+    average_bytes = compute_average(total_bytes, scans_count)
+    bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans_count)
+    flagged_rate = compute_average(flagged_count, scans_count)
+    average_flags = compute_average(flags_sum, scans_count)
+    acceleration_breakdown = {
+        result_key: hydrate_acceleration_metrics(prefix, totals_hash)
+        for result_key, prefix in ACCELERATION_PREFIXES.items()
+    }
 
     return {
         "scans_count": scans_count,
         "flagged_count": flagged_count,
         "flags_sum": flags_sum,
         "total_bytes": total_bytes,
+        "total_bytes_sq": total_bytes_sq,
+        "average_bytes": average_bytes,
+        "bytes_std_dev": bytes_std_dev,
         "total_duration_ms": total_duration,
+        "total_duration_sq_ms": total_duration_sq,
         "last_latency_ms": last_duration,
         "average_latency_ms": average_latency,
+        "latency_std_dev_ms": latency_std_dev,
+        "flagged_rate": flagged_rate,
+        "average_flags_per_scan": average_flags,
         "status_counts": status_counts,
         "last_flagged_at": last_flagged_at,
         "last_status": last_status,
         "last_reference": last_reference,
         "last_details": last_details,
+        "updated_at": updated_at,
+        "acceleration": acceleration_breakdown,
     }
 
 
