@@ -243,11 +243,16 @@ class AggregatedModerationCog(commands.Cog):
                 return None
 
         async def scan_task():
+            resolved_member = member
+            if resolved_member is None and user_id is not None:
+                resolved_member = await safe_get_member(guild, user_id)
+
             flagged = await self.scanner.is_nsfw(
-                url=str(emoji.url),
-                member=member,
+                message=message,
                 guild_id=guild.id,
-                nsfw_callback=handle_nsfw_content
+                nsfw_callback=handle_nsfw_content,
+                url=str(emoji.url),
+                member=resolved_member,
             )
             if flagged:
                 target_message = await resolve_message_for_removal(message)

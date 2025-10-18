@@ -361,6 +361,20 @@ async def check_attachment(
                 guild_id=guild_id,
             )
 
+            actor = author or getattr(message, "author", None)
+            actor_id = getattr(actor, "id", None)
+            actor_mention = getattr(actor, "mention", None)
+            if actor_mention is None and actor_id is not None:
+                actor_mention = f"<@{actor_id}>"
+            if actor_mention is None:
+                actor_mention = localize_message(
+                    translator,
+                    REPORT_BASE,
+                    "description.unknown_user",
+                    fallback="Unknown user",
+                    guild_id=guild_id,
+                )
+
             embed = discord.Embed(
                 title=localize_message(
                     translator,
@@ -375,7 +389,7 @@ async def check_attachment(
                             translator,
                             REPORT_BASE,
                             "description.user",
-                            placeholders={"user": author.mention},
+                            placeholders={"user": actor_mention},
                             fallback="User: {user}",
                             guild_id=guild_id,
                         ),
@@ -527,7 +541,13 @@ async def check_attachment(
                         inline=True,
                     )
 
-            embed.set_thumbnail(url=author.display_avatar.url)
+            avatar_url = None
+            if actor is not None:
+                avatar = getattr(actor, "display_avatar", None)
+                if avatar:
+                    avatar_url = avatar.url
+            if avatar_url:
+                embed.set_thumbnail(url=avatar_url)
             await mod_logging.log_to_channel(
                 embed=embed,
                 channel_id=message.channel.id,
