@@ -20,6 +20,7 @@ from modules.metrics import (  # noqa: E402
     log_media_scan,
 )
 from modules.metrics import backend  # noqa: E402
+from modules.metrics.backend.keys import totals_key as backend_totals_key  # noqa: E402
 
 
 @dataclass
@@ -140,7 +141,43 @@ def _patch_metrics_backend(monkeypatch: pytest.MonkeyPatch) -> Iterable[FakeRedi
     backend.set_client_override(None)
 
 
-@pytest.mark.asyncio
+@pytest.fixture
+def anyio_backend() -> str:
+    return "asyncio"
+
+
+RESET_RAW_EXACT = {
+    "total_duration_ms",
+    "total_duration_sq_ms",
+    "total_bytes",
+    "total_bytes_sq",
+    "total_frames_scanned",
+    "total_frames_target",
+}
+
+RESET_RAW_SUFFIXES = (
+    "_total_duration_ms",
+    "_total_duration_sq_ms",
+    "_total_bytes",
+    "_total_bytes_sq",
+    "_total_frames_scanned",
+    "_total_frames_target",
+    "duration_total_ms",
+    "duration_total_sq_ms",
+    "bytes_total",
+    "bytes_total_sq",
+    "frames_total_scanned",
+    "frames_total_target",
+)
+
+
+def _zero_raw_totals(store: dict[str, str]) -> None:
+    for field in list(store.keys()):
+        if field in RESET_RAW_EXACT or any(field.endswith(suffix) for suffix in RESET_RAW_SUFFIXES):
+            store[field] = "0"
+
+
+@pytest.mark.anyio("asyncio")
 async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> None:
     client = _patch_metrics_backend
     base_time = datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -387,3 +424,76 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
         assert decoded["content_type"] in {"image", "video"}
         accelerations.add(decoded.get("accelerated"))
     assert accelerations == {True, False}
+
+
+@pytest.mark.anyio("asyncio")
+async def test_resetting_raw_totals_clears_global_metrics(_patch_metrics_backend: FakeRedis) -> None:
+    base_time = datetime(2024, 2, 1, 9, 0, tzinfo=timezone.utc)
+
+    await log_media_scan(
+        guild_id=321,
+        channel_id=20,
+        user_id=84,
+        message_id=777,
+        content_type="image",
+        detected_mime="image/png",
+        filename="example.png",
+        file_size=2048,
+        source="attachment",
+        scan_result={"is_nsfw": True},
+        scan_duration_ms=150,
+        accelerated=True,
+        occurred_at=base_time,
+    )
+
+    totals_before = await get_media_metrics_totals()
+    assert totals_before["average_latency_ms"] > 0.0
+
+    totals_store = _patch_metrics_backend.hashes[backend_totals_key()]
+    _zero_raw_totals(totals_store)
+
+    totals_after = await get_media_metrics_totals()
+    assert totals_after["average_latency_ms"] == pytest.approx(0.0)
+    assert totals_after["average_bytes"] == pytest.approx(0.0)
+    assert totals_after["average_latency_per_frame_ms"] == pytest.approx(0.0)
+    assert totals_after["frames_per_second"] == pytest.approx(0.0)
+
+
+@pytest.mark.anyio("asyncio")
+async def test_resetting_raw_totals_clears_rollup_metrics(_patch_metrics_backend: FakeRedis) -> None:
+    base_time = datetime(2024, 2, 1, 9, 0, tzinfo=timezone.utc)
+
+    await log_media_scan(
+        guild_id=555,
+        channel_id=33,
+        user_id=999,
+        message_id=888,
+        content_type="video",
+        detected_mime="video/mp4",
+        filename="segment.mp4",
+        file_size=1000,
+        source="attachment",
+        scan_result={
+            "video_frames_scanned": 12,
+            "video_frames_target": 24,
+        },
+        scan_duration_ms=300,
+        accelerated=False,
+        occurred_at=base_time,
+    )
+
+    summary_before = await get_media_metrics_summary(guild_id=555)
+    assert summary_before
+    video_summary_before = next(entry for entry in summary_before if entry["content_type"] == "video")
+    assert video_summary_before["average_latency_ms"] > 0.0
+
+    for key, store in list(_patch_metrics_backend.hashes.items()):
+        if ":rollup:" in key and not key.endswith(":status"):
+            _zero_raw_totals(store)
+
+    summary_after = await get_media_metrics_summary(guild_id=555)
+    video_summary_after = next(entry for entry in summary_after if entry["content_type"] == "video")
+    assert video_summary_after["average_latency_ms"] == pytest.approx(0.0)
+    assert video_summary_after["average_frames_per_scan"] == pytest.approx(0.0)
+    assert video_summary_after["frames_per_second"] == pytest.approx(0.0)
+    assert video_summary_after["average_latency_per_frame_ms"] == pytest.approx(0.0)
