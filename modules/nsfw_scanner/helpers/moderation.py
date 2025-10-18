@@ -24,6 +24,15 @@ def _should_add_sfw_vector(
     return max_similarity <= SFW_VECTOR_MAX_SIMILARITY
 
 
+async def _get_moderations_resource(client):
+    """
+    Lazily resolve client.moderations in a thread so that the heavy OpenAI
+    imports it triggers do not block the event loop when the first scan runs.
+    """
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, lambda: client.moderations)
+
+
 async def moderator_api(
     scanner,
     text: str | None = None,
@@ -103,7 +112,8 @@ async def moderator_api(
             await asyncio.sleep(2)
             continue
         try:
-            response = await client.moderations.create(
+            moderations_resource = await _get_moderations_resource(client)
+            response = await moderations_resource.create(
                 model="omni-moderation-latest" if image_path else "text-moderation-latest",
                 input=inputs,
             )
