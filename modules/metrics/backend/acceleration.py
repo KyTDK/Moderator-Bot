@@ -38,6 +38,8 @@ def hydrate_acceleration_metrics(prefix: str, source: Mapping[str, str]) -> dict
     total_duration = coerce_int(source.get(f"{prefix}_total_duration_ms"))
     total_duration_sq = coerce_int(source.get(f"{prefix}_total_duration_sq_ms"))
     last_duration = coerce_int(source.get(f"{prefix}_last_duration_ms"))
+    total_frames_scanned = coerce_int(source.get(f"{prefix}_total_frames_scanned"))
+    total_frames_target = coerce_int(source.get(f"{prefix}_total_frames_target"))
     last_status = source.get(f"{prefix}_last_status")
     last_reference_raw = source.get(f"{prefix}_last_reference")
     last_reference = last_reference_raw if last_reference_raw else None
@@ -51,6 +53,11 @@ def hydrate_acceleration_metrics(prefix: str, source: Mapping[str, str]) -> dict
     bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans)
     flagged_rate = compute_average(flagged, scans)
     average_flags = compute_average(flags_sum, scans)
+    average_frames_per_scan = compute_average(total_frames_scanned, scans)
+    frame_denominator = total_frames_scanned if total_frames_scanned > 0 else scans
+    average_latency_per_frame = compute_average(total_duration, frame_denominator)
+    frames_per_second = (float(total_frames_scanned) / float(total_duration) * 1000.0) if total_duration > 0 else 0.0
+    frame_coverage_rate = compute_average(total_frames_scanned, total_frames_target)
 
     return {
         "scans_count": scans,
@@ -64,9 +71,15 @@ def hydrate_acceleration_metrics(prefix: str, source: Mapping[str, str]) -> dict
         "bytes_std_dev": bytes_std_dev,
         "total_duration_ms": total_duration,
         "total_duration_sq_ms": total_duration_sq,
+        "total_frames_scanned": total_frames_scanned,
+        "total_frames_target": total_frames_target,
+        "average_frames_per_scan": average_frames_per_scan,
         "last_latency_ms": last_duration,
         "average_latency_ms": average_latency,
         "latency_std_dev_ms": latency_std_dev,
+        "average_latency_per_frame_ms": average_latency_per_frame,
+        "frames_per_second": frames_per_second,
+        "frame_coverage_rate": frame_coverage_rate,
         "last_status": last_status,
         "last_reference": last_reference,
         "last_flagged_at": last_flagged_at,
@@ -89,6 +102,8 @@ def accumulate_summary_acceleration(summary_acceleration: dict[str, dict[str, An
         bucket["bytes_total_sq"] += coerce_int(source.get(f"{prefix}_total_bytes_sq"))
         bucket["duration_total_ms"] += coerce_int(source.get(f"{prefix}_total_duration_ms"))
         bucket["duration_total_sq_ms"] += coerce_int(source.get(f"{prefix}_total_duration_sq_ms"))
+        bucket["frames_total_scanned"] += coerce_int(source.get(f"{prefix}_total_frames_scanned"))
+        bucket["frames_total_target"] += coerce_int(source.get(f"{prefix}_total_frames_target"))
 
 
 def finalise_summary_acceleration_bucket(accel_bucket: dict[str, Any]) -> None:
@@ -103,6 +118,18 @@ def finalise_summary_acceleration_bucket(accel_bucket: dict[str, Any]) -> None:
     accel_bucket["bytes_std_dev"] = compute_stddev(accel_bucket["bytes_total"], accel_bucket["bytes_total_sq"], scans)
     accel_bucket["flagged_rate"] = compute_average(accel_bucket["flagged"], scans)
     accel_bucket["average_flags_per_scan"] = compute_average(accel_bucket["flags_sum"], scans)
+    accel_bucket["average_frames_per_scan"] = compute_average(accel_bucket["frames_total_scanned"], scans)
+    frame_denominator = accel_bucket["frames_total_scanned"] if accel_bucket["frames_total_scanned"] > 0 else scans
+    accel_bucket["average_latency_per_frame_ms"] = compute_average(accel_bucket["duration_total_ms"], frame_denominator)
+    accel_bucket["frames_per_second"] = (
+        float(accel_bucket["frames_total_scanned"]) / float(accel_bucket["duration_total_ms"]) * 1000.0
+        if accel_bucket["duration_total_ms"] > 0
+        else 0.0
+    )
+    accel_bucket["frame_coverage_rate"] = compute_average(
+        accel_bucket["frames_total_scanned"],
+        accel_bucket["frames_total_target"],
+    )
 
 
 def _empty_acceleration_totals() -> dict[str, Any]:
@@ -114,6 +141,8 @@ def _empty_acceleration_totals() -> dict[str, Any]:
         "bytes_total_sq": 0,
         "duration_total_ms": 0,
         "duration_total_sq_ms": 0,
+        "frames_total_scanned": 0,
+        "frames_total_target": 0,
     }
 
 

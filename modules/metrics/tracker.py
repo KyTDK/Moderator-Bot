@@ -123,6 +123,21 @@ async def log_media_scan(
     if extra_context:
         details["context"] = extra_context
 
+    def _coerce_frame_count(raw: Any | None) -> int | None:
+        if raw is None:
+            return None
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            return None
+        return value if value >= 0 else None
+
+    frames_scanned = None
+    frames_target = None
+    if isinstance(scan_result, dict):
+        frames_scanned = _coerce_frame_count(scan_result.get("video_frames_scanned"))
+        frames_target = _coerce_frame_count(scan_result.get("video_frames_target"))
+
     await metrics_backend.accumulate_media_metric(
         occurred_at=occurred,
         guild_id=guild_id,
@@ -136,6 +151,8 @@ async def log_media_scan(
         details=details,
         store_last_details=was_flagged or status != DEFAULT_STATUS,
         accelerated=accelerated,
+        frames_scanned=frames_scanned,
+        frames_target=frames_target,
     )
 
 

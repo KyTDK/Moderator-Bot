@@ -210,6 +210,8 @@ def _hydrate_rollup(
     total_duration = coerce_int(rollup_data.get("total_duration_ms"))
     total_bytes_sq = coerce_int(rollup_data.get("total_bytes_sq"))
     total_duration_sq = coerce_int(rollup_data.get("total_duration_sq_ms"))
+    total_frames_scanned = coerce_int(rollup_data.get("total_frames_scanned"))
+    total_frames_target = coerce_int(rollup_data.get("total_frames_target"))
     last_duration = coerce_int(rollup_data.get("last_duration_ms"))
     last_status = rollup_data.get("last_status")
     last_reference_raw = rollup_data.get("last_reference")
@@ -225,6 +227,11 @@ def _hydrate_rollup(
     bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans_count)
     flagged_rate = compute_average(flagged_count, scans_count)
     average_flags = compute_average(flags_sum, scans_count)
+    average_frames_per_scan = compute_average(total_frames_scanned, scans_count)
+    frame_denominator = total_frames_scanned if total_frames_scanned > 0 else scans_count
+    average_latency_per_frame = compute_average(total_duration, frame_denominator)
+    frames_per_second = (float(total_frames_scanned) / float(total_duration) * 1000.0) if total_duration > 0 else 0.0
+    frame_coverage_rate = compute_average(total_frames_scanned, total_frames_target)
 
     acceleration_breakdown = {
         result_key: hydrate_acceleration_metrics(prefix, rollup_data)
@@ -246,9 +253,15 @@ def _hydrate_rollup(
         "bytes_std_dev": bytes_std_dev,
         "total_duration_ms": total_duration,
         "total_duration_sq_ms": total_duration_sq,
+        "total_frames_scanned": total_frames_scanned,
+        "total_frames_target": total_frames_target,
+        "average_frames_per_scan": average_frames_per_scan,
         "last_latency_ms": last_duration,
         "average_latency_ms": average_latency,
         "latency_std_dev_ms": latency_std_dev,
+        "average_latency_per_frame_ms": average_latency_per_frame,
+        "frames_per_second": frames_per_second,
+        "frame_coverage_rate": frame_coverage_rate,
         "status_counts": status_counts,
         "last_flagged_at": last_flagged_at,
         "last_status": last_status,
@@ -269,6 +282,8 @@ def _empty_summary_bucket(content: str) -> dict[str, Any]:
         "bytes_total_sq": 0,
         "duration_total_ms": 0,
         "duration_total_sq_ms": 0,
+        "frames_total_scanned": 0,
+        "frames_total_target": 0,
         "acceleration": empty_summary_acceleration(),
     }
 
@@ -281,6 +296,8 @@ def _accumulate_summary_from_rollup(bucket: dict[str, Any], rollup_data: Mapping
     bucket["bytes_total_sq"] += coerce_int(rollup_data.get("total_bytes_sq"))
     bucket["duration_total_ms"] += coerce_int(rollup_data.get("total_duration_ms"))
     bucket["duration_total_sq_ms"] += coerce_int(rollup_data.get("total_duration_sq_ms"))
+    bucket["frames_total_scanned"] += coerce_int(rollup_data.get("total_frames_scanned"))
+    bucket["frames_total_target"] += coerce_int(rollup_data.get("total_frames_target"))
 
     accumulate_summary_acceleration(bucket["acceleration"], rollup_data)
 
@@ -293,6 +310,19 @@ def _finalise_summary_bucket(bucket: dict[str, Any]) -> None:
     bucket["bytes_std_dev"] = compute_stddev(bucket["bytes_total"], bucket["bytes_total_sq"], scans)
     bucket["flagged_rate"] = compute_average(bucket["flagged"], scans)
     bucket["average_flags_per_scan"] = compute_average(bucket["flags_sum"], scans)
+    bucket["average_frames_per_scan"] = compute_average(bucket["frames_total_scanned"], scans)
+
+    frame_denominator = bucket["frames_total_scanned"] if bucket["frames_total_scanned"] > 0 else scans
+    bucket["average_latency_per_frame_ms"] = compute_average(bucket["duration_total_ms"], frame_denominator)
+    bucket["frames_per_second"] = (
+        float(bucket["frames_total_scanned"]) / float(bucket["duration_total_ms"]) * 1000.0
+        if bucket["duration_total_ms"] > 0
+        else 0.0
+    )
+    bucket["frame_coverage_rate"] = compute_average(
+        bucket["frames_total_scanned"],
+        bucket["frames_total_target"],
+    )
 
     for accel_bucket in bucket["acceleration"].values():
         finalise_summary_acceleration_bucket(accel_bucket)

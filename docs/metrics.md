@@ -8,12 +8,14 @@ Moderator Bot now records moderation activity in Redis, pairing a realtime strea
 - **Daily rollups** are stored under keys that follow `"{prefix}:rollup:{YYYY-MM-DD}:{guild_id}:{content_type}"` where `prefix` is `METRICS_REDIS_PREFIX` (default `moderator:metrics`). Each hash tracks:
   - Core counters: `scans_count`, `flagged_count`, `flags_sum`.
   - Latency and size totals: `total_duration_ms`, `total_duration_sq_ms`, `total_bytes`, `total_bytes_sq`, `last_duration_ms`.
+  - Workload totals: `total_frames_scanned`, `total_frames_target`.
   - Derived values (computed when reading): `average_latency_ms`, `latency_std_dev_ms`, `average_bytes`, `bytes_std_dev`, `flagged_rate`, `average_flags_per_scan`.
+  - Workload-derived values: `average_frames_per_scan`, `average_latency_per_frame_ms`, `frames_per_second`, `frame_coverage_rate`.
   - Snapshots: `last_status`, `last_reference`, `last_flagged_at`, `last_details`, and `updated_at`.
   - Per-acceleration breakdowns (`accelerated_*`, `non_accelerated_*`, `unknown_acceleration_*`) mirroring the same counters, totals, and snapshots for each execution path.
   Status histograms are kept in a sibling hash that appends `:status` to the rollup key.
 - **Global daily rollups** reuse the same schema but set `guild_id` to `0`. They aggregate every scan across all guilds for each `content_type`, enabling dashboards to plot network-wide trends without re-summing per-guild data. Their rollup keys also live in the guild index `"{prefix}:rollups:index:guild:0"`.
-- **Global totals** sit in `"{prefix}:totals"`, mirroring the enriched rollup schema but aggregated across every guild and content type. Per-status counts live under `"{prefix}:totals:status"`, and `updated_at` reflects the last time any metric changed.
+- **Global totals** sit in `"{prefix}:totals"`, mirroring the enriched rollup schema (including frame workload counters and per-frame latency metrics) but aggregated across every guild and content type. Per-status counts live under `"{prefix}:totals:status"`, and `updated_at` reflects the last time any metric changed.
 - **Indexes** use sorted sets for fast scans: `"{prefix}:rollups:index"` contains every rollup key scored by `date.toordinal()`, and `"{prefix}:rollups:index:guild:{guild_id}"` scopes the index for guild-specific queries.
 
 #### Acceleration Breakdown
@@ -31,6 +33,8 @@ Each bucket contains:
 - `scans_count`, `flagged_count`, `flags_sum`
 - `total_duration_ms`, `total_duration_sq_ms`, `last_latency_ms`, `average_latency_ms`, `latency_std_dev_ms`
 - `total_bytes`, `total_bytes_sq`, `average_bytes`, `bytes_std_dev`
+- `total_frames_scanned`, `total_frames_target`, `average_frames_per_scan`
+- `average_latency_per_frame_ms`, `frames_per_second`, `frame_coverage_rate`
 - `flagged_rate`, `average_flags_per_scan`
 - Snapshot metadata: `last_status`, `last_reference`, `last_flagged_at`, `last_at`, `last_details`
 
@@ -42,14 +46,16 @@ Each bucket contains:
 2. Increments the relevant per-guild rollup hash and the global daily rollup, updating status snapshots and status-count hashes as needed.
 3. Applies the same increments to the global totals hash.
 
+When available the tracker records `video_frames_scanned` and `video_frames_target` so downstream rollups can normalise latency per frame and show throughput improvements for accelerated scans.
+
 Because Redis operations are idempotent increments and hash updates, the write path stays low-latency even at high scan volumes.
 
 ### Reading Metrics
 
-- `modules.metrics.get_media_metric_rollups()` walks the sorted-set indexes to collect the latest rollups, returning the raw counters plus derived statistics (averages, standard deviations, flag rates, bytes stats) and per-acceleration breakdowns. Each rollup also includes `status_counts`, `updated_at`, and the latest flagged snapshot.
+- `modules.metrics.get_media_metric_rollups()` walks the sorted-set indexes to collect the latest rollups, returning the raw counters plus derived statistics (averages, standard deviations, flag rates, bytes stats, frame-normalised latency) and per-acceleration breakdowns. Each rollup also includes `status_counts`, `updated_at`, and the latest flagged snapshot.
 - `modules.metrics.get_media_metric_global_rollups()` mirrors the structure above but retrieves the guild-agnostic daily rollups (`guild_id=0`) so dashboards can plot network-wide activity.
 - `modules.metrics.get_media_metrics_summary()` aggregates rollups by `content_type`, surfacing the same enriched metrics and acceleration splits for each content bucket.
-- `modules.metrics.get_media_metrics_totals()` fetches the global snapshot in the enriched format so existing consumers automatically gain the expanded measurements, including acceleration metrics and `status_counts`.
+- `modules.metrics.get_media_metrics_totals()` fetches the global snapshot in the enriched format so existing consumers automatically gain the expanded measurements, including acceleration metrics, per-frame latency, and `status_counts`.
 
 All helpers return native Python types (UTC-aware datetimes, integers, decoded JSON dicts) so callers don't need to manipulate Redis-specific representations.
 
@@ -80,4 +86,3 @@ The script:
 3. Drops the legacy MySQL tables once all writes succeed.
 
 Ensure `METRICS_REDIS_URL` points at the production Redis instance before running the script. After the migration completes, realtime metrics use Redis exclusively and MySQL no longer stores any metrics-specific tables.
-

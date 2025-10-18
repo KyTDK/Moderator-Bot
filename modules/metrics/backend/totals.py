@@ -21,6 +21,8 @@ async def fetch_metric_totals() -> dict[str, Any]:
     total_duration = coerce_int(totals_hash.get("total_duration_ms"))
     total_bytes_sq = coerce_int(totals_hash.get("total_bytes_sq"))
     total_duration_sq = coerce_int(totals_hash.get("total_duration_sq_ms"))
+    total_frames_scanned = coerce_int(totals_hash.get("total_frames_scanned"))
+    total_frames_target = coerce_int(totals_hash.get("total_frames_target"))
     last_duration = coerce_int(totals_hash.get("last_duration_ms"))
     last_status = totals_hash.get("last_status")
     last_reference_raw = totals_hash.get("last_reference")
@@ -36,6 +38,11 @@ async def fetch_metric_totals() -> dict[str, Any]:
     bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans_count)
     flagged_rate = compute_average(flagged_count, scans_count)
     average_flags = compute_average(flags_sum, scans_count)
+    average_frames_per_scan = compute_average(total_frames_scanned, scans_count)
+    frame_denominator = total_frames_scanned if total_frames_scanned > 0 else scans_count
+    average_latency_per_frame = compute_average(total_duration, frame_denominator)
+    frames_per_second = (float(total_frames_scanned) / float(total_duration) * 1000.0) if total_duration > 0 else 0.0
+    frame_coverage_rate = compute_average(total_frames_scanned, total_frames_target)
     acceleration_breakdown = {
         result_key: hydrate_acceleration_metrics(prefix, totals_hash)
         for result_key, prefix in ACCELERATION_PREFIXES.items()
@@ -51,9 +58,15 @@ async def fetch_metric_totals() -> dict[str, Any]:
         "bytes_std_dev": bytes_std_dev,
         "total_duration_ms": total_duration,
         "total_duration_sq_ms": total_duration_sq,
+        "total_frames_scanned": total_frames_scanned,
+        "total_frames_target": total_frames_target,
+        "average_frames_per_scan": average_frames_per_scan,
         "last_latency_ms": last_duration,
         "average_latency_ms": average_latency,
         "latency_std_dev_ms": latency_std_dev,
+        "average_latency_per_frame_ms": average_latency_per_frame,
+        "frames_per_second": frames_per_second,
+        "frame_coverage_rate": frame_coverage_rate,
         "flagged_rate": flagged_rate,
         "average_flags_per_scan": average_flags,
         "status_counts": status_counts,
@@ -90,6 +103,8 @@ async def import_totals_snapshot(
         "total_bytes": int(aggregates.get("total_bytes", 0)),
         "total_duration_ms": int(aggregates.get("total_duration_ms", 0)),
         "last_duration_ms": int(aggregates.get("last_duration_ms", 0)),
+        "total_frames_scanned": int(aggregates.get("total_frames_scanned", 0)),
+        "total_frames_target": int(aggregates.get("total_frames_target", 0)),
     }
     if last_flagged_at:
         mapping["last_flagged_at"] = ensure_utc(last_flagged_at).isoformat()

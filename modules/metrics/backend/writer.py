@@ -35,6 +35,8 @@ async def accumulate_media_metric(
     details: dict[str, Any] | None,
     store_last_details: bool,
     accelerated: bool | None,
+    frames_scanned: int | None,
+    frames_target: int | None,
 ) -> None:
     client = await get_redis_client()
     config = get_metrics_redis_config()
@@ -71,6 +73,8 @@ async def accumulate_media_metric(
         "reference": reference,
         "details": detail_payload,
         "accelerated": accelerated,
+        "frames_scanned": frames_scanned,
+        "frames_target": frames_target,
     }
 
     stream_kwargs: dict[str, Any] = {}
@@ -91,6 +95,8 @@ async def accumulate_media_metric(
     file_size_sq = file_size_value * file_size_value if file_size_value is not None else None
     duration_value = max(int(scan_duration_ms), 0) if scan_duration_ms is not None else None
     duration_sq = duration_value * duration_value if duration_value is not None else None
+    frames_scanned_value = max(int(frames_scanned), 0) if frames_scanned is not None else None
+    frames_target_value = max(int(frames_target), 0) if frames_target is not None else None
 
     await _record_rollup(
         client,
@@ -104,6 +110,8 @@ async def accumulate_media_metric(
         file_size_sq=file_size_sq,
         duration=duration_value,
         duration_sq=duration_sq,
+        frames_scanned=frames_scanned_value,
+        frames_target=frames_target_value,
         status=status,
         reference=reference,
         occurred_iso=occurred_iso,
@@ -125,6 +133,8 @@ async def accumulate_media_metric(
             file_size_sq=file_size_sq,
             duration=duration_value,
             duration_sq=duration_sq,
+            frames_scanned=frames_scanned_value,
+            frames_target=frames_target_value,
             status=status,
             reference=reference,
             occurred_iso=occurred_iso,
@@ -145,6 +155,8 @@ async def accumulate_media_metric(
         file_size_sq=file_size_sq,
         duration=duration_value,
         duration_sq=duration_sq,
+        frames_scanned=frames_scanned_value,
+        frames_target=frames_target_value,
         status=status,
         reference=reference,
         occurred_iso=occurred_iso,
@@ -170,6 +182,8 @@ async def _record_rollup(
     file_size_sq: int | None,
     duration: int | None,
     duration_sq: int | None,
+    frames_scanned: int | None,
+    frames_target: int | None,
     status: str,
     reference: str | None,
     occurred_iso: str,
@@ -186,6 +200,8 @@ async def _record_rollup(
         file_size_sq=file_size_sq,
         duration=duration,
         duration_sq=duration_sq,
+        frames_scanned=frames_scanned,
+        frames_target=frames_target,
         status=status,
         reference=reference,
         occurred_iso=occurred_iso,
@@ -209,6 +225,8 @@ async def _apply_metric_updates(
     file_size_sq: int | None,
     duration: int | None,
     duration_sq: int | None,
+    frames_scanned: int | None,
+    frames_target: int | None,
     status: str,
     reference: str | None,
     occurred_iso: str,
@@ -233,6 +251,11 @@ async def _apply_metric_updates(
             await client.hincrby(hash_key, "total_duration_sq_ms", duration_sq)
     else:
         await client.hset(hash_key, mapping={"last_duration_ms": 0})
+
+    if frames_scanned is not None:
+        await client.hincrby(hash_key, "total_frames_scanned", frames_scanned)
+    if frames_target is not None:
+        await client.hincrby(hash_key, "total_frames_target", frames_target)
 
     await client.hset(hash_key, mapping={"last_status": status})
     if was_flagged:
@@ -261,6 +284,8 @@ async def _apply_metric_updates(
         file_size_sq=file_size_sq,
         duration=duration,
         duration_sq=duration_sq,
+        frames_scanned=frames_scanned,
+        frames_target=frames_target,
         status=status,
         reference=reference,
         occurred_iso=occurred_iso,
@@ -279,6 +304,8 @@ async def _update_acceleration_bucket(
     file_size_sq: int | None,
     duration: int | None,
     duration_sq: int | None,
+    frames_scanned: int | None,
+    frames_target: int | None,
     status: str,
     reference: str | None,
     occurred_iso: str,
@@ -303,6 +330,11 @@ async def _update_acceleration_bucket(
             await client.hincrby(hash_key, f"{prefix}_total_duration_sq_ms", duration_sq)
     else:
         await client.hset(hash_key, mapping={f"{prefix}_last_duration_ms": 0})
+
+    if frames_scanned is not None:
+        await client.hincrby(hash_key, f"{prefix}_total_frames_scanned", frames_scanned)
+    if frames_target is not None:
+        await client.hincrby(hash_key, f"{prefix}_total_frames_target", frames_target)
 
     bucket_updates: dict[str, Any] = {
         f"{prefix}_last_at": occurred_iso,
