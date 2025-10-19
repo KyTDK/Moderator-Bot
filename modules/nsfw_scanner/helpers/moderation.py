@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import os
 from typing import Any
 
@@ -38,6 +39,8 @@ async def moderator_api(
     text: str | None = None,
     image_path: str | None = None,
     image: Image.Image | None = None,
+    image_bytes: bytes | None = None,
+    image_mime: str | None = None,
     guild_id: int | None = None,
     max_attempts: int = 3,
     skip_vector_add: bool = False,
@@ -53,26 +56,38 @@ async def moderator_api(
     }
 
     inputs: list[Any] | str = []
-    is_video = image_path is not None
+    has_image_input = image_path is not None or image_bytes is not None
 
-    if text and not image_path:
+    if text and not has_image_input:
         inputs = text
 
-    if is_video:
-        if not os.path.exists(image_path):
-            print(f"[moderator_api] Image path does not exist: {image_path}")
+    if has_image_input:
+        b64_data: str | None = None
+        if image_bytes is not None:
+            try:
+                b64_data = base64.b64encode(image_bytes).decode()
+            except Exception as exc:
+                print(f"[moderator_api] Failed to encode image bytes: {exc}")
+                return result
+        elif image_path is not None:
+            if not os.path.exists(image_path):
+                print(f"[moderator_api] Image path does not exist: {image_path}")
+                return result
+            try:
+                b64_data = await asyncio.to_thread(file_to_b64, image_path)
+            except Exception as exc:  # pragma: no cover - best effort logging
+                print(f"[moderator_api] Error reading image {image_path}: {exc}")
+                return result
+        if not b64_data:
+            print("[moderator_api] No image content was provided")
             return result
-        try:
-            b64 = await asyncio.to_thread(file_to_b64, image_path)
-        except Exception as exc:  # pragma: no cover - best effort logging
-            print(f"[moderator_api] Error reading/encoding image {image_path}: {exc}")
-            return result
-        inputs.append(
+        mime_type = image_mime or "image/jpeg"
+        inputs = [
             {
                 "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                "image_url": {"url": f"data:{mime_type};base64,{b64_data}"},
             }
-        )
+        ]
 
     if not inputs:
         print("[moderator_api] No inputs were provided")
@@ -114,7 +129,7 @@ async def moderator_api(
         try:
             moderations_resource = await _get_moderations_resource(client)
             response = await moderations_resource.create(
-                model="omni-moderation-latest" if image_path else "text-moderation-latest",
+                model="omni-moderation-latest" if has_image_input else "text-moderation-latest",
                 input=inputs,
             )
         except openai.AuthenticationError:

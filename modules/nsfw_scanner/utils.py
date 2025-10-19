@@ -1,6 +1,8 @@
 import base64
+import io
 import os
 import uuid
+from dataclasses import dataclass
 from threading import Event
 from typing import Iterator, Optional, Tuple
 
@@ -9,7 +11,14 @@ import filetype
 import numpy as np
 from PIL import Image
 
-from .constants import TMP_DIR
+
+@dataclass(slots=True)
+class ExtractedFrame:
+    name: str
+    data: bytes
+    mime_type: str
+    signature: Optional[np.ndarray]
+
 
 def safe_delete(path: str) -> None:
     try:
@@ -17,10 +26,12 @@ def safe_delete(path: str) -> None:
     except FileNotFoundError:
         pass
 
+
 def is_allowed_category(category: str, allowed_categories) -> bool:
     normalized = category.replace("/", "_").replace("-", "_").lower()
     allowed = [c.lower() for c in allowed_categories]
     return normalized in allowed
+
 
 ANIMATED_EXTS = {".gif", ".webp", ".apng", ".avif"}
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".heic"}
@@ -88,7 +99,7 @@ def iter_extracted_frames(
     *,
     use_hwaccel: bool = False,
     stop_event: Event | None = None,
-) -> Iterator[str]:
+) -> Iterator[ExtractedFrame]:
     ext = os.path.splitext(filename)[1].lower()
     if ext in {".webp", ".apng", ".avif"}:
         try:
@@ -103,9 +114,20 @@ def iter_extracted_frames(
                         return
                     img.seek(int(idx))
                     frame = img.convert("RGBA")
-                    out = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.png")
-                    frame.save(out, format="PNG")
-                    yield out
+                    buffer = io.BytesIO()
+                    try:
+                        frame.save(buffer, format="PNG")
+                        data = buffer.getvalue()
+                    finally:
+                        buffer.close()
+                    signature = _compute_signature_from_pillow(frame)
+                    frame.close()
+                    yield ExtractedFrame(
+                        name=f"{uuid.uuid4().hex[:8]}_{idx}.png",
+                        data=data,
+                        mime_type="image/png",
+                        signature=signature,
+                    )
         except Exception as exc:
             print(f"[iter_extracted_frames] Pillow failed on {filename}: {exc}")
         return
@@ -143,11 +165,18 @@ def iter_extracted_frames(
                 break
 
             if current_frame >= next_idx:
-                out_name = os.path.join(
-                    TMP_DIR, f"{uuid.uuid4().hex[:8]}_{current_frame}.jpg"
+                success, buffer = cv2.imencode(
+                    ".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80]
                 )
-                cv2.imwrite(out_name, frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
-                yield out_name
+                if success:
+                    data = buffer.tobytes()
+                    signature = _compute_signature_from_cv_frame(frame)
+                    yield ExtractedFrame(
+                        name=f"{uuid.uuid4().hex[:8]}_{current_frame}.jpg",
+                        data=data,
+                        mime_type="image/jpeg",
+                        signature=signature,
+                    )
                 try:
                     next_idx = next(idx_iter)
                 except StopIteration:
@@ -159,19 +188,24 @@ def iter_extracted_frames(
         cap.release()
 
 
-def extract_frames_threaded(filename: str, wanted: Optional[int]) -> list[str]:
-    return list(iter_extracted_frames(filename, wanted))
-
-
-def compute_frame_signature(path: str) -> Optional[np.ndarray]:
-    frame = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+def _compute_signature_from_cv_frame(frame: np.ndarray) -> Optional[np.ndarray]:
     if frame is None:
         return None
     try:
-        resized = cv2.resize(frame, (32, 32), interpolation=cv2.INTER_AREA)
+        grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        resized = cv2.resize(grayscale, (32, 32), interpolation=cv2.INTER_AREA)
     except Exception:
         return None
     return resized.astype("float32") / 255.0
+
+
+def _compute_signature_from_pillow(image: Image.Image) -> Optional[np.ndarray]:
+    try:
+        grayscale = image.convert("L")
+        resized = grayscale.resize((32, 32), Image.BILINEAR)
+        return np.asarray(resized, dtype="float32") / 255.0
+    except Exception:
+        return None
 
 
 def frames_are_similar(
@@ -188,16 +222,7 @@ def frames_are_similar(
     similarity = 1.0 - diff
     return similarity >= threshold
 
+
 def file_to_b64(path: str) -> str:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
-
-def convert_to_png_safe(input_path: str, output_path: str) -> Optional[str]:
-    try:
-        with Image.open(input_path) as img:
-            img = img.convert("RGBA")
-            img.save(output_path, format="PNG")
-        return output_path
-    except Exception as e:
-        print(f"[convert] Failed to convert {input_path} to PNG: {e}")
-        return None

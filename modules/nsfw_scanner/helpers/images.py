@@ -1,8 +1,8 @@
 import asyncio
+import io
 import os
 import random
 import traceback
-import uuid
 from dataclasses import dataclass
 from typing import Any, List, Optional, Sequence
 
@@ -14,10 +14,9 @@ from modules.utils import clip_vectors, mysql
 from ..constants import (
     CLIP_THRESHOLD,
     HIGH_ACCURACY_SIMILARITY,
-    TMP_DIR,
     VECTOR_REFRESH_DIVISOR,
 )
-from ..utils import convert_to_png_safe, is_allowed_category, safe_delete
+from ..utils import ExtractedFrame, is_allowed_category, safe_delete
 from .moderation import moderator_api
 
 
@@ -69,13 +68,60 @@ async def build_image_processing_context(
     )
 
 
+async def _open_image_from_path(path: str) -> Image.Image:
+    def _load() -> Image.Image:
+        image = Image.open(path)
+        try:
+            image.load()
+            if image.mode != "RGBA":
+                converted = image.convert("RGBA")
+                converted.load()
+                image.close()
+                image = converted
+            return image
+        except Exception:
+            image.close()
+            raise
+
+    return await asyncio.to_thread(_load)
+
+
+async def _open_image_from_bytes(data: bytes) -> Image.Image:
+    def _load() -> Image.Image:
+        buffer = io.BytesIO(data)
+        image = Image.open(buffer)
+        try:
+            image.load()
+            if image.mode != "RGBA":
+                converted = image.convert("RGBA")
+                converted.load()
+                image.close()
+                image = converted
+            return image
+        finally:
+            buffer.close()
+
+    return await asyncio.to_thread(_load)
+
+
+def _encode_image_to_png_bytes(image: Image.Image) -> bytes:
+    buffer = io.BytesIO()
+    try:
+        image.save(buffer, format="PNG")
+        return buffer.getvalue()
+    finally:
+        buffer.close()
+
+
 async def _run_image_pipeline(
     scanner,
     *,
-    image_path: str,
+    image_path: str | None,
     image: Image.Image,
     context: ImageProcessingContext,
     similarity_response: Optional[List[dict[str, Any]]] = None,
+    image_bytes: bytes | None = None,
+    image_mime: str | None = None,
 ) -> dict[str, Any] | None:
     similarity_results = similarity_response
     if similarity_results is None:
@@ -156,6 +202,8 @@ async def _run_image_pipeline(
     response = await moderator_api(
         scanner,
         image_path=image_path,
+        image_bytes=image_bytes,
+        image_mime=image_mime,
         guild_id=context.guild_id,
         image=image,
         skip_vector_add=skip_vector,
@@ -191,132 +239,107 @@ async def process_image(
             accelerated=accelerated,
         )
 
-    _, ext = os.path.splitext(original_filename)
-    needs_conversion = convert_to_png and ext.lower() != ".png"
-    if needs_conversion:
-        png_converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
-        conversion_result = await asyncio.to_thread(
-            convert_to_png_safe, original_filename, png_converted_path
-        )
-        if not conversion_result:
-            print(f"[process_image] PNG conversion failed: {original_filename}")
-            return None
-        image_path = conversion_result
-    else:
-        png_converted_path = None
-        image_path = original_filename
-
+    image: Image.Image | None = None
     try:
-        with Image.open(image_path) as image_file:
-            image = image_file
-            converted_image = None
-            if image.mode != "RGBA":
-                converted_image = image.convert("RGBA")
-                image = converted_image
-            try:
-                return await _run_image_pipeline(
-                    scanner,
-                    image_path=image_path,
-                    image=image,
-                    context=ctx,
-                    similarity_response=similarity_response,
-                )
-            finally:
-                if converted_image is not None:
-                    converted_image.close()
+        image = await _open_image_from_path(original_filename)
+        _, ext = os.path.splitext(original_filename)
+        needs_conversion = convert_to_png and ext.lower() != ".png"
+        image_path: str | None = None if needs_conversion else original_filename
+        image_bytes: bytes | None = None
+        image_mime: str | None = None
+
+        if needs_conversion:
+            image_bytes = await asyncio.to_thread(_encode_image_to_png_bytes, image)
+            image_mime = "image/png"
+
+        return await _run_image_pipeline(
+            scanner,
+            image_path=image_path,
+            image=image,
+            context=ctx,
+            similarity_response=similarity_response,
+            image_bytes=image_bytes,
+            image_mime=image_mime,
+        )
     except Exception as exc:
         print(traceback.format_exc())
         print(f"[process_image] Error processing image {original_filename}: {exc}")
         return None
     finally:
-        if needs_conversion:
-            safe_delete(png_converted_path or "")
+        if image is not None:
+            try:
+                image.close()
+            except Exception:
+                pass
         if clean_up:
             safe_delete(original_filename)
 
 
 async def process_image_batch(
     scanner,
-    frame_paths: Sequence[str],
+    frame_payloads: Sequence[ExtractedFrame],
     context: ImageProcessingContext,
     *,
     convert_to_png: bool = False,
-) -> list[tuple[str, dict[str, Any] | None]]:
+) -> list[tuple[ExtractedFrame, dict[str, Any] | None]]:
     """
-    Analyse a batch of image paths using shared settings/context.
-    Returns list of (frame_path, result_dict).
+    Analyse a batch of in-memory frames using shared settings/context.
+    Returns list of (frame_data, result_dict).
     """
-    prepared_images: list[Image.Image] = []
-    prepared_paths: list[str] = []
-    converted_paths: list[str | None] = []
+    prepared: list[tuple[ExtractedFrame, Image.Image | None]] = []
+    valid_images: list[Image.Image] = []
 
-    for frame_path in frame_paths:
-        _, ext = os.path.splitext(frame_path)
-        needs_conversion = convert_to_png and ext.lower() != ".png"
-        target_path = frame_path
-        converted_path = None
-        if needs_conversion:
-            converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.png")
-            conversion_result = await asyncio.to_thread(
-                convert_to_png_safe, frame_path, converted_path
-            )
-            if not conversion_result:
-                print(f"[process_image_batch] PNG conversion failed: {frame_path}")
-                prepared_images.append(None)  # type: ignore[arg-type]
-                prepared_paths.append(frame_path)
-                converted_paths.append(converted_path)
-                continue
-            target_path = conversion_result
+    decode_tasks: list[asyncio.Task[Image.Image | None]] = []
+    semaphore = asyncio.Semaphore(16 if context.accelerated else 1)
 
-        try:
-            image_file = Image.open(target_path)
-        except Exception as exc:
-            print(f"[process_image_batch] Failed to open {frame_path}: {exc}")
-            prepared_images.append(None)  # type: ignore[arg-type]
-            prepared_paths.append(target_path)
-            converted_paths.append(converted_path)
-            continue
+    async def _decode_frame(frame: ExtractedFrame) -> Image.Image | None:
+        async with semaphore:
+            try:
+                return await _open_image_from_bytes(frame.data)
+            except Exception as exc:
+                print(f"[process_image_batch] Failed to open {frame.name}: {exc}")
+                return None
 
-        converted_image = None
-        if image_file.mode != "RGBA":
-            converted_image = image_file.convert("RGBA")
-            image_file.close()
-            image = converted_image
-        else:
-            image = image_file
+    for frame in frame_payloads:
+        decode_tasks.append(asyncio.create_task(_decode_frame(frame)))
 
-        prepared_images.append(image)
-        prepared_paths.append(target_path)
-        converted_paths.append(converted_path)
+    decoded_images = await asyncio.gather(*decode_tasks)
 
-    valid_images = [img for img in prepared_images if img is not None]
+    for frame, image in zip(frame_payloads, decoded_images):
+        prepared.append((frame, image))
+        if image is not None:
+            valid_images.append(image)
+
     similarity_batches: List[List[dict[str, Any]]] = []
     if valid_images:
         similarity_batches = await asyncio.to_thread(
             clip_vectors.query_similar_batch, valid_images, 0
         )
 
-    results: list[tuple[str, dict[str, Any] | None]] = []
+    results: list[tuple[ExtractedFrame, dict[str, Any] | None]] = []
     similarity_iter = iter(similarity_batches)
 
-    for frame_path, target_path, img in zip(frame_paths, prepared_paths, prepared_images):
+    for frame, image in prepared:
         response: dict[str, Any] | None = None
-        similarity_response = next(similarity_iter, []) if img is not None else None
-        if img is not None:
+        similarity_response = next(similarity_iter, []) if image is not None else None
+        payload_bytes = frame.data
+        payload_mime = frame.mime_type
+        if convert_to_png and image is not None and frame.mime_type.lower() != "image/png":
+            payload_bytes = await asyncio.to_thread(_encode_image_to_png_bytes, image)
+            payload_mime = "image/png"
+        if image is not None:
             try:
                 response = await _run_image_pipeline(
                     scanner,
-                    image_path=target_path,
-                    image=img,
+                    image_path=None,
+                    image=image,
                     context=context,
                     similarity_response=similarity_response,
+                    image_bytes=payload_bytes,
+                    image_mime=payload_mime,
                 )
             finally:
-                img.close()
-        results.append((frame_path, response))
-
-    for converted_path in converted_paths:
-        if converted_path:
-            safe_delete(converted_path)
+                image.close()
+        results.append((frame, response))
 
     return results

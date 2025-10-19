@@ -132,12 +132,10 @@ async def test_process_image_reuses_png_without_conversion(monkeypatch, tmp_path
     png_path = tmp_path / "sample.png"
     Image.new("RGBA", (8, 8), (255, 0, 0, 255)).save(png_path)
 
-    monkeypatch.setattr(images_mod, "TMP_DIR", tmp_path)
-
     def fail_convert(*_args, **_kwargs):
-        raise AssertionError("convert_to_png_safe should not be called for PNG input")
+        raise AssertionError("_encode_image_to_png_bytes should not be called for PNG input")
 
-    monkeypatch.setattr(images_mod, "convert_to_png_safe", fail_convert)
+    monkeypatch.setattr(images_mod, "_encode_image_to_png_bytes", fail_convert)
 
     async def fake_get_settings(_guild_id, _keys):
         return {
@@ -169,16 +167,14 @@ async def test_process_image_converts_non_png(monkeypatch, tmp_path):
     jpeg_path = tmp_path / "sample.jpg"
     Image.new("RGB", (8, 8), (0, 255, 0)).save(jpeg_path, format="JPEG")
 
-    monkeypatch.setattr(images_mod, "TMP_DIR", tmp_path)
-
-    original_convert = images_mod.convert_to_png_safe
+    original_convert = images_mod._encode_image_to_png_bytes
     convert_calls = {"count": 0}
 
-    def tracked_convert(src, dest):
+    def tracked_convert(src):
         convert_calls["count"] += 1
-        return original_convert(src, dest)
+        return original_convert(src)
 
-    monkeypatch.setattr(images_mod, "convert_to_png_safe", tracked_convert)
+    monkeypatch.setattr(images_mod, "_encode_image_to_png_bytes", tracked_convert)
 
     async def fake_get_settings(_guild_id, _keys):
         return {
@@ -209,8 +205,6 @@ async def test_process_image_converts_non_png(monkeypatch, tmp_path):
 async def test_process_image_uses_precomputed_settings(monkeypatch, tmp_path):
     png_path = tmp_path / "precomputed.png"
     Image.new("RGBA", (4, 4), (0, 0, 255, 255)).save(png_path)
-
-    monkeypatch.setattr(images_mod, "TMP_DIR", tmp_path)
 
     async def fail_get_settings(*_args, **_kwargs):
         raise AssertionError("get_settings should not be called when settings provided")

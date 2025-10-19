@@ -1,4 +1,5 @@
 import asyncio
+import io
 import os
 from typing import Any, Optional
 from threading import Event
@@ -17,12 +18,7 @@ from ..constants import (
     MAX_CONCURRENT_FRAMES,
     MAX_FRAMES_PER_VIDEO,
 )
-from ..utils import (
-    compute_frame_signature,
-    frames_are_similar,
-    iter_extracted_frames,
-    safe_delete,
-)
+from ..utils import frames_are_similar, iter_extracted_frames, safe_delete, ExtractedFrame
 from .images import (
     ImageProcessingContext,
     build_image_processing_context,
@@ -42,6 +38,7 @@ CONCURRENCY_LIMITS_BY_TIER = {
 }
 
 DEFAULT_PREMIUM_TIER = "accelerated"
+MAX_BATCH_CAP = 16
 
 
 async def _resolve_video_limits(
@@ -97,14 +94,14 @@ async def process_video(
 
         def _produce():
             try:
-                for frame_path in iter_extracted_frames(
+                for frame_data in iter_extracted_frames(
                     original_filename,
                     frames_to_scan,
                     use_hwaccel=context.accelerated,
                     stop_event=stop_event,
                 ):
                     fut = asyncio.run_coroutine_threadsafe(
-                        queue.put(frame_path), loop
+                        queue.put(frame_data), loop
                     )
                     try:
                         fut.result()
@@ -119,12 +116,11 @@ async def process_video(
 
     extractor_task = asyncio.create_task(_run_extraction())
 
-    pending_cleanup: set[str] = set()
     processed_frames = 0
     flagged_file: Optional[discord.File] = None
     flagged_scan: dict[str, Any] | None = None
-    batch: list[str] = []
-    batch_size = max(1, min(max_concurrent_frames, 8))
+    batch: list[ExtractedFrame] = []
+    batch_size = max(1, min(max_concurrent_frames, MAX_BATCH_CAP))
     dedupe_enabled = context.accelerated
     last_signature = None
     dedupe_threshold = 0.995 if dedupe_enabled else 0.0
@@ -144,8 +140,7 @@ async def process_video(
             context,
             convert_to_png=False,
         )
-        for frame_path, scan in results:
-            pending_cleanup.discard(frame_path)
+        for frame_data, scan in results:
             processed_frames += 1
             if isinstance(scan, dict):
                 scan.setdefault("video_frames_scanned", None)
@@ -154,11 +149,11 @@ async def process_video(
                 scan["video_frames_target"] = _effective_target()
                 if scan.get("is_nsfw"):
                     flagged_file = discord.File(
-                        frame_path, filename=os.path.basename(frame_path)
+                        fp=io.BytesIO(frame_data.data),
+                        filename=os.path.basename(frame_data.name),
                     )
                     flagged_scan = scan
                     return True
-            safe_delete(frame_path)
         return False
 
     flagged = False
@@ -169,25 +164,18 @@ async def process_video(
                 break
             if item is None:
                 continue
-            frame_path = item
-            pending_cleanup.add(frame_path)
+            frame_data = item
 
             if flagged:
-                safe_delete(frame_path)
-                pending_cleanup.discard(frame_path)
                 continue
 
             if dedupe_enabled:
-                signature = compute_frame_signature(frame_path)
-                if frames_are_similar(
-                    last_signature, signature, threshold=dedupe_threshold
-                ):
-                    safe_delete(frame_path)
-                    pending_cleanup.discard(frame_path)
+                signature = frame_data.signature
+                if frames_are_similar(last_signature, signature, threshold=dedupe_threshold):
                     continue
                 last_signature = signature
 
-            batch.append(frame_path)
+            batch.append(frame_data)
             if len(batch) >= batch_size:
                 flagged = await _process_batch()
                 batch.clear()
@@ -200,8 +188,6 @@ async def process_video(
     finally:
         stop_event.set()
         await extractor_task
-        for leftover in list(pending_cleanup):
-            safe_delete(leftover)
         safe_delete(original_filename)
 
     if flagged_file and flagged_scan:
