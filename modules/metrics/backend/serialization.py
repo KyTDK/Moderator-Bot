@@ -90,7 +90,12 @@ def compute_frame_metrics(
     frame_denominator = frames if frames > 0 else scans
     average_latency_per_frame_ms = compute_average(total_duration_ms, frame_denominator)
     frames_per_second = (float(frames) / float(total_duration_ms) * 1000.0) if total_duration_ms > 0 else 0.0
-    frame_coverage_rate = compute_average(frames, max(total_frames_target, 0))
+    target = max(total_frames_target, 0)
+    if frames > 0 and target <= 0:
+        target = frames
+    elif target > 0 and frames > target:
+        target = frames
+    frame_coverage_rate = compute_average(frames, target)
     return (
         average_frames_per_scan,
         average_latency_per_frame_ms,

@@ -129,6 +129,11 @@ async def process_video(
     last_signature = None
     dedupe_threshold = 0.995 if dedupe_enabled else 0.0
 
+    def _effective_target() -> int:
+        if isinstance(frames_to_scan, int) and frames_to_scan > 0:
+            return frames_to_scan
+        return processed_frames
+
     async def _process_batch() -> bool:
         nonlocal processed_frames, flagged_file, flagged_scan, last_signature
         if not batch:
@@ -146,7 +151,7 @@ async def process_video(
                 scan.setdefault("video_frames_scanned", None)
                 scan.setdefault("video_frames_target", None)
                 scan["video_frames_scanned"] = processed_frames
-                scan["video_frames_target"] = frames_to_scan
+                scan["video_frames_target"] = _effective_target()
                 if scan.get("is_nsfw"):
                     flagged_file = discord.File(
                         frame_path, filename=os.path.basename(frame_path)
@@ -208,5 +213,5 @@ async def process_video(
         if processed_frames > 0
         else "no_frames_extracted",
         "video_frames_scanned": processed_frames,
-        "video_frames_target": frames_to_scan,
+        "video_frames_target": _effective_target(),
     }

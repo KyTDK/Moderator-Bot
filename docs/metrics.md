@@ -72,7 +72,7 @@ The Redis hashes only persist raw counters; every reader recomputes the derived 
 - `average_frames_per_scan` = `total_frames_scanned / max(scans_count, 1)`
 - `average_latency_per_frame_ms` divides `total_duration_ms` by `total_frames_scanned`, falling back to `scans_count` whenever no frame totals were recorded
 - `frames_per_second` = `(total_frames_scanned * 1000) / total_duration_ms` (returns `0` when the denominator is non-positive)
-- `frame_coverage_rate` = `total_frames_scanned / max(total_frames_target, 1)`
+- `frame_coverage_rate` divides `total_frames_scanned` by whichever is larger between `total_frames_target` and `total_frames_scanned` (falling back to `0` when no frames were processed)
 
 Summary payloads expose `scans`, `flagged`, `flags_sum`, `bytes_total`, `duration_total_ms`, `frames_total_scanned`, and `frames_total_target`. The `acceleration` buckets mirror that structure after running through the same formulas, so you can compare accelerated, non-accelerated, and unknown execution paths with identical metrics.
 
