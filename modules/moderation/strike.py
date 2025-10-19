@@ -160,7 +160,9 @@ async def perform_disciplinary_action(
                             )
                             continue
                         except discord.HTTPException as exc:
-                            print(f"[Bulk Delete] Failed: {exc}")
+                            guild_text = getattr(first.guild, "id", None) or "unknown"
+                            channel_text = getattr(first.channel, "id", None) or "unknown"
+                            print(f"[Bulk Delete] Failed for guild {guild_text}, channel {channel_text}: {exc}")
 
                     success = 0
                     for msg in messages:
@@ -168,7 +170,11 @@ async def perform_disciplinary_action(
                             await msg.delete()
                             success += 1
                         except Exception as exc:  # pragma: no cover - network failure
-                            print(f"[Delete] Failed for {msg.id}: {exc}")
+                            guild_text = getattr(msg.guild, "id", None) or "unknown"
+                            channel_text = getattr(msg.channel, "id", None) or "unknown"
+                            print(
+                                f"[Delete] Failed for {msg.id} (guild {guild_text}, channel {channel_text}): {exc}"
+                            )
                     results.append(
                         disciplinary_texts["delete_summary"].format(
                             deleted=success, total=len(messages)
