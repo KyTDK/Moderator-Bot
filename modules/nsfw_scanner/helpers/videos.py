@@ -38,6 +38,9 @@ CONCURRENCY_LIMITS_BY_TIER = {
 }
 
 DEFAULT_PREMIUM_TIER = "accelerated"
+FREE_MAX_CONCURRENCY_CAP = 3
+FREE_MAX_BATCH_CAP = 4
+ACCELERATED_MAX_BATCH_CAP = 16
 MAX_BATCH_CAP = 16
 
 
@@ -55,7 +58,7 @@ async def _resolve_video_limits(
     if premium is None:
         premium = await mysql.get_premium_status(guild_id)
     if not premium or not premium.get("is_active"):
-        return frames_limit, concurrency_limit
+        return frames_limit, min(concurrency_limit, FREE_MAX_CONCURRENCY_CAP)
 
     tier = premium.get("tier") or DEFAULT_PREMIUM_TIER
     frames_limit = FRAME_LIMITS_BY_TIER.get(
@@ -120,7 +123,8 @@ async def process_video(
     flagged_file: Optional[discord.File] = None
     flagged_scan: dict[str, Any] | None = None
     batch: list[ExtractedFrame] = []
-    batch_size = max(1, min(max_concurrent_frames, MAX_BATCH_CAP))
+    batch_cap = ACCELERATED_MAX_BATCH_CAP if context.accelerated else FREE_MAX_BATCH_CAP
+    batch_size = max(1, min(max_concurrent_frames, batch_cap))
     dedupe_enabled = context.accelerated
     last_signature = None
     dedupe_threshold = 0.995 if dedupe_enabled else 0.0
