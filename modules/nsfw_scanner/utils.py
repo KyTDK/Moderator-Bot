@@ -1,7 +1,8 @@
 import base64
 import os
 import uuid
-from typing import Optional, Tuple
+from threading import Event
+from typing import Iterator, Optional, Tuple
 
 import cv2
 import filetype
@@ -67,78 +68,125 @@ def determine_file_type(filename: str) -> Tuple[str, Optional[str]]:
     return FILE_TYPE_UNKNOWN, mime or None
 
 
-def extract_frames_threaded(filename: str, wanted: Optional[int]) -> list[str]:
-    temp_frames: list[str] = []
+def _resolve_frame_target(wanted: Optional[int], total: int) -> int:
+    if total <= 0:
+        return wanted or 0
+    if wanted is None:
+        return total
+    try:
+        desired = int(wanted)
+    except (TypeError, ValueError):
+        return 0
+    if desired <= 0:
+        return 0
+    return min(desired, total)
 
-    def resolve_target(total: int) -> int:
-        if total <= 0:
-            return 0
-        if wanted is None:
-            return total
-        try:
-            desired = int(wanted)
-        except (TypeError, ValueError):
-            return 0
-        if desired <= 0:
-            return 0
-        return min(desired, total)
 
+def iter_extracted_frames(
+    filename: str,
+    wanted: Optional[int],
+    *,
+    use_hwaccel: bool = False,
+    stop_event: Event | None = None,
+) -> Iterator[str]:
     ext = os.path.splitext(filename)[1].lower()
     if ext in {".webp", ".apng", ".avif"}:
         try:
             with Image.open(filename) as img:
-                n = getattr(img, "n_frames", 1)
-                if n <= 1:
-                    return []
-                target = resolve_target(n)
+                total_frames = getattr(img, "n_frames", 1)
+                target = _resolve_frame_target(wanted, total_frames)
                 if target <= 0:
-                    return []
-                idxs = np.linspace(0, n - 1, target, dtype=int)
+                    return
+                idxs = np.linspace(0, max(total_frames - 1, 0), target, dtype=int)
                 for idx in idxs:
+                    if stop_event and stop_event.is_set():
+                        return
                     img.seek(int(idx))
                     frame = img.convert("RGBA")
                     out = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:8]}_{idx}.png")
                     frame.save(out, format="PNG")
-                    temp_frames.append(out)
-                return temp_frames
-        except Exception as e:
-            print(f"[extract_frames_threaded] Pillow failed on {filename}: {e}")
+                    yield out
+        except Exception as exc:
+            print(f"[iter_extracted_frames] Pillow failed on {filename}: {exc}")
+        return
 
     cap = cv2.VideoCapture(filename)
+    if use_hwaccel:
+        try:
+            cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
+        except Exception:
+            pass
+
     try:
-        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-        target = resolve_target(total)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        target = _resolve_frame_target(wanted, total_frames)
         if target <= 0:
-            return []
+            return
 
-        idxs = set(np.linspace(0, total - 1, target, dtype=int))
-        if not idxs:
-            return []
+        if total_frames > 0:
+            idxs = np.linspace(0, max(total_frames - 1, 0), target, dtype=int)
+        else:
+            idxs = np.arange(0, target, dtype=int)
+        idxs_list = list(dict.fromkeys(int(idx) for idx in idxs))
+        if not idxs_list:
+            return
 
-        max_idx = max(idxs)
+        last_idx = idxs_list[-1]
+        idx_iter = iter(idxs_list)
+        next_idx = next(idx_iter)
         current_frame = 0
-        while cap.isOpened() and current_frame <= max_idx:
+        while cap.isOpened() and current_frame <= last_idx:
+            if stop_event and stop_event.is_set():
+                return
             ok, frame = cap.read()
             if not ok:
                 break
 
-            if current_frame in idxs:
+            if current_frame >= next_idx:
                 out_name = os.path.join(
                     TMP_DIR, f"{uuid.uuid4().hex[:8]}_{current_frame}.jpg"
                 )
                 cv2.imwrite(out_name, frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
-                temp_frames.append(out_name)
-                if len(temp_frames) == len(idxs):
+                yield out_name
+                try:
+                    next_idx = next(idx_iter)
+                except StopIteration:
                     break
-
             current_frame += 1
-
-        return temp_frames
-    except Exception as e:
-        print(f"[extract_frames_threaded] VideoCapture failed on {filename}: {e}")
-        return []
+    except Exception as exc:
+        print(f"[iter_extracted_frames] VideoCapture failed on {filename}: {exc}")
     finally:
         cap.release()
+
+
+def extract_frames_threaded(filename: str, wanted: Optional[int]) -> list[str]:
+    return list(iter_extracted_frames(filename, wanted))
+
+
+def compute_frame_signature(path: str) -> Optional[np.ndarray]:
+    frame = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    if frame is None:
+        return None
+    try:
+        resized = cv2.resize(frame, (32, 32), interpolation=cv2.INTER_AREA)
+    except Exception:
+        return None
+    return resized.astype("float32") / 255.0
+
+
+def frames_are_similar(
+    signature_a: Optional[np.ndarray],
+    signature_b: Optional[np.ndarray],
+    *,
+    threshold: float = 0.99,
+) -> bool:
+    if signature_a is None or signature_b is None:
+        return False
+    if signature_a.shape != signature_b.shape:
+        return False
+    diff = np.abs(signature_a - signature_b).mean()
+    similarity = 1.0 - diff
+    return similarity >= threshold
 
 def file_to_b64(path: str) -> str:
     with open(path, "rb") as f:

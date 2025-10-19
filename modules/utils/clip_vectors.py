@@ -6,7 +6,7 @@ import math
 import os
 from collections import defaultdict
 from threading import Event, Lock, Thread
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Dict, Iterable, List, Optional, Sequence
 
 import numpy as np
 import torch
@@ -296,15 +296,25 @@ def _ensure_clip_loaded() -> None:
         _device = dev
 
 
-def embed(img: Image.Image) -> np.ndarray:
+def embed_batch(images: Sequence[Image.Image]) -> np.ndarray:
+    """Return L2-normalised embeddings for a batch of images."""
+    if not images:
+        return np.empty((0, 0), dtype="float32")
     _ensure_clip_loaded()
-    t = _proc(images=img, return_tensors="pt")
-    # BatchEncoding supports .to(device)
+    t = _proc(images=list(images), return_tensors="pt")
     t = t.to(_device) if hasattr(t, "to") else t
     with torch.no_grad():
         v = _model.get_image_features(**t).cpu().numpy().astype("float32")
-    v = v / np.linalg.norm(v, axis=1, keepdims=True)
+
+    norms = np.linalg.norm(v, axis=1, keepdims=True)
+    norms[norms == 0] = 1.0
+    v = v / norms
     return v
+
+
+def embed(img: Image.Image) -> np.ndarray:
+    """Return a single image embedding (legacy helper)."""
+    return embed_batch([img])
 
 
 def add_vector(img: Image.Image, metadata: dict) -> None:
@@ -354,53 +364,91 @@ def query_similar(
     k: int = 20,
     min_votes: int = 1
 ) -> List[Dict]:
+    results = query_similar_batch([img], threshold=threshold, k=k, min_votes=min_votes)
+    return results[0] if results else []
+
+
+def query_similar_batch(
+    images: Sequence[Image.Image],
+    threshold: float = 0.80,
+    k: int = 20,
+    min_votes: int = 1,
+) -> List[List[Dict]]:
     global _vector_search_warned
     coll = _get_collection(timeout=30.0)
     if coll is None:
         if not _vector_search_warned:
             log.warning("Vector search skipped; Milvus collection is not ready")
             _vector_search_warned = True
+        return [[] for _ in images]
+
+    if not images:
         return []
 
-    vec = embed(img)[0]
+    vectors = embed_batch(images)
+    if vectors.size == 0:
+        return [[] for _ in images]
+
     search_params = {
         "metric_type": "IP",  # inner product
         "params": {"nprobe": NPROBE}
     }
 
     results = coll.search(
-        data=[vec],
+        data=[vec.tolist() for vec in vectors],
         anns_field="vector",
         param=search_params,
         limit=k,
-        output_fields=["category", "meta"]
+        output_fields=["category", "meta"],
     )
-    if not results or not results[0]:
-        return []
-
-    votes: dict[str, list[float]] = defaultdict(list)
-    top_hit: dict[str, Dict] = {}
-
-    for hit in results[0]:
-        sim = float(hit.score)
-        if sim < threshold:
+    formatted: List[List[Dict]] = []
+    for idx, vector_hits in enumerate(results or []):
+        if not vector_hits:
+            formatted.append([])
             continue
-        category = hit.entity.get("category")
-        meta_json = hit.entity.get("meta")
-        meta = json.loads(meta_json) if meta_json else {}
-        meta["similarity"] = sim
-        try:
-            meta["vector_id"] = int(hit.id)
-        except (TypeError, ValueError):
-            meta["vector_id"] = hit.id
 
-        votes[category].append(sim)
-        if category not in top_hit or sim > top_hit[category]["similarity"]:
-            top_hit[category] = meta
+        votes: dict[str, list[float]] = defaultdict(list)
+        top_hit: dict[str, Dict] = {}
 
-    valid_categories = {cat for cat, sims in votes.items()
-                        if len(sims) >= min_votes}
+        for hit in vector_hits:
+            sim = float(hit.score)
+            if sim < threshold:
+                continue
+            category = hit.entity.get("category")
+            meta_json = hit.entity.get("meta")
+            meta = json.loads(meta_json) if meta_json else {}
+            meta["similarity"] = sim
+            try:
+                meta["vector_id"] = int(hit.id)
+            except (TypeError, ValueError):
+                meta["vector_id"] = hit.id
 
-    result = [top_hit[cat] for cat in valid_categories]
-    result.sort(key=lambda h: h["similarity"], reverse=True)
-    return result
+            votes[category].append(sim)
+            if category not in top_hit or sim > top_hit[category]["similarity"]:
+                top_hit[category] = meta
+
+        valid_categories = {
+            cat for cat, sims in votes.items() if len(sims) >= min_votes
+        }
+        batch_result = [top_hit[cat] for cat in valid_categories]
+        batch_result.sort(key=lambda h: h["similarity"], reverse=True)
+        formatted.append(batch_result)
+
+    # Ensure one result list per image even if Milvus returned fewer batches.
+    if len(formatted) < len(images):
+        formatted.extend([[]] * (len(images) - len(formatted)))
+    return formatted
+
+
+__all__ = [
+    "register_failure_callback",
+    "is_available",
+    "is_fallback_active",
+    "get_last_error",
+    "embed",
+    "embed_batch",
+    "add_vector",
+    "delete_vectors",
+    "query_similar",
+    "query_similar_batch",
+]

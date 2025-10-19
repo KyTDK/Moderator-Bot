@@ -15,7 +15,7 @@ from ..utils import (
     FILE_TYPE_LABELS,
     FILE_TYPE_VIDEO,
 )
-from .images import process_image
+from .images import build_image_processing_context, process_image
 from .videos import process_video
 
 REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
@@ -286,16 +286,24 @@ async def check_attachment(
     file = None
     scan_result: dict[str, Any] | None = None
 
-    if file_type == FILE_TYPE_IMAGE:
+    settings = settings_cache.get_scan_settings()
+    if settings is None and guild_id is not None:
+        settings = await mysql.get_settings(
+            guild_id,
+            [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
+        )
+        settings_cache.set_scan_settings(settings)
         settings = settings_cache.get_scan_settings()
-        if settings is None and guild_id is not None:
-            settings = await mysql.get_settings(
-                guild_id,
-                [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
-            )
-            settings_cache.set_scan_settings(settings)
-        settings = settings or {}
-        accelerated_value = await _get_accelerated()
+    settings = settings or {}
+
+    accelerated_value = await _get_accelerated()
+    context = await build_image_processing_context(
+        guild_id,
+        settings=settings,
+        accelerated=accelerated_value,
+    )
+
+    if file_type == FILE_TYPE_IMAGE:
         scan_result = await process_image(
             scanner,
             original_filename=temp_filename,
@@ -303,16 +311,9 @@ async def check_attachment(
             clean_up=False,
             settings=settings,
             accelerated=accelerated_value,
+            context=context,
         )
     elif file_type == FILE_TYPE_VIDEO:
-        settings = settings_cache.get_scan_settings()
-        if settings is None and guild_id is not None:
-            settings = await mysql.get_settings(
-                guild_id,
-                [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
-            )
-            settings_cache.set_scan_settings(settings)
-        settings = settings or {}
         premium_status = None
         if guild_id is not None:
             if settings_cache.has_premium_status():
@@ -321,13 +322,11 @@ async def check_attachment(
                 premium_status = await mysql.get_premium_status(guild_id)
                 settings_cache.set_premium_status(premium_status)
                 premium_status = settings_cache.get_premium_status()
-        accelerated_value = await _get_accelerated()
         file, scan_result = await process_video(
             scanner,
             original_filename=temp_filename,
             guild_id=guild_id,
-            settings=settings,
-            accelerated=accelerated_value,
+            context=context,
             premium_status=premium_status,
         )
     else:
