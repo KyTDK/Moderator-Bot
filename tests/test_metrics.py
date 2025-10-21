@@ -265,7 +265,14 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert latest["bytes_std_dev"] == pytest.approx(0.0)
     assert latest["flagged_rate"] == pytest.approx(0.0)
     assert latest["average_flags_per_scan"] == pytest.approx(0.0)
-    assert latest["last_details"]["context"]["reason"] == "mime_unsupported"
+    latest_details = latest["last_details"]
+    assert "context" not in latest_details
+    assert latest_details["scanner"] == "nsfw_scanner"
+    assert latest_details["source"] == "attachment"
+    assert latest_details["workload"]["frames_scanned"] == 15
+    assert latest_details["workload"]["frames_target"] == 30
+    assert latest_details["scan"]["video_frames_scanned"] == 15
+    assert latest_details["scan"]["video_frames_target"] == 30
     assert latest["total_frames_scanned"] == 15
     assert latest["total_frames_target"] == 30
     assert latest["average_frames_per_scan"] == pytest.approx(15.0)
@@ -299,7 +306,7 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert day_one["flagged_rate"] == pytest.approx(0.5)
     assert day_one["average_flags_per_scan"] == pytest.approx(1.0)
     assert day_one["status_counts"]["scan_complete"] == 2
-    assert day_one["last_reference"] == "flagged_ref"
+    assert day_one["last_reference"] is None
     assert day_one["last_flagged_at"] == base_time
     assert day_one["updated_at"] is not None
     accel_day_one = day_one["acceleration"]["accelerated"]
@@ -311,7 +318,7 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert accel_day_one["latency_std_dev_ms"] == pytest.approx(20.0)
     assert accel_day_one["flagged_rate"] == pytest.approx(0.5)
     assert accel_day_one["average_flags_per_scan"] == pytest.approx(1.0)
-    assert accel_day_one["last_reference"] == "safe_ref"
+    assert accel_day_one["last_reference"] is None
     assert day_one["acceleration"]["non_accelerated"]["scans_count"] == 0
     assert day_one["acceleration"]["unknown"]["scans_count"] == 0
 
@@ -373,9 +380,14 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert totals["status_counts"]["scan_complete"] == 2
     assert totals["status_counts"]["unsupported_type"] == 1
     assert totals["last_status"] == "unsupported_type"
-    assert totals["last_reference"] == "flagged_ref"
+    assert totals["last_reference"] is None
     assert totals["last_flagged_at"] == base_time
-    assert totals["last_details"]["file"]["name"] == "clip.mp4"
+    totals_details = totals["last_details"]
+    assert "file" not in totals_details
+    assert "context" not in totals_details
+    assert totals_details["workload"]["bytes"] == 500
+    assert totals_details["workload"]["duration_ms"] == 60
+    assert totals_details["scan"]["video_frames_scanned"] == 15
     assert totals["updated_at"] is not None
     accel_totals = totals["acceleration"]["accelerated"]
     assert accel_totals["scans_count"] == 2

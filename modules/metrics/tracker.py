@@ -1,29 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Mapping
 
 from . import backend as metrics_backend
+from .sanitizer import build_scan_details
 
 DEFAULT_STATUS = "scan_complete"
-
-
-def _sorted_summary(summary: dict[str, Any] | None, limit: int = 5) -> list[dict[str, Any]]:
-    if not isinstance(summary, dict):
-        return []
-    try:
-        ordered = sorted(
-            summary.items(),
-            key=lambda item: float(item[1] or 0),
-            reverse=True,
-        )
-    except Exception:
-        ordered = summary.items()
-    collection = [
-        {"category": str(name), "score": float(score) if isinstance(score, (int, float)) else score}
-        for name, score in ordered
-    ]
-    return collection[:limit]
 
 
 def _compute_flags_count(scan_result: dict[str, Any] | None) -> int:
@@ -42,38 +25,29 @@ def _compute_flags_count(scan_result: dict[str, Any] | None) -> int:
     return 1 if scan_result.get("is_nsfw") else 0
 
 
-def _build_scan_payload(scan_result: dict[str, Any] | None, *, limit: int = 5) -> dict[str, Any]:
-    if not isinstance(scan_result, dict):
-        return {}
-    primary_keys = {
-        "is_nsfw",
-        "category",
-        "score",
-        "reason",
-        "threshold",
-        "summary_categories",
-        "flagged_any",
-        "max_similarity",
-        "max_category",
-        "high_accuracy",
-        "clip_threshold",
-        "similarity",
-        "video_frames_scanned",
-        "video_frames_target",
-    }
-    payload: dict[str, Any] = {}
-    for key in primary_keys:
-        if key in scan_result:
-            payload[key] = scan_result[key]
-
-    summary = payload.get("summary_categories")
-    if isinstance(summary, dict):
-        payload["top_summary_categories"] = _sorted_summary(summary, limit=limit)
-
-    extras = {k: v for k, v in scan_result.items() if k not in primary_keys}
-    if extras:
-        payload["extras"] = extras
-    return payload
+def _sanitize_scan_details(
+    *,
+    scanner: str,
+    source: str,
+    accelerated: bool | None,
+    flags_count: int,
+    scan_result: Mapping[str, Any] | None,
+    file_size: int | None,
+    scan_duration_ms: int | None,
+    frames_scanned: int | None,
+    frames_target: int | None,
+) -> dict[str, Any]:
+    return build_scan_details(
+        scanner=scanner,
+        source=source,
+        accelerated=accelerated,
+        flags_count=flags_count,
+        scan_result=scan_result,
+        file_size=file_size,
+        scan_duration_ms=scan_duration_ms,
+        frames_scanned=frames_scanned,
+        frames_target=frames_target,
+    )
 
 
 async def log_media_scan(
@@ -105,24 +79,6 @@ async def log_media_scan(
     was_flagged = bool(scan_result and scan_result.get("is_nsfw"))
     occurred = occurred_at or datetime.now(timezone.utc)
 
-    details: dict[str, Any] = {
-        "scanner": scanner,
-        "source": source,
-        "channel_id": channel_id,
-        "user_id": user_id,
-        "message_id": message_id,
-        "file": {
-            "name": filename,
-            "mime": detected_mime,
-            "size_bytes": file_size,
-        },
-        "scan": _build_scan_payload(scan_result),
-        "accelerated": accelerated,
-        "flags_count": flags_count,
-    }
-    if extra_context:
-        details["context"] = extra_context
-
     def _coerce_frame_count(raw: Any | None) -> int | None:
         if raw is None:
             return None
@@ -138,6 +94,18 @@ async def log_media_scan(
         frames_scanned = _coerce_frame_count(scan_result.get("video_frames_scanned"))
         frames_target = _coerce_frame_count(scan_result.get("video_frames_target"))
 
+    details = _sanitize_scan_details(
+        scanner=scanner,
+        source=source,
+        accelerated=accelerated,
+        flags_count=flags_count,
+        scan_result=scan_result,
+        file_size=file_size,
+        scan_duration_ms=scan_duration_ms,
+        frames_scanned=frames_scanned,
+        frames_target=frames_target,
+    )
+
     await metrics_backend.accumulate_media_metric(
         occurred_at=occurred,
         guild_id=guild_id,
@@ -147,7 +115,6 @@ async def log_media_scan(
         flags_count=flags_count,
         file_size=file_size,
         scan_duration_ms=scan_duration_ms,
-        reference=reference or filename,
         details=details,
         store_last_details=was_flagged or status != DEFAULT_STATUS,
         accelerated=accelerated,

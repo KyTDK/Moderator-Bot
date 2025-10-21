@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Mapping
 
 from modules.metrics import backend
+from modules.metrics.sanitizer import sanitize_details_blob
 from modules.utils.mysql.connection import execute_query, init_pool
 
 
@@ -23,7 +24,6 @@ async def _load_rollups() -> list[tuple[Any, ...]]:
             total_duration_ms,
             last_duration_ms,
             last_flagged_at,
-            last_reference,
             last_status,
             status_counts,
             last_details
@@ -47,7 +47,6 @@ async def _load_totals() -> Mapping[str, Any] | None:
             total_duration_ms,
             last_duration_ms,
             last_flagged_at,
-            last_reference,
             last_status,
             status_counts,
             last_details,
@@ -69,7 +68,6 @@ async def _load_totals() -> Mapping[str, Any] | None:
         total_duration_ms,
         last_duration_ms,
         last_flagged_at,
-        last_reference,
         last_status,
         status_counts,
         last_details,
@@ -83,10 +81,9 @@ async def _load_totals() -> Mapping[str, Any] | None:
         "total_duration_ms": int(total_duration_ms or 0),
         "last_duration_ms": int(last_duration_ms or 0),
         "last_flagged_at": last_flagged_at,
-        "last_reference": last_reference,
         "last_status": last_status,
         "status_counts": json.loads(status_counts) if status_counts else {},
-        "last_details": json.loads(last_details) if last_details else {},
+        "last_details": sanitize_details_blob(json.loads(last_details) if last_details else {}),
         "updated_at": updated_at,
     }
 
@@ -106,11 +103,11 @@ async def migrate_metrics() -> None:
         total_duration_ms,
         last_duration_ms,
         last_flagged_at,
-        last_reference,
         last_status,
         status_counts,
         last_details,
     ) in rollup_rows:
+        sanitized_details = sanitize_details_blob(json.loads(last_details) if last_details else {})
         await backend.import_rollup_snapshot(
             metric_date=metric_date,
             guild_id=None if guild_id in (None, 0) else int(guild_id),
@@ -126,12 +123,13 @@ async def migrate_metrics() -> None:
             status_counts=json.loads(status_counts) if status_counts else {},
             last_flagged_at=last_flagged_at if isinstance(last_flagged_at, datetime) else None,
             last_status=last_status,
-            last_reference=last_reference,
-            last_details=json.loads(last_details) if last_details else {},
+            last_reference=None,
+            last_details=sanitized_details,
         )
 
     totals = await _load_totals()
     if totals:
+        sanitized_totals_details = sanitize_details_blob(totals["last_details"])
         await backend.import_totals_snapshot(
             aggregates={
                 "scans_count": totals["scans_count"],
@@ -144,8 +142,8 @@ async def migrate_metrics() -> None:
             status_counts=totals["status_counts"],
             last_flagged_at=totals["last_flagged_at"],
             last_status=totals["last_status"],
-            last_reference=totals["last_reference"],
-            last_details=totals["last_details"],
+            last_reference=None,
+            last_details=sanitized_totals_details,
             updated_at=totals["updated_at"],
         )
 

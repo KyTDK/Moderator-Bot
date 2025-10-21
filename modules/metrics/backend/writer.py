@@ -6,6 +6,7 @@ from datetime import date, datetime, timezone
 from typing import Any
 
 from ..config import get_metrics_redis_config
+from ..sanitizer import sanitize_details_blob
 from ._redis import RedisError, get_redis_client
 from .acceleration import resolve_acceleration_prefix
 from .keys import (
@@ -31,7 +32,6 @@ async def accumulate_media_metric(
     flags_count: int,
     file_size: int | None,
     scan_duration_ms: int | None,
-    reference: str | None,
     details: dict[str, Any] | None,
     store_last_details: bool,
     accelerated: bool | None,
@@ -50,27 +50,25 @@ async def accumulate_media_metric(
     global_status_key = rollup_status_key(global_rollup_key_value)
     acceleration_prefix = resolve_acceleration_prefix(accelerated)
 
-    detail_payload: dict[str, Any] = {}
-    if details:
-        detail_payload.update(details)
+    detail_payload = sanitize_details_blob(details)
     detail_payload.setdefault("status", status)
     detail_payload.setdefault("was_flagged", was_flagged)
-    if reference is not None:
-        detail_payload.setdefault("reference", reference)
+    detail_payload.setdefault("flags_count", int(flags_count or 0))
+    if isinstance(accelerated, bool):
+        detail_payload.setdefault("accelerated", accelerated)
     detail_payload.setdefault("occurred_at", occurred.isoformat())
     detail_json = json_dumps(detail_payload)
 
     event_payload = {
         "occurred_at": occurred_iso,
         "metric_date": metric_date.isoformat(),
-        "guild_id": None if guild_id in (None, 0) else int(guild_id),
+        "guild_id": 0 if guild_id in (None, 0) else int(guild_id),
         "content_type": content_type,
         "status": status,
         "was_flagged": was_flagged,
         "flags_count": int(flags_count or 0),
         "file_size": file_size,
         "scan_duration_ms": scan_duration_ms,
-        "reference": reference,
         "details": detail_payload,
         "accelerated": accelerated,
         "frames_scanned": frames_scanned,
@@ -113,7 +111,6 @@ async def accumulate_media_metric(
         frames_scanned=frames_scanned_value,
         frames_target=frames_target_value,
         status=status,
-        reference=reference,
         occurred_iso=occurred_iso,
         detail_json=detail_json,
         store_last_details=store_last_details,
@@ -136,7 +133,6 @@ async def accumulate_media_metric(
             frames_scanned=frames_scanned_value,
             frames_target=frames_target_value,
             status=status,
-            reference=reference,
             occurred_iso=occurred_iso,
             detail_json=detail_json,
             store_last_details=store_last_details,
@@ -159,7 +155,6 @@ async def accumulate_media_metric(
         frames_scanned=frames_scanned_value,
         frames_target=frames_target_value,
         status=status,
-        reference=reference,
         occurred_iso=occurred_iso,
         detail_json=detail_json,
         store_last_details=store_last_details,
@@ -186,7 +181,6 @@ async def _record_rollup(
     frames_scanned: int | None,
     frames_target: int | None,
     status: str,
-    reference: str | None,
     occurred_iso: str,
     detail_json: str,
     store_last_details: bool,
@@ -206,7 +200,6 @@ async def _record_rollup(
         frames_scanned=frames_scanned,
         frames_target=frames_target,
         status=status,
-        reference=reference,
         occurred_iso=occurred_iso,
         detail_json=detail_json,
         store_last_details=store_last_details,
@@ -232,7 +225,6 @@ async def _apply_metric_updates(
     frames_scanned: int | None,
     frames_target: int | None,
     status: str,
-    reference: str | None,
     occurred_iso: str,
     detail_json: str,
     store_last_details: bool,
@@ -268,7 +260,6 @@ async def _apply_metric_updates(
     if was_flagged:
         flag_mapping = {
             "last_flagged_at": occurred_iso,
-            "last_reference": reference or "",
             "last_details": detail_json,
         }
         await client.hset(hash_key, mapping=flag_mapping)
@@ -294,7 +285,6 @@ async def _apply_metric_updates(
         frames_scanned=frames_scanned,
         frames_target=frames_target,
         status=status,
-        reference=reference,
         occurred_iso=occurred_iso,
         detail_json=detail_json,
     )
@@ -314,7 +304,6 @@ async def _update_acceleration_bucket(
     frames_scanned: int | None,
     frames_target: int | None,
     status: str,
-    reference: str | None,
     occurred_iso: str,
     detail_json: str,
 ) -> None:
@@ -348,8 +337,6 @@ async def _update_acceleration_bucket(
         f"{prefix}_last_status": status,
         f"{prefix}_last_details": detail_json,
     }
-    if reference is not None:
-        bucket_updates[f"{prefix}_last_reference"] = reference
     if was_flagged:
         bucket_updates[f"{prefix}_last_flagged_at"] = occurred_iso
     await client.hset(hash_key, mapping=bucket_updates)
