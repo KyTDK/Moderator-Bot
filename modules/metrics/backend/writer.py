@@ -149,6 +149,7 @@ async def accumulate_media_metric(
     await _apply_metric_updates(
         client,
         totals_hash,
+        metric_date_iso=None,
         was_flagged=was_flagged,
         flags_increment=flags_increment,
         file_size=file_size_value,
@@ -191,9 +192,11 @@ async def _record_rollup(
     store_last_details: bool,
     acceleration_prefix: str,
 ) -> None:
+    metric_date_iso = metric_date.isoformat()
     await _apply_metric_updates(
         client,
         rollup_key_value,
+        metric_date_iso=metric_date_iso,
         was_flagged=was_flagged,
         flags_increment=flags_increment,
         file_size=file_size,
@@ -219,6 +222,7 @@ async def _apply_metric_updates(
     client: Any,
     hash_key: str,
     *,
+    metric_date_iso: str | None,
     was_flagged: bool,
     flags_increment: int,
     file_size: int | None,
@@ -235,6 +239,9 @@ async def _apply_metric_updates(
     acceleration_prefix: str,
     set_updated_at: bool,
 ) -> None:
+    if metric_date_iso is not None:
+        await client.hset(hash_key, mapping={"metric_date": metric_date_iso})
+
     await client.hincrby(hash_key, "scans_count", 1)
     if was_flagged:
         await client.hincrby(hash_key, "flagged_count", 1)
