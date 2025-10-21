@@ -130,10 +130,8 @@ def _safe_json_loads(raw: Any) -> Mapping[str, Any]:
 
 async def cleanup_metrics_extras() -> None:
     config = get_metrics_redis_config()
-    if not config.enabled:
-        raise RuntimeError("METRICS_REDIS_URL must be configured to run cleanup")
 
-    client = Redis.from_url(config.url, decode_responses=True)
+    client = Redis(host="127.0.0.1", port=6379, db=1, decode_responses=True)
 
     try:
         rollup_removed = 0
