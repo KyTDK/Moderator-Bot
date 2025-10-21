@@ -24,13 +24,18 @@ async def backfill_global_rollup_metric_dates() -> None:
             metric_date_iso = metric_date.isoformat()
 
             existing = await client.hget(key_str, "metric_date")
-            if existing == metric_date_iso:
-                continue
 
-            await client.hset(key_str, mapping={"metric_date": metric_date_iso})
-            updated += 1
+            if existing and existing.strip():
+                if existing == metric_date_iso:
+                    continue
+            else:
+                existing = None
+
+            if existing != metric_date_iso:
+                await client.hset(key_str, mapping={"metric_date": metric_date_iso})
+                updated += 1
     finally:
-        await client.close()
+        await client.aclose()
         await client.connection_pool.disconnect()
 
     print(f"Updated metric_date for {updated} rollup hashes in {index_key}.")
