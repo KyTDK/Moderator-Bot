@@ -36,6 +36,7 @@ def _sanitize_scan_details(
     scan_duration_ms: int | None,
     frames_scanned: int | None,
     frames_target: int | None,
+    frames_media_total: int | None,
 ) -> dict[str, Any]:
     return build_scan_details(
         scanner=scanner,
@@ -47,6 +48,7 @@ def _sanitize_scan_details(
         scan_duration_ms=scan_duration_ms,
         frames_scanned=frames_scanned,
         frames_target=frames_target,
+        frames_media_total=frames_media_total,
     )
 
 
@@ -90,9 +92,13 @@ async def log_media_scan(
 
     frames_scanned = None
     frames_target = None
+    frames_media_total = None
     if isinstance(scan_result, dict):
         frames_scanned = _coerce_frame_count(scan_result.get("video_frames_scanned"))
         frames_target = _coerce_frame_count(scan_result.get("video_frames_target"))
+        frames_media_total = _coerce_frame_count(
+            scan_result.get("video_frames_media_total")
+        )
 
     details = _sanitize_scan_details(
         scanner=scanner,
@@ -104,6 +110,7 @@ async def log_media_scan(
         scan_duration_ms=scan_duration_ms,
         frames_scanned=frames_scanned,
         frames_target=frames_target,
+        frames_media_total=frames_media_total,
     )
 
     await metrics_backend.accumulate_media_metric(
@@ -120,6 +127,7 @@ async def log_media_scan(
         accelerated=accelerated,
         frames_scanned=frames_scanned,
         frames_target=frames_target,
+        frames_media_total=frames_media_total,
     )
 
 

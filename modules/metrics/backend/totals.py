@@ -32,6 +32,7 @@ async def fetch_metric_totals() -> dict[str, Any]:
     total_duration_sq = coerce_int(totals_hash.get("total_duration_sq_ms"))
     total_frames_scanned = coerce_int(totals_hash.get("total_frames_scanned"))
     total_frames_target = coerce_int(totals_hash.get("total_frames_target"))
+    total_frames_media = coerce_int(totals_hash.get("total_frames_media"))
     last_duration = coerce_int(totals_hash.get("last_duration_ms"))
     last_status = totals_hash.get("last_status")
     last_reference_raw = totals_hash.get("last_reference")
@@ -51,6 +52,7 @@ async def fetch_metric_totals() -> dict[str, Any]:
         total_duration_ms=total_duration,
         total_frames_scanned=total_frames_scanned,
         total_frames_target=total_frames_target,
+        total_frames_media=total_frames_media,
         scan_count=scans_count,
     )
     acceleration_breakdown = {
@@ -70,6 +72,7 @@ async def fetch_metric_totals() -> dict[str, Any]:
         "total_duration_sq_ms": total_duration_sq,
         "total_frames_scanned": total_frames_scanned,
         "total_frames_target": total_frames_target,
+        "total_frames_media": total_frames_media,
         "average_frames_per_scan": average_frames_per_scan,
         "last_latency_ms": last_duration,
         "average_latency_ms": average_latency,
@@ -115,6 +118,7 @@ async def import_totals_snapshot(
         "last_duration_ms": int(aggregates.get("last_duration_ms", 0)),
         "total_frames_scanned": int(aggregates.get("total_frames_scanned", 0)),
         "total_frames_target": int(aggregates.get("total_frames_target", 0)),
+        "total_frames_media": int(aggregates.get("total_frames_media", 0)),
     }
     if last_flagged_at:
         mapping["last_flagged_at"] = ensure_utc(last_flagged_at).isoformat()

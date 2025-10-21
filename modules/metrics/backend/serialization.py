@@ -82,6 +82,7 @@ def compute_frame_metrics(
     total_duration_ms: int,
     total_frames_scanned: int,
     total_frames_target: int,
+    total_frames_media: int,
     scan_count: int,
 ) -> tuple[float, float, float, float]:
     frames = max(total_frames_scanned, 0)
@@ -90,12 +91,14 @@ def compute_frame_metrics(
     frame_denominator = frames if frames > 0 else scans
     average_latency_per_frame_ms = compute_average(total_duration_ms, frame_denominator)
     frames_per_second = (float(frames) / float(total_duration_ms) * 1000.0) if total_duration_ms > 0 else 0.0
+    media_total = max(total_frames_media, 0)
     target = max(total_frames_target, 0)
-    if frames > 0 and target <= 0:
-        target = frames
-    elif target > 0 and frames > target:
-        target = frames
-    frame_coverage_rate = compute_average(frames, target)
+    coverage_denominator = media_total if media_total > 0 else target
+    if frames > 0 and coverage_denominator <= 0:
+        coverage_denominator = frames
+    elif coverage_denominator > 0 and frames > coverage_denominator:
+        coverage_denominator = frames
+    frame_coverage_rate = compute_average(frames, coverage_denominator)
     return (
         average_frames_per_scan,
         average_latency_per_frame_ms,

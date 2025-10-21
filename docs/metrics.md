@@ -8,9 +8,9 @@ Moderator Bot now records moderation activity in Redis, pairing a realtime strea
 - **Daily rollups** are stored under keys that follow `"{prefix}:rollup:{YYYY-MM-DD}:{guild_id}:{content_type}"` where `prefix` is `METRICS_REDIS_PREFIX` (default `moderator:metrics`). Each hash tracks:
   - Core counters: `scans_count`, `flagged_count`, `flags_sum`.
   - Latency and size totals: `total_duration_ms`, `total_duration_sq_ms`, `total_bytes`, `total_bytes_sq`, `last_duration_ms`.
-  - Workload totals: `total_frames_scanned`, `total_frames_target`.
+  - Workload totals: `total_frames_scanned`, `total_frames_target`, `total_frames_media`.
   - Derived values (computed when reading): `average_latency_ms`, `latency_std_dev_ms`, `average_bytes`, `bytes_std_dev`, `flagged_rate`, `average_flags_per_scan`.
-  - Workload-derived values: `average_frames_per_scan`, `average_latency_per_frame_ms`, `frames_per_second`, `frame_coverage_rate`.
+  - Workload-derived values: `average_frames_per_scan`, `average_latency_per_frame_ms`, `frames_per_second`, `frame_coverage_rate` (which uses `total_frames_media` when present).
   - Snapshots: `last_status`, `last_flagged_at`, `last_details`, and `updated_at`. The `last_details` blob only stores sanitised scanner/source metadata, aggregate counts, workload totals, and scan summaries—never raw payloads, filenames, message identifiers, or user information.
   - Per-acceleration breakdowns (`accelerated_*`, `non_accelerated_*`, `unknown_acceleration_*`) mirroring the same counters, totals, and snapshots for each execution path.
   Status histograms are kept in a sibling hash that appends `:status` to the rollup key.
@@ -33,7 +33,7 @@ Each bucket contains:
 - `scans_count`, `flagged_count`, `flags_sum`
 - `total_duration_ms`, `total_duration_sq_ms`, `last_latency_ms`, `average_latency_ms`, `latency_std_dev_ms`
 - `total_bytes`, `total_bytes_sq`, `average_bytes`, `bytes_std_dev`
-- `total_frames_scanned`, `total_frames_target`, `average_frames_per_scan`
+- `total_frames_scanned`, `total_frames_target`, `total_frames_media`, `average_frames_per_scan`
 - `average_latency_per_frame_ms`, `frames_per_second`, `frame_coverage_rate`
 - `flagged_rate`, `average_flags_per_scan`
 - Snapshot metadata: `last_status`, `last_flagged_at`, `last_at`, `last_details`
@@ -46,7 +46,7 @@ Each bucket contains:
 2. Increments the relevant per-guild rollup hash and the global daily rollup, updating status snapshots and status-count hashes as needed.
 3. Applies the same increments to the global totals hash.
 
-When available the tracker records `video_frames_scanned` and `video_frames_target` so downstream rollups can normalise latency per frame and show throughput improvements for accelerated scans.
+When available the tracker records `video_frames_scanned`, `video_frames_target`, and `video_frames_media_total` so downstream rollups can normalise latency per frame, calculate coverage against the true media length, and show throughput improvements for accelerated scans.
 
 Because Redis operations are idempotent increments and hash updates, the write path stays low-latency even at high scan volumes.
 
@@ -72,9 +72,9 @@ The Redis hashes only persist raw counters; every reader recomputes the derived 
 - `average_frames_per_scan` = `total_frames_scanned / max(scans_count, 1)`
 - `average_latency_per_frame_ms` divides `total_duration_ms` by `total_frames_scanned`, falling back to `scans_count` whenever no frame totals were recorded
 - `frames_per_second` = `(total_frames_scanned * 1000) / total_duration_ms` (returns `0` when the denominator is non-positive)
-- `frame_coverage_rate` divides `total_frames_scanned` by whichever is larger between `total_frames_target` and `total_frames_scanned` (falling back to `0` when no frames were processed)
+- `frame_coverage_rate` divides `total_frames_scanned` by `total_frames_media` when available, otherwise it falls back to the larger of `total_frames_target` or `total_frames_scanned` (returning `0` when no frames were processed)
 
-Summary payloads expose `scans`, `flagged`, `flags_sum`, `bytes_total`, `duration_total_ms`, `frames_total_scanned`, and `frames_total_target`. The `acceleration` buckets mirror that structure after running through the same formulas, so you can compare accelerated, non-accelerated, and unknown execution paths with identical metrics.
+Summary payloads expose `scans`, `flagged`, `flags_sum`, `bytes_total`, `duration_total_ms`, `frames_total_scanned`, `frames_total_target`, and `frames_total_media`. The `acceleration` buckets mirror that structure after running through the same formulas, so you can compare accelerated, non-accelerated, and unknown execution paths with identical metrics.
 
 ### Configuration
 
@@ -106,7 +106,7 @@ Ensure `METRICS_REDIS_URL` points at the production Redis instance before runnin
 
 ### Access Patterns and Examples
 
-- **Logging scans:** call `log_media_scan(...)` whenever the NSFW scanner finishes. Populate `video_frames_scanned` and `video_frames_target` for videos so downstream consumers can compute per-frame latency, throughput, and coverage.
+- **Logging scans:** call `log_media_scan(...)` whenever the NSFW scanner finishes. Populate `video_frames_scanned`, `video_frames_target`, and `video_frames_media_total` for videos so downstream consumers can compute per-frame latency, throughput, and coverage.
 - **Guild dashboards:** `await get_media_metric_rollups(guild_id=..., limit=...)` returns the newest rollups first. Filter by `content_type` to generate per-media charts, or merge guild IDs to monitor partner servers.
 - **Network overview:** `await get_media_metric_global_rollups(content_type="image")` produces cross-guild trends, while `await get_media_metrics_totals()` supplies headline KPIs (flagged counts, latency, acceleration splits).
 - **Content mix summaries:** `await get_media_metrics_summary(guild_id=...)` collapses every rollup into a per-content bucket with `acceleration` subtrees. Sort by `scans` or `flagged_rate` to build workload leaderboards.

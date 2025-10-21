@@ -153,6 +153,7 @@ RESET_RAW_EXACT = {
     "total_bytes_sq",
     "total_frames_scanned",
     "total_frames_target",
+    "total_frames_media",
 }
 
 RESET_RAW_SUFFIXES = (
@@ -162,12 +163,14 @@ RESET_RAW_SUFFIXES = (
     "_total_bytes_sq",
     "_total_frames_scanned",
     "_total_frames_target",
+    "_total_frames_media",
     "duration_total_ms",
     "duration_total_sq_ms",
     "bytes_total",
     "bytes_total_sq",
     "frames_total_scanned",
     "frames_total_target",
+    "frames_total_media",
 )
 
 
@@ -239,6 +242,7 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
         scan_result={
             "video_frames_scanned": 15,
             "video_frames_target": 30,
+            "video_frames_media_total": 40,
         },
         status="unsupported_type",
         scan_duration_ms=60,
@@ -271,21 +275,26 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert latest_details["source"] == "attachment"
     assert latest_details["workload"]["frames_scanned"] == 15
     assert latest_details["workload"]["frames_target"] == 30
+    assert latest_details["workload"]["frames_media_total"] == 40
     assert latest_details["scan"]["video_frames_scanned"] == 15
     assert latest_details["scan"]["video_frames_target"] == 30
+    assert latest_details["scan"]["video_frames_media_total"] == 40
     assert latest["total_frames_scanned"] == 15
     assert latest["total_frames_target"] == 30
+    assert latest["total_frames_media"] == 40
     assert latest["average_frames_per_scan"] == pytest.approx(15.0)
     assert latest["average_latency_per_frame_ms"] == pytest.approx(4.0)
     assert latest["frames_per_second"] == pytest.approx(250.0)
-    assert latest["frame_coverage_rate"] == pytest.approx(0.5)
+    assert latest["frame_coverage_rate"] == pytest.approx(0.375)
     assert latest["acceleration"]["non_accelerated"]["scans_count"] == 1
     assert latest["acceleration"]["non_accelerated"]["average_latency_ms"] == pytest.approx(60.0)
     assert latest["acceleration"]["non_accelerated"]["total_frames_scanned"] == 15
+    assert latest["acceleration"]["non_accelerated"]["total_frames_target"] == 30
+    assert latest["acceleration"]["non_accelerated"]["total_frames_media"] == 40
     assert latest["acceleration"]["non_accelerated"]["average_frames_per_scan"] == pytest.approx(15.0)
     assert latest["acceleration"]["non_accelerated"]["average_latency_per_frame_ms"] == pytest.approx(4.0)
     assert latest["acceleration"]["non_accelerated"]["frames_per_second"] == pytest.approx(250.0)
-    assert latest["acceleration"]["non_accelerated"]["frame_coverage_rate"] == pytest.approx(0.5)
+    assert latest["acceleration"]["non_accelerated"]["frame_coverage_rate"] == pytest.approx(0.375)
     assert latest["acceleration"]["accelerated"]["scans_count"] == 0
     assert latest["acceleration"]["unknown"]["scans_count"] == 0
     assert latest["updated_at"] is not None
@@ -341,16 +350,19 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert summary_map["video"]["average_latency_ms"] == pytest.approx(60.0)
     assert summary_map["video"]["frames_total_scanned"] == 15
     assert summary_map["video"]["frames_total_target"] == 30
+    assert summary_map["video"]["frames_total_media"] == 40
     assert summary_map["video"]["average_frames_per_scan"] == pytest.approx(15.0)
     assert summary_map["video"]["average_latency_per_frame_ms"] == pytest.approx(4.0)
     assert summary_map["video"]["frames_per_second"] == pytest.approx(250.0)
-    assert summary_map["video"]["frame_coverage_rate"] == pytest.approx(0.5)
+    assert summary_map["video"]["frame_coverage_rate"] == pytest.approx(0.375)
     assert summary_map["video"]["acceleration"]["non_accelerated"]["scans"] == 1
     assert summary_map["video"]["acceleration"]["non_accelerated"]["frames_total_scanned"] == 15
+    assert summary_map["video"]["acceleration"]["non_accelerated"]["frames_total_target"] == 30
+    assert summary_map["video"]["acceleration"]["non_accelerated"]["frames_total_media"] == 40
     assert summary_map["video"]["acceleration"]["non_accelerated"]["average_frames_per_scan"] == pytest.approx(15.0)
     assert summary_map["video"]["acceleration"]["non_accelerated"]["average_latency_per_frame_ms"] == pytest.approx(4.0)
     assert summary_map["video"]["acceleration"]["non_accelerated"]["frames_per_second"] == pytest.approx(250.0)
-    assert summary_map["video"]["acceleration"]["non_accelerated"]["frame_coverage_rate"] == pytest.approx(0.5)
+    assert summary_map["video"]["acceleration"]["non_accelerated"]["frame_coverage_rate"] == pytest.approx(0.375)
 
     global_summary = await get_media_metrics_summary()
     global_summary_map = {entry["content_type"]: entry for entry in global_summary}
@@ -365,6 +377,7 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert totals["total_duration_ms"] == 260
     assert totals["total_frames_scanned"] == 15
     assert totals["total_frames_target"] == 30
+    assert totals["total_frames_media"] == 40
     assert totals["last_latency_ms"] == 60
     assert totals["average_latency_ms"] == pytest.approx(86.6666666667)
     assert totals["latency_std_dev_ms"] == pytest.approx(24.958, rel=1e-3)
@@ -376,7 +389,7 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert totals["average_frames_per_scan"] == pytest.approx(5.0)
     assert totals["average_latency_per_frame_ms"] == pytest.approx(17.3333333333)
     assert totals["frames_per_second"] == pytest.approx(57.6923076923)
-    assert totals["frame_coverage_rate"] == pytest.approx(0.5)
+    assert totals["frame_coverage_rate"] == pytest.approx(0.375)
     assert totals["status_counts"]["scan_complete"] == 2
     assert totals["status_counts"]["unsupported_type"] == 1
     assert totals["last_status"] == "unsupported_type"
@@ -388,6 +401,7 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert totals_details["workload"]["bytes"] == 500
     assert totals_details["workload"]["duration_ms"] == 60
     assert totals_details["scan"]["video_frames_scanned"] == 15
+    assert totals_details["scan"]["video_frames_media_total"] == 40
     assert totals["updated_at"] is not None
     accel_totals = totals["acceleration"]["accelerated"]
     assert accel_totals["scans_count"] == 2
@@ -395,12 +409,16 @@ async def test_media_scan_metrics_flow(_patch_metrics_backend: FakeRedis) -> Non
     assert accel_totals["total_duration_ms"] == 200
     assert accel_totals["latency_std_dev_ms"] == pytest.approx(20.0)
     assert accel_totals["total_frames_scanned"] == 0
+    assert accel_totals["total_frames_target"] == 0
+    assert accel_totals["total_frames_media"] == 0
     assert accel_totals["average_latency_per_frame_ms"] == pytest.approx(100.0)
     assert totals["acceleration"]["non_accelerated"]["scans_count"] == 1
     assert totals["acceleration"]["non_accelerated"]["total_frames_scanned"] == 15
+    assert totals["acceleration"]["non_accelerated"]["total_frames_target"] == 30
+    assert totals["acceleration"]["non_accelerated"]["total_frames_media"] == 40
     assert totals["acceleration"]["non_accelerated"]["average_latency_per_frame_ms"] == pytest.approx(4.0)
     assert totals["acceleration"]["non_accelerated"]["frames_per_second"] == pytest.approx(250.0)
-    assert totals["acceleration"]["non_accelerated"]["frame_coverage_rate"] == pytest.approx(0.5)
+    assert totals["acceleration"]["non_accelerated"]["frame_coverage_rate"] == pytest.approx(0.375)
     assert totals["acceleration"]["unknown"]["scans_count"] == 0
 
     global_rollups = await get_media_metric_global_rollups(limit=10)

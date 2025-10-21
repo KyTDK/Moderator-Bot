@@ -24,6 +24,7 @@ _ALLOWED_SCAN_KEYS = {
     "similarity",
     "video_frames_scanned",
     "video_frames_target",
+    "video_frames_media_total",
 }
 
 _SUMMARY_LIMIT = 5
@@ -81,6 +82,7 @@ def _build_workload_details(
     scan_duration_ms: Any | None,
     frames_scanned: Any | None,
     frames_target: Any | None,
+    frames_media_total: Any | None,
 ) -> dict[str, Any]:
     workload: dict[str, Any] = {}
 
@@ -100,6 +102,10 @@ def _build_workload_details(
     if frames_target_value is not None:
         workload["frames_target"] = frames_target_value
 
+    frames_media_total_value = _coerce_int(frames_media_total)
+    if frames_media_total_value is not None:
+        workload["frames_media_total"] = frames_media_total_value
+
     return workload
 
 
@@ -114,6 +120,7 @@ def build_scan_details(
     scan_duration_ms: Any | None,
     frames_scanned: Any | None,
     frames_target: Any | None,
+    frames_media_total: Any | None,
 ) -> dict[str, Any]:
     details: dict[str, Any] = {
         "scanner": str(scanner) if scanner else "",
@@ -131,6 +138,7 @@ def build_scan_details(
         scan_duration_ms=scan_duration_ms,
         frames_scanned=frames_scanned,
         frames_target=frames_target,
+        frames_media_total=frames_media_total,
     )
     if workload:
         details["workload"] = workload
@@ -173,11 +181,13 @@ def sanitize_details_blob(raw_details: Mapping[str, Any] | None) -> dict[str, An
         scan_duration_ms=workload_payload.get("duration_ms"),
         frames_scanned=workload_payload.get("frames_scanned"),
         frames_target=workload_payload.get("frames_target"),
+        frames_media_total=workload_payload.get("frames_media_total"),
     )
 
     # Include workload keys individually as fallback for legacy payloads.
     legacy_frames_scanned = _coerce_int(raw_details.get("frames_scanned"))
     legacy_frames_target = _coerce_int(raw_details.get("frames_target"))
+    legacy_frames_media_total = _coerce_int(raw_details.get("frames_media_total"))
     legacy_bytes = _coerce_int(raw_details.get("file_size"))
     legacy_duration = _coerce_int(raw_details.get("scan_duration_ms"))
 
@@ -189,6 +199,8 @@ def sanitize_details_blob(raw_details: Mapping[str, Any] | None) -> dict[str, An
         workload.setdefault("frames_scanned", legacy_frames_scanned)
     if legacy_frames_target is not None:
         workload.setdefault("frames_target", legacy_frames_target)
+    if legacy_frames_media_total is not None:
+        workload.setdefault("frames_media_total", legacy_frames_media_total)
 
     if workload:
         sanitized["workload"] = workload

@@ -34,6 +34,7 @@ def hydrate_acceleration_metrics(prefix: str, source: Mapping[str, str]) -> dict
     last_duration = coerce_int(source.get(f"{prefix}_last_duration_ms"))
     total_frames_scanned = coerce_int(source.get(f"{prefix}_total_frames_scanned"))
     total_frames_target = coerce_int(source.get(f"{prefix}_total_frames_target"))
+    total_frames_media = coerce_int(source.get(f"{prefix}_total_frames_media"))
     last_status = source.get(f"{prefix}_last_status")
     last_reference_raw = source.get(f"{prefix}_last_reference")
     last_reference = last_reference_raw if last_reference_raw else None
@@ -51,6 +52,7 @@ def hydrate_acceleration_metrics(prefix: str, source: Mapping[str, str]) -> dict
         total_duration_ms=total_duration,
         total_frames_scanned=total_frames_scanned,
         total_frames_target=total_frames_target,
+        total_frames_media=total_frames_media,
         scan_count=scans,
     )
 
@@ -68,6 +70,7 @@ def hydrate_acceleration_metrics(prefix: str, source: Mapping[str, str]) -> dict
         "total_duration_sq_ms": total_duration_sq,
         "total_frames_scanned": total_frames_scanned,
         "total_frames_target": total_frames_target,
+        "total_frames_media": total_frames_media,
         "average_frames_per_scan": average_frames_per_scan,
         "last_latency_ms": last_duration,
         "average_latency_ms": average_latency,
@@ -99,6 +102,7 @@ def accumulate_summary_acceleration(summary_acceleration: dict[str, dict[str, An
         bucket["duration_total_sq_ms"] += coerce_int(source.get(f"{prefix}_total_duration_sq_ms"))
         bucket["frames_total_scanned"] += coerce_int(source.get(f"{prefix}_total_frames_scanned"))
         bucket["frames_total_target"] += coerce_int(source.get(f"{prefix}_total_frames_target"))
+        bucket["frames_total_media"] += coerce_int(source.get(f"{prefix}_total_frames_media"))
 
 
 def finalise_summary_acceleration_bucket(accel_bucket: dict[str, Any]) -> None:
@@ -122,6 +126,7 @@ def finalise_summary_acceleration_bucket(accel_bucket: dict[str, Any]) -> None:
         total_duration_ms=accel_bucket["duration_total_ms"],
         total_frames_scanned=accel_bucket["frames_total_scanned"],
         total_frames_target=accel_bucket["frames_total_target"],
+        total_frames_media=accel_bucket["frames_total_media"],
         scan_count=scans,
     )
 
@@ -137,6 +142,7 @@ def _empty_acceleration_totals() -> dict[str, Any]:
         "duration_total_sq_ms": 0,
         "frames_total_scanned": 0,
         "frames_total_target": 0,
+        "frames_total_media": 0,
     }
 
 

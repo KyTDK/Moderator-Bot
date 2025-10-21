@@ -222,6 +222,7 @@ def _hydrate_rollup(
     total_duration_sq = coerce_int(rollup_data.get("total_duration_sq_ms"))
     total_frames_scanned = coerce_int(rollup_data.get("total_frames_scanned"))
     total_frames_target = coerce_int(rollup_data.get("total_frames_target"))
+    total_frames_media = coerce_int(rollup_data.get("total_frames_media"))
     last_duration = coerce_int(rollup_data.get("last_duration_ms"))
     last_status = rollup_data.get("last_status")
     last_reference_raw = rollup_data.get("last_reference")
@@ -241,6 +242,7 @@ def _hydrate_rollup(
         total_duration_ms=total_duration,
         total_frames_scanned=total_frames_scanned,
         total_frames_target=total_frames_target,
+        total_frames_media=total_frames_media,
         scan_count=scans_count,
     )
 
@@ -266,6 +268,7 @@ def _hydrate_rollup(
         "total_duration_sq_ms": total_duration_sq,
         "total_frames_scanned": total_frames_scanned,
         "total_frames_target": total_frames_target,
+        "total_frames_media": total_frames_media,
         "average_frames_per_scan": average_frames_per_scan,
         "last_latency_ms": last_duration,
         "average_latency_ms": average_latency,
@@ -295,6 +298,7 @@ def _empty_summary_bucket(content: str) -> dict[str, Any]:
         "duration_total_sq_ms": 0,
         "frames_total_scanned": 0,
         "frames_total_target": 0,
+        "frames_total_media": 0,
         "acceleration": empty_summary_acceleration(),
     }
 
@@ -309,6 +313,7 @@ def _accumulate_summary_from_rollup(bucket: dict[str, Any], rollup_data: Mapping
     bucket["duration_total_sq_ms"] += coerce_int(rollup_data.get("total_duration_sq_ms"))
     bucket["frames_total_scanned"] += coerce_int(rollup_data.get("total_frames_scanned"))
     bucket["frames_total_target"] += coerce_int(rollup_data.get("total_frames_target"))
+    bucket["frames_total_media"] += coerce_int(rollup_data.get("total_frames_media"))
 
     accumulate_summary_acceleration(bucket["acceleration"], rollup_data)
 
@@ -330,6 +335,7 @@ def _finalise_summary_bucket(bucket: dict[str, Any]) -> None:
         total_duration_ms=bucket["duration_total_ms"],
         total_frames_scanned=bucket["frames_total_scanned"],
         total_frames_target=bucket["frames_total_target"],
+        total_frames_media=bucket["frames_total_media"],
         scan_count=scans,
     )
 
