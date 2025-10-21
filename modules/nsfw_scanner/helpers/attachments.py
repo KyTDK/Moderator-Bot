@@ -220,8 +220,12 @@ async def check_attachment(
     started_at = time.perf_counter()
     metrics_recorded = False
     accelerated_cache: dict[str, Any] = {"fetched": False, "value": None}
+    pipeline_accelerated: bool | None = None
 
     async def _get_accelerated() -> bool | None:
+        nonlocal pipeline_accelerated
+        if pipeline_accelerated is not None:
+            return pipeline_accelerated
         if accelerated_cache["fetched"]:
             return accelerated_cache["value"]
         accelerated_cache["fetched"] = True
@@ -232,10 +236,13 @@ async def check_attachment(
             accelerated_cache["value"] = await mysql.is_accelerated(guild_id=guild_id)
         except Exception:
             accelerated_cache["value"] = None
+        value = accelerated_cache["value"]
+        if isinstance(value, bool):
+            pipeline_accelerated = value
         return accelerated_cache["value"]
 
     async def _emit_metrics(result: dict[str, Any] | None, status: str) -> None:
-        nonlocal metrics_recorded
+        nonlocal metrics_recorded, pipeline_accelerated
         if metrics_recorded:
             return
         metrics_recorded = True
@@ -258,6 +265,9 @@ async def check_attachment(
             extra_context["jump_url"] = message.jump_url
 
         try:
+            accelerated_flag = pipeline_accelerated
+            if accelerated_flag is None:
+                accelerated_flag = await _get_accelerated()
             await log_media_scan(
                 guild_id=guild_id,
                 channel_id=channel_id,
@@ -271,7 +281,7 @@ async def check_attachment(
                 scan_result=result,
                 status=status,
                 scan_duration_ms=duration_ms,
-                accelerated=await _get_accelerated(),
+                accelerated=accelerated_flag,
                 reference=f"{message_id}:{filename}" if message_id else filename,
                 extra_context=extra_context,
             )
@@ -302,6 +312,7 @@ async def check_attachment(
         settings=settings,
         accelerated=accelerated_value,
     )
+    pipeline_accelerated = bool(context.accelerated)
 
     if file_type == FILE_TYPE_IMAGE:
         scan_result = await process_image(
