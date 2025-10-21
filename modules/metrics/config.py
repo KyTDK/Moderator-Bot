@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from functools import lru_cache
+from urllib.parse import parse_qsl, urlparse, urlunparse, urlencode
 
 from dotenv import load_dotenv
 
@@ -43,9 +44,34 @@ def _parse_bool(value: str | None, *, default: bool) -> bool:
     return default
 
 
+def _ensure_metrics_db(url: str | None, *, db_index: int = 1) -> str | None:
+    if not isinstance(url, str):
+        return None
+
+    trimmed = url.strip()
+    if not trimmed:
+        return None
+
+    parsed = urlparse(trimmed)
+
+    # redis:// connections use the path component for the database index.
+    if parsed.netloc:
+        new_path = f"/{db_index}"
+        parsed = parsed._replace(path=new_path)
+        if parsed.query:
+            filtered_query = [(key, value) for key, value in parse_qsl(parsed.query, keep_blank_values=True) if key != "db"]
+            parsed = parsed._replace(query=urlencode(filtered_query))
+        return urlunparse(parsed)
+
+    # redis+unix:// style URLs omit the netloc and rely on the db query parameter.
+    query_items = [(key, value) for key, value in parse_qsl(parsed.query, keep_blank_values=True) if key != "db"]
+    query_items.append(("db", str(db_index)))
+    return urlunparse(parsed._replace(query=urlencode(query_items)))
+
+
 @lru_cache(maxsize=1)
 def get_metrics_redis_config() -> MetricsRedisConfig:
-    url = os.getenv("METRICS_REDIS_URL")
+    url = _ensure_metrics_db(os.getenv("METRICS_REDIS_URL"))
     stream_name = os.getenv("METRICS_REDIS_STREAM", "moderator:metrics")
     maxlen_env = os.getenv("METRICS_REDIS_STREAM_MAXLEN")
     stream_maxlen = _parse_int(maxlen_env)

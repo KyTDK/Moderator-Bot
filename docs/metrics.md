@@ -80,13 +80,13 @@ Summary payloads expose `scans`, `flagged`, `flags_sum`, `bytes_total`, `duratio
 
 | Environment variable | Purpose | Default |
 | --- | --- | --- |
-| `METRICS_REDIS_URL` | Connection string for Redis (falls back to `REDIS_URL`). | _required for live usage_ |
+| `METRICS_REDIS_URL` | Connection string for the metrics Redis database (always normalised to `/1`). | _required for live usage_ |
 | `METRICS_REDIS_STREAM` | Redis stream name used for realtime fan-out. | `moderator:metrics` |
 | `METRICS_REDIS_STREAM_MAXLEN` | Optional trimming limit for the stream (`XADD MAXLEN`). | disabled |
 | `METRICS_REDIS_STREAM_APPROX` | Whether to use Redis approximate trimming (`~`). | `true` |
 | `METRICS_REDIS_PREFIX` | Prefix for rollup/totals keys and indexes. | `moderator:metrics` |
 
-If `METRICS_REDIS_URL` is not provided the backend stays inactive, but tests can still inject a fake client via `modules.metrics.backend.set_client_override`.
+If `METRICS_REDIS_URL` is not provided the backend stays inactive, but tests can still inject a fake client via `modules.metrics.backend.set_client_override`. The URL is automatically rewritten to target database `1` so metrics never share the default Redis database.
 
 ### Migrating Legacy Data
 

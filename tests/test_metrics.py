@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
+from urllib.parse import urlparse
 
 import pytest
 
@@ -21,6 +22,47 @@ from modules.metrics import (  # noqa: E402
 )
 from modules.metrics import backend  # noqa: E402
 from modules.metrics.backend.keys import totals_key as backend_totals_key  # noqa: E402
+from modules.metrics.config import get_metrics_redis_config  # noqa: E402
+
+
+@pytest.mark.anyio("asyncio")
+async def test_metrics_client_uses_database_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    from modules.metrics.backend import _redis as metrics_redis
+
+    monkeypatch.setenv("METRICS_REDIS_URL", "redis://example.com:6379")
+    get_metrics_redis_config.cache_clear()
+
+    class DummyConnectionPool:
+        def __init__(self, db_index: int) -> None:
+            self.connection_kwargs = {"db": db_index}
+
+        async def disconnect(self) -> None:  # pragma: no cover - compatibility shim
+            return None
+
+    class DummyRedis:
+        def __init__(self, db_index: int) -> None:
+            self.connection_pool = DummyConnectionPool(db_index)
+
+        async def close(self) -> None:  # pragma: no cover - compatibility shim
+            return None
+
+    def fake_from_url(url: str, *, decode_responses: bool) -> DummyRedis:
+        parsed = urlparse(url)
+        db_token = (parsed.path or "/0").lstrip("/") or "0"
+        return DummyRedis(int(db_token))
+
+    monkeypatch.setattr(metrics_redis, "redis_from_url", fake_from_url)
+    monkeypatch.setattr(metrics_redis, "RedisClient", DummyRedis)
+    monkeypatch.setattr(metrics_redis, "_redis_client", None)
+    monkeypatch.setattr(metrics_redis, "_client_override", None)
+    monkeypatch.setattr(metrics_redis, "_ready_logged", False)
+
+    client = await metrics_redis.get_redis_client()
+    try:
+        assert client.connection_pool.connection_kwargs["db"] == 1
+    finally:
+        await metrics_redis.close_metrics_client()
+        get_metrics_redis_config.cache_clear()
 
 
 @dataclass
