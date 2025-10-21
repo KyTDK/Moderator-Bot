@@ -120,6 +120,7 @@ async def process_video(
     extractor_task = asyncio.create_task(_run_extraction())
 
     processed_frames = 0
+    media_total_frames: int | None = None
     flagged_file: Optional[discord.File] = None
     flagged_scan: dict[str, Any] | None = None
     batch: list[ExtractedFrame] = []
@@ -135,7 +136,7 @@ async def process_video(
         return processed_frames
 
     async def _process_batch() -> bool:
-        nonlocal processed_frames, flagged_file, flagged_scan, last_signature
+        nonlocal processed_frames, flagged_file, flagged_scan, last_signature, media_total_frames
         if not batch:
             return False
         results = await process_image_batch(
@@ -146,11 +147,17 @@ async def process_video(
         )
         for frame_data, scan in results:
             processed_frames += 1
+            frame_total = getattr(frame_data, "total_frames", None)
+            if frame_total is not None:
+                media_total_frames = frame_total if media_total_frames is None else max(media_total_frames, frame_total)
             if isinstance(scan, dict):
                 scan.setdefault("video_frames_scanned", None)
                 scan.setdefault("video_frames_target", None)
+                scan.setdefault("video_frames_media_total", None)
                 scan["video_frames_scanned"] = processed_frames
                 scan["video_frames_target"] = _effective_target()
+                if media_total_frames is not None:
+                    scan["video_frames_media_total"] = media_total_frames
                 if scan.get("is_nsfw"):
                     flagged_file = discord.File(
                         fp=io.BytesIO(frame_data.data),
@@ -195,6 +202,9 @@ async def process_video(
         safe_delete(original_filename)
 
     if flagged_file and flagged_scan:
+        if media_total_frames is not None:
+            flagged_scan.setdefault("video_frames_media_total", None)
+            flagged_scan["video_frames_media_total"] = media_total_frames
         return flagged_file, flagged_scan
 
     return None, {
@@ -204,4 +214,5 @@ async def process_video(
         else "no_frames_extracted",
         "video_frames_scanned": processed_frames,
         "video_frames_target": _effective_target(),
+        "video_frames_media_total": media_total_frames,
     }

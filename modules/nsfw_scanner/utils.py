@@ -18,6 +18,7 @@ class ExtractedFrame:
     data: bytes
     mime_type: str
     signature: Optional[np.ndarray]
+    total_frames: Optional[int] = None
 
 
 def safe_delete(path: str) -> None:
@@ -127,6 +128,7 @@ def iter_extracted_frames(
                         data=data,
                         mime_type="image/png",
                         signature=signature,
+                        total_frames=int(total_frames) if total_frames else None,
                     )
         except Exception as exc:
             print(f"[iter_extracted_frames] Pillow failed on {filename}: {exc}")
@@ -176,6 +178,7 @@ def iter_extracted_frames(
                         data=data,
                         mime_type="image/jpeg",
                         signature=signature,
+                        total_frames=total_frames or None,
                     )
                 try:
                     next_idx = next(idx_iter)
