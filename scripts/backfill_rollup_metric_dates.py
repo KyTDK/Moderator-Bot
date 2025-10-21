@@ -8,7 +8,7 @@ from modules.metrics.backend.keys import parse_rollup_key, rollup_guild_index_ke
 
 
 async def backfill_global_rollup_metric_dates() -> None:
-    client = Redis(host="127.0.0.1", port=6379, decode_responses=True)
+    client = Redis(host="127.0.0.1", port=6379, db=1, decode_responses=True)
     index_key = rollup_guild_index_key(None)
     updated = 0
 
