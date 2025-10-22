@@ -5,6 +5,8 @@ from modules.utils import mysql
 from modules.utils.discord_utils import safe_get_channel
 
 async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=None):
+    channel = None
+    guild_id = None
     try:
         channel = await safe_get_channel(bot, channel_id)
 
@@ -12,16 +14,21 @@ async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=
             print(f"[log_to_channel] Channel {channel_id} not found.")
             return
 
-        # Ensure guild ID is an int
-        guild_id = channel.guild.id
+        guild = getattr(channel, "guild", None)
+        guild_id = getattr(guild, "id", None)
         if isinstance(guild_id, str):
             try:
                 guild_id = int(guild_id)
             except ValueError:
-                print(f"[log_to_channel] Invalid guild ID format: {guild_id}")
+                print(f"[log_to_channel] Invalid guild ID format for channel {channel_id}: {guild_id}")
                 return
 
-        is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
+        if guild_id is None:
+            print(f"[log_to_channel] Missing guild context for channel {channel_id}.")
+
+        is_accelerated = False
+        if guild_id is not None:
+            is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
 
         if embed and not is_accelerated:
             translator = getattr(bot, "translate", None)
@@ -46,8 +53,11 @@ async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=
             await channel.send(embed=embed)
 
     except Forbidden:
-        print(f"[log_to_channel] Missing permission to send messages in channel {channel_id}.")
+        guild_text = f" (guild {guild_id})" if guild_id is not None else ""
+        print(f"[log_to_channel] Missing permission to send messages in channel {channel_id}{guild_text}.")
     except HTTPException as e:
-        print(f"[log_to_channel] HTTP error while sending message to channel {channel_id}: {e}")
+        guild_text = f", guild {guild_id}" if guild_id is not None else ""
+        print(f"[log_to_channel] HTTP error while sending message to channel {channel_id}{guild_text}: {e}")
     except Exception as e:
-        print(f"[log_to_channel] Unexpected error: {e}")
+        guild_text = f", guild {guild_id}" if guild_id is not None else ""
+        print(f"[log_to_channel] Unexpected error for channel {channel_id}{guild_text}: {e}")

@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import os
 from typing import Any
 
@@ -24,15 +25,28 @@ def _should_add_sfw_vector(
     return max_similarity <= SFW_VECTOR_MAX_SIMILARITY
 
 
+async def _get_moderations_resource(client):
+    """
+    Lazily resolve client.moderations in a thread so that the heavy OpenAI
+    imports it triggers do not block the event loop when the first scan runs.
+    """
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, lambda: client.moderations)
+
+
 async def moderator_api(
     scanner,
     text: str | None = None,
     image_path: str | None = None,
     image: Image.Image | None = None,
+    image_bytes: bytes | None = None,
+    image_mime: str | None = None,
     guild_id: int | None = None,
     max_attempts: int = 3,
     skip_vector_add: bool = False,
     max_similarity: float | None = None,
+    allowed_categories: list[str] | None = None,
+    threshold: float | None = None,
 ) -> dict[str, Any]:
     result: dict[str, Any] = {
         "is_nsfw": None,
@@ -42,30 +56,69 @@ async def moderator_api(
     }
 
     inputs: list[Any] | str = []
-    is_video = image_path is not None
+    has_image_input = image_path is not None or image_bytes is not None
 
-    if text and not image_path:
+    if text and not has_image_input:
         inputs = text
 
-    if is_video:
-        if not os.path.exists(image_path):
-            print(f"[moderator_api] Image path does not exist: {image_path}")
+    if has_image_input:
+        b64_data: str | None = None
+        if image_bytes is not None:
+            try:
+                b64_data = base64.b64encode(image_bytes).decode()
+            except Exception as exc:
+                print(f"[moderator_api] Failed to encode image bytes: {exc}")
+                return result
+        elif image_path is not None:
+            if not os.path.exists(image_path):
+                print(f"[moderator_api] Image path does not exist: {image_path}")
+                return result
+            try:
+                b64_data = await asyncio.to_thread(file_to_b64, image_path)
+            except Exception as exc:  # pragma: no cover - best effort logging
+                print(f"[moderator_api] Error reading image {image_path}: {exc}")
+                return result
+        if not b64_data:
+            print("[moderator_api] No image content was provided")
             return result
-        try:
-            b64 = await asyncio.to_thread(file_to_b64, image_path)
-        except Exception as exc:  # pragma: no cover - best effort logging
-            print(f"[moderator_api] Error reading/encoding image {image_path}: {exc}")
-            return result
-        inputs.append(
+        mime_type = image_mime or "image/jpeg"
+        inputs = [
             {
                 "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                "image_url": {"url": f"data:{mime_type};base64,{b64_data}"},
             }
-        )
+        ]
 
     if not inputs:
         print("[moderator_api] No inputs were provided")
         return result
+
+    resolved_allowed_categories = allowed_categories
+    resolved_threshold = threshold
+    settings_map: dict[str, Any] | None = None
+
+    if guild_id is not None and (
+        resolved_allowed_categories is None or resolved_threshold is None
+    ):
+        settings_map = await mysql.get_settings(
+            guild_id, [NSFW_CATEGORY_SETTING, "threshold"]
+        )
+
+    if resolved_allowed_categories is None:
+        resolved_allowed_categories = (settings_map or {}).get(
+            NSFW_CATEGORY_SETTING, []
+        ) or []
+
+    if resolved_threshold is None:
+        try:
+            resolved_threshold = float((settings_map or {}).get("threshold", 0.7))
+        except (TypeError, ValueError):
+            resolved_threshold = 0.7
+
+    if resolved_allowed_categories is None:
+        resolved_allowed_categories = []
+    if resolved_threshold is None:
+        resolved_threshold = 0.7
 
     for _ in range(max_attempts):
         client, encrypted_key = await api.get_api_client(guild_id)
@@ -74,8 +127,9 @@ async def moderator_api(
             await asyncio.sleep(2)
             continue
         try:
-            response = await client.moderations.create(
-                model="omni-moderation-latest" if image_path else "text-moderation-latest",
+            moderations_resource = await _get_moderations_resource(client)
+            response = await moderations_resource.create(
+                model="omni-moderation-latest" if has_image_input else "text-moderation-latest",
                 input=inputs,
             )
         except openai.AuthenticationError:
@@ -98,32 +152,31 @@ async def moderator_api(
             await api.set_api_key_working(encrypted_key)
 
         results = response.results[0]
-        settings = await mysql.get_settings(guild_id, [NSFW_CATEGORY_SETTING, "threshold"])
-        allowed_categories = settings.get(NSFW_CATEGORY_SETTING, [])
-        try:
-            threshold = float(settings.get("threshold", 0.7))
-        except (TypeError, ValueError):
-            threshold = 0.7
         guild_flagged_categories: list[tuple[str, float]] = []
         summary_categories = {} # category: score
         flagged_any = False
         for category, is_flagged in results.categories.__dict__.items():
             normalized_category = category.replace("/", "_").replace("-", "_")
             score = results.category_scores.__dict__.get(category, 0)
-            if not is_flagged:
-                continue
-            else:
+
+            if is_flagged:
                 flagged_any = True
-            
+
             summary_categories[normalized_category] = score
 
-            if not skip_vector_add and clip_vectors.is_available():
-                await asyncio.to_thread(clip_vectors.add_vector, image, metadata={"category": normalized_category, "score": score})
+            if is_flagged and not skip_vector_add and clip_vectors.is_available():
+                await asyncio.to_thread(
+                    clip_vectors.add_vector,
+                    image,
+                    metadata={"category": normalized_category, "score": score},
+                )
 
-            if score < threshold:
+            if score < resolved_threshold:
                 continue
 
-            if allowed_categories and not is_allowed_category(category, allowed_categories):
+            if resolved_allowed_categories and not is_allowed_category(
+                category, resolved_allowed_categories
+            ):
                 continue
 
             guild_flagged_categories.append((normalized_category, score))
@@ -148,7 +201,7 @@ async def moderator_api(
                 "category": best_category,
                 "score": best_score,
                 "reason": "openai_moderation",
-                "threshold": threshold,
+                "threshold": resolved_threshold,
                 "summary_categories": summary_categories,
             }
 
@@ -156,7 +209,7 @@ async def moderator_api(
             "is_nsfw": False,
             "reason": "openai_moderation",
             "flagged_any": flagged_any,
-            "threshold": threshold,
+            "threshold": resolved_threshold,
             "summary_categories": summary_categories,
         }
 

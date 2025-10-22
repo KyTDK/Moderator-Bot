@@ -1,6 +1,8 @@
 import asyncio
+import io
 import os
 from typing import Any, Optional
+from threading import Event
 
 import discord
 
@@ -16,8 +18,12 @@ from ..constants import (
     MAX_CONCURRENT_FRAMES,
     MAX_FRAMES_PER_VIDEO,
 )
-from ..utils import extract_frames_threaded, safe_delete
-from .images import process_image
+from ..utils import frames_are_similar, iter_extracted_frames, safe_delete, ExtractedFrame
+from .images import (
+    ImageProcessingContext,
+    build_image_processing_context,
+    process_image_batch,
+)
 
 FRAME_LIMITS_BY_TIER = {
     "accelerated": ACCELERATED_MAX_FRAMES_PER_VIDEO,
@@ -32,18 +38,27 @@ CONCURRENCY_LIMITS_BY_TIER = {
 }
 
 DEFAULT_PREMIUM_TIER = "accelerated"
+FREE_MAX_CONCURRENCY_CAP = 3
+FREE_MAX_BATCH_CAP = 4
+ACCELERATED_MAX_BATCH_CAP = 16
+MAX_BATCH_CAP = 16
 
 
-async def _resolve_video_limits(guild_id: int | None) -> tuple[Optional[int], int]:
+async def _resolve_video_limits(
+    guild_id: int | None,
+    premium_status: Optional[dict[str, Any]] = None,
+) -> tuple[Optional[int], int]:
     frames_limit: Optional[int] = MAX_FRAMES_PER_VIDEO
     concurrency_limit = MAX_CONCURRENT_FRAMES
 
     if guild_id is None:
         return frames_limit, concurrency_limit
 
-    premium = await mysql.get_premium_status(guild_id)
+    premium = premium_status
+    if premium is None:
+        premium = await mysql.get_premium_status(guild_id)
     if not premium or not premium.get("is_active"):
-        return frames_limit, concurrency_limit
+        return frames_limit, min(concurrency_limit, FREE_MAX_CONCURRENCY_CAP)
 
     tier = premium.get("tier") or DEFAULT_PREMIUM_TIER
     frames_limit = FRAME_LIMITS_BY_TIER.get(
@@ -61,67 +76,145 @@ async def process_video(
     scanner,
     original_filename: str,
     guild_id: int,
+    *,
+    context: ImageProcessingContext | None = None,
+    premium_status: Optional[dict[str, Any]] = None,
 ) -> tuple[Optional[discord.File], dict[str, Any] | None]:
-    frames_to_scan, max_concurrent_frames = await _resolve_video_limits(guild_id)
-    temp_frames = await asyncio.to_thread(
-        extract_frames_threaded, original_filename, frames_to_scan
+    frames_to_scan, max_concurrent_frames = await _resolve_video_limits(
+        guild_id,
+        premium_status=premium_status,
     )
-    if not temp_frames:
-        safe_delete(original_filename)
-        return None, {
-            "is_nsfw": False,
-            "reason": "no_frames_extracted",
-            "video_frames_scanned": 0,
-            "video_frames_target": frames_to_scan,
-        }
 
-    semaphore = asyncio.Semaphore(max_concurrent_frames)
+    if context is None:
+        context = await build_image_processing_context(guild_id)
 
-    async def analyse(path: str):
-        async with semaphore:
+    stop_event = Event()
+    queue_max = max(4, max_concurrent_frames * (2 if context.accelerated else 1))
+    queue: asyncio.Queue[object] = asyncio.Queue(queue_max)
+    sentinel = object()
+
+    async def _run_extraction():
+        loop = asyncio.get_running_loop()
+
+        def _produce():
             try:
-                scan = await process_image(
-                    scanner,
-                    original_filename=path,
-                    guild_id=guild_id,
-                    clean_up=False,
-                )
-                if isinstance(scan, dict):
-                    scan.setdefault("video_frames_scanned", None)
-                    scan.setdefault("video_frames_target", None)
-                    scan["video_frames_scanned"] = len(temp_frames)
-                    scan["video_frames_target"] = frames_to_scan
-                    return (path, scan)
-                return None
-            except Exception as exc:
-                print(f"[process_video] Analyse error {path}: {exc}")
-                return None
+                for frame_data in iter_extracted_frames(
+                    original_filename,
+                    frames_to_scan,
+                    use_hwaccel=context.accelerated,
+                    accelerated_tier=context.accelerated,
+                    stop_event=stop_event,
+                ):
+                    fut = asyncio.run_coroutine_threadsafe(
+                        queue.put(frame_data), loop
+                    )
+                    try:
+                        fut.result()
+                    except Exception:
+                        break
+                    if stop_event.is_set():
+                        break
+            finally:
+                asyncio.run_coroutine_threadsafe(queue.put(sentinel), loop).result()
 
-    tasks = [asyncio.create_task(analyse(frame)) for frame in temp_frames]
-    try:
-        for done in asyncio.as_completed(tasks):
-            res = await done
-            if not res:
-                continue
-            frame_path, scan = res
+        return await asyncio.to_thread(_produce)
+
+    extractor_task = asyncio.create_task(_run_extraction())
+
+    processed_frames = 0
+    media_total_frames: int | None = None
+    flagged_file: Optional[discord.File] = None
+    flagged_scan: dict[str, Any] | None = None
+    batch: list[ExtractedFrame] = []
+    batch_cap = ACCELERATED_MAX_BATCH_CAP if context.accelerated else FREE_MAX_BATCH_CAP
+    batch_size = max(1, min(max_concurrent_frames, batch_cap))
+    dedupe_enabled = context.accelerated
+    last_signature = None
+    dedupe_threshold = 0.995 if dedupe_enabled else 0.0
+
+    def _effective_target() -> int:
+        if isinstance(frames_to_scan, int) and frames_to_scan > 0:
+            return frames_to_scan
+        return processed_frames
+
+    async def _process_batch() -> bool:
+        nonlocal processed_frames, flagged_file, flagged_scan, last_signature, media_total_frames
+        if not batch:
+            return False
+        results = await process_image_batch(
+            scanner,
+            batch.copy(),
+            context,
+            convert_to_png=False,
+        )
+        for frame_data, scan in results:
+            processed_frames += 1
+            frame_total = getattr(frame_data, "total_frames", None)
+            if frame_total is not None:
+                media_total_frames = frame_total if media_total_frames is None else max(media_total_frames, frame_total)
             if isinstance(scan, dict):
-                if not scan.get("is_nsfw"):
-                    continue
-            for task in tasks:
-                task.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
-            flagged_file = discord.File(
-                frame_path, filename=os.path.basename(frame_path)
-            )
-            return flagged_file, scan
+                scan.setdefault("video_frames_scanned", None)
+                scan.setdefault("video_frames_target", None)
+                scan.setdefault("video_frames_media_total", None)
+                scan["video_frames_scanned"] = processed_frames
+                scan["video_frames_target"] = _effective_target()
+                if media_total_frames is not None:
+                    scan["video_frames_media_total"] = media_total_frames
+                if scan.get("is_nsfw"):
+                    flagged_file = discord.File(
+                        fp=io.BytesIO(frame_data.data),
+                        filename=os.path.basename(frame_data.name),
+                    )
+                    flagged_scan = scan
+                    return True
+        return False
 
-        return None, {
-            "is_nsfw": False,
-            "reason": "no_nsfw_frames_detected",
-            "video_frames_scanned": len(temp_frames),
-            "video_frames_target": frames_to_scan,
-        }
+    flagged = False
+    try:
+        while True:
+            item = await queue.get()
+            if item is sentinel:
+                break
+            if item is None:
+                continue
+            frame_data = item
+
+            if flagged:
+                continue
+
+            if dedupe_enabled:
+                signature = frame_data.signature
+                if frames_are_similar(last_signature, signature, threshold=dedupe_threshold):
+                    continue
+                last_signature = signature
+
+            batch.append(frame_data)
+            if len(batch) >= batch_size:
+                flagged = await _process_batch()
+                batch.clear()
+                if flagged:
+                    stop_event.set()
+
+        if not flagged and batch:
+            flagged = await _process_batch()
+            batch.clear()
     finally:
-        for frame in temp_frames:
-            safe_delete(frame)
+        stop_event.set()
+        await extractor_task
         safe_delete(original_filename)
+
+    if flagged_file and flagged_scan:
+        if media_total_frames is not None:
+            flagged_scan.setdefault("video_frames_media_total", None)
+            flagged_scan["video_frames_media_total"] = media_total_frames
+        return flagged_file, flagged_scan
+
+    return None, {
+        "is_nsfw": False,
+        "reason": "no_nsfw_frames_detected"
+        if processed_frames > 0
+        else "no_frames_extracted",
+        "video_frames_scanned": processed_frames,
+        "video_frames_target": _effective_target(),
+        "video_frames_media_total": media_total_frames,
+    }

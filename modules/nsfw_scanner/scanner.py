@@ -19,6 +19,7 @@ from modules.utils.discord_utils import safe_get_channel
 
 from .constants import ALLOWED_USER_IDS, LOG_CHANNEL_ID, TMP_DIR
 from .helpers import (
+    AttachmentSettingsCache,
     check_attachment as helper_check_attachment,
     temp_download as helper_temp_download,
 )
@@ -121,9 +122,19 @@ class NSFWScanner:
         member: discord.Member | None = None,
     ) -> bool:
 
+        settings_cache = AttachmentSettingsCache()
+
         if url:
             async with helper_temp_download(self.session, url) as temp_filename:
-                return await helper_check_attachment(self, member, temp_filename, nsfw_callback, guild_id, message)
+                return await helper_check_attachment(
+                    self,
+                    member,
+                    temp_filename,
+                    nsfw_callback,
+                    guild_id,
+                    message,
+                    settings_cache=settings_cache,
+                )
         snapshots = getattr(message, "message_snapshots", None)
         snapshot = snapshots[0] if snapshots else None
 
@@ -156,7 +167,15 @@ class NSFWScanner:
                     continue
                 temp_filename = tmp.name
             try:
-                if await helper_check_attachment(self, message.author, temp_filename, nsfw_callback, guild_id, message):
+                if await helper_check_attachment(
+                    self,
+                    message.author,
+                    temp_filename,
+                    nsfw_callback,
+                    guild_id,
+                    message,
+                    settings_cache=settings_cache,
+                ):
                     return True
             finally:
                 safe_delete(temp_filename)
@@ -173,9 +192,18 @@ class NSFWScanner:
             for gif_url in possible_urls:
                 domain = urlparse(gif_url).netloc.lower()
                 is_tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
-                # Don't scan if its tenor and check-tenor-gifs is False
-                if is_tenor and not await mysql.get_settings(guild_id, "check-tenor-gifs"):
-                    continue
+                if is_tenor:
+                    check_tenor = True
+                    if guild_id is not None:
+                        if settings_cache.has_check_tenor():
+                            check_tenor = bool(settings_cache.get_check_tenor())
+                        else:
+                            check_tenor = bool(
+                                await mysql.get_settings(guild_id, "check-tenor-gifs")
+                            )
+                            settings_cache.set_check_tenor(check_tenor)
+                    if not check_tenor:
+                        continue
                 async with helper_temp_download(self.session, gif_url) as temp_filename:
                     if await helper_check_attachment(
                         self,
@@ -184,6 +212,7 @@ class NSFWScanner:
                         nsfw_callback=nsfw_callback,
                         guild_id=guild_id,
                         message=message,
+                        settings_cache=settings_cache,
                     ):
                         return True
 
@@ -209,6 +238,7 @@ class NSFWScanner:
                         nsfw_callback,
                         guild_id,
                         message,
+                        settings_cache=settings_cache,
                     ):
                         return True
                 finally:
@@ -234,6 +264,7 @@ class NSFWScanner:
                         nsfw_callback,
                         guild_id,
                         message,
+                        settings_cache=settings_cache,
                     ):
                         return True
             except Exception as e:

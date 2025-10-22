@@ -2,7 +2,7 @@ import asyncio
 import os
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional
 import time
 
 import discord
@@ -10,6 +10,7 @@ from discord.ext import commands, tasks
 
 from dotenv import load_dotenv
 
+from modules.metrics import log_media_scan
 from modules.utils import mysql, mod_logging
 from modules.utils.discord_utils import safe_get_member
 from modules.utils.time import parse_duration
@@ -17,6 +18,7 @@ from modules.utils.time import parse_duration
 from cogs.autonomous_moderation import helpers as am_helpers
 from cogs.voice_moderation.models import VoiceModerationReport
 from cogs.voice_moderation.prompt import VOICE_SYSTEM_PROMPT, BASE_SYSTEM_TOKENS
+from cogs.voice_moderation.transcribe_queue import TranscriptionWorkQueue
 from cogs.voice_moderation.voice_io import (
     HARVEST_WINDOW_SECONDS,
     harvest_pcm_chunk,
@@ -29,6 +31,9 @@ AUTOMOD_OPENAI_KEY = os.getenv("AUTOMOD_OPENAI_KEY")
 AIMOD_MODEL = os.getenv("AIMOD_MODEL", "gpt-5-nano")
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10))
+
+_TRANSCRIBE_WORKER_COUNT = 2
+_TRANSCRIBE_QUEUE_MAX = 4
 
 class _GuildVCState:
     def __init__(self) -> None:
@@ -206,13 +211,103 @@ class VoiceModeratorCog(commands.Cog):
         # Use the voice IO helper to handle connection and harvesting
         st = self._get_state(guild.id)
         utterances: list[tuple[int, str, datetime]] = []
-        chunk_tasks: list[asyncio.Task] = []
-        sem = asyncio.Semaphore(2)
+
+        async def _record_voice_metrics(
+            *,
+            status: str,
+            report_obj: VoiceModerationReport | None,
+            total_tokens: int,
+            request_cost: float,
+            usage_snapshot: dict[str, Any],
+            duration_ms: int,
+            error: str | None = None,
+        ) -> None:
+            violations_payload: list[dict[str, Any]] = []
+            if report_obj and getattr(report_obj, "violations", None):
+                for violation in list(report_obj.violations)[:10]:
+                    violations_payload.append(
+                        {
+                            "user_id": getattr(violation, "user_id", None),
+                            "rule": getattr(violation, "rule", None),
+                            "reason": getattr(violation, "reason", None),
+                            "actions": list(getattr(violation, "actions", []) or []),
+                        }
+                    )
+
+            scan_payload: dict[str, Any] = {
+                "is_nsfw": bool(violations_payload),
+                "reason": status,
+                "violations": violations_payload,
+                "violations_count": len(violations_payload),
+                "total_tokens": int(total_tokens),
+                "request_cost_usd": float(request_cost or 0),
+                "usage_snapshot": usage_snapshot or {},
+                "transcript_only": bool(transcript_only),
+                "high_accuracy": bool(high_accuracy),
+            }
+            if error:
+                scan_payload["error"] = error
+
+            extra_context = {
+                "status": status,
+                "utterance_count": len(utterances),
+                "listen_window_seconds": listen_delta.total_seconds(),
+                "idle_window_seconds": idle_delta.total_seconds(),
+                "transcript_only": bool(transcript_only),
+                "high_accuracy": bool(high_accuracy),
+            }
+
+            try:
+                await log_media_scan(
+                    guild_id=guild.id,
+                    channel_id=getattr(channel, "id", None),
+                    user_id=None,
+                    message_id=None,
+                    content_type="voice",
+                    detected_mime=None,
+                    filename=None,
+                    file_size=None,
+                    source="voice_pipeline",
+                    scan_result=scan_payload,
+                    status=status,
+                    scan_duration_ms=duration_ms,
+                    accelerated=await mysql.is_accelerated(guild_id=guild.id),
+                    reference=f"voice:{guild.id}:{getattr(channel, 'id', 'unknown')}",
+                    extra_context=extra_context,
+                    scanner="voice_moderation",
+                )
+            except Exception as metrics_exc:
+                print(f"[metrics] Voice metrics logging failed for guild {guild.id}: {metrics_exc}")
+        async def _transcribe_worker(
+            payload: tuple[dict[int, bytes], dict[int, datetime], dict[int, float]]
+        ) -> None:
+            eligible_map, end_ts_map, duration_map_s = payload
+            try:
+                chunk_utts, _ = await transcribe_harvest_chunk(
+                    guild_id=guild.id,
+                    api_key=AUTOMOD_OPENAI_KEY or "",
+                    eligible_map=eligible_map,
+                    end_ts_map=end_ts_map,
+                    duration_map_s=duration_map_s,
+                    high_quality=high_quality_transcription,
+                )
+                if chunk_utts:
+                    utterances.extend(chunk_utts)
+            except Exception as e:
+                print(f"[VCMod] transcribe task failed: {e}")
+
+        dispatcher = TranscriptionWorkQueue(
+            worker_count=_TRANSCRIBE_WORKER_COUNT,
+            max_queue_size=_TRANSCRIBE_QUEUE_MAX,
+            worker_fn=_transcribe_worker,
+        )
+
         if do_listen:
             # Harvest and transcribe repeatedly every window seconds during the listen duration
             start = time.monotonic()
-            next_tick = start
+            deadline = start + listen_delta.total_seconds()
             while True:
+                iteration_start = time.monotonic()
                 # Harvest only, fast path
                 st.voice, eligible_map, end_ts_map, duration_map_s = await harvest_pcm_chunk(
                     guild=guild,
@@ -223,39 +318,23 @@ class VoiceModeratorCog(commands.Cog):
                     window_seconds=HARVEST_WINDOW_SECONDS,
                 )
                 if eligible_map:
-                    # Spawn a background transcribe task, bounded by semaphore
-                    async def _do_transcribe(em=eligible_map, etm=end_ts_map, dmap=duration_map_s):
-                        async with sem:
-                            try:
-                                chunk_utts, _ = await transcribe_harvest_chunk(
-                                    guild_id=guild.id,
-                                    api_key=AUTOMOD_OPENAI_KEY or "",
-                                    eligible_map=em,
-                                    end_ts_map=etm,
-                                    duration_map_s=dmap,
-                                    high_quality=high_quality_transcription,
-                                )
-                                if chunk_utts:
-                                    utterances.extend(chunk_utts)
-                            except Exception as e:
-                                print(f"[VCMod] transcribe task failed: {e}")
+                    enqueue_wait = await dispatcher.submit((eligible_map, end_ts_map, duration_map_s))
+                    if enqueue_wait >= 0.5:
+                        print(
+                            f"[VCMod] Throttled harvest by {enqueue_wait:.2f}s while waiting for transcription backlog"
+                        )
 
-                    t = asyncio.create_task(_do_transcribe())
-                    chunk_tasks.append(t)
-                # schedule next harvest
-                next_tick += HARVEST_WINDOW_SECONDS
-                remaining = min(listen_delta.total_seconds(), next_tick - time.monotonic())
-                if remaining > 0:
-                    await asyncio.sleep(remaining)
-                else:
-                    # We overran the target tick; useful for debugging cadence
-                    print(f"[VCMod] Harvest overrun by {abs(remaining):.2f}s (transcribe backlog likely)")
                 # stop once listen window elapsed
-                if (time.monotonic() - start) >= listen_delta.total_seconds():
+                if time.monotonic() >= deadline:
                     break
-            # Wait for all chunk tasks to complete before processing results
-            if chunk_tasks:
-                await asyncio.gather(*chunk_tasks, return_exceptions=True)
+
+                elapsed = time.monotonic() - iteration_start
+                sleep_for = HARVEST_WINDOW_SECONDS - elapsed
+                if sleep_for > 0:
+                    # Respect the listen deadline even if window is longer
+                    await asyncio.sleep(min(sleep_for, max(0.0, deadline - time.monotonic())))
+            # Wait for all queued work to finish before processing results
+            await dispatcher.drain_and_close()
         else:
             # Saver mode: no listening/transcribing in this cycle
             await harvest_pcm_chunk(
@@ -389,6 +468,7 @@ class VoiceModeratorCog(commands.Cog):
         )
 
         # Run the shared moderation pipeline
+        pipeline_started = time.perf_counter()
         try:
             report, total_tokens, request_cost, usage, status = await run_moderation_pipeline_voice(
                 guild_id=guild.id,
@@ -406,8 +486,27 @@ class VoiceModeratorCog(commands.Cog):
             )
         except Exception as e:
             print(f"[VCMod] pipeline failed: {e}")
+            duration_ms = int(max((time.perf_counter() - pipeline_started) * 1000, 0))
+            await _record_voice_metrics(
+                status="exception",
+                report_obj=None,
+                total_tokens=0,
+                request_cost=0.0,
+                usage_snapshot={},
+                duration_ms=duration_ms,
+                error=str(e),
+            )
             await asyncio.sleep(idle_delta.total_seconds())
             return
+        duration_ms = int(max((time.perf_counter() - pipeline_started) * 1000, 0))
+        await _record_voice_metrics(
+            status=status,
+            report_obj=report,
+            total_tokens=total_tokens,
+            request_cost=request_cost,
+            usage_snapshot=usage,
+            duration_ms=duration_ms,
+        )
 
         # No violations
         if not report:

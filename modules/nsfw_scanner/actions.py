@@ -1,3 +1,5 @@
+import os
+
 import discord
 from discord import Member
 from discord.ext import commands
@@ -120,6 +122,9 @@ async def handle_nsfw_content(user: Member, bot: commands.Bot, guild_id: int, re
 
     try:
         image.close()
-        safe_delete(image.fp.name)
+        file_obj = getattr(image, "fp", None)
+        file_path = getattr(file_obj, "name", None)
+        if isinstance(file_path, str) and os.path.exists(file_path):
+            safe_delete(file_path)
     except Exception as e:
         print(f"[cleanup] couldn't delete evidence file: {e}")

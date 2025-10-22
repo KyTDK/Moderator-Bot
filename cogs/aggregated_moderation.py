@@ -166,6 +166,7 @@ class AggregatedModerationCog(commands.Cog):
         try:
             channel = await safe_get_channel(self.bot, payload.channel_id)
             if channel is None:
+                print(f"[raw] missing channel for reaction add {payload.channel_id}")
                 return
             message = await safe_get_message(channel, payload.message_id)
         except discord.NotFound:
@@ -175,6 +176,7 @@ class AggregatedModerationCog(commands.Cog):
             return
 
         if message is None:
+            print(f"[raw] missing message {payload.message_id}; skipping reaction scan")
             return
 
         guild = self.bot.get_guild(payload.guild_id)
@@ -186,8 +188,13 @@ class AggregatedModerationCog(commands.Cog):
         member = await safe_get_member(guild, payload.user_id)
         emoji = payload.emoji
 
+        reactions = getattr(message, "reactions", None)
+        if reactions is None:
+            print(f"[raw] message {payload.message_id} missing reactions data; skipping reaction scan")
+            return
+
         # Avoid scanning again
-        for r in message.reactions:
+        for r in reactions:
             if str(r.emoji) == str(emoji) and r.count > 1:
                 return
 
@@ -236,11 +243,16 @@ class AggregatedModerationCog(commands.Cog):
                 return None
 
         async def scan_task():
+            resolved_member = member
+            if resolved_member is None and user_id is not None:
+                resolved_member = await safe_get_member(guild, user_id)
+
             flagged = await self.scanner.is_nsfw(
-                url=str(emoji.url),
-                member=member,
+                message=message,
                 guild_id=guild.id,
-                nsfw_callback=handle_nsfw_content
+                nsfw_callback=handle_nsfw_content,
+                url=str(emoji.url),
+                member=resolved_member,
             )
             if flagged:
                 target_message = await resolve_message_for_removal(message)

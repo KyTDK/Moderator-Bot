@@ -27,7 +27,6 @@ from .captcha import (
     get_captcha_embed_record,
     upsert_captcha_embed_record,
 )
-
 from .shards import (
     ShardAssignment,
     ShardClaimError,

@@ -29,7 +29,12 @@ ALLOWED_USER_IDS = _parse_allowed_user_ids(os.getenv("ALLOWED_USER_IDS"))
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
-CLIP_THRESHOLD = 0.80  # Threshold for similarity search
+# Threshold for similarity search
+_CLIP_THRESHOLD_RAW = os.getenv("CLIP_THRESHOLD")
+try:
+    CLIP_THRESHOLD = float(_CLIP_THRESHOLD_RAW) if _CLIP_THRESHOLD_RAW is not None else 0.85
+except (TypeError, ValueError):
+    CLIP_THRESHOLD = 0.85
 HIGH_ACCURACY_SIMILARITY = 0.90  # Min similarity to skip API when high-accuracy is enabled
 # Max frames per video
 MAX_FRAMES_PER_VIDEO = 5
