@@ -6,6 +6,7 @@ Features:
 - Quick Avg Latency (default): show only the global average latency (ms) from {prefix}:totals.
 - Reset: zero just the *_total and *_total_sq fields that drive averages/throughput.
 - Report: compute mean & stddev for duration/bytes/frame metrics using totals and squares.
+- Coverage: surface accelerated and non-accelerated frame coverage ratios when frame totals exist.
 
 Notes:
 - Connects via TCP (defaults: 127.0.0.1:6379, DB 1).
@@ -446,6 +447,27 @@ def action_report(client: "redis.Redis", prefix: str, pattern: Optional[str]) ->
         if rows:
             print_table(key, rows)
 
+        coverage_pairs: list[tuple[str, Optional[FrameCoverage]]] = [
+            ("Accelerated", compute_frame_coverage_from_hash(h, "accelerated")),
+            ("Non-Accelerated", compute_frame_coverage_from_hash(h, "non_accelerated")),
+        ]
+
+        if any(info is not None for _, info in coverage_pairs):
+            if not rows:
+                print(f"\n== {key} ==")
+            print("  Frame coverage:")
+            for label, info in coverage_pairs:
+                if info:
+                    coverage_pct = info.coverage * 100.0
+                    scanned_display = f"{info.scanned:.0f}"
+                    denom_display = f"{info.denominator:.0f}"
+                    print(
+                        f"    {label}: {coverage_pct:.2f}% "
+                        f"({scanned_display}/{denom_display} via {info.denominator_field})"
+                    )
+                else:
+                    print(f"    {label}: n/a")
+
     report_hash(totals_key)
     for key in iter_rollup_keys(client, rollup_pattern):
         report_hash(key)
@@ -551,6 +573,22 @@ def action_quick_avg_latency(client: "redis.Redis", prefix: str) -> int:
         sample_display = f"{sample_std_ms:.3f} ms" if sample_std_ms is not None else "n/a"
         print(f"Pop σ      : {pop_display}")
         print(f"Sample σ   : {sample_display}")
+
+    for label, prefix in (
+        ("Accelerated Coverage", "accelerated"),
+        ("Non-Accelerated Coverage", "non_accelerated"),
+    ):
+        coverage_info = compute_frame_coverage_from_hash(h, prefix)
+        if coverage_info:
+            coverage_pct = coverage_info.coverage * 100.0
+            scanned_display = f"{coverage_info.scanned:.0f}"
+            denom_display = f"{coverage_info.denominator:.0f}"
+            print(
+                f"{label}: {coverage_pct:.2f}% "
+                f"({scanned_display}/{denom_display} via {coverage_info.denominator_field})"
+            )
+        else:
+            print(f"{label}: n/a")
     return 0
 
 
