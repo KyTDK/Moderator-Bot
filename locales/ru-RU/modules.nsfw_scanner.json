@@ -16,7 +16,8 @@
                             "user": "Пользователь: {user}",
                             "file": "Файл: `{filename}`",
                             "type": "Тип: `{file_type}`",
-                            "decision": "Решение: **{decision}**"
+                            "decision": "Решение: **{decision}**",
+                            "unknown_user": "Пользователь: Неизвестен"
                         },
                         "file_types": {
                             "image": "Изображение",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Высокая точность",
                             "clip_threshold": "Порог CLIP",
                             "moderation_threshold": "Порог модерации",
-                            "video_frames": "Кадры видео"
+                            "video_frames": "Кадры видео",
+                            "latency_ms": "Задержка (мс)",
+                            "average_latency_per_frame_ms": "Средняя задержка на кадр (мс)"
                         },
                         "reasons": {
                             "openai_moderation": "Модерация OpenAI",
