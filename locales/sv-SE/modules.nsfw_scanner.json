@@ -16,7 +16,8 @@
                             "user": "Användare: {user}",
                             "file": "Fil: `{filename}`",
                             "type": "Typ: `{file_type}`",
-                            "decision": "Beslut: **{decision}**"
+                            "decision": "Beslut: **{decision}**",
+                            "unknown_user": "Användare: Okänd"
                         },
                         "file_types": {
                             "image": "Bild",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Hög Noggrannhet",
                             "clip_threshold": "CLIP-tröskel",
                             "moderation_threshold": "Modereringströskel",
-                            "video_frames": "Videoramar"
+                            "video_frames": "Videoramar",
+                            "latency_ms": "Latens (ms)",
+                            "average_latency_per_frame_ms": "Genomsnittlig Latens per Bildruta (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "OpenAI-moderering",
