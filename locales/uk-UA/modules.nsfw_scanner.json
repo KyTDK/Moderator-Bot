@@ -16,7 +16,8 @@
                             "user": "Користувач: {user}",
                             "file": "Файл: `{filename}`",
                             "type": "Тип: `{file_type}`",
-                            "decision": "Рішення: **{decision}**"
+                            "decision": "Рішення: **{decision}**",
+                            "unknown_user": "Користувач: Невідомо"
                         },
                         "file_types": {
                             "image": "Зображення",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Висока точність",
                             "clip_threshold": "Поріг CLIP",
                             "moderation_threshold": "Поріг модерування",
-                            "video_frames": "Кадри відео"
+                            "video_frames": "Кадри відео",
+                            "latency_ms": "Затримка (мс)",
+                            "average_latency_per_frame_ms": "Середня затримка за кадр (мс)"
                         },
                         "reasons": {
                             "openai_moderation": "Модерація OpenAI",
