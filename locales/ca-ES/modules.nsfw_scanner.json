@@ -16,7 +16,8 @@
                             "user": "Usuari: {user}",
                             "file": "Fitxer: `{filename}`",
                             "type": "Tipus: `{file_type}`",
-                            "decision": "Decisió: **{decision}**"
+                            "decision": "Decisió: **{decision}**",
+                            "unknown_user": "Usuari: Desconegut"
                         },
                         "file_types": {
                             "image": "Imatge",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Alta precisió",
                             "clip_threshold": "Límit CLIP",
                             "moderation_threshold": "Límit de moderació",
-                            "video_frames": "Fotogrames de vídeo"
+                            "video_frames": "Fotogrames de vídeo",
+                            "latency_ms": "Latència (ms)",
+                            "average_latency_per_frame_ms": "Latència Mitjana per Fotograma (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "Moderació OpenAI",
