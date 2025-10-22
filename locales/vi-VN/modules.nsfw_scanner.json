@@ -16,7 +16,8 @@
                             "user": "Người dùng: {user}",
                             "file": "Tệp: `{filename}`",
                             "type": "Loại: `{file_type}`",
-                            "decision": "Quyết định: **{decision}**"
+                            "decision": "Quyết định: **{decision}**",
+                            "unknown_user": "Người dùng: Không xác định"
                         },
                         "file_types": {
                             "image": "Hình ảnh",
