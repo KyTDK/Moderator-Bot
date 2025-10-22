@@ -16,7 +16,8 @@
                             "user": "Корисник: {user}",
                             "file": "Фајл: `{filename}`",
                             "type": "Тип: `{file_type}`",
-                            "decision": "Одлука: **{decision}**"
+                            "decision": "Одлука: **{decision}**",
+                            "unknown_user": "Korisnik: Nepoznato"
                         },
                         "file_types": {
                             "image": "Слика",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Висока тачност",
                             "clip_threshold": "CLIP праг",
                             "moderation_threshold": "Праг умерености",
-                            "video_frames": "Видео оквири"
+                            "video_frames": "Видео оквири",
+                            "latency_ms": "Latencija (ms)",
+                            "average_latency_per_frame_ms": "Prosečna Latencija po Kadru (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "OpenAI модерација",
