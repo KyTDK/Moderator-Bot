@@ -78,7 +78,7 @@
                     "description": "用于发布 AI 违规日志的频道。"
                 },
                 "cycle-strike-actions": {
-                    "description": "用尽对用户可执行的操作后，循环执行惩戒措施"
+                    "description": "用尽对用户可执行的操作后，循环执行惩戒措施。"
                 },
                 "exclude-bannedwords-channels": {
                     "description": "从违禁词检测中排除的频道。"
