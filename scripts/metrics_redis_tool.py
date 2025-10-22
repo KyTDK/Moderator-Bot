@@ -19,7 +19,7 @@ from __future__ import annotations
 import math
 import sys
 import types
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, NamedTuple, Optional, Tuple
 
 
 def _import_redis() -> types.ModuleType:
@@ -131,6 +131,59 @@ def parse_float_safe(v: str) -> Optional[float]:
         return float(v)
     except Exception:
         return None
+
+
+class FrameCoverage(NamedTuple):
+    prefix: str
+    scanned: float
+    denominator: float
+    denominator_field: str
+    coverage: float
+
+
+def compute_frame_coverage_from_hash(h: dict[str, str], prefix: str) -> Optional[FrameCoverage]:
+    """
+    Compute the coverage ratio for the given acceleration prefix using the
+    workload totals described in docs/metrics.md.
+    """
+    scanned_key = f"{prefix}_total_frames_scanned"
+    target_key = f"{prefix}_total_frames_target"
+    media_key = f"{prefix}_total_frames_media"
+
+    if scanned_key not in h and target_key not in h and media_key not in h:
+        return None
+
+    scanned_val = parse_float_safe(h.get(scanned_key, "0"))
+    target_val = parse_float_safe(h.get(target_key, "0"))
+    media_val = parse_float_safe(h.get(media_key, "0"))
+
+    frames = max(scanned_val if scanned_val is not None else 0.0, 0.0)
+    target_total = max(target_val if target_val is not None else 0.0, 0.0)
+    media_total = max(media_val if media_val is not None else 0.0, 0.0)
+
+    denominator = 0.0
+    denominator_field = ""
+
+    if media_total > 0:
+        denominator = media_total
+        denominator_field = media_key
+    elif target_total > 0:
+        denominator = target_total
+        denominator_field = target_key
+
+    if frames > 0 and denominator <= 0:
+        denominator = frames
+        denominator_field = scanned_key
+
+    if denominator <= 0:
+        return None
+
+    if frames > denominator:
+        denominator = frames
+        denominator_field = scanned_key
+
+    coverage = frames / denominator if denominator > 0 else 0.0
+    return FrameCoverage(prefix, frames, denominator, denominator_field, coverage)
 
 
 def needs_reset(field: str) -> bool:
