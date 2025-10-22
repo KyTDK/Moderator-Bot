@@ -89,7 +89,8 @@ async def process_video(
         context = await build_image_processing_context(guild_id)
 
     stop_event = Event()
-    queue: asyncio.Queue[object] = asyncio.Queue(max(4, max_concurrent_frames * 2))
+    queue_max = max(4, max_concurrent_frames * (2 if context.accelerated else 1))
+    queue: asyncio.Queue[object] = asyncio.Queue(queue_max)
     sentinel = object()
 
     async def _run_extraction():
@@ -101,6 +102,7 @@ async def process_video(
                     original_filename,
                     frames_to_scan,
                     use_hwaccel=context.accelerated,
+                    accelerated_tier=context.accelerated,
                     stop_event=stop_event,
                 ):
                     fut = asyncio.run_coroutine_threadsafe(
