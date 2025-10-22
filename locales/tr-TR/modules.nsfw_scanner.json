@@ -16,7 +16,8 @@
                             "user": "Kullanıcı: {user}",
                             "file": "Dosya: `{filename}`",
                             "type": "Tür: `{file_type}`",
-                            "decision": "Karar: **{decision}**"
+                            "decision": "Karar: **{decision}**",
+                            "unknown_user": "Kullanıcı: Bilinmiyor"
                         },
                         "file_types": {
                             "image": "Görüntü",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Yüksek Doğruluk",
                             "clip_threshold": "CLIP Eşiği",
                             "moderation_threshold": "Moderasyon Eşiği",
-                            "video_frames": "Video Kareleri"
+                            "video_frames": "Video Kareleri",
+                            "latency_ms": "Gecikme (ms)",
+                            "average_latency_per_frame_ms": "Kare Başına Ortalama Gecikme (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "OpenAI moderasyonu",
