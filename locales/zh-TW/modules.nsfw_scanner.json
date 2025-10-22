@@ -16,7 +16,8 @@
                             "user": "使用者：{user}",
                             "file": "檔案：`{filename}`",
                             "type": "類型：`{file_type}`",
-                            "decision": "決策：**{decision}**"
+                            "decision": "決策：**{decision}**",
+                            "unknown_user": "使用者: 未知"
                         },
                         "file_types": {
                             "image": "圖片",
@@ -40,7 +41,9 @@
                             "high_accuracy": "高準確度",
                             "clip_threshold": "CLIP 門檻",
                             "moderation_threshold": "管理門檻",
-                            "video_frames": "影片幀"
+                            "video_frames": "影片幀",
+                            "latency_ms": "延遲 (毫秒)",
+                            "average_latency_per_frame_ms": "每影格平均延遲 (毫秒)"
                         },
                         "reasons": {
                             "openai_moderation": "OpenAI 審查",
