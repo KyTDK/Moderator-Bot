@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -12,7 +13,6 @@ from discord.utils import utcnow
 from modules.i18n import get_translated_mapping
 from modules.moderation import strike
 from modules.utils import mod_logging
-from modules.utils import mysql
 from modules.utils.time import parse_duration
 from modules.utils.localization import TranslateFn, localize_message
 
@@ -299,6 +299,7 @@ class CaptchaCallbackProcessor:
                 member = _PartialMember(guild=guild, id=payload.user_id)
             else:
                 raise
+        mysql = _mysql_module()
         settings = await mysql.get_settings(
             guild.id,
             [
@@ -1055,4 +1056,7 @@ def _extract_metadata_str(metadata: Mapping[str, Any], *keys: str) -> str | None
             return value.strip()
     return None
 
+
+def _mysql_module():
+    return importlib.import_module("modules.utils.mysql")
 
