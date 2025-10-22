@@ -16,7 +16,8 @@
                             "user": "Uživatel: {user}",
                             "file": "Soubor: `{filename}`",
                             "type": "Typ: `{file_type}`",
-                            "decision": "Rozhodnutí: **{decision}**"
+                            "decision": "Rozhodnutí: **{decision}**",
+                            "unknown_user": "Uživatel: Neznámý"
                         },
                         "file_types": {
                             "image": "Obrázek",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Vysoká přesnost",
                             "clip_threshold": "Prahová hodnota CLIP",
                             "moderation_threshold": "Prahová hodnota moderace",
-                            "video_frames": "Video rámy"
+                            "video_frames": "Video rámy",
+                            "latency_ms": "Latence (ms)",
+                            "average_latency_per_frame_ms": "Průměrná Latence na Snímek (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "Moderace OpenAI",
