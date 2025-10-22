@@ -101,6 +101,8 @@ FIELD_FALLBACKS = {
     "clip_threshold": "CLIP Threshold",
     "moderation_threshold": "Moderation Threshold",
     "video_frames": "Video Frames",
+    "latency_ms": "Scan Latency",
+    "average_latency_per_frame_ms": "Avg Latency / Frame",
 }
 
 REASON_FALLBACKS = {
@@ -439,6 +441,13 @@ async def check_attachment(
                     )
                 ),
             )
+
+            duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
+            embed.add_field(
+                name=_localize_field_name(translator, "latency_ms", guild_id),
+                value=f"{duration_ms} ms",
+                inline=True,
+            )
             if scan_result:
                 reason_value = _localize_reason(
                     translator, scan_result.get("reason"), guild_id
@@ -550,6 +559,19 @@ async def check_attachment(
                         value=f"{scanned}/{target}",
                         inline=True,
                     )
+                    try:
+                        scanned_frames = float(scanned)
+                    except (TypeError, ValueError):
+                        scanned_frames = 0.0
+                    if scanned_frames > 0:
+                        average_latency_per_frame = duration_ms / scanned_frames
+                        embed.add_field(
+                            name=_localize_field_name(
+                                translator, "average_latency_per_frame_ms", guild_id
+                            ),
+                            value=f"{average_latency_per_frame:.2f} ms/frame",
+                            inline=True,
+                        )
 
             avatar_url = None
             if actor is not None:
