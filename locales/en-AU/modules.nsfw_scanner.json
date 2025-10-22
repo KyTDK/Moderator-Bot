@@ -16,7 +16,8 @@
                             "user": "User: {user}",
                             "file": "File: `{filename}`",
                             "type": "Type: `{file_type}`",
-                            "decision": "Decision: **{decision}**"
+                            "decision": "Decision: **{decision}**",
+                            "unknown_user": "User: Unknown"
                         },
                         "file_types": {
                             "image": "Image",
@@ -40,7 +41,9 @@
                             "high_accuracy": "High Accuracy",
                             "clip_threshold": "CLIP Threshold",
                             "moderation_threshold": "Moderation Threshold",
-                            "video_frames": "Video Frames"
+                            "video_frames": "Video Frames",
+                            "latency_ms": "Latency (ms)",
+                            "average_latency_per_frame_ms": "Average Latency per Frame (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "OpenAI moderation",

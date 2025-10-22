@@ -16,7 +16,8 @@
                             "user": "Utilizator: {user}",
                             "file": "Fișier: `{filename}`",
                             "type": "Tip: `{file_type}`",
-                            "decision": "Decizie: **{decision}**"
+                            "decision": "Decizie: **{decision}**",
+                            "unknown_user": "Utilizator: Necunoscut"
                         },
                         "file_types": {
                             "image": "Imagine",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Acuratețe Ridicată",
                             "clip_threshold": "Prag CLIP",
                             "moderation_threshold": "Prag Moderare",
-                            "video_frames": "Cadre Video"
+                            "video_frames": "Cadre Video",
+                            "latency_ms": "Latență (ms)",
+                            "average_latency_per_frame_ms": "Latență medie pe cadru (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "Moderare OpenAI",

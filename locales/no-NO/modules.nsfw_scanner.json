@@ -16,7 +16,8 @@
                             "user": "Bruker: {user}",
                             "file": "Fil: `{filename}`",
                             "type": "Type: `{file_type}`",
-                            "decision": "Beslutning: **{decision}**"
+                            "decision": "Beslutning: **{decision}**",
+                            "unknown_user": "Bruker: Ukjent"
                         },
                         "file_types": {
                             "image": "Bilde",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Høy nøyaktighet",
                             "clip_threshold": "CLIP-grense",
                             "moderation_threshold": "Moderasjonsgrense",
-                            "video_frames": "Videorammer"
+                            "video_frames": "Videorammer",
+                            "latency_ms": "Latens (ms)",
+                            "average_latency_per_frame_ms": "Gjennomsnittlig latens per bilde (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "OpenAI-moderering",

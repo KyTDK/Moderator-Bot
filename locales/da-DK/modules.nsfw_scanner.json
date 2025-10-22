@@ -16,7 +16,8 @@
                             "user": "Bruger: {user}",
                             "file": "Fil: `{filename}`",
                             "type": "Type: `{file_type}`",
-                            "decision": "Beslutning: **{decision}**"
+                            "decision": "Beslutning: **{decision}**",
+                            "unknown_user": "Bruger: Ukendt"
                         },
                         "file_types": {
                             "image": "Billede",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Høj præcision",
                             "clip_threshold": "CLIP Tærskel",
                             "moderation_threshold": "Moderation Tærskel",
-                            "video_frames": "Video rammer"
+                            "video_frames": "Video rammer",
+                            "latency_ms": "Latens (ms)",
+                            "average_latency_per_frame_ms": "Gennemsnitlig Latens pr. Frame (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "OpenAI moderation",

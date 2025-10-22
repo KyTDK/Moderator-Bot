@@ -108,7 +108,7 @@
                     ]
                 },
                 "unmute-on-safe-pfp": {
-                    "description": "Quitar el tiempo de espera a un usuario una vez que haya cambiado su foto de perfil por algo apropiado"
+                    "description": "Quitar el tiempo de espera de un usuario una vez que haya cambiado su foto de perfil por algo apropiado."
                 },
                 "scan-age-restricted": {
                     "description": "Escanear canales con restricción de edad (NSFW). Cuando está desactivado, se omiten los canales NSFW."

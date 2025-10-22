@@ -7,9 +7,9 @@
                     "description": "Åsidosätt automatisk identifiering av språk och region med en specifik språk- och regionskod."
                 },
                 "nsfw_pfp_message": {
-                    "default": "Din profilbild innehåller explicit innehåll.",
+                    "default": "Din profilbild innehåller explicit innehåll",
                     "choices": [
-                        "Din profilbild innehåller explicit innehåll.",
+                        "Din profilbild innehåller expicit innehåll",
                         "Din profilbild är inte lämplig för denna server.",
                         "Din profilbild har markerats som NSFW."
                     ]
@@ -45,7 +45,7 @@
                     "description": "Skicka alltid ett detaljerat felsökningsmeddelande för AI-moderering till kanalen för AI-överträdelser, inklusive flaggade meddelanden, AI-beslut och vidtagna åtgärder."
                 },
                 "nsfw-verbose": {
-                    "description": "Publicera en detaljerad skanningsrapport som inbäddning i samma kanal som det skannade mediet"
+                    "description": "Publicera en detaljerad skanningsrapport som inbäddning i samma kanal som det skannade mediet."
                 },
                 "nsfw-channel": {
                     "description": "Kanal där NSFW-överträdelser loggas med förhandsvisning av mediet."
@@ -162,7 +162,7 @@
                     "description": "Aktivera röstkanalsmoderering och transkribering."
                 },
                 "cycle-strike-actions": {
-                    "description": "Växla mellan varningsåtgärder när det inte finns fler åtgärder att ge en användare"
+                    "description": "Växla mellan varningsåtgärder när det inte finns fler åtgärder att ge en användare."
                 },
                 "strike-expiry": {
                     "description": "Hur länge en strike varar. Använd format som 20s, 30m, 2h, 30d, 2w, 5mo, 1y. Sekunder, minuter, timmar, dagar, veckor, månader och år i nämnd ordning."

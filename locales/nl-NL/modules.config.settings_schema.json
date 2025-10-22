@@ -4,7 +4,7 @@
             "settings_schema": {
                 "locale": {
                     "invalid": "Ongeldige landinstelling. Ondersteunde landinstellingen: {supported}",
-                    "description": "Automatische detectie van het taalgebied overschrijven met een specifieke taalgebiedcode"
+                    "description": "Automatische detectie van het taalgebied overschrijven met een specifieke taalgebiedcode."
                 },
                 "nsfw_pfp_message": {
                     "default": "Uw profielfoto bevat naar schatting expliciete inhoud",

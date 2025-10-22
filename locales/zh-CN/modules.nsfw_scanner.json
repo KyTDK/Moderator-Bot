@@ -16,7 +16,8 @@
                             "user": "用户：{user}",
                             "file": "文件：`{filename}`",
                             "type": "类型：`{file_type}`",
-                            "decision": "决策：**{decision}**"
+                            "decision": "决策：**{decision}**",
+                            "unknown_user": "用户: 未知"
                         },
                         "file_types": {
                             "image": "图片",
@@ -40,7 +41,9 @@
                             "high_accuracy": "高精度",
                             "clip_threshold": "CLIP 阈值",
                             "moderation_threshold": "审核阈值",
-                            "video_frames": "视频帧"
+                            "video_frames": "视频帧",
+                            "latency_ms": "延迟 (毫秒)",
+                            "average_latency_per_frame_ms": "每帧平均延迟 (毫秒)"
                         },
                         "reasons": {
                             "openai_moderation": "OpenAI 审核",

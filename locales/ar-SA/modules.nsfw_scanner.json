@@ -16,7 +16,8 @@
                             "user": "المستخدم: {user}",
                             "file": "الملف: `{filename}`",
                             "type": "النوع: `{file_type}`",
-                            "decision": "القرار: **{decision}**"
+                            "decision": "القرار: **{decision}**",
+                            "unknown_user": "المستخدم: غير معروف"
                         },
                         "file_types": {
                             "image": "صورة",
@@ -40,7 +41,9 @@
                             "high_accuracy": "دقة عالية",
                             "clip_threshold": "عتبة CLIP",
                             "moderation_threshold": "عتبة الاعتدال",
-                            "video_frames": "إطارات الفيديو"
+                            "video_frames": "إطارات الفيديو",
+                            "latency_ms": "زمن الاستجابة (ms)",
+                            "average_latency_per_frame_ms": "متوسط زمن الاستجابة لكل إطار (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "تقييم OpenAI",
