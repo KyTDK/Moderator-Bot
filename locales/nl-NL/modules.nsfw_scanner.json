@@ -16,7 +16,8 @@
                             "user": "Gebruiker: {user}",
                             "file": "Bestand: `{filename}`",
                             "type": "Type: `{file_type}`",
-                            "decision": "Beslissing: **{decision}**"
+                            "decision": "Beslissing: **{decision}**",
+                            "unknown_user": "Gebruiker: Onbekend"
                         },
                         "file_types": {
                             "image": "Afbeelding",
@@ -40,7 +41,9 @@
                             "high_accuracy": "Hoge Nauwkeurigheid",
                             "clip_threshold": "CLIP Drempelwaarde",
                             "moderation_threshold": "Moderatie Drempelwaarde",
-                            "video_frames": "Videoframes"
+                            "video_frames": "Videoframes",
+                            "latency_ms": "Latentie (ms)",
+                            "average_latency_per_frame_ms": "Gemiddelde Latentie per Frame (ms)"
                         },
                         "reasons": {
                             "openai_moderation": "OpenAI-moderatie",
