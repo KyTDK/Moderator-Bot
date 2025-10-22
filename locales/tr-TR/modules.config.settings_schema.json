@@ -7,9 +7,9 @@
                     "description": "Otomatik yerel ayar algılamasını belirli bir yerel ayar koduyla geçersiz kılın."
                 },
                 "nsfw_pfp_message": {
-                    "default": "Profil resminizin uygunsuz bir içerik içerdiği tespit edildi.",
+                    "default": "Profil resminizin uygunsuz bir içerik içerdiği tespit edildi",
                     "choices": [
-                        "Profil resminizin uygunsuz bir içerik içerdiği tespit edildi.",
+                        "Profil resminizin uygunsuz bir içerik içerdiği tespit edildi",
                         "Profil resminiz bu sunucu için uygun değil.",
                         "Profil resminiz NSFW olarak işaretlendi."
                     ]
@@ -78,7 +78,7 @@
                     "description": "Yapay zeka ihlali günlüklerinin gönderildiği kanal."
                 },
                 "cycle-strike-actions": {
-                    "description": "Bir kullanıcıya verilecek eylemler tükendiğinde ihtar eylemlerini döngüye al"
+                    "description": "Bir kullanıcıya verilecek eylemler tükendiğinde ihtar eylemlerini döngüye al."
                 },
                 "exclude-bannedwords-channels": {
                     "description": "Yasaklı kelime tespitinden hariç tutulacak kanallar."
