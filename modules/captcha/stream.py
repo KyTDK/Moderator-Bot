@@ -531,7 +531,7 @@ class CaptchaStreamListener:
             return True
 
         try:
-            await self._processor.process(payload)
+            await self._processor.process(payload, message_id=message_id)
             _logger.info(
                 "Processed captcha callback for guild %s user %s (message %s)",
                 payload.guild_id,

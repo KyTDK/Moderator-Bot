@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 __all__ = ["CaptchaSession", "CaptchaSessionStore"]
 
@@ -19,6 +19,7 @@ class CaptchaSession:
     state: str | None = None
     redirect: str | None = None
     delivery_method: str = "dm"
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def is_expired(self, now: datetime | None = None) -> bool:
         if self.expires_at is None:
