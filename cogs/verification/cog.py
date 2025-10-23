@@ -271,6 +271,7 @@ class VerificationCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
             member.guild.id,
             [
                 "captcha-verification-enabled",
+                "vpn-detection-enabled",
                 "captcha-grace-period",
                 "captcha-max-attempts",
                 "pre-captcha-roles",
@@ -280,7 +281,9 @@ class VerificationCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
             ],
         )
 
-        if not settings.get("captcha-verification-enabled"):
+        captcha_enabled = bool(settings.get("captcha-verification-enabled"))
+        vpn_enabled = bool(settings.get("vpn-detection-enabled"))
+        if not captcha_enabled and not vpn_enabled:
             return False, texts["not_enabled"]
 
         if not self._api_client.is_configured:

@@ -117,9 +117,12 @@ class CaptchaCallbackProcessor:
             if policy.reason and not payload.failure_reason:
                 payload.failure_reason = policy.reason
 
-        if not settings.get("captcha-verification-enabled"):
+        captcha_enabled = bool(settings.get("captcha-verification-enabled"))
+        vpn_enabled = bool(settings.get("vpn-detection-enabled"))
+        vpn_only = self._is_vpn_only_session(payload, session)
+        if not captcha_enabled and not vpn_enabled and not vpn_only:
             _logger.info(
-                "Captcha callback ignored because captcha verification is disabled for guild %s",
+                "Captcha callback ignored because captcha and VPN verification are disabled for guild %s",
                 guild.id,
             )
             await self._sessions.remove(payload.guild_id, payload.user_id)
@@ -288,6 +291,7 @@ class CaptchaCallbackProcessor:
             guild.id,
             [
                 "captcha-verification-enabled",
+                "vpn-detection-enabled",
                 "captcha-success-actions",
                 "captcha-failure-actions",
                 "captcha-max-attempts",
@@ -305,6 +309,27 @@ class CaptchaCallbackProcessor:
             settings=settings,
             session=session,
         )
+
+    def _is_vpn_only_session(
+        self,
+        payload: CaptchaCallbackPayload,
+        session: CaptchaSession | None,
+    ) -> bool:
+        provider = _extract_metadata_str(payload.metadata, "provider")
+        if provider and provider.strip().lower() == "vpn-only":
+            return True
+        mode = _extract_metadata_str(
+            payload.metadata,
+            "verificationMode",
+            "verification_mode",
+        )
+        if mode and mode.strip().lower() == "vpn-only":
+            return True
+        if session is not None:
+            stored_mode = session.metadata.get("verification_mode")
+            if isinstance(stored_mode, str) and stored_mode.strip().lower() == "vpn-only":
+                return True
+        return False
 
     async def _ensure_session(
         self,

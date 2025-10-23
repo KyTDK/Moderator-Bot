@@ -73,12 +73,15 @@ class CaptchaEmbedMixin(CaptchaBaseMixin):
             guild.id,
             [
                 "captcha-verification-enabled",
+                "vpn-detection-enabled",
                 "captcha-delivery-method",
                 "captcha-embed-channel-id",
             ],
         )
 
-        enabled = bool(settings.get("captcha-verification-enabled"))
+        captcha_enabled = bool(settings.get("captcha-verification-enabled"))
+        vpn_enabled = bool(settings.get("vpn-detection-enabled"))
+        enabled = captcha_enabled or vpn_enabled
         delivery_method = str(settings.get("captcha-delivery-method") or "dm").lower()
         channel_id = self._coerce_positive_int(settings.get("captcha-embed-channel-id"))
 
