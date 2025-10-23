@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Literal
 
 import discord
 from discord import Interaction, app_commands
@@ -156,7 +157,9 @@ class VerificationCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
 
         await interaction.response.defer(ephemeral=True)
 
-        success, message = await self._initiate_verification(member)
+        success, message = await self._initiate_verification(
+            member, delivery_override="dm"
+        )
         if success:
             await interaction.followup.send(
                 message or request_texts["success"], ephemeral=True
@@ -259,7 +262,10 @@ class VerificationCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         await self._initiate_verification(member)
 
     async def _initiate_verification(
-        self, member: discord.Member
+        self,
+        member: discord.Member,
+        *,
+        delivery_override: Literal["dm", "embed"] | None = None,
     ) -> tuple[bool, str | None]:
         gid = member.guild.id
         texts = self.bot.translate("cogs.captcha.initiate",
@@ -344,7 +350,11 @@ class VerificationCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                     ", ".join(applied),
                 )
 
-        delivery_method = str(settings.get("captcha-delivery-method") or "dm").lower()
+        delivery_method_setting = str(
+            settings.get("captcha-delivery-method") or "dm"
+        ).lower()
+        forced_delivery = delivery_override.lower() if delivery_override else None
+        delivery_method = forced_delivery or delivery_method_setting
         embed_channel_id = self._coerce_positive_int(settings.get("captcha-embed-channel-id"))
         grace_setting = self._coerce_grace_period(settings.get("captcha-grace-period"))
         grace_display: str | None = None
