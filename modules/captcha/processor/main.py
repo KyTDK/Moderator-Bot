@@ -13,6 +13,7 @@ from modules.moderation import strike
 from modules.utils import mod_logging
 from modules.utils.localization import TranslateFn, localize_message
 from modules.utils.time import parse_duration
+from modules.verification.actions import apply_role_actions, parse_role_actions
 
 from ..models import (
     CaptchaCallbackPayload,
@@ -190,10 +191,14 @@ class CaptchaCallbackProcessor:
                 message=payload.failure_reason,
             )
 
+        success_texts = self._get_texts(
+            "success",
+            SUCCESS_TEXTS_FALLBACK,
+            guild_id=guild.id,
+        )
         action_result: str | None = None
         raw_success_actions = settings.get("captcha-success-actions")
         if raw_success_actions:
-            success_texts = self._get_texts("success", SUCCESS_TEXTS_FALLBACK, guild_id=guild.id)
             action_result = await strike.perform_disciplinary_action(
                 user=member,
                 bot=self._bot,
@@ -201,6 +206,29 @@ class CaptchaCallbackProcessor:
                 reason=success_texts["reason"],
                 source="captcha",
             )
+
+        vpn_post_actions = parse_role_actions(settings.get("vpn-post-actions"))
+        vpn_post_applied: list[str] = []
+        if vpn_post_actions and isinstance(member, discord.Member):
+            vpn_reason = success_texts.get("vpn_post_reason")
+            if not isinstance(vpn_reason, str) or not vpn_reason.strip():
+                vpn_reason = SUCCESS_TEXTS_FALLBACK.get(
+                    "vpn_post_reason",
+                    "Applying VPN post-verification role adjustments.",
+                )
+            vpn_post_applied = await apply_role_actions(
+                member,
+                vpn_post_actions,
+                reason=vpn_reason,
+                logger=_logger,
+            )
+            if vpn_post_applied:
+                _logger.info(
+                    "Applied VPN post-actions for guild %s user %s: %s",
+                    guild.id,
+                    member.id,
+                    ", ".join(vpn_post_applied),
+                )
 
         if action_result:
             disciplinary_texts = get_translated_mapping(
@@ -221,6 +249,8 @@ class CaptchaCallbackProcessor:
                 )
 
         success_actions = _extract_action_strings(raw_success_actions)
+        if vpn_post_applied:
+            success_actions.extend(vpn_post_applied)
 
         await self._sessions.remove(payload.guild_id, payload.user_id)
 
@@ -264,6 +294,8 @@ class CaptchaCallbackProcessor:
                 "captcha-log-channel",
                 "captcha-delivery-method",
                 "captcha-grace-period",
+                "vpn-detection-actions",
+                "vpn-post-actions",
             ],
         )
         session = await self._ensure_session(payload, settings)
@@ -427,6 +459,10 @@ class CaptchaCallbackProcessor:
         raw_actions: Any
         if policy and policy.actions:
             raw_actions = policy.actions
+        elif policy:
+            raw_actions = settings.get("vpn-detection-actions") or settings.get(
+                "captcha-failure-actions"
+            )
         else:
             raw_actions = settings.get("captcha-failure-actions")
 
@@ -439,6 +475,7 @@ class CaptchaCallbackProcessor:
         )
         attempts_texts = failure_texts["attempts"]
         policy_requires_challenge = False
+        executed_action_strings: list[str] = []
 
         for action in actions:
             normalized = action.action
@@ -448,16 +485,24 @@ class CaptchaCallbackProcessor:
                     member.guild.id,
                 )
                 continue
+            action_string = f"{normalized}:{action.extra}" if action.extra else normalized
             if normalized == "challenge":
                 policy_requires_challenge = True
+                executed_action_strings.append(action_string)
                 continue
-            if action.extra:
-                disciplinary_actions.append(f"{normalized}:{action.extra}")
-            else:
-                disciplinary_actions.append(normalized)
+            disciplinary_actions.append(action_string)
+            executed_action_strings.append(action_string)
 
+        policy_actions_fallback = bool(
+            policy is not None and not policy.actions and executed_action_strings
+        )
         if policy is not None:
+            if policy_actions_fallback:
+                policy.actions = list(executed_action_strings)
             policy.requires_challenge = policy_requires_challenge
+            if policy_actions_fallback and session is not None:
+                storage = session.metadata.setdefault("vpn_detection", {})
+                storage["actions"] = list(policy.actions)
 
         resolved_reason = (
             (policy.reason if policy and policy.reason else None)
@@ -474,6 +519,9 @@ class CaptchaCallbackProcessor:
         def _append_note(text: str | None) -> None:
             if text and text not in notes:
                 notes.append(text)
+
+        if policy_actions_fallback:
+            _append_note(failure_texts["notes"].get("policy_actions_fallback"))
 
         if not attempts_exhausted and not force_execute:
             if disciplinary_actions:

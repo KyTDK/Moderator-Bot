@@ -208,6 +208,18 @@
                 "captcha-failure-actions": {
                     "description": "Actions to perform automatically when a member fails captcha verification."
                 },
+                "vpn-detection-enabled": {
+                    "description": "Enable VPN and proxy screening during verification."
+                },
+                "vpn-detection-actions": {
+                    "description": "Actions to perform automatically when VPN detection denies access."
+                },
+                "vpn-pre-actions": {
+                    "description": "Role adjustments applied before VPN screening."
+                },
+                "vpn-post-actions": {
+                    "description": "Role adjustments applied after successful VPN screening."
+                },
                 "nsfw_pfp_message": {
                     "default": "Your profile picture was detected to contain explicit content",
                     "choices": [

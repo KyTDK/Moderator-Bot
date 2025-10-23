@@ -6,6 +6,7 @@ PROCESSOR_BASE_KEY = "modules.captcha.processor"
 
 SUCCESS_TEXTS_FALLBACK: dict[str, Any] = {
     "reason": "Captcha verification successful",
+    "vpn_post_reason": "Applying VPN post-verification role adjustments.",
     "embed": {
         "title": "Captcha Verification Passed",
         "description": "{mention} ({user_id}) passed captcha verification.",
@@ -32,6 +33,7 @@ FAILURE_TEXTS_FALLBACK: dict[str, Any] = {
             "VPN intel served from a stale cache; consider a softer response before taking "
             "irreversible actions."
         ),
+        "policy_actions_fallback": "VPN actions enforced using guild-configured defaults.",
     },
     "attempts": {
         "unlimited": "Unlimited attempts remain.",

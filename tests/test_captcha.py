@@ -623,6 +623,128 @@ def test_captcha_processor_recovers_embed_session(monkeypatch: pytest.MonkeyPatc
     asyncio.run(run())
 
 
+def test_captcha_processor_applies_vpn_post_actions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class DummyMember:
+        def __init__(self, user_id: int, guild: "DummyGuild") -> None:
+            self.id = user_id
+            self.guild = guild
+            self.roles: list[int] = []
+            self.mention = f"<@{user_id}>"
+
+    class DummyGuild:
+        def __init__(self, guild_id: int) -> None:
+            self.id = guild_id
+            self.name = "Guild"
+            self._member: DummyMember | None = None
+
+        def set_member(self, member: DummyMember) -> None:
+            self._member = member
+
+        def get_member(self, user_id: int) -> DummyMember | None:
+            if self._member and self._member.id == user_id:
+                return self._member
+            return None
+
+        async def fetch_member(self, user_id: int) -> DummyMember:
+            member = self.get_member(user_id)
+            if member is None:
+                raise AssertionError("fetch_member should not be called")
+            return member
+
+    class DummyBot:
+        def __init__(self, guild: DummyGuild) -> None:
+            self._guild = guild
+
+        def get_guild(self, guild_id: int) -> DummyGuild | None:
+            if self._guild.id == guild_id:
+                return self._guild
+            return None
+
+        async def fetch_guild(self, guild_id: int) -> DummyGuild:
+            return self._guild
+
+    store = CaptchaSessionStore()
+    guild_id = 1300
+    user_id = 1400
+    dummy_guild = DummyGuild(guild_id)
+    dummy_member = DummyMember(user_id, dummy_guild)
+    dummy_guild.set_member(dummy_member)
+    bot = DummyBot(dummy_guild)
+
+    monkeypatch.setattr("modules.captcha.processor.discord.Member", DummyMember)
+
+    processor = CaptchaCallbackProcessor(cast(commands.Bot, bot), store)
+
+    async def fake_get_settings(guild: int, keys: list[str]) -> dict[str, Any]:
+        return {
+            "captcha-verification-enabled": True,
+            "captcha-success-actions": None,
+            "captcha-failure-actions": None,
+            "captcha-max-attempts": None,
+            "captcha-log-channel": None,
+            "captcha-delivery-method": "dm",
+            "captcha-grace-period": None,
+            "vpn-post-actions": ["give_role:555"],
+        }
+
+    async def fake_log_to_channel(*args: Any, **kwargs: Any) -> None:
+        return None
+
+    post_calls: list[tuple[Any, list[Any], str | None]] = []
+
+    async def fake_apply_role_actions(*args: Any, **kwargs: Any) -> list[str]:
+        member = args[0]
+        actions = list(args[1])
+        reason = kwargs.get("reason")
+        post_calls.append((member, actions, reason))
+        return ["give_role:555"]
+
+    async def fake_perform_action(*args: Any, **kwargs: Any) -> None:
+        return None
+
+    monkeypatch.setattr("modules.utils.mysql.get_settings", fake_get_settings)
+    monkeypatch.setattr("modules.utils.mod_logging.log_to_channel", fake_log_to_channel)
+    monkeypatch.setattr("modules.moderation.strike.perform_disciplinary_action", fake_perform_action)
+    monkeypatch.setattr(
+        "modules.captcha.processor.main.apply_role_actions",
+        fake_apply_role_actions,
+    )
+
+    payload = CaptchaCallbackPayload.from_mapping(
+        {
+            "guildId": str(guild_id),
+            "userId": str(user_id),
+            "token": "vpn-token",
+            "status": "passed",
+            "success": True,
+        }
+    )
+
+    session = CaptchaSession(
+        guild_id=guild_id,
+        user_id=user_id,
+        token="vpn-token",
+        expires_at=None,
+        delivery_method="dm",
+    )
+
+    async def run() -> None:
+        await store.put(session)
+        result = await processor.process(payload)
+        assert result.status == "ok"
+        assert result.roles_applied == 1
+        assert await store.get(guild_id, user_id) is None
+
+    asyncio.run(run())
+
+    assert post_calls, "VPN post actions were not invoked"
+    _, actions_used, reason_used = post_calls[0]
+    assert reason_used and "post-verification" in reason_used.lower()
+    assert actions_used and actions_used[0].role_id == 555
+
+
 def test_captcha_processor_requires_session_for_dm(monkeypatch: pytest.MonkeyPatch) -> None:
     class DummyMember:
         def __init__(self, user_id: int, guild: "DummyGuild") -> None:
@@ -1165,6 +1287,128 @@ def test_vpn_policy_deny_applies_actions_and_records_metrics(
 
         history = processor._vpn_action_history.get("vpn-token")
         assert history is not None and "1-0" in history
+
+    asyncio.run(run())
+
+
+def test_vpn_policy_uses_guild_defaults_when_actions_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class DummyMember:
+        def __init__(self, user_id: int, guild: "DummyGuild") -> None:
+            self.id = user_id
+            self.guild = guild
+            self.mention = f"<@{user_id}>"
+
+    class DummyGuild:
+        def __init__(self, guild_id: int) -> None:
+            self.id = guild_id
+            self._member: DummyMember | None = None
+
+        def set_member(self, member: DummyMember) -> None:
+            self._member = member
+
+        def get_member(self, user_id: int) -> DummyMember | None:
+            if self._member and self._member.id == user_id:
+                return self._member
+            return None
+
+        async def fetch_member(self, user_id: int) -> DummyMember:
+            member = self.get_member(user_id)
+            if member is None:
+                raise AssertionError("fetch_member should not be called")
+            return member
+
+    class DummyBot:
+        def __init__(self, guild: DummyGuild) -> None:
+            self._guild = guild
+
+        def get_guild(self, guild_id: int) -> DummyGuild | None:
+            if self._guild.id == guild_id:
+                return self._guild
+            return None
+
+        async def fetch_guild(self, guild_id: int) -> DummyGuild:
+            return self._guild
+
+    store = CaptchaSessionStore()
+    guild_id = 6050
+    user_id = 7125
+    dummy_guild = DummyGuild(guild_id)
+    dummy_member = DummyMember(user_id, dummy_guild)
+    dummy_guild.set_member(dummy_member)
+    bot = DummyBot(dummy_guild)
+
+    monkeypatch.setattr("modules.captcha.processor.discord.Member", DummyMember)
+
+    processor = CaptchaCallbackProcessor(cast(commands.Bot, bot), store)
+
+    async def fake_get_settings(guild: int, keys: list[str]) -> dict[str, Any]:
+        return {
+            "captcha-verification-enabled": True,
+            "captcha-success-actions": None,
+            "captcha-failure-actions": None,
+            "captcha-max-attempts": 1,
+            "captcha-log-channel": None,
+            "captcha-delivery-method": "dm",
+            "captcha-grace-period": None,
+            "vpn-detection-actions": ["ban", "strike:1"],
+            "vpn-post-actions": None,
+        }
+
+    actions_called: list[list[str]] = []
+
+    async def fake_perform_action(*args: Any, **kwargs: Any) -> None:
+        action_string = kwargs.get("action_string")
+        if isinstance(action_string, list):
+            actions_called.append(list(action_string))
+        elif isinstance(action_string, str):
+            actions_called.append([action_string])
+
+    async def fake_log_to_channel(*args: Any, **kwargs: Any) -> None:
+        return None
+
+    monkeypatch.setattr("modules.utils.mysql.get_settings", fake_get_settings)
+    monkeypatch.setattr(
+        "modules.moderation.strike.perform_disciplinary_action",
+        fake_perform_action,
+    )
+    monkeypatch.setattr("modules.utils.mod_logging.log_to_channel", fake_log_to_channel)
+
+    payload_data = {
+        "guildId": str(guild_id),
+        "userId": str(user_id),
+        "token": "vpn-token",
+        "status": "failed",
+        "success": False,
+        "metadata": {
+            "policySource": "vpn-detection",
+            "policyDetail": {
+                "decision": "deny",
+                "providersFlagged": 1,
+                "providerCount": 1,
+                "riskScore": 91,
+                "actions": [],
+            },
+        },
+    }
+
+    async def run() -> None:
+        session = CaptchaSession(
+            guild_id=guild_id,
+            user_id=user_id,
+            token="vpn-token",
+            expires_at=None,
+            delivery_method="dm",
+        )
+        await store.put(session)
+        payload = CaptchaCallbackPayload.from_mapping(payload_data)
+        result = await processor.process(payload, message_id="4-0")
+        assert result.status == "failed"
+        assert actions_called == [["ban", "strike:1"]]
+        detection = session.metadata.get("vpn_detection")
+        assert detection is not None
+        assert detection["actions"] == ["ban", "strike:1"]
 
     asyncio.run(run())
 

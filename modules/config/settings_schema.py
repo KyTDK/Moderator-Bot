@@ -675,5 +675,37 @@ SETTINGS_SCHEMA = {
         default=["kick"],
         description_key="modules.config.settings_schema.captcha-failure-actions.description",
     ),
+    "vpn-detection-enabled": Setting(
+        name="vpn-detection-enabled",
+        description="Enable VPN and proxy screening during verification.",
+        setting_type=bool,
+        default=False,
+        hidden=True,
+        description_key="modules.config.settings_schema.vpn-detection-enabled.description",
+    ),
+    "vpn-detection-actions": Setting(
+        name="vpn-detection-actions",
+        description="Actions to perform when VPN detection denies access.",
+        setting_type=list[str],
+        default=["kick"],
+        hidden=True,
+        description_key="modules.config.settings_schema.vpn-detection-actions.description",
+    ),
+    "vpn-pre-actions": Setting(
+        name="vpn-pre-actions",
+        description="Role adjustments applied before VPN screening.",
+        setting_type=list[str],
+        default=[],
+        hidden=True,
+        description_key="modules.config.settings_schema.vpn-pre-actions.description",
+    ),
+    "vpn-post-actions": Setting(
+        name="vpn-post-actions",
+        description="Role adjustments applied after successful VPN screening.",
+        setting_type=list[str],
+        default=[],
+        hidden=True,
+        description_key="modules.config.settings_schema.vpn-post-actions.description",
+    ),
 }
 

@@ -23,6 +23,10 @@ from modules.i18n.strings import locale_namespace
 from modules.utils import mysql
 from modules.utils.discord_utils import resolve_role_references
 from modules.utils.time import parse_duration
+from modules.verification.actions import (
+    apply_role_actions,
+    parse_role_actions,
+)
 
 from .config import resolve_api_base, resolve_public_verify_url
 from .delivery import CaptchaDeliveryMixin
@@ -32,16 +36,16 @@ from modules.core.moderator_bot import ModeratorBot
 
 _logger = logging.getLogger(__name__)
 
-CAPTCHA_LOCALE = locale_namespace("cogs", "captcha")
-CAPTCHA_META = CAPTCHA_LOCALE.child("meta")
+VERIFICATION_LOCALE = locale_namespace("cogs", "captcha")
+VERIFICATION_META = VERIFICATION_LOCALE.child("meta")
 
 
-class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
-    """Captcha verification flow for new guild members."""
+class VerificationCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
+    """Verification flow combining captcha and VPN screening for new members."""
 
-    captcha_group = app_commands.Group(
-        name="captcha",
-        description=CAPTCHA_META.string("group_description"),
+    verification_group = app_commands.Group(
+        name="verification",
+        description=VERIFICATION_META.string("group_description"),
         guild_only=True,
         default_permissions=discord.Permissions(manage_guild=True),
     )
@@ -76,9 +80,9 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                 "CAPTCHA_API_TOKEN or API base URL missing; captcha verification will be disabled."
             )
 
-    @captcha_group.command(
+    @verification_group.command(
         name="sync",
-        description=CAPTCHA_META.string("sync", "description"),
+        description=VERIFICATION_META.string("sync", "description"),
     )
     async def sync_embed_command(self, interaction: Interaction) -> None:
         guild_id = interaction.guild.id
@@ -117,12 +121,12 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                 ephemeral=True,
             )
 
-    @captcha_group.command(
+    @verification_group.command(
         name="request",
-        description=CAPTCHA_META.string("request", "description"),
+        description=VERIFICATION_META.string("request", "description"),
     )
     @app_commands.describe(
-        member=CAPTCHA_META.string("request", "member")
+        member=VERIFICATION_META.string("request", "member")
     )
     async def request_verification_command(
         self, interaction: Interaction, member: discord.Member
@@ -210,20 +214,20 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         except Exception:
             _logger.exception("Failed to start captcha Redis stream listener")
             print(
-                "[CAPTCHA] Failed to start captcha Redis stream listener; see logs for details."
+                "[VERIFICATION] Failed to start verification Redis stream listener; see logs for details."
             )
             return
 
         if started:
             print(
-                "[CAPTCHA] Redis stream listener subscribed to "
+                "[VERIFICATION] Redis stream listener subscribed to "
                 f"{self._stream_config.stream} as "
                 f"{self._stream_config.group}/{self._stream_config.consumer_name}"
                 f" (start={self._stream_config.start_id})"
             )
         else:
             print(
-                "[CAPTCHA] Captcha Redis stream listener disabled; callbacks will not be processed."
+                "[VERIFICATION] Verification Redis stream listener disabled; callbacks will not be processed."
             )
 
         await self._stream_listener.stop()
@@ -272,6 +276,7 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                 "pre-captcha-roles",
                 "captcha-delivery-method",
                 "captcha-embed-channel-id",
+                "vpn-pre-actions",
             ],
         )
 
@@ -297,8 +302,13 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
         ]
         if pre_roles:
             try:
-                await member.add_roles(*pre_roles, reason=self.bot.translate("cogs.captcha.roles.assign_reason",
-                                                                             guild_id=gid))
+                await member.add_roles(
+                    *pre_roles,
+                    reason=self.bot.translate(
+                        "cogs.captcha.roles.assign_reason",
+                        guild_id=gid,
+                    ),
+                )
             except discord.Forbidden:
                 _logger.warning(
                     "Missing permissions to assign pre-captcha roles in guild %s",
@@ -309,6 +319,26 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                     "Failed to assign pre-captcha roles in guild %s for user %s",
                     member.guild.id,
                     member.id,
+                )
+
+        vpn_pre_actions = parse_role_actions(settings.get("vpn-pre-actions"))
+        if vpn_pre_actions:
+            reason = self.bot.translate(
+                "cogs.captcha.roles.vpn_pre_reason",
+                guild_id=gid,
+            )
+            applied = await apply_role_actions(
+                member,
+                vpn_pre_actions,
+                reason=reason,
+                logger=_logger,
+            )
+            if applied:
+                _logger.info(
+                    "Applied VPN pre-actions for guild %s user %s: %s",
+                    member.guild.id,
+                    member.id,
+                    ", ".join(applied),
                 )
 
         delivery_method = str(settings.get("captcha-delivery-method") or "dm").lower()
@@ -466,5 +496,5 @@ class CaptchaCog(CaptchaEmbedMixin, CaptchaDeliveryMixin, commands.Cog):
                 user_id,
             )
 
-async def setup_captcha(bot: commands.Bot) -> None:
-    await bot.add_cog(CaptchaCog(bot))
+async def setup_verification(bot: commands.Bot) -> None:
+    await bot.add_cog(VerificationCog(bot))

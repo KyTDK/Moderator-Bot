@@ -35,7 +35,8 @@
         "failure": "Unable to send verification instructions; please check the configuration."
       },
       "roles": {
-        "assign_reason": "Assigning pre-captcha roles"
+        "assign_reason": "Assigning pre-captcha roles",
+        "vpn_pre_reason": "Applying VPN staging roles"
       },
       "timeout": {
         "failure_reason": "Captcha verification timed out."
