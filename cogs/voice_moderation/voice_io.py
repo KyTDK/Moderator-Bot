@@ -91,16 +91,15 @@ async def _ensure_connected(
             return getattr(ch, "id", None)
 
         current = guild.voice_client or voice
-        me_state = getattr(getattr(guild, "me", None), "voice", None)
-        actual_channel_id = getattr(getattr(me_state, "channel", None), "id", None)
+        current_channel_id = _channel_id(current) if current else None
 
-        if current and (not current.is_connected() or actual_channel_id is None):
+        if current and not current.is_connected():
             await _safe_disconnect(current)
             current = None
             voice = None
 
         # If we appear to be in the target channel already, reuse the existing client.
-        if current and _channel_id(current) == channel.id:
+        if current and current_channel_id == channel.id:
             if isinstance(current, voice_recv.VoiceRecvClient):
                 return current
             await _safe_disconnect(current)
@@ -108,7 +107,7 @@ async def _ensure_connected(
             voice = None
 
         # Attempt to move if we are connected elsewhere.
-        if current and current.is_connected() and _channel_id(current) != channel.id:
+        if current and current.is_connected() and current_channel_id != channel.id:
             try:
                 await current.move_to(channel)
             except Exception:

@@ -15,12 +15,16 @@ from modules.utils import clip_vectors, mysql
 from ..constants import (
     CLIP_THRESHOLD,
     HIGH_ACCURACY_SIMILARITY,
+    MOD_API_MAX_CONCURRENCY,
     VECTOR_REFRESH_DIVISOR,
 )
 from ..utils.categories import is_allowed_category
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame
 from .moderation import moderator_api
+
+
+_MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
 
 
 @dataclass(slots=True)
@@ -494,27 +498,63 @@ async def process_image_batch(
     results: list[tuple[ExtractedFrame, dict[str, Any] | None]] = []
     similarity_iter = iter(similarity_batches)
 
+    entries: list[
+        tuple[
+            ExtractedFrame,
+            Image.Image | None,
+            bytes | None,
+            str | None,
+            Optional[List[dict[str, Any]]],
+        ]
+    ] = []
+
     for frame, image in prepared:
-        response: dict[str, Any] | None = None
         similarity_response = next(similarity_iter, []) if image is not None else None
-        payload_bytes = frame.data
-        payload_mime = frame.mime_type
+        payload_bytes: bytes | None = frame.data
+        payload_mime: str | None = frame.mime_type
         if convert_to_png and image is not None and frame.mime_type.lower() != "image/png":
             payload_bytes = await asyncio.to_thread(_encode_image_to_png_bytes, image)
             payload_mime = "image/png"
+        entries.append((frame, image, payload_bytes, payload_mime, similarity_response))
+
+    async def _moderate_entry(
+        frame: ExtractedFrame,
+        image: Image.Image | None,
+        payload_bytes: bytes | None,
+        payload_mime: str | None,
+        similarity_response: Optional[List[dict[str, Any]]],
+    ) -> tuple[ExtractedFrame, dict[str, Any] | None]:
+        response: dict[str, Any] | None = None
         if image is not None:
             try:
-                response = await _run_image_pipeline(
-                    scanner,
-                    image_path=None,
-                    image=image,
-                    context=context,
-                    similarity_response=similarity_response,
-                    image_bytes=payload_bytes,
-                    image_mime=payload_mime,
-                )
+                async with _MODERATION_API_SEMAPHORE:
+                    response = await _run_image_pipeline(
+                        scanner,
+                        image_path=None,
+                        image=image,
+                        context=context,
+                        similarity_response=similarity_response,
+                        image_bytes=payload_bytes,
+                        image_mime=payload_mime,
+                    )
             finally:
                 image.close()
-        results.append((frame, response))
+        return frame, response
+
+    if entries:
+        results.extend(
+            await asyncio.gather(
+                *(
+                    _moderate_entry(
+                        frame,
+                        image,
+                        payload_bytes,
+                        payload_mime,
+                        similarity_response,
+                    )
+                    for frame, image, payload_bytes, payload_mime, similarity_response in entries
+                )
+            )
+        )
 
     return results

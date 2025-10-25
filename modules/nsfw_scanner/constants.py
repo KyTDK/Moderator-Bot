@@ -57,3 +57,7 @@ try:
     VECTOR_REFRESH_DIVISOR = int(os.getenv("VECTOR_REFRESH_DIVISOR", "0"))
 except (TypeError, ValueError):
     VECTOR_REFRESH_DIVISOR = 0
+try:
+    MOD_API_MAX_CONCURRENCY = int(os.getenv("MOD_API_MAX_CONCURRENCY", "6"))
+except (TypeError, ValueError):
+    MOD_API_MAX_CONCURRENCY = 6
