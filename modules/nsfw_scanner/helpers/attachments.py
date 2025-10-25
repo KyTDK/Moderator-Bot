@@ -121,6 +121,7 @@ FIELD_FALLBACKS = {
     "video_frames": "Video Frames",
     "latency_ms": "Scan Latency",
     "average_latency_per_frame_ms": "Avg Latency / Frame",
+    "latency_breakdown": "Latency Breakdown",
 }
 
 REASON_FALLBACKS = {
@@ -466,6 +467,71 @@ async def check_attachment(
                 value=f"{duration_ms} ms",
                 inline=True,
             )
+            pipeline_metrics = (scan_result or {}).get("pipeline_metrics")
+            if isinstance(pipeline_metrics, dict):
+                breakdown_entries = pipeline_metrics.get("latency_breakdown_ms")
+                breakdown_lines: list[str] = []
+                normalized_entries: list[tuple[str | None, str | None, float]] = []
+                if isinstance(breakdown_entries, dict):
+                    for step_name, entry in breakdown_entries.items():
+                        label = None
+                        duration_value = None
+                        if isinstance(entry, dict):
+                            label = entry.get("label") or None
+                            duration_value = entry.get("duration_ms")
+                        else:
+                            duration_value = entry
+                        if duration_value is None:
+                            continue
+                        try:
+                            duration_float = float(duration_value)
+                        except (TypeError, ValueError):
+                            continue
+                        if duration_float <= 0:
+                            continue
+                        normalized_entries.append((step_name, label, duration_float))
+                elif isinstance(breakdown_entries, list):
+                    for entry in breakdown_entries:
+                        label = None
+                        duration_value = None
+                        if isinstance(entry, dict):
+                            label = entry.get("label") or entry.get("step")
+                            duration_value = entry.get("duration_ms")
+                        elif isinstance(entry, (list, tuple)) and entry:
+                            label = entry[0]
+                            duration_value = entry[1] if len(entry) > 1 else None
+                        if duration_value is None:
+                            continue
+                        try:
+                            duration_float = float(duration_value)
+                        except (TypeError, ValueError):
+                            continue
+                        if duration_float <= 0:
+                            continue
+                        normalized_entries.append((None, label, duration_float))
+                if normalized_entries:
+                    normalized_entries.sort(key=lambda item: item[2], reverse=True)
+                    for step_name, label, duration in normalized_entries:
+                        if step_name and label and label != step_name:
+                            breakdown_lines.append(
+                                f"• {label} (`{step_name}`): {duration:.2f} ms"
+                            )
+                        elif label:
+                            breakdown_lines.append(
+                                f"• {label}: {duration:.2f} ms"
+                            )
+                        elif step_name:
+                            breakdown_lines.append(
+                                f"• {step_name}: {duration:.2f} ms"
+                            )
+                    if breakdown_lines:
+                        embed.add_field(
+                            name=_localize_field_name(
+                                translator, "latency_breakdown", guild_id
+                            ),
+                            value="\n".join(breakdown_lines)[:1024],
+                            inline=False,
+                        )
             if scan_result:
                 reason_value = _localize_reason(
                     translator, scan_result.get("reason"), guild_id

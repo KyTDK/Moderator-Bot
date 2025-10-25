@@ -82,6 +82,7 @@ async def process_video(
     context: ImageProcessingContext | None = None,
     premium_status: Optional[dict[str, Any]] = None,
 ) -> tuple[Optional[discord.File], dict[str, Any] | None]:
+    overall_started = time.perf_counter()
     frames_to_scan, max_concurrent_frames = await _resolve_video_limits(
         guild_id,
         premium_status=premium_status,
@@ -153,6 +154,7 @@ async def process_video(
         "early_exit": None,
         "bytes_downloaded": None,
     }
+    latency_steps: dict[str, dict[str, Any]] = {}
     try:
         metrics_payload["bytes_downloaded"] = os.path.getsize(original_filename)
     except OSError:
@@ -288,6 +290,48 @@ async def process_video(
         stop_event.set()
         await extractor_task
         safe_delete(original_filename)
+
+    total_duration_ms = max((time.perf_counter() - overall_started) * 1000, 0.0)
+    metrics_payload["total_latency_ms"] = total_duration_ms
+    frame_pipeline_ms = float(metrics_payload.get("decode_latency_ms") or 0.0)
+    if frame_pipeline_ms > 0:
+        existing_frame_entry = latency_steps.get("frame_pipeline")
+        frame_pipeline_entry = {
+            "duration_ms": frame_pipeline_ms,
+            "label": "Frame Pipeline",
+        }
+        if isinstance(existing_frame_entry, dict):
+            try:
+                frame_pipeline_entry["duration_ms"] += float(
+                    existing_frame_entry.get("duration_ms") or 0.0
+                )
+            except (TypeError, ValueError):
+                pass
+            if not frame_pipeline_entry.get("label"):
+                frame_pipeline_entry["label"] = existing_frame_entry.get("label")
+        latency_steps["frame_pipeline"] = frame_pipeline_entry
+    overhead_ms = max(total_duration_ms - frame_pipeline_ms, 0.0)
+    if overhead_ms > 0:
+        existing_overhead_entry = latency_steps.get("coordination")
+        coordination_entry = {
+            "duration_ms": overhead_ms,
+            "label": "Coordinator Overhead",
+        }
+        if isinstance(existing_overhead_entry, dict):
+            try:
+                coordination_entry["duration_ms"] += float(
+                    existing_overhead_entry.get("duration_ms") or 0.0
+                )
+            except (TypeError, ValueError):
+                pass
+            if not coordination_entry.get("label"):
+                coordination_entry["label"] = existing_overhead_entry.get("label")
+        latency_steps["coordination"] = coordination_entry
+    metrics_payload["latency_breakdown_ms"] = {
+        key: value
+        for key, value in latency_steps.items()
+        if isinstance(value, dict)
+    }
 
     metrics_payload["frames_scanned"] = processed_frames
     metrics_payload["frames_target"] = _effective_target()
