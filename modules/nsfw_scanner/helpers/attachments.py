@@ -121,7 +121,6 @@ FIELD_FALLBACKS = {
     "video_frames": "Video Frames",
     "latency_ms": "Scan Latency",
     "average_latency_per_frame_ms": "Avg Latency / Frame",
-    "latency_breakdown": "Latency Breakdown",
 }
 
 REASON_FALLBACKS = {
@@ -467,37 +466,6 @@ async def check_attachment(
                 value=f"{duration_ms} ms",
                 inline=True,
             )
-            pipeline_metrics = (scan_result or {}).get("pipeline_metrics")
-            if isinstance(pipeline_metrics, dict):
-                breakdown_entries = pipeline_metrics.get("latency_breakdown_ms")
-                if isinstance(breakdown_entries, list):
-                    breakdown_lines: list[str] = []
-                    for entry in breakdown_entries:
-                        label = None
-                        duration_value = None
-                        if isinstance(entry, dict):
-                            label = entry.get("label") or entry.get("step")
-                            duration_value = entry.get("duration_ms")
-                        elif isinstance(entry, (list, tuple)) and entry:
-                            label = entry[0]
-                            duration_value = entry[1] if len(entry) > 1 else None
-                        if label is None or duration_value is None:
-                            continue
-                        try:
-                            duration_float = float(duration_value)
-                        except (TypeError, ValueError):
-                            continue
-                        breakdown_lines.append(
-                            f"• {label}: {duration_float:.2f} ms"
-                        )
-                    if breakdown_lines:
-                        embed.add_field(
-                            name=_localize_field_name(
-                                translator, "latency_breakdown", guild_id
-                            ),
-                            value="\n".join(breakdown_lines)[:1024],
-                            inline=False,
-                        )
             if scan_result:
                 reason_value = _localize_reason(
                     translator, scan_result.get("reason"), guild_id
