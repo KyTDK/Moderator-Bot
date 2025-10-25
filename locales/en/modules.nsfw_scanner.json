@@ -43,7 +43,8 @@
               "moderation_threshold": "Moderation Threshold",
               "video_frames": "Video Frames",
               "latency_ms": "Latency (ms)",
-              "average_latency_per_frame_ms": "Average Latency per Frame (ms)"
+              "average_latency_per_frame_ms": "Average Latency per Frame (ms)",
+              "latency_breakdown": "Latency Breakdown"
             },
             "reasons": {
               "openai_moderation": "OpenAI moderation",
