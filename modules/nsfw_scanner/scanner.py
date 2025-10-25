@@ -2,7 +2,9 @@ import asyncio
 import logging
 import os
 import re
+import time
 import uuid
+from collections import OrderedDict
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlparse
 
@@ -14,18 +16,63 @@ from discord.errors import NotFound
 from discord.ext import commands
 import pillow_avif  # registers AVIF support
 
+from modules.config.premium_plans import PLAN_CORE, PLAN_FREE, PLAN_PRO, PLAN_ULTRA
 from modules.utils import clip_vectors, mysql
 from modules.utils.discord_utils import safe_get_channel
 
-from .constants import ALLOWED_USER_IDS, LOG_CHANNEL_ID, TMP_DIR
+from .constants import (
+    ACCELERATED_DOWNLOAD_CAP_BYTES,
+    ACCELERATED_PRO_DOWNLOAD_CAP_BYTES,
+    ACCELERATED_ULTRA_DOWNLOAD_CAP_BYTES,
+    ALLOWED_USER_IDS,
+    DEFAULT_DOWNLOAD_CAP_BYTES,
+    LOG_CHANNEL_ID,
+    TMP_DIR,
+)
 from .helpers import (
     AttachmentSettingsCache,
     check_attachment as helper_check_attachment,
     temp_download as helper_temp_download,
 )
-from .utils import safe_delete
+from .utils.file_ops import safe_delete
 
 log = logging.getLogger(__name__)
+
+_PLAN_DOWNLOAD_CAPS: dict[str, int | None] = {
+    PLAN_CORE: ACCELERATED_DOWNLOAD_CAP_BYTES,
+    PLAN_PRO: ACCELERATED_PRO_DOWNLOAD_CAP_BYTES,
+    PLAN_ULTRA: ACCELERATED_ULTRA_DOWNLOAD_CAP_BYTES,
+    "accelerated": ACCELERATED_DOWNLOAD_CAP_BYTES,
+    "accelerated_core": ACCELERATED_DOWNLOAD_CAP_BYTES,
+    "accelerated_pro": ACCELERATED_PRO_DOWNLOAD_CAP_BYTES,
+    "accelerated_ultra": ACCELERATED_ULTRA_DOWNLOAD_CAP_BYTES,
+}
+
+_TENOR_CACHE_TTL = 600.0
+_TENOR_CACHE_MAX = 512
+_tenor_toggle_cache: "OrderedDict[int, tuple[float, bool]]" = OrderedDict()
+
+
+def _tenor_cache_get(guild_id: int) -> bool | None:
+    entry = _tenor_toggle_cache.get(guild_id)
+    if not entry:
+        return None
+    expires_at, value = entry
+    if expires_at <= time.monotonic():
+        _tenor_toggle_cache.pop(guild_id, None)
+        return None
+    refreshed_expiry = time.monotonic() + _TENOR_CACHE_TTL
+    _tenor_toggle_cache[guild_id] = (refreshed_expiry, value)
+    _tenor_toggle_cache.move_to_end(guild_id)
+    return value
+
+
+def _tenor_cache_set(guild_id: int, value: bool) -> None:
+    expires_at = time.monotonic() + _TENOR_CACHE_TTL
+    _tenor_toggle_cache[guild_id] = (expires_at, bool(value))
+    _tenor_toggle_cache.move_to_end(guild_id)
+    while len(_tenor_toggle_cache) > _TENOR_CACHE_MAX:
+        _tenor_toggle_cache.popitem(last=False)
 
 class NSFWScanner:
     def __init__(self, bot: commands.Bot):
@@ -124,8 +171,29 @@ class NSFWScanner:
 
         settings_cache = AttachmentSettingsCache()
 
+        async def _resolve_download_cap_bytes() -> int | None:
+            if guild_id is None:
+                return DEFAULT_DOWNLOAD_CAP_BYTES
+
+            if settings_cache.has_premium_plan():
+                plan = settings_cache.get_premium_plan()
+            else:
+                plan = None
+                try:
+                    plan = await mysql.resolve_guild_plan(guild_id)
+                except Exception:
+                    plan = None
+                settings_cache.set_premium_plan(plan)
+
+            normalized_plan = (plan or PLAN_FREE).lower()
+            return _PLAN_DOWNLOAD_CAPS.get(normalized_plan, DEFAULT_DOWNLOAD_CAP_BYTES)
+
+        download_cap_bytes = await _resolve_download_cap_bytes()
+
         if url:
-            async with helper_temp_download(self.session, url) as temp_filename:
+            async with helper_temp_download(
+                self.session, url, download_cap_bytes=download_cap_bytes
+            ) as temp_filename:
                 return await helper_check_attachment(
                     self,
                     member,
@@ -195,26 +263,45 @@ class NSFWScanner:
                 if is_tenor:
                     check_tenor = True
                     if guild_id is not None:
-                        if settings_cache.has_check_tenor():
-                            check_tenor = bool(settings_cache.get_check_tenor())
-                        else:
-                            check_tenor = bool(
-                                await mysql.get_settings(guild_id, "check-tenor-gifs")
-                            )
+                        cached_toggle = _tenor_cache_get(guild_id)
+                        if cached_toggle is not None:
+                            check_tenor = cached_toggle
                             settings_cache.set_check_tenor(check_tenor)
+                        elif settings_cache.has_check_tenor():
+                            check_tenor = bool(settings_cache.get_check_tenor())
+                            _tenor_cache_set(guild_id, check_tenor)
+                        else:
+                            setting_value = await mysql.get_settings(
+                                guild_id, "check-tenor-gifs"
+                            )
+                            check_tenor = bool(setting_value)
+                            settings_cache.set_check_tenor(check_tenor)
+                            _tenor_cache_set(guild_id, check_tenor)
                     if not check_tenor:
                         continue
-                async with helper_temp_download(self.session, gif_url) as temp_filename:
-                    if await helper_check_attachment(
-                        self,
-                        author=message.author,
-                        temp_filename=temp_filename,
-                        nsfw_callback=nsfw_callback,
-                        guild_id=guild_id,
-                        message=message,
-                        settings_cache=settings_cache,
-                    ):
-                        return True
+                try:
+                    async with helper_temp_download(
+                        self.session,
+                        gif_url,
+                        prefer_video=is_tenor,
+                        download_cap_bytes=download_cap_bytes,
+                    ) as temp_filename:
+                        if await helper_check_attachment(
+                            self,
+                            author=message.author,
+                            temp_filename=temp_filename,
+                            nsfw_callback=nsfw_callback,
+                            guild_id=guild_id,
+                            message=message,
+                            settings_cache=settings_cache,
+                        ):
+                            return True
+                except ValueError as download_error:
+                    log.debug(
+                        "Skipping media %s due to download cap: %s",
+                        gif_url,
+                        download_error,
+                    )
 
         for sticker in stickers:
             sticker_url = sticker.url
@@ -223,27 +310,39 @@ class NSFWScanner:
 
             extension = sticker.format.name.lower()
 
-            async with helper_temp_download(self.session, sticker_url, ext=extension) as temp_location:
-                gif_location = temp_location
+            try:
+                async with helper_temp_download(
+                    self.session,
+                    sticker_url,
+                    ext=extension,
+                    download_cap_bytes=download_cap_bytes,
+                ) as temp_location:
+                    gif_location = temp_location
 
-                if extension == "apng":
-                    gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
-                    await asyncio.to_thread(apnggif, temp_location, gif_location)
+                    if extension == "apng":
+                        gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
+                        await asyncio.to_thread(apnggif, temp_location, gif_location)
 
-                try:
-                    if await helper_check_attachment(
-                        self,
-                        message.author,
-                        gif_location,
-                        nsfw_callback,
-                        guild_id,
-                        message,
-                        settings_cache=settings_cache,
-                    ):
-                        return True
-                finally:
-                    if gif_location != temp_location:
-                        safe_delete(gif_location)
+                    try:
+                        if await helper_check_attachment(
+                            self,
+                            message.author,
+                            gif_location,
+                            nsfw_callback,
+                            guild_id,
+                            message,
+                            settings_cache=settings_cache,
+                        ):
+                            return True
+                    finally:
+                        if gif_location != temp_location:
+                            safe_delete(gif_location)
+            except ValueError as download_error:
+                log.debug(
+                    "Skipping sticker %s due to download cap: %s",
+                    sticker_url,
+                    download_error,
+                )
 
         custom_emoji_tags = list(set(re.findall(r'<a?:\w+:\d+>', message.content)))
         for tag in custom_emoji_tags:
@@ -256,7 +355,11 @@ class NSFWScanner:
                 continue
             emoji_url = str(emoji_obj.url)
             try:
-                async with helper_temp_download(self.session, emoji_url) as emoji_path:
+                async with helper_temp_download(
+                    self.session,
+                    emoji_url,
+                    download_cap_bytes=download_cap_bytes,
+                ) as emoji_path:
                     if await helper_check_attachment(
                         self,
                         message.author,
@@ -267,6 +370,12 @@ class NSFWScanner:
                         settings_cache=settings_cache,
                     ):
                         return True
+            except ValueError as download_error:
+                log.debug(
+                    "Skipping emoji %s due to download cap: %s",
+                    emoji_url,
+                    download_error,
+                )
             except Exception as e:
                 print(f"[emoji-scan] Failed to scan custom emoji {emoji_obj}: {e}")
 

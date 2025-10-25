@@ -9,11 +9,11 @@ from modules.metrics import log_media_scan
 from modules.utils import mod_logging, mysql
 from modules.utils.localization import TranslateFn, localize_message
 
-from ..utils import (
-    determine_file_type,
+from ..utils.file_types import (
     FILE_TYPE_IMAGE,
     FILE_TYPE_LABELS,
     FILE_TYPE_VIDEO,
+    determine_file_type,
 )
 from .images import build_image_processing_context, process_image
 from .videos import process_video
@@ -30,13 +30,20 @@ _CACHE_MISS = object()
 class AttachmentSettingsCache:
     """Cache frequently accessed guild settings for a scan batch."""
 
-    __slots__ = ("scan_settings", "nsfw_verbose", "check_tenor_gifs", "premium_status")
+    __slots__ = (
+        "scan_settings",
+        "nsfw_verbose",
+        "check_tenor_gifs",
+        "premium_status",
+        "premium_plan",
+    )
 
     def __init__(self) -> None:
         self.scan_settings: Any = _CACHE_MISS
         self.nsfw_verbose: Any = _CACHE_MISS
         self.check_tenor_gifs: Any = _CACHE_MISS
         self.premium_status: Any = _CACHE_MISS
+        self.premium_plan: Any = _CACHE_MISS
 
     def has_scan_settings(self) -> bool:
         return self.scan_settings is not _CACHE_MISS
@@ -81,6 +88,17 @@ class AttachmentSettingsCache:
 
     def set_premium_status(self, value: Any) -> None:
         self.premium_status = value if value is not None else {}
+
+    def has_premium_plan(self) -> bool:
+        return self.premium_plan is not _CACHE_MISS
+
+    def get_premium_plan(self) -> Any:
+        if self.premium_plan is _CACHE_MISS:
+            return None
+        return self.premium_plan
+
+    def set_premium_plan(self, value: Any) -> None:
+        self.premium_plan = value
 
 DECISION_FALLBACKS = {
     "unknown": "Unknown",

@@ -16,7 +16,9 @@ from ..constants import (
     HIGH_ACCURACY_SIMILARITY,
     VECTOR_REFRESH_DIVISOR,
 )
-from ..utils import ExtractedFrame, is_allowed_category, safe_delete
+from ..utils.categories import is_allowed_category
+from ..utils.file_ops import safe_delete
+from ..utils.frames import ExtractedFrame
 from .moderation import moderator_api
 
 

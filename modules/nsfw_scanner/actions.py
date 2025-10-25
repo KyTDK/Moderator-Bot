@@ -9,7 +9,7 @@ from modules.moderation import strike
 from modules.utils import mod_logging, mysql
 from modules.utils.localization import TranslateFn, localize_message
 
-from .utils import safe_delete
+from .utils.file_ops import safe_delete
 
 BASE_KEY = "modules.nsfw_scanner.actions"
 CONFIDENCE_BASE = "modules.nsfw_scanner.shared.confidence"

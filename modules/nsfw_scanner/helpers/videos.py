@@ -1,6 +1,7 @@
 import asyncio
 import io
 import os
+import time
 from typing import Any, Optional
 from threading import Event
 
@@ -18,7 +19,8 @@ from ..constants import (
     MAX_CONCURRENT_FRAMES,
     MAX_FRAMES_PER_VIDEO,
 )
-from ..utils import frames_are_similar, iter_extracted_frames, safe_delete, ExtractedFrame
+from ..utils.file_ops import safe_delete
+from ..utils.frames import ExtractedFrame, frames_are_similar, iter_extracted_frames
 from .images import (
     ImageProcessingContext,
     build_image_processing_context,
@@ -130,7 +132,31 @@ async def process_video(
     batch_size = max(1, min(max_concurrent_frames, batch_cap))
     dedupe_enabled = context.accelerated
     last_signature = None
-    dedupe_threshold = 0.995 if dedupe_enabled else 0.0
+    dedupe_threshold = 0.985 if dedupe_enabled else 0.0
+    last_motion_signature = None
+    motion_plateau = 0
+    processed_low_risk_streak = 0
+    if isinstance(frames_to_scan, int) and frames_to_scan:
+        low_risk_limit = max(4, min(10, frames_to_scan // 2 or 4))
+    else:
+        low_risk_limit = 6
+    motion_flat_limit = 8 if context.accelerated else 12
+    high_confidence_threshold = 0.92
+    low_risk_threshold = 0.05
+    flush_timeout = 0.035 if context.accelerated else 0.06
+    metrics_payload: dict[str, Any] = {
+        "dedupe_skipped": 0,
+        "frames_submitted": 0,
+        "frames_processed": 0,
+        "decode_latency_ms": 0.0,
+        "flush_count": 0,
+        "early_exit": None,
+        "bytes_downloaded": None,
+    }
+    try:
+        metrics_payload["bytes_downloaded"] = os.path.getsize(original_filename)
+    except OSError:
+        metrics_payload["bytes_downloaded"] = None
 
     def _effective_target() -> int:
         if isinstance(frames_to_scan, int) and frames_to_scan > 0:
@@ -138,17 +164,32 @@ async def process_video(
         return processed_frames
 
     async def _process_batch() -> bool:
-        nonlocal processed_frames, flagged_file, flagged_scan, last_signature, media_total_frames
+        nonlocal (
+            processed_frames,
+            flagged_file,
+            flagged_scan,
+            last_signature,
+            media_total_frames,
+            last_motion_signature,
+            motion_plateau,
+            processed_low_risk_streak,
+        )
         if not batch:
             return False
+        metrics_payload["frames_submitted"] += len(batch)
+        started = time.perf_counter()
         results = await process_image_batch(
             scanner,
             batch.copy(),
             context,
             convert_to_png=False,
         )
+        metrics_payload["decode_latency_ms"] += max(
+            (time.perf_counter() - started) * 1000, 0
+        )
         for frame_data, scan in results:
             processed_frames += 1
+            metrics_payload["frames_processed"] += 1
             frame_total = getattr(frame_data, "total_frames", None)
             if frame_total is not None:
                 media_total_frames = frame_total if media_total_frames is None else max(media_total_frames, frame_total)
@@ -160,19 +201,68 @@ async def process_video(
                 scan["video_frames_target"] = _effective_target()
                 if media_total_frames is not None:
                     scan["video_frames_media_total"] = media_total_frames
+                numeric_scores: list[float] = []
+                for key in ("confidence", "score", "probability", "nsfw_score", "max_probability"):
+                    value = scan.get(key)
+                    if isinstance(value, (int, float)):
+                        numeric_scores.append(float(value))
+                risk_score = max(numeric_scores) if numeric_scores else 0.0
                 if scan.get("is_nsfw"):
+                    if risk_score >= high_confidence_threshold:
+                        if metrics_payload["early_exit"] is None:
+                            metrics_payload["early_exit"] = "high_confidence_hit"
+                    else:
+                        if metrics_payload["early_exit"] is None:
+                            metrics_payload["early_exit"] = "nsfw_detected"
                     flagged_file = discord.File(
                         fp=io.BytesIO(frame_data.data),
                         filename=os.path.basename(frame_data.name),
                     )
                     flagged_scan = scan
+                    scan.setdefault("pipeline_metrics", {})
+                    scan["pipeline_metrics"].update(metrics_payload)
                     return True
+                if risk_score <= low_risk_threshold:
+                    processed_low_risk_streak += 1
+                    if processed_low_risk_streak >= low_risk_limit:
+                        if metrics_payload["early_exit"] is None:
+                            metrics_payload["early_exit"] = "low_risk_streak"
+                        stop_event.set()
+                else:
+                    processed_low_risk_streak = 0
+
+            signature = frame_data.signature
+            if signature is not None:
+                if last_motion_signature is not None and frames_are_similar(
+                    last_motion_signature, signature, threshold=0.997
+                ):
+                    motion_plateau += 1
+                    if motion_plateau >= motion_flat_limit and not stop_event.is_set():
+                        if metrics_payload["early_exit"] is None:
+                            metrics_payload["early_exit"] = "flat_motion"
+                        stop_event.set()
+                else:
+                    motion_plateau = 0
+                last_motion_signature = signature
         return False
 
     flagged = False
     try:
         while True:
-            item = await queue.get()
+            try:
+                item = await asyncio.wait_for(
+                    queue.get(), timeout=flush_timeout if batch else None
+                )
+            except asyncio.TimeoutError:
+                if batch:
+                    metrics_payload["flush_count"] += 1
+                    flagged = await _process_batch()
+                    batch.clear()
+                    if flagged:
+                        stop_event.set()
+                        break
+                continue
+
             if item is sentinel:
                 break
             if item is None:
@@ -185,6 +275,7 @@ async def process_video(
             if dedupe_enabled:
                 signature = frame_data.signature
                 if frames_are_similar(last_signature, signature, threshold=dedupe_threshold):
+                    metrics_payload["dedupe_skipped"] += 1
                     continue
                 last_signature = signature
 
@@ -194,8 +285,10 @@ async def process_video(
                 batch.clear()
                 if flagged:
                     stop_event.set()
+                    break
 
         if not flagged and batch:
+            metrics_payload["flush_count"] += 1
             flagged = await _process_batch()
             batch.clear()
     finally:
@@ -203,13 +296,22 @@ async def process_video(
         await extractor_task
         safe_delete(original_filename)
 
+    metrics_payload["frames_scanned"] = processed_frames
+    metrics_payload["frames_target"] = _effective_target()
+    metrics_payload["dedupe_enabled"] = bool(dedupe_enabled)
+    metrics_payload["residual_low_risk_streak"] = processed_low_risk_streak
+    metrics_payload["residual_motion_plateau"] = motion_plateau
+
+    if flagged_scan is not None:
+        flagged_scan.setdefault("pipeline_metrics", {}).update(metrics_payload)
+
     if flagged_file and flagged_scan:
         if media_total_frames is not None:
             flagged_scan.setdefault("video_frames_media_total", None)
             flagged_scan["video_frames_media_total"] = media_total_frames
         return flagged_file, flagged_scan
 
-    return None, {
+    safe_scan = {
         "is_nsfw": False,
         "reason": "no_nsfw_frames_detected"
         if processed_frames > 0
@@ -218,3 +320,5 @@ async def process_video(
         "video_frames_target": _effective_target(),
         "video_frames_media_total": media_total_frames,
     }
+    safe_scan.setdefault("pipeline_metrics", {}).update(metrics_payload)
+    return None, safe_scan

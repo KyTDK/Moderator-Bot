@@ -10,7 +10,8 @@ from cogs.nsfw import NSFW_CATEGORY_SETTING
 from modules.utils import api, clip_vectors, mysql
 
 from ..constants import ADD_SFW_VECTOR, SFW_VECTOR_MAX_SIMILARITY
-from ..utils import file_to_b64, is_allowed_category
+from ..utils.categories import is_allowed_category
+from ..utils.file_ops import file_to_b64
 
 
 def _should_add_sfw_vector(
