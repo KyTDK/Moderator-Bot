@@ -164,16 +164,9 @@ async def process_video(
         return processed_frames
 
     async def _process_batch() -> bool:
-        nonlocal (
-            processed_frames,
-            flagged_file,
-            flagged_scan,
-            last_signature,
-            media_total_frames,
-            last_motion_signature,
-            motion_plateau,
-            processed_low_risk_streak,
-        )
+        nonlocal processed_frames, flagged_file, flagged_scan, last_signature
+        nonlocal media_total_frames, last_motion_signature
+        nonlocal motion_plateau, processed_low_risk_streak
         if not batch:
             return False
         metrics_payload["frames_submitted"] += len(batch)
