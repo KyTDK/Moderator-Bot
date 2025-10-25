@@ -232,7 +232,7 @@ SETTINGS_SCHEMA = {
         name="threshold",
         description="Threshold for NSFW detection confidence. Lower values are more sensitive.",
         setting_type=float,
-        default=0.60,
+        default=0.70,
         hidden=True,
         description_key="modules.config.settings_schema.threshold.description",
     ),
