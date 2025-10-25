@@ -2,6 +2,7 @@ import asyncio
 import io
 import os
 import random
+import time
 import traceback
 from dataclasses import dataclass
 from typing import Any, List, Optional, Sequence
@@ -125,10 +126,45 @@ async def _run_image_pipeline(
     image_bytes: bytes | None = None,
     image_mime: str | None = None,
 ) -> dict[str, Any] | None:
+    total_started = time.perf_counter()
+    latency_steps: list[dict[str, Any]] = []
+
+    def _add_step(name: str, duration: float | None, *, label: str | None = None) -> None:
+        if duration is None:
+            return
+        duration = max(duration, 0.0)
+        if duration == 0:
+            return
+        latency_steps.append(
+            {
+                "step": name,
+                "duration_ms": duration,
+                "label": label or name.replace("_", " ").title(),
+            }
+        )
+
+    def _finalize(payload: dict[str, Any]) -> dict[str, Any]:
+        total_duration = max((time.perf_counter() - total_started) * 1000, 0.0)
+        pipeline_metrics = payload.setdefault("pipeline_metrics", {})
+        existing_breakdown = pipeline_metrics.get("latency_breakdown_ms")
+        if not isinstance(existing_breakdown, list):
+            existing_breakdown = []
+        existing_breakdown.extend(latency_steps)
+        pipeline_metrics["latency_breakdown_ms"] = existing_breakdown
+        current_total = float(pipeline_metrics.get("total_latency_ms") or 0.0)
+        pipeline_metrics["total_latency_ms"] = max(current_total, total_duration)
+        return payload
+
     similarity_results = similarity_response
     if similarity_results is None:
+        similarity_started = time.perf_counter()
         similarity_results = await asyncio.to_thread(
             clip_vectors.query_similar, image, threshold=0
+        )
+        _add_step(
+            "similarity_search",
+            (time.perf_counter() - similarity_started) * 1000,
+            label="Similarity Search",
         )
 
     best_match = None
@@ -176,7 +212,7 @@ async def _run_image_pipeline(
 
             category = item.get("category")
             if not category:
-                return {
+                result = {
                     "is_nsfw": False,
                     "reason": "similarity_match",
                     "max_similarity": max_similarity,
@@ -185,9 +221,10 @@ async def _run_image_pipeline(
                     "clip_threshold": CLIP_THRESHOLD,
                     "similarity": similarity,
                 }
+                return _finalize(result)
 
             if is_allowed_category(category, context.allowed_categories):
-                return {
+                result = {
                     "is_nsfw": True,
                     "category": category,
                     "reason": "similarity_match",
@@ -197,10 +234,12 @@ async def _run_image_pipeline(
                     "clip_threshold": CLIP_THRESHOLD,
                     "similarity": similarity,
                 }
+                return _finalize(result)
 
     skip_vector = (
         max_similarity >= CLIP_THRESHOLD and not refresh_triggered
     ) or not milvus_available
+    moderation_started = time.perf_counter()
     response = await moderator_api(
         scanner,
         image_path=image_path,
@@ -213,11 +252,17 @@ async def _run_image_pipeline(
         allowed_categories=context.allowed_categories,
         threshold=context.moderation_threshold,
     )
+    _add_step(
+        "moderation_api",
+        (time.perf_counter() - moderation_started) * 1000,
+        label="Moderator API",
+    )
     if isinstance(response, dict):
         response.setdefault("max_similarity", max_similarity)
         response.setdefault("max_category", max_category)
         response.setdefault("high_accuracy", context.high_accuracy)
         response.setdefault("clip_threshold", CLIP_THRESHOLD)
+        return _finalize(response)
     return response
 
 
@@ -233,6 +278,7 @@ async def process_image(
     context: ImageProcessingContext | None = None,
     similarity_response: Optional[List[dict[str, Any]]] = None,
 ) -> dict[str, Any] | None:
+    overall_started = time.perf_counter()
     ctx = context
     if ctx is None:
         ctx = await build_image_processing_context(
@@ -242,8 +288,19 @@ async def process_image(
         )
 
     image: Image.Image | None = None
+    latency_steps: list[dict[str, Any]] = []
     try:
+        load_started = time.perf_counter()
         image = await _open_image_from_path(original_filename)
+        load_duration = max((time.perf_counter() - load_started) * 1000, 0.0)
+        if load_duration > 0:
+            latency_steps.append(
+                {
+                    "step": "image_open",
+                    "duration_ms": load_duration,
+                    "label": "Open Image",
+                }
+            )
         _, ext = os.path.splitext(original_filename)
         needs_conversion = convert_to_png and ext.lower() != ".png"
         image_path: str | None = None if needs_conversion else original_filename
@@ -251,10 +308,20 @@ async def process_image(
         image_mime: str | None = None
 
         if needs_conversion:
+            encode_started = time.perf_counter()
             image_bytes = await asyncio.to_thread(_encode_image_to_png_bytes, image)
             image_mime = "image/png"
+            encode_duration = max((time.perf_counter() - encode_started) * 1000, 0.0)
+            if encode_duration > 0:
+                latency_steps.append(
+                    {
+                        "step": "image_encode",
+                        "duration_ms": encode_duration,
+                        "label": "Encode PNG",
+                    }
+                )
 
-        return await _run_image_pipeline(
+        response = await _run_image_pipeline(
             scanner,
             image_path=image_path,
             image=image,
@@ -263,6 +330,18 @@ async def process_image(
             image_bytes=image_bytes,
             image_mime=image_mime,
         )
+        if isinstance(response, dict):
+            pipeline_metrics = response.setdefault("pipeline_metrics", {})
+            breakdown = pipeline_metrics.get("latency_breakdown_ms")
+            if not isinstance(breakdown, list):
+                breakdown = []
+            pipeline_metrics["latency_breakdown_ms"] = latency_steps + breakdown
+            current_total = float(pipeline_metrics.get("total_latency_ms") or 0.0)
+            pipeline_metrics["total_latency_ms"] = max(
+                current_total,
+                max((time.perf_counter() - overall_started) * 1000, 0.0),
+            )
+        return response
     except Exception as exc:
         print(traceback.format_exc())
         print(f"[process_image] Error processing image {original_filename}: {exc}")
