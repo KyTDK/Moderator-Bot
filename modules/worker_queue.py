@@ -1,4 +1,6 @@
 import asyncio
+import builtins
+import traceback
 from typing import Optional
 
 _SENTINEL = object()
@@ -231,15 +233,25 @@ class WorkerQueue:
             task = await self.queue.get()
             if task is _SENTINEL:
                 self.queue.task_done()
-                # Mark one pending stop signal consumed
-                async with self._lock:
-                    if self._pending_stops > 0:
-                        self._pending_stops -= 1
+                if self._pending_stops > 0:
+                    self._pending_stops -= 1
                 break
             try:
                 await task
-            except Exception as e:
-                print(f"[WorkerQueue] Task failed: {e}")
+            except asyncio.CancelledError:
+                print(f"[WorkerQueue:{self._name}] Task cancelled.")
+            except BaseException as exc:  # noqa: BLE001
+                base_group = getattr(builtins, "BaseExceptionGroup", None)
+                if base_group is not None and isinstance(exc, base_group):
+                    sub_exceptions = exc.exceptions  # type: ignore[attr-defined]
+                    count = len(sub_exceptions)
+                    print(f"[WorkerQueue:{self._name}] Task group failed with {count} sub-exception(s).")
+                    for idx, sub_exc in enumerate(sub_exceptions, start=1):
+                        print(f"[WorkerQueue:{self._name}] ├─ Sub-exception {idx}/{count}: {sub_exc!r}")
+                        traceback.print_exception(type(sub_exc), sub_exc, sub_exc.__traceback__)
+                else:
+                    print(f"[WorkerQueue:{self._name}] Task failed: {exc!r}")
+                    traceback.print_exception(type(exc), exc, exc.__traceback__)
             finally:
                 self.queue.task_done()
 
