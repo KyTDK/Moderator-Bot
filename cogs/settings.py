@@ -292,11 +292,23 @@ class Settings(commands.Cog):
         guild_id = interaction.guild.id
         dash_url = f"https://modbot.neomechanical.com/dashboard/{interaction.guild.id}"
         color = discord.Color.blurple()
+        locale = self.bot.resolve_locale(interaction)
+        translator = self.bot.translator
+
+        placeholder_hints = {
+            "dashboard_url": dash_url,
+            "locale": locale or (getattr(translator, "default_locale", None) or "en"),
+            "default": getattr(translator, "default_locale", None) or "en",
+            "name": "",
+            "description": "",
+            "qualified_name": "",
+            "page": "1",
+        }
 
         texts = self.bot.translate(
             "cogs.settings.help.view",
             guild_id=guild_id,
-            placeholders={"dashboard_url": dash_url},
+            placeholders=placeholder_hints,
             fallback={},
         ) or {}
 
@@ -308,9 +320,6 @@ class Settings(commands.Cog):
         view.add_item(discord.ui.Button(label=button_label, url=dash_url, emoji=button_emoji))
 
         avatar = interaction.client.user.display_avatar.url if interaction.client.user else None
-
-        locale = self.bot.resolve_locale(interaction)
-        translator = self.bot.translator
         locale_texts = texts.get("locale", {})
         if locale:
             locale_display = locale_texts.get("current", "`{locale}`").format(locale=locale)
