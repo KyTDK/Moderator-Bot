@@ -4,7 +4,6 @@ import asyncio
 import os
 import uuid
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
 from typing import AsyncIterator
 from urllib.parse import urlparse, urlunparse
 
@@ -25,12 +24,21 @@ PROBE_LIMIT_BYTES = 512 * 1024  # 512 KiB
 TENOR_VIDEO_EXTS = (".mp4", ".webm")
 
 
-@dataclass(slots=True)
 class DownloadResult:
-    path: str
-    url: str
-    content_type: str | None
-    bytes_downloaded: int | None
+    __slots__ = ("path", "url", "content_type", "bytes_downloaded")
+
+    def __init__(
+        self,
+        *,
+        path: str,
+        url: str,
+        content_type: str | None,
+        bytes_downloaded: int | None,
+    ) -> None:
+        self.path = path
+        self.url = url
+        self.content_type = content_type
+        self.bytes_downloaded = bytes_downloaded
 
 
 def _is_tenor_host(host: str) -> bool:
