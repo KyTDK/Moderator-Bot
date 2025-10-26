@@ -208,7 +208,7 @@ class ModeratorBot(
 
     @tasks.loop(hours=6)
     async def cleanup_task(self) -> None:
-        await self.wait_until_ready()
+        await self._wait_for_client_ready()
         guild_ids = [guild.id for guild in self.guilds]
         print(f"[CLEANUP] Running cleanup for {len(guild_ids)} guilds...")
 
@@ -217,7 +217,7 @@ class ModeratorBot(
 
     @tasks.loop(seconds=60)
     async def shard_heartbeat(self) -> None:
-        await self.wait_until_ready()
+        await self._wait_for_client_ready()
         status = "ready" if self.is_ready() else "starting"
         try:
             await self.push_status(status)

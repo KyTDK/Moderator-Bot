@@ -26,6 +26,17 @@ class BackgroundTaskMixin(GuildLocaleMixin):
             task = factory()
             setattr(self, attr, task)
 
+    async def _wait_for_client_ready(self) -> None:
+        """Block until discord.Client has been logged in and is ready-aware."""
+        while True:
+            try:
+                await self.wait_until_ready()
+            except RuntimeError:
+                await asyncio.sleep(0.5)
+                continue
+            else:
+                return
+
     def _ensure_mysql_initialisation_started(self) -> None:
         def start() -> asyncio.Task[None]:
             return asyncio.create_task(self._initialise_mysql_pool())
@@ -67,13 +78,13 @@ class BackgroundTaskMixin(GuildLocaleMixin):
             await task
 
     async def _preload_guild_locale_cache_when_ready(self) -> None:
-        await self.wait_until_ready()
+        await self._wait_for_client_ready()
         await self._wait_for_mysql_ready()
         await self._preload_guild_locale_cache()
         print("[STARTUP] Guild locale cache preloaded (post-ready)")
 
     async def _load_extensions_when_ready(self) -> None:
-        await self.wait_until_ready()
+        await self._wait_for_client_ready()
         await self._wait_for_mysql_ready()
         await self._ensure_i18n_ready()
         await self._load_extensions()
@@ -82,7 +93,7 @@ class BackgroundTaskMixin(GuildLocaleMixin):
         print("[STARTUP] Extension loader finished (post-ready)")
 
     async def _start_topgg_poster_when_ready(self) -> None:
-        await self.wait_until_ready()
+        await self._wait_for_client_ready()
         await self._wait_for_mysql_ready()
         try:
             start_topgg_poster(self)

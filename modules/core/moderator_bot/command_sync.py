@@ -65,7 +65,7 @@ class CommandTreeSyncMixin(I18nMixin):
                 print(f"[STARTUP] Command tree sync sleeping for {delay:.1f}s before running")
                 await asyncio.sleep(delay)
 
-            await self.wait_until_ready()
+            await self._wait_for_client_ready()
             print("[STARTUP] Command tree sync coroutine has bot ready; beginning attempts")
             max_attempts = 3
             retry_delay = 10.0
