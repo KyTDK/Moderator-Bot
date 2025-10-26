@@ -8,6 +8,7 @@ import time
 import uuid
 from contextlib import AsyncExitStack
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 import discord
 from apnggif import apnggif
@@ -372,7 +373,7 @@ async def _build_evidence_file(path: str, item: MediaWorkItem) -> discord.File |
         fp = await asyncio.to_thread(_open)
     except Exception:
         return None
-    filename = os.path.basename(item.label or os.path.basename(path))
+    filename = _resolve_filename(item, path)
     return discord.File(fp, filename=filename)
 
 
@@ -401,6 +402,15 @@ async def _emit_verbose_if_needed(
         scan_result=payload,
         duration_ms=duration_ms,
     )
+
+
+def _resolve_filename(item: MediaWorkItem, fallback_path: str) -> str:
+    raw_label = item.label or ""
+    parsed = urlparse(raw_label)
+    candidate = os.path.basename(parsed.path)
+    if candidate:
+        return candidate
+    return os.path.basename(fallback_path)
 
 
 __all__ = ["scan_media_item", "MediaFlagged"]
