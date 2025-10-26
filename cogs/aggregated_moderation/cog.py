@@ -107,5 +107,7 @@ class AggregatedModerationCog(commands.Cog):
         await self.accelerated_queue.stop()
         await self.queue_monitor.stop()
 
+async def setup(bot: commands.Bot):
+    await bot.add_cog(AggregatedModerationCog(bot))
 
 __all__ = ["AggregatedModerationCog"]
