@@ -37,6 +37,7 @@ FIELD_FALLBACKS = {
     "latency_ms": "Scan Latency",
     "average_latency_per_frame_ms": "Avg Latency / Frame",
     "latency_breakdown": "Latency Breakdown",
+    "cache_status": "Cache Status",
 }
 
 REASON_FALLBACKS = {
@@ -207,6 +208,14 @@ async def emit_verbose_report(
         value=f"{duration_ms} ms",
         inline=True,
     )
+
+    cache_status = scan_result.get("cache_status")
+    if cache_status:
+        embed.add_field(
+            name=_localize_field_name(translator, "cache_status", guild_id),
+            value=str(cache_status),
+            inline=True,
+        )
 
     for field_key, fallback_key in ("reason", "score"), ("category", "category"):
         value = scan_result.get(field_key)

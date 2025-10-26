@@ -27,6 +27,28 @@ from .work_item import MediaFlagged, MediaWorkItem
 log = logging.getLogger(__name__)
 
 
+def _clone_scan_result(result: dict[str, Any]) -> dict[str, Any]:
+    cloned = dict(result)
+    metrics = cloned.get("pipeline_metrics")
+    if isinstance(metrics, dict):
+        cloned["pipeline_metrics"] = dict(metrics)
+    return cloned
+
+
+def _annotate_cache_status(result: dict[str, Any] | None, status: str | None) -> dict[str, Any] | None:
+    if result is None or not status:
+        return result
+    result["cache_status"] = status
+    metrics = result.get("pipeline_metrics")
+    if isinstance(metrics, dict):
+        metrics = dict(metrics)
+        metrics["cache_status"] = status
+        result["pipeline_metrics"] = metrics
+    else:
+        result["pipeline_metrics"] = {"cache_status": status}
+    return result
+
+
 async def scan_media_item(
     scanner,
     *,
@@ -44,9 +66,26 @@ async def scan_media_item(
     initial_reservation = await verdict_cache.claim(item.cache_key)
     if initial_reservation.verdict is not None:
         if bool(initial_reservation.verdict.get("is_nsfw")):
-            reuse_verdict = initial_reservation.verdict
+            reuse_verdict = _annotate_cache_status(
+                _clone_scan_result(initial_reservation.verdict),
+                "cache_hit_nsfw",
+            )
             reuse_status = "cache_hit_nsfw"
         else:
+            cached_result = _annotate_cache_status(
+                _clone_scan_result(initial_reservation.verdict),
+                "cache_hit_safe",
+            )
+            await _emit_verbose_if_needed(
+                scanner,
+                context=context,
+                message=message,
+                actor=actor,
+                scan_result=cached_result,
+                file_type=None,
+                detected_mime=None,
+                duration_ms=int((time.perf_counter() - started_at) * 1000),
+            )
             _queue_metrics(
                 context=context,
                 message=message,
@@ -62,9 +101,26 @@ async def scan_media_item(
     elif initial_reservation.waiter is not None:
         verdict = await initial_reservation.waiter
         if verdict and verdict.get("is_nsfw"):
-            reuse_verdict = verdict
+            reuse_verdict = _annotate_cache_status(
+                _clone_scan_result(verdict),
+                "cache_shared_nsfw",
+            )
             reuse_status = "cache_shared_nsfw"
         else:
+            cached_result = _annotate_cache_status(
+                _clone_scan_result(verdict) if verdict else None,
+                "cache_shared_safe",
+            )
+            await _emit_verbose_if_needed(
+                scanner,
+                context=context,
+                message=message,
+                actor=actor,
+                scan_result=cached_result,
+                file_type=None,
+                detected_mime=None,
+                duration_ms=int((time.perf_counter() - started_at) * 1000),
+            )
             _queue_metrics(
                 context=context,
                 message=message,
@@ -106,9 +162,26 @@ async def scan_media_item(
                 sha_reservation = await verdict_cache.claim(sha_key)
                 if sha_reservation.verdict is not None:
                     if bool(sha_reservation.verdict.get("is_nsfw")):
-                        reuse_verdict = sha_reservation.verdict
+                        reuse_verdict = _annotate_cache_status(
+                            _clone_scan_result(sha_reservation.verdict),
+                            reuse_status or "cache_hash_nsfw",
+                        )
                         reuse_status = reuse_status or "cache_hash_nsfw"
                     else:
+                        cached_result = _annotate_cache_status(
+                            _clone_scan_result(sha_reservation.verdict),
+                            "cache_hash_safe",
+                        )
+                        await _emit_verbose_if_needed(
+                            scanner,
+                            context=context,
+                            message=message,
+                            actor=actor,
+                            scan_result=cached_result,
+                            file_type=file_type,
+                            detected_mime=detected_mime,
+                            duration_ms=int((time.perf_counter() - started_at) * 1000),
+                        )
                         _queue_metrics(
                             context=context,
                             message=message,
@@ -124,9 +197,26 @@ async def scan_media_item(
                 elif sha_reservation.waiter is not None:
                     verdict = await sha_reservation.waiter
                     if verdict and verdict.get("is_nsfw"):
-                        reuse_verdict = verdict
+                        reuse_verdict = _annotate_cache_status(
+                            _clone_scan_result(verdict),
+                            reuse_status or "cache_hash_shared_nsfw",
+                        )
                         reuse_status = reuse_status or "cache_hash_shared_nsfw"
                     else:
+                        cached_result = _annotate_cache_status(
+                            _clone_scan_result(verdict) if verdict else None,
+                            "cache_hash_shared_safe",
+                        )
+                        await _emit_verbose_if_needed(
+                            scanner,
+                            context=context,
+                            message=message,
+                            actor=actor,
+                            scan_result=cached_result,
+                            file_type=file_type,
+                            detected_mime=detected_mime,
+                            duration_ms=int((time.perf_counter() - started_at) * 1000),
+                        )
                         _queue_metrics(
                             context=context,
                             message=message,
@@ -196,17 +286,17 @@ async def scan_media_item(
                 download=download,
             )
 
-            if context.nsfw_verbose and message is not None and scan_result is not None:
-                await emit_verbose_report(
-                    scanner,
-                    message=message,
-                    author=actor,
-                    guild_id=context.guild_id,
-                    file_type=file_type,
-                    detected_mime=detected_mime,
-                    scan_result=scan_result,
-                    duration_ms=duration_ms,
-                )
+            await _emit_verbose_if_needed(
+                scanner,
+                context=context,
+                message=message,
+                actor=actor,
+                scan_result=scan_result,
+                file_type=file_type,
+                detected_mime=detected_mime,
+                duration_ms=duration_ms,
+                cache_status=reuse_status,
+            )
 
             if scan_result and scan_result.get("is_nsfw"):
                 evidence_file = video_attachment or await _build_evidence_file(prepared_path, item)
@@ -284,6 +374,33 @@ async def _build_evidence_file(path: str, item: MediaWorkItem) -> discord.File |
         return None
     filename = os.path.basename(item.label or os.path.basename(path))
     return discord.File(fp, filename=filename)
+
+
+async def _emit_verbose_if_needed(
+    scanner,
+    *,
+    context: GuildScanContext,
+    message: discord.Message | None,
+    actor,
+    scan_result: dict[str, Any] | None,
+    file_type: str | None,
+    detected_mime: str | None,
+    duration_ms: int,
+    cache_status: str | None = None,
+) -> None:
+    if not (context.nsfw_verbose and message is not None and scan_result is not None):
+        return
+    payload = _annotate_cache_status(_clone_scan_result(scan_result), cache_status)
+    await emit_verbose_report(
+        scanner,
+        message=message,
+        author=actor,
+        guild_id=context.guild_id,
+        file_type=file_type,
+        detected_mime=detected_mime,
+        scan_result=payload,
+        duration_ms=duration_ms,
+    )
 
 
 __all__ = ["scan_media_item", "MediaFlagged"]
