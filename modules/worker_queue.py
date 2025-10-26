@@ -1,5 +1,6 @@
 import asyncio
 import builtins
+import inspect
 import time
 import traceback
 from typing import Optional
@@ -222,15 +223,7 @@ class WorkerQueue:
                     self.queue.task_done()
                     continue
                 # Drop the task (do not execute)
-                try:
-                    # Best-effort: if coroutine supports .close(), close it to free resources
-                    if hasattr(item, "close"):
-                        try:
-                            item.close()  # type: ignore[attr-defined]
-                        except Exception:
-                            pass
-                except Exception:
-                    pass
+                self._close_enqueued_coroutine(item)
                 dropped += 1
                 # Mark this task as done since we're discarding it
                 self.queue.task_done()
@@ -260,12 +253,15 @@ class WorkerQueue:
             try:
                 await coro
             finally:
+                self._close_underlying_coroutine(coro)
                 runtime = loop.time() - started_at
                 self._record_runtime(runtime)
                 if runtime > self._slow_runtime_threshold:
                     self._maybe_log_runtime(runtime, name)
 
-        return instrumented()
+        wrapped = instrumented()
+        setattr(wrapped, "_original_coro", coro)
+        return wrapped
 
     def _describe_coro(self, coro) -> str:
         code = getattr(coro, "cr_code", None)
@@ -322,6 +318,43 @@ class WorkerQueue:
             f"[WorkerQueue:{self._name}] Task {name!r} ran for {runtime:.2f}s "
             f"(current_backlog={self.queue.qsize()}, workers={self._active_workers()}/{self.max_workers})"
         )
+
+    def _close_enqueued_coroutine(self, item) -> None:
+        """Best-effort close of instrumented wrapper and underlying coroutine."""
+        try:
+            close = getattr(item, "close", None)
+            if callable(close):
+                try:
+                    close()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        original = getattr(item, "_original_coro", None)
+        if original is not None:
+            self._close_underlying_coroutine(original)
+
+    @staticmethod
+    def _close_underlying_coroutine(coro) -> None:
+        """Close a coroutine if it is not already finished."""
+        if coro is None or not asyncio.iscoroutine(coro):
+            return
+        try:
+            state = inspect.getcoroutinestate(coro)
+        except Exception:
+            state = None
+        if state == inspect.CORO_CLOSED:
+            return
+        close = getattr(coro, "close", None)
+        if callable(close):
+            try:
+                close()
+            except RuntimeError:
+                # Coroutine might currently be running; ignore.
+                pass
+            except Exception:
+                pass
 
     async def worker_loop(self):
         while True:

@@ -11,6 +11,7 @@ from typing import Any, Optional
 from urllib.parse import urlparse
 
 import discord
+import aiohttp
 from apnggif import apnggif
 
 from ..cache import verdict_cache
@@ -63,6 +64,29 @@ async def scan_media_item(
     cache_tokens: list[tuple[str, object | None]] = []
     reuse_verdict: dict[str, Any] | None = None
     reuse_status: str | None = None
+
+    async def _resolve_cache_tokens(verdict: dict[str, Any]) -> None:
+        if not cache_tokens:
+            return
+        for cache_key, token in cache_tokens:
+            if not cache_key or token is None:
+                continue
+            try:
+                await verdict_cache.resolve(cache_key, token, verdict)
+            except Exception:
+                log.debug("Failed to resolve cache token %s", cache_key, exc_info=True)
+        cache_tokens.clear()
+
+    async def _resolve_skip(reason: str, extra: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "is_nsfw": False,
+            "skipped": True,
+            "skip_reason": reason,
+        }
+        if extra:
+            payload.update(extra)
+        await _resolve_cache_tokens(payload)
+        return payload
 
     initial_reservation = await verdict_cache.claim(item.cache_key)
     if initial_reservation.verdict is not None:
@@ -136,6 +160,8 @@ async def scan_media_item(
             return
     else:
         cache_tokens.append((item.cache_key, initial_reservation.token))
+
+    download: DownloadResult | None = None
 
     try:
         async with AsyncExitStack() as stack:
@@ -255,6 +281,10 @@ async def scan_media_item(
                         premium_status=context.premium_status,
                     )
                 else:
+                    await _resolve_skip(
+                        "unsupported_type",
+                        {"detected_mime": detected_mime or "unknown"},
+                    )
                     _queue_metrics(
                         context=context,
                         message=message,
@@ -268,9 +298,7 @@ async def scan_media_item(
                     )
                     return
 
-            for cache_key, token in cache_tokens:
-                if cache_key:
-                    await verdict_cache.resolve(cache_key, token, scan_result or {})
+            await _resolve_cache_tokens(scan_result or {})
 
             duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
             status = reuse_status or "scan_complete"
@@ -318,11 +346,66 @@ async def scan_media_item(
                 except Exception:
                     pass
     except ValueError as download_error:
+        await _resolve_skip("download_restricted", {"error": str(download_error)})
+        duration_ms = int((time.perf_counter() - started_at) * 1000)
         log.debug("Skipping media %s due to download restriction: %s", item.url, download_error)
+        _queue_metrics(
+            context=context,
+            message=message,
+            actor=actor,
+            item=item,
+            duration_ms=duration_ms,
+            result=None,
+            detected_mime=None,
+            file_type=None,
+            status="download_restricted",
+            download=None,
+        )
+    except aiohttp.ClientResponseError as http_error:
+        await _resolve_skip(
+            "http_error",
+            {
+                "error_status": http_error.status,
+                "error_message": http_error.message,
+            },
+        )
+        duration_ms = int((time.perf_counter() - started_at) * 1000)
+        log.warning(
+            "Failed to download media %s (HTTP %s): %s",
+            item.url,
+            http_error.status,
+            http_error.message,
+        )
+        _queue_metrics(
+            context=context,
+            message=message,
+            actor=actor,
+            item=item,
+            duration_ms=duration_ms,
+            result=None,
+            detected_mime=None,
+            file_type=None,
+            status=f"http_error_{http_error.status}",
+            download=None,
+        )
     except MediaFlagged:
         raise
     except Exception as exc:
+        await _resolve_skip("exception", {"error": repr(exc)})
         log.exception("Failed to scan media %s: %s", item.url, exc)
+        duration_ms = int((time.perf_counter() - started_at) * 1000)
+        _queue_metrics(
+            context=context,
+            message=message,
+            actor=actor,
+            item=item,
+            duration_ms=duration_ms,
+            result=None,
+            detected_mime=None,
+            file_type=None,
+            status="exception",
+            download=None,
+        )
 
 
 def _queue_metrics(**kwargs) -> None:
