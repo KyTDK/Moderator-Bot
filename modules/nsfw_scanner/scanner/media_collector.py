@@ -16,12 +16,70 @@ from .work_item import MediaWorkItem
 from modules.utils.discord_utils import safe_get_channel
 
 log = logging.getLogger(__name__)
+_URL_RE = re.compile(r"https?://[^\s<>]+")
+
+
+def _media_stats(message: discord.Message | None) -> dict[str, int]:
+    stats = {
+        "attachments": 0,
+        "embeds": 0,
+        "stickers": 0,
+        "snapshots": 0,
+        "snapshot_attachments": 0,
+        "snapshot_embeds": 0,
+        "snapshot_stickers": 0,
+    }
+    if message is None:
+        return stats
+
+    attachments = getattr(message, "attachments", None) or []
+    embeds = getattr(message, "embeds", None) or []
+    stickers = getattr(message, "stickers", None) or []
+
+    stats["attachments"] = len(attachments)
+    stats["embeds"] = len(embeds)
+    stats["stickers"] = len(stickers)
+
+    snapshots = list(getattr(message, "message_snapshots", None) or [])
+    stats["snapshots"] = len(snapshots)
+    for snapshot in snapshots:
+        stats["snapshot_attachments"] += len(getattr(snapshot, "attachments", None) or [])
+        stats["snapshot_embeds"] += len(getattr(snapshot, "embeds", None) or [])
+        stats["snapshot_stickers"] += len(getattr(snapshot, "stickers", None) or [])
+
+    return stats
+
+
+def _has_media_metadata(stats: dict[str, int]) -> bool:
+    return any(
+        stats[key]
+        for key in (
+            "attachments",
+            "embeds",
+            "stickers",
+            "snapshot_attachments",
+            "snapshot_embeds",
+            "snapshot_stickers",
+        )
+    )
+
+
+def _summarise_stats(stats: dict[str, int]) -> str:
+    return ", ".join(f"{key}={value}" for key, value in stats.items())
+
+
+def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
+    if not content:
+        return []
+    matches = _URL_RE.findall(content)
+    return matches[:limit]
 
 
 async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
     attachments = getattr(message, "attachments", None) or []
     embeds = getattr(message, "embeds", None) or []
     stickers = getattr(message, "stickers", None) or []
+    original_stats = _media_stats(message)
     if attachments or embeds or stickers:
         return message
 
@@ -31,6 +89,8 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
 
     reasons: list[str] = []
     hydrated: discord.Message | None = None
+    hydrated_stats: dict[str, int] | None = None
+    fetched_stats: dict[str, int] | None = None
     try:
         hydrated = await wait_for_hydration(message)
     except Exception as exc:
@@ -38,14 +98,13 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
         reasons.append(f"Hydration wait failed: {exc}")
 
     if hydrated is not None:
-        has_media = (
-            getattr(hydrated, "attachments", None)
-            or getattr(hydrated, "embeds", None)
-            or getattr(hydrated, "stickers", None)
-        )
-        if has_media:
+        hydrated_stats = _media_stats(hydrated)
+        if _has_media_metadata(hydrated_stats):
             return hydrated
-        reasons.append("Hydration waiter returned payload without media metadata")
+        reasons.append(
+            "Hydration waiter returned payload without media metadata "
+            f"(counts: {_summarise_stats(hydrated_stats)})"
+        )
 
     channel = getattr(message, "channel", None)
     message_id = getattr(message, "id", None)
@@ -59,23 +118,34 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
             log.debug("hydrate_message: fetch fallback failed for message %s: %s", message_id, exc)
             fetch_reason = f"Message fetch raised HTTPException: {exc}"
         else:
-            if (
-                getattr(fetched, "attachments", None)
-                or getattr(fetched, "embeds", None)
-                or getattr(fetched, "stickers", None)
-            ):
+            fetched_stats = _media_stats(fetched)
+            if _has_media_metadata(fetched_stats):
                 return fetched
-            fetch_reason = "Fetched message still missing media metadata"
+            fetch_reason = (
+                "Fetched message still missing media metadata "
+                f"(counts: {_summarise_stats(fetched_stats)})"
+            )
         if fetch_reason:
             reasons.append(fetch_reason)
 
     if reasons and bot is not None and LOG_CHANNEL_ID:
-        await _notify_hydration_issue(bot, message, reasons)
+        debug_context = {
+            "content_urls": _extract_urls(content),
+            "original_stats": _summarise_stats(original_stats),
+            "hydrated_stats": _summarise_stats(hydrated_stats) if hydrated_stats else None,
+            "fetched_stats": _summarise_stats(fetched_stats) if fetched_stats else None,
+        }
+        await _notify_hydration_issue(bot, message, reasons, debug_context)
 
     return hydrated or message
 
 
-async def _notify_hydration_issue(bot: discord.Client, message: discord.Message, reasons: list[str]) -> None:
+async def _notify_hydration_issue(
+    bot: discord.Client,
+    message: discord.Message,
+    reasons: list[str],
+    debug_context: dict[str, str | list[str] | None] | None = None,
+) -> None:
     guild = getattr(message, "guild", None)
     if guild is None:
         return
@@ -95,6 +165,22 @@ async def _notify_hydration_issue(bot: discord.Client, message: discord.Message,
     embed.add_field(name="Details", value=reason_text[:1024], inline=False)
     if jump_url:
         embed.add_field(name="Jump", value=f"[Open Message]({jump_url})", inline=False)
+    if debug_context:
+        media_stats_lines: list[str] = []
+        original_stats = debug_context.get("original_stats")
+        if original_stats:
+            media_stats_lines.append(f"Original: {original_stats}")
+        hydrated_stats = debug_context.get("hydrated_stats")
+        if hydrated_stats:
+            media_stats_lines.append(f"Hydrated: {hydrated_stats}")
+        fetched_stats = debug_context.get("fetched_stats")
+        if fetched_stats:
+            media_stats_lines.append(f"Fetched: {fetched_stats}")
+        if media_stats_lines:
+            embed.add_field(name="Media Stats", value="\n".join(media_stats_lines)[:1024], inline=False)
+        urls = debug_context.get("content_urls") or []
+        if urls:
+            embed.add_field(name="Detected URLs", value="\n".join(urls)[:1024], inline=False)
     content = None
     allowed_mentions = discord.AllowedMentions.none()
     try:
