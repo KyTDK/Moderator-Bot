@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import builtins
 import logging
 import os
 from urllib.parse import urlparse
@@ -147,6 +148,15 @@ class NSFWScanner:
             )
         except MediaFlagged:
             return True
+        except Exception as exc:  # noqa: BLE001
+            base_group = getattr(builtins, "BaseExceptionGroup", None)
+            if base_group is not None and isinstance(exc, base_group):
+                matched, rest = exc.split(MediaFlagged)  # type: ignore[attr-defined]
+                if matched is not None:
+                    if rest is not None:
+                        raise rest
+                    return True
+            raise
         return False
 
     async def _fan_out_media(
