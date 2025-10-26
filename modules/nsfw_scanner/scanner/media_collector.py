@@ -75,15 +75,20 @@ def collect_media_items(
 
     seen_urls: set[str] = set()
     for embed in embeds:
+        tenor_added = False
         for candidate in _extract_embed_urls(embed):
             if candidate in seen_urls:
                 continue
-            seen_urls.add(candidate)
             parsed = urlparse(candidate)
             domain = parsed.netloc.lower()
             is_tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
+            if is_tenor and tenor_added:
+                continue
             if is_tenor and not context.tenor_allowed:
                 continue
+            seen_urls.add(candidate)
+            if is_tenor:
+                tenor_added = True
             ext = os.path.splitext(parsed.path)[1]
             items.append(
                 MediaWorkItem(
