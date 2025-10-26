@@ -44,7 +44,8 @@
               "video_frames": "Video Frames",
               "latency_ms": "Latency (ms)",
               "average_latency_per_frame_ms": "Average Latency per Frame (ms)",
-              "latency_breakdown": "Latency Breakdown"
+              "latency_breakdown": "Latency Breakdown",
+              "cache_status": "Cache Status"
             },
             "reasons": {
               "openai_moderation": "OpenAI moderation",
