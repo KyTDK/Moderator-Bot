@@ -143,11 +143,12 @@ async def emit_verbose_report(
         decision_key = "safe"
 
     decision_label = _localize_decision(translator, decision_key, guild_id)
+    normalized_file_type = (file_type or "unknown").lower()
     file_type_label = localize_message(
         translator,
         REPORT_BASE,
-        f"file_types.{file_type}",
-        fallback=FILE_TYPE_LABELS.get(file_type, detected_mime or (file_type or "unknown").title()),
+        f"file_types.{normalized_file_type}",
+        fallback=FILE_TYPE_LABELS.get(normalized_file_type, detected_mime or normalized_file_type.title()),
         guild_id=guild_id,
     )
 
