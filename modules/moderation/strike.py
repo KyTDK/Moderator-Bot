@@ -475,7 +475,7 @@ async def strike(
         action_description = "\n" + strike_texts["action_none"]
 
     strike_info = "\n" + strike_texts["strike_count"].format(count=strike_count)
-    if strikes_till_ban:
+    if strikes_till_ban is not None and strikes_till_ban > 0:
         strike_info += " " + strike_texts["strike_until_ban"].format(
             remaining=strikes_till_ban
         )

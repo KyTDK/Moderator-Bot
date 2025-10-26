@@ -16,7 +16,6 @@ from modules.config.premium_plans import PLAN_CORE, PLAN_FREE
 from ..constants import (
     CLIP_THRESHOLD,
     HIGH_ACCURACY_SIMILARITY,
-    MOD_API_MAX_CONCURRENCY,
     VECTOR_REFRESH_DIVISOR,
 )
 from ..utils.categories import is_allowed_category
@@ -26,7 +25,18 @@ from ..limits import PremiumLimits, resolve_limits
 from .moderation import moderator_api
 
 
-_MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
+_PLAN_SEMAPHORES: dict[str, tuple[int, asyncio.Semaphore]] = {}
+
+
+def _get_plan_semaphore(plan: str, limit: int) -> asyncio.Semaphore:
+    safe_plan = plan or PLAN_FREE
+    safe_limit = max(1, limit)
+    cached = _PLAN_SEMAPHORES.get(safe_plan)
+    if cached and cached[0] == safe_limit:
+        return cached[1]
+    semaphore = asyncio.Semaphore(safe_limit)
+    _PLAN_SEMAPHORES[safe_plan] = (safe_limit, semaphore)
+    return semaphore
 
 
 @dataclass(slots=True)
@@ -523,17 +533,23 @@ async def process_image_batch(
             payload_mime = "image/png"
         entries.append((frame, image, payload_bytes, payload_mime, similarity_response))
 
+    plan_limits = getattr(context, "limits", None)
+    plan_name = getattr(plan_limits, "plan", PLAN_FREE) if plan_limits else PLAN_FREE
+    plan_limit = getattr(plan_limits, "max_moderation_calls", 1) if plan_limits else 1
+    plan_semaphore = _get_plan_semaphore(plan_name, plan_limit)
+
     async def _moderate_entry(
         frame: ExtractedFrame,
         image: Image.Image | None,
         payload_bytes: bytes | None,
         payload_mime: str | None,
         similarity_response: Optional[List[dict[str, Any]]],
+        semaphore: asyncio.Semaphore,
     ) -> tuple[ExtractedFrame, dict[str, Any] | None]:
         response: dict[str, Any] | None = None
         if image is not None:
             try:
-                async with _MODERATION_API_SEMAPHORE:
+                async with semaphore:
                     response = await _run_image_pipeline(
                         scanner,
                         image_path=None,
@@ -557,6 +573,7 @@ async def process_image_batch(
                         payload_bytes,
                         payload_mime,
                         similarity_response,
+                        plan_semaphore,
                     )
                     for frame, image, payload_bytes, payload_mime, similarity_response in entries
                 )

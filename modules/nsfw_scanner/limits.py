@@ -24,7 +24,7 @@ from .constants import (
     DEFAULT_DOWNLOAD_CAP_BYTES,
     MAX_CONCURRENT_FRAMES,
     MAX_FRAMES_PER_VIDEO,
-    MOD_API_MAX_CONCURRENCY,
+    MOD_API_CONCURRENCY_BY_PLAN,
 )
 
 
@@ -48,14 +48,18 @@ class PremiumLimits:
 
 
 def _build_limits() -> dict[str, PremiumLimits]:
-    baseline_mod_limit = max(1, MOD_API_MAX_CONCURRENCY)
+    plan_concurrency = MOD_API_CONCURRENCY_BY_PLAN
+    free_mod_calls = max(1, plan_concurrency.get(PLAN_FREE, 3))
+    core_mod_calls = max(free_mod_calls, plan_concurrency.get(PLAN_CORE, free_mod_calls))
+    pro_mod_calls = max(core_mod_calls, plan_concurrency.get(PLAN_PRO, core_mod_calls))
+    ultra_mod_calls = max(pro_mod_calls, plan_concurrency.get(PLAN_ULTRA, pro_mod_calls))
     return {
         PLAN_FREE: PremiumLimits(
             plan=PLAN_FREE,
             download_cap_bytes=DEFAULT_DOWNLOAD_CAP_BYTES,
             max_downloads=4,
             max_frame_decodes=6,
-            max_moderation_calls=max(3, baseline_mod_limit // 2),
+            max_moderation_calls=free_mod_calls,
             max_frames_in_flight=MAX_CONCURRENT_FRAMES,
             max_frames_per_video=MAX_FRAMES_PER_VIDEO,
             max_video_workers=2,
@@ -68,7 +72,7 @@ def _build_limits() -> dict[str, PremiumLimits]:
             download_cap_bytes=ACCELERATED_DOWNLOAD_CAP_BYTES,
             max_downloads=8,
             max_frame_decodes=12,
-            max_moderation_calls=max(4, baseline_mod_limit - 2),
+            max_moderation_calls=core_mod_calls,
             max_frames_in_flight=ACCELERATED_MAX_CONCURRENT_FRAMES,
             max_frames_per_video=ACCELERATED_MAX_FRAMES_PER_VIDEO,
             max_video_workers=4,
@@ -81,7 +85,7 @@ def _build_limits() -> dict[str, PremiumLimits]:
             download_cap_bytes=ACCELERATED_PRO_DOWNLOAD_CAP_BYTES,
             max_downloads=10,
             max_frame_decodes=18,
-            max_moderation_calls=max(5, baseline_mod_limit - 1),
+            max_moderation_calls=pro_mod_calls,
             max_frames_in_flight=ACCELERATED_PRO_CONCURRENT_FRAMES,
             max_frames_per_video=ACCELERATED_PRO_MAX_FRAMES_PER_VIDEO,
             max_video_workers=5,
@@ -94,7 +98,7 @@ def _build_limits() -> dict[str, PremiumLimits]:
             download_cap_bytes=ACCELERATED_ULTRA_DOWNLOAD_CAP_BYTES,
             max_downloads=14,
             max_frame_decodes=24,
-            max_moderation_calls=baseline_mod_limit,
+            max_moderation_calls=ultra_mod_calls,
             max_frames_in_flight=ACCELERATED_ULTRA_CONCURRENT_FRAMES,
             max_frames_per_video=ACCELERATED_ULTRA_MAX_FRAMES_PER_VIDEO,
             max_video_workers=6,
