@@ -130,7 +130,7 @@ class NSFWScanner:
         else:
             if target_message is None:
                 return False
-            target_message = await hydrate_message(target_message)
+            target_message = await hydrate_message(target_message, bot=self.bot)
             media_items = collect_media_items(target_message, self.bot, guild_context)
 
         if not media_items:

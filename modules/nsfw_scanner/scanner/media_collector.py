@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import re
 from typing import Iterable, List
@@ -10,10 +11,14 @@ import discord
 from cogs.hydration import wait_for_hydration
 
 from ..context import GuildScanContext
+from ..constants import LOG_CHANNEL_ID
 from .work_item import MediaWorkItem
+from modules.utils.discord_utils import safe_get_channel
+
+log = logging.getLogger(__name__)
 
 
-async def hydrate_message(message: discord.Message) -> discord.Message:
+async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
     attachments = getattr(message, "attachments", None) or []
     embeds = getattr(message, "embeds", None) or []
     stickers = getattr(message, "stickers", None) or []
@@ -24,11 +29,78 @@ async def hydrate_message(message: discord.Message) -> discord.Message:
     if "http" not in content:
         return message
 
+    reasons: list[str] = []
+    hydrated: discord.Message | None = None
     try:
         hydrated = await wait_for_hydration(message)
-    except Exception:
-        return message
+    except Exception as exc:
+        log.debug("hydrate_message: hydration wait failed for message %s: %s", getattr(message, "id", "?"), exc)
+        reasons.append(f"Hydration wait failed: {exc}")
+
+    if hydrated is not None:
+        has_media = (
+            getattr(hydrated, "attachments", None)
+            or getattr(hydrated, "embeds", None)
+            or getattr(hydrated, "stickers", None)
+        )
+        if has_media:
+            return hydrated
+        reasons.append("Hydration waiter returned payload without media metadata")
+
+    channel = getattr(message, "channel", None)
+    message_id = getattr(message, "id", None)
+    if channel is not None and message_id is not None and hasattr(channel, "fetch_message"):
+        fetch_reason: str | None = None
+        try:
+            fetched = await channel.fetch_message(message_id)
+        except (discord.NotFound, discord.Forbidden):
+            fetch_reason = "Message fetch returned NotFound/Forbidden"
+        except discord.HTTPException as exc:
+            log.debug("hydrate_message: fetch fallback failed for message %s: %s", message_id, exc)
+            fetch_reason = f"Message fetch raised HTTPException: {exc}"
+        else:
+            if (
+                getattr(fetched, "attachments", None)
+                or getattr(fetched, "embeds", None)
+                or getattr(fetched, "stickers", None)
+            ):
+                return fetched
+            fetch_reason = "Fetched message still missing media metadata"
+        if fetch_reason:
+            reasons.append(fetch_reason)
+
+    if reasons and bot is not None and LOG_CHANNEL_ID:
+        await _notify_hydration_issue(bot, message, reasons)
+
     return hydrated or message
+
+
+async def _notify_hydration_issue(bot: discord.Client, message: discord.Message, reasons: list[str]) -> None:
+    guild = getattr(message, "guild", None)
+    if guild is None:
+        return
+    try:
+        channel = await safe_get_channel(bot, LOG_CHANNEL_ID)
+    except Exception as exc:
+        log.warning("hydrate_message: failed to resolve LOG_CHANNEL_ID=%s: %s", LOG_CHANNEL_ID, exc)
+        return
+    if channel is None:
+        log.warning("hydrate_message: LOG_CHANNEL_ID=%s not found", LOG_CHANNEL_ID)
+        return
+
+    jump_url = getattr(message, "jump_url", None)
+    summary = f"Message `{getattr(message, 'id', 'unknown')}` in <#{getattr(getattr(message, 'channel', None), 'id', 0)}> could not be hydrated."
+    embed = discord.Embed(title="Media Hydration Failed", description=summary, color=discord.Color.orange())
+    reason_text = "\n".join(f"- {reason}" for reason in reasons)
+    embed.add_field(name="Details", value=reason_text[:1024], inline=False)
+    if jump_url:
+        embed.add_field(name="Jump", value=f"[Open Message]({jump_url})", inline=False)
+    content = None
+    allowed_mentions = discord.AllowedMentions.none()
+    try:
+        await channel.send(content=content, embed=embed, allowed_mentions=allowed_mentions)
+    except Exception as exc:
+        log.warning("hydrate_message: failed to send hydration alert for message %s: %s", getattr(message, "id", "?"), exc)
 
 
 def collect_media_items(
