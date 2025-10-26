@@ -41,6 +41,10 @@ class DownloadResult(str):
         self.bytes_downloaded = bytes_downloaded
         return self
 
+    @property
+    def path(self) -> str:
+        return str(self)
+
 
 def _is_tenor_host(host: str) -> bool:
     host = host.lower()
