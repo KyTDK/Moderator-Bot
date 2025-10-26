@@ -1,9 +1,55 @@
 import asyncio
 import builtins
-import inspect
 import time
 import traceback
 from typing import Optional
+
+
+class _InstrumentedTask:
+    __slots__ = (
+        "_queue",
+        "_coro",
+        "_loop",
+        "_enqueued_at",
+        "_backlog_at_enqueue",
+        "_name",
+        "_closed",
+    )
+
+    def __init__(self, queue, coro, loop, enqueued_at, backlog_at_enqueue, name) -> None:
+        self._queue = queue
+        self._coro = coro
+        self._loop = loop
+        self._enqueued_at = enqueued_at
+        self._backlog_at_enqueue = backlog_at_enqueue
+        self._name = name
+        self._closed = False
+
+    def __await__(self):
+        return self._run().__await__()
+
+    async def _run(self):
+        started_at = self._loop.time()
+        wait_duration = started_at - self._enqueued_at
+        queue = self._queue
+        queue._record_wait(wait_duration)
+        if wait_duration > queue._slow_wait_threshold:
+            queue._maybe_log_wait(wait_duration, self._backlog_at_enqueue, self._name)
+
+        try:
+            await self._coro
+        finally:
+            runtime = self._loop.time() - started_at
+            queue._record_runtime(runtime)
+            if runtime > queue._slow_runtime_threshold:
+                queue._maybe_log_runtime(runtime, self._name)
+            self.close()
+
+    def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        self._queue._close_coroutine(self._coro)
 
 _SENTINEL = object()
 
@@ -243,25 +289,7 @@ class WorkerQueue:
         name = self._describe_coro(coro)
         backlog_at_enqueue = self.queue.qsize()
 
-        async def instrumented():
-            started_at = loop.time()
-            wait_duration = started_at - enqueued_at
-            self._record_wait(wait_duration)
-            if wait_duration > self._slow_wait_threshold:
-                self._maybe_log_wait(wait_duration, backlog_at_enqueue, name)
-
-            try:
-                await coro
-            finally:
-                self._close_underlying_coroutine(coro)
-                runtime = loop.time() - started_at
-                self._record_runtime(runtime)
-                if runtime > self._slow_runtime_threshold:
-                    self._maybe_log_runtime(runtime, name)
-
-        wrapped = instrumented()
-        setattr(wrapped, "_original_coro", coro)
-        return wrapped
+        return _InstrumentedTask(self, coro, loop, enqueued_at, backlog_at_enqueue, name)
 
     def _describe_coro(self, coro) -> str:
         code = getattr(coro, "cr_code", None)
@@ -320,38 +348,30 @@ class WorkerQueue:
         )
 
     def _close_enqueued_coroutine(self, item) -> None:
-        """Best-effort close of instrumented wrapper and underlying coroutine."""
-        try:
-            close = getattr(item, "close", None)
-            if callable(close):
-                try:
-                    close()
-                except Exception:
-                    pass
-        except Exception:
-            pass
+        """Best-effort close of instrumented wrapper."""
+        if isinstance(item, _InstrumentedTask):
+            item.close()
+            return
 
-        original = getattr(item, "_original_coro", None)
-        if original is not None:
-            self._close_underlying_coroutine(original)
+        close = getattr(item, "close", None)
+        if callable(close):
+            try:
+                close()
+            except RuntimeError:
+                # Coroutine might currently be running; ignore.
+                pass
+            except Exception:
+                pass
 
     @staticmethod
-    def _close_underlying_coroutine(coro) -> None:
-        """Close a coroutine if it is not already finished."""
-        if coro is None or not asyncio.iscoroutine(coro):
-            return
-        try:
-            state = inspect.getcoroutinestate(coro)
-        except Exception:
-            state = None
-        if state == inspect.CORO_CLOSED:
+    def _close_coroutine(coro) -> None:
+        if coro is None:
             return
         close = getattr(coro, "close", None)
         if callable(close):
             try:
                 close()
             except RuntimeError:
-                # Coroutine might currently be running; ignore.
                 pass
             except Exception:
                 pass
