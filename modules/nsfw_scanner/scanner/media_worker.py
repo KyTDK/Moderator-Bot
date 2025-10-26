@@ -196,19 +196,20 @@ async def scan_media_item(
                 download=download,
             )
 
+            if context.nsfw_verbose and message is not None and scan_result is not None:
+                await emit_verbose_report(
+                    scanner,
+                    message=message,
+                    author=actor,
+                    guild_id=context.guild_id,
+                    file_type=file_type,
+                    detected_mime=detected_mime,
+                    scan_result=scan_result,
+                    duration_ms=duration_ms,
+                )
+
             if scan_result and scan_result.get("is_nsfw"):
                 evidence_file = video_attachment or await _build_evidence_file(prepared_path, item)
-                if context.nsfw_verbose and message is not None:
-                    await emit_verbose_report(
-                        scanner,
-                        message=message,
-                        author=actor,
-                        guild_id=context.guild_id,
-                        file_type=file_type,
-                        detected_mime=detected_mime,
-                        scan_result=scan_result,
-                        duration_ms=duration_ms,
-                    )
                 if evidence_file is not None and message is not None:
                     await dispatch_callback(
                         scanner=scanner,
