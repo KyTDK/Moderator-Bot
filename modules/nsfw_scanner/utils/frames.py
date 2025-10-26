@@ -327,6 +327,7 @@ def iter_extracted_frames(
                 max_pending = workers * 2
 
         stop_requested = False
+        consecutive_failures = 0
 
         try:
             for target_idx in idx_iter:
@@ -382,7 +383,25 @@ def iter_extracted_frames(
 
                 ok, frame = cap.read()
                 if not ok:
-                    break
+                    # ffmpeg occasionally reports decoding errors such as
+                    # ``h264 @ ... mmco: unref short failure`` when it
+                    # encounters damaged frames.  OpenCV surfaces this as a
+                    # ``False`` read result which previously caused us to
+                    # stop processing the rest of the video.  Instead, try to
+                    # skip over the bad frame and continue so we can still
+                    # analyse any subsequent frames that decode correctly.
+                    consecutive_failures += 1
+                    if consecutive_failures > 8:
+                        break
+                    if stop_event and stop_event.is_set():
+                        break
+                    try:
+                        cap.grab()
+                    except Exception:
+                        pass
+                    current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES) or current_frame + 1)
+                    continue
+                consecutive_failures = 0
                 if stop_requested:
                     break
 
