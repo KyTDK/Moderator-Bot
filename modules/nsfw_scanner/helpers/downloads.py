@@ -10,7 +10,7 @@ from urllib.parse import urlparse, urlunparse
 import aiohttp
 
 from ..concurrency import concurrency_pool
-from ..limits import PremiumLimits
+from ..limits import PremiumLimits, resolve_limits
 from ..utils.file_ops import safe_delete
 from ..constants import DEFAULT_DOWNLOAD_CAP_BYTES, TMP_DIR
 
@@ -24,21 +24,22 @@ PROBE_LIMIT_BYTES = 512 * 1024  # 512 KiB
 TENOR_VIDEO_EXTS = (".mp4", ".webm")
 
 
-class DownloadResult:
-    __slots__ = ("path", "url", "content_type", "bytes_downloaded")
+class DownloadResult(str):
+    __slots__ = ("url", "content_type", "bytes_downloaded")
 
-    def __init__(
-        self,
-        *,
+    def __new__(
+        cls,
         path: str,
+        *,
         url: str,
         content_type: str | None,
         bytes_downloaded: int | None,
-    ) -> None:
-        self.path = path
+    ):
+        self = str.__new__(cls, path)
         self.url = url
         self.content_type = content_type
         self.bytes_downloaded = bytes_downloaded
+        return self
 
 
 def _is_tenor_host(host: str) -> bool:
@@ -116,8 +117,8 @@ async def temp_download(
     session: aiohttp.ClientSession,
     url: str,
     *,
-    guild_key: str | int | None,
-    limits: PremiumLimits,
+    guild_key: str | int | None = None,
+    limits: PremiumLimits | None = None,
     ext: str | None = None,
     prefer_video: bool = True,
     head_cache: dict[str, tuple[bool, int | None]] | None = None,
@@ -126,6 +127,7 @@ async def temp_download(
         raise RuntimeError("NSFWScanner session is not initialised. Call start() first.")
 
     os.makedirs(TMP_DIR, exist_ok=True)
+    limits = limits or resolve_limits(None)
 
     head_cache = head_cache or {}
     resolved_url = await resolve_media_url(

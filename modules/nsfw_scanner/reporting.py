@@ -106,8 +106,8 @@ def _localize_category(translator: TranslateFn | None, category: str | None, gui
         return localize_message(
             translator,
             SHARED_CATEGORY,
-            "unknown",
-            fallback="Unknown",
+            "unspecified",
+            fallback="Unspecified",
             guild_id=guild_id,
         )
     normalized = category.lower().replace(" ", "_")
@@ -177,15 +177,15 @@ async def emit_verbose_report(
                 localize_message(
                     translator,
                     REPORT_BASE,
-                    "description.actor",
-                    placeholders={"actor": actor_mention},
-                    fallback="**Actor:** {actor}",
+                    "description.user",
+                    placeholders={"user": actor_mention},
+                    fallback="**User:** {user}",
                     guild_id=guild_id,
                 ),
                 localize_message(
                     translator,
                     REPORT_BASE,
-                    "description.file_type",
+                    "description.type",
                     placeholders={"file_type": file_type_label},
                     fallback="**Type:** {file_type}",
                     guild_id=guild_id,
