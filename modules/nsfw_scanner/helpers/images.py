@@ -11,6 +11,7 @@ from PIL import Image
 
 from cogs.nsfw import NSFW_CATEGORY_SETTING
 from modules.utils import clip_vectors, mysql
+from modules.config.premium_plans import PLAN_CORE, PLAN_FREE
 
 from ..constants import (
     CLIP_THRESHOLD,
@@ -21,6 +22,7 @@ from ..constants import (
 from ..utils.categories import is_allowed_category
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame
+from ..limits import PremiumLimits, resolve_limits
 from .moderation import moderator_api
 
 
@@ -34,12 +36,17 @@ class ImageProcessingContext:
     allowed_categories: list[str]
     moderation_threshold: float
     high_accuracy: bool
-    accelerated: bool
+    limits: PremiumLimits
+
+    @property
+    def accelerated(self) -> bool:
+        return self.limits.is_premium
 
 
 async def build_image_processing_context(
     guild_id: int | None,
     settings: dict[str, Any] | None = None,
+    limits: PremiumLimits | None = None,
     accelerated: bool | None = None,
 ) -> ImageProcessingContext:
     settings_map: dict[str, Any] = settings.copy() if settings else {}
@@ -58,12 +65,11 @@ async def build_image_processing_context(
     high_accuracy = bool(settings_map.get("nsfw-high-accuracy"))
     allowed_categories = settings_map.get(NSFW_CATEGORY_SETTING) or []
 
-    accelerated_flag = bool(accelerated)
-    if accelerated_flag is False and accelerated is None and guild_id is not None:
-        try:
-            accelerated_flag = bool(await mysql.is_accelerated(guild_id=guild_id))
-        except Exception:
-            accelerated_flag = False
+    if limits is not None:
+        resolved_limits = limits
+    else:
+        fallback_plan = PLAN_CORE if accelerated else PLAN_FREE
+        resolved_limits = resolve_limits(fallback_plan)
 
     return ImageProcessingContext(
         guild_id=guild_id,
@@ -71,7 +77,7 @@ async def build_image_processing_context(
         allowed_categories=list(allowed_categories),
         moderation_threshold=moderation_threshold,
         high_accuracy=high_accuracy,
-        accelerated=accelerated_flag,
+        limits=resolved_limits,
     )
 
 
