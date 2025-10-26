@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import time
 from typing import Optional
 
 import discord
@@ -91,6 +90,15 @@ class FreeQueueMonitor:
         hard_limit = metrics.get("backlog_hard_limit")
         shed_to = metrics.get("backlog_shed_to")
         dropped = metrics.get("dropped_tasks_total", 0)
+        tasks_completed = metrics.get("tasks_completed", 0)
+        avg_runtime = float(metrics.get("avg_runtime", 0.0))
+        avg_wait = float(metrics.get("avg_wait_time", 0.0))
+        ema_runtime = float(metrics.get("ema_runtime", 0.0))
+        ema_wait = float(metrics.get("ema_wait_time", 0.0))
+        last_runtime = float(metrics.get("last_runtime", 0.0))
+        last_wait = float(metrics.get("last_wait_time", 0.0))
+        longest_runtime = float(metrics.get("longest_runtime", 0.0))
+        longest_wait = float(metrics.get("longest_wait", 0.0))
         lines = [
             f"Backlog: {backlog}",
             f"Workers: {active}/{max_workers} (baseline {baseline}, burst {autoscale_max})",
@@ -100,6 +108,17 @@ class FreeQueueMonitor:
         if hard_limit is not None:
             lines.append(f"Hard limit: {hard_limit} -> shed to {shed_to}")
         lines.append(f"Dropped total: {dropped}")
+        lines.append(
+            "Task timings: "
+            f"avg_run={avg_runtime:.2f}s (ema {ema_runtime:.2f}s), "
+            f"avg_wait={avg_wait:.2f}s (ema {ema_wait:.2f}s)"
+        )
+        lines.append(
+            "Last/peak: "
+            f"last_run={last_runtime:.2f}s, last_wait={last_wait:.2f}s, "
+            f"longest_run={longest_runtime:.2f}s, longest_wait={longest_wait:.2f}s"
+        )
+        lines.append(f"Tasks completed: {tasks_completed}")
         return "\n".join(lines)
 
     async def _emit_report(self, free_metrics: dict, accel_metrics: dict) -> None:
@@ -117,6 +136,8 @@ class FreeQueueMonitor:
             f"free_workers={free_metrics.get('active_workers', 0)}/{free_metrics.get('max_workers', 0)}",
             f"accelerated_backlog={accel_backlog}",
             f"dropped_total={dropped_total}",
+            f"avg_run={float(free_metrics.get('avg_runtime', 0.0)):.2f}s",
+            f"avg_wait={float(free_metrics.get('avg_wait_time', 0.0)):.2f}s",
         ]
         if backlog_high:
             summary.append(f"backlog_ratio={ratio:.2f}")
@@ -197,4 +218,3 @@ class FreeQueueMonitor:
                     self._lag_hits = 0
         except asyncio.CancelledError:
             raise
-

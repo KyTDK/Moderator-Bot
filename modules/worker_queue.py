@@ -1,5 +1,6 @@
 import asyncio
 import builtins
+import time
 import traceback
 from typing import Optional
 
@@ -47,6 +48,21 @@ class WorkerQueue:
 
         # Metrics
         self._metrics_dropped: int = 0
+        self._metrics_processed: int = 0
+        self._metrics_total_runtime: float = 0.0
+        self._metrics_total_wait: float = 0.0
+        self._metrics_wait_samples: int = 0
+        self._metrics_runtime_ema: Optional[float] = None
+        self._metrics_wait_ema: Optional[float] = None
+        self._metrics_last_runtime: Optional[float] = None
+        self._metrics_last_wait: Optional[float] = None
+        self._metrics_longest_runtime: float = 0.0
+        self._metrics_longest_wait: float = 0.0
+        self._slow_wait_threshold: float = 15.0
+        self._slow_runtime_threshold: float = 20.0
+        self._slow_log_cooldown: float = 30.0
+        self._last_wait_log: float = 0.0
+        self._last_runtime_log: float = 0.0
 
     def _active_workers(self) -> int:
         """Count non-finished worker tasks."""
@@ -92,7 +108,7 @@ class WorkerQueue:
     async def add_task(self, coro):
         if not asyncio.iscoroutine(coro):
             raise TypeError("add_task expects a coroutine")
-        await self.queue.put(coro)
+        await self.queue.put(self._wrap_task(coro))
         # If backlog shedding is enabled and we're over the hard limit, shed immediately.
         await self._shed_backlog_if_needed(trigger="put")
 
@@ -228,6 +244,85 @@ class WorkerQueue:
             print(f"[WorkerQueue:{self._name}] Backlog {q} exceeded hard limit {self._backlog_hard_limit}; dropped {dropped} oldest task(s) (trigger={trigger}).")
         return dropped
 
+    def _wrap_task(self, coro):
+        loop = asyncio.get_running_loop()
+        enqueued_at = loop.time()
+        name = self._describe_coro(coro)
+        backlog_at_enqueue = self.queue.qsize()
+
+        async def instrumented():
+            started_at = loop.time()
+            wait_duration = started_at - enqueued_at
+            self._record_wait(wait_duration)
+            if wait_duration > self._slow_wait_threshold:
+                self._maybe_log_wait(wait_duration, backlog_at_enqueue, name)
+
+            try:
+                await coro
+            finally:
+                runtime = loop.time() - started_at
+                self._record_runtime(runtime)
+                if runtime > self._slow_runtime_threshold:
+                    self._maybe_log_runtime(runtime, name)
+
+        return instrumented()
+
+    def _describe_coro(self, coro) -> str:
+        code = getattr(coro, "cr_code", None)
+        if code is not None:
+            qualname = getattr(code, "co_qualname", None)
+            if qualname:
+                return qualname
+            name = getattr(code, "co_name", None)
+            if name:
+                return name
+        name = getattr(coro, "__qualname__", None) or getattr(coro, "__name__", None)
+        if name:
+            return str(name)
+        return repr(coro)
+
+    def _record_wait(self, wait: float) -> None:
+        self._metrics_last_wait = wait
+        self._metrics_total_wait += wait
+        self._metrics_wait_samples += 1
+        if self._metrics_wait_ema is None:
+            self._metrics_wait_ema = wait
+        else:
+            self._metrics_wait_ema = (self._metrics_wait_ema * 0.8) + (wait * 0.2)
+        if wait > self._metrics_longest_wait:
+            self._metrics_longest_wait = wait
+
+    def _record_runtime(self, runtime: float) -> None:
+        self._metrics_processed += 1
+        self._metrics_last_runtime = runtime
+        self._metrics_total_runtime += runtime
+        if self._metrics_runtime_ema is None:
+            self._metrics_runtime_ema = runtime
+        else:
+            self._metrics_runtime_ema = (self._metrics_runtime_ema * 0.8) + (runtime * 0.2)
+        if runtime > self._metrics_longest_runtime:
+            self._metrics_longest_runtime = runtime
+
+    def _maybe_log_wait(self, wait: float, backlog: int, name: str) -> None:
+        now = time.monotonic()
+        if now - self._last_wait_log < self._slow_log_cooldown:
+            return
+        self._last_wait_log = now
+        print(
+            f"[WorkerQueue:{self._name}] Task {name!r} waited {wait:.2f}s before starting "
+            f"(backlog_at_enqueue={backlog}, current_backlog={self.queue.qsize()}, workers={self._active_workers()}/{self.max_workers})"
+        )
+
+    def _maybe_log_runtime(self, runtime: float, name: str) -> None:
+        now = time.monotonic()
+        if now - self._last_runtime_log < self._slow_log_cooldown:
+            return
+        self._last_runtime_log = now
+        print(
+            f"[WorkerQueue:{self._name}] Task {name!r} ran for {runtime:.2f}s "
+            f"(current_backlog={self.queue.qsize()}, workers={self._active_workers()}/{self.max_workers})"
+        )
+
     async def worker_loop(self):
         while True:
             task = await self.queue.get()
@@ -273,4 +368,13 @@ class WorkerQueue:
             "dropped_tasks_total": self._metrics_dropped,
             "backlog_hard_limit": self._backlog_hard_limit,
             "backlog_shed_to": self._backlog_shed_to,
+            "tasks_completed": self._metrics_processed,
+            "avg_runtime": (self._metrics_total_runtime / self._metrics_processed) if self._metrics_processed else 0.0,
+            "avg_wait_time": (self._metrics_total_wait / self._metrics_wait_samples) if self._metrics_wait_samples else 0.0,
+            "ema_runtime": self._metrics_runtime_ema or 0.0,
+            "ema_wait_time": self._metrics_wait_ema or 0.0,
+            "last_runtime": self._metrics_last_runtime or 0.0,
+            "last_wait_time": self._metrics_last_wait or 0.0,
+            "longest_runtime": self._metrics_longest_runtime,
+            "longest_wait": self._metrics_longest_wait,
         }
