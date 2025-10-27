@@ -284,24 +284,6 @@ async def check_attachment(
                     return None
                 return str(value)
 
-        def _format_video_frames(scanned, scan_result, _translator, _guild_id, _duration_ms):
-                target = scan_result.get("video_frames_target")
-                if scanned is None or target is None:
-                    return None
-                return f"{scanned}/{target}"
-
-        def _format_average_latency(scanned, _scan_result, _translator, _guild_id, duration_ms_param):
-                if scanned is None:
-                    return None
-                try:
-                    scanned_frames = float(scanned)
-                except (TypeError, ValueError):
-                    return None
-                if scanned_frames <= 0:
-                    return None
-                average_latency_per_frame = duration_ms_param / scanned_frames
-                return f"{average_latency_per_frame:.2f} ms/frame"
-
         field_specs: tuple[ScanFieldSpec, ...] = DEFAULT_FIELD_SPECS + (
                 ScanFieldSpec(field_key="flagged_any", formatter=_format_boolean),
                 ScanFieldSpec(
@@ -320,16 +302,6 @@ async def check_attachment(
                     field_key="moderation_threshold",
                     source_key="threshold",
                     formatter=default_score_formatter,
-                ),
-                ScanFieldSpec(
-                    field_key="video_frames",
-                    source_key="video_frames_scanned",
-                    formatter=_format_video_frames,
-                ),
-                ScanFieldSpec(
-                    field_key="average_latency_per_frame_ms",
-                    source_key="video_frames_scanned",
-                    formatter=_format_average_latency,
                 ),
             )
 
