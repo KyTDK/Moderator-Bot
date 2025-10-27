@@ -93,6 +93,31 @@ if "cogs.hydration" not in sys.modules:
     hydration_stub.wait_for_hydration = _wait_for_hydration
     sys.modules["cogs.hydration"] = hydration_stub
 
+discord_utils_stub = types.ModuleType("modules.utils.discord_utils")
+
+
+async def _async_noop(*_args, **_kwargs):
+    return None
+
+
+async def _async_true(*_args, **_kwargs):
+    return True
+
+
+def _sync_list(*_args, **_kwargs):
+    return []
+
+
+discord_utils_stub.safe_get_channel = _async_noop
+discord_utils_stub.safe_get_user = _async_noop
+discord_utils_stub.safe_get_member = _async_noop
+discord_utils_stub.safe_get_message = _async_noop
+discord_utils_stub.ensure_member_with_presence = _async_noop
+discord_utils_stub.message_user = _async_noop
+discord_utils_stub.require_accelerated = _async_true
+discord_utils_stub.resolve_role_references = _sync_list
+sys.modules.setdefault("modules.utils.discord_utils", discord_utils_stub)
+
 images_stub = types.ModuleType("modules.nsfw_scanner.helpers.images")
 
 
@@ -187,3 +212,31 @@ def test_collect_media_items_deduplicates_tenor_variants():
     assert len(items) == 1
     assert items[0].tenor is True
     assert items[0].url == "https://media1.tenor.com/abcdefghijk/video.mp4"
+
+
+def test_collect_media_items_derives_cdn_fallback_for_proxy_only_attachment():
+    attachment = SimpleNamespace(
+        proxy_url="https://media.discordapp.net/attachments/1/2/image0.gif?width=120&height=80",
+        url=None,
+        filename="image0.gif",
+        size=1337,
+        id=42,
+    )
+    message = SimpleNamespace(
+        attachments=[attachment],
+        embeds=[],
+        stickers=[],
+        message_snapshots=[],
+        id=99,
+        channel=SimpleNamespace(id=123),
+        guild=SimpleNamespace(id=456),
+        content="",
+    )
+    context = SimpleNamespace(tenor_allowed=True)
+
+    items = collect_media_items(message, _DummyBot(), context)
+
+    assert len(items) == 1
+    fallback_urls = items[0].metadata.get("fallback_urls")
+    assert fallback_urls == ["https://cdn.discordapp.com/attachments/1/2/image0.gif"]
+    assert items[0].url == "https://media.discordapp.net/attachments/1/2/image0.gif?width=120&height=80"

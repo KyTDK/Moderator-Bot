@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from typing import Iterable
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 import discord
 
@@ -73,6 +73,27 @@ def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
         return []
     matches = _URL_RE.findall(content)
     return matches[:limit]
+
+
+def _derive_discord_cdn_fallback(url: str) -> str | None:
+    """Return the original Discord CDN URL for a proxy attachment URL."""
+
+    if not isinstance(url, str) or not url:
+        return None
+
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return None
+
+    netloc = parsed.netloc.lower()
+    if not netloc.endswith("discordapp.net"):
+        return None
+
+    # Discord proxy URLs for attachments follow /attachments/<channel>/<id>/...
+    if not parsed.path.startswith("/attachments/"):
+        return None
+
+    return urlunparse(("https", "cdn.discordapp.com", parsed.path, "", "", ""))
 
 
 async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
@@ -174,6 +195,11 @@ def collect_media_items(
             if parsed_candidate.scheme not in {"http", "https"}:
                 continue
             url_candidates.append(candidate)
+
+        if url_candidates and len(url_candidates) == 1:
+            derived_fallback = _derive_discord_cdn_fallback(url_candidates[0])
+            if derived_fallback and derived_fallback not in url_candidates:
+                url_candidates.append(derived_fallback)
 
         if not url_candidates:
             continue
