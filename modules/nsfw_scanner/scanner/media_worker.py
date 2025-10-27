@@ -358,7 +358,17 @@ async def scan_media_item(
         if extra:
             payload.update(extra)
         await _resolve_cache_tokens(payload)
-        await _emit_diagnostic(reason, status=status or reason, extra=extra)
+        should_emit_diagnostic = True
+        if reason == "unsupported_type" and item.tenor and item.source == "content":
+            # Tenor share links that appear in message content typically provide an
+            # embed with the actual media.  The content URL itself is just a HTML
+            # landing page, which we intentionally skip.  Emitting a diagnostic for
+            # these items is confusing because the embed will still be scanned
+            # successfully.  Suppress the diagnostic for this specific case so the
+            # log channel only reflects actionable skips.
+            should_emit_diagnostic = False
+        if should_emit_diagnostic:
+            await _emit_diagnostic(reason, status=status or reason, extra=extra)
         return payload
 
     initial_reservation = await verdict_cache.claim(item.cache_key)
