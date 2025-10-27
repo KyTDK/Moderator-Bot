@@ -9,11 +9,14 @@ import aiohttp
 import discord
 from discord.utils import utcnow
 
-from ..constants import LOG_CHANNEL_ID
-from ..context import GuildScanContext
-from ..reporting import emit_verbose_report
-from ..work_item import MediaWorkItem
-from .cache import annotate_cache_status, clone_scan_result
+from modules.nsfw_scanner.constants import LOG_CHANNEL_ID
+from modules.nsfw_scanner.context import GuildScanContext
+from modules.nsfw_scanner.reporting import emit_verbose_report
+from modules.nsfw_scanner.scanner.work_item import MediaWorkItem
+from modules.nsfw_scanner.scanner.media_worker.cache import (
+    annotate_cache_status,
+    clone_scan_result,
+)
 from modules.utils.log_channel import send_log_message
 
 log = logging.getLogger(__name__)
