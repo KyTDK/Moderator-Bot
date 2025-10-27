@@ -58,19 +58,8 @@ async def moderator_api(
         "reason": None,
     }
 
-    def _record_step(name: str, start: float, *, label: str) -> None:
-        if latency_callback is None:
-            return
-        duration_ms = max((time.perf_counter() - start) * 1000, 0.0)
-        if duration_ms <= 0:
-            return
-        try:
-            latency_callback(name, duration_ms, label=label)
-        except Exception:
-            pass
-
-    def _record_duration(name: str, duration_ms: float, *, label: str) -> None:
-        if latency_callback is None:
+    def _record_latency(name: str, duration_ms: float | None, *, label: str) -> None:
+        if latency_callback is None or duration_ms is None:
             return
         duration_ms = max(duration_ms, 0.0)
         if duration_ms <= 0:
@@ -79,6 +68,10 @@ async def moderator_api(
             latency_callback(name, duration_ms, label=label)
         except Exception:
             pass
+
+    def _record_elapsed(name: str, started_at: float, *, label: str) -> None:
+        duration_ms = max((time.perf_counter() - started_at) * 1000, 0.0)
+        _record_latency(name, duration_ms, label=label)
 
     inputs: list[Any] | str = []
     has_image_input = image_path is not None or image_bytes is not None
@@ -95,7 +88,7 @@ async def moderator_api(
             except Exception as exc:
                 print(f"[moderator_api] Failed to encode image bytes: {exc}")
                 return result
-            _record_step(
+            _record_elapsed(
                 "moderation_api_encode_image",
                 encode_started,
                 label="Encode Image Payload",
@@ -110,7 +103,7 @@ async def moderator_api(
             except Exception as exc:  # pragma: no cover - best effort logging
                 print(f"[moderator_api] Error reading image {image_path}: {exc}")
                 return result
-            _record_step(
+            _record_elapsed(
                 "moderation_api_encode_image",
                 encode_started,
                 label="Encode Image Payload",
@@ -160,7 +153,7 @@ async def moderator_api(
     for _ in range(max_attempts):
         client_started = time.perf_counter()
         client, encrypted_key = await api.get_api_client(guild_id)
-        _record_step(
+        _record_elapsed(
             "moderation_api_acquire_client",
             client_started,
             label="Acquire API Client",
@@ -169,7 +162,7 @@ async def moderator_api(
             print("[moderator_api] No available API key.")
             sleep_started = time.perf_counter()
             await asyncio.sleep(2)
-            _record_step(
+            _record_elapsed(
                 "moderation_api_retry_backoff",
                 sleep_started,
                 label="Retry Backoff",
@@ -179,9 +172,9 @@ async def moderator_api(
         resource_started = time.perf_counter()
         try:
             moderations_resource = await _get_moderations_resource(client)
-            _record_duration(
+            _record_elapsed(
                 "moderation_api_get_resource",
-                (time.perf_counter() - resource_started) * 1000,
+                resource_started,
                 label="Resolve Moderations Resource",
             )
             request_started = time.perf_counter()
@@ -189,22 +182,22 @@ async def moderator_api(
                 model="omni-moderation-latest" if has_image_input else "text-moderation-latest",
                 input=inputs,
             )
-            _record_duration(
+            _record_elapsed(
                 "moderation_api_request",
-                (time.perf_counter() - request_started) * 1000,
+                request_started,
                 label="OpenAI Moderation Request",
             )
         except openai.AuthenticationError:
             if request_started is not None:
-                _record_duration(
+                _record_elapsed(
                     "moderation_api_request",
-                    (time.perf_counter() - request_started) * 1000,
+                    request_started,
                     label="OpenAI Moderation Request",
                 )
             else:
-                _record_duration(
+                _record_elapsed(
                     "moderation_api_get_resource",
-                    (time.perf_counter() - resource_started) * 1000,
+                    resource_started,
                     label="Resolve Moderations Resource",
                 )
             print("[moderator_api] Authentication failed. Marking key as not working.")
@@ -212,15 +205,15 @@ async def moderator_api(
             continue
         except openai.RateLimitError as exc:
             if request_started is not None:
-                _record_duration(
+                _record_elapsed(
                     "moderation_api_request",
-                    (time.perf_counter() - request_started) * 1000,
+                    request_started,
                     label="OpenAI Moderation Request",
                 )
             else:
-                _record_duration(
+                _record_elapsed(
                     "moderation_api_get_resource",
-                    (time.perf_counter() - resource_started) * 1000,
+                    resource_started,
                     label="Resolve Moderations Resource",
                 )
             print(f"[moderator_api] Rate limit error: {exc}. Marking key as not working.")
@@ -228,15 +221,15 @@ async def moderator_api(
             continue
         except Exception as exc:
             if request_started is not None:
-                _record_duration(
+                _record_elapsed(
                     "moderation_api_request",
-                    (time.perf_counter() - request_started) * 1000,
+                    request_started,
                     label="OpenAI Moderation Request",
                 )
             else:
-                _record_duration(
+                _record_elapsed(
                     "moderation_api_get_resource",
-                    (time.perf_counter() - resource_started) * 1000,
+                    resource_started,
                     label="Resolve Moderations Resource",
                 )
             print(f"[moderator_api] Unexpected error from OpenAI API: {exc}.")
@@ -269,7 +262,7 @@ async def moderator_api(
                     image,
                     metadata={"category": normalized_category, "score": score},
                 )
-                _record_step(
+                _record_elapsed(
                     "moderation_api_add_vector",
                     add_vector_started,
                     label="Add Flagged Vector",
@@ -297,7 +290,7 @@ async def moderator_api(
                 image,
                 metadata={"category": None, "score": 0},
             )
-            _record_step(
+            _record_elapsed(
                 "moderation_api_add_sfw_vector",
                 add_sfw_started,
                 label="Add SFW Vector",

@@ -21,7 +21,7 @@ from ..constants import (
 from ..utils.categories import is_allowed_category
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame
-from ..utils.latency import merge_latency_breakdowns
+from ..utils.latency import LatencyTracker
 from ..limits import PremiumLimits, resolve_limits
 from .moderation import moderator_api
 
@@ -146,56 +146,26 @@ async def _run_image_pipeline(
     similarity_response: Optional[List[dict[str, Any]]] = None,
     image_bytes: bytes | None = None,
     image_mime: str | None = None,
+    latency: LatencyTracker | None = None,
 ) -> dict[str, Any] | None:
     total_started = time.perf_counter()
-    latency_steps: dict[str, dict[str, Any]] = {}
-
-    def _add_step(name: str, duration: float | None, *, label: str | None = None) -> None:
-        if duration is None:
-            return
-        try:
-            duration_value = float(duration)
-        except (TypeError, ValueError):
-            return
-        duration_value = max(duration_value, 0.0)
-        if duration_value == 0:
-            return
-        entry = latency_steps.setdefault(
-            name,
-            {
-                "duration_ms": 0.0,
-                "label": label or name.replace("_", " ").title(),
-            },
-        )
-        entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + duration_value
-        if label:
-            entry["label"] = label
-        elif not entry.get("label"):
-            entry["label"] = name.replace("_", " ").title()
+    tracker = latency or LatencyTracker()
 
     def _finalize(payload: dict[str, Any]) -> dict[str, Any]:
         total_duration = max((time.perf_counter() - total_started) * 1000, 0.0)
-        pipeline_metrics = payload.setdefault("pipeline_metrics", {})
-        merged_breakdown = merge_latency_breakdowns(
-            pipeline_metrics.get("latency_breakdown_ms"),
-            latency_steps,
+        pipeline_metrics = tracker.merge_into(
+            payload.setdefault("pipeline_metrics", {}),
+            total_duration_ms=total_duration,
         )
-        pipeline_metrics["latency_breakdown_ms"] = merged_breakdown
-        current_total = float(pipeline_metrics.get("total_latency_ms") or 0.0)
-        pipeline_metrics["total_latency_ms"] = max(current_total, total_duration)
+        payload["pipeline_metrics"] = pipeline_metrics
         return payload
 
     similarity_results = similarity_response
     if similarity_results is None:
-        similarity_started = time.perf_counter()
-        similarity_results = await asyncio.to_thread(
-            clip_vectors.query_similar, image, threshold=0
-        )
-        _add_step(
-            "similarity_search",
-            (time.perf_counter() - similarity_started) * 1000,
-            label="Similarity Search",
-        )
+        with tracker.measure("similarity_search", label="Similarity Search"):
+            similarity_results = await asyncio.to_thread(
+                clip_vectors.query_similar, image, threshold=0
+            )
 
     best_match = None
     max_similarity = 0.0
@@ -269,25 +239,20 @@ async def _run_image_pipeline(
     skip_vector = (
         max_similarity >= CLIP_THRESHOLD and not refresh_triggered
     ) or not milvus_available
-    moderation_started = time.perf_counter()
-    response = await moderator_api(
-        scanner,
-        image_path=image_path,
-        image_bytes=image_bytes,
-        image_mime=image_mime,
-        guild_id=context.guild_id,
-        image=image,
-        skip_vector_add=skip_vector,
-        max_similarity=max_similarity,
-        allowed_categories=context.allowed_categories,
-        threshold=context.moderation_threshold,
-        latency_callback=_add_step,
-    )
-    _add_step(
-        "moderation_api",
-        (time.perf_counter() - moderation_started) * 1000,
-        label="Moderator API",
-    )
+    with tracker.measure("moderation_api", label="Moderator API"):
+        response = await moderator_api(
+            scanner,
+            image_path=image_path,
+            image_bytes=image_bytes,
+            image_mime=image_mime,
+            guild_id=context.guild_id,
+            image=image,
+            skip_vector_add=skip_vector,
+            max_similarity=max_similarity,
+            allowed_categories=context.allowed_categories,
+            threshold=context.moderation_threshold,
+            latency_callback=tracker.add_duration,
+        )
     if isinstance(response, dict):
         response.setdefault("max_similarity", max_similarity)
         response.setdefault("max_category", max_category)
@@ -319,20 +284,10 @@ async def process_image(
         )
 
     image: Image.Image | None = None
-    latency_steps: dict[str, dict[str, Any]] = {}
+    latency_tracker = LatencyTracker()
     try:
-        load_started = time.perf_counter()
-        image = await _open_image_from_path(original_filename)
-        load_duration = max((time.perf_counter() - load_started) * 1000, 0.0)
-        if load_duration > 0:
-            entry = latency_steps.setdefault(
-                "image_open",
-                {
-                    "duration_ms": 0.0,
-                    "label": "Open Image",
-                },
-            )
-            entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + load_duration
+        with latency_tracker.measure("image_open", label="Open Image"):
+            image = await _open_image_from_path(original_filename)
         _, ext = os.path.splitext(original_filename)
         needs_conversion = convert_to_png and ext.lower() != ".png"
         image_path: str | None = None if needs_conversion else original_filename
@@ -340,19 +295,11 @@ async def process_image(
         image_mime: str | None = None
 
         if needs_conversion:
-            encode_started = time.perf_counter()
-            image_bytes = await asyncio.to_thread(_encode_image_to_png_bytes, image)
-            image_mime = "image/png"
-            encode_duration = max((time.perf_counter() - encode_started) * 1000, 0.0)
-            if encode_duration > 0:
-                entry = latency_steps.setdefault(
-                    "image_encode",
-                    {
-                        "duration_ms": 0.0,
-                        "label": "Encode PNG",
-                    },
+            with latency_tracker.measure("image_encode", label="Encode PNG"):
+                image_bytes = await asyncio.to_thread(
+                    _encode_image_to_png_bytes, image
                 )
-                entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + encode_duration
+            image_mime = "image/png"
 
         response = await _run_image_pipeline(
             scanner,
@@ -362,60 +309,17 @@ async def process_image(
             similarity_response=similarity_response,
             image_bytes=image_bytes,
             image_mime=image_mime,
+            latency=latency_tracker,
         )
         if isinstance(response, dict):
             pipeline_metrics = response.setdefault("pipeline_metrics", {})
-            breakdown = pipeline_metrics.get("latency_breakdown_ms")
-            if not isinstance(breakdown, dict):
-                breakdown = {}
-            else:
-                normalized_breakdown: dict[str, dict[str, Any]] = {}
-                for step_key, step_value in breakdown.items():
-                    if isinstance(step_value, dict):
-                        normalized_duration = step_value.get("duration_ms")
-                        try:
-                            normalized_duration = float(normalized_duration)
-                        except (TypeError, ValueError):
-                            continue
-                        normalized_breakdown[step_key] = {
-                            "duration_ms": normalized_duration,
-                            "label": step_value.get("label"),
-                        }
-                    elif isinstance(step_value, (int, float)):
-                        normalized_breakdown[step_key] = {
-                            "duration_ms": float(step_value),
-                            "label": step_key.replace("_", " ").title(),
-                        }
-                breakdown = normalized_breakdown
-            for step_name, entry in latency_steps.items():
-                duration_val = entry.get("duration_ms")
-                try:
-                    duration_float = float(duration_val)
-                except (TypeError, ValueError):
-                    continue
-                if duration_float <= 0:
-                    continue
-                label_value = entry.get("label") or step_name.replace("_", " ").title()
-                existing_entry = breakdown.get(step_name)
-                if isinstance(existing_entry, dict):
-                    try:
-                        duration_float += float(existing_entry.get("duration_ms") or 0.0)
-                    except (TypeError, ValueError):
-                        pass
-                    if not label_value:
-                        label_value = existing_entry.get("label")
-                elif isinstance(existing_entry, (int, float)):
-                    duration_float += float(existing_entry)
-                breakdown[step_name] = {
-                    "duration_ms": duration_float,
-                    "label": label_value or step_name.replace("_", " ").title(),
-                }
-            pipeline_metrics["latency_breakdown_ms"] = breakdown
+            overall_duration = max((time.perf_counter() - overall_started) * 1000, 0.0)
             current_total = float(pipeline_metrics.get("total_latency_ms") or 0.0)
-            pipeline_metrics["total_latency_ms"] = max(
-                current_total,
-                max((time.perf_counter() - overall_started) * 1000, 0.0),
-            )
+            if overall_duration > 0:
+                pipeline_metrics["total_latency_ms"] = max(
+                    current_total,
+                    overall_duration,
+                )
         return response
     except Exception as exc:
         print(traceback.format_exc())
@@ -438,7 +342,7 @@ async def process_image_batch(
     *,
     convert_to_png: bool = False,
     metrics: dict[str, Any] | None = None,
-    latency_steps: dict[str, dict[str, Any]] | None = None,
+    latency: LatencyTracker | None = None,
 ) -> list[tuple[ExtractedFrame, dict[str, Any] | None]]:
     """
     Analyse a batch of in-memory frames using shared settings/context.
@@ -461,17 +365,8 @@ async def process_image_batch(
             return
         if metrics is not None:
             metrics[metrics_key] = float(metrics.get(metrics_key) or 0.0) + duration_ms
-        if latency_steps is not None:
-            entry = latency_steps.setdefault(
-                step_key,
-                {
-                    "duration_ms": 0.0,
-                    "label": label,
-                },
-            )
-            entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + duration_ms
-            if not entry.get("label"):
-                entry["label"] = label
+        if latency is not None:
+            latency.add_duration(step_key, duration_ms, label=label)
 
     async def _decode_frame(frame: ExtractedFrame) -> Image.Image | None:
         async with semaphore:
@@ -567,6 +462,7 @@ async def process_image_batch(
                         similarity_response=similarity_response,
                         image_bytes=payload_bytes,
                         image_mime=payload_mime,
+                        latency=latency,
                     )
                 finally:
                     pipeline_duration_ms = max(

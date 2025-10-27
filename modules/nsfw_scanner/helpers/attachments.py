@@ -7,7 +7,7 @@ import discord
 from cogs.nsfw import NSFW_CATEGORY_SETTING
 from modules.metrics import log_media_scan
 from modules.utils import mod_logging, mysql
-from modules.utils.localization import TranslateFn, localize_message
+from modules.utils.localization import localize_message
 
 from ..utils.file_types import (
     FILE_TYPE_IMAGE,
@@ -15,15 +15,20 @@ from ..utils.file_types import (
     FILE_TYPE_VIDEO,
     determine_file_type,
 )
-from ..utils.latency import format_latency_breakdown_lines
+from ..utils.latency import build_latency_fields
 from .images import build_image_processing_context, process_image
 from .videos import process_video
 
-REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
-SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
-SHARED_CATEGORY = "modules.nsfw_scanner.shared.category"
-SHARED_ROOT = "modules.nsfw_scanner.shared"
-NSFW_CATEGORY_NAMESPACE = "cogs.nsfw.meta.categories"
+from .localization import (
+    REPORT_BASE,
+    SHARED_ROOT,
+    localize_boolean,
+    localize_category,
+    localize_decision,
+    localize_field_name,
+    localize_reason,
+    resolve_translator,
+)
 
 _CACHE_MISS = object()
 
@@ -101,122 +106,7 @@ class AttachmentSettingsCache:
     def set_premium_plan(self, value: Any) -> None:
         self.premium_plan = value
 
-DECISION_FALLBACKS = {
-    "unknown": "Unknown",
-    "nsfw": "NSFW",
-    "safe": "Safe",
-}
 
-FIELD_FALLBACKS = {
-    "reason": "Reason",
-    "category": "Category",
-    "score": "Score",
-    "flagged_any": "Flagged Any",
-    "summary_categories": "Summary Categories",
-    "max_similarity": "Max Similarity",
-    "max_category": "Max Similarity Category",
-    "similarity": "Matched Similarity",
-    "high_accuracy": "High Accuracy",
-    "clip_threshold": "CLIP Threshold",
-    "moderation_threshold": "Moderation Threshold",
-    "video_frames": "Video Frames",
-    "latency_ms": "Scan Latency",
-    "average_latency_per_frame_ms": "Avg Latency / Frame",
-    "latency_breakdown": "Latency Breakdown",
-}
-
-REASON_FALLBACKS = {
-    "openai_moderation": "OpenAI moderation",
-    "similarity_match": "Similarity match",
-    "no_frames_extracted": "No frames extracted",
-    "no_nsfw_frames_detected": "No NSFW frames detected",
-}
-
-
-def _resolve_translator(scanner) -> TranslateFn | None:
-    translate = getattr(getattr(scanner, "bot", None), "translate", None)
-    return translate if callable(translate) else None
-
-
-def _localize_decision(translator: TranslateFn | None, decision: str, guild_id: int | None) -> str:
-    fallback = DECISION_FALLBACKS.get(decision, decision.capitalize())
-    return localize_message(
-        translator,
-        REPORT_BASE,
-        f"decision.{decision}",
-        fallback=fallback,
-        guild_id=guild_id,
-    )
-
-
-def _localize_field_name(translator: TranslateFn | None, field: str, guild_id: int | None) -> str:
-    fallback = FIELD_FALLBACKS.get(field, field.replace("_", " ").title())
-    return localize_message(
-        translator,
-        REPORT_BASE,
-        f"fields.{field}",
-        fallback=fallback,
-        guild_id=guild_id,
-    )
-
-
-def _localize_reason(
-    translator: TranslateFn | None,
-    reason: Any,
-    guild_id: int | None,
-) -> str | None:
-    if reason is None:
-        return None
-    if isinstance(reason, str):
-        normalized = reason if reason in REASON_FALLBACKS else reason.lower().replace(" ", "_")
-        fallback = REASON_FALLBACKS.get(normalized, str(reason))
-        return localize_message(
-            translator,
-            REPORT_BASE,
-            f"reasons.{normalized}",
-            fallback=fallback,
-            guild_id=guild_id,
-        )
-    return str(reason)
-
-
-def _localize_boolean(
-    translator: TranslateFn | None,
-    value: bool,
-    guild_id: int | None,
-) -> str:
-    key = "true" if value else "false"
-    return localize_message(
-        translator,
-        SHARED_BOOLEAN,
-        key,
-        fallback=key,
-        guild_id=guild_id,
-    )
-
-
-def _localize_category(
-    translator: TranslateFn | None,
-    category: str | None,
-    guild_id: int | None,
-) -> str:
-    normalized = (category or "unspecified").strip()
-    if not normalized:
-        normalized = "unspecified"
-    normalized = normalized.replace("/", "_").replace("-", "_").lower()
-    fallback = normalized.replace("_", " ").title()
-
-    if translator is None:
-        return fallback
-
-    namespace = SHARED_CATEGORY if normalized == "unspecified" else NSFW_CATEGORY_NAMESPACE
-    return localize_message(
-        translator,
-        namespace,
-        normalized,
-        fallback=fallback,
-        guild_id=guild_id,
-    )
 
 
 async def check_attachment(
@@ -369,7 +259,7 @@ async def check_attachment(
         )
         return False
 
-    translator = _resolve_translator(scanner)
+    translator = resolve_translator(scanner)
     await _emit_metrics(scan_result, "scan_complete")
 
     try:
@@ -384,7 +274,7 @@ async def check_attachment(
             decision_key = "unknown"
             if scan_result is not None:
                 decision_key = "nsfw" if scan_result.get("is_nsfw") else "safe"
-            decision_label = _localize_decision(translator, decision_key, guild_id)
+            decision_label = localize_decision(translator, decision_key, guild_id)
             file_type_label = localize_message(
                 translator,
                 REPORT_BASE,
@@ -463,43 +353,34 @@ async def check_attachment(
             )
 
             duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
-            embed.add_field(
-                name=_localize_field_name(translator, "latency_ms", guild_id),
-                value=f"{duration_ms} ms",
-                inline=True,
-            )
             pipeline_metrics = (scan_result or {}).get("pipeline_metrics")
-            if isinstance(pipeline_metrics, dict):
-                breakdown_lines = format_latency_breakdown_lines(
-                    pipeline_metrics.get("latency_breakdown_ms"),
-                    bullet="•",
-                    decimals=2,
-                    include_step_label=True,
-                    sort_desc=True,
-                    step_wrapper=lambda step: f"`{step}`",
-                )
-                if breakdown_lines:
-                    embed.add_field(
-                        name=_localize_field_name(
-                            translator, "latency_breakdown", guild_id
-                        ),
-                        value="\n".join(breakdown_lines)[:1024],
-                        inline=False,
-                    )
+            for field in build_latency_fields(
+                lambda key: localize_field_name(translator, key, guild_id),
+                pipeline_metrics if isinstance(pipeline_metrics, dict) else None,
+                duration_ms=duration_ms,
+                breakdown_kwargs={
+                    "bullet": "•",
+                    "decimals": 2,
+                    "include_step_label": True,
+                    "sort_desc": True,
+                    "step_wrapper": lambda step: f"`{step}`",
+                },
+            ):
+                embed.add_field(**field)
             if scan_result:
-                reason_value = _localize_reason(
+                reason_value = localize_reason(
                     translator, scan_result.get("reason"), guild_id
                 )
                 if reason_value:
                     embed.add_field(
-                        name=_localize_field_name(translator, "reason", guild_id),
+                        name=localize_field_name(translator, "reason", guild_id),
                         value=str(reason_value)[:1024],
                         inline=False,
                     )
                 if scan_result.get("category"):
                     embed.add_field(
-                        name=_localize_field_name(translator, "category", guild_id),
-                        value=_localize_category(
+                        name=localize_field_name(translator, "category", guild_id),
+                        value=localize_category(
                             translator,
                             str(scan_result.get("category")),
                             guild_id,
@@ -508,16 +389,16 @@ async def check_attachment(
                     )
                 if scan_result.get("score") is not None:
                     embed.add_field(
-                        name=_localize_field_name(translator, "score", guild_id),
+                        name=localize_field_name(translator, "score", guild_id),
                         value=f"{float(scan_result.get('score') or 0):.3f}",
                         inline=True,
                     )
                 if scan_result.get("flagged_any") is not None:
                     embed.add_field(
-                        name=_localize_field_name(
+                        name=localize_field_name(
                             translator, "flagged_any", guild_id
                         ),
-                        value=_localize_boolean(
+                        value=localize_boolean(
                             translator,
                             bool(scan_result.get("flagged_any")),
                             guild_id,
@@ -526,7 +407,7 @@ async def check_attachment(
                     )
                 if scan_result.get("summary_categories") is not None:
                     embed.add_field(
-                        name=_localize_field_name(
+                        name=localize_field_name(
                             translator, "summary_categories", guild_id
                         ),
                         value=str(scan_result.get("summary_categories")),
@@ -534,7 +415,7 @@ async def check_attachment(
                     )
                 if scan_result.get("max_similarity") is not None:
                     embed.add_field(
-                        name=_localize_field_name(
+                        name=localize_field_name(
                             translator, "max_similarity", guild_id
                         ),
                         value=f"{float(scan_result.get('max_similarity') or 0):.3f}",
@@ -542,7 +423,7 @@ async def check_attachment(
                     )
                 if scan_result.get("max_category") is not None:
                     embed.add_field(
-                        name=_localize_field_name(
+                        name=localize_field_name(
                             translator, "max_category", guild_id
                         ),
                         value=str(scan_result.get("max_category")),
@@ -550,7 +431,7 @@ async def check_attachment(
                     )
                 if scan_result.get("similarity") is not None:
                     embed.add_field(
-                        name=_localize_field_name(
+                        name=localize_field_name(
                             translator, "similarity", guild_id
                         ),
                         value=f"{float(scan_result.get('similarity') or 0):.3f}",
@@ -558,10 +439,10 @@ async def check_attachment(
                     )
                 if scan_result.get("high_accuracy") is not None:
                     embed.add_field(
-                        name=_localize_field_name(
+                        name=localize_field_name(
                             translator, "high_accuracy", guild_id
                         ),
-                        value=_localize_boolean(
+                        value=localize_boolean(
                             translator,
                             bool(scan_result.get("high_accuracy")),
                             guild_id,
@@ -570,7 +451,7 @@ async def check_attachment(
                     )
                 if scan_result.get("clip_threshold") is not None:
                     embed.add_field(
-                        name=_localize_field_name(
+                        name=localize_field_name(
                             translator, "clip_threshold", guild_id
                         ),
                         value=f"{float(scan_result.get('clip_threshold') or 0):.3f}",
@@ -579,7 +460,7 @@ async def check_attachment(
                 if scan_result.get("threshold") is not None:
                     try:
                         embed.add_field(
-                            name=_localize_field_name(
+                            name=localize_field_name(
                                 translator, "moderation_threshold", guild_id
                             ),
                             value=f"{float(scan_result.get('threshold') or 0):.3f}",
@@ -591,7 +472,7 @@ async def check_attachment(
                     scanned = scan_result.get("video_frames_scanned")
                     target = scan_result.get("video_frames_target")
                     embed.add_field(
-                        name=_localize_field_name(
+                        name=localize_field_name(
                             translator, "video_frames", guild_id
                         ),
                         value=f"{scanned}/{target}",
@@ -604,7 +485,7 @@ async def check_attachment(
                     if scanned_frames > 0:
                         average_latency_per_frame = duration_ms / scanned_frames
                         embed.add_field(
-                            name=_localize_field_name(
+                            name=localize_field_name(
                                 translator, "average_latency_per_frame_ms", guild_id
                             ),
                             value=f"{average_latency_per_frame:.2f} ms/frame",
@@ -647,7 +528,7 @@ async def check_attachment(
         if file is None:
             file = discord.File(temp_filename, filename=filename)
         try:
-            category_label = _localize_category(
+            category_label = localize_category(
                 translator,
                 category_name,
                 guild_id,

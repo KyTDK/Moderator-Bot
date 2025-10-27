@@ -5,121 +5,21 @@ from typing import Any, Optional
 import discord
 
 from modules.utils import mod_logging
-from modules.utils.localization import TranslateFn, localize_message
+from modules.utils.localization import localize_message
 
 from .utils.file_types import FILE_TYPE_LABELS
-from .utils.latency import format_latency_breakdown_lines
+from .utils.latency import build_latency_fields
 
-REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
-SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
-SHARED_CATEGORY = "modules.nsfw_scanner.shared.category"
-SHARED_ROOT = "modules.nsfw_scanner.shared"
-NSFW_CATEGORY_NAMESPACE = "cogs.nsfw.meta.categories"
-
-DECISION_FALLBACKS = {
-    "unknown": "Unknown",
-    "nsfw": "NSFW",
-    "safe": "Safe",
-}
-
-FIELD_FALLBACKS = {
-    "reason": "Reason",
-    "category": "Category",
-    "score": "Score",
-    "flagged_any": "Flagged Any",
-    "summary_categories": "Summary Categories",
-    "max_similarity": "Max Similarity",
-    "max_category": "Max Similarity Category",
-    "similarity": "Matched Similarity",
-    "high_accuracy": "High Accuracy",
-    "clip_threshold": "CLIP Threshold",
-    "moderation_threshold": "Moderation Threshold",
-    "video_frames": "Video Frames",
-    "latency_ms": "Scan Latency",
-    "average_latency_per_frame_ms": "Avg Latency / Frame",
-    "latency_breakdown": "Latency Breakdown",
-    "cache_status": "Cache Status",
-}
-
-REASON_FALLBACKS = {
-    "openai_moderation": "OpenAI moderation",
-    "similarity_match": "Similarity match",
-    "no_frames_extracted": "No frames extracted",
-    "no_nsfw_frames_detected": "No NSFW frames detected",
-}
-
-
-def resolve_translator(scanner) -> TranslateFn | None:
-    translate = getattr(getattr(scanner, "bot", None), "translate", None)
-    return translate if callable(translate) else None
-
-
-def _localize_decision(translator: TranslateFn | None, decision: str, guild_id: int | None) -> str:
-    fallback = DECISION_FALLBACKS.get(decision, decision.capitalize())
-    return localize_message(
-        translator,
-        REPORT_BASE,
-        f"decision.{decision}",
-        fallback=fallback,
-        guild_id=guild_id,
-    )
-
-
-def _localize_field_name(translator: TranslateFn | None, field: str, guild_id: int | None) -> str:
-    fallback = FIELD_FALLBACKS.get(field, field.replace("_", " ").title())
-    return localize_message(
-        translator,
-        REPORT_BASE,
-        f"fields.{field}",
-        fallback=fallback,
-        guild_id=guild_id,
-    )
-
-
-def _localize_reason(translator: TranslateFn | None, reason: Any, guild_id: int | None) -> str | None:
-    if reason is None:
-        return None
-    if isinstance(reason, str):
-        normalized = reason if reason in REASON_FALLBACKS else reason.lower().replace(" ", "_")
-        fallback = REASON_FALLBACKS.get(normalized, str(reason))
-        return localize_message(
-            translator,
-            REPORT_BASE,
-            f"reasons.{normalized}",
-            fallback=fallback,
-            guild_id=guild_id,
-        )
-    return str(reason)
-
-
-def _localize_boolean(translator: TranslateFn | None, value: bool, guild_id: int | None) -> str:
-    key = "true" if value else "false"
-    return localize_message(
-        translator,
-        SHARED_BOOLEAN,
-        key,
-        fallback=key,
-        guild_id=guild_id,
-    )
-
-
-def _localize_category(translator: TranslateFn | None, category: str | None, guild_id: int | None) -> str:
-    if not category:
-        return localize_message(
-            translator,
-            SHARED_CATEGORY,
-            "unspecified",
-            fallback="Unspecified",
-            guild_id=guild_id,
-        )
-    normalized = category.lower().replace(" ", "_")
-    return localize_message(
-        translator,
-        NSFW_CATEGORY_NAMESPACE,
-        normalized,
-        fallback=category.replace("_", " ").title(),
-        guild_id=guild_id,
-    )
+from .helpers.localization import (
+    REPORT_BASE,
+    SHARED_ROOT,
+    localize_boolean,
+    localize_category,
+    localize_decision,
+    localize_field_name,
+    localize_reason,
+    resolve_translator,
+)
 
 
 async def emit_verbose_report(
@@ -143,7 +43,7 @@ async def emit_verbose_report(
     elif scan_result.get("is_nsfw") is False:
         decision_key = "safe"
 
-    decision_label = _localize_decision(translator, decision_key, guild_id)
+    decision_label = localize_decision(translator, decision_key, guild_id)
     normalized_file_type = (file_type or "unknown").lower()
     file_type_label = localize_message(
         translator,
@@ -205,16 +105,20 @@ async def emit_verbose_report(
         ),
         color=discord.Color.orange() if scan_result.get("is_nsfw") else discord.Color.green(),
     )
-    embed.add_field(
-        name=_localize_field_name(translator, "latency_ms", guild_id),
-        value=f"{duration_ms} ms",
-        inline=True,
-    )
+    pipeline_metrics = scan_result.get("pipeline_metrics")
+    for field in build_latency_fields(
+        lambda key: localize_field_name(translator, key, guild_id),
+        pipeline_metrics if isinstance(pipeline_metrics, dict) else None,
+        duration_ms=duration_ms,
+        breakdown_kwargs={"decimals": 1, "fallback_label_style": "title"},
+        value_max_length=1024,
+    ):
+        embed.add_field(**field)
 
     cache_status = scan_result.get("cache_status")
     if cache_status:
         embed.add_field(
-            name=_localize_field_name(translator, "cache_status", guild_id),
+            name=localize_field_name(translator, "cache_status", guild_id),
             value=str(cache_status),
             inline=True,
         )
@@ -224,28 +128,14 @@ async def emit_verbose_report(
         if value is None:
             continue
         if field_key == "reason":
-            value = _localize_reason(translator, value, guild_id)
+            value = localize_reason(translator, value, guild_id)
         elif field_key == "category":
-            value = _localize_category(translator, value, guild_id)
+            value = localize_category(translator, value, guild_id)
         embed.add_field(
-            name=_localize_field_name(translator, fallback_key, guild_id),
+            name=localize_field_name(translator, fallback_key, guild_id),
             value=value,
             inline=True,
         )
-
-    pipeline_metrics = scan_result.get("pipeline_metrics")
-    if isinstance(pipeline_metrics, dict):
-        breakdown_lines = format_latency_breakdown_lines(
-            pipeline_metrics.get("latency_breakdown_ms"),
-            decimals=1,
-            fallback_label_style="title",
-        )
-        if breakdown_lines:
-            embed.add_field(
-                name=_localize_field_name(translator, "latency_breakdown", guild_id),
-                value="\n".join(breakdown_lines),
-                inline=False,
-            )
 
     avatar = getattr(getattr(actor, "display_avatar", None), "url", None)
     if avatar:
@@ -286,7 +176,7 @@ async def dispatch_callback(
         confidence_value = None
         confidence_source = None
 
-    category_label = _localize_category(translator, category_name, guild_id)
+    category_label = localize_category(translator, category_name, guild_id)
     reason = localize_message(
         translator,
         SHARED_ROOT,

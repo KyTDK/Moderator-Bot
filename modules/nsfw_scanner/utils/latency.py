@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import time
+from contextlib import ContextDecorator
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable, List, Sequence
+from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Sequence
 
 
 @dataclass(slots=True)
@@ -204,10 +206,179 @@ def merge_latency_breakdowns(
     }
 
 
+def build_latency_fields(
+    localize_field_name: Callable[[str], str],
+    pipeline_metrics: Mapping[str, Any] | None,
+    *,
+    duration_ms: float | int | None = None,
+    breakdown_kwargs: dict[str, Any] | None = None,
+    value_max_length: int = 1024,
+) -> List[dict[str, Any]]:
+    """Create embed field payloads for latency information."""
+
+    fields: list[dict[str, Any]] = []
+    total_duration = _coerce_duration(duration_ms)
+    metrics: Mapping[str, Any] | None = pipeline_metrics if isinstance(
+        pipeline_metrics, Mapping
+    ) else None
+
+    if total_duration is None and metrics is not None:
+        total_duration = _coerce_duration(metrics.get("total_latency_ms"))
+
+    if total_duration is not None and total_duration > 0:
+        fields.append(
+            {
+                "name": localize_field_name("latency_ms"),
+                "value": f"{int(total_duration)} ms",
+                "inline": True,
+            }
+        )
+
+    if metrics is not None:
+        breakdown_kwargs = breakdown_kwargs or {}
+        lines = format_latency_breakdown_lines(
+            metrics.get("latency_breakdown_ms"),
+            **breakdown_kwargs,
+        )
+        if lines:
+            value = "\n".join(lines)
+            if value_max_length > 0:
+                value = value[:value_max_length]
+            fields.append(
+                {
+                    "name": localize_field_name("latency_breakdown"),
+                    "value": value,
+                    "inline": False,
+                }
+            )
+
+    return fields
+
+
 __all__ = [
     "LatencyEntry",
+    "LatencyTracker",
+    "build_latency_fields",
     "format_latency_breakdown_lines",
     "merge_latency_breakdowns",
     "normalize_latency_breakdown",
 ]
+
+class _LatencyMeasurement(ContextDecorator):
+    """Context manager used by :class:`LatencyTracker` to time steps."""
+
+    def __init__(
+        self,
+        tracker: LatencyTracker,
+        step: str,
+        *,
+        label: str | None = None,
+    ) -> None:
+        self._tracker = tracker
+        self._step = step
+        self._label = label
+        self._started_at: float | None = None
+
+    def __enter__(self) -> _LatencyMeasurement:
+        self._started_at = time.perf_counter()
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:  # type: ignore[override]
+        if self._started_at is None:
+            return
+        duration_ms = (time.perf_counter() - self._started_at) * 1000
+        self._tracker.add_duration(
+            self._step,
+            duration_ms,
+            label=self._label,
+        )
+
+
+class LatencyTracker:
+    """Utility to accumulate latency information across pipeline steps."""
+
+    def __init__(self) -> None:
+        self._steps: dict[str, dict[str, Any]] = {}
+
+    def add_duration(
+        self,
+        step: str,
+        duration_ms: float | int | None,
+        *,
+        label: str | None = None,
+    ) -> None:
+        duration = _coerce_duration(duration_ms)
+        if duration is None or duration <= 0:
+            return
+        entry = self._steps.setdefault(
+            step,
+            {
+                "duration_ms": 0.0,
+                "label": label,
+            },
+        )
+        entry_duration = _coerce_duration(entry.get("duration_ms")) or 0.0
+        entry["duration_ms"] = entry_duration + duration
+        if label:
+            entry["label"] = label
+        elif not entry.get("label"):
+            entry["label"] = step.replace("_", " ").title()
+
+    def measure(
+        self,
+        step: str,
+        *,
+        label: str | None = None,
+    ) -> _LatencyMeasurement:
+        """Return a context manager that records elapsed duration for ``step``."""
+
+        return _LatencyMeasurement(self, step, label=label)
+
+    def record_elapsed(
+        self,
+        step: str,
+        started_at: float,
+        *,
+        label: str | None = None,
+    ) -> None:
+        """Record the elapsed time from ``started_at`` for ``step``."""
+
+        duration_ms = (time.perf_counter() - started_at) * 1000
+        self.add_duration(step, duration_ms, label=label)
+
+    @property
+    def steps(self) -> dict[str, dict[str, Any]]:
+        """Expose the accumulated latency mapping."""
+
+        return self._steps
+
+    def merge_into(
+        self,
+        pipeline_metrics: MutableMapping[str, Any] | None,
+        *,
+        total_duration_ms: float | int | None = None,
+        fallback_label_style: str = "title",
+    ) -> MutableMapping[str, Any]:
+        """Merge tracked latency into ``pipeline_metrics``."""
+
+        metrics: MutableMapping[str, Any]
+        if pipeline_metrics is None or not isinstance(pipeline_metrics, MutableMapping):
+            metrics = {}
+        else:
+            metrics = pipeline_metrics
+
+        if self._steps:
+            metrics["latency_breakdown_ms"] = merge_latency_breakdowns(
+                metrics.get("latency_breakdown_ms"),
+                self._steps,
+                fallback_label_style=fallback_label_style,
+            )
+
+        if total_duration_ms is not None:
+            total = _coerce_duration(total_duration_ms) or 0.0
+            existing_total = _coerce_duration(metrics.get("total_latency_ms")) or 0.0
+            if total > 0:
+                metrics["total_latency_ms"] = max(existing_total, total)
+
+        return metrics
 
