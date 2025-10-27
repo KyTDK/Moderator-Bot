@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import re
-from typing import Iterable, List
+from typing import Iterable
 from urllib.parse import urlparse
 
 import discord
@@ -14,9 +14,11 @@ from ..context import GuildScanContext
 from ..constants import LOG_CHANNEL_ID
 from .work_item import MediaWorkItem
 from modules.utils.discord_utils import safe_get_channel
+from ..utils.file_types import ANIMATED_EXTS, IMAGE_EXTS, VIDEO_EXTS
 
 log = logging.getLogger(__name__)
 _URL_RE = re.compile(r"https?://[^\s<>]+")
+ALLOWED_CONTENT_EXTS = ANIMATED_EXTS | VIDEO_EXTS | IMAGE_EXTS
 
 
 def _media_stats(message: discord.Message | None) -> dict[str, int]:
@@ -208,6 +210,7 @@ def collect_media_items(
     )
 
     items: list[MediaWorkItem] = []
+    seen_urls: set[str] = set()
     for attachment in attachments:
         url = getattr(attachment, "proxy_url", None) or getattr(attachment, "url", None)
         if not url:
@@ -230,8 +233,11 @@ def collect_media_items(
                 metadata=metadata,
             )
         )
+        seen_urls.add(url)
+        raw_url = getattr(attachment, "url", None)
+        if raw_url:
+            seen_urls.add(raw_url)
 
-    seen_urls: set[str] = set()
     for embed in embeds:
         tenor_added = False
         for candidate in _extract_embed_urls(embed):
@@ -257,7 +263,7 @@ def collect_media_items(
                     ext_hint=ext or None,
                     tenor=is_tenor,
                 )
-            )
+        )
 
     for sticker in stickers:
         sticker_url = getattr(sticker, "url", None)
@@ -293,6 +299,34 @@ def collect_media_items(
                 metadata={"emoji_id": getattr(emoji, "id", None)},
             )
         )
+
+    for source in (message, snapshot):
+        content = getattr(source, "content", None) if source is not None else None
+        if not content:
+            continue
+        for candidate in _extract_urls(content):
+            if candidate in seen_urls:
+                continue
+            parsed = urlparse(candidate)
+            domain = parsed.netloc.lower()
+            tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
+            if tenor and not context.tenor_allowed:
+                continue
+            ext = os.path.splitext(parsed.path)[1].lower()
+            if not tenor and ext not in ALLOWED_CONTENT_EXTS:
+                continue
+            prefer_video = tenor or ext in ANIMATED_EXTS or ext in VIDEO_EXTS
+            seen_urls.add(candidate)
+            items.append(
+                MediaWorkItem(
+                    source="content",
+                    label=candidate,
+                    url=candidate,
+                    prefer_video=prefer_video,
+                    ext_hint=ext or None,
+                    tenor=tenor,
+                )
+            )
 
     return items
 
