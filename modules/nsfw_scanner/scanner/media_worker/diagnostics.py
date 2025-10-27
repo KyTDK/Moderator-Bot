@@ -73,23 +73,45 @@ async def notify_download_failure(
     fallback_list = [url for url in fallback_urls if url]
     refreshed_list = [url for url in (refreshed_urls or []) if url]
 
-    attempted_display = "\n".join(
-        suppress_discord_link_embed(url) for url in attempted_list
+    proxy_url = metadata.get("proxy_url") or (
+        getattr(item.attachment, "proxy_url", None) if item.attachment else None
     )
-    if len(attempted_display) > 1000:
-        attempted_display = f"{attempted_display[:997]}…"
+    original_url = metadata.get("original_url") or (
+        getattr(item.attachment, "url", None) if item.attachment else None
+    )
 
-    fallback_display = ", ".join(
-        suppress_discord_link_embed(url) for url in fallback_list
-    )
-    if len(fallback_display) > 1000:
-        fallback_display = f"{fallback_display[:997]}…"
+    if proxy_url is not None and not isinstance(proxy_url, str):
+        proxy_url = str(proxy_url)
+    if original_url is not None and not isinstance(original_url, str):
+        original_url = str(original_url)
 
-    refreshed_display = ", ".join(
-        suppress_discord_link_embed(url) for url in refreshed_list
-    )
-    if len(refreshed_display) > 1000:
-        refreshed_display = f"{refreshed_display[:997]}…"
+    def _format_single(url_value: str) -> str:
+        formatted = suppress_discord_link_embed(url_value)
+        if len(formatted) > 1024:
+            return f"{formatted[:1021]}…"
+        return formatted
+
+    def _format_join(url_values: Iterable[str], *, separator: str) -> str:
+        formatted_values = [_format_single(url) for url in url_values]
+        joined = separator.join(formatted_values)
+        if len(joined) > 1000:
+            return f"{joined[:997]}…"
+        return joined
+
+    seen_primary = {value for value in (proxy_url, original_url) if value}
+    additional_attempts = [
+        url for url in attempted_list if url not in seen_primary
+    ]
+    fallback_filtered = [
+        url for url in fallback_list if url not in seen_primary
+    ]
+    refreshed_filtered = [
+        url for url in refreshed_list if url not in seen_primary
+    ]
+
+    attempted_display = _format_join(additional_attempts, separator="\n")
+    fallback_display = _format_join(fallback_filtered, separator=", ")
+    refreshed_display = _format_join(refreshed_filtered, separator=", ")
 
     embed = discord.Embed(
         title="Media download failure",
@@ -114,8 +136,16 @@ async def notify_download_failure(
             request_value = f"{request_value[:1021]}…"
         embed.add_field(name="Request", value=request_value, inline=False)
 
+    if proxy_url:
+        embed.add_field(name="Proxy URL", value=_format_single(proxy_url), inline=False)
+    if original_url and (original_url != proxy_url or not proxy_url):
+        embed.add_field(name="Original URL", value=_format_single(original_url), inline=False)
     if attempted_display:
-        embed.add_field(name="Attempted URLs", value=attempted_display, inline=False)
+        embed.add_field(
+            name="Additional Attempted URLs",
+            value=attempted_display,
+            inline=False,
+        )
     if fallback_display:
         embed.add_field(name="Fallback URLs", value=fallback_display, inline=False)
     if refreshed_display:

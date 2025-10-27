@@ -158,6 +158,12 @@ def collect_media_items(
         filename = getattr(attachment, "filename", None)
         proxy_url = getattr(attachment, "proxy_url", None)
         raw_url = getattr(attachment, "url", None)
+
+        if proxy_url is not None and not isinstance(proxy_url, str):
+            proxy_url = str(proxy_url)
+        if raw_url is not None and not isinstance(raw_url, str):
+            raw_url = str(raw_url)
+
         primary_url = proxy_url or raw_url or (filename or "")
         if not isinstance(primary_url, str):
             primary_url = str(primary_url)
@@ -175,6 +181,12 @@ def collect_media_items(
             "channel_id": message_channel_id or snapshot_channel_id,
             "guild_id": message_guild_id or snapshot_guild_id,
         }
+        if proxy_url:
+            metadata["proxy_url"] = proxy_url
+        if raw_url:
+            metadata["original_url"] = raw_url
+        if proxy_url and raw_url and proxy_url != raw_url:
+            metadata["fallback_urls"] = [raw_url]
         if cache_hint:
             metadata["cache_key"] = f"hash::{cache_hint}"
         seen_urls.add(primary_url)

@@ -239,3 +239,35 @@ def test_collect_media_items_uses_proxy_url_without_fallback():
     assert len(items) == 1
     assert items[0].metadata.get("fallback_urls") is None
     assert items[0].url == "https://media.discordapp.net/attachments/1/2/image0.gif?width=120&height=80"
+
+
+def test_collect_media_items_records_original_url_when_proxy_available():
+    proxy_url = "https://media.discordapp.net/attachments/1/2/image0.gif?width=120&height=80"
+    original_url = "https://cdn.discordapp.com/attachments/1/2/image0.gif"
+    attachment = SimpleNamespace(
+        proxy_url=proxy_url,
+        url=original_url,
+        filename="image0.gif",
+        size=1337,
+        id=42,
+    )
+    message = SimpleNamespace(
+        attachments=[attachment],
+        embeds=[],
+        stickers=[],
+        message_snapshots=[],
+        id=99,
+        channel=SimpleNamespace(id=123),
+        guild=SimpleNamespace(id=456),
+        content="",
+    )
+    context = SimpleNamespace(tenor_allowed=True)
+
+    items = collect_media_items(message, _DummyBot(), context)
+
+    assert len(items) == 1
+    metadata = items[0].metadata
+    assert metadata.get("proxy_url") == proxy_url
+    assert metadata.get("original_url") == original_url
+    assert metadata.get("fallback_urls") == [original_url]
+    assert items[0].url == proxy_url
