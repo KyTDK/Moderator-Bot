@@ -11,9 +11,7 @@ import discord
 from cogs.hydration import wait_for_hydration
 
 from ..context import GuildScanContext
-from ..constants import LOG_CHANNEL_ID
 from .work_item import MediaWorkItem
-from modules.utils.discord_utils import safe_get_channel
 from ..utils.file_types import ANIMATED_EXTS, IMAGE_EXTS, VIDEO_EXTS
 
 log = logging.getLogger(__name__)
@@ -78,10 +76,10 @@ def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
 
 
 async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
+    _ = bot  # Parameter kept for API compatibility; no runtime usage.
     attachments = getattr(message, "attachments", None) or []
     embeds = getattr(message, "embeds", None) or []
     stickers = getattr(message, "stickers", None) or []
-    original_stats = _media_stats(message)
     if attachments or embeds or stickers:
         return message
 
@@ -89,7 +87,6 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
     if "http" not in content:
         return message
 
-    reasons: list[str] = []
     hydrated: discord.Message | None = None
     hydrated_stats: dict[str, int] | None = None
     fetched_stats: dict[str, int] | None = None
@@ -97,16 +94,11 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
         hydrated = await wait_for_hydration(message)
     except Exception as exc:
         log.debug("hydrate_message: hydration wait failed for message %s: %s", getattr(message, "id", "?"), exc)
-        reasons.append(f"Hydration wait failed: {exc}")
 
     if hydrated is not None:
         hydrated_stats = _media_stats(hydrated)
         if _has_media_metadata(hydrated_stats):
             return hydrated
-        reasons.append(
-            "Hydration waiter returned payload without media metadata "
-            f"(counts: {_summarise_stats(hydrated_stats)})"
-        )
 
     channel = getattr(message, "channel", None)
     message_id = getattr(message, "id", None)
@@ -128,67 +120,9 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
                 f"(counts: {_summarise_stats(fetched_stats)})"
             )
         if fetch_reason:
-            reasons.append(fetch_reason)
-
-    if reasons and bot is not None and LOG_CHANNEL_ID:
-        debug_context = {
-            "content_urls": _extract_urls(content),
-            "original_stats": _summarise_stats(original_stats),
-            "hydrated_stats": _summarise_stats(hydrated_stats) if hydrated_stats else None,
-            "fetched_stats": _summarise_stats(fetched_stats) if fetched_stats else None,
-        }
-        await _notify_hydration_issue(bot, message, reasons, debug_context)
+            log.debug("hydrate_message: %s", fetch_reason)
 
     return hydrated or message
-
-
-async def _notify_hydration_issue(
-    bot: discord.Client,
-    message: discord.Message,
-    reasons: list[str],
-    debug_context: dict[str, str | list[str] | None] | None = None,
-) -> None:
-    guild = getattr(message, "guild", None)
-    if guild is None:
-        return
-    try:
-        channel = await safe_get_channel(bot, LOG_CHANNEL_ID)
-    except Exception as exc:
-        log.warning("hydrate_message: failed to resolve LOG_CHANNEL_ID=%s: %s", LOG_CHANNEL_ID, exc)
-        return
-    if channel is None:
-        log.warning("hydrate_message: LOG_CHANNEL_ID=%s not found", LOG_CHANNEL_ID)
-        return
-
-    jump_url = getattr(message, "jump_url", None)
-    summary = f"Message `{getattr(message, 'id', 'unknown')}` in <#{getattr(getattr(message, 'channel', None), 'id', 0)}> could not be hydrated."
-    embed = discord.Embed(title="Media Hydration Failed", description=summary, color=discord.Color.orange())
-    reason_text = "\n".join(f"- {reason}" for reason in reasons)
-    embed.add_field(name="Details", value=reason_text[:1024], inline=False)
-    if jump_url:
-        embed.add_field(name="Jump", value=f"[Open Message]({jump_url})", inline=False)
-    if debug_context:
-        media_stats_lines: list[str] = []
-        original_stats = debug_context.get("original_stats")
-        if original_stats:
-            media_stats_lines.append(f"Original: {original_stats}")
-        hydrated_stats = debug_context.get("hydrated_stats")
-        if hydrated_stats:
-            media_stats_lines.append(f"Hydrated: {hydrated_stats}")
-        fetched_stats = debug_context.get("fetched_stats")
-        if fetched_stats:
-            media_stats_lines.append(f"Fetched: {fetched_stats}")
-        if media_stats_lines:
-            embed.add_field(name="Media Stats", value="\n".join(media_stats_lines)[:1024], inline=False)
-        urls = debug_context.get("content_urls") or []
-        if urls:
-            embed.add_field(name="Detected URLs", value="\n".join(urls)[:1024], inline=False)
-    content = None
-    allowed_mentions = discord.AllowedMentions.none()
-    try:
-        await channel.send(content=content, embed=embed, allowed_mentions=allowed_mentions)
-    except Exception as exc:
-        log.warning("hydrate_message: failed to send hydration alert for message %s: %s", getattr(message, "id", "?"), exc)
 
 
 def collect_media_items(
