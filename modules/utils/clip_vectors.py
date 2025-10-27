@@ -129,6 +129,16 @@ _device = None
 _init_lock = Lock()
 _write_lock = Lock()
 
+_preferred_device = "cuda" if torch.cuda.is_available() else "cpu"
+if _preferred_device == "cuda":
+    _device_details = torch.cuda.get_device_name(torch.cuda.current_device())
+    _startup_message = f"CLIP vectors configured to use CUDA device: {_device_details}"
+else:
+    _startup_message = "CLIP vectors running on CPU; CUDA device not detected"
+
+log.info(_startup_message)
+print(_startup_message)
+
 
 def _suggest_ivf_params(n_vectors: int) -> tuple[int, int]:
     """Suggest reasonable IVF parameters for the current collection size."""
@@ -288,10 +298,10 @@ def _ensure_clip_loaded() -> None:
     with _init_lock:
         if _model is not None and _proc is not None and _device is not None:
             return
-        dev = "cuda" if torch.cuda.is_available() else "cpu"
+        dev = _preferred_device
         m = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
         p = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
-        _model = m.to(dev)
+        _model = m.to(dev).eval()
         _proc = p
         _device = dev
 
