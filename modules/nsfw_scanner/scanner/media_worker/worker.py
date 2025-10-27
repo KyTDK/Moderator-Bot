@@ -20,6 +20,7 @@ from ...helpers.downloads import DownloadResult
 from ...helpers.images import process_image
 from ...helpers.videos import process_video
 from ...reporting import dispatch_callback
+from ...utils.diagnostics import extract_context_lines, render_detail_lines, truncate_field_value
 from ...utils.file_types import FILE_TYPE_IMAGE, FILE_TYPE_VIDEO, determine_file_type
 from ...utils.file_ops import safe_delete
 from ..work_item import MediaFlagged, MediaWorkItem
@@ -207,42 +208,32 @@ async def scan_media_item(
         embed.add_field(name="Source", value=item.source or "unknown", inline=True)
 
         metadata = item.metadata or {}
-        context_lines = []
-        guild_id = metadata.get("guild_id") or context.guild_id
-        channel_id = metadata.get("channel_id")
-        message_id = metadata.get("message_id")
-        attachment_id = metadata.get("attachment_id")
-        if guild_id is not None:
-            context_lines.append(f"Guild: {guild_id}")
-        if channel_id is not None:
-            context_lines.append(f"Channel: {channel_id}")
-        if message_id is not None:
-            context_lines.append(f"Message: {message_id}")
-        if attachment_id is not None:
-            context_lines.append(f"Attachment: {attachment_id}")
+        context_lines = extract_context_lines(
+            metadata=metadata,
+            fallback_guild_id=context.guild_id,
+            include_attachment=True,
+        )
         if context_lines:
             embed.add_field(name="Context", value="\n".join(context_lines), inline=False)
 
         if extra:
-            detail_lines: list[str] = []
-            for key, value in extra.items():
-                if value is None:
-                    continue
-                detail_lines.append(f"{key}: {value}")
-            if detail_lines:
-                detail_text = "\n".join(detail_lines)
-                if len(detail_text) > 1024:
-                    detail_text = f"{detail_text[:1021]}…"
+            detail_text = render_detail_lines(extra)
+            if detail_text:
                 embed.add_field(name="Details", value=detail_text, inline=False)
 
         if message is not None and getattr(message, "jump_url", None):
-            embed.add_field(name="Message Link", value=message.jump_url, inline=False)
+            embed.add_field(
+                name="Message Link",
+                value=truncate_field_value(message.jump_url),
+                inline=False,
+            )
 
         if item.url:
-            url_value = item.url
-            if len(url_value) > 1024:
-                url_value = f"{url_value[:1021]}…"
-            embed.add_field(name="URL", value=url_value, inline=False)
+            embed.add_field(
+                name="URL",
+                value=truncate_field_value(item.url),
+                inline=False,
+            )
         success = await send_log_message(
             bot,
             embed=embed,

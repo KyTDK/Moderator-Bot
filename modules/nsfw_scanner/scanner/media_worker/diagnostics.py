@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from typing import Any, Iterable
 from urllib.parse import urlparse
 
@@ -19,19 +18,19 @@ from modules.nsfw_scanner.scanner.media_worker.cache import (
 )
 from modules.utils.log_channel import send_log_message
 
+from ...utils.diagnostics import (
+    DiagnosticRateLimiter,
+    extract_context_lines,
+    truncate_field_value,
+)
+
 log = logging.getLogger(__name__)
 
-_DIAGNOSTIC_THROTTLE: dict[str, float] = {}
-_DIAGNOSTIC_COOLDOWN_SECONDS = 120.0
+_DIAGNOSTIC_LIMITER = DiagnosticRateLimiter()
 
 
 def should_emit_diagnostic(key: str) -> bool:
-    now = time.monotonic()
-    last = _DIAGNOSTIC_THROTTLE.get(key)
-    if last is not None and (now - last) < _DIAGNOSTIC_COOLDOWN_SECONDS:
-        return False
-    _DIAGNOSTIC_THROTTLE[key] = now
-    return True
+    return _DIAGNOSTIC_LIMITER.should_emit(key)
 
 
 def suppress_discord_link_embed(url: str) -> str:
@@ -87,9 +86,7 @@ async def notify_download_failure(
 
     def _format_single(url_value: str) -> str:
         formatted = suppress_discord_link_embed(url_value)
-        if len(formatted) > 1024:
-            return f"{formatted[:1021]}…"
-        return formatted
+        return truncate_field_value(formatted)
 
     def _format_join(url_values: Iterable[str], *, separator: str) -> str:
         formatted_values = [_format_single(url) for url in url_values]
@@ -121,7 +118,11 @@ async def notify_download_failure(
     )
     embed.add_field(name="HTTP status", value=f"{error.status}", inline=True)
     error_message = getattr(error, "message", None) or getattr(error, "history", None) or str(error)
-    embed.add_field(name="Error detail", value=error_message[:1024] or "N/A", inline=False)
+    embed.add_field(
+        name="Error detail",
+        value=truncate_field_value(error_message or "N/A"),
+        inline=False,
+    )
     request_info = getattr(error, "request_info", None)
     real_url = getattr(request_info, "real_url", None) if request_info else None
     real_url_str = str(real_url) if real_url else None
@@ -132,14 +133,24 @@ async def notify_download_failure(
             request_value = request_method
         if real_url_str:
             request_value = f"{request_value} {real_url_str}".strip()
-        if len(request_value) > 1024:
-            request_value = f"{request_value[:1021]}…"
-        embed.add_field(name="Request", value=request_value, inline=False)
+        embed.add_field(
+            name="Request",
+            value=truncate_field_value(request_value),
+            inline=False,
+        )
 
     if proxy_url:
-        embed.add_field(name="Proxy URL", value=_format_single(proxy_url), inline=False)
+        embed.add_field(
+            name="Proxy URL",
+            value=_format_single(proxy_url),
+            inline=False,
+        )
     if original_url and (original_url != proxy_url or not proxy_url):
-        embed.add_field(name="Original URL", value=_format_single(original_url), inline=False)
+        embed.add_field(
+            name="Original URL",
+            value=_format_single(original_url),
+            inline=False,
+        )
     if attempted_display:
         embed.add_field(
             name="Additional Attempted URLs",
@@ -153,22 +164,26 @@ async def notify_download_failure(
 
     if real_url_str and real_url_str not in attempted_list:
         resolved_url = suppress_discord_link_embed(real_url_str)
-        if len(resolved_url) > 1024:
-            resolved_url = f"{resolved_url[:1021]}…"
-        embed.add_field(name="Resolved URL", value=resolved_url, inline=False)
+        embed.add_field(
+            name="Resolved URL",
+            value=truncate_field_value(resolved_url),
+            inline=False,
+        )
 
-    context_bits = {
-        "guild": metadata.get("guild_id") or context.guild_id,
-        "channel": metadata.get("channel_id"),
-        "message": metadata.get("message_id"),
-        "attachment": metadata.get("attachment_id"),
-    }
-    context_lines = [f"{key}: {value}" for key, value in context_bits.items() if value is not None]
+    context_lines = extract_context_lines(
+        metadata=metadata,
+        fallback_guild_id=context.guild_id,
+        include_attachment=True,
+    )
     if context_lines:
         embed.add_field(name="Context", value="\n".join(context_lines), inline=False)
 
     if message is not None and getattr(message, "jump_url", None):
-        embed.add_field(name="Source message", value=message.jump_url, inline=False)
+        embed.add_field(
+            name="Source message",
+            value=truncate_field_value(message.jump_url),
+            inline=False,
+        )
 
     if item.source:
         embed.add_field(name="Source", value=item.source, inline=True)
@@ -199,9 +214,7 @@ async def notify_download_failure(
             for header_key, header_value in list(headers.items())[:5]:
                 interesting_headers.append(f"{header_key}: {header_value}")
     if interesting_headers:
-        header_text = "\n".join(interesting_headers)
-        if len(header_text) > 1024:
-            header_text = f"{header_text[:1021]}…"
+        header_text = truncate_field_value("\n".join(interesting_headers))
         embed.add_field(name="Response headers", value=header_text, inline=False)
 
     success = await send_log_message(

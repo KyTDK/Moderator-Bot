@@ -4,7 +4,6 @@ import asyncio
 import builtins
 import logging
 import os
-import time
 from urllib.parse import urlparse
 
 import aiohttp
@@ -17,6 +16,12 @@ from modules.utils.log_channel import resolve_log_channel, send_log_message
 
 from ..constants import ALLOWED_USER_IDS, LOG_CHANNEL_ID, TMP_DIR
 from ..context import GuildScanContext, build_guild_scan_context
+from ..utils.diagnostics import (
+    DiagnosticRateLimiter,
+    extract_context_lines,
+    render_detail_lines,
+    truncate_field_value,
+)
 from .media_collector import collect_media_items, hydrate_message
 from .media_worker import MediaFlagged, scan_media_item
 from .work_item import MediaWorkItem
@@ -31,7 +36,7 @@ class NSFWScanner:
         self.tmp_dir = TMP_DIR
         self._clip_failure_callback_registered = False
         self._last_reported_milvus_error_key: str | None = None
-        self._diagnostic_throttle: dict[str, float] = {}
+        self._diagnostic_limiter = DiagnosticRateLimiter()
 
     async def start(self):
         self.session = aiohttp.ClientSession()
@@ -47,14 +52,6 @@ class NSFWScanner:
             return
         clip_vectors.register_failure_callback(self._handle_milvus_failure)
         self._clip_failure_callback_registered = True
-
-    def _should_emit_diagnostic(self, key: str, cooldown: float = 120.0) -> bool:
-        now = time.monotonic()
-        last = self._diagnostic_throttle.get(key)
-        if last is not None and (now - last) < cooldown:
-            return False
-        self._diagnostic_throttle[key] = now
-        return True
 
     async def _handle_milvus_failure(self, exc: Exception) -> None:
         error_key = f"{type(exc).__name__}:{exc}"
@@ -186,7 +183,7 @@ class NSFWScanner:
         if not LOG_CHANNEL_ID:
             return
         throttle_key = f"{guild_id or 'global'}::{reason}"
-        if not self._should_emit_diagnostic(throttle_key):
+        if not self._diagnostic_limiter.should_emit(throttle_key):
             return
         embed = discord.Embed(
             title="NSFW scan not started",
@@ -203,28 +200,36 @@ class NSFWScanner:
             author = getattr(message, "author", None)
 
             embed.description = f"Message ID: {getattr(message, 'id', 'unknown')}"
-            if channel_id is not None:
-                embed.add_field(name="Channel", value=str(channel_id), inline=True)
             if author is not None:
                 embed.add_field(name="Author", value=f"{getattr(author, 'id', 'unknown')}", inline=True)
 
+            context_lines = extract_context_lines(
+                message=message,
+                include_author=False,
+                include_message=False,
+            )
+            if context_lines:
+                embed.add_field(
+                    name="Context",
+                    value="\n".join(context_lines),
+                    inline=False,
+                )
             content = getattr(message, "content", None)
             if content:
-                preview = content.strip()
-                if len(preview) > 1024:
-                    preview = f"{preview[:1021]}…"
+                preview = truncate_field_value(content.strip())
                 if preview:
                     embed.add_field(name="Content Preview", value=preview, inline=False)
 
             if getattr(message, "jump_url", None):
-                embed.add_field(name="Message Link", value=message.jump_url, inline=False)
+                embed.add_field(
+                    name="Message Link",
+                    value=truncate_field_value(message.jump_url),
+                    inline=False,
+                )
 
         if details:
-            detail_lines = [f"{key}: {value}" for key, value in details.items() if value is not None]
-            if detail_lines:
-                detail_text = "\n".join(detail_lines)
-                if len(detail_text) > 1024:
-                    detail_text = f"{detail_text[:1021]}…"
+            detail_text = render_detail_lines(details)
+            if detail_text:
                 embed.add_field(name="Details", value=detail_text, inline=False)
         success = await send_log_message(
             self.bot,
