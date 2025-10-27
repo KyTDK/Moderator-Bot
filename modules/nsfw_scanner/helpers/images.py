@@ -476,6 +476,8 @@ async def process_image_batch(
     context: ImageProcessingContext,
     *,
     convert_to_png: bool = False,
+    metrics: dict[str, Any] | None = None,
+    latency_steps: dict[str, dict[str, Any]] | None = None,
 ) -> list[tuple[ExtractedFrame, dict[str, Any] | None]]:
     """
     Analyse a batch of in-memory frames using shared settings/context.
@@ -487,6 +489,29 @@ async def process_image_batch(
     decode_tasks: list[asyncio.Task[Image.Image | None]] = []
     semaphore = asyncio.Semaphore(16 if context.accelerated else 1)
 
+    def _record_latency(
+        metrics_key: str,
+        step_key: str,
+        duration_ms: float,
+        *,
+        label: str,
+    ) -> None:
+        if duration_ms <= 0:
+            return
+        if metrics is not None:
+            metrics[metrics_key] = float(metrics.get(metrics_key) or 0.0) + duration_ms
+        if latency_steps is not None:
+            entry = latency_steps.setdefault(
+                step_key,
+                {
+                    "duration_ms": 0.0,
+                    "label": label,
+                },
+            )
+            entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + duration_ms
+            if not entry.get("label"):
+                entry["label"] = label
+
     async def _decode_frame(frame: ExtractedFrame) -> Image.Image | None:
         async with semaphore:
             try:
@@ -495,10 +520,18 @@ async def process_image_batch(
                 print(f"[process_image_batch] Failed to open {frame.name}: {exc}")
                 return None
 
+    decode_started = time.perf_counter()
     for frame in frame_payloads:
         decode_tasks.append(asyncio.create_task(_decode_frame(frame)))
 
     decoded_images = await asyncio.gather(*decode_tasks)
+    decode_duration = max((time.perf_counter() - decode_started) * 1000, 0.0)
+    _record_latency(
+        "frame_pipeline_decode_ms",
+        "frame_pipeline_decode",
+        decode_duration,
+        label="Frame Decode",
+    )
 
     for frame, image in zip(frame_payloads, decoded_images):
         prepared.append((frame, image))
@@ -507,8 +540,16 @@ async def process_image_batch(
 
     similarity_batches: List[List[dict[str, Any]]] = []
     if valid_images:
+        similarity_started = time.perf_counter()
         similarity_batches = await asyncio.to_thread(
             clip_vectors.query_similar_batch, valid_images, 0
+        )
+        similarity_duration = max((time.perf_counter() - similarity_started) * 1000, 0.0)
+        _record_latency(
+            "frame_pipeline_similarity_ms",
+            "frame_pipeline_similarity",
+            similarity_duration,
+            label="Frame Similarity Search",
         )
 
     results: list[tuple[ExtractedFrame, dict[str, Any] | None]] = []
@@ -547,6 +588,7 @@ async def process_image_batch(
         semaphore: asyncio.Semaphore,
     ) -> tuple[ExtractedFrame, dict[str, Any] | None]:
         response: dict[str, Any] | None = None
+        inference_started = time.perf_counter()
         if image is not None:
             try:
                 async with semaphore:
@@ -561,6 +603,13 @@ async def process_image_batch(
                     )
             finally:
                 image.close()
+        inference_duration = max((time.perf_counter() - inference_started) * 1000, 0.0)
+        _record_latency(
+            "frame_pipeline_inference_ms",
+            "frame_pipeline_inference",
+            inference_duration,
+            label="Frame Inference",
+        )
         return frame, response
 
     if entries:

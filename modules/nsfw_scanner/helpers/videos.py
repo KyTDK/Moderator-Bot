@@ -150,6 +150,9 @@ async def process_video(
         "frames_submitted": 0,
         "frames_processed": 0,
         "decode_latency_ms": 0.0,
+        "frame_pipeline_decode_ms": 0.0,
+        "frame_pipeline_similarity_ms": 0.0,
+        "frame_pipeline_inference_ms": 0.0,
         "flush_count": 0,
         "early_exit": None,
         "bytes_downloaded": None,
@@ -178,6 +181,8 @@ async def process_video(
             batch.copy(),
             context,
             convert_to_png=False,
+            metrics=metrics_payload,
+            latency_steps=latency_steps,
         )
         metrics_payload["decode_latency_ms"] += max(
             (time.perf_counter() - started) * 1000, 0
