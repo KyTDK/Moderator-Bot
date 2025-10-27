@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import traceback
 from typing import Callable
 
 import discord
@@ -157,7 +158,8 @@ class BackgroundTaskMixin(GuildLocaleMixin):
                     if self._log_cog_loads:
                         print(f"Loaded Cog: {filename[:-3]}")
                 except Exception as exc:
-                    print(f"[FATAL] Failed to load cog {filename}: {exc}")
+                    print(f"[FATAL] Failed to load cog {filename}:")
+                    traceback.print_exception(type(exc), exc, exc.__traceback__)
                     raise
         except Exception:
             raise
