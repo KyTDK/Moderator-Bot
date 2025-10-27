@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Optional
 
@@ -317,10 +319,70 @@ def _default_score_formatter(value, _scan_result, _translator, _guild_id: int, _
         return None
 
 
+def _coerce_int(value: Any) -> int | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number):
+        return None
+    return int(number)
+
+
+def _coerce_float(value: Any) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _format_video_frames(value, scan_result, _translator, _guild_id, _duration_ms):
+    scanned = _coerce_int(value)
+    if scanned is None:
+        return None
+
+    target_raw = scan_result.get("video_frames_target")
+    target = _coerce_int(target_raw)
+    media_total_raw = scan_result.get("video_frames_media_total")
+    media_total = _coerce_int(media_total_raw)
+
+    parts: list[str] = [str(scanned)]
+    if target is not None and target > 0:
+        parts[0] = f"{scanned}/{target}"
+    if media_total is not None and media_total > 0:
+        parts.append(f"({media_total} total)")
+    return " ".join(parts)
+
+
+def _format_average_latency_per_frame(value, _scan_result, _translator, _guild_id, duration_ms):
+    scanned_frames = _coerce_float(value)
+    total_duration = _coerce_float(duration_ms)
+    if (
+        scanned_frames is None
+        or scanned_frames <= 0
+        or total_duration is None
+        or total_duration < 0
+    ):
+        return None
+    average_latency = total_duration / scanned_frames
+    return f"{average_latency:.2f} ms/frame"
+
+
 _DEFAULT_FIELD_SPECS: tuple[ScanFieldSpec, ...] = (
     ScanFieldSpec(field_key="reason", inline=False, formatter=_default_reason_formatter),
     ScanFieldSpec(field_key="category", formatter=_default_category_formatter),
     ScanFieldSpec(field_key="score", formatter=_default_score_formatter),
+    ScanFieldSpec(
+        field_key="video_frames",
+        source_key="video_frames_scanned",
+        formatter=_format_video_frames,
+    ),
+    ScanFieldSpec(
+        field_key="average_latency_per_frame_ms",
+        source_key="video_frames_scanned",
+        formatter=_format_average_latency_per_frame,
+    ),
 )
 
 
