@@ -280,15 +280,7 @@ async def scan_media_item(
         if extra:
             payload.update(extra)
         await _resolve_cache_tokens(payload)
-        should_emit = True
-        if reason == "unsupported_type" and item.tenor and item.source == "content":
-            should_emit = False
-        if (
-            reason == "unsupported_type"
-            and item.source == "embed"
-            and (extra or {}).get("detected_mime", "").lower() == "unknown"
-        ):
-            should_emit = False
+        should_emit = reason != "unsupported_type"
         if should_emit:
             await _emit_diagnostic(reason, status=status or reason, extra=extra)
         return payload
