@@ -123,8 +123,6 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
             log.debug("hydrate_message: %s", fetch_reason)
 
     return hydrated or message
-
-
 def collect_media_items(
     message: discord.Message,
     bot: discord.Client,
@@ -155,20 +153,29 @@ def collect_media_items(
 
     items: list[MediaWorkItem] = []
     seen_urls: set[str] = set()
+    attachments_by_filename: dict[str, discord.Attachment] = {}
     for attachment in attachments:
-        url_candidates: list[str] = []
+        raw_candidates: list[str] = []
         proxy_url = getattr(attachment, "proxy_url", None)
         if proxy_url:
-            url_candidates.append(proxy_url)
+            raw_candidates.append(proxy_url)
         raw_url = getattr(attachment, "url", None)
-        if raw_url and raw_url not in url_candidates:
-            url_candidates.append(raw_url)
+        if raw_url and raw_url not in raw_candidates:
+            raw_candidates.append(raw_url)
+
+        filename = getattr(attachment, "filename", None) or (raw_candidates[0] if raw_candidates else None)
+        ext = os.path.splitext(filename)[1] if filename else ""
+
+        url_candidates: list[str] = []
+        for candidate in raw_candidates:
+            if candidate and candidate not in url_candidates:
+                url_candidates.append(candidate)
+
         if not url_candidates:
             continue
         primary_url = url_candidates[0]
         fallback_urls = url_candidates[1:]
-        filename = getattr(attachment, "filename", None) or primary_url
-        ext = os.path.splitext(filename)[1]
+        label_value = filename or primary_url
         cache_hint = getattr(attachment, "hash", None)
         metadata: dict[str, object] = {
             "size": getattr(attachment, "size", None),
@@ -183,10 +190,12 @@ def collect_media_items(
             metadata["fallback_urls"] = fallback_urls
         for candidate in url_candidates:
             seen_urls.add(candidate)
+        if filename:
+            attachments_by_filename.setdefault(filename, attachment)
         items.append(
             MediaWorkItem(
                 source="attachment",
-                label=filename,
+                label=label_value,
                 url=primary_url,
                 ext_hint=ext or None,
                 metadata=metadata,
@@ -196,6 +205,10 @@ def collect_media_items(
     for embed in embeds:
         tenor_added = False
         for candidate in _extract_embed_urls(embed):
+            resolved_candidate = _resolve_embed_url(candidate, attachments_by_filename)
+            if not resolved_candidate:
+                continue
+            candidate = resolved_candidate
             if candidate in seen_urls:
                 continue
             parsed = urlparse(candidate)
@@ -298,6 +311,30 @@ def _extract_embed_urls(embed: discord.Embed) -> list[str]:
     if thumbnail and getattr(thumbnail, "url", None):
         urls.append(thumbnail.url)
     return urls
+
+
+def _resolve_embed_url(
+    candidate: str,
+    attachments_by_filename: dict[str, discord.Attachment],
+) -> str | None:
+    parsed = urlparse(candidate)
+    if parsed.scheme != "attachment":
+        return candidate
+
+    filename = parsed.path.lstrip("/")
+    if not filename:
+        return None
+
+    attachment = attachments_by_filename.get(filename)
+    if attachment is None:
+        return None
+
+    for attr in ("url", "proxy_url"):
+        resolved = getattr(attachment, attr, None)
+        if resolved:
+            return resolved
+
+    return None
 
 
 def _extract_custom_emojis(
