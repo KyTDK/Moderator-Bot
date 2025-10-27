@@ -146,7 +146,13 @@ async def notify_download_failure(
             return f"{joined[:997]}…"
         return joined
 
+    primary_url = getattr(item, "url", None)
+    if primary_url is not None and not isinstance(primary_url, str):
+        primary_url = str(primary_url)
+
     seen_primary = {value for value in (proxy_url, original_url) if value}
+    if primary_url:
+        seen_primary.add(primary_url)
     additional_attempts = [
         attempt for attempt in attempted_info if attempt.url not in seen_primary
     ]
@@ -200,6 +206,27 @@ async def notify_download_failure(
         embed.add_field(
             name="Request",
             value=truncate_field_value(request_value),
+            inline=False,
+        )
+
+    if primary_url:
+        parsed_primary = urlparse(primary_url)
+        formatted_primary = _format_single(primary_url)
+        primary_details: list[str] = []
+        scheme = parsed_primary.scheme or "<missing>"
+        primary_details.append(f"scheme={scheme}")
+        host = parsed_primary.netloc or "<missing>"
+        primary_details.append(f"host={host}")
+        is_absolute = bool(parsed_primary.scheme and parsed_primary.netloc)
+        primary_details.append(
+            f"absolute={'yes' if is_absolute else 'no'}"
+        )
+        work_item_value = truncate_field_value(
+            f"{formatted_primary}\n{', '.join(primary_details)}"
+        )
+        embed.add_field(
+            name="Work item URL",
+            value=work_item_value,
             inline=False,
         )
 
