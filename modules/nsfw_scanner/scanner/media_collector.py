@@ -446,24 +446,30 @@ def collect_media_items(
 
 def _extract_embed_urls(embed: discord.Embed) -> list[str]:
     urls: list[str] = []
+
+    def _add_url(proxy_url: str | None, url: str | None) -> None:
+        # Only use proxy_url if available (it’s signed).
+        if proxy_url:
+            urls.append(str(proxy_url))
+        # Use url only if it’s not a Discord CDN link or already signed.
+        elif url:
+            s = str(url)
+            if "media.discordapp.net" in s and "?" not in s:
+                return  # skip unsigned media.discordapp.net URLs
+            urls.append(s)
+
     video = getattr(embed, "video", None)
     if video:
-        proxy_url = getattr(video, "proxy_url", None)
-        url = getattr(video, "url", None)
-        if proxy_url or url:
-            urls.append(proxy_url or url)
+        _add_url(getattr(video, "proxy_url", None), getattr(video, "url", None))
+
     image = getattr(embed, "image", None)
     if image:
-        proxy_url = getattr(image, "proxy_url", None)
-        url = getattr(image, "url", None)
-        if proxy_url or url:
-            urls.append(proxy_url or url)
+        _add_url(getattr(image, "proxy_url", None), getattr(image, "url", None))
+
     thumbnail = getattr(embed, "thumbnail", None)
     if thumbnail:
-        proxy_url = getattr(thumbnail, "proxy_url", None)
-        url = getattr(thumbnail, "url", None)
-        if proxy_url or url:
-            urls.append(proxy_url or url)
+        _add_url(getattr(thumbnail, "proxy_url", None), getattr(thumbnail, "url", None))
+
     return urls
 
 
