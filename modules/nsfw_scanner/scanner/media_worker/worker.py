@@ -26,6 +26,8 @@ from ...utils.file_ops import safe_delete
 from ..work_item import MediaFlagged, MediaWorkItem
 from .cache import annotate_cache_status, clone_scan_result
 from .diagnostics import (
+    AttemptedURL,
+    describe_attempt_source,
     emit_verbose_if_needed,
     notify_download_failure,
     should_emit_diagnostic,
@@ -362,7 +364,7 @@ async def scan_media_item(
         metadata.get("refreshed_urls"),
         metadata.get("refreshed_url"),
     )
-    attempted_urls: list[str] = []
+    attempted_urls: list[AttemptedURL] = []
 
     try:
         async def _process_download(download_obj: DownloadResult) -> None:
@@ -547,8 +549,9 @@ async def scan_media_item(
         if item.url:
             url_candidates: list[str] = []
             seen_candidates: set[str] = set()
+            candidate_sources: dict[str, str] = {}
 
-            def _queue_candidate(value: str | None) -> None:
+            def _queue_candidate(value: str | None, source: str) -> None:
                 if not value:
                     return
                 candidate = str(value).strip()
@@ -556,14 +559,15 @@ async def scan_media_item(
                     return
                 seen_candidates.add(candidate)
                 url_candidates.append(candidate)
+                candidate_sources[candidate] = source
 
-            _queue_candidate(item.url)
+            _queue_candidate(item.url, "work_item")
             for candidate in candidate_urls_meta:
-                _queue_candidate(candidate)
+                _queue_candidate(candidate, "metadata_candidate")
             for candidate in fallback_urls:
-                _queue_candidate(candidate)
+                _queue_candidate(candidate, "metadata_fallback")
             for candidate in refreshed_urls:
-                _queue_candidate(candidate)
+                _queue_candidate(candidate, "metadata_refreshed")
 
             attempted_set: set[str] = set()
             observed_refreshed: list[str] = []
@@ -578,7 +582,12 @@ async def scan_media_item(
                         url_override=candidate_url,
                     ) as temp_download:
                         if candidate_url not in attempted_set:
-                            attempted_urls.append(candidate_url)
+                            attempted_urls.append(
+                                AttemptedURL(
+                                    url=candidate_url,
+                                    source=candidate_sources.get(candidate_url),
+                                )
+                            )
                             attempted_set.add(candidate_url)
                         resolved_url = getattr(temp_download, "url", None)
                         if (
@@ -593,7 +602,12 @@ async def scan_media_item(
                         return
                 except aiohttp.ClientResponseError as http_error:
                     if candidate_url not in attempted_set:
-                        attempted_urls.append(candidate_url)
+                        attempted_urls.append(
+                            AttemptedURL(
+                                url=candidate_url,
+                                source=candidate_sources.get(candidate_url),
+                            )
+                        )
                         attempted_set.add(candidate_url)
                     request_info = getattr(http_error, "request_info", None)
                     real_url = None
@@ -663,7 +677,10 @@ async def scan_media_item(
             download=None,
         )
     except aiohttp.ClientResponseError as http_error:
-        attempted_for_log = getattr(http_error, "_attempted_urls", attempted_urls)
+        attempted_for_log_raw = getattr(http_error, "_attempted_urls", attempted_urls)
+        attempted_for_log = list(attempted_for_log_raw)
+        if not attempted_for_log and item.url:
+            attempted_for_log = [AttemptedURL(str(item.url), "work_item")]
         fallback_for_log = getattr(http_error, "_fallback_urls", fallback_urls)
         refreshed_for_log = getattr(http_error, "_refreshed_urls", refreshed_urls)
         if not getattr(http_error, "_download_failure_logged", False):
@@ -672,7 +689,7 @@ async def scan_media_item(
                 item=item,
                 context=context,
                 message=message,
-                attempted_urls=attempted_for_log or ([item.url] if item.url else []),
+                attempted_urls=attempted_for_log,
                 fallback_urls=fallback_for_log,
                 refreshed_urls=refreshed_for_log,
                 error=http_error,
@@ -684,7 +701,11 @@ async def scan_media_item(
             {
                 "error_status": http_error.status,
                 "error_message": http_error.message,
-                "attempted_urls": ", ".join(attempted_for_log or []) or item.url,
+                "attempted_urls": ", ".join(
+                    f"{entry.url} ({label})" if (label := describe_attempt_source(entry.source)) else entry.url
+                    for entry in attempted_for_log
+                )
+                or item.url,
                 "fallback_urls": ", ".join(fallback_for_log or []),
             },
             status=f"http_error_{http_error.status}",

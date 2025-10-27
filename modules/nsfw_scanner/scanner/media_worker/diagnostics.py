@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable, NamedTuple, Sequence
 from urllib.parse import urlparse
 
 import aiohttp
@@ -23,6 +23,25 @@ from ...utils.diagnostics import (
     extract_context_lines,
     truncate_field_value,
 )
+
+class AttemptedURL(NamedTuple):
+    url: str
+    source: str | None = None
+
+
+_ATTEMPT_SOURCE_LABELS: dict[str, str] = {
+    "work_item": "work item URL",
+    "metadata_candidate": "metadata candidate URL",
+    "metadata_fallback": "metadata fallback URL",
+    "metadata_refreshed": "metadata refreshed URL",
+}
+
+
+def describe_attempt_source(source: str | None) -> str | None:
+    if not source:
+        return None
+    return _ATTEMPT_SOURCE_LABELS.get(source, source)
+
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +72,7 @@ async def notify_download_failure(
     item: MediaWorkItem,
     context: GuildScanContext,
     message: discord.Message | None,
-    attempted_urls: Iterable[str],
+    attempted_urls: Iterable[AttemptedURL | Sequence[str] | str],
     fallback_urls: Iterable[str],
     refreshed_urls: Iterable[str] | None,
     error: aiohttp.ClientResponseError,
@@ -68,7 +87,33 @@ async def notify_download_failure(
     logger = logger or log
 
     metadata = item.metadata or {}
-    attempted_list = [url for url in attempted_urls if url]
+
+    def _coerce_attempted(entry: AttemptedURL | Sequence[str] | str) -> AttemptedURL:
+        if isinstance(entry, AttemptedURL):
+            return entry
+        if isinstance(entry, Sequence) and not isinstance(entry, (str, bytes, bytearray)):
+            if not entry:
+                raise ValueError("empty attempted URL entry")
+            url_value = str(entry[0]) if entry[0] else ""
+            source_value = (
+                str(entry[1]) if len(entry) > 1 and entry[1] is not None else None
+            )
+            return AttemptedURL(url=url_value, source=source_value)
+        return AttemptedURL(url=str(entry), source=None)
+
+    attempted_info: list[AttemptedURL] = []
+    for raw_entry in attempted_urls:
+        if not raw_entry:
+            continue
+        try:
+            coerced = _coerce_attempted(raw_entry)
+        except ValueError:
+            continue
+        if coerced.url:
+            attempted_info.append(coerced)
+
+    attempted_strings = [attempt.url for attempt in attempted_info]
+
     fallback_list = [url for url in fallback_urls if url]
     refreshed_list = [url for url in (refreshed_urls or []) if url]
 
@@ -88,8 +133,14 @@ async def notify_download_failure(
         formatted = suppress_discord_link_embed(url_value)
         return truncate_field_value(formatted)
 
-    def _format_join(url_values: Iterable[str], *, separator: str) -> str:
-        formatted_values = [_format_single(url) for url in url_values]
+    def _format_join(
+        url_values: Iterable[Any],
+        *,
+        separator: str,
+        formatter: Callable[[Any], str] | None = None,
+    ) -> str:
+        apply_formatter = formatter or _format_single
+        formatted_values = [apply_formatter(url) for url in url_values]
         joined = separator.join(formatted_values)
         if len(joined) > 1000:
             return f"{joined[:997]}…"
@@ -97,7 +148,7 @@ async def notify_download_failure(
 
     seen_primary = {value for value in (proxy_url, original_url) if value}
     additional_attempts = [
-        url for url in attempted_list if url not in seen_primary
+        attempt for attempt in attempted_info if attempt.url not in seen_primary
     ]
     fallback_filtered = [
         url for url in fallback_list if url not in seen_primary
@@ -106,7 +157,20 @@ async def notify_download_failure(
         url for url in refreshed_list if url not in seen_primary
     ]
 
-    attempted_display = _format_join(additional_attempts, separator="\n")
+    def _format_attempt_entry(entry: AttemptedURL) -> str:
+        base = suppress_discord_link_embed(entry.url)
+        source_label = describe_attempt_source(entry.source)
+        if source_label:
+            value = f"{base} ({source_label})"
+        else:
+            value = base
+        return truncate_field_value(value)
+
+    attempted_display = _format_join(
+        additional_attempts,
+        separator="\n",
+        formatter=_format_attempt_entry,
+    )
     fallback_display = _format_join(fallback_filtered, separator=", ")
     refreshed_display = _format_join(refreshed_filtered, separator=", ")
 
@@ -162,7 +226,7 @@ async def notify_download_failure(
     if refreshed_display:
         embed.add_field(name="Refreshed URLs", value=refreshed_display, inline=False)
 
-    if real_url_str and real_url_str not in attempted_list:
+    if real_url_str and real_url_str not in attempted_strings:
         resolved_url = suppress_discord_link_embed(real_url_str)
         embed.add_field(
             name="Resolved URL",
@@ -261,6 +325,8 @@ async def emit_verbose_if_needed(
 __all__ = [
     "should_emit_diagnostic",
     "suppress_discord_link_embed",
+    "AttemptedURL",
+    "describe_attempt_source",
     "notify_download_failure",
     "emit_verbose_if_needed",
 ]
