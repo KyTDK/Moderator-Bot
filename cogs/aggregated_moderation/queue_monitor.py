@@ -225,6 +225,17 @@ class FreeQueueMonitor:
             f"(backlog={snapshot.backlog}, high={backlog_high}, avg_wait={snapshot.avg_wait:.2f}s)"
         )
         await queue.ensure_capacity(target)
+        post_snapshot: Optional[QueueSnapshot] = None
+        try:
+            post_snapshot = QueueSnapshot.from_mapping(queue.metrics())
+        except Exception:
+            post_snapshot = None
+        await self._log_adaptive_change(
+            tier=tier,
+            before=snapshot,
+            after=post_snapshot,
+            target=target,
+        )
 
     async def _handle_adaptive_scaling(self, free: QueueSnapshot, accel: QueueSnapshot) -> None:
         """Adjust queue limits when adaptive scaling is enabled."""
@@ -297,6 +308,90 @@ class FreeQueueMonitor:
                     self._lag_hits = 0
         except asyncio.CancelledError:
             raise
+
+
+    async def _log_adaptive_change(
+        self,
+        *,
+        tier: str,
+        before: QueueSnapshot,
+        after: Optional[QueueSnapshot],
+        target: int,
+    ) -> None:
+        if not LOG_CHANNEL_ID:
+            return
+        try:
+            channel = await safe_get_channel(self._bot, LOG_CHANNEL_ID)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[FreeQueueLag] Failed to resolve LOG_CHANNEL_ID for adaptive log: {exc}")
+            return
+
+        if channel is None:
+            print(f"[FreeQueueLag] Unable to resolve LOG_CHANNEL_ID={LOG_CHANNEL_ID} for adaptive log")
+            return
+
+        applied = after.max_workers if after is not None else target
+        applied_autoscale = after.autoscale_max if after is not None else max(before.autoscale_max, target)
+        backlog_ratio = before.backlog_ratio if before.backlog_high else 0.0
+
+        reasons: list[str] = []
+        if before.backlog_excess > 0:
+            reasons.append(f"backlog above high watermark by {before.backlog_excess}")
+        if before.wait_pressure:
+            reasons.append("wait pressure detected")
+        if not reasons:
+            reasons.append("heuristics recommended scale-up")
+
+        embed = discord.Embed(
+            title="Adaptive scaling applied",
+            description=(
+                f"{tier.title()} queue scaling from {before.max_workers} to {applied} workers "
+                f"(target requested {target})"
+            ),
+            color=discord.Color.blue(),
+        )
+        embed.add_field(
+            name="Worker limits",
+            value=(
+                f"baseline={before.baseline_workers}\n"
+                f"previous max={before.max_workers}\n"
+                f"new max={applied}\n"
+                f"previous burst={before.autoscale_max}\n"
+                f"new burst={applied_autoscale}"
+            ),
+            inline=True,
+        )
+        embed.add_field(
+            name="Backlog snapshot",
+            value=(
+                f"backlog={before.backlog}\n"
+                f"active={before.active_workers}\n"
+                f"high watermark={before.backlog_high}\n"
+                f"low watermark={before.backlog_low}\n"
+                f"ratio={backlog_ratio:.2f}"
+            ),
+            inline=True,
+        )
+        embed.add_field(
+            name="Timing",
+            value=(
+                f"avg_wait={before.avg_wait:.2f}s\n"
+                f"avg_run={before.avg_runtime:.2f}s\n"
+                f"last_wait={before.last_wait:.2f}s\n"
+                f"longest_wait={before.longest_wait:.2f}s"
+            ),
+            inline=False,
+        )
+        embed.add_field(
+            name="Triggers",
+            value="\n".join(f"- {reason}" for reason in reasons),
+            inline=False,
+        )
+
+        try:
+            await channel.send(embed=embed)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[FreeQueueLag] Failed to send adaptive scaling log: {exc}")
 
 
 __all__ = ["FreeQueueMonitor"]
