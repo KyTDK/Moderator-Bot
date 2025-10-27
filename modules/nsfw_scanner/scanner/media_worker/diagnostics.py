@@ -87,6 +87,15 @@ async def notify_download_failure(
     logger = logger or log
 
     metadata = item.metadata or {}
+    hydration_stage = metadata.get("hydration_stage")
+    hydrated_urls_meta = metadata.get("hydrated_urls") or []
+    if isinstance(hydrated_urls_meta, str):
+        hydrated_urls_list = [hydrated_urls_meta]
+    elif isinstance(hydrated_urls_meta, Iterable):
+        hydrated_urls_list = [str(url) for url in hydrated_urls_meta if url]
+    else:
+        hydrated_urls_list = []
+    original_proxy_url_meta = metadata.get("original_proxy_url")
 
     def _coerce_attempted(entry: AttemptedURL | Sequence[str] | str) -> AttemptedURL:
         if isinstance(entry, AttemptedURL):
@@ -210,6 +219,20 @@ async def notify_download_failure(
             inline=False,
         )
 
+    final_attempt_entry = attempted_info[-1] if attempted_info else None
+    final_attempt_source = (
+        describe_attempt_source(final_attempt_entry.source)
+        if final_attempt_entry
+        else None
+    )
+    final_attempt_url = None
+    if real_url_str:
+        final_attempt_url = real_url_str
+    elif final_attempt_entry:
+        final_attempt_url = final_attempt_entry.url
+    elif primary_url:
+        final_attempt_url = primary_url
+
     if primary_url:
         parsed_primary = urlparse(primary_url)
         formatted_primary = _format_single(primary_url)
@@ -237,11 +260,42 @@ async def notify_download_failure(
             value=_format_single(proxy_url),
             inline=False,
         )
+    attachment_proxy_url = getattr(item.attachment, "proxy_url", None) if item.attachment else None
+    if original_proxy_url_meta or attachment_proxy_url:
+        original_candidate = original_proxy_url_meta or attachment_proxy_url
+        embed.add_field(
+            name="Original attachment proxy URL",
+            value=_format_single(str(original_candidate)),
+            inline=False,
+        )
     if original_url and (original_url != proxy_url or not proxy_url):
         embed.add_field(
             name="Original URL",
             value=_format_single(original_url),
             inline=False,
+        )
+    if final_attempt_url:
+        final_value = suppress_discord_link_embed(final_attempt_url)
+        if final_attempt_source:
+            final_value = f"{final_value} ({final_attempt_source})"
+        embed.add_field(
+            name="Final attempted URL",
+            value=truncate_field_value(final_value),
+            inline=False,
+        )
+        parsed_final = urlparse(final_attempt_url)
+        query_lower = (parsed_final.query or "").lower()
+        has_signed_query = "ex=" in query_lower
+        embed.add_field(
+            name="Contains ?ex=",
+            value="yes" if has_signed_query else "no",
+            inline=True,
+        )
+    if hydration_stage:
+        embed.add_field(
+            name="Hydration stage",
+            value=hydration_stage,
+            inline=True,
         )
     if attempted_display:
         embed.add_field(
@@ -259,6 +313,17 @@ async def notify_download_failure(
         embed.add_field(
             name="Resolved URL",
             value=truncate_field_value(resolved_url),
+            inline=False,
+        )
+    if hydrated_urls_list:
+        hydrated_display = _format_join(
+            hydrated_urls_list,
+            separator="\n",
+            formatter=_format_single,
+        )
+        embed.add_field(
+            name="Hydrated URLs",
+            value=hydrated_display,
             inline=False,
         )
 
