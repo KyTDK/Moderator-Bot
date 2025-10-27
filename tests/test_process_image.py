@@ -104,6 +104,7 @@ moderation_stub = types.ModuleType("modules.nsfw_scanner.helpers.moderation")
 
 
 async def _moderator_api(*_args, **_kwargs):
+    _kwargs.pop("latency_callback", None)
     return {
         "is_nsfw": False,
         "reason": "openai_moderation",

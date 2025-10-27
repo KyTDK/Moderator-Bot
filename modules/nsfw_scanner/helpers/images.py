@@ -321,6 +321,7 @@ async def _run_image_pipeline(
         max_similarity=max_similarity,
         allowed_categories=context.allowed_categories,
         threshold=context.moderation_threshold,
+        latency_callback=_add_step,
     )
     _add_step(
         "moderation_api",
@@ -589,9 +590,15 @@ async def process_image_batch(
     ) -> tuple[ExtractedFrame, dict[str, Any] | None]:
         response: dict[str, Any] | None = None
         inference_started = time.perf_counter()
+        wait_duration_ms = 0.0
+        pipeline_duration_ms = 0.0
         if image is not None:
             try:
-                async with semaphore:
+                wait_started = time.perf_counter()
+                await semaphore.acquire()
+                wait_duration_ms = max((time.perf_counter() - wait_started) * 1000, 0.0)
+                pipeline_started = time.perf_counter()
+                try:
                     response = await _run_image_pipeline(
                         scanner,
                         image_path=None,
@@ -601,8 +608,28 @@ async def process_image_batch(
                         image_bytes=payload_bytes,
                         image_mime=payload_mime,
                     )
+                finally:
+                    pipeline_duration_ms = max(
+                        (time.perf_counter() - pipeline_started) * 1000,
+                        0.0,
+                    )
+                    semaphore.release()
             finally:
                 image.close()
+        if wait_duration_ms > 0:
+            _record_latency(
+                "frame_pipeline_inference_wait_ms",
+                "frame_pipeline_inference_wait",
+                wait_duration_ms,
+                label="Frame Semaphore Wait",
+            )
+        if pipeline_duration_ms > 0:
+            _record_latency(
+                "frame_pipeline_inference_run_ms",
+                "frame_pipeline_inference_run",
+                pipeline_duration_ms,
+                label="Frame Pipeline Execution",
+            )
         inference_duration = max((time.perf_counter() - inference_started) * 1000, 0.0)
         _record_latency(
             "frame_pipeline_inference_ms",
