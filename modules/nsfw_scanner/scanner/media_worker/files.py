@@ -9,10 +9,9 @@ from urllib.parse import urlparse
 import discord
 from apnggif import apnggif
 
-from ..constants import TMP_DIR
-from ..work_item import MediaWorkItem
-from ..utils.file_ops import safe_delete
-
+from modules.nsfw_scanner.constants import TMP_DIR
+from modules.nsfw_scanner.scanner.work_item import MediaWorkItem
+from modules.nsfw_scanner.utils.file_ops import safe_delete
 
 async def convert_apng(stack: AsyncExitStack, path: str) -> str:
     converted_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
