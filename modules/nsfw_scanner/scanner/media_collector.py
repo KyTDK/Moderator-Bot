@@ -78,7 +78,6 @@ def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
 async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
     _ = bot  # Parameter kept for API compatibility; no runtime usage.
     attachments = getattr(message, "attachments", None) or []
-    stickers = getattr(message, "stickers", None) or []
     if attachments and all(
         (getattr(a, "proxy_url", None) or getattr(a, "url", None) or "").startswith(("http://", "https://"))
         for a in attachments
