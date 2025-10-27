@@ -78,9 +78,8 @@ def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
 async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
     _ = bot  # Parameter kept for API compatibility; no runtime usage.
     attachments = getattr(message, "attachments", None) or []
-    embeds = getattr(message, "embeds", None) or []
     stickers = getattr(message, "stickers", None) or []
-    if attachments or stickers:
+    if any(getattr(a, "proxy_url", None) or getattr(a, "url", None) for a in attachments) or stickers:
         return message
 
     content = getattr(message, "content", "") or ""
@@ -165,6 +164,10 @@ def collect_media_items(
             raw_url = str(raw_url)
 
         primary_url = proxy_url or raw_url or (filename or "")
+        # Skip if no real CDN URL
+        if not primary_url.startswith(("http://", "https://")):
+            log.debug("Skipping attachment with no valid URL: %s", filename)
+            continue
         if not isinstance(primary_url, str):
             primary_url = str(primary_url)
         if not primary_url:
