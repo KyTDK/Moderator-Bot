@@ -22,11 +22,11 @@ from ..helpers.downloads import DownloadResult, temp_download
 from ..helpers.images import process_image
 from ..helpers.videos import process_video
 from ..reporting import dispatch_callback, emit_verbose_report
-from ..utils.discord_utils import safe_get_channel
 from ..utils.file_ops import safe_delete
 from ..utils.file_types import FILE_TYPE_IMAGE, FILE_TYPE_VIDEO, determine_file_type
 from .metrics import queue_media_metrics
 from .work_item import MediaFlagged, MediaWorkItem
+from modules.utils.discord_utils import safe_get_channel
 
 log = logging.getLogger(__name__)
 
