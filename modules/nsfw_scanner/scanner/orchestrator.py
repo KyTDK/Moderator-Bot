@@ -141,7 +141,7 @@ class NSFWScanner:
         media_items: list[MediaWorkItem] = []
         target_message = message
 
-        if url:
+        if url and message is None:
             media_items.append(self._build_url_item(url))
         else:
             if target_message is None:
