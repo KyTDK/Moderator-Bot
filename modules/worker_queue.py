@@ -187,6 +187,20 @@ class WorkerQueue:
             # prune
             self.workers = [w for w in self.workers if not w.done()]
 
+    async def ensure_capacity(self, target_workers: int):
+        """Ensure the queue can scale up to the requested worker count."""
+        target_workers = max(1, int(target_workers))
+        needs_resize = False
+
+        async with self._lock:
+            if target_workers > self._autoscale_max:
+                self._autoscale_max = target_workers
+            if target_workers > self.max_workers:
+                needs_resize = True
+
+        if needs_resize:
+            await self.resize_workers(target_workers)
+
     async def autoscaler_loop(self):
         """Periodically checks backlog and adjusts worker count.
 
