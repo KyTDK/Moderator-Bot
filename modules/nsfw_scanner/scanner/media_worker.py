@@ -162,20 +162,45 @@ async def scan_media_item(
         cache_tokens.append((item.cache_key, initial_reservation.token))
 
     download: DownloadResult | None = None
+    candidate_urls: list[str] = [item.url]
+    fallback_urls = item.metadata.get("fallback_urls")
+    if isinstance(fallback_urls, (list, tuple)):
+        for candidate in fallback_urls:
+            if isinstance(candidate, str) and candidate and candidate not in candidate_urls:
+                candidate_urls.append(candidate)
 
     try:
         async with AsyncExitStack() as stack:
-            download = await stack.enter_async_context(
-                temp_download(
-                    scanner.session,
-                    item.url,
-                    guild_key=_guild_key(context),
-                    limits=context.limits,
-                    ext=item.ext_hint,
-                    prefer_video=item.prefer_video,
-                    head_cache=context.head_cache,
-                )
-            )
+            last_http_error: aiohttp.ClientResponseError | None = None
+            for candidate_url in candidate_urls:
+                try:
+                    download = await stack.enter_async_context(
+                        temp_download(
+                            scanner.session,
+                            candidate_url,
+                            guild_key=_guild_key(context),
+                            limits=context.limits,
+                            ext=item.ext_hint,
+                            prefer_video=item.prefer_video,
+                            head_cache=context.head_cache,
+                        )
+                    )
+                    break
+                except aiohttp.ClientResponseError as http_error:
+                    is_last_candidate = candidate_url == candidate_urls[-1]
+                    if http_error.status in {401, 403, 404} and not is_last_candidate:
+                        last_http_error = http_error
+                        log.debug(
+                            "Download failed for %s (HTTP %s); trying fallback",
+                            candidate_url,
+                            http_error.status,
+                        )
+                        continue
+                    raise
+            if download is None:
+                if last_http_error is not None:
+                    raise last_http_error
+                raise RuntimeError(f"Failed to resolve download URL for {item.label}")
             prepared_path = download.path
             if item.metadata.get("sticker_format") == "apng":
                 prepared_path = await _convert_apng(stack, prepared_path)
@@ -370,9 +395,13 @@ async def scan_media_item(
             },
         )
         duration_ms = int((time.perf_counter() - started_at) * 1000)
+        failed_url = item.url
+        request_info = getattr(http_error, "request_info", None)
+        if request_info is not None and getattr(request_info, "real_url", None) is not None:
+            failed_url = str(request_info.real_url)
         log.warning(
             "Failed to download media %s (HTTP %s): %s",
-            item.url,
+            failed_url,
             http_error.status,
             http_error.message,
         )

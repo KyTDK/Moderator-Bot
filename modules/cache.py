@@ -29,6 +29,7 @@ class CachedAttachment:
     def __init__(self, data: dict):
         self.filename = data["filename"]
         self.url = data["url"]
+        self.proxy_url = data.get("proxy_url")
         self.size = data["size"]
 
 class CachedReaction:
@@ -77,6 +78,7 @@ async def cache_message(msg: discord.Message):
             {
                 "filename": a.filename,
                 "url": a.url,
+                "proxy_url": getattr(a, "proxy_url", None),
                 "size": a.size,
             }
             for a in msg.attachments

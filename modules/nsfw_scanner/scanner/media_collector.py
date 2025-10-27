@@ -146,10 +146,18 @@ def collect_media_items(
     items: list[MediaWorkItem] = []
     seen_urls: set[str] = set()
     for attachment in attachments:
-        url = getattr(attachment, "proxy_url", None) or getattr(attachment, "url", None)
-        if not url:
+        url_candidates: list[str] = []
+        proxy_url = getattr(attachment, "proxy_url", None)
+        if proxy_url:
+            url_candidates.append(proxy_url)
+        raw_url = getattr(attachment, "url", None)
+        if raw_url and raw_url not in url_candidates:
+            url_candidates.append(raw_url)
+        if not url_candidates:
             continue
-        filename = getattr(attachment, "filename", None) or url
+        primary_url = url_candidates[0]
+        fallback_urls = url_candidates[1:]
+        filename = getattr(attachment, "filename", None) or primary_url
         ext = os.path.splitext(filename)[1]
         cache_hint = getattr(attachment, "hash", None)
         metadata: dict[str, object] = {
@@ -158,19 +166,19 @@ def collect_media_items(
         }
         if cache_hint:
             metadata["cache_key"] = f"hash::{cache_hint}"
+        if fallback_urls:
+            metadata["fallback_urls"] = fallback_urls
+        for candidate in url_candidates:
+            seen_urls.add(candidate)
         items.append(
             MediaWorkItem(
                 source="attachment",
                 label=filename,
-                url=url,
+                url=primary_url,
                 ext_hint=ext or None,
                 metadata=metadata,
             )
         )
-        seen_urls.add(url)
-        raw_url = getattr(attachment, "url", None)
-        if raw_url:
-            seen_urls.add(raw_url)
 
     for embed in embeds:
         tenor_added = False
