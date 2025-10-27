@@ -12,7 +12,7 @@ import aiohttp
 import discord
 from discord.utils import utcnow
 
-from ..cache import verdict_cache
+from ...cache import verdict_cache
 from ..constants import LOG_CHANNEL_ID
 from ..context import GuildScanContext
 from ..helpers.downloads import DownloadResult
