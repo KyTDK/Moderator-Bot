@@ -214,7 +214,7 @@ def test_collect_media_items_deduplicates_tenor_variants():
     assert items[0].url == "https://media1.tenor.com/abcdefghijk/video.mp4"
 
 
-def test_collect_media_items_derives_cdn_fallback_for_proxy_only_attachment():
+def test_collect_media_items_uses_proxy_url_without_fallback():
     attachment = SimpleNamespace(
         proxy_url="https://media.discordapp.net/attachments/1/2/image0.gif?width=120&height=80",
         url=None,
@@ -237,6 +237,5 @@ def test_collect_media_items_derives_cdn_fallback_for_proxy_only_attachment():
     items = collect_media_items(message, _DummyBot(), context)
 
     assert len(items) == 1
-    fallback_urls = items[0].metadata.get("fallback_urls")
-    assert fallback_urls == ["https://cdn.discordapp.com/attachments/1/2/image0.gif"]
+    assert items[0].metadata.get("fallback_urls") is None
     assert items[0].url == "https://media.discordapp.net/attachments/1/2/image0.gif?width=120&height=80"

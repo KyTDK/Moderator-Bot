@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:  # pragma: no cover - typing import
+    import discord
 
 
 @dataclass(slots=True)
@@ -13,6 +16,7 @@ class MediaWorkItem:
     ext_hint: str | None = None
     tenor: bool = False
     metadata: dict[str, Any] = field(default_factory=dict)
+    attachment: "discord.Attachment | None" = None
 
     @property
     def cache_key(self) -> str:

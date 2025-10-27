@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import logging
+import os
+import tempfile
 import time
-from contextlib import AsyncExitStack
+from contextlib import AsyncExitStack, asynccontextmanager
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 import aiohttp
 import discord
@@ -12,11 +15,12 @@ from discord.utils import utcnow
 from ..cache import verdict_cache
 from ..constants import LOG_CHANNEL_ID
 from ..context import GuildScanContext
-from ..helpers.downloads import DownloadResult, temp_download
+from ..helpers.downloads import DownloadResult
 from ..helpers.images import process_image
 from ..helpers.videos import process_video
 from ..reporting import dispatch_callback
 from ..utils.file_types import FILE_TYPE_IMAGE, FILE_TYPE_VIDEO, determine_file_type
+from ..utils.file_ops import safe_delete
 from ..work_item import MediaFlagged, MediaWorkItem
 from .cache import annotate_cache_status, clone_scan_result
 from .diagnostics import (
@@ -25,14 +29,101 @@ from .diagnostics import (
     should_emit_diagnostic,
 )
 from .files import build_evidence_file, convert_apng, hash_file
-from .urls import (
-    extend_unique,
-    normalise_candidate_url,
-    resolve_attachment_refresh_candidates,
-)
 from modules.utils.log_channel import send_log_message
 
 log = logging.getLogger(__name__)
+
+
+_CHUNK_SIZE = 1 << 17
+
+
+def _ensure_tmp_dir(scanner) -> None:
+    os.makedirs(scanner.tmp_dir, exist_ok=True)
+
+
+def _resolve_suffix(candidate: str | None, fallback: str) -> str:
+    suffix = candidate or fallback
+    if suffix and not suffix.startswith("."):
+        suffix = f".{suffix}"
+    return suffix or fallback
+
+
+@asynccontextmanager
+async def _attachment_to_tempfile(scanner, item: MediaWorkItem) -> Any:
+    attachment = item.attachment
+    if attachment is None:
+        raise RuntimeError("MediaWorkItem missing attachment reference")
+    _ensure_tmp_dir(scanner)
+    suffix = _resolve_suffix(item.ext_hint, os.path.splitext(getattr(attachment, "filename", "") or "")[1] or ".bin")
+    fd, path = tempfile.mkstemp(dir=scanner.tmp_dir, suffix=suffix)
+    os.close(fd)
+    try:
+        await attachment.save(path)
+        size = getattr(attachment, "size", None)
+        if size is None:
+            try:
+                size = os.path.getsize(path)
+            except OSError:
+                size = None
+        url_value = (
+            getattr(attachment, "url", None)
+            or getattr(attachment, "proxy_url", None)
+            or item.url
+            or item.label
+        )
+        content_type = getattr(attachment, "content_type", None)
+        yield DownloadResult(
+            path,
+            url=str(url_value) if url_value else item.label,
+            content_type=content_type,
+            bytes_downloaded=size,
+        )
+    finally:
+        safe_delete(path)
+
+
+@asynccontextmanager
+async def _download_url_exact(scanner, item: MediaWorkItem, *, limits) -> Any:
+    if not item.url:
+        raise RuntimeError("MediaWorkItem missing URL for download")
+    if scanner.session is None:
+        raise RuntimeError("NSFWScanner session is not initialised. Call start() first.")
+    _ensure_tmp_dir(scanner)
+    parsed = urlparse(item.url)
+    suffix = _resolve_suffix(item.ext_hint, os.path.splitext(parsed.path)[1] or ".bin")
+    fd, path = tempfile.mkstemp(dir=scanner.tmp_dir, suffix=suffix)
+    os.close(fd)
+    total = 0
+    content_type: str | None = None
+    try:
+        async with scanner.session.get(item.url) as resp:
+            resp.raise_for_status()
+            content_type = resp.headers.get("Content-Type")
+            content_length = resp.content_length
+            cap = limits.download_cap_bytes
+            if cap is not None and content_length and content_length > cap:
+                raise ValueError(f"Download exceeds cap ({content_length} bytes)")
+            with open(path, "wb") as handle:
+                async for chunk in resp.content.iter_chunked(_CHUNK_SIZE):
+                    if not chunk:
+                        continue
+                    total += len(chunk)
+                    if cap is not None and total > cap:
+                        raise ValueError("Download exceeds cap")
+                    handle.write(chunk)
+        if total == 0:
+            try:
+                total = os.path.getsize(path)
+            except OSError:
+                total = 0
+        yield DownloadResult(
+            path,
+            url=item.url,
+            content_type=content_type,
+            bytes_downloaded=total or None,
+        )
+    finally:
+        safe_delete(path)
 
 
 async def scan_media_item(
@@ -229,163 +320,121 @@ async def scan_media_item(
     else:
         cache_tokens.append((item.cache_key, initial_reservation.token))
 
-    download: DownloadResult | None = None
-    candidate_urls: list[str] = []
-    seen_candidates: set[str] = set()
-
-    def _add_candidate(url: str | None, *, update_metadata: bool = False) -> None:
-        if not url:
-            return
-        normalised = normalise_candidate_url(item, url)
-        effective = normalised or (url.strip() if isinstance(url, str) else url)
-        if not isinstance(effective, str) or not effective:
-            return
-        if update_metadata:
-            extend_unique(fallback_urls_updated, [normalised or effective])
-        if effective in seen_candidates:
-            return
-        candidate_urls.append(effective)
-        seen_candidates.add(effective)
-
-    fallback_urls_raw = item.metadata.get("fallback_urls")
-    if isinstance(fallback_urls_raw, list):
-        fallback_urls_list = fallback_urls_raw
-    elif isinstance(fallback_urls_raw, tuple):
-        fallback_urls_list = list(fallback_urls_raw)
-        item.metadata["fallback_urls"] = fallback_urls_list
-    else:
-        fallback_urls_list = []
-        if isinstance(fallback_urls_raw, str) and fallback_urls_raw:
-            fallback_urls_list.append(fallback_urls_raw)
-        item.metadata["fallback_urls"] = fallback_urls_list
-    fallback_urls_updated: list[str] = []
-
-    _add_candidate(item.url)
-
-    for candidate in fallback_urls_list:
-        _add_candidate(candidate, update_metadata=True)
-
-    if fallback_urls_updated and fallback_urls_updated != fallback_urls_list:
-        fallback_urls_list[:] = fallback_urls_updated
-
-    if not candidate_urls and isinstance(item.url, str) and item.url:
-        candidate_urls.append(item.url)
-
-    refreshed_attachment_attempted = False
-    attempted_urls: list[str] = []
+    attempted_urls: list[str] = [item.url] if item.url else []
 
     try:
-        async with AsyncExitStack() as stack:
-            last_http_error: aiohttp.ClientResponseError | None = None
-            for candidate_url in candidate_urls:
-                attempted_urls.append(candidate_url)
-                try:
-                    download = await stack.enter_async_context(
-                        temp_download(
-                            scanner.session,
-                            candidate_url,
-                            guild_key=_guild_key(context),
-                            limits=context.limits,
-                            ext=item.ext_hint,
-                            prefer_video=item.prefer_video,
-                            head_cache=context.head_cache,
-                        )
-                    )
-                    break
-                except aiohttp.ClientResponseError as http_error:
-                    is_last_candidate = candidate_url == candidate_urls[-1]
-                    if http_error.status in {401, 403, 404}:
-                        added_candidates = False
-                        if not refreshed_attachment_attempted:
-                            refreshed_attachment_attempted = True
-                            refreshed_candidates = await resolve_attachment_refresh_candidates(
+        async def _process_download(download_obj: DownloadResult) -> None:
+            nonlocal reuse_verdict, reuse_status
+            prepared_path = download_obj.path
+            async with AsyncExitStack() as stack:
+                if item.metadata.get("sticker_format") == "apng":
+                    prepared_path = await convert_apng(stack, prepared_path)
+
+                file_type, detected_mime = determine_file_type(prepared_path)
+
+                sha_key = None
+                file_hash = await hash_file(prepared_path)
+                if file_hash:
+                    sha_key = f"sha256::{file_hash}"
+                    sha_reservation = await verdict_cache.claim(sha_key)
+                    if sha_reservation.verdict is not None:
+                        if bool(sha_reservation.verdict.get("is_nsfw")):
+                            reuse_verdict = annotate_cache_status(
+                                clone_scan_result(sha_reservation.verdict),
+                                reuse_status or "cache_hash_nsfw",
+                            )
+                            reuse_status = reuse_status or "cache_hash_nsfw"
+                        else:
+                            cached_result = annotate_cache_status(
+                                clone_scan_result(sha_reservation.verdict),
+                                "cache_hash_safe",
+                            )
+                            await emit_verbose_if_needed(
                                 scanner,
-                                item=item,
+                                context=context,
                                 message=message,
+                                actor=actor,
+                                scan_result=cached_result,
+                                file_type=file_type,
+                                detected_mime=detected_mime,
+                                duration_ms=int((time.perf_counter() - started_at) * 1000),
                             )
-                            new_candidates = [
-                                refreshed
-                                for refreshed in refreshed_candidates
-                                if refreshed and refreshed not in candidate_urls
-                            ]
-                            if new_candidates:
-                                extend_unique(candidate_urls, new_candidates)
-                                extend_unique(fallback_urls_list, new_candidates)
-                                added_candidates = True
-                                log.debug(
-                                    "Refreshed attachment URL for %s via message fetch",
-                                    item.label,
-                                )
-                        if added_candidates:
-                            continue
-                        if not is_last_candidate:
-                            last_http_error = http_error
-                            log.debug(
-                                "Download failed for %s (HTTP %s); trying fallback",
-                                candidate_url,
-                                http_error.status,
+                            _queue_metrics(
+                                context=context,
+                                message=message,
+                                actor=actor,
+                                item=item,
+                                duration_ms=int((time.perf_counter() - started_at) * 1000),
+                                result=sha_reservation.verdict,
+                                detected_mime=detected_mime,
+                                file_type=file_type,
+                                status="cache_hash_safe",
                             )
-                            continue
-                    last_http_error = http_error
-                    await notify_download_failure(
-                        scanner,
-                        item=item,
-                        context=context,
-                        message=message,
-                        attempted_urls=attempted_urls,
-                        fallback_urls=fallback_urls_list,
-                        error=http_error,
-                        logger=log,
-                    )
-                    setattr(http_error, "_download_failure_logged", True)
-                    raise
-            if download is None:
-                if last_http_error is not None:
-                    await notify_download_failure(
-                        scanner,
-                        item=item,
-                        context=context,
-                        message=message,
-                        attempted_urls=attempted_urls or [item.url],
-                        fallback_urls=fallback_urls_list,
-                        error=last_http_error,
-                        logger=log,
-                    )
-                    setattr(last_http_error, "_download_failure_logged", True)
-                    raise last_http_error
-                raise RuntimeError(f"Failed to resolve download URL for {item.label}")
-            prepared_path = download.path
-            if item.metadata.get("sticker_format") == "apng":
-                prepared_path = await convert_apng(stack, prepared_path)
-
-            file_type, detected_mime = determine_file_type(prepared_path)
-
-            sha_key = None
-            file_hash = await hash_file(prepared_path)
-            if file_hash:
-                sha_key = f"sha256::{file_hash}"
-                sha_reservation = await verdict_cache.claim(sha_key)
-                if sha_reservation.verdict is not None:
-                    if bool(sha_reservation.verdict.get("is_nsfw")):
-                        reuse_verdict = annotate_cache_status(
-                            clone_scan_result(sha_reservation.verdict),
-                            reuse_status or "cache_hash_nsfw",
-                        )
-                        reuse_status = reuse_status or "cache_hash_nsfw"
+                            return
+                    elif sha_reservation.waiter is not None:
+                        verdict = await sha_reservation.waiter
+                        if verdict and verdict.get("is_nsfw"):
+                            reuse_verdict = annotate_cache_status(
+                                clone_scan_result(verdict),
+                                reuse_status or "cache_hash_shared_nsfw",
+                            )
+                            reuse_status = reuse_status or "cache_hash_shared_nsfw"
+                        else:
+                            cached_result = annotate_cache_status(
+                                clone_scan_result(verdict) if verdict else None,
+                                "cache_hash_shared_safe",
+                            )
+                            await emit_verbose_if_needed(
+                                scanner,
+                                context=context,
+                                message=message,
+                                actor=actor,
+                                scan_result=cached_result,
+                                file_type=file_type,
+                                detected_mime=detected_mime,
+                                duration_ms=int((time.perf_counter() - started_at) * 1000),
+                            )
+                            _queue_metrics(
+                                context=context,
+                                message=message,
+                                actor=actor,
+                                item=item,
+                                duration_ms=int((time.perf_counter() - started_at) * 1000),
+                                result=verdict,
+                                detected_mime=detected_mime,
+                                file_type=file_type,
+                                status="cache_hash_shared_safe",
+                            )
+                            return
                     else:
-                        cached_result = annotate_cache_status(
-                            clone_scan_result(sha_reservation.verdict),
-                            "cache_hash_safe",
-                        )
-                        await emit_verbose_if_needed(
+                        cache_tokens.append((sha_key, sha_reservation.token))
+
+                scan_result: dict[str, Any] | None = reuse_verdict
+                evidence_file: Optional[discord.File] = None
+                video_attachment: Optional[discord.File] = None
+
+                if scan_result is None:
+                    if file_type == FILE_TYPE_IMAGE:
+                        scan_result = await process_image(
                             scanner,
-                            context=context,
-                            message=message,
-                            actor=actor,
-                            scan_result=cached_result,
-                            file_type=file_type,
-                            detected_mime=detected_mime,
-                            duration_ms=int((time.perf_counter() - started_at) * 1000),
+                            original_filename=prepared_path,
+                            guild_id=context.guild_id,
+                            clean_up=False,
+                            context=context.image_context,
+                        )
+                    elif file_type == FILE_TYPE_VIDEO:
+                        video_attachment, scan_result = await process_video(
+                            scanner,
+                            original_filename=prepared_path,
+                            guild_id=context.guild_id,
+                            context=context.image_context,
+                            premium_status=context.premium_status,
+                        )
+                    else:
+                        await _resolve_skip(
+                            "unsupported_type",
+                            {"detected_mime": detected_mime or "unknown"},
+                            status="unsupported_type",
                         )
                         _queue_metrics(
                             context=context,
@@ -393,137 +442,90 @@ async def scan_media_item(
                             actor=actor,
                             item=item,
                             duration_ms=int((time.perf_counter() - started_at) * 1000),
-                            result=sha_reservation.verdict,
+                            result=None,
                             detected_mime=detected_mime,
                             file_type=file_type,
-                            status="cache_hash_safe",
+                            status="unsupported_type",
                         )
                         return
-                elif sha_reservation.waiter is not None:
-                    verdict = await sha_reservation.waiter
-                    if verdict and verdict.get("is_nsfw"):
-                        reuse_verdict = annotate_cache_status(
-                            clone_scan_result(verdict),
-                            reuse_status or "cache_hash_shared_nsfw",
-                        )
-                        reuse_status = reuse_status or "cache_hash_shared_nsfw"
-                    else:
-                        cached_result = annotate_cache_status(
-                            clone_scan_result(verdict) if verdict else None,
-                            "cache_hash_shared_safe",
-                        )
-                        await emit_verbose_if_needed(
-                            scanner,
-                            context=context,
+
+                await _resolve_cache_tokens(scan_result or {})
+
+                duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
+                status = reuse_status or "scan_complete"
+                _queue_metrics(
+                    context=context,
+                    message=message,
+                    actor=actor,
+                    item=item,
+                    duration_ms=duration_ms,
+                    result=scan_result,
+                    detected_mime=detected_mime,
+                    file_type=file_type,
+                    status=status,
+                    download=download_obj,
+                )
+
+                await emit_verbose_if_needed(
+                    scanner,
+                    context=context,
+                    message=message,
+                    actor=actor,
+                    scan_result=scan_result,
+                    file_type=file_type,
+                    detected_mime=detected_mime,
+                    duration_ms=duration_ms,
+                    cache_status=reuse_status,
+                )
+
+                if scan_result and scan_result.get("is_nsfw"):
+                    evidence_file = video_attachment or await build_evidence_file(prepared_path, item)
+                    if evidence_file is not None and message is not None:
+                        await dispatch_callback(
+                            scanner=scanner,
+                            nsfw_callback=nsfw_callback,
+                            author=actor,
+                            guild_id=context.guild_id or 0,
+                            scan_result=scan_result,
                             message=message,
-                            actor=actor,
-                            scan_result=cached_result,
-                            file_type=file_type,
-                            detected_mime=detected_mime,
-                            duration_ms=int((time.perf_counter() - started_at) * 1000),
+                            file=evidence_file,
                         )
-                        _queue_metrics(
-                            context=context,
-                            message=message,
-                            actor=actor,
-                            item=item,
-                            duration_ms=int((time.perf_counter() - started_at) * 1000),
-                            result=verdict,
-                            detected_mime=detected_mime,
-                            file_type=file_type,
-                            status="cache_hash_shared_safe",
-                        )
-                        return
-                else:
-                    cache_tokens.append((sha_key, sha_reservation.token))
+                    raise MediaFlagged(scan_result or {})
+                if video_attachment:
+                    try:
+                        video_attachment.close()
+                    except Exception:
+                        pass
 
-            scan_result: dict[str, Any] | None = reuse_verdict
-            evidence_file: Optional[discord.File] = None
-            video_attachment: Optional[discord.File] = None
+        if item.attachment is not None:
+            async with _attachment_to_tempfile(scanner, item) as temp_download:
+                await _process_download(temp_download)
+            return
 
-            if scan_result is None:
-                if file_type == FILE_TYPE_IMAGE:
-                    scan_result = await process_image(
-                        scanner,
-                        original_filename=prepared_path,
-                        guild_id=context.guild_id,
-                        clean_up=False,
-                        context=context.image_context,
-                    )
-                elif file_type == FILE_TYPE_VIDEO:
-                    video_attachment, scan_result = await process_video(
-                        scanner,
-                        original_filename=prepared_path,
-                        guild_id=context.guild_id,
-                        context=context.image_context,
-                        premium_status=context.premium_status,
-                    )
-                else:
-                    await _resolve_skip(
-                        "unsupported_type",
-                        {"detected_mime": detected_mime or "unknown"},
-                        status="unsupported_type",
-                    )
-                    _queue_metrics(
-                        context=context,
-                        message=message,
-                        actor=actor,
-                        item=item,
-                        duration_ms=int((time.perf_counter() - started_at) * 1000),
-                        result=None,
-                        detected_mime=detected_mime,
-                        file_type=file_type,
-                        status="unsupported_type",
-                    )
-                    return
+        if item.url:
+            async with _download_url_exact(scanner, item, limits=context.limits) as temp_download:
+                await _process_download(temp_download)
+            return
 
-            await _resolve_cache_tokens(scan_result or {})
-
-            duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
-            status = reuse_status or "scan_complete"
-            _queue_metrics(
-                context=context,
-                message=message,
-                actor=actor,
-                item=item,
-                duration_ms=duration_ms,
-                result=scan_result,
-                detected_mime=detected_mime,
-                file_type=file_type,
-                status=status,
-                download=download,
-            )
-
-            await emit_verbose_if_needed(
-                scanner,
-                context=context,
-                message=message,
-                actor=actor,
-                scan_result=scan_result,
-                file_type=file_type,
-                detected_mime=detected_mime,
-                duration_ms=duration_ms,
-                cache_status=reuse_status,
-            )
-
-            if scan_result and scan_result.get("is_nsfw"):
-                evidence_file = video_attachment or await build_evidence_file(prepared_path, item)
-                if evidence_file is not None and message is not None:
-                    await dispatch_callback(
-                        scanner=scanner,
-                        nsfw_callback=nsfw_callback,
-                        author=actor,
-                        guild_id=context.guild_id or 0,
-                        scan_result=scan_result,
-                        message=message,
-                        file=evidence_file,
-                    )
-                raise MediaFlagged(scan_result or {})
-            if video_attachment:
-                try:
-                    video_attachment.close()
-                except Exception:
-                    pass
+        await _resolve_skip(
+            "missing_source",
+            {"error": "no attachment or url available"},
+            status="missing_source",
+        )
+        duration_ms = int((time.perf_counter() - started_at) * 1000)
+        _queue_metrics(
+            context=context,
+            message=message,
+            actor=actor,
+            item=item,
+            duration_ms=duration_ms,
+            result=None,
+            detected_mime=None,
+            file_type=None,
+            status="missing_source",
+            download=None,
+        )
+        return
     except ValueError as download_error:
         await _resolve_skip(
             "download_restricted",
@@ -554,7 +556,7 @@ async def scan_media_item(
                 context=context,
                 message=message,
                 attempted_urls=attempted_urls or [item.url],
-                fallback_urls=fallback_urls_list,
+                fallback_urls=[],
                 error=http_error,
                 logger=log,
             )
@@ -565,7 +567,7 @@ async def scan_media_item(
                 "error_status": http_error.status,
                 "error_message": http_error.message,
                 "attempted_urls": ", ".join(attempted_urls or []) or item.url,
-                "fallback_urls": ", ".join(fallback_urls_list),
+                "fallback_urls": "",
             },
             status=f"http_error_{http_error.status}",
         )

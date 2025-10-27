@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from typing import Iterable
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 import discord
 
@@ -73,28 +73,6 @@ def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
         return []
     matches = _URL_RE.findall(content)
     return matches[:limit]
-
-
-def _derive_discord_cdn_fallback(url: str) -> str | None:
-    """Return the original Discord CDN URL for a proxy attachment URL."""
-
-    if not isinstance(url, str) or not url:
-        return None
-
-    parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"}:
-        return None
-
-    hostname = parsed.hostname.lower() if parsed.hostname else ""
-    # Only allow discordapp.net and its subdomains (e.g. cdn.discordapp.net)
-    if not (hostname == "discordapp.net" or hostname.endswith(".discordapp.net")):
-        return None
-
-    # Discord proxy URLs for attachments follow /attachments/<channel>/<id>/...
-    if not parsed.path.startswith("/attachments/"):
-        return None
-
-    return urlunparse(("https", "cdn.discordapp.com", parsed.path, "", "", ""))
 
 
 async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
@@ -177,36 +155,18 @@ def collect_media_items(
     seen_urls: set[str] = set()
     attachments_by_filename: dict[str, discord.Attachment] = {}
     for attachment in attachments:
-        raw_candidates: list[str] = []
+        filename = getattr(attachment, "filename", None)
         proxy_url = getattr(attachment, "proxy_url", None)
-        if proxy_url:
-            raw_candidates.append(proxy_url)
         raw_url = getattr(attachment, "url", None)
-        if raw_url and raw_url not in raw_candidates:
-            raw_candidates.append(raw_url)
-
-        filename = getattr(attachment, "filename", None) or (raw_candidates[0] if raw_candidates else None)
-        ext = os.path.splitext(filename)[1] if filename else ""
-
-        url_candidates: list[str] = []
-        for candidate in raw_candidates:
-            if not candidate or candidate in url_candidates:
-                continue
-            parsed_candidate = urlparse(candidate)
-            if parsed_candidate.scheme not in {"http", "https"}:
-                continue
-            url_candidates.append(candidate)
-
-        if url_candidates and len(url_candidates) == 1:
-            derived_fallback = _derive_discord_cdn_fallback(url_candidates[0])
-            if derived_fallback and derived_fallback not in url_candidates:
-                url_candidates.append(derived_fallback)
-
-        if not url_candidates:
+        primary_url = raw_url or proxy_url or (filename or "")
+        if not isinstance(primary_url, str):
+            primary_url = str(primary_url)
+        if not primary_url:
+            primary_url = filename or "attachment"
+        if primary_url in seen_urls:
             continue
-        primary_url = url_candidates[0]
-        fallback_urls = url_candidates[1:]
-        label_value = filename or primary_url
+
+        ext = os.path.splitext(filename or "")[1]
         cache_hint = getattr(attachment, "hash", None)
         metadata: dict[str, object] = {
             "size": getattr(attachment, "size", None),
@@ -217,19 +177,17 @@ def collect_media_items(
         }
         if cache_hint:
             metadata["cache_key"] = f"hash::{cache_hint}"
-        if fallback_urls:
-            metadata["fallback_urls"] = fallback_urls
-        for candidate in url_candidates:
-            seen_urls.add(candidate)
+        seen_urls.add(primary_url)
         if filename:
             attachments_by_filename.setdefault(filename, attachment)
         items.append(
             MediaWorkItem(
                 source="attachment",
-                label=label_value,
+                label=filename or primary_url,
                 url=primary_url,
                 ext_hint=ext or None,
                 metadata=metadata,
+                attachment=attachment,
             )
         )
 
