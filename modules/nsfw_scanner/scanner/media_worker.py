@@ -30,6 +30,18 @@ from .work_item import MediaFlagged, MediaWorkItem
 
 log = logging.getLogger(__name__)
 
+_DIAGNOSTIC_THROTTLE: dict[str, float] = {}
+_DIAGNOSTIC_COOLDOWN_SECONDS = 120.0
+
+
+def _should_emit_diagnostic(key: str) -> bool:
+    now = time.monotonic()
+    last = _DIAGNOSTIC_THROTTLE.get(key)
+    if last is not None and (now - last) < _DIAGNOSTIC_COOLDOWN_SECONDS:
+        return False
+    _DIAGNOSTIC_THROTTLE[key] = now
+    return True
+
 
 def _clone_scan_result(result: dict[str, Any]) -> dict[str, Any]:
     cloned = dict(result)
@@ -177,6 +189,79 @@ async def scan_media_item(
     cache_tokens: list[tuple[str, object | None]] = []
     reuse_verdict: dict[str, Any] | None = None
     reuse_status: str | None = None
+    diagnostic_key_base = f"{context.guild_id or 'global'}::{item.source or 'unknown'}"
+
+    async def _emit_diagnostic(reason: str, *, status: str | None = None, extra: Optional[dict[str, Any]] = None) -> None:
+        if not LOG_CHANNEL_ID:
+            return
+        bot = getattr(scanner, "bot", None)
+        if bot is None:
+            return
+        throttle_key = f"{diagnostic_key_base}::{reason}"
+        if not _should_emit_diagnostic(throttle_key):
+            return
+        try:
+            channel = await safe_get_channel(bot, LOG_CHANNEL_ID)
+        except Exception:  # pragma: no cover - best effort logging
+            log.debug("Failed to resolve diagnostic channel %s", LOG_CHANNEL_ID, exc_info=True)
+            return
+
+        if channel is None:
+            return
+
+        embed = discord.Embed(
+            title="NSFW scan skipped",
+            description=item.label or item.url or "Unknown media item",
+            color=discord.Color.orange(),
+            timestamp=utcnow(),
+        )
+        embed.add_field(name="Reason", value=reason, inline=True)
+        if status:
+            embed.add_field(name="Status", value=status, inline=True)
+        embed.add_field(name="Source", value=item.source or "unknown", inline=True)
+
+        metadata = item.metadata or {}
+        context_lines = []
+        guild_id = metadata.get("guild_id") or context.guild_id
+        channel_id = metadata.get("channel_id")
+        message_id = metadata.get("message_id")
+        attachment_id = metadata.get("attachment_id")
+        if guild_id is not None:
+            context_lines.append(f"Guild: {guild_id}")
+        if channel_id is not None:
+            context_lines.append(f"Channel: {channel_id}")
+        if message_id is not None:
+            context_lines.append(f"Message: {message_id}")
+        if attachment_id is not None:
+            context_lines.append(f"Attachment: {attachment_id}")
+        if context_lines:
+            embed.add_field(name="Context", value="\n".join(context_lines), inline=False)
+
+        if extra:
+            detail_lines: list[str] = []
+            for key, value in extra.items():
+                if value is None:
+                    continue
+                detail_lines.append(f"{key}: {value}")
+            if detail_lines:
+                detail_text = "\n".join(detail_lines)
+                if len(detail_text) > 1024:
+                    detail_text = f"{detail_text[:1021]}…"
+                embed.add_field(name="Details", value=detail_text, inline=False)
+
+        if message is not None and getattr(message, "jump_url", None):
+            embed.add_field(name="Message Link", value=message.jump_url, inline=False)
+
+        if item.url:
+            url_value = item.url
+            if len(url_value) > 1024:
+                url_value = f"{url_value[:1021]}…"
+            embed.add_field(name="URL", value=url_value, inline=False)
+
+        try:
+            await channel.send(embed=embed)
+        except Exception:  # pragma: no cover - best effort logging
+            log.debug("Failed to send NSFW diagnostic to channel %s", LOG_CHANNEL_ID, exc_info=True)
 
     async def _resolve_cache_tokens(verdict: dict[str, Any]) -> None:
         if not cache_tokens:
@@ -190,7 +275,12 @@ async def scan_media_item(
                 log.debug("Failed to resolve cache token %s", cache_key, exc_info=True)
         cache_tokens.clear()
 
-    async def _resolve_skip(reason: str, extra: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    async def _resolve_skip(
+        reason: str,
+        extra: Optional[dict[str, Any]] = None,
+        *,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "is_nsfw": False,
             "skipped": True,
@@ -199,6 +289,7 @@ async def scan_media_item(
         if extra:
             payload.update(extra)
         await _resolve_cache_tokens(payload)
+        await _emit_diagnostic(reason, status=status or reason, extra=extra)
         return payload
 
     initial_reservation = await verdict_cache.claim(item.cache_key)
@@ -481,6 +572,7 @@ async def scan_media_item(
                     await _resolve_skip(
                         "unsupported_type",
                         {"detected_mime": detected_mime or "unknown"},
+                        status="unsupported_type",
                     )
                     _queue_metrics(
                         context=context,
@@ -543,7 +635,11 @@ async def scan_media_item(
                 except Exception:
                     pass
     except ValueError as download_error:
-        await _resolve_skip("download_restricted", {"error": str(download_error)})
+        await _resolve_skip(
+            "download_restricted",
+            {"error": str(download_error)},
+            status="download_restricted",
+        )
         duration_ms = int((time.perf_counter() - started_at) * 1000)
         log.debug("Skipping media %s due to download restriction: %s", item.url, download_error)
         _queue_metrics(
@@ -575,7 +671,10 @@ async def scan_media_item(
             {
                 "error_status": http_error.status,
                 "error_message": http_error.message,
+                "attempted_urls": ", ".join(attempted_urls or []) or item.url,
+                "fallback_urls": ", ".join(fallback_urls_list),
             },
+            status=f"http_error_{http_error.status}",
         )
         duration_ms = int((time.perf_counter() - started_at) * 1000)
         failed_url = item.url
@@ -603,7 +702,7 @@ async def scan_media_item(
     except MediaFlagged:
         raise
     except Exception as exc:
-        await _resolve_skip("exception", {"error": repr(exc)})
+        await _resolve_skip("exception", {"error": repr(exc)}, status="exception")
         log.exception("Failed to scan media %s: %s", item.url, exc)
         duration_ms = int((time.perf_counter() - started_at) * 1000)
         _queue_metrics(

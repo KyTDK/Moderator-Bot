@@ -4,11 +4,13 @@ import asyncio
 import builtins
 import logging
 import os
+import time
 from urllib.parse import urlparse
 
 import aiohttp
 import discord
 import pillow_avif  # noqa: F401 - registers AVIF support
+from discord.utils import utcnow
 
 from modules.utils import clip_vectors
 from modules.utils.discord_utils import safe_get_channel
@@ -29,6 +31,7 @@ class NSFWScanner:
         self.tmp_dir = TMP_DIR
         self._clip_failure_callback_registered = False
         self._last_reported_milvus_error_key: str | None = None
+        self._diagnostic_throttle: dict[str, float] = {}
 
     async def start(self):
         self.session = aiohttp.ClientSession()
@@ -44,6 +47,14 @@ class NSFWScanner:
             return
         clip_vectors.register_failure_callback(self._handle_milvus_failure)
         self._clip_failure_callback_registered = True
+
+    def _should_emit_diagnostic(self, key: str, cooldown: float = 120.0) -> bool:
+        now = time.monotonic()
+        last = self._diagnostic_throttle.get(key)
+        if last is not None and (now - last) < cooldown:
+            return False
+        self._diagnostic_throttle[key] = now
+        return True
 
     async def _handle_milvus_failure(self, exc: Exception) -> None:
         error_key = f"{type(exc).__name__}:{exc}"
@@ -134,6 +145,25 @@ class NSFWScanner:
             media_items = collect_media_items(target_message, self.bot, guild_context)
 
         if not media_items:
+            details: dict[str, object] | None = None
+            if target_message is not None:
+                attachments = getattr(target_message, "attachments", None) or []
+                embeds = getattr(target_message, "embeds", None) or []
+                stickers = getattr(target_message, "stickers", None) or []
+                snapshots = getattr(target_message, "message_snapshots", None) or []
+                details = {
+                    "attachments": len(attachments),
+                    "embeds": len(embeds),
+                    "stickers": len(stickers),
+                    "snapshots": len(snapshots),
+                    "content_present": bool(getattr(target_message, "content", "")),
+                }
+            await self._emit_collection_diagnostic(
+                reason="no_media_items",
+                guild_id=resolved_guild_id,
+                message=target_message,
+                details=details,
+            )
             return False
 
         actor = member or getattr(target_message, "author", None)
@@ -158,6 +188,81 @@ class NSFWScanner:
                     return True
             raise
         return False
+
+    async def _emit_collection_diagnostic(
+        self,
+        *,
+        reason: str,
+        guild_id: int | None,
+        message: discord.Message | None,
+        details: dict[str, object] | None = None,
+    ) -> None:
+        if not LOG_CHANNEL_ID:
+            return
+        throttle_key = f"{guild_id or 'global'}::{reason}"
+        if not self._should_emit_diagnostic(throttle_key):
+            return
+
+        try:
+            channel = await safe_get_channel(self.bot, LOG_CHANNEL_ID)
+        except Exception:  # pragma: no cover - best effort logging
+            log.debug(
+                "Failed to resolve LOG_CHANNEL_ID=%s for collection diagnostic",
+                LOG_CHANNEL_ID,
+                exc_info=True,
+            )
+            return
+
+        if channel is None:
+            return
+
+        embed = discord.Embed(
+            title="NSFW scan not started",
+            color=discord.Color.orange(),
+            timestamp=utcnow(),
+        )
+        embed.add_field(name="Reason", value=reason, inline=True)
+
+        if guild_id is not None:
+            embed.add_field(name="Guild", value=str(guild_id), inline=True)
+
+        if message is not None:
+            channel_id = getattr(getattr(message, "channel", None), "id", None)
+            author = getattr(message, "author", None)
+
+            embed.description = f"Message ID: {getattr(message, 'id', 'unknown')}"
+            if channel_id is not None:
+                embed.add_field(name="Channel", value=str(channel_id), inline=True)
+            if author is not None:
+                embed.add_field(name="Author", value=f"{getattr(author, 'id', 'unknown')}", inline=True)
+
+            content = getattr(message, "content", None)
+            if content:
+                preview = content.strip()
+                if len(preview) > 1024:
+                    preview = f"{preview[:1021]}…"
+                if preview:
+                    embed.add_field(name="Content Preview", value=preview, inline=False)
+
+            if getattr(message, "jump_url", None):
+                embed.add_field(name="Message Link", value=message.jump_url, inline=False)
+
+        if details:
+            detail_lines = [f"{key}: {value}" for key, value in details.items() if value is not None]
+            if detail_lines:
+                detail_text = "\n".join(detail_lines)
+                if len(detail_text) > 1024:
+                    detail_text = f"{detail_text[:1021]}…"
+                embed.add_field(name="Details", value=detail_text, inline=False)
+
+        try:
+            await channel.send(embed=embed)
+        except Exception:  # pragma: no cover - best effort logging
+            log.debug(
+                "Failed to send collection diagnostic to channel %s",
+                LOG_CHANNEL_ID,
+                exc_info=True,
+            )
 
     async def _fan_out_media(
         self,
