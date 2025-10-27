@@ -13,14 +13,14 @@ import discord
 from discord.utils import utcnow
 
 from ...cache import verdict_cache
-from ..constants import LOG_CHANNEL_ID
-from ..context import GuildScanContext
-from ..helpers.downloads import DownloadResult
-from ..helpers.images import process_image
-from ..helpers.videos import process_video
-from ..reporting import dispatch_callback
-from ..utils.file_types import FILE_TYPE_IMAGE, FILE_TYPE_VIDEO, determine_file_type
-from ..utils.file_ops import safe_delete
+from ...constants import LOG_CHANNEL_ID
+from ...context import GuildScanContext
+from ...helpers.downloads import DownloadResult
+from ...helpers.images import process_image
+from ...helpers.videos import process_video
+from ...reporting import dispatch_callback
+from ...utils.file_types import FILE_TYPE_IMAGE, FILE_TYPE_VIDEO, determine_file_type
+from ...utils.file_ops import safe_delete
 from ..work_item import MediaFlagged, MediaWorkItem
 from .cache import annotate_cache_status, clone_scan_result
 from .diagnostics import (
