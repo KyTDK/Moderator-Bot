@@ -39,6 +39,7 @@ class FreeQueueMonitor:
         self._last_report_at: Optional[float] = None
         self._last_dropped_total: int = 0
         self._adaptive_last: dict[str, float] = {}
+        self._last_adaptive_signature: dict[str, tuple[int, int, int, int]] = {}
 
     async def start(self) -> None:
         if self._task and not self._task.done():
@@ -60,6 +61,7 @@ class FreeQueueMonitor:
             self._last_report_at = None
             self._last_dropped_total = 0
             self._adaptive_last.clear()
+            self._last_adaptive_signature.clear()
 
     @staticmethod
     def _is_lagging(free: QueueSnapshot, accel: QueueSnapshot) -> bool:
@@ -334,6 +336,11 @@ class FreeQueueMonitor:
         applied_autoscale = after.autoscale_max if after is not None else max(before.autoscale_max, target)
         backlog_ratio = before.backlog_ratio if before.backlog_high else 0.0
 
+        signature = (before.max_workers, applied, applied_autoscale, target)
+        last_signature = self._last_adaptive_signature.get(tier)
+        if last_signature == signature:
+            return
+
         reasons: list[str] = []
         if before.backlog_excess > 0:
             reasons.append(f"backlog above high watermark by {before.backlog_excess}")
@@ -390,6 +397,7 @@ class FreeQueueMonitor:
 
         try:
             await channel.send(embed=embed)
+            self._last_adaptive_signature[tier] = signature
         except Exception as exc:  # noqa: BLE001
             print(f"[FreeQueueLag] Failed to send adaptive scaling log: {exc}")
 
