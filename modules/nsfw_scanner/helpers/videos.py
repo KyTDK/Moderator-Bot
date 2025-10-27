@@ -21,6 +21,7 @@ from ..constants import (
 )
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame, frames_are_similar, iter_extracted_frames
+from ..utils.latency import merge_latency_breakdowns
 from .images import (
     ImageProcessingContext,
     build_image_processing_context,
@@ -332,11 +333,10 @@ async def process_video(
             if not coordination_entry.get("label"):
                 coordination_entry["label"] = existing_overhead_entry.get("label")
         latency_steps["coordination"] = coordination_entry
-    metrics_payload["latency_breakdown_ms"] = {
-        key: value
-        for key, value in latency_steps.items()
-        if isinstance(value, dict)
-    }
+    metrics_payload["latency_breakdown_ms"] = merge_latency_breakdowns(
+        metrics_payload.get("latency_breakdown_ms"),
+        latency_steps,
+    )
 
     metrics_payload["frames_scanned"] = processed_frames
     metrics_payload["frames_target"] = _effective_target()

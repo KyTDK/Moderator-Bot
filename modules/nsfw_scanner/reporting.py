@@ -8,6 +8,7 @@ from modules.utils import mod_logging
 from modules.utils.localization import TranslateFn, localize_message
 
 from .utils.file_types import FILE_TYPE_LABELS
+from .utils.latency import format_latency_breakdown_lines
 
 REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
 SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
@@ -234,25 +235,17 @@ async def emit_verbose_report(
 
     pipeline_metrics = scan_result.get("pipeline_metrics")
     if isinstance(pipeline_metrics, dict):
-        latency_breakdown = pipeline_metrics.get("latency_breakdown_ms")
-        if isinstance(latency_breakdown, dict):
-            lines: list[str] = []
-            for key, entry in latency_breakdown.items():
-                duration = entry.get("duration_ms") if isinstance(entry, dict) else entry
-                if duration is None:
-                    continue
-                try:
-                    duration = float(duration)
-                except (TypeError, ValueError):
-                    continue
-                label = entry.get("label") if isinstance(entry, dict) else key.replace("_", " ").title()
-                lines.append(f"{label}: {duration:.1f} ms")
-            if lines:
-                embed.add_field(
-                    name=_localize_field_name(translator, "latency_breakdown", guild_id),
-                    value="\n".join(lines),
-                    inline=False,
-                )
+        breakdown_lines = format_latency_breakdown_lines(
+            pipeline_metrics.get("latency_breakdown_ms"),
+            decimals=1,
+            fallback_label_style="title",
+        )
+        if breakdown_lines:
+            embed.add_field(
+                name=_localize_field_name(translator, "latency_breakdown", guild_id),
+                value="\n".join(breakdown_lines),
+                inline=False,
+            )
 
     avatar = getattr(getattr(actor, "display_avatar", None), "url", None)
     if avatar:

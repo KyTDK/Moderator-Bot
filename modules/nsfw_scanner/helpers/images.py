@@ -21,6 +21,7 @@ from ..constants import (
 from ..utils.categories import is_allowed_category
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame
+from ..utils.latency import merge_latency_breakdowns
 from ..limits import PremiumLimits, resolve_limits
 from .moderation import moderator_api
 
@@ -175,52 +176,11 @@ async def _run_image_pipeline(
     def _finalize(payload: dict[str, Any]) -> dict[str, Any]:
         total_duration = max((time.perf_counter() - total_started) * 1000, 0.0)
         pipeline_metrics = payload.setdefault("pipeline_metrics", {})
-        existing_breakdown = pipeline_metrics.get("latency_breakdown_ms")
-        if not isinstance(existing_breakdown, dict):
-            existing_breakdown = {}
-        else:
-            normalized: dict[str, dict[str, Any]] = {}
-            for step_key, step_value in existing_breakdown.items():
-                if isinstance(step_value, dict):
-                    normalized_duration = step_value.get("duration_ms")
-                    try:
-                        normalized_duration = float(normalized_duration)
-                    except (TypeError, ValueError):
-                        continue
-                    normalized[step_key] = {
-                        "duration_ms": normalized_duration,
-                        "label": step_value.get("label"),
-                    }
-                elif isinstance(step_value, (int, float)):
-                    normalized[step_key] = {
-                        "duration_ms": float(step_value),
-                        "label": step_key.replace("_", " ").title(),
-                    }
-            existing_breakdown = normalized
-        for step_name, entry in latency_steps.items():
-            duration_val = entry.get("duration_ms")
-            try:
-                duration_float = float(duration_val)
-            except (TypeError, ValueError):
-                continue
-            if duration_float <= 0:
-                continue
-            label_value = entry.get("label") or step_name.replace("_", " ").title()
-            existing_entry = existing_breakdown.get(step_name)
-            if isinstance(existing_entry, dict):
-                try:
-                    duration_float += float(existing_entry.get("duration_ms") or 0.0)
-                except (TypeError, ValueError):
-                    pass
-                if not label_value:
-                    label_value = existing_entry.get("label")
-            elif isinstance(existing_entry, (int, float)):
-                duration_float += float(existing_entry)
-            existing_breakdown[step_name] = {
-                "duration_ms": duration_float,
-                "label": label_value or step_name.replace("_", " ").title(),
-            }
-        pipeline_metrics["latency_breakdown_ms"] = existing_breakdown
+        merged_breakdown = merge_latency_breakdowns(
+            pipeline_metrics.get("latency_breakdown_ms"),
+            latency_steps,
+        )
+        pipeline_metrics["latency_breakdown_ms"] = merged_breakdown
         current_total = float(pipeline_metrics.get("total_latency_ms") or 0.0)
         pipeline_metrics["total_latency_ms"] = max(current_total, total_duration)
         return payload
