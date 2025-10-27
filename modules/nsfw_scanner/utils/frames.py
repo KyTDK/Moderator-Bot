@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import contextlib
 import os
+import sys
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
@@ -34,6 +36,39 @@ def _configure_video_logging() -> None:
 
 
 _configure_video_logging()
+
+
+@contextlib.contextmanager
+def _suppress_decoder_stderr() -> Iterator[None]:
+    """Prevent noisy ffmpeg decoder logs from leaking to stderr."""
+
+    try:
+        stderr_fd = sys.stderr.fileno()
+    except (AttributeError, OSError):
+        # Nothing we can do if sys.stderr has no file descriptor.
+        yield
+        return
+
+    try:
+        duplicate_fd = os.dup(stderr_fd)
+        devnull_fd = os.open(os.devnull, os.O_WRONLY)
+    except OSError:
+        yield
+        return
+
+    try:
+        os.dup2(devnull_fd, stderr_fd)
+        yield
+    finally:
+        try:
+            os.dup2(duplicate_fd, stderr_fd)
+        except OSError:
+            pass
+        for fd in (devnull_fd, duplicate_fd):
+            try:
+                os.close(fd)
+            except OSError:
+                pass
 
 __all__ = [
     "ExtractedFrame",
@@ -381,7 +416,8 @@ def iter_extracted_frames(
                             if stop_event and stop_event.is_set():
                                 stop_requested = True
                                 break
-                            grabbed = cap.grab()
+                            with _suppress_decoder_stderr():
+                                grabbed = cap.grab()
                             if not grabbed:
                                 break
                             skipped += 1
@@ -405,7 +441,8 @@ def iter_extracted_frames(
                 if stop_requested:
                     break
 
-                ok, frame = cap.read()
+                with _suppress_decoder_stderr():
+                    ok, frame = cap.read()
                 if not ok:
                     # ffmpeg occasionally reports decoding errors such as
                     # ``h264 @ ... mmco: unref short failure`` when it
@@ -420,7 +457,8 @@ def iter_extracted_frames(
                     if stop_event and stop_event.is_set():
                         break
                     try:
-                        cap.grab()
+                        with _suppress_decoder_stderr():
+                            cap.grab()
                     except Exception:
                         pass
                     current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES) or current_frame + 1)
