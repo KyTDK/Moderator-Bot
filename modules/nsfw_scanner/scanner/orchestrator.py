@@ -151,24 +151,30 @@ class NSFWScanner:
 
         if not media_items:
             details: dict[str, object] | None = None
+            should_emit = True
             if target_message is not None:
                 attachments = getattr(target_message, "attachments", None) or []
                 embeds = getattr(target_message, "embeds", None) or []
                 stickers = getattr(target_message, "stickers", None) or []
                 snapshots = getattr(target_message, "message_snapshots", None) or []
-                details = {
+                media_counts = {
                     "attachments": len(attachments),
                     "embeds": len(embeds),
                     "stickers": len(stickers),
                     "snapshots": len(snapshots),
+                }
+                details = {
+                    **media_counts,
                     "content_present": bool(getattr(target_message, "content", "")),
                 }
-            await self._emit_collection_diagnostic(
-                reason="no_media_items",
-                guild_id=resolved_guild_id,
-                message=target_message,
-                details=details,
-            )
+                should_emit = any(media_counts.values())
+            if should_emit:
+                await self._emit_collection_diagnostic(
+                    reason="no_media_items",
+                    guild_id=resolved_guild_id,
+                    message=target_message,
+                    details=details,
+                )
             return False
 
         actor = member or getattr(target_message, "author", None)
