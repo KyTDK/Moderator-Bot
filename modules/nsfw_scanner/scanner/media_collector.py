@@ -143,6 +143,16 @@ def collect_media_items(
         getattr(snapshot, "stickers", None) or []
     )
 
+    message_id = getattr(message, "id", None)
+    message_channel = getattr(message, "channel", None)
+    message_channel_id = getattr(message_channel, "id", None)
+    message_guild = getattr(message, "guild", None)
+    message_guild_id = getattr(message_guild, "id", None)
+
+    snapshot_id = getattr(snapshot, "id", None) if snapshot else None
+    snapshot_channel_id = getattr(snapshot, "channel_id", None) if snapshot else None
+    snapshot_guild_id = getattr(snapshot, "guild_id", None) if snapshot else None
+
     items: list[MediaWorkItem] = []
     seen_urls: set[str] = set()
     for attachment in attachments:
@@ -163,6 +173,9 @@ def collect_media_items(
         metadata: dict[str, object] = {
             "size": getattr(attachment, "size", None),
             "attachment_id": getattr(attachment, "id", None),
+            "message_id": message_id or snapshot_id,
+            "channel_id": message_channel_id or snapshot_channel_id,
+            "guild_id": message_guild_id or snapshot_guild_id,
         }
         if cache_hint:
             metadata["cache_key"] = f"hash::{cache_hint}"
