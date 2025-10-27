@@ -11,6 +11,30 @@ import cv2
 import numpy as np
 from PIL import Image, ImageSequence
 
+_FFMPEG_LOG_ENV = "OPENCV_FFMPEG_CAPTURE_OPTIONS"
+_FFMPEG_LOG_QUIET = "loglevel;quiet"
+
+
+def _configure_video_logging() -> None:
+    """Tame OpenCV/FFmpeg logging so noisy decoder errors stay out of stderr."""
+    existing = os.environ.get(_FFMPEG_LOG_ENV, "")
+    options = [opt for opt in existing.split("|") if opt]
+    if all(not opt.lower().startswith("loglevel;") for opt in options):
+        options.append(_FFMPEG_LOG_QUIET)
+        os.environ[_FFMPEG_LOG_ENV] = "|".join(options)
+    try:
+        cv2.setLogLevel(cv2.LOG_LEVEL_ERROR)
+    except AttributeError:
+        try:
+            cv2.utils.logging.setLogLevel(cv2.utils.logging.LOG_LEVEL_ERROR)  # type: ignore[attr-defined]
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+
+_configure_video_logging()
+
 __all__ = [
     "ExtractedFrame",
     "iter_extracted_frames",
