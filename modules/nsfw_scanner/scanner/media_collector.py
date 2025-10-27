@@ -79,7 +79,10 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
     _ = bot  # Parameter kept for API compatibility; no runtime usage.
     attachments = getattr(message, "attachments", None) or []
     stickers = getattr(message, "stickers", None) or []
-    if any(getattr(a, "proxy_url", None) or getattr(a, "url", None) for a in attachments) or stickers:
+    if attachments and all(
+        (getattr(a, "proxy_url", None) or getattr(a, "url", None) or "").startswith(("http://", "https://"))
+        for a in attachments
+    ):
         return message
 
     content = getattr(message, "content", "") or ""
