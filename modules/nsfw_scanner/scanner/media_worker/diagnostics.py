@@ -202,7 +202,8 @@ async def notify_download_failure(
         if request_method:
             request_value = request_method
         if real_url_str:
-            request_value = f"{request_value} {real_url_str}".strip()
+            formatted_url = suppress_discord_link_embed(real_url_str)
+            request_value = f"{request_value} {formatted_url}".strip()
         embed.add_field(
             name="Request",
             value=truncate_field_value(request_value),
@@ -272,7 +273,9 @@ async def notify_download_failure(
     if message is not None and getattr(message, "jump_url", None):
         embed.add_field(
             name="Source message",
-            value=truncate_field_value(message.jump_url),
+            value=truncate_field_value(
+                suppress_discord_link_embed(message.jump_url)
+            ),
             inline=False,
         )
 
