@@ -158,7 +158,7 @@ def collect_media_items(
         filename = getattr(attachment, "filename", None)
         proxy_url = getattr(attachment, "proxy_url", None)
         raw_url = getattr(attachment, "url", None)
-        primary_url = raw_url or proxy_url or (filename or "")
+        primary_url = proxy_url or raw_url or (filename or "")
         if not isinstance(primary_url, str):
             primary_url = str(primary_url)
         if not primary_url:
@@ -294,14 +294,23 @@ def collect_media_items(
 def _extract_embed_urls(embed: discord.Embed) -> list[str]:
     urls: list[str] = []
     video = getattr(embed, "video", None)
-    if video and getattr(video, "url", None):
-        urls.append(video.url)
+    if video:
+        proxy_url = getattr(video, "proxy_url", None)
+        url = getattr(video, "url", None)
+        if proxy_url or url:
+            urls.append(proxy_url or url)
     image = getattr(embed, "image", None)
-    if image and getattr(image, "url", None):
-        urls.append(image.url)
+    if image:
+        proxy_url = getattr(image, "proxy_url", None)
+        url = getattr(image, "url", None)
+        if proxy_url or url:
+            urls.append(proxy_url or url)
     thumbnail = getattr(embed, "thumbnail", None)
-    if thumbnail and getattr(thumbnail, "url", None):
-        urls.append(thumbnail.url)
+    if thumbnail:
+        proxy_url = getattr(thumbnail, "proxy_url", None)
+        url = getattr(thumbnail, "url", None)
+        if proxy_url or url:
+            urls.append(proxy_url or url)
     return urls
 
 
@@ -321,7 +330,7 @@ def _resolve_embed_url(
     if attachment is None:
         return None
 
-    for attr in ("url", "proxy_url"):
+    for attr in ("proxy_url", "url"):
         resolved = getattr(attachment, attr, None)
         if resolved:
             return resolved
