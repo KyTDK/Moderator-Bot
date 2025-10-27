@@ -15,7 +15,12 @@ from ..utils.file_types import (
     FILE_TYPE_VIDEO,
     determine_file_type,
 )
-from ..reporting import ScanFieldSpec, emit_verbose_report
+from ..reporting import (
+    DEFAULT_FIELD_SPECS,
+    ScanFieldSpec,
+    default_score_formatter,
+    emit_verbose_report,
+)
 from .images import build_image_processing_context, process_image
 from .videos import process_video
 
@@ -259,52 +264,33 @@ async def check_attachment(
     translator = resolve_translator(scanner)
     await _emit_metrics(scan_result, "scan_complete")
 
-    try:
-        verbose_enabled = False
-        if message is not None and guild_id is not None:
-            if settings_cache.has_verbose():
-                verbose_enabled = bool(settings_cache.get_verbose())
-            else:
-                verbose_enabled = bool(await mysql.get_settings(guild_id, "nsfw-verbose"))
-                settings_cache.set_verbose(verbose_enabled)
-        if message is not None and verbose_enabled:
-            duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
+    verbose_enabled = False
+    if message is not None and guild_id is not None:
+        if settings_cache.has_verbose():
+            verbose_enabled = bool(settings_cache.get_verbose())
+        else:
+            verbose_enabled = bool(await mysql.get_settings(guild_id, "nsfw-verbose"))
+            settings_cache.set_verbose(verbose_enabled)
+    if message is not None and verbose_enabled:
+        duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
 
-            def _format_reason(value, _scan_result, translator, guild_id, _duration_ms):
-                if value is None:
-                    return None
-                return localize_reason(translator, value, guild_id)
-
-            def _format_category(value, _scan_result, translator, guild_id, _duration_ms):
-                if value is None:
-                    return None
-                return localize_category(translator, value, guild_id)
-
-            def _format_float(value, _scan_result, _translator, _guild_id, _duration_ms):
-                if value is None:
-                    return None
-                try:
-                    return f"{float(value):.3f}"
-                except (TypeError, ValueError):
-                    return None
-
-            def _format_boolean(value, _scan_result, translator, guild_id, _duration_ms):
+        def _format_boolean(value, _scan_result, translator, guild_id, _duration_ms):
                 if value is None:
                     return None
                 return localize_boolean(translator, bool(value), guild_id)
 
-            def _format_summary(value, _scan_result, _translator, _guild_id, _duration_ms):
+        def _format_summary(value, _scan_result, _translator, _guild_id, _duration_ms):
                 if value is None:
                     return None
                 return str(value)
 
-            def _format_video_frames(scanned, scan_result, _translator, _guild_id, _duration_ms):
+        def _format_video_frames(scanned, scan_result, _translator, _guild_id, _duration_ms):
                 target = scan_result.get("video_frames_target")
                 if scanned is None or target is None:
                     return None
                 return f"{scanned}/{target}"
 
-            def _format_average_latency(scanned, _scan_result, _translator, _guild_id, duration_ms_param):
+        def _format_average_latency(scanned, _scan_result, _translator, _guild_id, duration_ms_param):
                 if scanned is None:
                     return None
                 try:
@@ -316,25 +302,24 @@ async def check_attachment(
                 average_latency_per_frame = duration_ms_param / scanned_frames
                 return f"{average_latency_per_frame:.2f} ms/frame"
 
-            field_specs: tuple[ScanFieldSpec, ...] = (
-                ScanFieldSpec(field_key="reason", inline=False, formatter=_format_reason),
-                ScanFieldSpec(field_key="category", formatter=_format_category),
-                ScanFieldSpec(field_key="score", formatter=_format_float),
+        field_specs: tuple[ScanFieldSpec, ...] = DEFAULT_FIELD_SPECS + (
                 ScanFieldSpec(field_key="flagged_any", formatter=_format_boolean),
                 ScanFieldSpec(
                     field_key="summary_categories",
                     inline=False,
                     formatter=_format_summary,
                 ),
-                ScanFieldSpec(field_key="max_similarity", formatter=_format_float),
+                ScanFieldSpec(
+                    field_key="max_similarity", formatter=default_score_formatter
+                ),
                 ScanFieldSpec(field_key="max_category", formatter=_format_summary),
-                ScanFieldSpec(field_key="similarity", formatter=_format_float),
+                ScanFieldSpec(field_key="similarity", formatter=default_score_formatter),
                 ScanFieldSpec(field_key="high_accuracy", formatter=_format_boolean),
-                ScanFieldSpec(field_key="clip_threshold", formatter=_format_float),
+                ScanFieldSpec(field_key="clip_threshold", formatter=default_score_formatter),
                 ScanFieldSpec(
                     field_key="moderation_threshold",
                     source_key="threshold",
-                    formatter=_format_float,
+                    formatter=default_score_formatter,
                 ),
                 ScanFieldSpec(
                     field_key="video_frames",
@@ -348,44 +333,42 @@ async def check_attachment(
                 ),
             )
 
-            latency_overrides = {
-                "breakdown_kwargs": {
-                    "bullet": "•",
-                    "decimals": 2,
-                    "include_step_label": True,
-                    "sort_desc": True,
-                    "step_wrapper": lambda step: f"`{step}`",
-                }
+        latency_overrides = {
+            "breakdown_kwargs": {
+                "bullet": "•",
+                "decimals": 2,
+                "include_step_label": True,
+                "sort_desc": True,
+                "step_wrapper": lambda step: f"`{step}`",
             }
+        }
 
-            color_resolver = lambda decision, _result: (
-                discord.Color.red()
-                if decision == "nsfw"
-                else (
-                    discord.Color.orange()
-                    if decision == "safe"
-                    else discord.Color.dark_grey()
-                )
+        color_resolver = lambda decision, _result: (
+            discord.Color.red()
+            if decision == "nsfw"
+            else (
+                discord.Color.orange()
+                if decision == "safe"
+                else discord.Color.dark_grey()
             )
+        )
 
-            await emit_verbose_report(
-                scanner,
-                message=message,
-                author=author,
-                guild_id=guild_id,
-                file_type=file_type,
-                detected_mime=detected_mime,
-                scan_result=scan_result,
-                duration_ms=duration_ms,
-                filename=filename,
-                bold_labels=False,
-                latency_kwargs=latency_overrides,
-                field_specs=field_specs,
-                include_cache_status=False,
-                color_resolver=color_resolver,
-            )
-    except Exception as exc:
-        print(f"[verbose] Failed to send verbose embed: {exc}")
+        await emit_verbose_report(
+            scanner,
+            message=message,
+            author=author,
+            guild_id=guild_id,
+            file_type=file_type,
+            detected_mime=detected_mime,
+            scan_result=scan_result,
+            duration_ms=duration_ms,
+            filename=filename,
+            bold_labels=False,
+            latency_kwargs=latency_overrides,
+            field_specs=field_specs,
+            include_cache_status=False,
+            color_resolver=color_resolver,
+        )
 
     if not perform_actions:
         return False

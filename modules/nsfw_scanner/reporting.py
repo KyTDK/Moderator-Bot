@@ -324,6 +324,27 @@ _DEFAULT_FIELD_SPECS: tuple[ScanFieldSpec, ...] = (
 )
 
 
+def default_reason_formatter(value, scan_result, translator, guild_id: int, duration: int):
+    """Public wrapper around the standard reason formatter."""
+
+    return _default_reason_formatter(value, scan_result, translator, guild_id, duration)
+
+
+def default_category_formatter(value, scan_result, translator, guild_id: int, duration: int):
+    """Public wrapper around the standard category formatter."""
+
+    return _default_category_formatter(value, scan_result, translator, guild_id, duration)
+
+
+def default_score_formatter(value, scan_result, translator, guild_id: int, duration: int):
+    """Public wrapper around the standard score formatter."""
+
+    return _default_score_formatter(value, scan_result, translator, guild_id, duration)
+
+
+DEFAULT_FIELD_SPECS: tuple[ScanFieldSpec, ...] = _DEFAULT_FIELD_SPECS
+
+
 async def emit_verbose_report(
     scanner,
     *,
