@@ -8,7 +8,7 @@ import time
 import uuid
 from contextlib import AsyncExitStack
 from typing import Any, Optional
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse, urlunparse
 
 import discord
 import aiohttp
@@ -115,6 +115,53 @@ async def _resolve_attachment_refresh_candidates(
                 refreshed_urls.append(candidate)
             break
     return refreshed_urls
+
+
+def _normalise_candidate_url(item: MediaWorkItem, candidate: str | None) -> str | None:
+    if not isinstance(candidate, str):
+        return None
+
+    stripped = candidate.strip()
+    if not stripped:
+        return None
+
+    parsed = urlparse(stripped)
+    if parsed.scheme in {"http", "https"} and parsed.netloc:
+        return stripped
+
+    if not parsed.scheme and parsed.netloc:
+        return urlunparse(("https", parsed.netloc, parsed.path, parsed.params, parsed.query, parsed.fragment))
+
+    if not parsed.scheme and parsed.path.startswith("/attachments/"):
+        return urlunparse(("https", "cdn.discordapp.com", parsed.path, "", "", ""))
+
+    if not parsed.scheme and parsed.path.startswith("attachments/"):
+        path = f"/{parsed.path}"
+        return urlunparse(("https", "cdn.discordapp.com", path, "", "", ""))
+
+    metadata = item.metadata or {}
+    attachment_id = metadata.get("attachment_id")
+    channel_id = metadata.get("channel_id")
+
+    if not attachment_id or not channel_id:
+        return None
+
+    try:
+        attachment_id_int = int(attachment_id)
+        channel_id_int = int(channel_id)
+    except (TypeError, ValueError):
+        return None
+
+    filename = parsed.path or ""
+    if not filename:
+        filename = metadata.get("filename") or item.label or ""
+    filename = filename.strip().lstrip("/")
+    if not filename:
+        return None
+
+    safe_filename = quote(filename)
+    path = f"/attachments/{channel_id_int}/{attachment_id_int}/{safe_filename}"
+    return urlunparse(("https", "cdn.discordapp.com", path, "", "", ""))
 
 
 def _suppress_discord_link_embed(url: str) -> str:
@@ -445,7 +492,26 @@ async def scan_media_item(
         cache_tokens.append((item.cache_key, initial_reservation.token))
 
     download: DownloadResult | None = None
-    candidate_urls: list[str] = [item.url]
+    candidate_urls: list[str] = []
+    seen_candidates: set[str] = set()
+
+    def _add_candidate(url: str | None, *, update_metadata: bool = False) -> None:
+        if not url:
+            return
+        normalised = _normalise_candidate_url(item, url)
+        effective = normalised or (url.strip() if isinstance(url, str) else url)
+        if not isinstance(effective, str) or not effective:
+            return
+        if update_metadata:
+            if normalised and normalised not in fallback_urls_updated:
+                fallback_urls_updated.append(normalised)
+            elif effective not in fallback_urls_updated:
+                fallback_urls_updated.append(effective)
+        if effective in seen_candidates:
+            return
+        candidate_urls.append(effective)
+        seen_candidates.add(effective)
+
     fallback_urls_raw = item.metadata.get("fallback_urls")
     if isinstance(fallback_urls_raw, list):
         fallback_urls_list = fallback_urls_raw
@@ -457,9 +523,19 @@ async def scan_media_item(
         if isinstance(fallback_urls_raw, str) and fallback_urls_raw:
             fallback_urls_list.append(fallback_urls_raw)
         item.metadata["fallback_urls"] = fallback_urls_list
+    fallback_urls_updated: list[str] = []
+
+    _add_candidate(item.url)
+
     for candidate in fallback_urls_list:
-        if isinstance(candidate, str) and candidate and candidate not in candidate_urls:
-            candidate_urls.append(candidate)
+        _add_candidate(candidate, update_metadata=True)
+
+    if fallback_urls_updated and fallback_urls_updated != fallback_urls_list:
+        fallback_urls_list[:] = fallback_urls_updated
+
+    if not candidate_urls and isinstance(item.url, str) and item.url:
+        candidate_urls.append(item.url)
+
     refreshed_attachment_attempted = False
     attempted_urls: list[str] = []
 
