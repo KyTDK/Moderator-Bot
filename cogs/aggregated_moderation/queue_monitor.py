@@ -8,7 +8,7 @@ from typing import Optional
 import discord
 
 from modules.nsfw_scanner.constants import LOG_CHANNEL_ID
-from modules.utils.discord_utils import safe_get_channel
+from modules.utils.log_channel import resolve_log_channel
 
 from .config import AggregatedModerationConfig
 from .queue_snapshot import QueueSnapshot
@@ -141,11 +141,22 @@ class FreeQueueMonitor:
 
         if not LOG_CHANNEL_ID:
             return
+
         try:
-            channel = await safe_get_channel(self._bot, LOG_CHANNEL_ID)
-            if channel is None:
-                print(f"[FreeQueueLag] Unable to resolve LOG_CHANNEL_ID={LOG_CHANNEL_ID}")
-                return
+            channel = await resolve_log_channel(
+                self._bot,
+                context="free_queue_backlog",
+                raise_on_exception=True,
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[FreeQueueLag] Failed to resolve LOG_CHANNEL_ID for backlog report: {exc}")
+            return
+
+        if channel is None:
+            print(f"[FreeQueueLag] Unable to resolve LOG_CHANNEL_ID={LOG_CHANNEL_ID}")
+            return
+
+        try:
             await channel.send(embed=embed)
         except Exception as exc:  # noqa: BLE001
             print(f"[FreeQueueLag] Failed to send log embed: {exc}")
@@ -322,8 +333,13 @@ class FreeQueueMonitor:
     ) -> None:
         if not LOG_CHANNEL_ID:
             return
+
         try:
-            channel = await safe_get_channel(self._bot, LOG_CHANNEL_ID)
+            channel = await resolve_log_channel(
+                self._bot,
+                context="adaptive_scaling",
+                raise_on_exception=True,
+            )
         except Exception as exc:  # noqa: BLE001
             print(f"[FreeQueueLag] Failed to resolve LOG_CHANNEL_ID for adaptive log: {exc}")
             return

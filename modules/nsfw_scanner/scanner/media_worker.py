@@ -27,6 +27,7 @@ from ..utils.file_types import FILE_TYPE_IMAGE, FILE_TYPE_VIDEO, determine_file_
 from .metrics import queue_media_metrics
 from .work_item import MediaFlagged, MediaWorkItem
 from modules.utils.discord_utils import safe_get_channel
+from modules.utils.log_channel import send_log_message
 
 log = logging.getLogger(__name__)
 
@@ -125,15 +126,6 @@ async def _notify_download_failure(
     if bot is None:
         return
 
-    try:
-        channel = await safe_get_channel(bot, LOG_CHANNEL_ID)
-    except Exception:  # pragma: no cover - best effort logging
-        log.debug("Failed to resolve LOG_CHANNEL_ID=%s for download failure", LOG_CHANNEL_ID, exc_info=True)
-        return
-
-    if channel is None:
-        return
-
     metadata = item.metadata or {}
     attempted_display = "\n".join(attempted_urls)
     if len(attempted_display) > 1000:
@@ -170,9 +162,13 @@ async def _notify_download_failure(
     if message is not None and getattr(message, "jump_url", None):
         embed.add_field(name="Source message", value=message.jump_url, inline=False)
 
-    try:
-        await channel.send(embed=embed)
-    except Exception:  # pragma: no cover - best effort logging
+    success = await send_log_message(
+        bot,
+        embed=embed,
+        logger=log,
+        context="media_download_failure",
+    )
+    if not success:  # pragma: no cover - best effort logging
         log.debug("Failed to send download failure embed to LOG_CHANNEL_ID=%s", LOG_CHANNEL_ID, exc_info=True)
 
 
@@ -200,15 +196,6 @@ async def scan_media_item(
         throttle_key = f"{diagnostic_key_base}::{reason}"
         if not _should_emit_diagnostic(throttle_key):
             return
-        try:
-            channel = await safe_get_channel(bot, LOG_CHANNEL_ID)
-        except Exception:  # pragma: no cover - best effort logging
-            log.debug("Failed to resolve diagnostic channel %s", LOG_CHANNEL_ID, exc_info=True)
-            return
-
-        if channel is None:
-            return
-
         embed = discord.Embed(
             title="NSFW scan skipped",
             description=item.label or item.url or "Unknown media item",
@@ -257,10 +244,13 @@ async def scan_media_item(
             if len(url_value) > 1024:
                 url_value = f"{url_value[:1021]}…"
             embed.add_field(name="URL", value=url_value, inline=False)
-
-        try:
-            await channel.send(embed=embed)
-        except Exception:  # pragma: no cover - best effort logging
+        success = await send_log_message(
+            bot,
+            embed=embed,
+            logger=log,
+            context="nsfw_diagnostic",
+        )
+        if not success:  # pragma: no cover - best effort logging
             log.debug("Failed to send NSFW diagnostic to channel %s", LOG_CHANNEL_ID, exc_info=True)
 
     async def _resolve_cache_tokens(verdict: dict[str, Any]) -> None:

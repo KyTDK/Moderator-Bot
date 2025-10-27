@@ -13,7 +13,7 @@ import pillow_avif  # noqa: F401 - registers AVIF support
 from discord.utils import utcnow
 
 from modules.utils import clip_vectors
-from modules.utils.discord_utils import safe_get_channel
+from modules.utils.log_channel import resolve_log_channel, send_log_message
 
 from ..constants import ALLOWED_USER_IDS, LOG_CHANNEL_ID, TMP_DIR
 from ..context import GuildScanContext, build_guild_scan_context
@@ -86,7 +86,12 @@ class NSFWScanner:
         embed.set_footer(text="OpenAI moderation fallback active")
 
         try:
-            channel = await safe_get_channel(self.bot, LOG_CHANNEL_ID)
+            channel = await resolve_log_channel(
+                self.bot,
+                logger=log,
+                context="milvus_failure",
+                raise_on_exception=True,
+            )
         except Exception as lookup_exc:
             log.warning(
                 "Milvus failure detected but log channel %s could not be resolved: %s",
@@ -202,20 +207,6 @@ class NSFWScanner:
         throttle_key = f"{guild_id or 'global'}::{reason}"
         if not self._should_emit_diagnostic(throttle_key):
             return
-
-        try:
-            channel = await safe_get_channel(self.bot, LOG_CHANNEL_ID)
-        except Exception:  # pragma: no cover - best effort logging
-            log.debug(
-                "Failed to resolve LOG_CHANNEL_ID=%s for collection diagnostic",
-                LOG_CHANNEL_ID,
-                exc_info=True,
-            )
-            return
-
-        if channel is None:
-            return
-
         embed = discord.Embed(
             title="NSFW scan not started",
             color=discord.Color.orange(),
@@ -254,10 +245,13 @@ class NSFWScanner:
                 if len(detail_text) > 1024:
                     detail_text = f"{detail_text[:1021]}…"
                 embed.add_field(name="Details", value=detail_text, inline=False)
-
-        try:
-            await channel.send(embed=embed)
-        except Exception:  # pragma: no cover - best effort logging
+        success = await send_log_message(
+            self.bot,
+            embed=embed,
+            logger=log,
+            context="nsfw_collection_diagnostic",
+        )
+        if not success:  # pragma: no cover - best effort logging
             log.debug(
                 "Failed to send collection diagnostic to channel %s",
                 LOG_CHANNEL_ID,
