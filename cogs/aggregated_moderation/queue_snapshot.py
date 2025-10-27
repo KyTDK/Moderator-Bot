@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Mapping, Optional
 
 
@@ -47,6 +49,8 @@ class QueueSnapshot:
     last_wait: float
     longest_runtime: float
     longest_wait: float
+    last_runtime_details: Mapping[str, Any]
+    longest_runtime_details: Mapping[str, Any]
     check_interval: float
     scale_down_grace: float
 
@@ -75,6 +79,8 @@ class QueueSnapshot:
             last_wait=_float(metrics.get("last_wait_time")),
             longest_runtime=_float(metrics.get("longest_runtime")),
             longest_wait=_float(metrics.get("longest_wait")),
+            last_runtime_details=dict(metrics.get("last_runtime_details") or {}),
+            longest_runtime_details=dict(metrics.get("longest_runtime_details") or {}),
             check_interval=_float(metrics.get("check_interval")),
             scale_down_grace=_float(metrics.get("scale_down_grace")),
         )
@@ -132,6 +138,133 @@ class QueueSnapshot:
         )
         parts.append(f"Tasks completed: {self.tasks_completed}")
         return "\n".join(parts)
+
+    @staticmethod
+    def _format_wall_time(value: Any) -> Optional[str]:
+        try:
+            ts = float(value)
+        except (TypeError, ValueError):
+            return None
+        try:
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+        except (OSError, OverflowError):
+            return None
+        return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    @staticmethod
+    def _int_or_none(value: Any) -> Optional[int]:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _float_or_none(value: Any) -> Optional[float]:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _format_source(details: Mapping[str, Any]) -> Optional[str]:
+        filename = details.get("filename")
+        if not filename:
+            return None
+        try:
+            filename = os.path.relpath(str(filename))
+        except (TypeError, ValueError):
+            filename = str(filename)
+        line = details.get("first_lineno")
+        if line:
+            try:
+                return f"{filename}:{int(line)}"
+            except (TypeError, ValueError):
+                return filename
+        return filename
+
+    @staticmethod
+    def _format_workers(details: Mapping[str, Any]) -> Optional[str]:
+        active = QueueSnapshot._int_or_none(details.get("active_workers_start"))
+        max_workers = QueueSnapshot._int_or_none(details.get("max_workers"))
+        autoscale = QueueSnapshot._int_or_none(details.get("autoscale_max"))
+        if active is None and max_workers is None:
+            return None
+        if active is not None and max_workers is not None:
+            base = f"{active}/{max_workers}"
+        elif active is not None:
+            base = f"active={active}"
+        else:
+            base = f"max={max_workers}"
+        if autoscale and (max_workers is None or autoscale > max_workers):
+            base = f"{base} (burst {autoscale})"
+        return base
+
+    @staticmethod
+    def _format_backlog(details: Mapping[str, Any]) -> Optional[str]:
+        enqueue = QueueSnapshot._int_or_none(details.get("backlog_at_enqueue"))
+        start = QueueSnapshot._int_or_none(details.get("backlog_at_start"))
+        finish = QueueSnapshot._int_or_none(details.get("backlog_at_finish"))
+        values = []
+        if enqueue is not None:
+            values.append(f"enqueued={enqueue}")
+        if start is not None:
+            values.append(f"start={start}")
+        if finish is not None:
+            values.append(f"finish={finish}")
+        if not values:
+            return None
+        return " -> ".join(values)
+
+    def format_longest_runtime_detail(self) -> str:
+        return self._format_runtime_detail(self.longest_runtime_details)
+
+    def format_last_runtime_detail(self) -> str:
+        return self._format_runtime_detail(self.last_runtime_details)
+
+    def _format_runtime_detail(self, details: Mapping[str, Any]) -> str:
+        if not details:
+            return "No task details captured yet."
+
+        lines: list[str] = []
+        name = details.get("display_name")
+        if name:
+            lines.append(f"Task: `{name}`")
+
+        module = details.get("module")
+        if module:
+            lines.append(f"Module: `{module}`")
+
+        source = self._format_source(details)
+        if source:
+            lines.append(f"Source: `{source}`")
+
+        runtime = details.get("runtime")
+        wait = details.get("wait")
+        if runtime is not None:
+            runtime_val = self._float_or_none(runtime)
+            if runtime_val is not None:
+                wait_suffix = ""
+                wait_val = self._float_or_none(wait)
+                if wait_val is not None:
+                    wait_suffix = f" (wait {wait_val:.2f}s)"
+                lines.append(f"Runtime: {runtime_val:.2f}s{wait_suffix}")
+
+        backlog = self._format_backlog(details)
+        if backlog:
+            lines.append(f"Queue backlog: {backlog}")
+
+        workers = self._format_workers(details)
+        if workers:
+            lines.append(f"Workers at start: {workers}")
+
+        started_at = self._format_wall_time(details.get("started_at_wall"))
+        completed_at = self._format_wall_time(details.get("completed_at_wall"))
+        if started_at:
+            lines.append(f"Started: {started_at}")
+        if completed_at:
+            lines.append(f"Finished: {completed_at}")
+
+        return "\n".join(lines)
 
 
 __all__ = ["QueueSnapshot"]

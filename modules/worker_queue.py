@@ -2,7 +2,89 @@ import asyncio
 import builtins
 import time
 import traceback
-from typing import Optional
+from dataclasses import dataclass
+from typing import Any, Optional
+
+
+@dataclass(slots=True)
+class TaskMetadata:
+    display_name: str
+    module: Optional[str]
+    qualname: Optional[str]
+    function: Optional[str]
+    filename: Optional[str]
+    first_lineno: Optional[int]
+
+    @classmethod
+    def from_coroutine(cls, coro) -> "TaskMetadata":
+        """Extract identifying information for a coroutine."""
+        code = getattr(coro, "cr_code", None)
+        qualname = getattr(code, "co_qualname", None) if code is not None else None
+        func_name = getattr(code, "co_name", None) if code is not None else None
+        filename = getattr(code, "co_filename", None) if code is not None else None
+        first_lineno = getattr(code, "co_firstlineno", None) if code is not None else None
+
+        module = getattr(coro, "__module__", None)
+        if module is None:
+            frame = getattr(coro, "cr_frame", None)
+            if frame is not None:
+                module = frame.f_globals.get("__name__")
+
+        fallback = getattr(coro, "__qualname__", None) or getattr(coro, "__name__", None)
+        name = qualname or func_name or fallback
+        if not name and module:
+            name = f"{module}.<coroutine>"
+        display_name = str(name) if name else repr(coro)
+
+        return cls(
+            display_name=display_name,
+            module=module,
+            qualname=qualname,
+            function=func_name,
+            filename=filename,
+            first_lineno=first_lineno,
+        )
+
+
+@dataclass(slots=True)
+class TaskRuntimeDetail:
+    metadata: TaskMetadata
+    wait: float
+    runtime: float
+    enqueued_at_monotonic: float
+    started_at_monotonic: float
+    completed_at_monotonic: float
+    started_at_wall: float
+    completed_at_wall: float
+    backlog_at_enqueue: int
+    backlog_at_start: int
+    backlog_at_finish: int
+    active_workers_start: int
+    max_workers: int
+    autoscale_max: int
+
+    def as_mapping(self) -> dict[str, Any]:
+        return {
+            "display_name": self.metadata.display_name,
+            "module": self.metadata.module,
+            "qualname": self.metadata.qualname,
+            "function": self.metadata.function,
+            "filename": self.metadata.filename,
+            "first_lineno": self.metadata.first_lineno,
+            "wait": self.wait,
+            "runtime": self.runtime,
+            "enqueued_at_monotonic": self.enqueued_at_monotonic,
+            "started_at_monotonic": self.started_at_monotonic,
+            "completed_at_monotonic": self.completed_at_monotonic,
+            "started_at_wall": self.started_at_wall,
+            "completed_at_wall": self.completed_at_wall,
+            "backlog_at_enqueue": self.backlog_at_enqueue,
+            "backlog_at_start": self.backlog_at_start,
+            "backlog_at_finish": self.backlog_at_finish,
+            "active_workers_start": self.active_workers_start,
+            "max_workers": self.max_workers,
+            "autoscale_max": self.autoscale_max,
+        }
 
 
 class _InstrumentedTask:
@@ -13,16 +95,18 @@ class _InstrumentedTask:
         "_enqueued_at",
         "_backlog_at_enqueue",
         "_name",
+        "_metadata",
         "_closed",
     )
 
-    def __init__(self, queue, coro, loop, enqueued_at, backlog_at_enqueue, name) -> None:
+    def __init__(self, queue, coro, loop, enqueued_at, backlog_at_enqueue, metadata: TaskMetadata) -> None:
         self._queue = queue
         self._coro = coro
         self._loop = loop
         self._enqueued_at = enqueued_at
         self._backlog_at_enqueue = backlog_at_enqueue
-        self._name = name
+        self._metadata = metadata
+        self._name = metadata.display_name
         self._closed = False
 
     def __await__(self):
@@ -30,17 +114,40 @@ class _InstrumentedTask:
 
     async def _run(self):
         started_at = self._loop.time()
+        started_wall = time.time()
         wait_duration = started_at - self._enqueued_at
         queue = self._queue
         queue._record_wait(wait_duration)
         if wait_duration > queue._slow_wait_threshold:
             queue._maybe_log_wait(wait_duration, self._backlog_at_enqueue, self._name)
 
+        backlog_at_start = queue.queue.qsize()
+        active_workers_start = queue._active_workers()
+
         try:
             await self._coro
         finally:
-            runtime = self._loop.time() - started_at
-            queue._record_runtime(runtime)
+            completed_at = self._loop.time()
+            completed_wall = time.time()
+            runtime = completed_at - started_at
+            backlog_at_finish = queue.queue.qsize()
+            detail = TaskRuntimeDetail(
+                metadata=self._metadata,
+                wait=wait_duration,
+                runtime=runtime,
+                enqueued_at_monotonic=self._enqueued_at,
+                started_at_monotonic=started_at,
+                completed_at_monotonic=completed_at,
+                started_at_wall=started_wall,
+                completed_at_wall=completed_wall,
+                backlog_at_enqueue=self._backlog_at_enqueue,
+                backlog_at_start=backlog_at_start,
+                backlog_at_finish=backlog_at_finish,
+                active_workers_start=active_workers_start,
+                max_workers=queue.max_workers,
+                autoscale_max=queue._autoscale_max,
+            )
+            queue._record_runtime(detail)
             if runtime > queue._slow_runtime_threshold:
                 queue._maybe_log_runtime(runtime, self._name)
             self.close()
@@ -105,6 +212,8 @@ class WorkerQueue:
         self._metrics_last_wait: Optional[float] = None
         self._metrics_longest_runtime: float = 0.0
         self._metrics_longest_wait: float = 0.0
+        self._metrics_last_runtime_detail: Optional[TaskRuntimeDetail] = None
+        self._metrics_longest_runtime_detail: Optional[TaskRuntimeDetail] = None
         self._slow_wait_threshold: float = 15.0
         self._slow_runtime_threshold: float = 20.0
         self._slow_log_cooldown: float = 30.0
@@ -300,24 +409,13 @@ class WorkerQueue:
     def _wrap_task(self, coro):
         loop = asyncio.get_running_loop()
         enqueued_at = loop.time()
-        name = self._describe_coro(coro)
+        metadata = self._task_metadata(coro)
         backlog_at_enqueue = self.queue.qsize()
 
-        return _InstrumentedTask(self, coro, loop, enqueued_at, backlog_at_enqueue, name)
+        return _InstrumentedTask(self, coro, loop, enqueued_at, backlog_at_enqueue, metadata)
 
-    def _describe_coro(self, coro) -> str:
-        code = getattr(coro, "cr_code", None)
-        if code is not None:
-            qualname = getattr(code, "co_qualname", None)
-            if qualname:
-                return qualname
-            name = getattr(code, "co_name", None)
-            if name:
-                return name
-        name = getattr(coro, "__qualname__", None) or getattr(coro, "__name__", None)
-        if name:
-            return str(name)
-        return repr(coro)
+    def _task_metadata(self, coro) -> TaskMetadata:
+        return TaskMetadata.from_coroutine(coro)
 
     def _record_wait(self, wait: float) -> None:
         self._metrics_last_wait = wait
@@ -330,7 +428,8 @@ class WorkerQueue:
         if wait > self._metrics_longest_wait:
             self._metrics_longest_wait = wait
 
-    def _record_runtime(self, runtime: float) -> None:
+    def _record_runtime(self, detail: TaskRuntimeDetail) -> None:
+        runtime = detail.runtime
         self._metrics_processed += 1
         self._metrics_last_runtime = runtime
         self._metrics_total_runtime += runtime
@@ -340,6 +439,9 @@ class WorkerQueue:
             self._metrics_runtime_ema = (self._metrics_runtime_ema * 0.8) + (runtime * 0.2)
         if runtime > self._metrics_longest_runtime:
             self._metrics_longest_runtime = runtime
+        self._metrics_last_runtime_detail = detail
+        if runtime >= self._metrics_longest_runtime:
+            self._metrics_longest_runtime_detail = detail
 
     def _maybe_log_wait(self, wait: float, backlog: int, name: str) -> None:
         now = time.monotonic()
@@ -444,4 +546,6 @@ class WorkerQueue:
             "last_wait_time": self._metrics_last_wait or 0.0,
             "longest_runtime": self._metrics_longest_runtime,
             "longest_wait": self._metrics_longest_wait,
+            "last_runtime_details": self._metrics_last_runtime_detail.as_mapping() if self._metrics_last_runtime_detail else {},
+            "longest_runtime_details": self._metrics_longest_runtime_detail.as_mapping() if self._metrics_longest_runtime_detail else {},
         }

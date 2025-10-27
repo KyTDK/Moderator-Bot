@@ -125,6 +125,16 @@ class FreeQueueMonitor:
             ),
             inline=False,
         )
+        embed.add_field(
+            name="Longest free task breakdown",
+            value=free.format_longest_runtime_detail(),
+            inline=False,
+        )
+        embed.add_field(
+            name="Latest free task snapshot",
+            value=free.format_last_runtime_detail(),
+            inline=False,
+        )
         embed.set_footer(text=f"Dropped tasks since last report: {dropped_delta}")
 
         if not LOG_CHANNEL_ID:
