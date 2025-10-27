@@ -80,7 +80,7 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
     attachments = getattr(message, "attachments", None) or []
     embeds = getattr(message, "embeds", None) or []
     stickers = getattr(message, "stickers", None) or []
-    if attachments or embeds or stickers:
+    if attachments or stickers:
         return message
 
     content = getattr(message, "content", "") or ""
