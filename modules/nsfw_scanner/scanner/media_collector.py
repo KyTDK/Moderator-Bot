@@ -168,8 +168,12 @@ def collect_media_items(
 
         url_candidates: list[str] = []
         for candidate in raw_candidates:
-            if candidate and candidate not in url_candidates:
-                url_candidates.append(candidate)
+            if not candidate or candidate in url_candidates:
+                continue
+            parsed_candidate = urlparse(candidate)
+            if parsed_candidate.scheme not in {"http", "https"}:
+                continue
+            url_candidates.append(candidate)
 
         if not url_candidates:
             continue
@@ -208,10 +212,13 @@ def collect_media_items(
             resolved_candidate = _resolve_embed_url(candidate, attachments_by_filename)
             if not resolved_candidate:
                 continue
+            parsed_candidate = urlparse(resolved_candidate)
+            if parsed_candidate.scheme not in {"http", "https"}:
+                continue
             candidate = resolved_candidate
             if candidate in seen_urls:
                 continue
-            parsed = urlparse(candidate)
+            parsed = parsed_candidate
             domain = parsed.netloc.lower()
             is_tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
             if is_tenor and tenor_added:

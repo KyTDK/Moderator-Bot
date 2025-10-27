@@ -101,11 +101,18 @@ async def _resolve_attachment_refresh_candidates(
         return []
 
     refreshed_urls: list[str] = []
-    for attachment in getattr(refreshed_message, "attachments", ()):
+    for attachment in getattr(refreshed_message, "attachments", ()): 
         if getattr(attachment, "id", None) == attachment_id_int:
-            for candidate in (getattr(attachment, "proxy_url", None), getattr(attachment, "url", None)):
-                if candidate and candidate not in refreshed_urls:
-                    refreshed_urls.append(candidate)
+            for candidate in (
+                getattr(attachment, "proxy_url", None),
+                getattr(attachment, "url", None),
+            ):
+                if not candidate or candidate in refreshed_urls:
+                    continue
+                parsed_candidate = urlparse(candidate)
+                if parsed_candidate.scheme not in {"http", "https"}:
+                    continue
+                refreshed_urls.append(candidate)
             break
     return refreshed_urls
 
@@ -144,10 +151,30 @@ async def _notify_download_failure(
     embed.add_field(name="HTTP status", value=f"{error.status}", inline=True)
     error_message = getattr(error, "message", None) or getattr(error, "history", None) or str(error)
     embed.add_field(name="Error detail", value=error_message[:1024] or "N/A", inline=False)
+    request_info = getattr(error, "request_info", None)
+    real_url = getattr(request_info, "real_url", None) if request_info else None
+    real_url_str = str(real_url) if real_url else None
+    request_method = getattr(request_info, "method", None) if request_info else None
+    if request_method or real_url:
+        request_value = " "
+        if request_method:
+            request_value = request_method
+        if real_url_str:
+            request_value = f"{request_value} {real_url_str}".strip()
+        if len(request_value) > 1024:
+            request_value = f"{request_value[:1021]}…"
+        embed.add_field(name="Request", value=request_value, inline=False)
+
     if attempted_display:
         embed.add_field(name="Attempted URLs", value=attempted_display, inline=False)
     if fallback_display:
         embed.add_field(name="Fallback URLs", value=fallback_display, inline=False)
+
+    if real_url_str and real_url_str not in attempted_urls:
+        resolved_url = real_url_str
+        if len(resolved_url) > 1024:
+            resolved_url = f"{resolved_url[:1021]}…"
+        embed.add_field(name="Resolved URL", value=resolved_url, inline=False)
 
     context_bits = {
         "guild": metadata.get("guild_id") or context.guild_id,
@@ -161,6 +188,40 @@ async def _notify_download_failure(
 
     if message is not None and getattr(message, "jump_url", None):
         embed.add_field(name="Source message", value=message.jump_url, inline=False)
+
+    if item.source:
+        embed.add_field(name="Source", value=item.source, inline=True)
+    if item.ext_hint:
+        embed.add_field(name="Extension", value=item.ext_hint, inline=True)
+
+    attachment_size = metadata.get("size")
+    if isinstance(attachment_size, int):
+        embed.add_field(name="Size", value=f"{attachment_size} bytes", inline=True)
+
+    interesting_headers: list[str] = []
+    headers = getattr(error, "headers", None)
+    if headers:
+        for header_key in (
+            "Content-Type",
+            "Content-Length",
+            "Cache-Control",
+            "Age",
+            "Via",
+            "CF-Ray",
+            "CF-Cache-Status",
+            "Server",
+        ):
+            header_value = headers.get(header_key)
+            if header_value:
+                interesting_headers.append(f"{header_key}: {header_value}")
+        if not interesting_headers:
+            for header_key, header_value in list(headers.items())[:5]:
+                interesting_headers.append(f"{header_key}: {header_value}")
+    if interesting_headers:
+        header_text = "\n".join(interesting_headers)
+        if len(header_text) > 1024:
+            header_text = f"{header_text[:1021]}…"
+        embed.add_field(name="Response headers", value=header_text, inline=False)
 
     success = await send_log_message(
         bot,
