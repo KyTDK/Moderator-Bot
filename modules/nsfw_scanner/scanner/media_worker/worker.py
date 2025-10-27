@@ -4,6 +4,7 @@ import logging
 import os
 import tempfile
 import time
+from collections.abc import Iterable
 from contextlib import AsyncExitStack, asynccontextmanager
 from typing import Any, Optional
 from urllib.parse import urlparse
@@ -48,6 +49,36 @@ def _resolve_suffix(candidate: str | None, fallback: str) -> str:
     return suffix or fallback
 
 
+def _normalise_url_list(*values: object) -> list[str]:
+    urls: list[str] = []
+    seen: set[str] = set()
+
+    def _register(value: str | None) -> None:
+        if not value:
+            return
+        candidate = str(value).strip()
+        if not candidate:
+            return
+        if candidate in seen:
+            return
+        seen.add(candidate)
+        urls.append(candidate)
+
+    for value in values:
+        if not value:
+            continue
+        if isinstance(value, str):
+            _register(value)
+            continue
+        if isinstance(value, Iterable):
+            for inner in value:
+                _register(inner)
+            continue
+        _register(str(value))
+
+    return urls
+
+
 @asynccontextmanager
 async def _attachment_to_tempfile(scanner, item: MediaWorkItem) -> Any:
     attachment = item.attachment
@@ -83,26 +114,35 @@ async def _attachment_to_tempfile(scanner, item: MediaWorkItem) -> Any:
 
 
 @asynccontextmanager
-async def _download_url_exact(scanner, item: MediaWorkItem, *, limits) -> Any:
-    if not item.url:
+async def _download_url_exact(
+    scanner,
+    item: MediaWorkItem,
+    *,
+    limits,
+    url_override: str | None = None,
+) -> Any:
+    target_url = url_override or item.url
+    if not target_url:
         raise RuntimeError("MediaWorkItem missing URL for download")
     if scanner.session is None:
         raise RuntimeError("NSFWScanner session is not initialised. Call start() first.")
     _ensure_tmp_dir(scanner)
-    parsed = urlparse(item.url)
+    parsed = urlparse(target_url)
     suffix = _resolve_suffix(item.ext_hint, os.path.splitext(parsed.path)[1] or ".bin")
     fd, path = tempfile.mkstemp(dir=scanner.tmp_dir, suffix=suffix)
     os.close(fd)
     total = 0
     content_type: str | None = None
+    resolved_url: str | None = None
     try:
-        async with scanner.session.get(item.url) as resp:
+        async with scanner.session.get(target_url) as resp:
             resp.raise_for_status()
             content_type = resp.headers.get("Content-Type")
             content_length = resp.content_length
             cap = limits.download_cap_bytes
             if cap is not None and content_length and content_length > cap:
                 raise ValueError(f"Download exceeds cap ({content_length} bytes)")
+            resolved_url = str(resp.url) if getattr(resp, "url", None) else target_url
             with open(path, "wb") as handle:
                 async for chunk in resp.content.iter_chunked(_CHUNK_SIZE):
                     if not chunk:
@@ -118,7 +158,7 @@ async def _download_url_exact(scanner, item: MediaWorkItem, *, limits) -> Any:
                 total = 0
         yield DownloadResult(
             path,
-            url=item.url,
+            url=resolved_url or target_url,
             content_type=content_type,
             bytes_downloaded=total or None,
         )
@@ -243,6 +283,12 @@ async def scan_media_item(
         should_emit = True
         if reason == "unsupported_type" and item.tenor and item.source == "content":
             should_emit = False
+        if (
+            reason == "unsupported_type"
+            and item.source == "embed"
+            and (extra or {}).get("detected_mime", "").lower() == "unknown"
+        ):
+            should_emit = False
         if should_emit:
             await _emit_diagnostic(reason, status=status or reason, extra=extra)
         return payload
@@ -320,7 +366,20 @@ async def scan_media_item(
     else:
         cache_tokens.append((item.cache_key, initial_reservation.token))
 
-    attempted_urls: list[str] = [item.url] if item.url else []
+    metadata = item.metadata or {}
+    fallback_urls: list[str] = _normalise_url_list(
+        metadata.get("fallback_urls"),
+        metadata.get("fallback_url"),
+    )
+    candidate_urls_meta: list[str] = _normalise_url_list(
+        metadata.get("candidate_urls"),
+        metadata.get("candidate_url"),
+    )
+    refreshed_urls: list[str] = _normalise_url_list(
+        metadata.get("refreshed_urls"),
+        metadata.get("refreshed_url"),
+    )
+    attempted_urls: list[str] = []
 
     try:
         async def _process_download(download_obj: DownloadResult) -> None:
@@ -503,8 +562,80 @@ async def scan_media_item(
             return
 
         if item.url:
-            async with _download_url_exact(scanner, item, limits=context.limits) as temp_download:
-                await _process_download(temp_download)
+            url_candidates: list[str] = []
+            seen_candidates: set[str] = set()
+
+            def _queue_candidate(value: str | None) -> None:
+                if not value:
+                    return
+                candidate = str(value).strip()
+                if not candidate or candidate in seen_candidates:
+                    return
+                seen_candidates.add(candidate)
+                url_candidates.append(candidate)
+
+            _queue_candidate(item.url)
+            for candidate in candidate_urls_meta:
+                _queue_candidate(candidate)
+            for candidate in fallback_urls:
+                _queue_candidate(candidate)
+            for candidate in refreshed_urls:
+                _queue_candidate(candidate)
+
+            attempted_set: set[str] = set()
+            observed_refreshed: list[str] = []
+            last_http_error: aiohttp.ClientResponseError | None = None
+
+            for candidate_url in url_candidates:
+                try:
+                    async with _download_url_exact(
+                        scanner,
+                        item,
+                        limits=context.limits,
+                        url_override=candidate_url,
+                    ) as temp_download:
+                        if candidate_url not in attempted_set:
+                            attempted_urls.append(candidate_url)
+                            attempted_set.add(candidate_url)
+                        resolved_url = getattr(temp_download, "url", None)
+                        if (
+                            resolved_url
+                            and isinstance(resolved_url, str)
+                            and resolved_url not in attempted_set
+                            and resolved_url not in refreshed_urls
+                            and resolved_url not in observed_refreshed
+                        ):
+                            observed_refreshed.append(resolved_url)
+                        await _process_download(temp_download)
+                        return
+                except aiohttp.ClientResponseError as http_error:
+                    if candidate_url not in attempted_set:
+                        attempted_urls.append(candidate_url)
+                        attempted_set.add(candidate_url)
+                    request_info = getattr(http_error, "request_info", None)
+                    real_url = None
+                    if request_info is not None and getattr(request_info, "real_url", None):
+                        real_url = str(request_info.real_url)
+                    if (
+                        real_url
+                        and real_url not in attempted_set
+                        and real_url not in refreshed_urls
+                        and real_url not in observed_refreshed
+                    ):
+                        observed_refreshed.append(real_url)
+                    last_http_error = http_error
+                    continue
+
+            if observed_refreshed:
+                refreshed_urls.extend(
+                    url for url in observed_refreshed if url not in refreshed_urls
+                )
+
+            if last_http_error is not None:
+                setattr(last_http_error, "_attempted_urls", list(attempted_urls))
+                setattr(last_http_error, "_fallback_urls", list(fallback_urls))
+                setattr(last_http_error, "_refreshed_urls", list(refreshed_urls))
+                raise last_http_error
             return
 
         await _resolve_skip(
@@ -549,14 +680,18 @@ async def scan_media_item(
             download=None,
         )
     except aiohttp.ClientResponseError as http_error:
+        attempted_for_log = getattr(http_error, "_attempted_urls", attempted_urls)
+        fallback_for_log = getattr(http_error, "_fallback_urls", fallback_urls)
+        refreshed_for_log = getattr(http_error, "_refreshed_urls", refreshed_urls)
         if not getattr(http_error, "_download_failure_logged", False):
             await notify_download_failure(
                 scanner,
                 item=item,
                 context=context,
                 message=message,
-                attempted_urls=attempted_urls or [item.url],
-                fallback_urls=[],
+                attempted_urls=attempted_for_log or ([item.url] if item.url else []),
+                fallback_urls=fallback_for_log,
+                refreshed_urls=refreshed_for_log,
                 error=http_error,
                 logger=log,
             )
@@ -566,8 +701,8 @@ async def scan_media_item(
             {
                 "error_status": http_error.status,
                 "error_message": http_error.message,
-                "attempted_urls": ", ".join(attempted_urls or []) or item.url,
-                "fallback_urls": "",
+                "attempted_urls": ", ".join(attempted_for_log or []) or item.url,
+                "fallback_urls": ", ".join(fallback_for_log or []),
             },
             status=f"http_error_{http_error.status}",
         )

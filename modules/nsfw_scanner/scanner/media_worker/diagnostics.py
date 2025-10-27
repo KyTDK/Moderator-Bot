@@ -56,6 +56,7 @@ async def notify_download_failure(
     message: discord.Message | None,
     attempted_urls: Iterable[str],
     fallback_urls: Iterable[str],
+    refreshed_urls: Iterable[str] | None,
     error: aiohttp.ClientResponseError,
     logger: logging.Logger | None = None,
 ) -> None:
@@ -68,17 +69,27 @@ async def notify_download_failure(
     logger = logger or log
 
     metadata = item.metadata or {}
+    attempted_list = [url for url in attempted_urls if url]
+    fallback_list = [url for url in fallback_urls if url]
+    refreshed_list = [url for url in (refreshed_urls or []) if url]
+
     attempted_display = "\n".join(
-        suppress_discord_link_embed(url) for url in attempted_urls if url
+        suppress_discord_link_embed(url) for url in attempted_list
     )
     if len(attempted_display) > 1000:
         attempted_display = f"{attempted_display[:997]}…"
 
     fallback_display = ", ".join(
-        suppress_discord_link_embed(url) for url in fallback_urls if url
+        suppress_discord_link_embed(url) for url in fallback_list
     )
     if len(fallback_display) > 1000:
         fallback_display = f"{fallback_display[:997]}…"
+
+    refreshed_display = ", ".join(
+        suppress_discord_link_embed(url) for url in refreshed_list
+    )
+    if len(refreshed_display) > 1000:
+        refreshed_display = f"{refreshed_display[:997]}…"
 
     embed = discord.Embed(
         title="Media download failure",
@@ -107,8 +118,10 @@ async def notify_download_failure(
         embed.add_field(name="Attempted URLs", value=attempted_display, inline=False)
     if fallback_display:
         embed.add_field(name="Fallback URLs", value=fallback_display, inline=False)
+    if refreshed_display:
+        embed.add_field(name="Refreshed URLs", value=refreshed_display, inline=False)
 
-    if real_url_str and real_url_str not in attempted_urls:
+    if real_url_str and real_url_str not in attempted_list:
         resolved_url = suppress_discord_link_embed(real_url_str)
         if len(resolved_url) > 1024:
             resolved_url = f"{resolved_url[:1021]}…"
