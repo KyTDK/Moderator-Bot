@@ -85,8 +85,9 @@ def _derive_discord_cdn_fallback(url: str) -> str | None:
     if parsed.scheme not in {"http", "https"}:
         return None
 
-    netloc = parsed.netloc.lower()
-    if not netloc.endswith("discordapp.net"):
+    hostname = parsed.hostname.lower() if parsed.hostname else ""
+    # Only allow discordapp.net and its subdomains (e.g. cdn.discordapp.net)
+    if not (hostname == "discordapp.net" or hostname.endswith(".discordapp.net")):
         return None
 
     # Discord proxy URLs for attachments follow /attachments/<channel>/<id>/...
