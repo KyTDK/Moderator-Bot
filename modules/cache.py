@@ -1,8 +1,11 @@
 import asyncio
 from collections import OrderedDict
+import os
+import tempfile
+
+import aiohttp
 import discord
 import diskcache as dc
-import os, tempfile
 
 cache_dir = os.path.join(tempfile.gettempdir(), "modbot_messages")
 message_cache = dc.Cache(cache_dir, size_limit=10**9)
@@ -27,11 +30,37 @@ DEFAULT_CACHED_MESSAGE = {
 
 class CachedAttachment:
     def __init__(self, data: dict):
-        self.filename = data["filename"]
-        self.url = data["url"]
+        self.filename = data.get("filename")
+        self.url = data.get("url")
         self.proxy_url = data.get("proxy_url")
         self.id = data.get("id")
-        self.size = data["size"]
+        self.size = data.get("size")
+        self.content_type = data.get("content_type")
+
+    async def save(self, fp, *, seek_begin: bool = True) -> None:
+        target_url = self.proxy_url or self.url
+        if not target_url:
+            raise RuntimeError("CachedAttachment is missing a usable URL")
+
+        should_close = False
+        handle = fp
+        if isinstance(fp, (str, os.PathLike)):
+            handle = open(os.fspath(fp), "wb")
+            should_close = True
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(target_url) as resp:
+                    resp.raise_for_status()
+                    async for chunk in resp.content.iter_chunked(64 * 1024):
+                        if not chunk:
+                            continue
+                        handle.write(chunk)
+            if seek_begin and hasattr(handle, "seek"):
+                handle.seek(0)
+        finally:
+            if should_close:
+                handle.close()
 
 class CachedReaction:
     def __init__(self, data: dict):
@@ -82,6 +111,7 @@ async def cache_message(msg: discord.Message):
                 "url": a.url,
                 "proxy_url": getattr(a, "proxy_url", None),
                 "size": a.size,
+                "content_type": getattr(a, "content_type", None),
             }
             for a in msg.attachments
         ] if msg.attachments else [],
