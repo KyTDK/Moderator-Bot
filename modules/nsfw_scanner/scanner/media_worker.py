@@ -117,6 +117,20 @@ async def _resolve_attachment_refresh_candidates(
     return refreshed_urls
 
 
+def _suppress_discord_link_embed(url: str) -> str:
+    if not isinstance(url, str):
+        return url
+    stripped = url.strip()
+    if not stripped:
+        return stripped
+    if stripped.startswith("<") and stripped.endswith(">"):
+        return stripped
+    scheme = urlparse(stripped).scheme
+    if scheme in {"http", "https"}:
+        return f"<{stripped}>"
+    return stripped
+
+
 async def _notify_download_failure(
     scanner,
     *,
@@ -134,11 +148,15 @@ async def _notify_download_failure(
         return
 
     metadata = item.metadata or {}
-    attempted_display = "\n".join(attempted_urls)
+    attempted_display = "\n".join(
+        _suppress_discord_link_embed(url) for url in attempted_urls if url
+    )
     if len(attempted_display) > 1000:
         attempted_display = f"{attempted_display[:997]}…"
 
-    fallback_display = ", ".join(fallback_urls)
+    fallback_display = ", ".join(
+        _suppress_discord_link_embed(url) for url in fallback_urls if url
+    )
     if len(fallback_display) > 1000:
         fallback_display = f"{fallback_display[:997]}…"
 
@@ -171,7 +189,7 @@ async def _notify_download_failure(
         embed.add_field(name="Fallback URLs", value=fallback_display, inline=False)
 
     if real_url_str and real_url_str not in attempted_urls:
-        resolved_url = real_url_str
+        resolved_url = _suppress_discord_link_embed(real_url_str)
         if len(resolved_url) > 1024:
             resolved_url = f"{resolved_url[:1021]}…"
         embed.add_field(name="Resolved URL", value=resolved_url, inline=False)
