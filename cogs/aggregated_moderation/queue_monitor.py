@@ -10,7 +10,7 @@ from modules.utils.log_channel import send_log_message
 
 from .config import AggregatedModerationConfig
 from .alert_payloads import build_backlog_cleared_embed, build_backlog_embed
-from .media_rates import MediaRateCalculator
+from .media_rates import MediaProcessingRate, MediaRateCalculator
 from .queue_snapshot import QueueSnapshot
 
 
@@ -89,12 +89,7 @@ class FreeQueueMonitor:
         dropped_delta = max(0, free.dropped_total - self._last_dropped_total)
         self._last_dropped_total = free.dropped_total
 
-        rates = await self._rate_calculator.compute_rates()
-        window_minutes = self._rate_calculator.window_minutes
-        if rates:
-            rate_summary = ", ".join(rate.format_console(window_minutes) for rate in rates)
-        else:
-            rate_summary = "none"
+        rates, rate_summary = await self._collect_rates_summary()
 
         summary = [
             f"free_backlog={free.backlog}",
@@ -308,12 +303,7 @@ class FreeQueueMonitor:
         free: QueueSnapshot,
         accel: QueueSnapshot,
     ) -> None:
-        rates = await self._rate_calculator.compute_rates()
-        window_minutes = self._rate_calculator.window_minutes
-        if rates:
-            rate_summary = ", ".join(rate.format_console(window_minutes) for rate in rates)
-        else:
-            rate_summary = "none"
+        rates, rate_summary = await self._collect_rates_summary()
 
         summary = [
             "backlog_recovered",
@@ -342,6 +332,15 @@ class FreeQueueMonitor:
             return
 
         self._backlog_active = False
+
+    async def _collect_rates_summary(self) -> tuple[list[MediaProcessingRate], str]:
+        rates = await self._rate_calculator.compute_rates()
+        window_minutes = self._rate_calculator.window_minutes
+        if rates:
+            rate_summary = ", ".join(rate.format_console(window_minutes) for rate in rates)
+        else:
+            rate_summary = "none"
+        return rates, rate_summary
 
 
     async def _log_adaptive_change(

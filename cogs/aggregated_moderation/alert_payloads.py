@@ -19,6 +19,16 @@ def _format_processing_rates_field(
     return label, value
 
 
+def _add_queue_fields(
+    embed: discord.Embed,
+    *,
+    free: QueueSnapshot,
+    accel: QueueSnapshot,
+) -> None:
+    embed.add_field(name="Free queue", value=free.format_lines(), inline=False)
+    embed.add_field(name="Accelerated queue", value=accel.format_lines(), inline=False)
+
+
 def build_backlog_embed(
     *,
     free: QueueSnapshot,
@@ -40,8 +50,7 @@ def build_backlog_embed(
         description=description,
         color=discord.Color.orange(),
     )
-    embed.add_field(name="Free queue", value=free.format_lines(), inline=False)
-    embed.add_field(name="Accelerated queue", value=accel.format_lines(), inline=False)
+    _add_queue_fields(embed, free=free, accel=accel)
     embed.add_field(
         name="Current tuning snapshot",
         value="\n".join(
@@ -100,8 +109,7 @@ def build_backlog_cleared_embed(
         description=description,
         color=discord.Color.green(),
     )
-    embed.add_field(name="Free queue", value=free.format_lines(), inline=False)
-    embed.add_field(name="Accelerated queue", value=accel.format_lines(), inline=False)
+    _add_queue_fields(embed, free=free, accel=accel)
 
     label, value = _format_processing_rates_field(rates=rates, calculator=calculator)
     embed.add_field(name=label, value=value, inline=False)
