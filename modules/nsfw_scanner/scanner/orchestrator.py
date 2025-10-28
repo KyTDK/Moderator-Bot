@@ -25,6 +25,7 @@ from ..utils.diagnostics import (
 from .media_collector import collect_media_items
 from .media_worker import MediaFlagged, scan_media_item
 from .work_item import MediaWorkItem
+from ..utils.file_types import ANIMATED_EXTS, VIDEO_EXTS
 
 log = logging.getLogger(__name__)
 
@@ -114,3 +115,41 @@ class NSFWScanner:
                     return True
 
         return False
+
+    def _build_url_item(self, url: str) -> MediaWorkItem:
+        parsed = urlparse(str(url))
+        ext = os.path.splitext(parsed.path)[1].lower()
+        domain = parsed.netloc.lower()
+        tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
+        prefer_video = tenor or ext in VIDEO_EXTS or ext in ANIMATED_EXTS
+        return MediaWorkItem(
+            source="url",
+            label=str(url),
+            url=str(url),
+            prefer_video=prefer_video,
+            ext_hint=ext or None,
+            tenor=tenor,
+            metadata={},
+        )
+
+    async def _fan_out_media(
+        self,
+        *,
+        items: list[MediaWorkItem],
+        context: GuildScanContext,
+        message: discord.Message | None,
+        actor: discord.Member | None,
+        nsfw_callback,
+    ) -> None:
+        if actor is not None and getattr(actor, "id", None) in ALLOWED_USER_IDS:
+            return
+
+        for item in items:
+            await scan_media_item(
+                self,
+                item=item,
+                context=context,
+                message=message,
+                actor=actor,
+                nsfw_callback=nsfw_callback,
+            )
