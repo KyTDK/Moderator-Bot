@@ -1,3 +1,4 @@
+import asyncio
 import sys
 import types
 from pathlib import Path
@@ -173,7 +174,10 @@ orchestrator_stub = types.ModuleType("modules.nsfw_scanner.scanner.orchestrator"
 orchestrator_stub.NSFWScanner = object
 sys.modules.setdefault("modules.nsfw_scanner.scanner.orchestrator", orchestrator_stub)
 
-from modules.nsfw_scanner.scanner.media_collector import collect_media_items
+from modules.nsfw_scanner.scanner.media_collector import (
+    collect_media_items,
+    hydrate_message,
+)
 
 
 def _build_embed(*, video_url: str | None = None, image_url: str | None = None) -> SimpleNamespace:
@@ -192,6 +196,13 @@ def _build_embed(*, video_url: str | None = None, image_url: str | None = None) 
 class _DummyBot:
     def get_emoji(self, _emoji_id):
         return None
+
+
+class _WeakNamespace:
+    __slots__ = ("__dict__", "__weakref__")
+
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
 
 def test_collect_media_items_deduplicates_tenor_variants():
@@ -222,7 +233,7 @@ def test_collect_media_items_uses_proxy_url_without_fallback():
         size=1337,
         id=42,
     )
-    message = SimpleNamespace(
+    message = _WeakNamespace(
         attachments=[attachment],
         embeds=[],
         stickers=[],
@@ -251,7 +262,7 @@ def test_collect_media_items_records_original_url_when_proxy_available():
         size=1337,
         id=42,
     )
-    message = SimpleNamespace(
+    message = _WeakNamespace(
         attachments=[attachment],
         embeds=[],
         stickers=[],
@@ -271,3 +282,45 @@ def test_collect_media_items_records_original_url_when_proxy_available():
     assert metadata.get("original_url") == original_url
     assert metadata.get("fallback_urls") == [original_url]
     assert items[0].url == proxy_url
+
+
+def test_collect_media_items_prefers_signed_content_url():
+    signed_url = (
+        "https://cdn.discordapp.com/attachments/1/2/image0.gif"
+        "?ex=6612b18b&is=65f03c8b&hm=deadbeefcafebabe"
+    )
+    proxy_url = "https://media.discordapp.net/attachments/1/2/image0.gif"
+    original_url = "https://cdn.discordapp.com/attachments/1/2/image0.gif"
+    attachment = SimpleNamespace(
+        proxy_url=proxy_url,
+        url=original_url,
+        filename="image0.gif",
+        size=1337,
+        id=42,
+        hash="abcdef",
+    )
+    message = _WeakNamespace(
+        attachments=[attachment],
+        embeds=[],
+        stickers=[],
+        message_snapshots=[],
+        id=99,
+        channel=SimpleNamespace(id=123),
+        guild=SimpleNamespace(id=456),
+        content=f"look at this {signed_url}",
+    )
+    context = SimpleNamespace(tenor_allowed=True)
+
+    hydrated_message = asyncio.run(hydrate_message(message))
+    assert hydrated_message is message
+
+    items = collect_media_items(message, _DummyBot(), context)
+
+    assert len(items) == 1
+    item = items[0]
+    assert item.url == signed_url
+    metadata = item.metadata
+    assert metadata.get("original_url") == signed_url
+    assert metadata.get("proxy_url") == proxy_url
+    assert metadata.get("fallback_urls") == [proxy_url, original_url]
+    assert metadata.get("signed_content_urls") == [signed_url]

@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from typing import Any, Iterable
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import discord
 
@@ -21,6 +21,12 @@ ALLOWED_CONTENT_EXTS = ANIMATED_EXTS | VIDEO_EXTS | IMAGE_EXTS
 
 
 _HYDRATION_METADATA: "WeakKeyDictionary[discord.Message, dict[str, Any]]" = WeakKeyDictionary()
+
+_SIGNED_DISCORD_DOMAINS = {
+    "cdn.discordapp.com",
+    "media.discordapp.net",
+    "cdn.discordapp.net",
+}
 
 
 def _snapshot_attachment_state(message: discord.Message | None) -> dict[str, Any]:
@@ -69,11 +75,12 @@ def _store_hydration_metadata(
     stage: str,
     original_snapshot: dict[str, Any],
     final_snapshot: dict[str, Any],
+    extra: dict[str, Any] | None = None,
 ) -> None:
     if message is None:
         return
     try:
-        _HYDRATION_METADATA[message] = {
+        metadata: dict[str, Any] = {
             "stage": stage,
             "hydrated_urls": list(final_snapshot.get("all_urls", [])),
             "hydrated_proxy_urls": list(final_snapshot.get("proxy_list", [])),
@@ -83,6 +90,9 @@ def _store_hydration_metadata(
                 original_snapshot.get("proxy_by_index", {})
             ),
         }
+        if extra:
+            metadata.update(extra)
+        _HYDRATION_METADATA[message] = metadata
     except TypeError:  # pragma: no cover - weakref unsupported
         return
 
@@ -152,10 +162,57 @@ def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
     return matches[:limit]
 
 
+def _is_signed_discord_media_url(url: str) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    domain = parsed.netloc.lower()
+    if domain not in _SIGNED_DISCORD_DOMAINS:
+        return False
+    query_params = parse_qs(parsed.query)
+    required_params = {"ex", "is", "hm"}
+    if not required_params.issubset(query_params.keys()):
+        return False
+    return True
+
+
+def _extract_signed_discord_urls(content: str | None) -> list[str]:
+    if not content:
+        return []
+    signed_urls: list[str] = []
+    for candidate in _URL_RE.findall(content):
+        if _is_signed_discord_media_url(candidate):
+            signed_urls.append(candidate)
+    return signed_urls
+
+
+def _map_signed_urls_to_filenames(urls: Iterable[str]) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for url in urls:
+        if not _is_signed_discord_media_url(url):
+            continue
+        parsed = urlparse(url)
+        filename = os.path.basename(parsed.path)
+        if filename and filename not in mapping:
+            mapping[filename] = url
+    return mapping
+
+
 async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
     _ = bot  # Parameter kept for API compatibility; no runtime usage.
     attachments = getattr(message, "attachments", None) or []
     original_snapshot = _snapshot_attachment_state(message)
+    content = getattr(message, "content", "") or ""
+    signed_content_urls = _extract_signed_discord_urls(content)
+    if signed_content_urls:
+        _store_hydration_metadata(
+            message,
+            stage="content_signed_urls",
+            original_snapshot=original_snapshot,
+            final_snapshot=original_snapshot,
+            extra={"signed_content_urls": signed_content_urls},
+        )
+        return message
     if attachments and all(
         (getattr(a, "proxy_url", None) or getattr(a, "url", None) or "").startswith(("http://", "https://"))
         for a in attachments
@@ -168,7 +225,6 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
         )
         return message
 
-    content = getattr(message, "content", "") or ""
     if "http" not in content:
         return message
 
@@ -266,6 +322,10 @@ def collect_media_items(
         base_metadata["hydrated_urls"] = list(hydrated_urls)
     original_proxy_map = hydration_info.get("original_proxy_map") or {}
     original_proxy_index_map = hydration_info.get("original_proxy_index_map") or {}
+    signed_content_urls = hydration_info.get("signed_content_urls") or []
+    if signed_content_urls:
+        base_metadata["signed_content_urls"] = list(signed_content_urls)
+    signed_url_map = _map_signed_urls_to_filenames(signed_content_urls)
 
     items: list[MediaWorkItem] = []
     seen_urls: set[str] = set()
@@ -280,7 +340,17 @@ def collect_media_items(
         if raw_url is not None and not isinstance(raw_url, str):
             raw_url = str(raw_url)
 
+        signed_override = signed_url_map.get(filename) if filename else None
+
+        fallback_urls: list[str] = []
         primary_url = proxy_url or raw_url or (filename or "")
+        if signed_override:
+            primary_url = signed_override
+            if proxy_url and proxy_url != primary_url:
+                fallback_urls.append(proxy_url)
+            if raw_url and raw_url not in (primary_url, proxy_url):
+                fallback_urls.append(raw_url)
+
         # Skip if no real CDN URL
         if not primary_url.startswith(("http://", "https://")):
             log.debug("Skipping attachment with no valid URL: %s", filename)
@@ -306,9 +376,13 @@ def collect_media_items(
         )
         if proxy_url:
             metadata["proxy_url"] = proxy_url
-        if raw_url:
+        if signed_override:
+            metadata["original_url"] = signed_override
+        elif raw_url:
             metadata["original_url"] = raw_url
-        if proxy_url and raw_url and proxy_url != raw_url:
+        if fallback_urls:
+            metadata["fallback_urls"] = fallback_urls
+        elif proxy_url and raw_url and proxy_url != raw_url:
             metadata["fallback_urls"] = [raw_url]
         if cache_hint:
             metadata["cache_key"] = f"hash::{cache_hint}"
