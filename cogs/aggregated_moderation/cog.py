@@ -10,6 +10,7 @@ from modules.core.moderator_bot import ModeratorBot
 from modules.nsfw_scanner import NSFWScanner
 from modules.utils import mysql
 from modules.worker_queue import WorkerQueue
+from modules.worker_queue_alerts import SingularTaskReporter
 
 from .config import AggregatedModerationConfig, load_config
 from .handlers import ModerationHandlers
@@ -22,6 +23,7 @@ class AggregatedModerationCog(commands.Cog):
         self.config: AggregatedModerationConfig = load_config()
 
         self.scanner = NSFWScanner(bot)
+        self._singular_task_reporter = SingularTaskReporter(bot)
 
         autoscale = self.config.autoscale
         self.free_queue = WorkerQueue(
@@ -32,6 +34,7 @@ class AggregatedModerationCog(commands.Cog):
             autoscale_check_interval=autoscale.check_interval,
             scale_down_grace=autoscale.scale_down_grace,
             name="free",
+            singular_task_reporter=self._singular_task_reporter,
         )
         self.accelerated_queue = WorkerQueue(
             max_workers=self.config.accelerated.max_workers,
@@ -41,6 +44,7 @@ class AggregatedModerationCog(commands.Cog):
             autoscale_check_interval=autoscale.check_interval,
             scale_down_grace=autoscale.scale_down_grace,
             name="accelerated",
+            singular_task_reporter=self._singular_task_reporter,
         )
 
         self.queue_monitor = FreeQueueMonitor(

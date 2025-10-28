@@ -3,7 +3,7 @@ import builtins
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Awaitable, Callable, Optional
 
 
 @dataclass(slots=True)
@@ -87,6 +87,9 @@ class TaskRuntimeDetail:
         }
 
 
+SlowTaskReporter = Callable[["TaskRuntimeDetail", str], Awaitable[None]]
+
+
 class _InstrumentedTask:
     __slots__ = (
         "_queue",
@@ -147,9 +150,7 @@ class _InstrumentedTask:
                 max_workers=queue.max_workers,
                 autoscale_max=queue._autoscale_max,
             )
-            queue._record_runtime(detail)
-            if runtime > queue._slow_runtime_threshold:
-                queue._maybe_log_runtime(runtime, self._name)
+            queue._handle_task_complete(detail, runtime, self._name)
             self.close()
 
     def close(self) -> None:
@@ -173,6 +174,8 @@ class WorkerQueue:
         name: Optional[str] = None,
         backlog_hard_limit: Optional[int] = 500,
         backlog_shed_to: Optional[int] = None,
+        singular_task_reporter: Optional[SlowTaskReporter] = None,
+        singular_runtime_threshold: Optional[float] = None,
     ):
         self.queue = asyncio.Queue()
         # Current configured max (may change via autoscaler/resize)
@@ -219,6 +222,13 @@ class WorkerQueue:
         self._slow_log_cooldown: float = 30.0
         self._last_wait_log: float = 0.0
         self._last_runtime_log: float = 0.0
+        if singular_runtime_threshold is None:
+            singular_runtime_threshold = float(
+                getattr(singular_task_reporter, "threshold", 30.0)
+            )
+        self._singular_runtime_threshold: float = float(singular_runtime_threshold)
+        self._singular_task_reporter = singular_task_reporter
+        self._alert_tasks: set[asyncio.Task[Any]] = set()
 
     def _active_workers(self) -> int:
         """Count non-finished worker tasks."""
@@ -260,6 +270,9 @@ class WorkerQueue:
                 except asyncio.QueueEmpty:
                     break
             self._pending_stops = 0
+            if self._alert_tasks:
+                await asyncio.gather(*self._alert_tasks, return_exceptions=True)
+                self._alert_tasks.clear()
 
     async def add_task(self, coro):
         if not asyncio.iscoroutine(coro):
@@ -442,6 +455,7 @@ class WorkerQueue:
         self._metrics_last_runtime_detail = detail
         if runtime >= self._metrics_longest_runtime:
             self._metrics_longest_runtime_detail = detail
+        self._maybe_report_singular_task(detail)
 
     def _maybe_log_wait(self, wait: float, backlog: int, name: str) -> None:
         now = time.monotonic()
@@ -462,6 +476,49 @@ class WorkerQueue:
             f"[WorkerQueue:{self._name}] Task {name!r} ran for {runtime:.2f}s "
             f"(current_backlog={self.queue.qsize()}, workers={self._active_workers()}/{self.max_workers})"
         )
+
+    def _handle_task_complete(self, detail: TaskRuntimeDetail, runtime: float, name: str) -> None:
+        self._record_runtime(detail)
+        if runtime > self._slow_runtime_threshold:
+            self._maybe_log_runtime(runtime, name)
+
+    def _maybe_report_singular_task(self, detail: TaskRuntimeDetail) -> None:
+        reporter = self._singular_task_reporter
+        if reporter is None:
+            return
+        if detail.runtime < self._singular_runtime_threshold:
+            return
+        if not self._is_singular(detail):
+            return
+        self._schedule_singular_task_alert(reporter, detail)
+
+    @staticmethod
+    def _is_singular(detail: TaskRuntimeDetail) -> bool:
+        return detail.max_workers <= 1 and detail.autoscale_max <= 1
+
+    def _schedule_singular_task_alert(
+        self, reporter: SlowTaskReporter, detail: TaskRuntimeDetail
+    ) -> None:
+        try:
+            task = asyncio.create_task(reporter(detail, self._name))
+        except RuntimeError:
+            print(
+                f"[WorkerQueue:{self._name}] Unable to schedule singular task alert; no running event loop."
+            )
+            return
+        self._alert_tasks.add(task)
+        task.add_done_callback(self._on_alert_task_done)
+
+    def _on_alert_task_done(self, task: asyncio.Task[Any]) -> None:
+        self._alert_tasks.discard(task)
+        if task.cancelled():
+            return
+        try:
+            task.result()
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"[WorkerQueue:{self._name}] Singular task reporter failed: {exc!r}"
+            )
 
     def _close_enqueued_coroutine(self, item) -> None:
         """Best-effort close of instrumented wrapper."""

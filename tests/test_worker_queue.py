@@ -36,3 +36,67 @@ def test_worker_queue_handles_exception_group(capsys):
         await asyncio.wait_for(queue.stop(), timeout=1)
 
     asyncio.run(runner())
+
+
+def test_worker_queue_reports_slow_singular_task():
+    async def runner():
+        triggered = asyncio.Event()
+        reported: list[tuple[str, float]] = []
+
+        async def reporter(detail, queue_name):
+            reported.append((queue_name, detail.runtime))
+            triggered.set()
+
+        queue = WorkerQueue(
+            max_workers=1,
+            autoscale_max=1,
+            name="singular",
+            singular_task_reporter=reporter,
+            singular_runtime_threshold=0.01,
+        )
+        await queue.start()
+
+        async def slow_task():
+            await asyncio.sleep(0.02)
+
+        await queue.add_task(slow_task())
+        await asyncio.wait_for(queue.queue.join(), timeout=1)
+        await asyncio.wait_for(triggered.wait(), timeout=1)
+        await asyncio.wait_for(queue.stop(), timeout=1)
+
+        assert reported
+        queue_name, runtime = reported[0]
+        assert queue_name == "singular"
+        assert runtime >= 0.02
+
+    asyncio.run(runner())
+
+
+def test_worker_queue_skips_non_singular_tasks_for_alerts():
+    async def runner():
+        reported = False
+
+        async def reporter(*_):
+            nonlocal reported
+            reported = True
+
+        queue = WorkerQueue(
+            max_workers=2,
+            autoscale_max=2,
+            name="not_singular",
+            singular_task_reporter=reporter,
+            singular_runtime_threshold=0.0,
+        )
+        await queue.start()
+
+        async def slow_task():
+            await asyncio.sleep(0.01)
+
+        await queue.add_task(slow_task())
+        await asyncio.wait_for(queue.queue.join(), timeout=1)
+        await asyncio.sleep(0.05)
+        await asyncio.wait_for(queue.stop(), timeout=1)
+
+        assert not reported
+
+    asyncio.run(runner())

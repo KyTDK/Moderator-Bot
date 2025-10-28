@@ -5,12 +5,22 @@ from discord.ext import commands
 from modules.cache import DEFAULT_CACHED_MESSAGE, CachedMessage, cache_message, get_cached_message
 from modules.utils import mysql
 from modules.worker_queue import WorkerQueue
+from modules.worker_queue_alerts import SingularTaskReporter
 
 class EventDispatcherCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.free_queue = WorkerQueue(max_workers=1)
-        self.accelerated_queue = WorkerQueue(max_workers=5)
+        self._singular_task_reporter = SingularTaskReporter(bot)
+        self.free_queue = WorkerQueue(
+            max_workers=1,
+            name="event_dispatcher_free",
+            singular_task_reporter=self._singular_task_reporter,
+        )
+        self.accelerated_queue = WorkerQueue(
+            max_workers=5,
+            name="event_dispatcher_accelerated",
+            singular_task_reporter=self._singular_task_reporter,
+        )
 
     async def add_to_queue(self, coro, guild_id: int):
         accelerated = await mysql.is_accelerated(guild_id=guild_id)

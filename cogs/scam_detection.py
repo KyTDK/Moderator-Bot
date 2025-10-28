@@ -16,6 +16,7 @@ import aiohttp
 from discord.ext import tasks
 from modules.utils.url_utils import extract_urls, unshorten_url, update_tld_list
 from modules.worker_queue import WorkerQueue
+from modules.worker_queue_alerts import SingularTaskReporter
 from modules.core.moderator_bot import ModeratorBot
 from modules.i18n.strings import locale_string
 
@@ -196,8 +197,17 @@ class ScamDetectionCog(commands.Cog):
     def __init__(self, bot: ModeratorBot):
         self.bot = bot
         # Start background tasks after cog is fully loaded to avoid blocking startup
-        self.free_queue = WorkerQueue(max_workers=1)
-        self.accelerated_queue = WorkerQueue(max_workers=3)
+        self._singular_task_reporter = SingularTaskReporter(bot)
+        self.free_queue = WorkerQueue(
+            max_workers=1,
+            name="scam_detection_free",
+            singular_task_reporter=self._singular_task_reporter,
+        )
+        self.accelerated_queue = WorkerQueue(
+            max_workers=3,
+            name="scam_detection_accelerated",
+            singular_task_reporter=self._singular_task_reporter,
+        )
 
     scam_group = app_commands.Group(
         name="scam",
