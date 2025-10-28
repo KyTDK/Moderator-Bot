@@ -3,287 +3,238 @@ from __future__ import annotations
 import logging
 import os
 import re
-from typing import Any, Iterable
-from urllib.parse import parse_qs, urlparse
+from typing import Any, Iterable, Tuple, List, Dict
+from urllib.parse import urlparse, parse_qs
 
 import discord
+from weakref import WeakKeyDictionary
 
 from cogs.hydration import wait_for_hydration
-from weakref import WeakKeyDictionary
 
 from ..context import GuildScanContext
 from .work_item import MediaWorkItem
 from ..utils.file_types import ANIMATED_EXTS, IMAGE_EXTS, VIDEO_EXTS
 
 log = logging.getLogger(__name__)
+
 _URL_RE = re.compile(r"https?://[^\s<>]+")
 ALLOWED_CONTENT_EXTS = ANIMATED_EXTS | VIDEO_EXTS | IMAGE_EXTS
-
+_SIGNED_DISCORD_DOMAINS = {"cdn.discordapp.com", "media.discordapp.net", "cdn.discordapp.net"}
 
 _HYDRATION_METADATA: "WeakKeyDictionary[discord.Message, dict[str, Any]]" = WeakKeyDictionary()
 
-_SIGNED_DISCORD_DOMAINS = {
-    "cdn.discordapp.com",
-    "media.discordapp.net",
-    "cdn.discordapp.net",
-}
+def _is_http(u: str | None) -> bool:
+    return bool(u) and isinstance(u, str) and u.startswith(("http://", "https://"))
 
+def _host(u: str) -> str:
+    try:
+        return urlparse(u).netloc.lower()
+    except Exception:
+        return ""
+
+def _is_discord_host(u: str) -> bool:
+    return _host(u) in _SIGNED_DISCORD_DOMAINS
+
+def _is_signed_discord_media_url(u: str | None) -> bool:
+    if not _is_http(u):
+        return False
+    if not _is_discord_host(u or ""):
+        return False
+    q = parse_qs(urlparse(u or "").query)
+    return {"ex", "is", "hm"}.issubset(q.keys())
+
+def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
+    if not content:
+        return []
+    return _URL_RE.findall(content)[:limit]
+
+def _extract_signed_discord_urls(content: str | None) -> list[str]:
+    return [u for u in _extract_urls(content, limit=20) if _is_signed_discord_media_url(u)]
+
+def _map_signed_urls_to_filenames(urls: Iterable[str]) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for u in urls:
+        try:
+            fn = os.path.basename(urlparse(u).path)
+        except Exception:
+            continue
+        if fn and fn not in mapping:
+            mapping[fn] = u
+    return mapping
 
 def _snapshot_attachment_state(message: discord.Message | None) -> dict[str, Any]:
-    snapshot = {
-        "proxy_list": [],
-        "all_urls": [],
-        "proxy_by_id": {},
-        "proxy_by_index": {},
-    }
-    if message is None:
-        return snapshot
-
-    attachments = getattr(message, "attachments", None) or []
-    for index, attachment in enumerate(attachments):
-        proxy_url = getattr(attachment, "proxy_url", None)
-        url = getattr(attachment, "url", None)
-
-        proxy_str: str | None = None
-        if proxy_url:
-            proxy_str = str(proxy_url)
-            snapshot["proxy_list"].append(proxy_str)
-            if proxy_str not in snapshot["all_urls"]:
-                snapshot["all_urls"].append(proxy_str)
-
-        if url:
-            url_str = str(url)
-            if url_str not in snapshot["all_urls"]:
-                snapshot["all_urls"].append(url_str)
-            if proxy_str is None:
-                proxy_str = url_str
-
-        if proxy_str is None:
+    snap = {"proxy_list": [], "all_urls": [], "proxy_by_id": {}, "proxy_by_index": {}}
+    if not message:
+        return snap
+    for idx, a in enumerate(getattr(message, "attachments", None) or []):
+        p = getattr(a, "proxy_url", None)
+        r = getattr(a, "url", None)
+        p_s, r_s = (str(p) if p else None), (str(r) if r else None)
+        if p_s:
+            snap["proxy_list"].append(p_s)
+            if p_s not in snap["all_urls"]:
+                snap["all_urls"].append(p_s)
+        if r_s:
+            if r_s not in snap["all_urls"]:
+                snap["all_urls"].append(r_s)
+            if not p_s:
+                p_s = r_s
+        if not p_s:
             continue
-
-        attachment_id = getattr(attachment, "id", None)
-        if attachment_id is not None:
-            snapshot["proxy_by_id"][attachment_id] = proxy_str
-        snapshot["proxy_by_index"][index] = proxy_str
-
-    return snapshot
-
+        a_id = getattr(a, "id", None)
+        if a_id is not None:
+            snap["proxy_by_id"][a_id] = p_s
+        snap["proxy_by_index"][idx] = p_s
+    return snap
 
 def _store_hydration_metadata(
     message: discord.Message | None,
     *,
     stage: str,
-    original_snapshot: dict[str, Any],
-    final_snapshot: dict[str, Any],
+    original: dict[str, Any],
+    final: dict[str, Any],
     extra: dict[str, Any] | None = None,
 ) -> None:
-    if message is None:
+    if not message:
         return
+    data: dict[str, Any] = {
+        "stage": stage,
+        "hydrated_urls": list(final.get("all_urls", [])),
+        "hydrated_proxy_urls": list(final.get("proxy_list", [])),
+        "original_proxy_urls": list(original.get("proxy_list", [])),
+        "original_proxy_map": dict(original.get("proxy_by_id", {})),
+        "original_proxy_index_map": dict(original.get("proxy_by_index", {})),
+    }
+    if extra:
+        data.update(extra)
     try:
-        metadata: dict[str, Any] = {
-            "stage": stage,
-            "hydrated_urls": list(final_snapshot.get("all_urls", [])),
-            "hydrated_proxy_urls": list(final_snapshot.get("proxy_list", [])),
-            "original_proxy_urls": list(original_snapshot.get("proxy_list", [])),
-            "original_proxy_map": dict(original_snapshot.get("proxy_by_id", {})),
-            "original_proxy_index_map": dict(
-                original_snapshot.get("proxy_by_index", {})
-            ),
-        }
-        if extra:
-            metadata.update(extra)
-        _HYDRATION_METADATA[message] = metadata
-    except TypeError:  # pragma: no cover - weakref unsupported
-        return
-
+        _HYDRATION_METADATA[message] = data
+    except TypeError:
+        pass  # weakref unsupported in some edge mocks
 
 def _get_hydration_metadata(message: discord.Message | None) -> dict[str, Any]:
-    if message is None:
+    if not message:
         return {}
     try:
         return _HYDRATION_METADATA.get(message, {})
-    except TypeError:  # pragma: no cover - weakref unsupported
+    except TypeError:
         return {}
 
-
-def _media_stats(message: discord.Message | None) -> dict[str, int]:
-    stats = {
-        "attachments": 0,
-        "embeds": 0,
-        "stickers": 0,
-        "snapshots": 0,
-        "snapshot_attachments": 0,
-        "snapshot_embeds": 0,
-        "snapshot_stickers": 0,
-    }
-    if message is None:
+def _media_counts(message: discord.Message | None) -> dict[str, int]:
+    stats = dict(attachments=0, embeds=0, stickers=0, snapshots=0,
+                 snapshot_attachments=0, snapshot_embeds=0, snapshot_stickers=0)
+    if not message:
         return stats
-
     attachments = getattr(message, "attachments", None) or []
     embeds = getattr(message, "embeds", None) or []
     stickers = getattr(message, "stickers", None) or []
-
-    stats["attachments"] = len(attachments)
-    stats["embeds"] = len(embeds)
-    stats["stickers"] = len(stickers)
-
-    snapshots = list(getattr(message, "message_snapshots", None) or [])
-    stats["snapshots"] = len(snapshots)
-    for snapshot in snapshots:
-        stats["snapshot_attachments"] += len(getattr(snapshot, "attachments", None) or [])
-        stats["snapshot_embeds"] += len(getattr(snapshot, "embeds", None) or [])
-        stats["snapshot_stickers"] += len(getattr(snapshot, "stickers", None) or [])
-
+    stats["attachments"], stats["embeds"], stats["stickers"] = len(attachments), len(embeds), len(stickers)
+    snaps = list(getattr(message, "message_snapshots", None) or [])
+    stats["snapshots"] = len(snaps)
+    for s in snaps:
+        stats["snapshot_attachments"] += len(getattr(s, "attachments", None) or [])
+        stats["snapshot_embeds"] += len(getattr(s, "embeds", None) or [])
+        stats["snapshot_stickers"] += len(getattr(s, "stickers", None) or [])
     return stats
 
+def _has_any_media(stats: dict[str, int]) -> bool:
+    return any(stats[k] for k in ("attachments","embeds","stickers","snapshot_attachments","snapshot_embeds","snapshot_stickers"))
 
-def _has_media_metadata(stats: dict[str, int]) -> bool:
-    return any(
-        stats[key]
-        for key in (
-            "attachments",
-            "embeds",
-            "stickers",
-            "snapshot_attachments",
-            "snapshot_embeds",
-            "snapshot_stickers",
-        )
-    )
+def _choose_best_attachment_url(
+    filename: str | None,
+    proxy_url: str | None,
+    raw_url: str | None,
+    signed_content_urls: List[str],
+    filename_signed_map: Dict[str, str],
+) -> Tuple[str | None, List[str]]:
+    p = str(proxy_url) if proxy_url else None
+    r = str(raw_url) if raw_url else None
+    fallback: List[str] = []
 
+    if _is_signed_discord_media_url(p):
+        if r and r != p:
+            fallback.append(r)
+        return p, fallback
 
-def _summarise_stats(stats: dict[str, int]) -> str:
-    return ", ".join(f"{key}={value}" for key, value in stats.items())
+    if _is_signed_discord_media_url(r):
+        if p and p != r:
+            fallback.append(p)
+        return r, fallback
 
+    if _is_http(p) and not _is_discord_host(p):
+        if r and r != p:
+            fallback.append(r)
+        return p, fallback
+    if _is_http(r) and not _is_discord_host(r):
+        if p and p != r:
+            fallback.append(p)
+        return r, fallback
 
-def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
-    if not content:
-        return []
-    matches = _URL_RE.findall(content)
-    return matches[:limit]
+    signed = filename_signed_map.get(filename or "")
+    if not signed and signed_content_urls:
+        signed = signed_content_urls[0]
+    if signed:
+        if p and p != signed:
+            fallback.append(p)
+        if r and r not in (signed, p):
+            fallback.append(r)
+        return signed, fallback
 
+    if _is_http(p):
+        if r and r != p:
+            fallback.append(r)
+        return p, fallback
+    if _is_http(r):
+        if p and p != r:
+            fallback.append(p)
+        return r, fallback
 
-def _is_signed_discord_media_url(url: str) -> bool:
-    parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"}:
-        return False
-    domain = parsed.netloc.lower()
-    if domain not in _SIGNED_DISCORD_DOMAINS:
-        return False
-    query_params = parse_qs(parsed.query)
-    required_params = {"ex", "is", "hm"}
-    if not required_params.issubset(query_params.keys()):
-        return False
-    return True
-
-
-def _extract_signed_discord_urls(content: str | None) -> list[str]:
-    if not content:
-        return []
-    signed_urls: list[str] = []
-    for candidate in _URL_RE.findall(content):
-        if _is_signed_discord_media_url(candidate):
-            signed_urls.append(candidate)
-    return signed_urls
-
-
-def _map_signed_urls_to_filenames(urls: Iterable[str]) -> dict[str, str]:
-    mapping: dict[str, str] = {}
-    for url in urls:
-        if not _is_signed_discord_media_url(url):
-            continue
-        parsed = urlparse(url)
-        filename = os.path.basename(parsed.path)
-        if filename and filename not in mapping:
-            mapping[filename] = url
-    return mapping
-
+    return None, fallback
 
 async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
-    _ = bot  # Parameter kept for API compatibility; no runtime usage.
+    # Only skip if every attachment already has a usable URL: http(s) and (non-Discord OR signed).
     attachments = getattr(message, "attachments", None) or []
-    original_snapshot = _snapshot_attachment_state(message)
     content = getattr(message, "content", "") or ""
-    signed_content_urls = _extract_signed_discord_urls(content)
-    if signed_content_urls:
-        _store_hydration_metadata(
-            message,
-            stage="content_signed_urls",
-            original_snapshot=original_snapshot,
-            final_snapshot=original_snapshot,
-            extra={"signed_content_urls": signed_content_urls},
-        )
-        return message
-    if attachments and all(
-        (getattr(a, "proxy_url", None) or getattr(a, "url", None) or "").startswith(("http://", "https://"))
-        for a in attachments
-    ):
-        _store_hydration_metadata(
-            message,
-            stage="skipped",
-            original_snapshot=original_snapshot,
-            final_snapshot=_snapshot_attachment_state(message),
-        )
-        return message
+    original = _snapshot_attachment_state(message)
 
-    if "http" not in content:
-        return message
+    def _usable(u: str) -> bool:
+        return _is_http(u) and (not _is_discord_host(u) or _is_signed_discord_media_url(u))
 
+    if attachments:
+        raw_urls = [(str(getattr(a, "proxy_url", "") or getattr(a, "url", "") or "")) for a in attachments]
+        if all(u and _usable(u) for u in raw_urls):
+            _store_hydration_metadata(message, stage="skipped_usable", original=original, final=_snapshot_attachment_state(message))
+            return message
+
+    # Try Discord's internal hydration first (wait_for_hydration)
     hydrated: discord.Message | None = None
-    hydrated_stats: dict[str, int] | None = None
-    fetched_stats: dict[str, int] | None = None
     try:
         hydrated = await wait_for_hydration(message)
     except Exception as exc:
-        log.debug("hydrate_message: hydration wait failed for message %s: %s", getattr(message, "id", "?"), exc)
+        log.debug("hydrate_message: wait_for_hydration failed for %s: %r", getattr(message, "id", "?"), exc)
 
-    if hydrated is not None:
-        hydrated_stats = _media_stats(hydrated)
-        if _has_media_metadata(hydrated_stats):
-            _store_hydration_metadata(
-                hydrated,
-                stage="wait_for_hydration",
-                original_snapshot=original_snapshot,
-                final_snapshot=_snapshot_attachment_state(hydrated),
-            )
-            return hydrated
+    if hydrated and _has_any_media(_media_counts(hydrated)):
+        _store_hydration_metadata(hydrated, stage="wait_for_hydration", original=original, final=_snapshot_attachment_state(hydrated))
+        return hydrated
 
-    channel = getattr(message, "channel", None)
-    message_id = getattr(message, "id", None)
-    if channel is not None and message_id is not None and hasattr(channel, "fetch_message"):
-        fetch_reason: str | None = None
-        try:
-            fetched = await channel.fetch_message(message_id)
-        except (discord.NotFound, discord.Forbidden):
-            fetch_reason = "Message fetch returned NotFound/Forbidden"
-        except discord.HTTPException as exc:
-            log.debug("hydrate_message: fetch fallback failed for message %s: %s", message_id, exc)
-            fetch_reason = f"Message fetch raised HTTPException: {exc}"
-        else:
-            fetched_stats = _media_stats(fetched)
-            if _has_media_metadata(fetched_stats):
-                _store_hydration_metadata(
-                    fetched,
-                    stage="fetch_message",
-                    original_snapshot=original_snapshot,
-                    final_snapshot=_snapshot_attachment_state(fetched),
-                )
-                return fetched
-            fetch_reason = (
-                "Fetched message still missing media metadata "
-                f"(counts: {_summarise_stats(fetched_stats)})"
-            )
-        if fetch_reason:
-            log.debug("hydrate_message: %s", fetch_reason)
+    if ("http" in content) or attachments:
+        channel = getattr(message, "channel", None)
+        mid = getattr(message, "id", None)
+        if channel and mid and hasattr(channel, "fetch_message"):
+            try:
+                fetched = await channel.fetch_message(mid)
+            except (discord.NotFound, discord.Forbidden) as e:
+                log.debug("hydrate_message: fetch_message NotFound/Forbidden for %s: %s", mid, e)
+            except discord.HTTPException as e:
+                log.debug("hydrate_message: fetch_message HTTPException for %s: %s", mid, e)
+            else:
+                if _has_any_media(_media_counts(fetched)):
+                    _store_hydration_metadata(fetched, stage="fetch_message", original=original, final=_snapshot_attachment_state(fetched))
+                    return fetched
 
-    final_message = hydrated or message
-    final_stage = "wait_for_hydration" if hydrated is not None else "skipped"
-    _store_hydration_metadata(
-        final_message,
-        stage=final_stage,
-        original_snapshot=original_snapshot,
-        final_snapshot=_snapshot_attachment_state(final_message),
-    )
-    return final_message
+    _store_hydration_metadata(message, stage=("wait_for_hydration" if hydrated else "skipped_unusable"), original=original, final=_snapshot_attachment_state(message))
+    return message
+
 def collect_media_items(
     message: discord.Message,
     bot: discord.Client,
@@ -292,15 +243,9 @@ def collect_media_items(
     snapshots = getattr(message, "message_snapshots", None) or []
     snapshot = snapshots[0] if snapshots else None
 
-    attachments = list(getattr(message, "attachments", None) or []) or list(
-        getattr(snapshot, "attachments", None) or []
-    )
-    embeds = list(getattr(message, "embeds", None) or []) or list(
-        getattr(snapshot, "embeds", None) or []
-    )
-    stickers = list(getattr(message, "stickers", None) or []) or list(
-        getattr(snapshot, "stickers", None) or []
-    )
+    attachments = list(getattr(message, "attachments", None) or []) or list(getattr(snapshot, "attachments", None) or [])
+    embeds = list(getattr(message, "embeds", None) or []) or list(getattr(snapshot, "embeds", None) or [])
+    stickers = list(getattr(message, "stickers", None) or []) or list(getattr(snapshot, "stickers", None) or [])
 
     message_id = getattr(message, "id", None)
     message_channel = getattr(message, "channel", None)
@@ -312,187 +257,132 @@ def collect_media_items(
     snapshot_channel_id = getattr(snapshot, "channel_id", None) if snapshot else None
     snapshot_guild_id = getattr(snapshot, "guild_id", None) if snapshot else None
 
-    hydration_info = _get_hydration_metadata(message)
-    base_metadata: dict[str, Any] = {}
-    hydration_stage = hydration_info.get("stage")
-    if hydration_stage:
-        base_metadata["hydration_stage"] = hydration_stage
-    hydrated_urls = hydration_info.get("hydrated_urls")
-    if hydrated_urls:
-        base_metadata["hydrated_urls"] = list(hydrated_urls)
-    original_proxy_map = hydration_info.get("original_proxy_map") or {}
-    original_proxy_index_map = hydration_info.get("original_proxy_index_map") or {}
-    signed_content_urls = hydration_info.get("signed_content_urls") or []
-    if signed_content_urls:
-        base_metadata["signed_content_urls"] = list(signed_content_urls)
-    signed_url_map = _map_signed_urls_to_filenames(signed_content_urls)
+    # Signed URLs present in message content (used to override unsigned attachment URLs).
+    content = getattr(message, "content", "") or ""
+    signed_from_content = _extract_signed_discord_urls(content)
+    signed_filename_map = _map_signed_urls_to_filenames(signed_from_content)
+
+    # Carry hydration breadcrumbs for observability.
+    h = _get_hydration_metadata(message)
+    base_meta: dict[str, Any] = {}
+    if h.get("stage"):
+        base_meta["hydration_stage"] = h["stage"]
+    if h.get("hydrated_urls"):
+        base_meta["hydrated_urls"] = list(h["hydrated_urls"])
+    if signed_from_content:
+        base_meta["signed_content_urls"] = list(signed_from_content)
 
     items: list[MediaWorkItem] = []
-    seen_urls: set[str] = set()
+    seen: set[str] = set()
     attachments_by_filename: dict[str, discord.Attachment] = {}
-    for attachment_index, attachment in enumerate(attachments):
-        filename = getattr(attachment, "filename", None)
-        proxy_url = getattr(attachment, "proxy_url", None)
-        raw_url = getattr(attachment, "url", None)
 
-        if proxy_url is not None and not isinstance(proxy_url, str):
-            proxy_url = str(proxy_url)
-        if raw_url is not None and not isinstance(raw_url, str):
-            raw_url = str(raw_url)
+    for idx, a in enumerate(attachments):
+        filename = getattr(a, "filename", None)
+        proxy_url = getattr(a, "proxy_url", None)
+        raw_url = getattr(a, "url", None)
 
-        signed_override = signed_url_map.get(filename) if filename else None
+        primary, fallbacks = _choose_best_attachment_url(
+            filename, proxy_url, raw_url, signed_from_content, signed_filename_map
+        )
 
-        fallback_urls: list[str] = []
-        primary_url = proxy_url or raw_url or (filename or "")
-        if signed_override:
-            primary_url = signed_override
-            if proxy_url and proxy_url != primary_url:
-                fallback_urls.append(proxy_url)
-            if raw_url and raw_url not in (primary_url, proxy_url):
-                fallback_urls.append(raw_url)
-
-        # Skip if no real CDN URL
-        if not primary_url.startswith(("http://", "https://")):
-            log.debug("Skipping attachment with no valid URL: %s", filename)
+        if not primary or not _is_http(primary):
+            log.debug("collect: skip attachment (no usable URL). filename=%s proxy=%s raw=%s", filename, proxy_url, raw_url)
             continue
-        if not isinstance(primary_url, str):
-            primary_url = str(primary_url)
-        if not primary_url:
-            primary_url = filename or "attachment"
-        if primary_url in seen_urls:
+        if primary in seen:
             continue
+        seen.add(primary)
+        if filename:
+            attachments_by_filename.setdefault(filename, a)
 
         ext = os.path.splitext(filename or "")[1]
-        cache_hint = getattr(attachment, "hash", None)
-        metadata: dict[str, object] = dict(base_metadata)
-        metadata.update(
-            {
-            "size": getattr(attachment, "size", None),
-            "attachment_id": getattr(attachment, "id", None),
+        meta = {
+            **base_meta,
+            "size": getattr(a, "size", None),
+            "attachment_id": getattr(a, "id", None),
             "message_id": message_id or snapshot_id,
             "channel_id": message_channel_id or snapshot_channel_id,
             "guild_id": message_guild_id or snapshot_guild_id,
         }
-        )
         if proxy_url:
-            metadata["proxy_url"] = proxy_url
-        if signed_override:
-            metadata["original_url"] = signed_override
-        elif raw_url:
-            metadata["original_url"] = raw_url
-        if fallback_urls:
-            metadata["fallback_urls"] = fallback_urls
-        elif proxy_url and raw_url and proxy_url != raw_url:
-            metadata["fallback_urls"] = [raw_url]
+            meta["proxy_url"] = str(proxy_url)
+        if raw_url:
+            meta["original_url"] = str(raw_url)
+        if fallbacks:
+            meta["fallback_urls"] = list(fallbacks)
+        cache_hint = getattr(a, "hash", None)
         if cache_hint:
-            metadata["cache_key"] = f"hash::{cache_hint}"
+            meta["cache_key"] = f"hash::{cache_hint}"
 
-        original_proxy_url = None
-        attachment_id = getattr(attachment, "id", None)
-        if attachment_id is not None and attachment_id in original_proxy_map:
-            original_proxy_url = original_proxy_map[attachment_id]
-        elif attachment_index in original_proxy_index_map:
-            original_proxy_url = original_proxy_index_map[attachment_index]
-        if original_proxy_url:
-            metadata["original_proxy_url"] = original_proxy_url
-
-        seen_urls.add(primary_url)
-        if filename:
-            attachments_by_filename.setdefault(filename, attachment)
+        log.debug("collect: ATTACHMENT using %s (file=%s, fallbacks=%s)", primary, filename, bool(fallbacks))
         items.append(
             MediaWorkItem(
                 source="attachment",
-                label=filename or primary_url,
-                url=primary_url,
+                label=filename or primary,
+                url=primary,
                 ext_hint=ext or None,
-                metadata=metadata,
-                attachment=attachment,
+                metadata=meta,
+                attachment=a,
             )
         )
 
     for embed in embeds:
         tenor_added = False
         for candidate in _extract_embed_urls(embed):
-            resolved_candidate = _resolve_embed_url(candidate, attachments_by_filename)
-            if not resolved_candidate:
+            resolved = _resolve_embed_url(candidate, attachments_by_filename) or ""
+            if not _is_http(resolved):
                 continue
-            parsed_candidate = urlparse(resolved_candidate)
-            if parsed_candidate.scheme not in {"http", "https"}:
+            if resolved in seen:
                 continue
-            candidate = resolved_candidate
-            if candidate in seen_urls:
-                continue
-            parsed = parsed_candidate
+            parsed = urlparse(resolved)
             domain = parsed.netloc.lower()
             is_tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
-            if is_tenor and tenor_added:
-                continue
-            if is_tenor and not context.tenor_allowed:
-                continue
-            seen_urls.add(candidate)
             if is_tenor:
+                if tenor_added or not context.tenor_allowed:
+                    continue
                 tenor_added = True
+            # Skip unsigned Discord CDN embed URLs (they 404); allow signed or non-Discord.
+            if _is_discord_host(resolved) and not _is_signed_discord_media_url(resolved):
+                log.debug("collect: skip unsigned discord EMBED %s", resolved)
+                continue
+            seen.add(resolved)
             ext = os.path.splitext(parsed.path)[1]
-            embed_metadata: dict[str, Any] = dict(base_metadata)
             items.append(
                 MediaWorkItem(
                     source="embed",
-                    label=candidate,
-                    url=candidate,
+                    label=resolved,
+                    url=resolved,
                     prefer_video=is_tenor,
                     ext_hint=ext or None,
                     tenor=is_tenor,
-                    metadata=embed_metadata,
+                    metadata=dict(base_meta),
                 )
             )
 
     for sticker in stickers:
-        sticker_url = getattr(sticker, "url", None)
-        if not sticker_url:
+        s_url = getattr(sticker, "url", None)
+        if not _is_http(s_url):
             continue
         fmt = getattr(getattr(sticker, "format", None), "name", None)
-        label = getattr(sticker, "name", None) or sticker_url
+        label = getattr(sticker, "name", None) or s_url
         ext = f".{fmt.lower()}" if fmt else None
-        sticker_metadata: dict[str, Any] = dict(base_metadata)
-        sticker_metadata["sticker_format"] = (fmt or "").lower()
         items.append(
             MediaWorkItem(
                 source="sticker",
                 label=label,
-                url=sticker_url,
+                url=str(s_url),
                 ext_hint=ext,
-                metadata=sticker_metadata,
+                metadata={**base_meta, "sticker_format": (fmt or "").lower()},
             )
         )
 
-    for emoji in _extract_custom_emojis(message, bot):
-        emoji_url = str(getattr(emoji, "url", None) or "")
-        if not emoji_url:
+    for src in (message, snapshot):
+        text = getattr(src, "content", None) if src is not None else None
+        if not text:
             continue
-        label = getattr(emoji, "name", None) or emoji_url
-        animated = getattr(emoji, "animated", False)
-        ext = ".gif" if animated else ".png"
-        emoji_metadata: dict[str, Any] = dict(base_metadata)
-        emoji_metadata["emoji_id"] = getattr(emoji, "id", None)
-        items.append(
-            MediaWorkItem(
-                source="emoji",
-                label=label,
-                url=emoji_url,
-                prefer_video=animated,
-                ext_hint=ext,
-                metadata=emoji_metadata,
-            )
-        )
-
-    for source in (message, snapshot):
-        content = getattr(source, "content", None) if source is not None else None
-        if not content:
-            continue
-        for candidate in _extract_urls(content):
-            if candidate in seen_urls:
+        for u in _extract_urls(text, limit=20):
+            if u in seen:
                 continue
-            parsed = urlparse(candidate)
+            parsed = urlparse(u)
             domain = parsed.netloc.lower()
             tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
             if tenor and not context.tenor_allowed:
@@ -500,91 +390,63 @@ def collect_media_items(
             ext = os.path.splitext(parsed.path)[1].lower()
             if not tenor and ext not in ALLOWED_CONTENT_EXTS:
                 continue
-            prefer_video = tenor or ext in ANIMATED_EXTS or ext in VIDEO_EXTS
-            seen_urls.add(candidate)
-            content_metadata: dict[str, Any] = dict(base_metadata)
+            # Skip unsigned Discord CDN URLs from plain content; prefer signed ones we already recorded.
+            if _is_discord_host(u) and not _is_signed_discord_media_url(u):
+                continue
+            seen.add(u)
             items.append(
                 MediaWorkItem(
                     source="content",
-                    label=candidate,
-                    url=candidate,
-                    prefer_video=prefer_video,
+                    label=u,
+                    url=u,
+                    prefer_video=tenor or ext in ANIMATED_EXTS or ext in VIDEO_EXTS,
                     ext_hint=ext or None,
                     tenor=tenor,
-                    metadata=content_metadata,
+                    metadata=dict(base_meta),
                 )
             )
 
     return items
 
-
 def _extract_embed_urls(embed: discord.Embed) -> list[str]:
     urls: list[str] = []
 
-    def _add_url(proxy_url: str | None, url: str | None) -> None:
-        # Only use proxy_url if available (it’s signed).
+    def add(proxy_url: str | None, url: str | None) -> None:
+        # Prefer proxy if present (Discord usually sets this to a signed URL).
         if proxy_url:
             urls.append(str(proxy_url))
-        # Use url only if it’s not a Discord CDN link or already signed.
-        elif url:
+            return
+        if url:
             s = str(url)
-            if "media.discordapp.net" in s and "?" not in s:
-                return  # skip unsigned media.discordapp.net URLs
             urls.append(s)
 
-    video = getattr(embed, "video", None)
-    if video:
-        _add_url(getattr(video, "proxy_url", None), getattr(video, "url", None))
-
-    image = getattr(embed, "image", None)
-    if image:
-        _add_url(getattr(image, "proxy_url", None), getattr(image, "url", None))
-
-    thumbnail = getattr(embed, "thumbnail", None)
-    if thumbnail:
-        _add_url(getattr(thumbnail, "proxy_url", None), getattr(thumbnail, "url", None))
+    v = getattr(embed, "video", None)
+    if v:
+        add(getattr(v, "proxy_url", None), getattr(v, "url", None))
+    i = getattr(embed, "image", None)
+    if i:
+        add(getattr(i, "proxy_url", None), getattr(i, "url", None))
+    t = getattr(embed, "thumbnail", None)
+    if t:
+        add(getattr(t, "proxy_url", None), getattr(t, "url", None))
 
     return urls
 
-
-def _resolve_embed_url(
-    candidate: str,
-    attachments_by_filename: dict[str, discord.Attachment],
-) -> str | None:
+def _resolve_embed_url(candidate: str, attachments_by_filename: dict[str, discord.Attachment]) -> str | None:
     parsed = urlparse(candidate)
     if parsed.scheme != "attachment":
         return candidate
-
     filename = parsed.path.lstrip("/")
     if not filename:
         return None
-
-    attachment = attachments_by_filename.get(filename)
-    if attachment is None:
+    a = attachments_by_filename.get(filename)
+    if not a:
         return None
-
+    # Prefer proxy/url from the resolved attachment entry.
     for attr in ("proxy_url", "url"):
-        resolved = getattr(attachment, attr, None)
+        resolved = getattr(a, attr, None)
         if resolved:
-            return resolved
-
+            return str(resolved)
     return None
-
-
-def _extract_custom_emojis(
-    message: discord.Message,
-    bot: discord.Client,
-) -> Iterable[discord.Emoji]:
-    content = getattr(message, "content", "") or ""
-    matches = set(re.findall(r"<a?:\w+:(\d+)>", content))
-    for match in matches:
-        try:
-            emoji_id = int(match)
-        except ValueError:
-            continue
-        emoji = bot.get_emoji(emoji_id)
-        if emoji:
-            yield emoji
-
 
 __all__ = ["hydrate_message", "collect_media_items"]
