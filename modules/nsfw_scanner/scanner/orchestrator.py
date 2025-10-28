@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 import aiohttp
 import discord
-import pillow_avif  # noqa: F401 - registers AVIF support
+import pillow_avif  # noqa: F401
 from discord.utils import utcnow
 
 from modules.utils import clip_vectors
@@ -50,76 +50,20 @@ class NSFWScanner:
     def _ensure_clip_failure_notifier(self) -> None:
         if self._clip_failure_callback_registered:
             return
-        clip_vectors.register_failure_callback(self._handle_milvus_failure)
+        clip_vectors.register_failure_callback(self._on_clip_failure)
         self._clip_failure_callback_registered = True
 
-    async def _handle_milvus_failure(self, exc: Exception) -> None:
-        error_key = f"{type(exc).__name__}:{exc}"
-        if self._last_reported_milvus_error_key == error_key:
+    async def _on_clip_failure(self, reason: str):
+        if not reason or not LOG_CHANNEL_ID:
             return
-
-        self._last_reported_milvus_error_key = error_key
-
-        if not LOG_CHANNEL_ID:
-            log.warning("Milvus failure detected but LOG_CHANNEL_ID is not configured")
+        if reason == self._last_reported_milvus_error_key:
             return
-
-        mention = " ".join(f"<@{user_id}>" for user_id in ALLOWED_USER_IDS).strip()
-        description = (
-            "Failed to connect to Milvus at "
-            f"{clip_vectors.MILVUS_HOST}:{clip_vectors.MILVUS_PORT}. "
-            "Moderator Bot is falling back to the OpenAI `moderator_api` path until the vector index is available again."
+        self._last_reported_milvus_error_key = reason
+        await send_log_message(
+            self.bot,
+            f"⚠️ CLIP vector store issue: `{truncate_field_value(reason, 300)}`",
+            LOG_CHANNEL_ID,
         )
-        embed = discord.Embed(
-            title="Milvus connection failure",
-            description=description,
-            color=discord.Color.red(),
-        )
-        embed.add_field(
-            name="Exception",
-            value=f"`{type(exc).__name__}: {exc}`",
-            inline=False,
-        )
-        embed.set_footer(text="OpenAI moderation fallback active")
-
-        try:
-            channel = await resolve_log_channel(
-                self.bot,
-                logger=log,
-                context="milvus_failure",
-                raise_on_exception=True,
-            )
-        except Exception as lookup_exc:
-            log.warning(
-                "Milvus failure detected but log channel %s could not be resolved: %s",
-                LOG_CHANNEL_ID,
-                lookup_exc,
-            )
-            return
-
-        if channel is None:
-            log.warning(
-                "Milvus failure detected but log channel %s could not be found",
-                LOG_CHANNEL_ID,
-            )
-            return
-
-        try:
-            await channel.send(
-                content=mention or None,
-                embed=embed,
-            )
-        except Exception as send_exc:
-            log.warning(
-                "Failed to report Milvus failure to channel %s: %s",
-                LOG_CHANNEL_ID,
-                send_exc,
-            )
-        else:
-            log.warning(
-                "Milvus failure reported to channel %s; OpenAI moderation fallback active",
-                LOG_CHANNEL_ID,
-            )
 
     async def is_nsfw(
         self,
@@ -160,7 +104,7 @@ class NSFWScanner:
             )
         except MediaFlagged:
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             base_group = getattr(builtins, "BaseExceptionGroup", None)
             if base_group is not None and isinstance(exc, base_group):
                 matched, rest = exc.split(MediaFlagged)  # type: ignore[attr-defined]
@@ -168,113 +112,5 @@ class NSFWScanner:
                     if rest is not None:
                         raise rest
                     return True
-            raise
+
         return False
-
-    async def _emit_collection_diagnostic(
-        self,
-        *,
-        reason: str,
-        guild_id: int | None,
-        message: discord.Message | None,
-        details: dict[str, object] | None = None,
-    ) -> None:
-        if not LOG_CHANNEL_ID:
-            return
-        throttle_key = f"{guild_id or 'global'}::{reason}"
-        if not self._diagnostic_limiter.should_emit(throttle_key):
-            return
-        embed = discord.Embed(
-            title="NSFW scan not started",
-            color=discord.Color.orange(),
-            timestamp=utcnow(),
-        )
-        embed.add_field(name="Reason", value=reason, inline=True)
-
-        if guild_id is not None:
-            embed.add_field(name="Guild", value=str(guild_id), inline=True)
-
-        if message is not None:
-            channel_id = getattr(getattr(message, "channel", None), "id", None)
-            author = getattr(message, "author", None)
-
-            embed.description = f"Message ID: {getattr(message, 'id', 'unknown')}"
-            if author is not None:
-                embed.add_field(name="Author", value=f"{getattr(author, 'id', 'unknown')}", inline=True)
-
-            context_lines = extract_context_lines(
-                message=message,
-                include_author=False,
-                include_message=False,
-            )
-            if context_lines:
-                embed.add_field(
-                    name="Context",
-                    value="\n".join(context_lines),
-                    inline=False,
-                )
-            content = getattr(message, "content", None)
-            if content:
-                preview = truncate_field_value(content.strip())
-                if preview:
-                    embed.add_field(name="Content Preview", value=preview, inline=False)
-
-            if getattr(message, "jump_url", None):
-                embed.add_field(
-                    name="Message Link",
-                    value=truncate_field_value(message.jump_url),
-                    inline=False,
-                )
-
-        if details:
-            detail_text = render_detail_lines(details)
-            if detail_text:
-                embed.add_field(name="Details", value=detail_text, inline=False)
-        success = await send_log_message(
-            self.bot,
-            embed=embed,
-            logger=log,
-            context="nsfw_collection_diagnostic",
-        )
-        if not success:  # pragma: no cover - best effort logging
-            log.debug(
-                "Failed to send collection diagnostic to channel %s",
-                LOG_CHANNEL_ID,
-                exc_info=True,
-            )
-
-    async def _fan_out_media(
-        self,
-        *,
-        items: list[MediaWorkItem],
-        context: GuildScanContext,
-        message: discord.Message | None,
-        actor: discord.Member | None,
-        nsfw_callback,
-    ) -> None:
-        async with asyncio.TaskGroup() as task_group:
-            for item in items:
-                task_group.create_task(
-                    scan_media_item(
-                        self,
-                        item=item,
-                        context=context,
-                        message=message,
-                        actor=actor,
-                        nsfw_callback=nsfw_callback,
-                    ),
-                    name=f"nsfw:{item.source}:{item.label}",
-                )
-
-    def _build_url_item(self, url: str) -> MediaWorkItem:
-        parsed = urlparse(url)
-        ext = os.path.splitext(parsed.path)[1]
-        return MediaWorkItem(
-            source="url",
-            label=url,
-            url=url,
-            ext_hint=ext or None,
-        )
-
-
-__all__ = ["NSFWScanner"]
