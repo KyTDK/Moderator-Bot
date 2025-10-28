@@ -5,12 +5,12 @@ import math
 import time
 from typing import Optional
 
-import discord
-
 from modules.nsfw_scanner.constants import LOG_CHANNEL_ID
-from modules.utils.log_channel import resolve_log_channel
+from modules.utils.log_channel import send_log_message
 
 from .config import AggregatedModerationConfig
+from .alert_payloads import build_backlog_cleared_embed, build_backlog_embed
+from .media_rates import MediaRateCalculator
 from .queue_snapshot import QueueSnapshot
 
 
@@ -40,6 +40,8 @@ class FreeQueueMonitor:
         self._last_dropped_total: int = 0
         self._adaptive_last: dict[str, float] = {}
         self._last_adaptive_signature: dict[str, tuple[int, int, int, int]] = {}
+        self._rate_calculator = MediaRateCalculator()
+        self._backlog_active: bool = False
 
     async def start(self) -> None:
         if self._task and not self._task.done():
@@ -62,6 +64,7 @@ class FreeQueueMonitor:
             self._last_dropped_total = 0
             self._adaptive_last.clear()
             self._last_adaptive_signature.clear()
+            self._backlog_active = False
 
     @staticmethod
     def _is_lagging(free: QueueSnapshot, accel: QueueSnapshot) -> bool:
@@ -83,10 +86,15 @@ class FreeQueueMonitor:
         )
 
     async def _emit_report(self, free: QueueSnapshot, accel: QueueSnapshot) -> None:
-        ratio = free.backlog_ratio
-
         dropped_delta = max(0, free.dropped_total - self._last_dropped_total)
         self._last_dropped_total = free.dropped_total
+
+        rates = await self._rate_calculator.compute_rates()
+        window_minutes = self._rate_calculator.window_minutes
+        if rates:
+            rate_summary = ", ".join(rate.format_console(window_minutes) for rate in rates)
+        else:
+            rate_summary = "none"
 
         summary = [
             f"free_backlog={free.backlog}",
@@ -95,71 +103,35 @@ class FreeQueueMonitor:
             f"dropped_total={free.dropped_total}",
             f"avg_run={free.avg_runtime:.2f}s",
             f"avg_wait={free.avg_wait:.2f}s",
+            f"processing_rates=[{rate_summary}]",
         ]
         if free.backlog_high:
-            summary.append(f"backlog_ratio={ratio:.2f}")
+            summary.append(f"backlog_ratio={free.backlog_ratio:.2f}")
         if dropped_delta:
             summary.append(f"dropped_since_last={dropped_delta}")
 
         print(f"[FreeQueueLag] {' '.join(summary)}")
 
-        description = (
-            f"Free backlog {free.backlog} (~{ratio:.2f}x high watermark)"
-            if free.backlog_high
-            else f"Free backlog {free.backlog}"
-        )
-
-        embed = discord.Embed(
-            title="Free queue backlog warning",
-            description=description,
-            color=discord.Color.orange(),
-        )
-        embed.add_field(name="Free queue", value=free.format_lines(), inline=False)
-        embed.add_field(name="Accelerated queue", value=accel.format_lines(), inline=False)
-        embed.add_field(
-            name="Current tuning snapshot",
-            value="\n".join(
-                [
-                    f"FREE workers: base {free.baseline_workers} / current {free.max_workers} / burst {free.autoscale_max} (adaptive={'on' if self._config.free.adaptive_limits else 'off'})",
-                    f"ACCEL workers: base {accel.baseline_workers} / current {accel.max_workers} / burst {accel.autoscale_max} (adaptive={'on' if self._config.accelerated.adaptive_limits else 'off'})",
-                    f"Watermarks: high={free.backlog_high} / {accel.backlog_high}, low={free.backlog_low} / {accel.backlog_low}",
-                ]
-            ),
-            inline=False,
-        )
-        embed.add_field(
-            name="Longest free task breakdown",
-            value=free.format_longest_runtime_detail(),
-            inline=False,
-        )
-        embed.add_field(
-            name="Latest free task snapshot",
-            value=free.format_last_runtime_detail(),
-            inline=False,
-        )
-        embed.set_footer(text=f"Dropped tasks since last report: {dropped_delta}")
-
         if not LOG_CHANNEL_ID:
             return
 
-        try:
-            channel = await resolve_log_channel(
-                self._bot,
-                context="free_queue_backlog",
-                raise_on_exception=True,
-            )
-        except Exception as exc:  # noqa: BLE001
-            print(f"[FreeQueueLag] Failed to resolve LOG_CHANNEL_ID for backlog report: {exc}")
+        embed = build_backlog_embed(
+            free=free,
+            accel=accel,
+            config=self._config,
+            dropped_delta=dropped_delta,
+            rates=rates,
+            calculator=self._rate_calculator,
+        )
+        if not await send_log_message(
+            self._bot,
+            embed=embed,
+            context="free_queue_backlog",
+        ):
+            print(f"[FreeQueueLag] Failed to send backlog warning to LOG_CHANNEL_ID={LOG_CHANNEL_ID}")
             return
 
-        if channel is None:
-            print(f"[FreeQueueLag] Unable to resolve LOG_CHANNEL_ID={LOG_CHANNEL_ID}")
-            return
-
-        try:
-            await channel.send(embed=embed)
-        except Exception as exc:  # noqa: BLE001
-            print(f"[FreeQueueLag] Failed to send log embed: {exc}")
+        self._backlog_active = True
 
     def _adaptive_recommend(self, snapshot: QueueSnapshot) -> Optional[int]:
         if snapshot.backlog <= 0:
@@ -302,6 +274,8 @@ class FreeQueueMonitor:
                     if self._is_lagging(free_snapshot, accel_snapshot):
                         self._lag_hits += 1
                     else:
+                        if self._backlog_active and self._has_backlog_recovered(free_snapshot):
+                            await self._emit_backlog_cleared(free_snapshot, accel_snapshot)
                         self._lag_hits = 0
 
                     if self._lag_hits < monitor_cfg.required_hits:
@@ -321,6 +295,53 @@ class FreeQueueMonitor:
                     self._lag_hits = 0
         except asyncio.CancelledError:
             raise
+
+    def _has_backlog_recovered(self, snapshot: QueueSnapshot) -> bool:
+        if snapshot.backlog <= 0:
+            return True
+        if snapshot.backlog_low is not None and snapshot.backlog <= snapshot.backlog_low:
+            return True
+        return snapshot.backlog <= snapshot.baseline_workers
+
+    async def _emit_backlog_cleared(
+        self,
+        free: QueueSnapshot,
+        accel: QueueSnapshot,
+    ) -> None:
+        rates = await self._rate_calculator.compute_rates()
+        window_minutes = self._rate_calculator.window_minutes
+        if rates:
+            rate_summary = ", ".join(rate.format_console(window_minutes) for rate in rates)
+        else:
+            rate_summary = "none"
+
+        summary = [
+            "backlog_recovered",
+            f"free_backlog={free.backlog}",
+            f"accelerated_backlog={accel.backlog}",
+            f"processing_rates=[{rate_summary}]",
+        ]
+        print(f"[FreeQueueLag] {' '.join(summary)}")
+
+        if not LOG_CHANNEL_ID:
+            self._backlog_active = False
+            return
+
+        embed = build_backlog_cleared_embed(
+            free=free,
+            accel=accel,
+            rates=rates,
+            calculator=self._rate_calculator,
+        )
+        if not await send_log_message(
+            self._bot,
+            embed=embed,
+            context="free_queue_backlog",
+        ):
+            print(f"[FreeQueueLag] Failed to send backlog recovery notice to LOG_CHANNEL_ID={LOG_CHANNEL_ID}")
+            return
+
+        self._backlog_active = False
 
 
     async def _log_adaptive_change(
