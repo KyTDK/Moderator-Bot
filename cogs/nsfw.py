@@ -7,9 +7,13 @@ from modules.utils import mysql
 from modules.utils.action_manager import ActionListManager
 from modules.utils.discord_utils import require_accelerated
 from modules.utils.list_manager import ListManager
-from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from modules.core.moderator_bot import ModeratorBot
+from modules.utils.action_command_helpers import (
+    process_add_action,
+    process_remove_action,
+    process_view_actions,
+)
 
 NSFW_ACTION_SETTING = "nsfw-detection-action"
 manager = ActionListManager(NSFW_ACTION_SETTING)
@@ -48,23 +52,21 @@ class NSFWCog(commands.Cog):
         role: discord.Role = None,
         reason: str = None,
     ):
-        await interaction.response.defer(ephemeral=True)
-        
         gid = interaction.guild.id
-        action_str = await validate_action(
-            interaction=interaction,
-            action=action,
-            duration=duration,
-            role=role,
-            valid_actions=VALID_ACTION_VALUES,
-            param=reason,
+        await process_add_action(
+            interaction,
+            manager=manager,
             translator=self.bot.translate,
+            validate_kwargs={
+                "interaction": interaction,
+                "action": action,
+                "duration": duration,
+                "role": role,
+                "valid_actions": VALID_ACTION_VALUES,
+                "param": reason,
+                "translator": self.bot.translate,
+            },
         )
-        if action_str is None:
-            return
-
-        message = await manager.add_action(gid, action_str, translator=self.bot.translate)
-        await interaction.followup.send(message, ephemeral=True)
 
     @nsfw_group.command(
         name="remove_action",
@@ -77,8 +79,12 @@ class NSFWCog(commands.Cog):
     async def remove_nsfw_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
 
-        message = await manager.remove_action(gid, action, translator=self.bot.translate)
-        await interaction.response.send_message(message, ephemeral=True)
+        await process_remove_action(
+            interaction,
+            manager=manager,
+            translator=self.bot.translate,
+            action=action,
+        )
 
     @nsfw_group.command(
         name="view_actions",
@@ -87,17 +93,15 @@ class NSFWCog(commands.Cog):
     async def view_nsfw_actions(self, interaction: Interaction):
         gid = interaction.guild.id
 
-        actions = await manager.view_actions(gid)
-        texts = self.bot.translate("cogs.nsfw.actions",
-                                    guild_id=gid)
-        if not actions:
-            await interaction.response.send_message(texts["none"], ephemeral=True)
-            return
+        texts = self.bot.translate("cogs.nsfw.actions", guild_id=gid)
 
-        formatted = "\n".join(f"{i+1}. `{a}`" for i, a in enumerate(actions))
-        await interaction.response.send_message(
-            texts["heading"].format(actions=formatted),
-            ephemeral=True
+        await process_view_actions(
+            interaction,
+            manager=manager,
+            when_empty=texts["none"],
+            format_message=lambda actions: texts["heading"].format(
+                actions="\n".join(f"{i + 1}. `{a}`" for i, a in enumerate(actions))
+            ),
         )
 
     @nsfw_group.command(

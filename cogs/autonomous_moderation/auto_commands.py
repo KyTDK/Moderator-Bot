@@ -7,9 +7,9 @@ from modules.utils import mysql
 from modules.utils.event_manager import EventListManager
 from modules.utils.action_manager import ActionListManager
 from modules.utils.actions import VALID_ACTION_VALUES, action_choices
-from modules.utils.strike import validate_action
 from modules.core.moderator_bot import ModeratorBot
 from modules.i18n.strings import locale_string
+from modules.utils.action_command_helpers import process_add_action, process_remove_action
 
 AIMOD_ACTION_SETTING = "aimod-detection-action"
 ACTION_MANAGER = ActionListManager(AIMOD_ACTION_SETTING)
@@ -120,24 +120,23 @@ class AutonomousCommandsCog(commands.Cog):
         role: discord.Role = None,
         reason: str = None,
     ):
-        await interaction.response.defer(ephemeral=True)
         if not await can_run(interaction):
             return
 
-        action_str = await validate_action(
-            interaction=interaction,
-            action=action,
-            duration=duration,
-            role=role,
-            valid_actions=VALID_ACTION_VALUES + ["auto"],
-            param=reason,
+        await process_add_action(
+            interaction,
+            manager=ACTION_MANAGER,
             translator=self.bot.translate,
+            validate_kwargs={
+                "interaction": interaction,
+                "action": action,
+                "duration": duration,
+                "role": role,
+                "valid_actions": VALID_ACTION_VALUES + ["auto"],
+                "param": reason,
+                "translator": self.bot.translate,
+            },
         )
-        if action_str is None:
-            return
-
-        msg = await ACTION_MANAGER.add_action(interaction.guild.id, action_str, translator=self.bot.translate)
-        await interaction.followup.send(msg, ephemeral=True)
 
     @ai_mod_group.command(
         name="remove_action",
@@ -150,8 +149,12 @@ class AutonomousCommandsCog(commands.Cog):
     async def remove_action(self, interaction: Interaction, action: str):
         if not await can_run(interaction):
             return
-        msg = await ACTION_MANAGER.remove_action(interaction.guild.id, action, translator=self.bot.translate)
-        await interaction.response.send_message(msg, ephemeral=True)
+        await process_remove_action(
+            interaction,
+            manager=ACTION_MANAGER,
+            translator=self.bot.translate,
+            action=action,
+        )
 
     @ai_mod_group.command(
         name="toggle",

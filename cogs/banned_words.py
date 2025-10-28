@@ -2,20 +2,23 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
-import io
 import re
 import discord
 from better_profanity import profanity
 from cleantext import clean
 from modules.utils import mod_logging, mysql
-from modules.utils.guild_list_storage import (
-    GuildListAddResult,
-    add_value,
-    clear_values,
-    fetch_values,
-    remove_value,
+from modules.utils.guild_list_storage import fetch_values
+from modules.utils.action_command_helpers import (
+    process_add_action,
+    process_remove_action,
+    process_view_actions,
 )
-from modules.utils.strike import validate_action
+from modules.utils.guild_list_commands import (
+    add_guild_list_entry,
+    clear_guild_list,
+    remove_guild_list_entry,
+    send_guild_list_file,
+)
 from modules.i18n.strings import locale_namespace
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from modules.utils.text import normalize_text
@@ -109,43 +112,17 @@ class BannedWordsCog(commands.Cog):
     )
     async def add_banned_word(self, interaction: Interaction, word: str):
         """Add a word to the banned words list."""
-        await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild.id
-        result = await add_value(
-            guild_id=guild_id,
+        await add_guild_list_entry(
+            interaction,
             table="banned_words",
             column="word",
             value=word,
             limit=MAX_BANNED_WORDS,
-        )
-        if result is GuildListAddResult.ALREADY_PRESENT:
-            await interaction.followup.send(
-                self.bot.translate(
-                    "cogs.banned_words.add.duplicate",
-                    placeholders={"word": word},
-                    guild_id=guild_id,
-                ),
-                ephemeral=True,
-            )
-            return
-        if result is GuildListAddResult.LIMIT_REACHED:
-            await interaction.followup.send(
-                self.bot.translate(
-                    "cogs.banned_words.limit_reached",
-                    placeholders={"limit": MAX_BANNED_WORDS},
-                    guild_id=guild_id,
-                ),
-                ephemeral=True,
-            )
-            return
-
-        await interaction.followup.send(
-            self.bot.translate(
-                "cogs.banned_words.add.success",
-                placeholders={"word": word},
-                guild_id=guild_id,
-            ),
-            ephemeral=True,
+            translator=self.bot.translate,
+            value_placeholder="word",
+            duplicate_key="cogs.banned_words.add.duplicate",
+            success_key="cogs.banned_words.add.success",
+            limit_key="cogs.banned_words.limit_reached",
         )
 
     # Remove a banned word
@@ -155,29 +132,15 @@ class BannedWordsCog(commands.Cog):
     )
     async def remove_banned_word(self, interaction: Interaction, word: str):
         """Remove a word from the banned words list."""
-        await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild.id
-        # Check if the word exists in the database
-        removed = await remove_value(
-            guild_id=guild_id,
+        await remove_guild_list_entry(
+            interaction,
             table="banned_words",
             column="word",
             value=word,
-        )
-        if not removed:
-            await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.remove.missing",
-                                   placeholders={"word": word},
-                                   guild_id=guild_id,),
-                ephemeral=True,
-            )
-            return
-
-        await interaction.followup.send(
-            self.bot.translate("cogs.banned_words.remove.success",
-                               placeholders={"word": word},
-                               guild_id=guild_id,),
-            ephemeral=True,
+            translator=self.bot.translate,
+            value_placeholder="word",
+            missing_key="cogs.banned_words.remove.missing",
+            success_key="cogs.banned_words.remove.success",
         )
     @remove_banned_word.autocomplete("word")
     async def banned_word_autocomplete(
@@ -202,34 +165,17 @@ class BannedWordsCog(commands.Cog):
     )
     async def list_banned_words(self, interaction: Interaction):
         """List all banned words."""
-        await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild.id
-        # Retrieve all banned words from the database
-        banned_words = await fetch_values(
-            guild_id=guild_id,
+        await send_guild_list_file(
+            interaction,
             table="banned_words",
             column="word",
+            translator=self.bot.translate,
+            value_placeholder="word",
+            empty_key="cogs.banned_words.list.empty",
+            header_key="cogs.banned_words.list.file_header",
+            item_key="cogs.banned_words.list.file_item",
+            filename_factory=lambda guild_id: f"banned_words_{guild_id}.txt",
         )
-
-        if not banned_words or len(banned_words) == 0:
-            await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.list.empty",
-                                   guild_id=guild_id,),
-                ephemeral=True,
-            )
-            return
-
-        file_content = self.bot.translate("cogs.banned_words.list.file_header",
-                                          guild_id=guild_id) + "\n"
-        if banned_words and len(banned_words) > 0:
-            for word in banned_words:
-                file_content += self.bot.translate("cogs.banned_words.list.file_item", 
-                                                   placeholders={"word": word},
-                                                   guild_id=guild_id) + "\n"
-            file_buffer = io.StringIO(file_content)
-            file = discord.File(file_buffer, filename = f"banned_words_{interaction.guild.id}.txt")
-
-        await interaction.followup.send(file=file, ephemeral=True)
 
     # Clear all banned words
     @bannedwords_group.command(
@@ -238,24 +184,12 @@ class BannedWordsCog(commands.Cog):
     )
     async def clear_banned_words(self, interaction: Interaction):
         """Clear all banned words."""
-        await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild.id
-        # Clear all banned words from the database
-        removed = await clear_values(
-            guild_id=guild_id,
+        await clear_guild_list(
+            interaction,
             table="banned_words",
-        )
-        if removed == 0:
-            await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.clear.empty",
-                                   guild_id=guild_id,),
-                ephemeral=True,
-            )
-            return
-        await interaction.followup.send(
-            self.bot.translate("cogs.banned_words.clear.success",
-                               guild_id=guild_id,),
-            ephemeral=True,
+            translator=self.bot.translate,
+            empty_key="cogs.banned_words.clear.empty",
+            success_key="cogs.banned_words.clear.success",
         )
 
     async def handle_message(self, message: discord.Message):
@@ -364,22 +298,20 @@ class BannedWordsCog(commands.Cog):
         role: discord.Role = None,
         reason: str = None,
     ):
-        await interaction.response.defer(ephemeral=True)
-        
-        action_str = await validate_action(
-            interaction=interaction,
-            action=action,
-            duration=duration,
-            role=role,
-            valid_actions=VALID_ACTION_VALUES,
-            param=reason,
+        await process_add_action(
+            interaction,
+            manager=manager,
             translator=self.bot.translate,
+            validate_kwargs={
+                "interaction": interaction,
+                "action": action,
+                "duration": duration,
+                "role": role,
+                "valid_actions": VALID_ACTION_VALUES,
+                "param": reason,
+                "translator": self.bot.translate,
+            },
         )
-        if action_str is None:
-            return
-
-        msg = await manager.add_action(interaction.guild.id, action_str, translator=self.bot.translate)
-        await interaction.followup.send(msg, ephemeral=True)
 
     @bannedwords_group.command(
         name="remove_action",
@@ -390,31 +322,31 @@ class BannedWordsCog(commands.Cog):
     )
     @app_commands.autocomplete(action=manager.autocomplete)
     async def remove_banned_action(self, interaction: Interaction, action: str):
-        msg = await manager.remove_action(interaction.guild.id, action, translator=self.bot.translate)
-        await interaction.response.send_message(msg, ephemeral=True)
+        await process_remove_action(
+            interaction,
+            manager=manager,
+            translator=self.bot.translate,
+            action=action,
+        )
 
     @bannedwords_group.command(
         name="view_actions",
         description=META.string("view_actions", "description"),
     )
     async def view_banned_actions(self, interaction: Interaction):
-        actions = await manager.view_actions(interaction.guild.id)
         guild_id = interaction.guild.id
-        if not actions:
-            await interaction.response.send_message(
-                self.bot.translate("cogs.banned_words.actions.none",
-                                   guild_id=guild_id,),
-                ephemeral=True,
-            )
-            return
-
-        formatted = "\n".join(f"{i+1}. `{a}`" for i, a in enumerate(actions))
-        header = self.bot.translate(
-            "cogs.banned_words.actions.header",
-            placeholders={"actions": formatted},
-            guild_id=guild_id,
+        await process_view_actions(
+            interaction,
+            manager=manager,
+            when_empty=self.bot.translate("cogs.banned_words.actions.none", guild_id=guild_id),
+            format_message=lambda actions: self.bot.translate(
+                "cogs.banned_words.actions.header",
+                placeholders={
+                    "actions": "\n".join(f"{i + 1}. `{a}`" for i, a in enumerate(actions))
+                },
+                guild_id=guild_id,
+            ),
         )
-        await interaction.response.send_message(header, ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BannedWordsCog(bot))

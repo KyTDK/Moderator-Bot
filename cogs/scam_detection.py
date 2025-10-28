@@ -9,7 +9,10 @@ from modules.utils import mod_logging
 from modules.utils.mysql import execute_query, get_settings, update_settings
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
-from modules.utils.strike import validate_action
+from modules.utils.action_command_helpers import (
+    process_add_action,
+    process_remove_action,
+)
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
 from modules.utils.text import normalize_text
 import aiohttp
@@ -351,23 +354,22 @@ class ScamDetectionCog(commands.Cog):
         role: discord.Role = None,
         reason: str = None,
     ):
-        await interaction.response.defer(ephemeral=True)
-        
         gid = interaction.guild.id
-        action_str = await validate_action(
-            interaction=interaction,
-            action=action,
-            duration=duration,
-            role=role,
-            valid_actions=VALID_ACTION_VALUES,
-            param=reason,
-            translator=self.bot.translate,
-        )
-        if action_str is None:
-            return
 
-        msg = await manager.add_action(gid, action_str, translator=self.bot.translate)
-        await interaction.followup.send(msg, ephemeral=True)
+        await process_add_action(
+            interaction,
+            manager=manager,
+            translator=self.bot.translate,
+            validate_kwargs={
+                "interaction": interaction,
+                "action": action,
+                "duration": duration,
+                "role": role,
+                "valid_actions": VALID_ACTION_VALUES,
+                "param": reason,
+                "translator": self.bot.translate,
+            },
+        )
 
     @scam_group.command(
         name="remove_action",
@@ -379,8 +381,13 @@ class ScamDetectionCog(commands.Cog):
     @app_commands.autocomplete(action=manager.autocomplete)
     async def scam_remove_action(self, interaction: Interaction, action: str):
         gid = interaction.guild.id
-        msg = await manager.remove_action(gid, action, translator=self.bot.translate)
-        await interaction.response.send_message(msg, ephemeral=True)
+
+        await process_remove_action(
+            interaction,
+            manager=manager,
+            translator=self.bot.translate,
+            action=action,
+        )
 
     @scam_group.command(
         name="view",
