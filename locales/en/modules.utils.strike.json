@@ -12,7 +12,8 @@
           "duration_not_supported": "`{action}` does not support a duration.",
           "role_not_supported": "`{action}` does not use a role.",
           "warn_message_required": "You must provide a warning message.",
-          "warn_role_disallowed": "You cannot attach a role to a warn action."
+          "warn_role_disallowed": "You cannot attach a role to a warn action.",
+          "broadcast_message_required": "You must provide a broadcast message."
         }
       }
     }

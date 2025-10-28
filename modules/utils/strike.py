@@ -1,14 +1,16 @@
 ﻿from __future__ import annotations
 
-from collections.abc import Iterable, Callable
+from collections.abc import Callable, Iterable
 from typing import Any
 
-from discord import Role, Interaction
+from discord import Interaction, Role
 
+from modules.moderation.action_specs import (
+    ROLE_ACTION_CANONICAL,
+    get_action_spec,
+)
 from modules.utils import time
 
-DURATION_ACTIONS = {"timeout"}
-ROLE_ACTIONS = {"give_role", "take_role"}
 BASE_KEY = "modules.utils.strike.validation"
 TranslateFn = Callable[..., Any]
 
@@ -58,9 +60,11 @@ async def validate_action(
         )
 
     action = action.lower()
+    spec = get_action_spec(action)
+    canonical_action = spec.canonical_name if spec else action
     errors: list[str] = []
 
-    if action == "timeout":
+    if canonical_action == "timeout":
         if not allow_duration:
             errors.append(
                 _format_message(
@@ -94,19 +98,19 @@ async def validate_action(
                 )
             )
         return (
-            f"{action}:{duration}"
+            f"{canonical_action}:{duration}"
             if not errors
             else await _return_errors(interaction, errors, ephemeral)
         )
 
-    if action in ROLE_ACTIONS:
+    if canonical_action in ROLE_ACTION_CANONICAL:
         if not role:
             errors.append(
                 _format_message(
                     translator,
                     "role_required",
                     "You must specify a role for `{action}`.",
-                    placeholders={"action": action},
+                    placeholders={"action": canonical_action},
                 )
             )
         if duration:
@@ -115,22 +119,23 @@ async def validate_action(
                     translator,
                     "duration_not_supported",
                     "`{action}` does not support a duration.",
-                    placeholders={"action": action},
+                    placeholders={"action": canonical_action},
                 )
             )
         return (
-            f"{action}:{role.id}"
+            f"{canonical_action}:{role.id}"
             if not errors
             else await _return_errors(interaction, errors, ephemeral)
         )
 
-    if action == "warn":
-        if not param:
+    if canonical_action == "warn":
+        if spec and spec.requires_message and not param:
             errors.append(
                 _format_message(
                     translator,
-                    "warn_message_required",
-                    "You must provide a warning message.",
+                    spec.missing_message_key or "warn_message_required",
+                    spec.missing_message_fallback
+                    or "You must provide a warning message.",
                 )
             )
         if duration:
@@ -139,7 +144,7 @@ async def validate_action(
                     translator,
                     "duration_not_supported",
                     "`{action}` does not support a duration.",
-                    placeholders={"action": action},
+                    placeholders={"action": canonical_action},
                 )
             )
         if role:
@@ -151,30 +156,74 @@ async def validate_action(
                 )
             )
         return (
-            f"{action}:{param}"
+            f"{canonical_action}:{param}"
             if not errors
             else await _return_errors(interaction, errors, ephemeral)
         )
 
     if duration:
+        if not spec or not spec.allows_duration:
+            errors.append(
+                _format_message(
+                    translator,
+                    "duration_not_supported",
+                    "`{action}` does not support a duration.",
+                    placeholders={"action": canonical_action},
+                )
+            )
+    elif spec and spec.requires_duration:
         errors.append(
             _format_message(
                 translator,
-                "duration_not_supported",
-                "`{action}` does not support a duration.",
-                placeholders={"action": action},
+                "duration_required",
+                "You must provide a duration (e.g. `30m`, `1d`, `2w`).",
             )
         )
+
     if role:
+        if not spec or not spec.allows_role:
+            errors.append(
+                _format_message(
+                    translator,
+                    "role_not_supported",
+                    "`{action}` does not use a role.",
+                    placeholders={"action": canonical_action},
+                )
+            )
+    elif spec and spec.requires_role:
         errors.append(
             _format_message(
                 translator,
-                "role_not_supported",
-                "`{action}` does not use a role.",
-                placeholders={"action": action},
+                "role_required",
+                "You must specify a role for `{action}`.",
+                placeholders={"action": canonical_action},
             )
         )
-    return action if not errors else await _return_errors(interaction, errors, ephemeral)
+
+    if spec and spec.requires_message and not param and canonical_action != "warn":
+        errors.append(
+            _format_message(
+                translator,
+                spec.missing_message_key or "message_required",
+                spec.missing_message_fallback
+                or "You must provide a message for `{action}`.",
+                placeholders={"action": canonical_action},
+            )
+        )
+
+    if errors:
+        return await _return_errors(interaction, errors, ephemeral)
+
+    if duration and spec and spec.allows_duration:
+        return f"{canonical_action}:{duration}"
+
+    if role and spec and spec.requires_role:
+        return f"{canonical_action}:{role.id}"
+
+    if param and spec and spec.requires_message:
+        return f"{canonical_action}:{param}"
+
+    return canonical_action
 
 async def _return_errors(interaction: Interaction, errors: list[str], ephemeral: bool):
     await interaction.followup.send("\n".join(errors), ephemeral=ephemeral)

@@ -9,10 +9,15 @@ from discord import Color, Embed, Interaction, Member, Message
 from discord.ext import commands
 
 from modules.i18n import get_translated_mapping
+from modules.moderation.action_specs import (
+    ROLE_ACTION_CANONICAL,
+    get_action_spec,
+)
 from modules.utils import mod_logging, mysql
 from modules.utils.discord_utils import message_user, resolve_role_references
 from modules.utils.mysql import execute_query
 from modules.utils.time import parse_duration
+from modules.verification.actions import RoleAction, apply_role_actions
 
 
 _logger = logging.getLogger(__name__)
@@ -138,12 +143,14 @@ async def perform_disciplinary_action(
             base_action = base_action.strip()
             normalized_action = base_action.lower()
             param = param.strip() if param else None
+            spec = get_action_spec(normalized_action)
+            canonical_action = spec.canonical_name if spec else normalized_action
 
-            if normalized_action == "none":
+            if canonical_action == "none":
                 results.append(disciplinary_texts["no_action"])
                 continue
 
-            if normalized_action == "delete":
+            if canonical_action == "delete":
                 if messages:
                     first = messages[0]
                     if all(msg.channel.id == first.channel.id for msg in messages):
@@ -184,23 +191,23 @@ async def perform_disciplinary_action(
                     results.append(disciplinary_texts["delete_missing"])
                 continue
 
-            if normalized_action == "strike":
+            if canonical_action == "strike":
                 await strike(user=user, bot=bot, reason=reason, expiry=param)
                 key = "strike_issued_with_expiry" if param else "strike_issued"
                 results.append(disciplinary_texts[key])
                 continue
 
-            if normalized_action == "kick":
+            if canonical_action == "kick":
                 await user.kick(reason=reason)
                 results.append(disciplinary_texts["user_kicked"])
                 continue
 
-            if normalized_action == "ban":
+            if canonical_action == "ban":
                 await user.ban(reason=reason)
                 results.append(disciplinary_texts["user_banned"])
                 continue
 
-            if normalized_action == "timeout":
+            if canonical_action == "timeout":
                 if not param:
                     results.append(disciplinary_texts["timeout_missing"])
                     continue
@@ -228,45 +235,60 @@ async def perform_disciplinary_action(
                 )
                 continue
 
-            if normalized_action == "give_role":
+            if canonical_action in ROLE_ACTION_CANONICAL:
                 if not param:
-                    results.append(disciplinary_texts["give_role_missing"])
+                    key = (
+                        "give_role_missing"
+                        if canonical_action == "give_role"
+                        else "remove_role_missing"
+                    )
+                    results.append(disciplinary_texts[key])
                     continue
 
                 roles = resolve_role_references(user.guild, [param], logger=_logger)
-                role = roles[0] if roles else None
-                if role is None:
+                if not roles:
+                    key = (
+                        "give_role_not_found"
+                        if canonical_action == "give_role"
+                        else "remove_role_not_found"
+                    )
                     results.append(
-                        disciplinary_texts["give_role_not_found"].format(role=param)
+                        disciplinary_texts[key].format(role=param)
                     )
                     continue
 
-                await user.add_roles(role, reason=reason)
-                results.append(
-                    disciplinary_texts["give_role_success"].format(role=role.name)
-                )
-                continue
-
-            if normalized_action in {"take_role", "remove_role"}:
-                if not param:
-                    results.append(disciplinary_texts["remove_role_missing"])
-                    continue
-
-                roles = resolve_role_references(user.guild, [param], logger=_logger)
-                role = roles[0] if roles else None
-                if role is None:
-                    results.append(
-                        disciplinary_texts["remove_role_not_found"].format(role=param)
+                role_actions = [
+                    RoleAction(
+                        operation=canonical_action,
+                        role_id=role.id,
                     )
-                    continue
-
-                await user.remove_roles(role, reason=reason)
-                results.append(
-                    disciplinary_texts["remove_role_success"].format(role=role.name)
+                    for role in roles
+                ]
+                executed = await apply_role_actions(
+                    user,
+                    role_actions,
+                    reason=reason,
+                    logger=_logger,
                 )
+                executed_ids = {
+                    int(action.split(":", 1)[1])
+                    for action in executed
+                    if ":" in action
+                }
+                success_roles = [role for role in roles if role.id in executed_ids]
+                if success_roles:
+                    key = (
+                        "give_role_success"
+                        if canonical_action == "give_role"
+                        else "remove_role_success"
+                    )
+                    for role in success_roles:
+                        results.append(
+                            disciplinary_texts[key].format(role=role.name)
+                        )
                 continue
 
-            if normalized_action == "warn":
+            if canonical_action == "warn":
                 warn_texts = get_translated_mapping(
                     bot,
                     "modules.moderation.strike.warn_embed",
@@ -307,7 +329,7 @@ async def perform_disciplinary_action(
                         results.append(disciplinary_texts["warn_failed"])
                 continue
 
-            if normalized_action == "broadcast":
+            if canonical_action == "broadcast":
                 if not param:
                     results.append(disciplinary_texts["broadcast_missing"])
                     continue

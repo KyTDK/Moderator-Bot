@@ -25,6 +25,32 @@ SettingsListener = Callable[[int, str, Any], Awaitable[None] | None]
 _settings_listeners: list[SettingsListener] = []
 
 
+def _coerce_strike_action_entry(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item) for item in value]
+    if isinstance(value, tuple):
+        if not value:
+            return []
+        action = value[0]
+        duration = value[1] if len(value) > 1 else None
+        if duration:
+            return [f"{action}:{duration}"]
+        return [str(action)]
+    if value is None:
+        return []
+    return [str(value)]
+
+
+def _normalize_strike_actions_mapping(data: Any) -> dict[str, list[str]]:
+    if not isinstance(data, dict):
+        return {}
+
+    normalized: dict[str, list[str]] = {}
+    for key, value in data.items():
+        normalized[key] = _coerce_strike_action_entry(value)
+    return normalized
+
+
 def add_settings_listener(listener: SettingsListener) -> None:
     """Register a coroutine or callback invoked when a setting changes."""
 
@@ -121,18 +147,8 @@ async def get_settings(
                 value = []
             value = [v for v in value if v != "none"]
 
-        if key == "strike-actions":
-            migrated: dict[str, list[str]] = {}
-            if isinstance(value, dict):
-                for action_key, action_value in value.items():
-                    if isinstance(action_value, list):
-                        migrated[action_key] = action_value
-                    elif isinstance(action_value, tuple):
-                        action, duration = action_value
-                        migrated[action_key] = [f"{action}:{duration}" if duration else action]
-                    else:
-                        migrated[action_key] = [str(action_value)]
-                value = migrated
+        if key == "strike-actions" and isinstance(value, dict):
+            value = _normalize_strike_actions_mapping(value)
 
         return value
 
@@ -172,16 +188,7 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
     else:
         processed_value = settings_value
         if settings_key == "strike-actions" and isinstance(processed_value, dict):
-            converted: dict[str, list[str]] = {}
-            for key, value in processed_value.items():
-                if isinstance(value, list):
-                    converted[key] = value
-                elif isinstance(value, tuple):
-                    action, duration = value
-                    converted[key] = [f"{action}:{duration}" if duration else action]
-                else:
-                    converted[key] = [str(value)]
-            processed_value = converted
+            processed_value = _normalize_strike_actions_mapping(processed_value)
 
         public_value = processed_value
 
