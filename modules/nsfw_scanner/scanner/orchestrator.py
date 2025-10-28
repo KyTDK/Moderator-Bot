@@ -88,7 +88,7 @@ class NSFWScanner:
         else:
             if target_message is None:
                 return False
-            media_items = collect_media_items(target_message, self.bot, guild_context)
+            media_items = await collect_media_items(target_message, self.bot, guild_context)
 
         if not media_items:
             return False

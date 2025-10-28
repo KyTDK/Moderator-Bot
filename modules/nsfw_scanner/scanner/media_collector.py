@@ -7,6 +7,9 @@ from typing import Any
 from urllib.parse import urlparse
 
 import discord
+from discord.utils import utcnow
+
+from cogs.hydration import wait_for_hydration
 
 from ..context import GuildScanContext
 from ..utils.file_types import ANIMATED_EXTS, IMAGE_EXTS, VIDEO_EXTS
@@ -28,11 +31,69 @@ def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
     return _URL_RE.findall(content)[:limit]
 
 
-def collect_media_items(
+async def collect_media_items(
     message: discord.Message,
     bot: discord.Client,
     context: GuildScanContext,
 ) -> list[MediaWorkItem]:
+    hydration_meta: dict[str, Any] | None = None
+
+    attachments_present = bool(getattr(message, "attachments", None))
+    embeds_present = bool(getattr(message, "embeds", None))
+    stickers_present = bool(getattr(message, "stickers", None))
+
+    requires_hydration = not (attachments_present or embeds_present or stickers_present)
+
+    if requires_hydration:
+        hydration_started_at = utcnow()
+        hydrated_message = await wait_for_hydration(message)
+        hydration_completed_at = utcnow()
+
+        attachments = list(getattr(hydrated_message, "attachments", None) or [])
+        embeds = list(getattr(hydrated_message, "embeds", None) or [])
+        stickers = list(getattr(hydrated_message, "stickers", None) or [])
+
+        hydrated_urls: list[str] = []
+        for attachment in attachments:
+            proxy_url = getattr(attachment, "proxy_url", None)
+            url = getattr(attachment, "url", None)
+            if proxy_url:
+                hydrated_urls.append(str(proxy_url))
+            elif url:
+                hydrated_urls.append(str(url))
+
+        for embed in embeds:
+            hydrated_urls.extend(_extract_embed_urls(embed))
+
+        for sticker in stickers:
+            sticker_url = getattr(sticker, "url", None)
+            if sticker_url:
+                hydrated_urls.append(str(sticker_url))
+
+        if hydrated_urls:
+            # Preserve ordering while removing duplicates
+            hydrated_urls = list(dict.fromkeys(hydrated_urls))
+
+        hydration_meta = {
+            "hydration_stage": "raw_message_update",
+            "hydration_status": "hydrated"
+            if attachments or embeds or stickers
+            else "timeout",
+            "hydration_method": "wait_for_hydration",
+            "hydration_origin": "nsfw_scanner.collect_media_items",
+            "hydration_attempts": 1,
+            "hydration_started_at": hydration_started_at.isoformat(),
+            "hydration_completed_at": hydration_completed_at.isoformat(),
+            "hydration_elapsed_ms": int(
+                (hydration_completed_at - hydration_started_at).total_seconds() * 1000
+            ),
+        }
+
+        if hydrated_urls:
+            hydration_meta["hydrated_urls"] = hydrated_urls
+
+        message = hydrated_message
+
     snapshots = getattr(message, "message_snapshots", None) or []
     snapshot = snapshots[0] if snapshots else None
 
@@ -65,6 +126,9 @@ def collect_media_items(
         base_meta["channel_id"] = message_channel_id or snapshot_channel_id
     if message_guild_id or snapshot_guild_id:
         base_meta["guild_id"] = message_guild_id or snapshot_guild_id
+
+    if hydration_meta:
+        base_meta.update(hydration_meta)
 
     items: list[MediaWorkItem] = []
     seen: set[str] = set()
