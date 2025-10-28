@@ -14,12 +14,15 @@ class ModerationHandlers:
         self._scanner = scanner
         self._enqueue = enqueue_task
 
+    async def _nsfw_enabled(self, guild_id: int) -> bool:
+        return bool(await mysql.get_settings(guild_id, "nsfw-enabled"))
+
     async def handle_message(self, message: discord.Message) -> None:
         if message.author.bot or message.guild is None:
             return
 
         guild_id = message.guild.id
-        if not await mysql.get_settings(guild_id, "nsfw-enabled"):
+        if not await self._nsfw_enabled(guild_id):
             return
 
         scan_age_restricted = await mysql.get_settings(guild_id, "scan-age-restricted")
@@ -75,7 +78,7 @@ class ModerationHandlers:
         guild = reaction.message.guild
         if guild is None:
             return
-        if not await mysql.get_settings(guild.id, "nsfw-enabled"):
+        if not await self._nsfw_enabled(guild.id):
             return
         if not isinstance(reaction.emoji, (discord.Emoji, discord.PartialEmoji)):
             return
@@ -119,7 +122,7 @@ class ModerationHandlers:
         guild = self._bot.get_guild(payload.guild_id)
         if guild is None:
             return
-        if not await mysql.get_settings(guild.id, "nsfw-enabled"):
+        if not await self._nsfw_enabled(guild.id):
             return
 
         member = await safe_get_member(guild, payload.user_id)
@@ -150,8 +153,6 @@ class ModerationHandlers:
             return
 
         for guild in self._bot.guilds:
-            if not await mysql.get_settings(guild.id, "check-pfp"):
-                continue
             member = await safe_get_member(guild, after.id)
             if member:
                 await self._queue_avatar_scan(guild, member)
@@ -227,7 +228,7 @@ class ModerationHandlers:
         await self._enqueue(scan_task(), guild_id=guild.id)
 
     async def _queue_avatar_scan(self, guild: discord.Guild, member: discord.Member, is_join: bool = False) -> None:
-        if not await mysql.get_settings(guild.id, "nsfw-enabled"):
+        if not await self._nsfw_enabled(guild.id):
             return
         if not await mysql.get_settings(guild.id, "check-pfp"):
             return

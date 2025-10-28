@@ -18,7 +18,7 @@ PROBE_LIMIT_BYTES = 512 * 1024  # 512 KiB
 TENOR_VIDEO_EXTS = (".mp4", ".webm")
 
 
-def _is_tenor_host(host: str) -> bool:
+def is_tenor_host(host: str) -> bool:
     host = host.lower()
     return host == "tenor.com" or host.endswith(".tenor.com")
 
@@ -39,7 +39,7 @@ async def resolve_media_url(session, url: str, *, prefer_video: bool = True) -> 
     if not prefer_video:
         return url
     parsed = urlparse(url)
-    if not _is_tenor_host(parsed.netloc):
+    if not is_tenor_host(parsed.netloc):
         return url
     base, ext = os.path.splitext(parsed.path)
     if ext.lower() != ".gif":
