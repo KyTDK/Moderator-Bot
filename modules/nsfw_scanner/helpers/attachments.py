@@ -16,6 +16,7 @@ from ..utils.file_types import (
     determine_file_type,
 )
 from .images import build_image_processing_context, process_image
+from .metrics import normalize_latency_breakdown
 from .videos import process_video
 
 REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
@@ -471,44 +472,22 @@ async def check_attachment(
             if isinstance(pipeline_metrics, dict):
                 breakdown_entries = pipeline_metrics.get("latency_breakdown_ms")
                 breakdown_lines: list[str] = []
+                normalized_map = normalize_latency_breakdown(breakdown_entries)
                 normalized_entries: list[tuple[str | None, str | None, float]] = []
-                if isinstance(breakdown_entries, dict):
-                    for step_name, entry in breakdown_entries.items():
-                        label = None
-                        duration_value = None
-                        if isinstance(entry, dict):
-                            label = entry.get("label") or None
-                            duration_value = entry.get("duration_ms")
-                        else:
-                            duration_value = entry
-                        if duration_value is None:
-                            continue
-                        try:
-                            duration_float = float(duration_value)
-                        except (TypeError, ValueError):
-                            continue
-                        if duration_float <= 0:
-                            continue
-                        normalized_entries.append((step_name, label, duration_float))
-                elif isinstance(breakdown_entries, list):
-                    for entry in breakdown_entries:
-                        label = None
-                        duration_value = None
-                        if isinstance(entry, dict):
-                            label = entry.get("label") or entry.get("step")
-                            duration_value = entry.get("duration_ms")
-                        elif isinstance(entry, (list, tuple)) and entry:
-                            label = entry[0]
-                            duration_value = entry[1] if len(entry) > 1 else None
-                        if duration_value is None:
-                            continue
-                        try:
-                            duration_float = float(duration_value)
-                        except (TypeError, ValueError):
-                            continue
-                        if duration_float <= 0:
-                            continue
-                        normalized_entries.append((None, label, duration_float))
+                for step_name, entry in normalized_map.items():
+                    duration_value = entry.get("duration_ms") if isinstance(entry, dict) else None
+                    if duration_value is None:
+                        continue
+                    try:
+                        duration_float = float(duration_value)
+                    except (TypeError, ValueError):
+                        continue
+                    if duration_float <= 0:
+                        continue
+                    label_value = None
+                    if isinstance(entry, dict) and entry.get("label") is not None:
+                        label_value = str(entry.get("label"))
+                    normalized_entries.append((step_name, label_value, duration_float))
                 if normalized_entries:
                     normalized_entries.sort(key=lambda item: item[2], reverse=True)
                     for step_name, label, duration in normalized_entries:
