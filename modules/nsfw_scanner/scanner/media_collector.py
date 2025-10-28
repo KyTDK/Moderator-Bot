@@ -36,12 +36,10 @@ def _is_discord_host(u: str) -> bool:
     return _host(u) in _SIGNED_DISCORD_DOMAINS
 
 def _is_signed_discord_media_url(u: str | None) -> bool:
-    if not _is_http(u):
+    if not u:
         return False
-    if not _is_discord_host(u or ""):
-        return False
-    q = parse_qs(urlparse(u or "").query)
-    return {"ex", "is", "hm"}.issubset(q.keys())
+    u = str(u).strip().rstrip("&")
+    return "?ex=" in u and "?is=" in u and "?hm=" in u
 
 def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
     if not content:
