@@ -97,6 +97,15 @@ async def notify_download_failure(
         hydrated_urls_list = []
     original_proxy_url_meta = metadata.get("original_proxy_url")
 
+    def _stringify_metadata_value(value: Any) -> str:
+        if value is None:
+            return "None"
+        if isinstance(value, (list, tuple, set)):
+            return ", ".join(str(entry) for entry in value)
+        if isinstance(value, dict):
+            return ", ".join(f"{str(key)}={str(val)}" for key, val in value.items())
+        return str(value)
+
     def _coerce_attempted(entry: AttemptedURL | Sequence[str] | str) -> AttemptedURL:
         if isinstance(entry, AttemptedURL):
             return entry
@@ -283,12 +292,44 @@ async def notify_download_failure(
             value=truncate_field_value(final_value),
             inline=False,
         )
+    hydration_summary_lines: list[str] = []
     if hydration_stage:
-        embed.add_field(
-            name="Hydration stage",
-            value=hydration_stage,
-            inline=True,
-        )
+        hydration_summary_lines.append(f"Stage: {hydration_stage}")
+    else:
+        hydration_summary_lines.append("Stage: <missing>")
+
+    hydrated_url_count = len(hydrated_urls_list)
+    hydration_summary_lines.append(f"Hydrated URLs: {hydrated_url_count}")
+
+    hydration_summary_keys: dict[str, str] = {
+        "hydration_status": "Status",
+        "hydration_attempts": "Attempts",
+        "hydration_reason": "Reason",
+        "hydration_source": "Source",
+        "hydration_origin": "Origin",
+        "hydration_method": "Method",
+        "hydration_result": "Result",
+        "hydration_cache_status": "Cache",
+        "hydration_worker": "Worker",
+        "hydration_elapsed_ms": "Duration (ms)",
+        "hydration_duration_ms": "Duration (ms)",
+        "hydration_started_at": "Started",
+        "hydration_completed_at": "Completed",
+        "hydration_timestamp": "Timestamp",
+    }
+
+    for key, label in hydration_summary_keys.items():
+        value = metadata.get(key)
+        if value is None:
+            continue
+        hydration_summary_lines.append(f"{label}: {_stringify_metadata_value(value)}")
+
+    hydration_summary_value = "\n".join(hydration_summary_lines)
+    embed.add_field(
+        name="Hydration details",
+        value=truncate_field_value(hydration_summary_value),
+        inline=False,
+    )
     if attempted_display:
         embed.add_field(
             name="Additional Attempted URLs",
@@ -316,6 +357,29 @@ async def notify_download_failure(
         embed.add_field(
             name="Hydrated URLs",
             value=hydrated_display,
+            inline=False,
+        )
+
+    hydration_metadata_entries: list[str] = []
+    for key, value in metadata.items():
+        if not isinstance(key, str):
+            continue
+        key_lower = key.lower()
+        if key in {"hydration_stage", "hydrated_urls"}:
+            continue
+        if key in hydration_summary_keys:
+            continue
+        if "hydrate" not in key_lower and "hydration" not in key_lower:
+            continue
+        hydration_metadata_entries.append(
+            f"{key}: {_stringify_metadata_value(value)}"
+        )
+
+    if hydration_metadata_entries:
+        hydration_metadata_entries.sort()
+        embed.add_field(
+            name="Hydration metadata",
+            value=truncate_field_value("\n".join(hydration_metadata_entries)),
             inline=False,
         )
 
