@@ -2,13 +2,19 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
-from modules.utils.mysql import execute_query
 import io
 import discord
 from modules.utils import mod_logging, mysql
 from modules.utils.strike import validate_action
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
-from modules.utils.url_utils import extract_urls, norm_domain, norm_url
+from modules.utils.guild_list_storage import (
+    GuildListAddResult,
+    add_value,
+    clear_values,
+    fetch_values,
+    remove_value,
+)
+from modules.utils.url_utils import ensure_scheme, extract_urls, norm_domain, norm_url
 from urllib.parse import urlparse
 from modules.core.moderator_bot import ModeratorBot
 from modules.i18n.strings import locale_string
@@ -17,11 +23,8 @@ MAX_URLS = 500
 BANNEDURLS_ACTION_SETTING = "url-detection-action"
 manager = ActionListManager(BANNEDURLS_ACTION_SETTING)
 
-def _ensure_http(u: str) -> str:
-    return u if u.startswith(("http://","https://")) else f"http://{u}"
-
 def _is_domain_only(s: str) -> bool:
-    p = urlparse(_ensure_http(s))
+    p = urlparse(ensure_scheme(s))
     return (p.path or "").strip("/") == "" and not p.query and not p.fragment
 
 class BannedURLsCog(commands.Cog):
@@ -42,42 +45,40 @@ class BannedURLsCog(commands.Cog):
     async def add_banned_urls(self, interaction: Interaction, url: str):
         guild_id = interaction.guild.id
 
-        # limit
-        count_row, _ = await execute_query(
-            "SELECT COUNT(*) FROM banned_urls WHERE guild_id = %s", (guild_id,), fetch_one=True
+        result = await add_value(
+            guild_id=guild_id,
+            table="banned_urls",
+            column="url",
+            value=url,
+            limit=MAX_URLS,
         )
-        if count_row and count_row[0] >= MAX_URLS:
+        if result is GuildListAddResult.ALREADY_PRESENT:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.limit_reached", 
-                                   placeholders={"limit": MAX_URLS},
-                                   guild_id=guild_id),
+                self.bot.translate(
+                    "cogs.banned_urls.add.duplicate",
+                    placeholders={"url": url},
+                    guild_id=guild_id,
+                ),
                 ephemeral=True,
             )
             return
-        
-        # already present?
-        row, _ = await execute_query(
-            "SELECT 1 FROM banned_urls WHERE guild_id = %s AND url = %s",
-            (guild_id, url),
-            fetch_one=True
-        )
-        if row:
+        if result is GuildListAddResult.LIMIT_REACHED:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.add.duplicate", 
-                                   placeholders={"url": url},
-                                   guild_id=guild_id),
+                self.bot.translate(
+                    "cogs.banned_urls.limit_reached",
+                    placeholders={"limit": MAX_URLS},
+                    guild_id=guild_id,
+                ),
                 ephemeral=True,
             )
             return
 
-        await execute_query(
-            "INSERT INTO banned_urls (guild_id, url) VALUES (%s, %s)",
-            (guild_id, url)
-        )
         await interaction.response.send_message(
-            self.bot.translate("cogs.banned_urls.add.success", 
-                               placeholders={"url": url},
-                               guild_id=guild_id),
+            self.bot.translate(
+                "cogs.banned_urls.add.success",
+                placeholders={"url": url},
+                guild_id=guild_id,
+            ),
             ephemeral=True,
         )
 
@@ -88,13 +89,15 @@ class BannedURLsCog(commands.Cog):
     async def remove_banned_urls(self, interaction: Interaction, url: str):
         guild_id = interaction.guild.id
 
-        _, affected = await execute_query(
-            "DELETE FROM banned_urls WHERE guild_id = %s AND url = %s",
-            (guild_id, url)
+        removed = await remove_value(
+            guild_id=guild_id,
+            table="banned_urls",
+            column="url",
+            value=url,
         )
-        if affected == 0:
+        if not removed:
             await interaction.response.send_message(
-                self.bot.translate("cogs.banned_urls.remove.missing", 
+                self.bot.translate("cogs.banned_urls.remove.missing",
                                    placeholders={"url": url},
                                    guild_id=guild_id),
                 ephemeral=True,
@@ -110,10 +113,11 @@ class BannedURLsCog(commands.Cog):
     @remove_banned_urls.autocomplete("url")
     async def banned_urls_autocomplete(self, interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
         guild_id = interaction.guild.id
-        rows, _ = await execute_query(
-            "SELECT url FROM banned_urls WHERE guild_id = %s", (guild_id,), fetch_all=True
+        all_urls = await fetch_values(
+            guild_id=guild_id,
+            table="banned_urls",
+            column="url",
         )
-        all_urls = [r[0] for r in (rows or []) if r]
         filtered = [u for u in all_urls if current.lower() in u.lower()]
         return [app_commands.Choice(name=u, value=u) for u in filtered[:25]]
 
@@ -123,10 +127,11 @@ class BannedURLsCog(commands.Cog):
     )
     async def list_banned_urls(self, interaction: Interaction):
         guild_id = interaction.guild.id
-        rows, _ = await execute_query(
-            "SELECT url FROM banned_urls WHERE guild_id = %s", (guild_id,), fetch_all=True
+        banned = await fetch_values(
+            guild_id=guild_id,
+            table="banned_urls",
+            column="url",
         )
-        banned = [row[0] for row in (rows or [])]
         if not banned:
             await interaction.response.send_message(
                 self.bot.translate("cogs.banned_urls.list.empty",
@@ -152,8 +157,11 @@ class BannedURLsCog(commands.Cog):
     )
     async def clear_banned_urls(self, interaction: Interaction):
         guild_id = interaction.guild.id
-        _, affected = await execute_query("DELETE FROM banned_urls WHERE guild_id = %s", (guild_id,))
-        if affected == 0:
+        removed = await clear_values(
+            guild_id=guild_id,
+            table="banned_urls",
+        )
+        if removed == 0:
             await interaction.response.send_message(
                 self.bot.translate("cogs.banned_urls.clear.empty",
                                    guild_id=guild_id),
@@ -177,10 +185,12 @@ class BannedURLsCog(commands.Cog):
             return
 
         # Load banned
-        rows, _ = await execute_query(
-            "SELECT url FROM banned_urls WHERE guild_id = %s", (guild_id,), fetch_all=True
+        banned = await fetch_values(
+            guild_id=guild_id,
+            table="banned_urls",
+            column="url",
         )
-        banned = [r[0] for r in (rows or []) if r and r[0]]
+        banned = [u for u in banned if u]
         if not banned:
             return
 

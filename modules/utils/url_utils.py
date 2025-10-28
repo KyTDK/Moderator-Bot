@@ -12,11 +12,19 @@ INTERMEDIARY_DOMAINS = {
     "antiphishing.biz",
 }
 
-def _ensure_scheme(u: str) -> str:
+
+def ensure_scheme(u: str) -> str:
     """Prepend http:// if no scheme is present."""
+
     if not u.startswith(("http://", "https://")):
         return f"http://{u}"
     return u
+
+
+def _ensure_scheme(u: str) -> str:
+    """Backward compatible alias for internal imports."""
+
+    return ensure_scheme(u)
 
 def _strip_leading_garbage(u: str) -> str:
     """
@@ -36,7 +44,7 @@ def clean_and_normalize_urls(found_urls: Iterable[str]) -> List[str]:
     """
     cleaned: List[str] = []
     for raw in found_urls:
-        u = _ensure_scheme(raw)
+        u = ensure_scheme(raw)
         u = _strip_leading_garbage(u)
         cleaned.append(u)
     return cleaned

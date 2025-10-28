@@ -2,13 +2,19 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
-from modules.utils.mysql import execute_query
 import io
 import re
 import discord
 from better_profanity import profanity
 from cleantext import clean
 from modules.utils import mod_logging, mysql
+from modules.utils.guild_list_storage import (
+    GuildListAddResult,
+    add_value,
+    clear_values,
+    fetch_values,
+    remove_value,
+)
 from modules.utils.strike import validate_action
 from modules.i18n.strings import locale_namespace
 from modules.utils.actions import action_choices, VALID_ACTION_VALUES
@@ -105,45 +111,40 @@ class BannedWordsCog(commands.Cog):
         """Add a word to the banned words list."""
         await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild.id
-        # Check if the word is already in the database
-        existing_word, _ = await execute_query(
-            "SELECT * FROM banned_words WHERE guild_id = %s AND word = %s",
-            (guild_id, word),
-            fetch_one=True
+        result = await add_value(
+            guild_id=guild_id,
+            table="banned_words",
+            column="word",
+            value=word,
+            limit=MAX_BANNED_WORDS,
         )
-        if existing_word:
+        if result is GuildListAddResult.ALREADY_PRESENT:
             await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.add.duplicate", 
-                                   placeholders={"word": word},
-                                   guild_id=guild_id,),
+                self.bot.translate(
+                    "cogs.banned_words.add.duplicate",
+                    placeholders={"word": word},
+                    guild_id=guild_id,
+                ),
                 ephemeral=True,
             )
             return
-        
-        # Check how many banned words exist
-        count_result, _ = await execute_query(
-            "SELECT COUNT(*) FROM banned_words WHERE guild_id = %s",
-            (guild_id,),
-            fetch_one=True
-        )
-        if count_result and count_result[0] >= MAX_BANNED_WORDS:
+        if result is GuildListAddResult.LIMIT_REACHED:
             await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.limit_reached", 
-                                   placeholders={"limit": MAX_BANNED_WORDS},
-                                   guild_id=guild_id,),
+                self.bot.translate(
+                    "cogs.banned_words.limit_reached",
+                    placeholders={"limit": MAX_BANNED_WORDS},
+                    guild_id=guild_id,
+                ),
                 ephemeral=True,
             )
             return
 
-        # Insert the new banned word into the database
-        await execute_query(
-            "INSERT INTO banned_words (guild_id, word) VALUES (%s, %s)",
-            (guild_id, word)
-        )
         await interaction.followup.send(
-            self.bot.translate("cogs.banned_words.add.success", 
-                               placeholders={"word": word},
-                               guild_id=guild_id,),
+            self.bot.translate(
+                "cogs.banned_words.add.success",
+                placeholders={"word": word},
+                guild_id=guild_id,
+            ),
             ephemeral=True,
         )
 
@@ -157,28 +158,23 @@ class BannedWordsCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild.id
         # Check if the word exists in the database
-        rows, _ = await execute_query(
-            "SELECT * FROM banned_words WHERE guild_id = %s AND word = %s",
-            (guild_id, word),
-            fetch_one=True
+        removed = await remove_value(
+            guild_id=guild_id,
+            table="banned_words",
+            column="word",
+            value=word,
         )
-        existing_word = rows[0] if rows else None
-        if not existing_word:
+        if not removed:
             await interaction.followup.send(
-                self.bot.translate("cogs.banned_words.remove.missing", 
+                self.bot.translate("cogs.banned_words.remove.missing",
                                    placeholders={"word": word},
                                    guild_id=guild_id,),
                 ephemeral=True,
             )
             return
 
-        # Remove the banned word from the database
-        await execute_query(
-            "DELETE FROM banned_words WHERE guild_id = %s AND word = %s",
-            (guild_id, word)
-        )
         await interaction.followup.send(
-            self.bot.translate("cogs.banned_words.remove.success", 
+            self.bot.translate("cogs.banned_words.remove.success",
                                placeholders={"word": word},
                                guild_id=guild_id,),
             ephemeral=True,
@@ -191,13 +187,11 @@ class BannedWordsCog(commands.Cog):
     ) -> list[app_commands.Choice[str]]:
         """Autocomplete banned words for the remove command."""
         guild_id = interaction.guild.id
-        rows, _ = await execute_query(
-            "SELECT word FROM banned_words WHERE guild_id = %s",
-            (guild_id,),
-            fetch_all=True
+        all_words = await fetch_values(
+            guild_id=guild_id,
+            table="banned_words",
+            column="word",
         )
-
-        all_words = [row[0] for row in rows]
         filtered = [w for w in all_words if current.lower() in w.lower()]
         return [app_commands.Choice(name=word, value=word) for word in filtered[:25]]
 
@@ -211,13 +205,11 @@ class BannedWordsCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild.id
         # Retrieve all banned words from the database
-        rows, _ = await execute_query(
-                    "SELECT word FROM banned_words WHERE guild_id = %s",
-                    (guild_id,),
-                    fetch_all=True
-                )
-
-        banned_words = [row[0] for row in rows]
+        banned_words = await fetch_values(
+            guild_id=guild_id,
+            table="banned_words",
+            column="word",
+        )
 
         if not banned_words or len(banned_words) == 0:
             await interaction.followup.send(
@@ -249,11 +241,11 @@ class BannedWordsCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild.id
         # Clear all banned words from the database
-        _, affected_rows = await execute_query(
-            "DELETE FROM banned_words WHERE guild_id = %s",
-            (guild_id,)
+        removed = await clear_values(
+            guild_id=guild_id,
+            table="banned_words",
         )
-        if affected_rows == 0:
+        if removed == 0:
             await interaction.followup.send(
                 self.bot.translate("cogs.banned_words.clear.empty",
                                    guild_id=guild_id,),
@@ -278,10 +270,12 @@ class BannedWordsCog(commands.Cog):
 
         use_defaults = await mysql.get_settings(guild_id, "use-default-banned-words")
 
-        rows, _ = await execute_query(
-            "SELECT word FROM banned_words WHERE guild_id = %s", (guild_id,), fetch_all=True
+        rows = await fetch_values(
+            guild_id=guild_id,
+            table="banned_words",
+            column="word",
         )
-        custom = [r[0].lower() for r in rows]
+        custom = [r.lower() for r in rows]
 
         if use_defaults:
             profanity.load_censor_words()
