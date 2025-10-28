@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 import os
 import re
-from typing import Any, Iterable, Tuple, List, Dict
-from urllib.parse import urlparse, parse_qs
+from typing import Any, Tuple, List
+from urllib.parse import urlparse
 
 import discord
 from weakref import WeakKeyDictionary
@@ -19,54 +19,15 @@ log = logging.getLogger(__name__)
 
 _URL_RE = re.compile(r"https?://[^\s<>]+")
 ALLOWED_CONTENT_EXTS = ANIMATED_EXTS | VIDEO_EXTS | IMAGE_EXTS
-_SIGNED_DISCORD_DOMAINS = {"cdn.discordapp.com", "media.discordapp.net", "cdn.discordapp.net"}
-
 _HYDRATION_METADATA: "WeakKeyDictionary[discord.Message, dict[str, Any]]" = WeakKeyDictionary()
 
 def _is_http(u: str | None) -> bool:
     return bool(u) and isinstance(u, str) and u.startswith(("http://", "https://"))
 
-def _host(u: str) -> str:
-    try:
-        return urlparse(u).netloc.lower()
-    except Exception:
-        return ""
-
-def _is_discord_host(u: str) -> bool:
-    return _host(u) in _SIGNED_DISCORD_DOMAINS
-
-def _is_signed_discord_media_url(u: str | None) -> bool:
-    if not u:
-        return False
-    try:
-        parsed = urlparse(str(u))
-    except Exception:
-        return False
-    if parsed.scheme not in ("http", "https"):
-        return False
-    if _host(str(u)) not in _SIGNED_DISCORD_DOMAINS:
-        return False
-    query = {k.lower(): v for k, v in parse_qs(parsed.query).items()}
-    return all(query.get(param) for param in ("ex", "is", "hm"))
-
 def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
     if not content:
         return []
     return _URL_RE.findall(content)[:limit]
-
-def _extract_signed_discord_urls(content: str | None) -> list[str]:
-    return [u for u in _extract_urls(content, limit=20) if _is_signed_discord_media_url(u)]
-
-def _map_signed_urls_to_filenames(urls: Iterable[str]) -> dict[str, str]:
-    mapping: dict[str, str] = {}
-    for u in urls:
-        try:
-            fn = os.path.basename(urlparse(u).path)
-        except Exception:
-            continue
-        if fn and fn not in mapping:
-            mapping[fn] = u
-    return mapping
 
 def _snapshot_attachment_state(message: discord.Message | None) -> dict[str, Any]:
     snap = {"proxy_list": [], "all_urls": [], "proxy_by_id": {}, "proxy_by_index": {}}
@@ -147,44 +108,12 @@ def _has_any_media(stats: dict[str, int]) -> bool:
     return any(stats[k] for k in ("attachments","embeds","stickers","snapshot_attachments","snapshot_embeds","snapshot_stickers"))
 
 def _choose_best_attachment_url(
-    filename: str | None,
     proxy_url: str | None,
     raw_url: str | None,
-    signed_content_urls: List[str],
-    filename_signed_map: Dict[str, str],
 ) -> Tuple[str | None, List[str]]:
     p = str(proxy_url) if proxy_url else None
     r = str(raw_url) if raw_url else None
     fallback: List[str] = []
-
-    if _is_signed_discord_media_url(p):
-        if r and r != p:
-            fallback.append(r)
-        return p, fallback
-
-    if _is_signed_discord_media_url(r):
-        if p and p != r:
-            fallback.append(p)
-        return r, fallback
-
-    if _is_http(p) and not _is_discord_host(p):
-        if r and r != p:
-            fallback.append(r)
-        return p, fallback
-    if _is_http(r) and not _is_discord_host(r):
-        if p and p != r:
-            fallback.append(p)
-        return r, fallback
-
-    signed = filename_signed_map.get(filename or "")
-    if not signed and signed_content_urls:
-        signed = signed_content_urls[0]
-    if signed:
-        if p and p != signed:
-            fallback.append(p)
-        if r and r not in (signed, p):
-            fallback.append(r)
-        return signed, fallback
 
     if _is_http(p):
         if r and r != p:
@@ -198,24 +127,13 @@ def _choose_best_attachment_url(
     return None, fallback
 
 async def hydrate_message(message: discord.Message, bot: discord.Client | None = None) -> discord.Message:
-    # Only skip if every attachment already has a usable URL: http(s) and (non-Discord OR signed).
+    # Only skip if every attachment already has a usable URL: http(s).
     attachments = getattr(message, "attachments", None) or []
     content = getattr(message, "content", "") or ""
     original = _snapshot_attachment_state(message)
 
-    signed_urls = _extract_signed_discord_urls(content)
-    if signed_urls:
-        _store_hydration_metadata(
-            message,
-            stage="skipped_signed_content",
-            original=original,
-            final=_snapshot_attachment_state(message),
-            extra={"signed_content_urls": list(signed_urls)},
-        )
-        return message
-
     def _usable(u: str) -> bool:
-        return _is_http(u) and (not _is_discord_host(u) or _is_signed_discord_media_url(u))
+        return _is_http(u)
 
     if attachments:
         raw_urls = [(str(getattr(a, "proxy_url", "") or getattr(a, "url", "") or "")) for a in attachments]
@@ -274,10 +192,7 @@ def collect_media_items(
     snapshot_channel_id = getattr(snapshot, "channel_id", None) if snapshot else None
     snapshot_guild_id = getattr(snapshot, "guild_id", None) if snapshot else None
 
-    # Signed URLs present in message content (used to override unsigned attachment URLs).
     content = getattr(message, "content", "") or ""
-    signed_from_content = _extract_signed_discord_urls(content)
-    signed_filename_map = _map_signed_urls_to_filenames(signed_from_content)
 
     # Carry hydration breadcrumbs for observability.
     h = _get_hydration_metadata(message)
@@ -286,8 +201,6 @@ def collect_media_items(
         base_meta["hydration_stage"] = h["stage"]
     if h.get("hydrated_urls"):
         base_meta["hydrated_urls"] = list(h["hydrated_urls"])
-    if signed_from_content:
-        base_meta["signed_content_urls"] = list(signed_from_content)
 
     items: list[MediaWorkItem] = []
     seen: set[str] = set()
@@ -299,7 +212,7 @@ def collect_media_items(
         raw_url = getattr(a, "url", None)
 
         primary, fallbacks = _choose_best_attachment_url(
-            filename, proxy_url, raw_url, signed_from_content, signed_filename_map
+            proxy_url, raw_url
         )
 
         if not primary or not _is_http(primary):
@@ -357,10 +270,6 @@ def collect_media_items(
                 if tenor_added or not context.tenor_allowed:
                     continue
                 tenor_added = True
-            # Skip unsigned Discord CDN embed URLs (they 404); allow signed or non-Discord.
-            if _is_discord_host(resolved) and not _is_signed_discord_media_url(resolved):
-                log.debug("collect: skip unsigned discord EMBED %s", resolved)
-                continue
             seen.add(resolved)
             ext = os.path.splitext(parsed.path)[1]
             items.append(
@@ -407,9 +316,6 @@ def collect_media_items(
             ext = os.path.splitext(parsed.path)[1].lower()
             if not tenor and ext not in ALLOWED_CONTENT_EXTS:
                 continue
-            # Skip unsigned Discord CDN URLs from plain content; prefer signed ones we already recorded.
-            if _is_discord_host(u) and not _is_signed_discord_media_url(u):
-                continue
             seen.add(u)
             items.append(
                 MediaWorkItem(
@@ -429,7 +335,7 @@ def _extract_embed_urls(embed: discord.Embed) -> list[str]:
     urls: list[str] = []
 
     def add(proxy_url: str | None, url: str | None) -> None:
-        # Prefer proxy if present (Discord usually sets this to a signed URL).
+        # Prefer proxy if present to match what Discord displays to clients.
         if proxy_url:
             urls.append(str(proxy_url))
             return

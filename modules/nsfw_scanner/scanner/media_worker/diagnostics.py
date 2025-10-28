@@ -283,14 +283,6 @@ async def notify_download_failure(
             value=truncate_field_value(final_value),
             inline=False,
         )
-        parsed_final = urlparse(final_attempt_url)
-        query_lower = (parsed_final.query or "").lower()
-        has_signed_query = "ex=" in query_lower
-        embed.add_field(
-            name="Contains ?ex=",
-            value="yes" if has_signed_query else "no",
-            inline=True,
-        )
     if hydration_stage:
         embed.add_field(
             name="Hydration stage",
