@@ -141,15 +141,16 @@ class NSFWScanner:
         actor: discord.Member | None,
         nsfw_callback,
     ) -> None:
-        if actor is not None and getattr(actor, "id", None) in ALLOWED_USER_IDS:
-            return
-
-        for item in items:
-            await scan_media_item(
-                self,
-                item=item,
-                context=context,
-                message=message,
-                actor=actor,
-                nsfw_callback=nsfw_callback,
-            )
+        async with asyncio.TaskGroup() as task_group:
+            for item in items:
+                task_group.create_task(
+                    scan_media_item(
+                        self,
+                        item=item,
+                        context=context,
+                        message=message,
+                        actor=actor,
+                        nsfw_callback=nsfw_callback,
+                    ),
+                    name=f"nsfw:{item.source}:{item.label}",
+                )
