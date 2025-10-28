@@ -22,7 +22,7 @@ from ..utils.diagnostics import (
     render_detail_lines,
     truncate_field_value,
 )
-from .media_collector import collect_media_items, hydrate_message
+from .media_collector import collect_media_items
 from .media_worker import MediaFlagged, scan_media_item
 from .work_item import MediaWorkItem
 
@@ -143,7 +143,6 @@ class NSFWScanner:
         else:
             if target_message is None:
                 return False
-            target_message = await hydrate_message(target_message, bot=self.bot)
             media_items = collect_media_items(target_message, self.bot, guild_context)
 
         if not media_items:
