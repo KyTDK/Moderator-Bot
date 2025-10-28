@@ -35,6 +35,7 @@ from .constants import (
 from .helpers import (
     AttachmentSettingsCache,
     check_attachment as helper_check_attachment,
+    is_tenor_host,
     temp_download as helper_temp_download,
 )
 from .utils.file_ops import safe_delete
@@ -471,7 +472,7 @@ class NSFWScanner:
 
             for gif_url in possible_urls:
                 domain = urlparse(gif_url).netloc.lower()
-                is_tenor = domain == "tenor.com" or domain.endswith(".tenor.com")
+                is_tenor = is_tenor_host(domain)
                 if is_tenor:
                     check_tenor = True
                     if guild_id is not None:
