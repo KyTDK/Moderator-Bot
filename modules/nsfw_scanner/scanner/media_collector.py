@@ -38,8 +38,16 @@ def _is_discord_host(u: str) -> bool:
 def _is_signed_discord_media_url(u: str | None) -> bool:
     if not u:
         return False
-    u = str(u).strip().rstrip("&")
-    return "?ex=" in u and "?is=" in u and "?hm=" in u
+    try:
+        parsed = urlparse(str(u))
+    except Exception:
+        return False
+    if parsed.scheme not in ("http", "https"):
+        return False
+    if _host(str(u)) not in _SIGNED_DISCORD_DOMAINS:
+        return False
+    query = {k.lower(): v for k, v in parse_qs(parsed.query).items()}
+    return all(query.get(param) for param in ("ex", "is", "hm"))
 
 def _extract_urls(content: str | None, limit: int = 3) -> list[str]:
     if not content:
@@ -194,6 +202,17 @@ async def hydrate_message(message: discord.Message, bot: discord.Client | None =
     attachments = getattr(message, "attachments", None) or []
     content = getattr(message, "content", "") or ""
     original = _snapshot_attachment_state(message)
+
+    signed_urls = _extract_signed_discord_urls(content)
+    if signed_urls:
+        _store_hydration_metadata(
+            message,
+            stage="skipped_signed_content",
+            original=original,
+            final=_snapshot_attachment_state(message),
+            extra={"signed_content_urls": list(signed_urls)},
+        )
+        return message
 
     def _usable(u: str) -> bool:
         return _is_http(u) and (not _is_discord_host(u) or _is_signed_discord_media_url(u))
