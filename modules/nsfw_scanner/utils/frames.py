@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import contextlib
 import os
-import sys
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
@@ -12,63 +10,6 @@ from typing import Iterator, Optional
 import cv2
 import numpy as np
 from PIL import Image, ImageSequence
-
-_FFMPEG_LOG_ENV = "OPENCV_FFMPEG_CAPTURE_OPTIONS"
-_FFMPEG_LOG_QUIET = "loglevel;quiet"
-
-
-def _configure_video_logging() -> None:
-    """Tame OpenCV/FFmpeg logging so noisy decoder errors stay out of stderr."""
-    existing = os.environ.get(_FFMPEG_LOG_ENV, "")
-    options = [opt for opt in existing.split("|") if opt]
-    if all(not opt.lower().startswith("loglevel;") for opt in options):
-        options.append(_FFMPEG_LOG_QUIET)
-        os.environ[_FFMPEG_LOG_ENV] = "|".join(options)
-    try:
-        cv2.setLogLevel(cv2.LOG_LEVEL_ERROR)
-    except AttributeError:
-        try:
-            cv2.utils.logging.setLogLevel(cv2.utils.logging.LOG_LEVEL_ERROR)  # type: ignore[attr-defined]
-        except Exception:
-            pass
-    except Exception:
-        pass
-
-
-_configure_video_logging()
-
-
-@contextlib.contextmanager
-def _suppress_decoder_stderr() -> Iterator[None]:
-    """Prevent noisy ffmpeg decoder logs from leaking to stderr."""
-
-    try:
-        stderr_fd = sys.stderr.fileno()
-    except (AttributeError, OSError):
-        # Nothing we can do if sys.stderr has no file descriptor.
-        yield
-        return
-
-    try:
-        duplicate_fd = os.dup(stderr_fd)
-        devnull_fd = os.open(os.devnull, os.O_WRONLY)
-    except OSError:
-        yield
-        return
-
-    try:
-        os.dup2(devnull_fd, stderr_fd)
-        yield
-    finally:
-        try:
-            os.dup2(duplicate_fd, stderr_fd)
-        except OSError:
-            pass
-        for fd in (devnull_fd, duplicate_fd):
-            try:
-                os.close(fd)
-            except OSError:
-                pass
 
 __all__ = [
     "ExtractedFrame",
@@ -386,7 +327,6 @@ def iter_extracted_frames(
                 max_pending = workers * 2
 
         stop_requested = False
-        consecutive_failures = 0
 
         try:
             for target_idx in idx_iter:
@@ -416,8 +356,7 @@ def iter_extracted_frames(
                             if stop_event and stop_event.is_set():
                                 stop_requested = True
                                 break
-                            with _suppress_decoder_stderr():
-                                grabbed = cap.grab()
+                            grabbed = cap.grab()
                             if not grabbed:
                                 break
                             skipped += 1
@@ -441,29 +380,9 @@ def iter_extracted_frames(
                 if stop_requested:
                     break
 
-                with _suppress_decoder_stderr():
-                    ok, frame = cap.read()
+                ok, frame = cap.read()
                 if not ok:
-                    # ffmpeg occasionally reports decoding errors such as
-                    # ``h264 @ ... mmco: unref short failure`` when it
-                    # encounters damaged frames.  OpenCV surfaces this as a
-                    # ``False`` read result which previously caused us to
-                    # stop processing the rest of the video.  Instead, try to
-                    # skip over the bad frame and continue so we can still
-                    # analyse any subsequent frames that decode correctly.
-                    consecutive_failures += 1
-                    if consecutive_failures > 8:
-                        break
-                    if stop_event and stop_event.is_set():
-                        break
-                    try:
-                        with _suppress_decoder_stderr():
-                            cap.grab()
-                    except Exception:
-                        pass
-                    current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES) or current_frame + 1)
-                    continue
-                consecutive_failures = 0
+                    break
                 if stop_requested:
                     break
 

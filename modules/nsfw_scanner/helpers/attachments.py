@@ -6,8 +6,8 @@ import discord
 
 from cogs.nsfw import NSFW_CATEGORY_SETTING
 from modules.metrics import log_media_scan
-from modules.utils import mysql
-from modules.utils.localization import localize_message
+from modules.utils import mod_logging, mysql
+from modules.utils.localization import TranslateFn, localize_message
 
 from ..utils.file_types import (
     FILE_TYPE_IMAGE,
@@ -15,22 +15,14 @@ from ..utils.file_types import (
     FILE_TYPE_VIDEO,
     determine_file_type,
 )
-from ..reporting import (
-    DEFAULT_FIELD_SPECS,
-    ScanFieldSpec,
-    default_score_formatter,
-    emit_verbose_report,
-)
 from .images import build_image_processing_context, process_image
 from .videos import process_video
 
-from .localization import (
-    SHARED_ROOT,
-    localize_boolean,
-    localize_category,
-    localize_reason,
-    resolve_translator,
-)
+REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
+SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
+SHARED_CATEGORY = "modules.nsfw_scanner.shared.category"
+SHARED_ROOT = "modules.nsfw_scanner.shared"
+NSFW_CATEGORY_NAMESPACE = "cogs.nsfw.meta.categories"
 
 _CACHE_MISS = object()
 
@@ -108,7 +100,122 @@ class AttachmentSettingsCache:
     def set_premium_plan(self, value: Any) -> None:
         self.premium_plan = value
 
+DECISION_FALLBACKS = {
+    "unknown": "Unknown",
+    "nsfw": "NSFW",
+    "safe": "Safe",
+}
 
+FIELD_FALLBACKS = {
+    "reason": "Reason",
+    "category": "Category",
+    "score": "Score",
+    "flagged_any": "Flagged Any",
+    "summary_categories": "Summary Categories",
+    "max_similarity": "Max Similarity",
+    "max_category": "Max Similarity Category",
+    "similarity": "Matched Similarity",
+    "high_accuracy": "High Accuracy",
+    "clip_threshold": "CLIP Threshold",
+    "moderation_threshold": "Moderation Threshold",
+    "video_frames": "Video Frames",
+    "latency_ms": "Scan Latency",
+    "average_latency_per_frame_ms": "Avg Latency / Frame",
+    "latency_breakdown": "Latency Breakdown",
+}
+
+REASON_FALLBACKS = {
+    "openai_moderation": "OpenAI moderation",
+    "similarity_match": "Similarity match",
+    "no_frames_extracted": "No frames extracted",
+    "no_nsfw_frames_detected": "No NSFW frames detected",
+}
+
+
+def _resolve_translator(scanner) -> TranslateFn | None:
+    translate = getattr(getattr(scanner, "bot", None), "translate", None)
+    return translate if callable(translate) else None
+
+
+def _localize_decision(translator: TranslateFn | None, decision: str, guild_id: int | None) -> str:
+    fallback = DECISION_FALLBACKS.get(decision, decision.capitalize())
+    return localize_message(
+        translator,
+        REPORT_BASE,
+        f"decision.{decision}",
+        fallback=fallback,
+        guild_id=guild_id,
+    )
+
+
+def _localize_field_name(translator: TranslateFn | None, field: str, guild_id: int | None) -> str:
+    fallback = FIELD_FALLBACKS.get(field, field.replace("_", " ").title())
+    return localize_message(
+        translator,
+        REPORT_BASE,
+        f"fields.{field}",
+        fallback=fallback,
+        guild_id=guild_id,
+    )
+
+
+def _localize_reason(
+    translator: TranslateFn | None,
+    reason: Any,
+    guild_id: int | None,
+) -> str | None:
+    if reason is None:
+        return None
+    if isinstance(reason, str):
+        normalized = reason if reason in REASON_FALLBACKS else reason.lower().replace(" ", "_")
+        fallback = REASON_FALLBACKS.get(normalized, str(reason))
+        return localize_message(
+            translator,
+            REPORT_BASE,
+            f"reasons.{normalized}",
+            fallback=fallback,
+            guild_id=guild_id,
+        )
+    return str(reason)
+
+
+def _localize_boolean(
+    translator: TranslateFn | None,
+    value: bool,
+    guild_id: int | None,
+) -> str:
+    key = "true" if value else "false"
+    return localize_message(
+        translator,
+        SHARED_BOOLEAN,
+        key,
+        fallback=key,
+        guild_id=guild_id,
+    )
+
+
+def _localize_category(
+    translator: TranslateFn | None,
+    category: str | None,
+    guild_id: int | None,
+) -> str:
+    normalized = (category or "unspecified").strip()
+    if not normalized:
+        normalized = "unspecified"
+    normalized = normalized.replace("/", "_").replace("-", "_").lower()
+    fallback = normalized.replace("_", " ").title()
+
+    if translator is None:
+        return fallback
+
+    namespace = SHARED_CATEGORY if normalized == "unspecified" else NSFW_CATEGORY_NAMESPACE
+    return localize_message(
+        translator,
+        namespace,
+        normalized,
+        fallback=fallback,
+        guild_id=guild_id,
+    )
 
 
 async def check_attachment(
@@ -261,86 +368,309 @@ async def check_attachment(
         )
         return False
 
-    translator = resolve_translator(scanner)
+    translator = _resolve_translator(scanner)
     await _emit_metrics(scan_result, "scan_complete")
 
-    verbose_enabled = False
-    if message is not None and guild_id is not None:
-        if settings_cache.has_verbose():
-            verbose_enabled = bool(settings_cache.get_verbose())
-        else:
-            verbose_enabled = bool(await mysql.get_settings(guild_id, "nsfw-verbose"))
-            settings_cache.set_verbose(verbose_enabled)
-    if message is not None and verbose_enabled:
-        duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
+    try:
+        verbose_enabled = False
+        if message is not None and guild_id is not None:
+            if settings_cache.has_verbose():
+                verbose_enabled = bool(settings_cache.get_verbose())
+            else:
+                verbose_enabled = bool(await mysql.get_settings(guild_id, "nsfw-verbose"))
+                settings_cache.set_verbose(verbose_enabled)
+        if message is not None and verbose_enabled:
+            decision_key = "unknown"
+            if scan_result is not None:
+                decision_key = "nsfw" if scan_result.get("is_nsfw") else "safe"
+            decision_label = _localize_decision(translator, decision_key, guild_id)
+            file_type_label = localize_message(
+                translator,
+                REPORT_BASE,
+                f"file_types.{file_type}",
+                fallback=FILE_TYPE_LABELS.get(file_type, detected_mime or file_type.title()),
+                guild_id=guild_id,
+            )
 
-        def _format_boolean(value, _scan_result, translator, guild_id, _duration_ms):
-                if value is None:
-                    return None
-                return localize_boolean(translator, bool(value), guild_id)
+            actor = author or getattr(message, "author", None)
+            actor_id = getattr(actor, "id", None)
+            actor_mention = getattr(actor, "mention", None)
+            if actor_mention is None and actor_id is not None:
+                actor_mention = f"<@{actor_id}>"
+            if actor_mention is None:
+                actor_mention = localize_message(
+                    translator,
+                    REPORT_BASE,
+                    "description.unknown_user",
+                    fallback="Unknown user",
+                    guild_id=guild_id,
+                )
 
-        def _format_summary(value, _scan_result, _translator, _guild_id, _duration_ms):
-                if value is None:
-                    return None
-                return str(value)
-
-        field_specs: tuple[ScanFieldSpec, ...] = DEFAULT_FIELD_SPECS + (
-                ScanFieldSpec(field_key="flagged_any", formatter=_format_boolean),
-                ScanFieldSpec(
-                    field_key="summary_categories",
-                    inline=False,
-                    formatter=_format_summary,
+            embed = discord.Embed(
+                title=localize_message(
+                    translator,
+                    REPORT_BASE,
+                    "title",
+                    fallback="NSFW Scan Report",
+                    guild_id=guild_id,
                 ),
-                ScanFieldSpec(
-                    field_key="max_similarity", formatter=default_score_formatter
+                description="\n".join(
+                    [
+                        localize_message(
+                            translator,
+                            REPORT_BASE,
+                            "description.user",
+                            placeholders={"user": actor_mention},
+                            fallback="User: {user}",
+                            guild_id=guild_id,
+                        ),
+                        localize_message(
+                            translator,
+                            REPORT_BASE,
+                            "description.file",
+                            placeholders={"filename": filename},
+                            fallback="File: `{filename}`",
+                            guild_id=guild_id,
+                        ),
+                        localize_message(
+                            translator,
+                            REPORT_BASE,
+                            "description.type",
+                            placeholders={"file_type": file_type_label},
+                            fallback="Type: `{file_type}`",
+                            guild_id=guild_id,
+                        ),
+                        localize_message(
+                            translator,
+                            REPORT_BASE,
+                            "description.decision",
+                            placeholders={"decision": decision_label},
+                            fallback="Decision: **{decision}**",
+                            guild_id=guild_id,
+                        ),
+                    ]
                 ),
-                ScanFieldSpec(field_key="max_category", formatter=_format_summary),
-                ScanFieldSpec(field_key="similarity", formatter=default_score_formatter),
-                ScanFieldSpec(field_key="high_accuracy", formatter=_format_boolean),
-                ScanFieldSpec(field_key="clip_threshold", formatter=default_score_formatter),
-                ScanFieldSpec(
-                    field_key="moderation_threshold",
-                    source_key="threshold",
-                    formatter=default_score_formatter,
+                color=(
+                    discord.Color.orange()
+                    if decision_key == "safe"
+                    else (
+                        discord.Color.red()
+                        if decision_key == "nsfw"
+                        else discord.Color.dark_grey()
+                    )
                 ),
             )
 
-        latency_overrides = {
-            "breakdown_kwargs": {
-                "bullet": "•",
-                "decimals": 2,
-                "include_step_label": True,
-                "sort_desc": True,
-                "step_wrapper": lambda step: f"`{step}`",
-            }
-        }
-
-        color_resolver = lambda decision, _result: (
-            discord.Color.red()
-            if decision == "nsfw"
-            else (
-                discord.Color.orange()
-                if decision == "safe"
-                else discord.Color.dark_grey()
+            duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
+            embed.add_field(
+                name=_localize_field_name(translator, "latency_ms", guild_id),
+                value=f"{duration_ms} ms",
+                inline=True,
             )
-        )
+            pipeline_metrics = (scan_result or {}).get("pipeline_metrics")
+            if isinstance(pipeline_metrics, dict):
+                breakdown_entries = pipeline_metrics.get("latency_breakdown_ms")
+                breakdown_lines: list[str] = []
+                normalized_entries: list[tuple[str | None, str | None, float]] = []
+                if isinstance(breakdown_entries, dict):
+                    for step_name, entry in breakdown_entries.items():
+                        label = None
+                        duration_value = None
+                        if isinstance(entry, dict):
+                            label = entry.get("label") or None
+                            duration_value = entry.get("duration_ms")
+                        else:
+                            duration_value = entry
+                        if duration_value is None:
+                            continue
+                        try:
+                            duration_float = float(duration_value)
+                        except (TypeError, ValueError):
+                            continue
+                        if duration_float <= 0:
+                            continue
+                        normalized_entries.append((step_name, label, duration_float))
+                elif isinstance(breakdown_entries, list):
+                    for entry in breakdown_entries:
+                        label = None
+                        duration_value = None
+                        if isinstance(entry, dict):
+                            label = entry.get("label") or entry.get("step")
+                            duration_value = entry.get("duration_ms")
+                        elif isinstance(entry, (list, tuple)) and entry:
+                            label = entry[0]
+                            duration_value = entry[1] if len(entry) > 1 else None
+                        if duration_value is None:
+                            continue
+                        try:
+                            duration_float = float(duration_value)
+                        except (TypeError, ValueError):
+                            continue
+                        if duration_float <= 0:
+                            continue
+                        normalized_entries.append((None, label, duration_float))
+                if normalized_entries:
+                    normalized_entries.sort(key=lambda item: item[2], reverse=True)
+                    for step_name, label, duration in normalized_entries:
+                        if step_name and label and label != step_name:
+                            breakdown_lines.append(
+                                f"• {label} (`{step_name}`): {duration:.2f} ms"
+                            )
+                        elif label:
+                            breakdown_lines.append(
+                                f"• {label}: {duration:.2f} ms"
+                            )
+                        elif step_name:
+                            breakdown_lines.append(
+                                f"• {step_name}: {duration:.2f} ms"
+                            )
+                    if breakdown_lines:
+                        embed.add_field(
+                            name=_localize_field_name(
+                                translator, "latency_breakdown", guild_id
+                            ),
+                            value="\n".join(breakdown_lines)[:1024],
+                            inline=False,
+                        )
+            if scan_result:
+                reason_value = _localize_reason(
+                    translator, scan_result.get("reason"), guild_id
+                )
+                if reason_value:
+                    embed.add_field(
+                        name=_localize_field_name(translator, "reason", guild_id),
+                        value=str(reason_value)[:1024],
+                        inline=False,
+                    )
+                if scan_result.get("category"):
+                    embed.add_field(
+                        name=_localize_field_name(translator, "category", guild_id),
+                        value=_localize_category(
+                            translator,
+                            str(scan_result.get("category")),
+                            guild_id,
+                        ),
+                        inline=True,
+                    )
+                if scan_result.get("score") is not None:
+                    embed.add_field(
+                        name=_localize_field_name(translator, "score", guild_id),
+                        value=f"{float(scan_result.get('score') or 0):.3f}",
+                        inline=True,
+                    )
+                if scan_result.get("flagged_any") is not None:
+                    embed.add_field(
+                        name=_localize_field_name(
+                            translator, "flagged_any", guild_id
+                        ),
+                        value=_localize_boolean(
+                            translator,
+                            bool(scan_result.get("flagged_any")),
+                            guild_id,
+                        ),
+                        inline=True,
+                    )
+                if scan_result.get("summary_categories") is not None:
+                    embed.add_field(
+                        name=_localize_field_name(
+                            translator, "summary_categories", guild_id
+                        ),
+                        value=str(scan_result.get("summary_categories")),
+                        inline=False,
+                    )
+                if scan_result.get("max_similarity") is not None:
+                    embed.add_field(
+                        name=_localize_field_name(
+                            translator, "max_similarity", guild_id
+                        ),
+                        value=f"{float(scan_result.get('max_similarity') or 0):.3f}",
+                        inline=True,
+                    )
+                if scan_result.get("max_category") is not None:
+                    embed.add_field(
+                        name=_localize_field_name(
+                            translator, "max_category", guild_id
+                        ),
+                        value=str(scan_result.get("max_category")),
+                        inline=True,
+                    )
+                if scan_result.get("similarity") is not None:
+                    embed.add_field(
+                        name=_localize_field_name(
+                            translator, "similarity", guild_id
+                        ),
+                        value=f"{float(scan_result.get('similarity') or 0):.3f}",
+                        inline=True,
+                    )
+                if scan_result.get("high_accuracy") is not None:
+                    embed.add_field(
+                        name=_localize_field_name(
+                            translator, "high_accuracy", guild_id
+                        ),
+                        value=_localize_boolean(
+                            translator,
+                            bool(scan_result.get("high_accuracy")),
+                            guild_id,
+                        ),
+                        inline=True,
+                    )
+                if scan_result.get("clip_threshold") is not None:
+                    embed.add_field(
+                        name=_localize_field_name(
+                            translator, "clip_threshold", guild_id
+                        ),
+                        value=f"{float(scan_result.get('clip_threshold') or 0):.3f}",
+                        inline=True,
+                    )
+                if scan_result.get("threshold") is not None:
+                    try:
+                        embed.add_field(
+                            name=_localize_field_name(
+                                translator, "moderation_threshold", guild_id
+                            ),
+                            value=f"{float(scan_result.get('threshold') or 0):.3f}",
+                            inline=True,
+                        )
+                    except Exception:
+                        pass
+                if scan_result.get("video_frames_scanned") is not None:
+                    scanned = scan_result.get("video_frames_scanned")
+                    target = scan_result.get("video_frames_target")
+                    embed.add_field(
+                        name=_localize_field_name(
+                            translator, "video_frames", guild_id
+                        ),
+                        value=f"{scanned}/{target}",
+                        inline=True,
+                    )
+                    try:
+                        scanned_frames = float(scanned)
+                    except (TypeError, ValueError):
+                        scanned_frames = 0.0
+                    if scanned_frames > 0:
+                        average_latency_per_frame = duration_ms / scanned_frames
+                        embed.add_field(
+                            name=_localize_field_name(
+                                translator, "average_latency_per_frame_ms", guild_id
+                            ),
+                            value=f"{average_latency_per_frame:.2f} ms/frame",
+                            inline=True,
+                        )
 
-        await emit_verbose_report(
-            scanner,
-            message=message,
-            author=author,
-            guild_id=guild_id,
-            file_type=file_type,
-            detected_mime=detected_mime,
-            scan_result=scan_result,
-            duration_ms=duration_ms,
-            filename=filename,
-            bold_labels=False,
-            latency_kwargs=latency_overrides,
-            field_specs=field_specs,
-            include_cache_status=False,
-            color_resolver=color_resolver,
-        )
+            avatar_url = None
+            if actor is not None:
+                avatar = getattr(actor, "display_avatar", None)
+                if avatar:
+                    avatar_url = avatar.url
+            if avatar_url:
+                embed.set_thumbnail(url=avatar_url)
+            await mod_logging.log_to_channel(
+                embed=embed,
+                channel_id=message.channel.id,
+                bot=scanner.bot,
+            )
+    except Exception as exc:
+        print(f"[verbose] Failed to send verbose embed: {exc}")
 
     if not perform_actions:
         return False
@@ -363,7 +693,7 @@ async def check_attachment(
         if file is None:
             file = discord.File(temp_filename, filename=filename)
         try:
-            category_label = localize_category(
+            category_label = _localize_category(
                 translator,
                 category_name,
                 guild_id,

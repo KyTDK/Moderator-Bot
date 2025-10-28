@@ -21,7 +21,6 @@ from ..constants import (
 )
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame, frames_are_similar, iter_extracted_frames
-from ..utils.latency import LatencyTracker
 from .images import (
     ImageProcessingContext,
     build_image_processing_context,
@@ -151,14 +150,11 @@ async def process_video(
         "frames_submitted": 0,
         "frames_processed": 0,
         "decode_latency_ms": 0.0,
-        "frame_pipeline_decode_ms": 0.0,
-        "frame_pipeline_similarity_ms": 0.0,
-        "frame_pipeline_inference_ms": 0.0,
         "flush_count": 0,
         "early_exit": None,
         "bytes_downloaded": None,
     }
-    latency_tracker = LatencyTracker()
+    latency_steps: dict[str, dict[str, Any]] = {}
     try:
         metrics_payload["bytes_downloaded"] = os.path.getsize(original_filename)
     except OSError:
@@ -182,8 +178,6 @@ async def process_video(
             batch.copy(),
             context,
             convert_to_png=False,
-            metrics=metrics_payload,
-            latency=latency_tracker,
         )
         metrics_payload["decode_latency_ms"] += max(
             (time.perf_counter() - started) * 1000, 0
@@ -298,25 +292,46 @@ async def process_video(
         safe_delete(original_filename)
 
     total_duration_ms = max((time.perf_counter() - overall_started) * 1000, 0.0)
+    metrics_payload["total_latency_ms"] = total_duration_ms
     frame_pipeline_ms = float(metrics_payload.get("decode_latency_ms") or 0.0)
     if frame_pipeline_ms > 0:
-        latency_tracker.add_duration(
-            "frame_pipeline",
-            frame_pipeline_ms,
-            label="Frame Pipeline",
-        )
+        existing_frame_entry = latency_steps.get("frame_pipeline")
+        frame_pipeline_entry = {
+            "duration_ms": frame_pipeline_ms,
+            "label": "Frame Pipeline",
+        }
+        if isinstance(existing_frame_entry, dict):
+            try:
+                frame_pipeline_entry["duration_ms"] += float(
+                    existing_frame_entry.get("duration_ms") or 0.0
+                )
+            except (TypeError, ValueError):
+                pass
+            if not frame_pipeline_entry.get("label"):
+                frame_pipeline_entry["label"] = existing_frame_entry.get("label")
+        latency_steps["frame_pipeline"] = frame_pipeline_entry
     overhead_ms = max(total_duration_ms - frame_pipeline_ms, 0.0)
     if overhead_ms > 0:
-        latency_tracker.add_duration(
-            "coordination",
-            overhead_ms,
-            label="Coordinator Overhead",
-        )
-
-    latency_tracker.merge_into(
-        metrics_payload,
-        total_duration_ms=total_duration_ms,
-    )
+        existing_overhead_entry = latency_steps.get("coordination")
+        coordination_entry = {
+            "duration_ms": overhead_ms,
+            "label": "Coordinator Overhead",
+        }
+        if isinstance(existing_overhead_entry, dict):
+            try:
+                coordination_entry["duration_ms"] += float(
+                    existing_overhead_entry.get("duration_ms") or 0.0
+                )
+            except (TypeError, ValueError):
+                pass
+            if not coordination_entry.get("label"):
+                coordination_entry["label"] = existing_overhead_entry.get("label")
+        latency_steps["coordination"] = coordination_entry
+    metrics_payload["latency_breakdown_ms"] = {
+        key: value
+        for key, value in latency_steps.items()
+        if isinstance(value, dict)
+    }
 
     metrics_payload["frames_scanned"] = processed_frames
     metrics_payload["frames_target"] = _effective_target()
