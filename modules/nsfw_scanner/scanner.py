@@ -19,6 +19,7 @@ import pillow_avif  # registers AVIF support
 from modules.config.premium_plans import PLAN_CORE, PLAN_FREE, PLAN_PRO, PLAN_ULTRA
 from modules.utils import clip_vectors, mysql
 from modules.utils.discord_utils import safe_get_channel
+from modules.utils.log_channel import send_log_message
 
 from .constants import (
     ACCELERATED_DOWNLOAD_CAP_BYTES,
@@ -96,6 +97,93 @@ class NSFWScanner:
             return
         clip_vectors.register_failure_callback(self._handle_milvus_failure)
         self._clip_failure_callback_registered = True
+
+    @staticmethod
+    def _truncate(value: str, limit: int = 1024) -> str:
+        if len(value) <= limit:
+            return value
+        return value[: limit - 1] + "\u2026"
+
+    async def _send_failure_log(
+        self,
+        *,
+        title: str,
+        source: str,
+        exc: Exception,
+        message: discord.Message | None,
+        context: str,
+    ) -> None:
+        if not LOG_CHANNEL_ID:
+            return
+
+        description = self._truncate(f"Source: {source}", 2048)
+        embed = discord.Embed(title=title, description=description, color=discord.Color.red())
+
+        error_value = self._truncate(f"`{type(exc).__name__}: {exc}`")
+        embed.add_field(name="Error", value=error_value or "(no details)", inline=False)
+
+        if message is not None and getattr(message, "jump_url", None):
+            embed.add_field(
+                name="Message",
+                value=f"[Jump to message]({message.jump_url})",
+                inline=False,
+            )
+
+        guild = getattr(message, "guild", None)
+        if guild is not None:
+            embed.add_field(
+                name="Guild",
+                value=self._truncate(f"{getattr(guild, 'name', 'Unknown')} (`{guild.id}`)", 1024),
+                inline=False,
+            )
+
+        channel = getattr(message, "channel", None)
+        if channel is not None and getattr(channel, "id", None):
+            channel_name = getattr(channel, "name", None) or getattr(channel, "id", "Unknown")
+            embed.add_field(
+                name="Channel",
+                value=self._truncate(f"{channel_name} (`{channel.id}`)", 1024),
+                inline=False,
+            )
+
+        success = await send_log_message(
+            self.bot,
+            embed=embed,
+            allowed_mentions=discord.AllowedMentions.none(),
+            context=context,
+        )
+        if not success:
+            log.debug("Failed to report %s to LOG_CHANNEL_ID=%s", context, LOG_CHANNEL_ID)
+
+    async def _report_download_failure(
+        self,
+        *,
+        source_url: str,
+        exc: Exception,
+        message: discord.Message | None = None,
+    ) -> None:
+        await self._send_failure_log(
+            title="Download failure",
+            source=source_url,
+            exc=exc,
+            message=message,
+            context="nsfw_scanner.download",
+        )
+
+    async def _report_scan_failure(
+        self,
+        *,
+        source: str,
+        exc: Exception,
+        message: discord.Message | None = None,
+    ) -> None:
+        await self._send_failure_log(
+            title="NSFW scan failure",
+            source=source,
+            exc=exc,
+            message=message,
+            context="nsfw_scanner.scan",
+        )
 
     async def _handle_milvus_failure(self, exc: Exception) -> None:
         error_key = f"{type(exc).__name__}:{exc}"
@@ -191,18 +279,52 @@ class NSFWScanner:
         download_cap_bytes = await _resolve_download_cap_bytes()
 
         if url:
-            async with helper_temp_download(
-                self.session, url, download_cap_bytes=download_cap_bytes
-            ) as temp_filename:
-                return await helper_check_attachment(
-                    self,
-                    member,
-                    temp_filename,
-                    nsfw_callback,
-                    guild_id,
-                    message,
-                    settings_cache=settings_cache,
+            scan_failed = False
+            try:
+                async with helper_temp_download(
+                    self.session, url, download_cap_bytes=download_cap_bytes
+                ) as temp_filename:
+                    try:
+                        return await helper_check_attachment(
+                            self,
+                            member,
+                            temp_filename,
+                            nsfw_callback,
+                            guild_id,
+                            message,
+                            settings_cache=settings_cache,
+                        )
+                    except Exception as scan_exc:
+                        scan_failed = True
+                        log.exception("Failed to scan media from url %s", url)
+                        await self._report_scan_failure(
+                            source=url,
+                            exc=scan_exc,
+                            message=message,
+                        )
+                        raise
+            except ValueError as download_error:
+                log.debug(
+                    "Skipping media %s due to download failure: %s",
+                    url,
+                    download_error,
                 )
+                await self._report_download_failure(
+                    source_url=url,
+                    exc=download_error,
+                    message=message,
+                )
+                raise
+            except Exception as download_exc:
+                if scan_failed:
+                    raise
+                log.exception("Failed to download media from url %s", url)
+                await self._report_download_failure(
+                    source_url=url,
+                    exc=download_exc,
+                    message=message,
+                )
+                raise
         snapshots = getattr(message, "message_snapshots", None)
         snapshot = snapshots[0] if snapshots else None
 
@@ -229,9 +351,14 @@ class NSFWScanner:
             with NamedTemporaryFile(delete=False, dir=TMP_DIR, suffix=suffix) as tmp:
                 try:
                     await attachment.save(tmp.name)
-                except NotFound:
+                except NotFound as exc:
                     safe_delete(tmp.name)
                     print(f"[NSFW] Attachment not found: {attachment.url}")
+                    await self._report_download_failure(
+                        source_url=attachment.url,
+                        exc=exc,
+                        message=message,
+                    )
                     continue
                 temp_filename = tmp.name
             try:
@@ -245,6 +372,16 @@ class NSFWScanner:
                     settings_cache=settings_cache,
                 ):
                     return True
+            except Exception as scan_exc:
+                log.exception(
+                    "Failed to scan attachment %s", getattr(attachment, "url", attachment.filename)
+                )
+                await self._report_scan_failure(
+                    source=getattr(attachment, "url", attachment.filename),
+                    exc=scan_exc,
+                    message=message,
+                )
+                raise
             finally:
                 safe_delete(temp_filename)
 
@@ -279,6 +416,7 @@ class NSFWScanner:
                             _tenor_cache_set(guild_id, check_tenor)
                     if not check_tenor:
                         continue
+                scan_failed = False
                 try:
                     async with helper_temp_download(
                         self.session,
@@ -286,22 +424,47 @@ class NSFWScanner:
                         prefer_video=is_tenor,
                         download_cap_bytes=download_cap_bytes,
                     ) as temp_filename:
-                        if await helper_check_attachment(
-                            self,
-                            author=message.author,
-                            temp_filename=temp_filename,
-                            nsfw_callback=nsfw_callback,
-                            guild_id=guild_id,
-                            message=message,
-                            settings_cache=settings_cache,
-                        ):
-                            return True
+                        try:
+                            if await helper_check_attachment(
+                                self,
+                                author=message.author,
+                                temp_filename=temp_filename,
+                                nsfw_callback=nsfw_callback,
+                                guild_id=guild_id,
+                                message=message,
+                                settings_cache=settings_cache,
+                            ):
+                                return True
+                        except Exception as scan_exc:
+                            scan_failed = True
+                            log.exception("Failed to scan embedded media %s", gif_url)
+                            await self._report_scan_failure(
+                                source=gif_url,
+                                exc=scan_exc,
+                                message=message,
+                            )
+                            raise
                 except ValueError as download_error:
                     log.debug(
                         "Skipping media %s due to download cap: %s",
                         gif_url,
                         download_error,
                     )
+                    await self._report_download_failure(
+                        source_url=gif_url,
+                        exc=download_error,
+                        message=message,
+                    )
+                except Exception as download_exc:
+                    if scan_failed:
+                        raise
+                    log.exception("Failed to download embedded media %s", gif_url)
+                    await self._report_download_failure(
+                        source_url=gif_url,
+                        exc=download_exc,
+                        message=message,
+                    )
+                    raise
 
         for sticker in stickers:
             sticker_url = sticker.url
@@ -310,6 +473,7 @@ class NSFWScanner:
 
             extension = sticker.format.name.lower()
 
+            scan_failed = False
             try:
                 async with helper_temp_download(
                     self.session,
@@ -324,16 +488,26 @@ class NSFWScanner:
                         await asyncio.to_thread(apnggif, temp_location, gif_location)
 
                     try:
-                        if await helper_check_attachment(
-                            self,
-                            message.author,
-                            gif_location,
-                            nsfw_callback,
-                            guild_id,
-                            message,
-                            settings_cache=settings_cache,
-                        ):
-                            return True
+                        try:
+                            if await helper_check_attachment(
+                                self,
+                                message.author,
+                                gif_location,
+                                nsfw_callback,
+                                guild_id,
+                                message,
+                                settings_cache=settings_cache,
+                            ):
+                                return True
+                        except Exception as scan_exc:
+                            scan_failed = True
+                            log.exception("Failed to scan sticker media %s", sticker_url)
+                            await self._report_scan_failure(
+                                source=sticker_url,
+                                exc=scan_exc,
+                                message=message,
+                            )
+                            raise
                     finally:
                         if gif_location != temp_location:
                             safe_delete(gif_location)
@@ -343,6 +517,21 @@ class NSFWScanner:
                     sticker_url,
                     download_error,
                 )
+                await self._report_download_failure(
+                    source_url=sticker_url,
+                    exc=download_error,
+                    message=message,
+                )
+            except Exception as download_exc:
+                if scan_failed:
+                    raise
+                log.exception("Failed to download sticker %s", sticker_url)
+                await self._report_download_failure(
+                    source_url=sticker_url,
+                    exc=download_exc,
+                    message=message,
+                )
+                raise
 
         custom_emoji_tags = list(set(re.findall(r'<a?:\w+:\d+>', message.content)))
         for tag in custom_emoji_tags:
@@ -360,23 +549,41 @@ class NSFWScanner:
                     emoji_url,
                     download_cap_bytes=download_cap_bytes,
                 ) as emoji_path:
-                    if await helper_check_attachment(
-                        self,
-                        message.author,
-                        emoji_path,
-                        nsfw_callback,
-                        guild_id,
-                        message,
-                        settings_cache=settings_cache,
-                    ):
-                        return True
+                    try:
+                        if await helper_check_attachment(
+                            self,
+                            message.author,
+                            emoji_path,
+                            nsfw_callback,
+                            guild_id,
+                            message,
+                            settings_cache=settings_cache,
+                        ):
+                            return True
+                    except Exception as scan_exc:
+                        log.exception("Failed to scan custom emoji %s", emoji_url)
+                        await self._report_scan_failure(
+                            source=emoji_url,
+                            exc=scan_exc,
+                            message=message,
+                        )
             except ValueError as download_error:
                 log.debug(
                     "Skipping emoji %s due to download cap: %s",
                     emoji_url,
                     download_error,
                 )
+                await self._report_download_failure(
+                    source_url=emoji_url,
+                    exc=download_error,
+                    message=message,
+                )
             except Exception as e:
-                print(f"[emoji-scan] Failed to scan custom emoji {emoji_obj}: {e}")
+                log.exception("Failed to download custom emoji %s", emoji_url)
+                await self._report_download_failure(
+                    source_url=emoji_url,
+                    exc=e,
+                    message=message,
+                )
 
         return False
