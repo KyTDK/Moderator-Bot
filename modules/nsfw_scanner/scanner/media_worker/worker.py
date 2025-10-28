@@ -541,10 +541,32 @@ async def scan_media_item(
                     except Exception:
                         pass
 
-        if item.attachment is not None:
-            async with _attachment_to_tempfile(scanner, item) as temp_download:
-                await _process_download(temp_download)
-            return
+        if (
+            item.source == "attachment"
+            and item.attachment is None
+            and message is not None
+        ):
+            label_name = os.path.basename(str(item.label)) if item.label else None
+            for candidate in getattr(message, "attachments", []):
+                if label_name and candidate.filename == label_name:
+                    item.attachment = candidate
+                    break
+                if item.url and candidate.url == item.url:
+                    item.attachment = candidate
+                    break
+
+        attachment = getattr(item, "attachment", None)
+        if attachment is not None:
+            try:
+                async with _attachment_to_tempfile(scanner, item) as temp_download:
+                    await _process_download(temp_download)
+                return
+            except Exception as attachment_error:  # pragma: no cover - best effort fallback
+                log.warning(
+                    "Attachment save failed (%s), falling back to URL for %s",  # noqa: PLE1205
+                    attachment_error,
+                    item.label or item.url,
+                )
 
         if item.url:
             url_candidates: list[str] = []
