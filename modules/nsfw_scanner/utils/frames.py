@@ -282,17 +282,22 @@ def iter_extracted_frames(
 
     enable_parallel = bool(accelerated_tier) if accelerated_tier is not None else use_hwaccel
     enable_hwaccel = use_hwaccel and (accelerated_tier is None or accelerated_tier)
+    hwaccel_in_use = enable_hwaccel
 
-    cap = cv2.VideoCapture(filename)
-    if enable_hwaccel:
-        try:
-            cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
-        except Exception:
-            pass
-        try:
-            cap.set(cv2.CAP_PROP_BUFFERSIZE, 4)
-        except Exception:
-            pass
+    def _open_capture(*, use_hw: bool) -> cv2.VideoCapture:
+        cap_obj = cv2.VideoCapture(filename)
+        if use_hw:
+            try:
+                cap_obj.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
+            except Exception:
+                pass
+            try:
+                cap_obj.set(cv2.CAP_PROP_BUFFERSIZE, 4)
+            except Exception:
+                pass
+        return cap_obj
+
+    cap = _open_capture(use_hw=hwaccel_in_use)
 
     try:
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
@@ -312,6 +317,7 @@ def iter_extracted_frames(
 
         frame_seek_threshold = 5
         idx_iter = iter(idxs_list)
+        pending_idx: int | None = None
         current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES) or 0)
 
         executor: ThreadPoolExecutor | None = None
@@ -326,10 +332,26 @@ def iter_extracted_frames(
                 )
                 max_pending = workers * 2
 
+        decode_failures = 0
+        max_decode_failures = max(8, len(idxs_list) // 3 + 3)
+        hwaccel_fallback_attempted = False
         stop_requested = False
 
         try:
-            for target_idx in idx_iter:
+            while True:
+                if stop_event and stop_event.is_set():
+                    stop_requested = True
+                    break
+
+                if pending_idx is not None:
+                    target_idx = pending_idx
+                    pending_idx = None
+                else:
+                    try:
+                        target_idx = next(idx_iter)
+                    except StopIteration:
+                        break
+
                 if stop_event and stop_event.is_set():
                     stop_requested = True
                     break
@@ -382,9 +404,49 @@ def iter_extracted_frames(
 
                 ok, frame = cap.read()
                 if not ok:
-                    break
+                    decode_failures += 1
+                    if hwaccel_in_use and not hwaccel_fallback_attempted:
+                        print(
+                            f"[iter_extracted_frames] Hardware decode failed at frame {target_idx}; retrying without acceleration."
+                        )
+                        hwaccel_fallback_attempted = True
+                        hwaccel_in_use = False
+                        try:
+                            cap.release()
+                        except Exception:
+                            pass
+                        cap = _open_capture(use_hw=False)
+                        if target_idx > 0:
+                            try:
+                                cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
+                            except Exception:
+                                pass
+                        current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES) or target_idx)
+                        pending_idx = target_idx
+                        decode_failures = 0
+                        continue
+                    if decode_failures >= max_decode_failures:
+                        print(
+                            f"[iter_extracted_frames] Decoder repeatedly failed around frame {target_idx}; aborting video scan for {os.path.basename(filename)}."
+                        )
+                        break
+                    if decode_failures == 1:
+                        print(
+                            f"[iter_extracted_frames] Failed to decode frame {target_idx}; skipping."
+                        )
+                    fallback_seek = target_idx + 1
+                    if total_frames > 0:
+                        fallback_seek = min(total_frames - 1, fallback_seek)
+                    try:
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, fallback_seek)
+                    except Exception:
+                        pass
+                    current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES) or fallback_seek)
+                    continue
                 if stop_requested:
                     break
+
+                decode_failures = 0
 
                 if executor:
                     future = executor.submit(
