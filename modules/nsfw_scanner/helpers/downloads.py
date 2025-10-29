@@ -4,7 +4,6 @@ import os
 import time
 import uuid
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
 from typing import AsyncIterator
 from urllib.parse import urlparse, urlunparse
 
@@ -67,17 +66,27 @@ async def resolve_media_url(session, url: str, *, prefer_video: bool = True) -> 
     return url
 
 
-@dataclass(slots=True)
 class TempDownloadTelemetry:
     """Detailed timings captured during a temporary download."""
 
-    resolve_latency_ms: float | None = None
-    head_latency_ms: float = 0.0
-    download_latency_ms: float | None = None
-    disk_write_latency_ms: float = 0.0
-    bytes_downloaded: int | None = None
-    content_length: int | None = None
-    resolved_url: str | None = None
+    __slots__ = (
+        "resolve_latency_ms",
+        "head_latency_ms",
+        "download_latency_ms",
+        "disk_write_latency_ms",
+        "bytes_downloaded",
+        "content_length",
+        "resolved_url",
+    )
+
+    def __init__(self) -> None:
+        self.resolve_latency_ms: float | None = None
+        self.head_latency_ms: float = 0.0
+        self.download_latency_ms: float | None = None
+        self.disk_write_latency_ms: float = 0.0
+        self.bytes_downloaded: int | None = None
+        self.content_length: int | None = None
+        self.resolved_url: str | None = None
 
     def record_head_duration(self, duration_ms: float | None) -> None:
         if duration_ms is None:
@@ -102,10 +111,24 @@ class TempDownloadTelemetry:
         self.disk_write_latency_ms += duration_value
 
 
-@dataclass(slots=True)
 class TempDownloadResult:
-    path: str
-    telemetry: TempDownloadTelemetry
+    __slots__ = ("path", "telemetry")
+
+    def __init__(self, path: str, telemetry: TempDownloadTelemetry) -> None:
+        self.path = path
+        self.telemetry = telemetry
+
+    def __str__(self) -> str:  # pragma: no cover - trivial delegation
+        return self.path
+
+    def __fspath__(self) -> str:  # pragma: no cover - trivial delegation
+        return self.path
+
+    def __bytes__(self) -> bytes:  # pragma: no cover - trivial delegation
+        return self.path.encode()
+
+    def __getattr__(self, attr):  # pragma: no cover - trivial delegation
+        return getattr(self.path, attr)
 
 
 def _resolve_stream_config(content_length: int | None) -> tuple[int, int]:
