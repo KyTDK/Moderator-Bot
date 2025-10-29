@@ -3,8 +3,9 @@ from __future__ import annotations
 import os
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
+from contextlib import contextmanager
 from dataclasses import dataclass
-from threading import Event
+from threading import Event, Lock
 from typing import Iterator, Optional
 
 import cv2
@@ -20,6 +21,51 @@ __all__ = [
 PREVIEW_MAX_DIMENSION = 112
 TARGET_MAX_DIMENSION = 224
 DEDUP_SIGNATURE_DIM = 16
+
+_SUPPRESS_OPENCV_STDERR = os.environ.get("MODBOT_SUPPRESS_OPENCV_STDERR", "1").lower()
+_SUPPRESS_OPENCV_STDERR = _SUPPRESS_OPENCV_STDERR not in {"0", "false", "off"}
+_STDERR_REDIRECT_LOCK = Lock()
+
+
+@contextmanager
+def _suppress_cv2_stderr():
+    if not _SUPPRESS_OPENCV_STDERR:
+        yield
+        return
+    devnull_fd = None
+    saved_stderr = None
+    with _STDERR_REDIRECT_LOCK:
+        try:
+            saved_stderr = os.dup(2)
+            devnull_fd = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull_fd, 2)
+        except OSError:
+            if saved_stderr is not None:
+                try:
+                    os.close(saved_stderr)
+                except OSError:
+                    pass
+            if devnull_fd is not None:
+                try:
+                    os.close(devnull_fd)
+                except OSError:
+                    pass
+            yield
+            return
+    try:
+        yield
+    finally:
+        with _STDERR_REDIRECT_LOCK:
+            if saved_stderr is not None:
+                try:
+                    os.dup2(saved_stderr, 2)
+                finally:
+                    os.close(saved_stderr)
+            if devnull_fd is not None:
+                try:
+                    os.close(devnull_fd)
+                except OSError:
+                    pass
 
 
 @dataclass(slots=True)
@@ -285,14 +331,17 @@ def iter_extracted_frames(
     hwaccel_in_use = enable_hwaccel
 
     def _open_capture(*, use_hw: bool) -> cv2.VideoCapture:
-        cap_obj = cv2.VideoCapture(filename)
+        with _suppress_cv2_stderr():
+            cap_obj = cv2.VideoCapture(filename)
         if use_hw:
             try:
-                cap_obj.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
+                with _suppress_cv2_stderr():
+                    cap_obj.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
             except Exception:
                 pass
             try:
-                cap_obj.set(cv2.CAP_PROP_BUFFERSIZE, 4)
+                with _suppress_cv2_stderr():
+                    cap_obj.set(cv2.CAP_PROP_BUFFERSIZE, 4)
             except Exception:
                 pass
         return cap_obj
@@ -361,7 +410,8 @@ def iter_extracted_frames(
                     seek_success = False
                     if jump > frame_seek_threshold:
                         try:
-                            seek_success = cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
+                            with _suppress_cv2_stderr():
+                                seek_success = cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
                         except Exception:
                             seek_success = False
                         else:
@@ -378,7 +428,8 @@ def iter_extracted_frames(
                             if stop_event and stop_event.is_set():
                                 stop_requested = True
                                 break
-                            grabbed = cap.grab()
+                            with _suppress_cv2_stderr():
+                                grabbed = cap.grab()
                             if not grabbed:
                                 break
                             skipped += 1
@@ -391,7 +442,8 @@ def iter_extracted_frames(
                 elif target_idx < current_frame:
                     seek_success = False
                     try:
-                        seek_success = cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
+                        with _suppress_cv2_stderr():
+                            seek_success = cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
                     except Exception:
                         seek_success = False
                     if seek_success:
@@ -402,7 +454,8 @@ def iter_extracted_frames(
                 if stop_requested:
                     break
 
-                ok, frame = cap.read()
+                with _suppress_cv2_stderr():
+                    ok, frame = cap.read()
                 if not ok:
                     decode_failures += 1
                     if hwaccel_in_use and not hwaccel_fallback_attempted:
@@ -418,7 +471,8 @@ def iter_extracted_frames(
                         cap = _open_capture(use_hw=False)
                         if target_idx > 0:
                             try:
-                                cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
+                                with _suppress_cv2_stderr():
+                                    cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
                             except Exception:
                                 pass
                         current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES) or target_idx)
@@ -438,7 +492,8 @@ def iter_extracted_frames(
                     if total_frames > 0:
                         fallback_seek = min(total_frames - 1, fallback_seek)
                     try:
-                        cap.set(cv2.CAP_PROP_POS_FRAMES, fallback_seek)
+                        with _suppress_cv2_stderr():
+                            cap.set(cv2.CAP_PROP_POS_FRAMES, fallback_seek)
                     except Exception:
                         pass
                     current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES) or fallback_seek)
