@@ -10,12 +10,21 @@ from typing import Any, List, Optional, Sequence
 
 from PIL import Image
 
+try:
+    from pillow_heif import register_heif_opener
+except ImportError:  # pragma: no cover - optional dependency handled gracefully
+    register_heif_opener = None
+else:
+    register_heif_opener()
+
 from cogs.nsfw import NSFW_CATEGORY_SETTING
 from modules.utils import clip_vectors, mysql
+from modules.utils.log_channel import send_log_message
 
 from ..constants import (
     CLIP_THRESHOLD,
     HIGH_ACCURACY_SIMILARITY,
+    LOG_CHANNEL_ID,
     MOD_API_MAX_CONCURRENCY,
     VECTOR_REFRESH_DIVISOR,
 )
@@ -96,6 +105,51 @@ async def _open_image_from_path(path: str) -> Image.Image:
             raise
 
     return await asyncio.to_thread(_load)
+
+
+async def _notify_image_open_failure(
+    scanner,
+    *,
+    filename: str,
+    exc: Exception,
+) -> None:
+    if not LOG_CHANNEL_ID:
+        return
+
+    bot = getattr(scanner, "bot", None)
+    if bot is None:
+        return
+
+    try:
+        display_name = os.path.basename(filename) or filename
+    except Exception:
+        display_name = filename
+
+    error_summary = f"{type(exc).__name__}: {exc}"
+    message = (
+        ":warning: Failed to open image during NSFW scan. "
+        f"File: `{display_name}`. Error: `{error_summary}`"
+    )
+
+    try:
+        success = await send_log_message(
+            bot,
+            content=message,
+            context="nsfw_scanner.image_open",
+        )
+    except Exception:  # pragma: no cover - best effort logging
+        log.debug(
+            "Failed to report image open failure to LOG_CHANNEL_ID=%s",
+            LOG_CHANNEL_ID,
+            exc_info=True,
+        )
+        return
+
+    if not success:
+        log.debug(
+            "Failed to report image open failure to LOG_CHANNEL_ID=%s",
+            LOG_CHANNEL_ID,
+        )
 
 
 async def _open_image_from_bytes(data: bytes) -> Image.Image:
@@ -373,6 +427,12 @@ async def process_image(
     except Exception as exc:
         print(traceback.format_exc())
         print(f"[process_image] Error processing image {original_filename}: {exc}")
+        if image is None:
+            await _notify_image_open_failure(
+                scanner,
+                filename=original_filename,
+                exc=exc,
+            )
         return None
     finally:
         if image is not None:
