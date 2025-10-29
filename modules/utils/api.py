@@ -3,6 +3,7 @@ import random
 import time
 from typing import Mapping
 
+import httpx
 from openai import AsyncOpenAI
 
 from modules.utils import mysql
@@ -42,7 +43,11 @@ fernet = Fernet(FERNET_KEY)
 
 def _get_client(api_key: str) -> AsyncOpenAI:
     if api_key not in _clients:
-        _clients[api_key] = AsyncOpenAI(api_key=api_key)
+        _clients[api_key] = AsyncOpenAI(
+            api_key=api_key,
+            max_retries=0,
+            timeout=httpx.Timeout(30.0, connect=5.0),
+        )
     return _clients[api_key]
 
 async def check_openai_api_key(api_key):
