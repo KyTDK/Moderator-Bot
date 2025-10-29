@@ -13,7 +13,7 @@ from .helpers.metrics import ScanTelemetry, collect_scan_telemetry
 log = logging.getLogger(__name__)
 
 
-SLOW_SCAN_THRESHOLD_MS = 30_000.0
+SLOW_SCAN_THRESHOLD_MS = 20_000.0
 
 
 def _format_latency(ms_value: float) -> str:
