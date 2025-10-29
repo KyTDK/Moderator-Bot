@@ -46,7 +46,7 @@ def _get_client(api_key: str) -> AsyncOpenAI:
         _clients[api_key] = AsyncOpenAI(
             api_key=api_key,
             max_retries=0,
-            timeout=httpx.Timeout(30.0, connect=5.0),
+            timeout=httpx.Timeout(20.0, connect=5.0),
         )
     return _clients[api_key]
 

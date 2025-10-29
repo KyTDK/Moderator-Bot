@@ -110,6 +110,38 @@ async def log_slow_scan_if_needed(
             inline=False,
         )
 
+    moderator_meta_lines: list[str] = []
+    pipeline_metrics = getattr(telemetry, "pipeline_metrics", None)
+    if isinstance(pipeline_metrics, dict):
+        metadata = pipeline_metrics.get("moderator_metadata")
+        if isinstance(metadata, dict):
+            attempts = metadata.get("attempts")
+            if attempts is not None:
+                moderator_meta_lines.append(f"Attempts: {attempts}")
+            no_key_waits = metadata.get("no_key_waits")
+            if no_key_waits:
+                moderator_meta_lines.append(f"No-Key Waits: {no_key_waits}")
+            had_successful = metadata.get("had_successful_attempt")
+            if had_successful is not None:
+                moderator_meta_lines.append(f"Successful Attempt: {bool(had_successful)}")
+            failures = metadata.get("failures")
+            if isinstance(failures, dict) and failures:
+                failure_parts = [
+                    f"{name}={count}"
+                    for name, count in sorted(failures.items())
+                    if count
+                ]
+                if failure_parts:
+                    moderator_meta_lines.append(
+                        "Failures: " + ", ".join(failure_parts)
+                    )
+    if moderator_meta_lines:
+        embed.add_field(
+            name="Moderator Metadata",
+            value="\n".join(moderator_meta_lines)[:1024],
+            inline=False,
+        )
+
     context_lines: list[str] = []
     if message is not None:
         guild = getattr(message, "guild", None)
@@ -152,4 +184,3 @@ async def log_slow_scan_if_needed(
 
 
 __all__ = ["log_slow_scan_if_needed", "SLOW_SCAN_THRESHOLD_MS"]
-

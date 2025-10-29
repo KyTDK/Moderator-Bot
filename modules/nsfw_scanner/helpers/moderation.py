@@ -6,6 +6,7 @@ from collections import Counter
 from typing import Any
 
 import openai
+import httpx
 from PIL import Image
 
 from cogs.nsfw import NSFW_CATEGORY_SETTING
@@ -128,7 +129,7 @@ async def moderator_api(
     image_bytes: bytes | None = None,
     image_mime: str | None = None,
     guild_id: int | None = None,
-    max_attempts: int = 3,
+    max_attempts: int = 2,
     skip_vector_add: bool = False,
     max_similarity: float | None = None,
     allowed_categories: list[str] | None = None,
@@ -247,6 +248,14 @@ async def moderator_api(
             print(f"[moderator_api] Rate limit error: {exc}. Marking key as not working.")
             await api.set_api_key_not_working(api_key=encrypted_key, bot=scanner.bot)
             latency_tracker.record_failure("rate_limit_error")
+            continue
+        except openai.APITimeoutError as exc:
+            print(f"[moderator_api] Moderation request timed out: {exc}.")
+            latency_tracker.record_failure("openai_timeout")
+            continue
+        except httpx.TimeoutException as exc:
+            print(f"[moderator_api] HTTP timeout during moderation request: {exc}.")
+            latency_tracker.record_failure("http_timeout")
             continue
         except Exception as exc:
             print(f"[moderator_api] Unexpected error from OpenAI API: {exc}.")
