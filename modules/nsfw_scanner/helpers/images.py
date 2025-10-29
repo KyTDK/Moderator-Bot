@@ -1,5 +1,6 @@
 import asyncio
 import io
+import logging
 import os
 import random
 import time
@@ -26,6 +27,9 @@ from .moderation import moderator_api
 
 
 _MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
+
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -171,14 +175,23 @@ async def _run_image_pipeline(
     similarity_results = similarity_response
     if similarity_results is None:
         similarity_started = time.perf_counter()
-        similarity_results = await asyncio.to_thread(
-            clip_vectors.query_similar, image, threshold=0
-        )
-        _add_step(
-            "similarity_search",
-            (time.perf_counter() - similarity_started) * 1000,
-            label="Similarity Search",
-        )
+        try:
+            similarity_results = await asyncio.to_thread(
+                clip_vectors.query_similar, image, threshold=0
+            )
+        except Exception as exc:
+            log.warning(
+                "Similarity search failed; falling back to moderator API: %s",
+                exc,
+                exc_info=True,
+            )
+            similarity_results = []
+        finally:
+            _add_step(
+                "similarity_search",
+                (time.perf_counter() - similarity_started) * 1000,
+                label="Similarity Search",
+            )
 
     best_match = None
     max_similarity = 0.0
@@ -408,9 +421,17 @@ async def process_image_batch(
 
     similarity_batches: List[List[dict[str, Any]]] = []
     if valid_images:
-        similarity_batches = await asyncio.to_thread(
-            clip_vectors.query_similar_batch, valid_images, 0
-        )
+        try:
+            similarity_batches = await asyncio.to_thread(
+                clip_vectors.query_similar_batch, valid_images, 0
+            )
+        except Exception as exc:
+            log.warning(
+                "Batch similarity search failed; continuing without matches: %s",
+                exc,
+                exc_info=True,
+            )
+            similarity_batches = [[] for _ in valid_images]
 
     results: list[tuple[ExtractedFrame, dict[str, Any] | None]] = []
     similarity_iter = iter(similarity_batches)
