@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    from .downloads import TempDownloadTelemetry
 
 
 def _coerce_duration(value: Any) -> float | None:
@@ -17,6 +21,102 @@ def _default_label(step_name: str | None) -> str | None:
     if not step_name:
         return None
     return str(step_name).replace("_", " ").title()
+
+
+def _coerce_int(value: Any) -> int | None:
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return None
+    return number
+
+
+def _add_latency_step(
+    target: dict[str, dict[str, Any]],
+    key: str,
+    duration_ms: Any,
+    *,
+    label: str,
+) -> None:
+    duration_float = _coerce_duration(duration_ms)
+    if duration_float is None or duration_float <= 0:
+        return
+    entry = target.setdefault(
+        key,
+        {
+            "duration_ms": 0.0,
+            "label": label,
+        },
+    )
+    try:
+        entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + duration_float
+    except (TypeError, ValueError):
+        entry["duration_ms"] = duration_float
+    if not entry.get("label"):
+        entry["label"] = label
+
+
+def build_download_latency_breakdown(
+    telemetry: "TempDownloadTelemetry" | None,
+) -> dict[str, dict[str, Any]]:
+    steps: dict[str, dict[str, Any]] = {}
+    if telemetry is None:
+        return steps
+
+    if telemetry.resolve_latency_ms:
+        _add_latency_step(
+            steps,
+            "download_resolve",
+            telemetry.resolve_latency_ms,
+            label="Resolve Media URL",
+        )
+    if telemetry.head_latency_ms:
+        _add_latency_step(
+            steps,
+            "download_head",
+            telemetry.head_latency_ms,
+            label="HEAD Probes",
+        )
+    if telemetry.download_latency_ms:
+        _add_latency_step(
+            steps,
+            "download_stream",
+            telemetry.download_latency_ms,
+            label="Download Stream",
+        )
+    if telemetry.disk_write_latency_ms:
+        _add_latency_step(
+            steps,
+            "download_write",
+            telemetry.disk_write_latency_ms,
+            label="Disk Writes",
+        )
+
+    return steps
+
+
+@dataclass(slots=True)
+class FrameMetrics:
+    scanned: Optional[int] = None
+    target: Optional[int] = None
+    media_total: Optional[int] = None
+    processed: Optional[int] = None
+    submitted: Optional[int] = None
+    pipeline_scanned: Optional[int] = None
+    pipeline_target: Optional[int] = None
+    dedupe_skipped: Optional[int] = None
+
+
+@dataclass(slots=True)
+class ScanTelemetry:
+    total_latency_ms: Optional[float]
+    pipeline_metrics: Optional[Dict[str, Any]]
+    frame_metrics: FrameMetrics
+    frame_lines: List[str] = field(default_factory=list)
+    breakdown_lines: List[str] = field(default_factory=list)
+    average_latency_per_frame_ms: Optional[float] = None
+    bytes_downloaded: Optional[int] = None
+    early_exit: Any = None
 
 
 def normalize_latency_breakdown(entries: Any) -> dict[str, dict[str, Any]]:
@@ -107,4 +207,182 @@ def merge_latency_breakdown(
         }
 
     return merged
+
+
+def format_latency_breakdown_lines(entries: Any) -> List[str]:
+    """Format latency breakdown data into ordered display lines."""
+
+    normalized = normalize_latency_breakdown(entries)
+    sortable: List[Tuple[str, str | None, float]] = []
+
+    for step_name, entry in normalized.items():
+        duration = None
+        if isinstance(entry, dict):
+            duration = _coerce_duration(entry.get("duration_ms"))
+        if duration is None:
+            continue
+
+        label_value = None
+        if isinstance(entry, dict) and entry.get("label") is not None:
+            label_value = str(entry.get("label"))
+
+        sortable.append((str(step_name), label_value, duration))
+
+    sortable.sort(key=lambda item: item[2], reverse=True)
+
+    lines: List[str] = []
+    for step_name, label, duration in sortable:
+        if label and step_name and label != step_name:
+            lines.append(f"• {label} (`{step_name}`): {duration:.2f} ms")
+        elif label:
+            lines.append(f"• {label}: {duration:.2f} ms")
+        else:
+            lines.append(f"• {step_name}: {duration:.2f} ms")
+
+    return lines
+
+
+def extract_pipeline_metrics(scan_result: Any) -> dict[str, Any] | None:
+    if not isinstance(scan_result, dict):
+        return None
+    pipeline_metrics = scan_result.get("pipeline_metrics")
+    return pipeline_metrics if isinstance(pipeline_metrics, dict) else None
+
+
+def extract_total_latency_ms(
+    pipeline_metrics: Any,
+    fallback_total_ms: Any = None,
+) -> float | None:
+    candidate = None
+    if isinstance(pipeline_metrics, dict):
+        candidate = _coerce_duration(pipeline_metrics.get("total_latency_ms"))
+        if candidate is None:
+            candidate = _coerce_duration(pipeline_metrics.get("total_duration_ms"))
+    if candidate is not None:
+        return candidate
+    return _coerce_duration(fallback_total_ms)
+
+
+def extract_frame_metrics(
+    scan_result: Any,
+    pipeline_metrics: Any,
+) -> FrameMetrics:
+    if not isinstance(pipeline_metrics, dict):
+        pipeline_metrics = None
+
+    if not isinstance(scan_result, dict):
+        scan_result = {}
+
+    return FrameMetrics(
+        scanned=_coerce_int(scan_result.get("video_frames_scanned")),
+        target=_coerce_int(scan_result.get("video_frames_target")),
+        media_total=_coerce_int(scan_result.get("video_frames_media_total")),
+        processed=_coerce_int((pipeline_metrics or {}).get("frames_processed")),
+        submitted=_coerce_int((pipeline_metrics or {}).get("frames_submitted")),
+        pipeline_scanned=_coerce_int((pipeline_metrics or {}).get("frames_scanned")),
+        pipeline_target=_coerce_int((pipeline_metrics or {}).get("frames_target")),
+        dedupe_skipped=_coerce_int((pipeline_metrics or {}).get("dedupe_skipped")),
+    )
+
+
+def format_frame_metrics_lines(metrics: FrameMetrics) -> List[str]:
+    lines: List[str] = []
+
+    parts: List[str] = []
+    if metrics.scanned is not None or metrics.target is not None:
+        scanned_display = str(metrics.scanned or 0)
+        if metrics.target is None:
+            target_display = "unknown"
+        else:
+            target_display = str(metrics.target)
+        parts.append(f"scan {scanned_display}/{target_display}")
+    if metrics.media_total is not None:
+        parts.append(f"media total {metrics.media_total}")
+    if parts:
+        lines.append("Video Frames: " + ", ".join(parts))
+
+    for label, value in (
+        ("Processed Frames", metrics.processed),
+        ("Submitted Frames", metrics.submitted),
+        ("Scanned Frames", metrics.pipeline_scanned),
+        ("Target Frames", metrics.pipeline_target),
+        ("Dedupe Skipped", metrics.dedupe_skipped),
+    ):
+        if value is not None:
+            lines.append(f"{label}: {value}")
+
+    return lines
+
+
+def format_video_scan_progress(metrics: FrameMetrics) -> str | None:
+    if metrics.scanned is None:
+        return None
+
+    scanned_display = str(metrics.scanned)
+    if metrics.target is None:
+        target_display = "None"
+    else:
+        target_display = str(metrics.target)
+
+    return f"{scanned_display}/{target_display}"
+
+
+def compute_average_latency_per_frame(
+    total_duration_ms: Any,
+    metrics: FrameMetrics,
+) -> float | None:
+    duration = _coerce_duration(total_duration_ms)
+    if duration is None or metrics.scanned is None or metrics.scanned <= 0:
+        return None
+    return duration / float(metrics.scanned)
+
+
+def collect_scan_telemetry(
+    scan_result: Any,
+    *,
+    fallback_total_ms: Any = None,
+) -> ScanTelemetry:
+    pipeline_metrics = extract_pipeline_metrics(scan_result)
+    total_latency_ms = extract_total_latency_ms(pipeline_metrics, fallback_total_ms)
+    frame_metrics = extract_frame_metrics(scan_result, pipeline_metrics)
+
+    if isinstance(pipeline_metrics, dict):
+        breakdown_source = pipeline_metrics.get("latency_breakdown_ms")
+        bytes_downloaded = _coerce_int(pipeline_metrics.get("bytes_downloaded"))
+        early_exit = pipeline_metrics.get("early_exit")
+    else:
+        breakdown_source = None
+        bytes_downloaded = None
+        early_exit = None
+
+    frame_lines = format_frame_metrics_lines(frame_metrics)
+    breakdown_lines = format_latency_breakdown_lines(breakdown_source)
+    average_latency_per_frame = compute_average_latency_per_frame(
+        total_latency_ms if total_latency_ms is not None else fallback_total_ms,
+        frame_metrics,
+    )
+    if average_latency_per_frame is not None:
+        frame_lines.append(f"Average Latency / Frame: {average_latency_per_frame:.2f} ms")
+
+    if (
+        frame_metrics.dedupe_skipped is not None
+        and frame_metrics.pipeline_scanned is not None
+        and frame_metrics.dedupe_skipped >= 0
+        and frame_metrics.pipeline_scanned >= 0
+    ):
+        total_considered = frame_metrics.dedupe_skipped + frame_metrics.pipeline_scanned
+        if total_considered > 0:
+            dedupe_ratio = (frame_metrics.dedupe_skipped / total_considered) * 100.0
+            frame_lines.append(f"Dedupe Savings: {dedupe_ratio:.2f}%")
+
+    return ScanTelemetry(
+        total_latency_ms=total_latency_ms,
+        pipeline_metrics=pipeline_metrics,
+        frame_metrics=frame_metrics,
+        frame_lines=frame_lines,
+        breakdown_lines=breakdown_lines,
+        average_latency_per_frame_ms=average_latency_per_frame,
+        bytes_downloaded=bytes_downloaded,
+        early_exit=early_exit,
+    )
 

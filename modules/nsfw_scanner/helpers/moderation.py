@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import os
+import time
 from typing import Any
 
 import openai
@@ -59,6 +60,43 @@ async def moderator_api(
     inputs: list[Any] | str = []
     has_image_input = image_path is not None or image_bytes is not None
 
+    timings: dict[str, float] = {
+        "payload_prepare_ms": 0.0,
+        "resource_latency_ms": 0.0,
+        "api_call_ms": 0.0,
+        "vector_add_ms": 0.0,
+    }
+
+    def _finalize(payload: dict[str, Any]) -> dict[str, Any]:
+        breakdown: dict[str, dict[str, Any]] = {}
+        if timings["payload_prepare_ms"] > 0:
+            breakdown["moderation_payload"] = {
+                "duration_ms": timings["payload_prepare_ms"],
+                "label": "Moderator Payload Prep",
+            }
+        if timings["resource_latency_ms"] > 0:
+            breakdown["moderation_resource"] = {
+                "duration_ms": timings["resource_latency_ms"],
+                "label": "Moderator Client Resolve",
+            }
+        if timings["api_call_ms"] > 0:
+            breakdown["moderation_request"] = {
+                "duration_ms": timings["api_call_ms"],
+                "label": "Moderator API Request",
+            }
+        if timings["vector_add_ms"] > 0:
+            breakdown["moderation_vector"] = {
+                "duration_ms": timings["vector_add_ms"],
+                "label": "Vector Maintenance",
+            }
+        if breakdown:
+            pipeline_metrics = payload.setdefault("pipeline_metrics", {})
+            moderator_breakdown = pipeline_metrics.setdefault(
+                "moderator_breakdown_ms", {}
+            )
+            moderator_breakdown.update(breakdown)
+        return payload
+
     if text and not has_image_input:
         inputs = text
 
@@ -66,22 +104,30 @@ async def moderator_api(
         b64_data: str | None = None
         if image_bytes is not None:
             try:
+                started = time.perf_counter()
                 b64_data = base64.b64encode(image_bytes).decode()
+                timings["payload_prepare_ms"] += (
+                    time.perf_counter() - started
+                ) * 1000
             except Exception as exc:
                 print(f"[moderator_api] Failed to encode image bytes: {exc}")
-                return result
+                return _finalize(result)
         elif image_path is not None:
             if not os.path.exists(image_path):
                 print(f"[moderator_api] Image path does not exist: {image_path}")
-                return result
+                return _finalize(result)
             try:
+                started = time.perf_counter()
                 b64_data = await asyncio.to_thread(file_to_b64, image_path)
+                timings["payload_prepare_ms"] += (
+                    time.perf_counter() - started
+                ) * 1000
             except Exception as exc:  # pragma: no cover - best effort logging
                 print(f"[moderator_api] Error reading image {image_path}: {exc}")
-                return result
+                return _finalize(result)
         if not b64_data:
             print("[moderator_api] No image content was provided")
-            return result
+            return _finalize(result)
         mime_type = image_mime or "image/jpeg"
         inputs = [
             {
@@ -92,7 +138,7 @@ async def moderator_api(
 
     if not inputs:
         print("[moderator_api] No inputs were provided")
-        return result
+        return _finalize(result)
 
     resolved_allowed_categories = allowed_categories
     resolved_threshold = threshold
@@ -128,11 +174,17 @@ async def moderator_api(
             await asyncio.sleep(2)
             continue
         try:
+            resource_started = time.perf_counter()
             moderations_resource = await _get_moderations_resource(client)
+            timings["resource_latency_ms"] += (
+                time.perf_counter() - resource_started
+            ) * 1000
+            api_started = time.perf_counter()
             response = await moderations_resource.create(
                 model="omni-moderation-latest" if has_image_input else "text-moderation-latest",
                 input=inputs,
             )
+            timings["api_call_ms"] += (time.perf_counter() - api_started) * 1000
         except openai.AuthenticationError:
             print("[moderator_api] Authentication failed. Marking key as not working.")
             await api.set_api_key_not_working(api_key=encrypted_key, bot=scanner.bot)
@@ -154,7 +206,7 @@ async def moderator_api(
 
         results = response.results[0]
         guild_flagged_categories: list[tuple[str, float]] = []
-        summary_categories = {} # category: score
+        summary_categories = {}  # category: score
         flagged_any = False
         for category, is_flagged in results.categories.__dict__.items():
             normalized_category = category.replace("/", "_").replace("-", "_")
@@ -166,11 +218,15 @@ async def moderator_api(
             summary_categories[normalized_category] = score
 
             if is_flagged and not skip_vector_add and clip_vectors.is_available():
+                vector_started = time.perf_counter()
                 await asyncio.to_thread(
                     clip_vectors.add_vector,
                     image,
                     metadata={"category": normalized_category, "score": score},
                 )
+                timings["vector_add_ms"] += (
+                    time.perf_counter() - vector_started
+                ) * 1000
 
             if score < resolved_threshold:
                 continue
@@ -188,30 +244,38 @@ async def moderator_api(
             and clip_vectors.is_available()
             and _should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
         ):
+            vector_started = time.perf_counter()
             await asyncio.to_thread(
                 clip_vectors.add_vector,
                 image,
                 metadata={"category": None, "score": 0},
             )
+            timings["vector_add_ms"] += (
+                time.perf_counter() - vector_started
+            ) * 1000
 
         if guild_flagged_categories:
             guild_flagged_categories.sort(key=lambda item: item[1], reverse=True)
             best_category, best_score = guild_flagged_categories[0]
-            return {
-                "is_nsfw": True,
-                "category": best_category,
-                "score": best_score,
+            return _finalize(
+                {
+                    "is_nsfw": True,
+                    "category": best_category,
+                    "score": best_score,
+                    "reason": "openai_moderation",
+                    "threshold": resolved_threshold,
+                    "summary_categories": summary_categories,
+                }
+            )
+
+        return _finalize(
+            {
+                "is_nsfw": False,
                 "reason": "openai_moderation",
+                "flagged_any": flagged_any,
                 "threshold": resolved_threshold,
                 "summary_categories": summary_categories,
             }
+        )
 
-        return {
-            "is_nsfw": False,
-            "reason": "openai_moderation",
-            "flagged_any": flagged_any,
-            "threshold": resolved_threshold,
-            "summary_categories": summary_categories,
-        }
-
-    return result
+    return _finalize(result)

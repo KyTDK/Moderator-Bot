@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 import os
+import time
 import uuid
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from typing import AsyncIterator
 from urllib.parse import urlparse, urlunparse
 
@@ -23,16 +27,25 @@ def is_tenor_host(host: str) -> bool:
     return host == "tenor.com" or host.endswith(".tenor.com")
 
 
-async def _probe_head(session, url: str) -> tuple[bool, int | None]:
+async def _probe_head(session, url: str) -> tuple[bool, int | None, float | None]:
+    started = time.perf_counter()
     try:
-        async with session.head(url, allow_redirects=True, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+        async with session.head(
+            url,
+            allow_redirects=True,
+            timeout=aiohttp.ClientTimeout(total=5),
+        ) as resp:
             if resp.status < 400:
                 length_header = resp.headers.get("Content-Length")
-                content_length = int(length_header) if length_header and length_header.isdigit() else None
-                return True, content_length
+                content_length = (
+                    int(length_header)
+                    if length_header and length_header.isdigit()
+                    else None
+                )
+                return True, content_length, (time.perf_counter() - started) * 1000
     except Exception:
-        return False, None
-    return False, None
+        return False, None, (time.perf_counter() - started) * 1000
+    return False, None, (time.perf_counter() - started) * 1000
 
 
 async def resolve_media_url(session, url: str, *, prefer_video: bool = True) -> str:
@@ -48,10 +61,51 @@ async def resolve_media_url(session, url: str, *, prefer_video: bool = True) -> 
     for alt_ext in TENOR_VIDEO_EXTS:
         alt_path = f"{base}{alt_ext}"
         alt_url = urlunparse(parsed._replace(path=alt_path))
-        ok, _ = await _probe_head(session, alt_url)
+        ok, _, _ = await _probe_head(session, alt_url)
         if ok:
             return alt_url
     return url
+
+
+@dataclass(slots=True)
+class TempDownloadTelemetry:
+    """Detailed timings captured during a temporary download."""
+
+    resolve_latency_ms: float | None = None
+    head_latency_ms: float = 0.0
+    download_latency_ms: float | None = None
+    disk_write_latency_ms: float = 0.0
+    bytes_downloaded: int | None = None
+    content_length: int | None = None
+    resolved_url: str | None = None
+
+    def record_head_duration(self, duration_ms: float | None) -> None:
+        if duration_ms is None:
+            return
+        try:
+            duration_value = float(duration_ms)
+        except (TypeError, ValueError):
+            return
+        if duration_value <= 0:
+            return
+        self.head_latency_ms += duration_value
+
+    def record_disk_write(self, duration_ms: float | None) -> None:
+        if duration_ms is None:
+            return
+        try:
+            duration_value = float(duration_ms)
+        except (TypeError, ValueError):
+            return
+        if duration_value <= 0:
+            return
+        self.disk_write_latency_ms += duration_value
+
+
+@dataclass(slots=True)
+class TempDownloadResult:
+    path: str
+    telemetry: TempDownloadTelemetry
 
 
 def _resolve_stream_config(content_length: int | None) -> tuple[int, int]:
@@ -76,23 +130,29 @@ async def temp_download(
     *,
     prefer_video: bool = True,
     download_cap_bytes: int | None = DEFAULT_DOWNLOAD_CAP_BYTES,
-) -> AsyncIterator[str]:
+) -> AsyncIterator[TempDownloadResult]:
     if session is None:
         raise RuntimeError("NSFWScanner session is not initialised. Call start() first.")
 
     os.makedirs(TMP_DIR, exist_ok=True)
 
+    telemetry = TempDownloadTelemetry()
+
+    resolve_started = time.perf_counter()
     resolved_url = await resolve_media_url(session, url, prefer_video=prefer_video)
+    telemetry.resolve_latency_ms = (time.perf_counter() - resolve_started) * 1000
     unlimited = download_cap_bytes is None
     if ext and not ext.startswith('.'):
         ext = '.' + ext
     resolved_path_ext = os.path.splitext(urlparse(resolved_url).path)[1]
     ext = ext or resolved_path_ext or '.bin'
-    head_ok, head_length = await _probe_head(session, resolved_url)
+    head_ok, head_length, head_duration = await _probe_head(session, resolved_url)
+    telemetry.record_head_duration(head_duration)
     if not unlimited and head_ok and head_length and head_length > download_cap_bytes:
         if resolved_url != url:
             resolved_url = url
-            head_ok, head_length = await _probe_head(session, resolved_url)
+            head_ok, head_length, head_duration = await _probe_head(session, resolved_url)
+            telemetry.record_head_duration(head_duration)
             if head_ok and head_length and head_length > download_cap_bytes:
                 raise ValueError(f"Download exceeds cap ({head_length} bytes)")
         else:
@@ -100,7 +160,11 @@ async def temp_download(
 
     path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{ext}")
 
+    telemetry.content_length = head_length
+    telemetry.resolved_url = resolved_url
+
     try:
+        download_started = time.perf_counter()
         async with session.get(resolved_url) as resp:
             resp.raise_for_status()
             response_length = resp.content_length or head_length
@@ -122,10 +186,20 @@ async def temp_download(
                     if not unlimited and total_downloaded > download_cap_bytes:
                         raise ValueError("Download exceeded cap")
                     if len(buffer) >= buffer_limit:
+                        write_started = time.perf_counter()
                         file_obj.write(buffer)
+                        telemetry.record_disk_write(
+                            (time.perf_counter() - write_started) * 1000
+                        )
                         buffer = bytearray()
                 if buffer:
+                    write_started = time.perf_counter()
                     file_obj.write(buffer)
+                    telemetry.record_disk_write(
+                        (time.perf_counter() - write_started) * 1000
+                    )
+            telemetry.download_latency_ms = (time.perf_counter() - download_started) * 1000
+            telemetry.bytes_downloaded = total_downloaded
     except Exception:
         try:
             os.remove(path)
@@ -134,7 +208,7 @@ async def temp_download(
         raise
 
     try:
-        yield path
+        yield TempDownloadResult(path=path, telemetry=telemetry)
     finally:
         try:
             os.remove(path)

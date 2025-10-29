@@ -1,5 +1,5 @@
 from .attachments import AttachmentSettingsCache, check_attachment
-from .downloads import is_tenor_host, temp_download
+from .downloads import TempDownloadResult, is_tenor_host, temp_download
 from .images import (
     ImageProcessingContext,
     build_image_processing_context,
@@ -13,6 +13,7 @@ __all__ = [
     "AttachmentSettingsCache",
     "check_attachment",
     "temp_download",
+    "TempDownloadResult",
     "is_tenor_host",
     "ImageProcessingContext",
     "build_image_processing_context",

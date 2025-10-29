@@ -122,6 +122,7 @@ async def process_video(
 
         return await asyncio.to_thread(_produce)
 
+    extraction_started = time.perf_counter()
     extractor_task = asyncio.create_task(_run_extraction())
 
     processed_frames = 0
@@ -150,11 +151,37 @@ async def process_video(
         "frames_submitted": 0,
         "frames_processed": 0,
         "decode_latency_ms": 0.0,
+        "batch_decode_latency_ms": 0.0,
+        "batch_similarity_latency_ms": 0.0,
+        "moderation_latency_ms": 0.0,
+        "moderation_wait_latency_ms": 0.0,
+        "queue_wait_latency_ms": 0.0,
+        "dedupe_check_latency_ms": 0.0,
+        "extraction_latency_ms": 0.0,
         "flush_count": 0,
         "early_exit": None,
         "bytes_downloaded": None,
     }
     latency_steps: dict[str, dict[str, Any]] = {}
+
+    def _record_latency(name: str, duration_ms: float, label: str) -> None:
+        if duration_ms <= 0:
+            return
+        entry = latency_steps.setdefault(
+            name,
+            {
+                "duration_ms": 0.0,
+                "label": label,
+            },
+        )
+        try:
+            entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + float(
+                duration_ms
+            )
+        except (TypeError, ValueError):
+            entry["duration_ms"] = float(duration_ms)
+        if not entry.get("label"):
+            entry["label"] = label
     try:
         metrics_payload["bytes_downloaded"] = os.path.getsize(original_filename)
     except OSError:
@@ -172,15 +199,23 @@ async def process_video(
         if not batch:
             return False
         metrics_payload["frames_submitted"] += len(batch)
-        started = time.perf_counter()
-        results = await process_image_batch(
+        results, batch_metrics = await process_image_batch(
             scanner,
             batch.copy(),
             context,
             convert_to_png=False,
         )
-        metrics_payload["decode_latency_ms"] += max(
-            (time.perf_counter() - started) * 1000, 0
+        decode_ms = float(batch_metrics.get("decode_latency_ms") or 0.0)
+        metrics_payload["decode_latency_ms"] += decode_ms
+        metrics_payload["batch_decode_latency_ms"] += decode_ms
+        metrics_payload["batch_similarity_latency_ms"] += float(
+            batch_metrics.get("similarity_latency_ms") or 0.0
+        )
+        metrics_payload["moderation_latency_ms"] += float(
+            batch_metrics.get("moderation_latency_ms") or 0.0
+        )
+        metrics_payload["moderation_wait_latency_ms"] += float(
+            batch_metrics.get("moderation_wait_latency_ms") or 0.0
         )
         for frame_data, scan in results:
             processed_frames += 1
@@ -245,10 +280,17 @@ async def process_video(
     try:
         while True:
             try:
+                wait_started = time.perf_counter()
                 item = await asyncio.wait_for(
                     queue.get(), timeout=flush_timeout if batch else None
                 )
+                metrics_payload["queue_wait_latency_ms"] += (
+                    time.perf_counter() - wait_started
+                ) * 1000
             except asyncio.TimeoutError:
+                metrics_payload["queue_wait_latency_ms"] += (
+                    time.perf_counter() - wait_started
+                ) * 1000
                 if batch:
                     metrics_payload["flush_count"] += 1
                     flagged = await _process_batch()
@@ -268,11 +310,18 @@ async def process_video(
                 continue
 
             if dedupe_enabled:
+                dedupe_started = time.perf_counter()
                 signature = frame_data.signature
                 if frames_are_similar(last_signature, signature, threshold=dedupe_threshold):
                     metrics_payload["dedupe_skipped"] += 1
+                    metrics_payload["dedupe_check_latency_ms"] += (
+                        time.perf_counter() - dedupe_started
+                    ) * 1000
                     continue
                 last_signature = signature
+                metrics_payload["dedupe_check_latency_ms"] += (
+                    time.perf_counter() - dedupe_started
+                ) * 1000
 
             batch.append(frame_data)
             if len(batch) >= batch_size:
@@ -289,44 +338,69 @@ async def process_video(
     finally:
         stop_event.set()
         await extractor_task
+        metrics_payload["extraction_latency_ms"] += (
+            time.perf_counter() - extraction_started
+        ) * 1000
         safe_delete(original_filename)
 
     total_duration_ms = max((time.perf_counter() - overall_started) * 1000, 0.0)
     metrics_payload["total_latency_ms"] = total_duration_ms
-    frame_pipeline_ms = float(metrics_payload.get("decode_latency_ms") or 0.0)
+
+    _record_latency(
+        "frame_decode",
+        float(metrics_payload.get("batch_decode_latency_ms") or 0.0),
+        "Frame Decode",
+    )
+    _record_latency(
+        "frame_similarity",
+        float(metrics_payload.get("batch_similarity_latency_ms") or 0.0),
+        "Frame Similarity Search",
+    )
+    _record_latency(
+        "frame_moderation",
+        float(metrics_payload.get("moderation_latency_ms") or 0.0),
+        "Frame Moderator Calls",
+    )
+    _record_latency(
+        "frame_moderation_wait",
+        float(metrics_payload.get("moderation_wait_latency_ms") or 0.0),
+        "Moderator Queue Wait",
+    )
+    _record_latency(
+        "frame_dedupe",
+        float(metrics_payload.get("dedupe_check_latency_ms") or 0.0),
+        "Dedupe Checks",
+    )
+    _record_latency(
+        "frame_extraction",
+        float(metrics_payload.get("extraction_latency_ms") or 0.0),
+        "Frame Extraction",
+    )
+    _record_latency(
+        "frame_queue_wait",
+        float(metrics_payload.get("queue_wait_latency_ms") or 0.0),
+        "Frame Queue Wait",
+    )
+
+    frame_pipeline_ms = (
+        float(metrics_payload.get("batch_decode_latency_ms") or 0.0)
+        + float(metrics_payload.get("batch_similarity_latency_ms") or 0.0)
+        + float(metrics_payload.get("moderation_latency_ms") or 0.0)
+        + float(metrics_payload.get("moderation_wait_latency_ms") or 0.0)
+        + float(metrics_payload.get("dedupe_check_latency_ms") or 0.0)
+    )
     if frame_pipeline_ms > 0:
-        existing_frame_entry = latency_steps.get("frame_pipeline")
-        frame_pipeline_entry = {
-            "duration_ms": frame_pipeline_ms,
-            "label": "Frame Pipeline",
-        }
-        if isinstance(existing_frame_entry, dict):
-            try:
-                frame_pipeline_entry["duration_ms"] += float(
-                    existing_frame_entry.get("duration_ms") or 0.0
-                )
-            except (TypeError, ValueError):
-                pass
-            if not frame_pipeline_entry.get("label"):
-                frame_pipeline_entry["label"] = existing_frame_entry.get("label")
-        latency_steps["frame_pipeline"] = frame_pipeline_entry
-    overhead_ms = max(total_duration_ms - frame_pipeline_ms, 0.0)
+        _record_latency("frame_pipeline", frame_pipeline_ms, "Frame Pipeline")
+
+    overhead_ms = max(
+        total_duration_ms
+        - frame_pipeline_ms
+        - float(metrics_payload.get("queue_wait_latency_ms") or 0.0)
+        - float(metrics_payload.get("extraction_latency_ms") or 0.0),
+        0.0,
+    )
     if overhead_ms > 0:
-        existing_overhead_entry = latency_steps.get("coordination")
-        coordination_entry = {
-            "duration_ms": overhead_ms,
-            "label": "Coordinator Overhead",
-        }
-        if isinstance(existing_overhead_entry, dict):
-            try:
-                coordination_entry["duration_ms"] += float(
-                    existing_overhead_entry.get("duration_ms") or 0.0
-                )
-            except (TypeError, ValueError):
-                pass
-            if not coordination_entry.get("label"):
-                coordination_entry["label"] = existing_overhead_entry.get("label")
-        latency_steps["coordination"] = coordination_entry
+        _record_latency("coordination", overhead_ms, "Coordinator Overhead")
     metrics_payload["latency_breakdown_ms"] = {
         key: value
         for key, value in latency_steps.items()

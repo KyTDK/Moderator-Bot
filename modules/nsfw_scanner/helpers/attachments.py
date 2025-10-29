@@ -15,8 +15,14 @@ from ..utils.file_types import (
     FILE_TYPE_VIDEO,
     determine_file_type,
 )
+from ..logging_utils import log_slow_scan_if_needed
 from .images import build_image_processing_context, process_image
-from .metrics import normalize_latency_breakdown
+from .metrics import (
+    collect_scan_telemetry,
+    format_video_scan_progress,
+    merge_latency_breakdown,
+    normalize_latency_breakdown,
+)
 from .videos import process_video
 
 REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
@@ -228,14 +234,50 @@ async def check_attachment(
     message,
     perform_actions: bool = True,
     settings_cache: AttachmentSettingsCache | None = None,
+    *,
+    pre_latency_steps: dict[str, dict[str, Any]] | None = None,
+    pre_download_bytes: int | None = None,
 ) -> bool:
     if settings_cache is None:
         settings_cache = AttachmentSettingsCache()
 
+    latency_steps = normalize_latency_breakdown(pre_latency_steps)
+
+    def _record_latency(name: str, duration_ms: float, label: str) -> None:
+        if duration_ms <= 0:
+            return
+        entry = latency_steps.setdefault(
+            name,
+            {
+                "duration_ms": 0.0,
+                "label": label,
+            },
+        )
+        try:
+            entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + float(
+                duration_ms
+            )
+        except (TypeError, ValueError):
+            entry["duration_ms"] = float(duration_ms)
+        if not entry.get("label"):
+            entry["label"] = label
+
     filename = os.path.basename(temp_filename)
+    mime_started = time.perf_counter()
     file_type, detected_mime = determine_file_type(temp_filename)
+    _record_latency(
+        "attachment_mime_detection",
+        (time.perf_counter() - mime_started) * 1000,
+        "MIME Detection",
+    )
     try:
+        size_started = time.perf_counter()
         file_size = os.path.getsize(temp_filename)
+        _record_latency(
+            "attachment_filesize",
+            (time.perf_counter() - size_started) * 1000,
+            "File Size Lookup",
+        )
     except OSError:
         file_size = None
 
@@ -255,7 +297,15 @@ async def check_attachment(
             accelerated_cache["value"] = None
             return None
         try:
-            accelerated_cache["value"] = await mysql.is_accelerated(guild_id=guild_id)
+            lookup_started = time.perf_counter()
+            accelerated_cache["value"] = await mysql.is_accelerated(
+                guild_id=guild_id
+            )
+            _record_latency(
+                "attachment_accelerated_lookup",
+                (time.perf_counter() - lookup_started) * 1000,
+                "Accelerated Lookup",
+            )
         except Exception:
             accelerated_cache["value"] = None
         value = accelerated_cache["value"]
@@ -320,19 +370,31 @@ async def check_attachment(
 
     settings = settings_cache.get_scan_settings()
     if settings is None and guild_id is not None:
+        settings_started = time.perf_counter()
         settings = await mysql.get_settings(
             guild_id,
             [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
+        )
+        _record_latency(
+            "attachment_settings_lookup",
+            (time.perf_counter() - settings_started) * 1000,
+            "Settings Lookup",
         )
         settings_cache.set_scan_settings(settings)
         settings = settings_cache.get_scan_settings()
     settings = settings or {}
 
     accelerated_value = await _get_accelerated()
+    context_started = time.perf_counter()
     context = await build_image_processing_context(
         guild_id,
         settings=settings,
         accelerated=accelerated_value,
+    )
+    _record_latency(
+        "attachment_context_build",
+        (time.perf_counter() - context_started) * 1000,
+        "Build Scan Context",
     )
     pipeline_accelerated = bool(context.accelerated)
 
@@ -352,7 +414,13 @@ async def check_attachment(
             if settings_cache.has_premium_status():
                 premium_status = settings_cache.get_premium_status()
             else:
+                premium_started = time.perf_counter()
                 premium_status = await mysql.get_premium_status(guild_id)
+                _record_latency(
+                    "attachment_premium_lookup",
+                    (time.perf_counter() - premium_started) * 1000,
+                    "Premium Lookup",
+                )
                 settings_cache.set_premium_status(premium_status)
                 premium_status = settings_cache.get_premium_status()
         file, scan_result = await process_video(
@@ -371,6 +439,39 @@ async def check_attachment(
 
     translator = _resolve_translator(scanner)
     await _emit_metrics(scan_result, "scan_complete")
+
+    scan_duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
+
+    if isinstance(scan_result, dict):
+        pipeline_metrics = scan_result.setdefault("pipeline_metrics", {})
+        existing_breakdown = pipeline_metrics.get("latency_breakdown_ms")
+        pipeline_metrics["latency_breakdown_ms"] = merge_latency_breakdown(
+            existing_breakdown,
+            latency_steps,
+        )
+        if pre_download_bytes is not None and pipeline_metrics.get("bytes_downloaded") is None:
+            pipeline_metrics["bytes_downloaded"] = pre_download_bytes
+        elif pipeline_metrics.get("bytes_downloaded") is None and file_size is not None:
+            pipeline_metrics["bytes_downloaded"] = file_size
+
+    telemetry = collect_scan_telemetry(
+        scan_result,
+        fallback_total_ms=scan_duration_ms,
+    )
+    total_latency_ms = telemetry.total_latency_ms
+    try:
+        await log_slow_scan_if_needed(
+            bot=scanner.bot,
+            scan_result=scan_result,
+            media_type=file_type,
+            detected_mime=detected_mime,
+            total_duration_ms=total_latency_ms,
+            filename=filename,
+            message=message,
+            telemetry=telemetry,
+        )
+    except Exception as exc:
+        print(f"[slow-log] Failed to emit slow scan log: {exc}")
 
     try:
         verbose_enabled = False
@@ -462,55 +563,24 @@ async def check_attachment(
                 ),
             )
 
-            duration_ms = int(max((time.perf_counter() - started_at) * 1000, 0))
+            duration_display_ms = (
+                int(total_latency_ms)
+                if total_latency_ms is not None
+                else scan_duration_ms
+            )
             embed.add_field(
                 name=_localize_field_name(translator, "latency_ms", guild_id),
-                value=f"{duration_ms} ms",
+                value=f"{duration_display_ms} ms",
                 inline=True,
             )
-            pipeline_metrics = (scan_result or {}).get("pipeline_metrics")
-            if isinstance(pipeline_metrics, dict):
-                breakdown_entries = pipeline_metrics.get("latency_breakdown_ms")
-                breakdown_lines: list[str] = []
-                normalized_map = normalize_latency_breakdown(breakdown_entries)
-                normalized_entries: list[tuple[str | None, str | None, float]] = []
-                for step_name, entry in normalized_map.items():
-                    duration_value = entry.get("duration_ms") if isinstance(entry, dict) else None
-                    if duration_value is None:
-                        continue
-                    try:
-                        duration_float = float(duration_value)
-                    except (TypeError, ValueError):
-                        continue
-                    if duration_float <= 0:
-                        continue
-                    label_value = None
-                    if isinstance(entry, dict) and entry.get("label") is not None:
-                        label_value = str(entry.get("label"))
-                    normalized_entries.append((step_name, label_value, duration_float))
-                if normalized_entries:
-                    normalized_entries.sort(key=lambda item: item[2], reverse=True)
-                    for step_name, label, duration in normalized_entries:
-                        if step_name and label and label != step_name:
-                            breakdown_lines.append(
-                                f"• {label} (`{step_name}`): {duration:.2f} ms"
-                            )
-                        elif label:
-                            breakdown_lines.append(
-                                f"• {label}: {duration:.2f} ms"
-                            )
-                        elif step_name:
-                            breakdown_lines.append(
-                                f"• {step_name}: {duration:.2f} ms"
-                            )
-                    if breakdown_lines:
-                        embed.add_field(
-                            name=_localize_field_name(
-                                translator, "latency_breakdown", guild_id
-                            ),
-                            value="\n".join(breakdown_lines)[:1024],
-                            inline=False,
-                        )
+            if telemetry.breakdown_lines:
+                embed.add_field(
+                    name=_localize_field_name(
+                        translator, "latency_breakdown", guild_id
+                    ),
+                    value="\n".join(telemetry.breakdown_lines)[:1024],
+                    inline=False,
+                )
             if scan_result:
                 reason_value = _localize_reason(
                     translator, scan_result.get("reason"), guild_id
@@ -612,27 +682,22 @@ async def check_attachment(
                         )
                     except Exception:
                         pass
-                if scan_result.get("video_frames_scanned") is not None:
-                    scanned = scan_result.get("video_frames_scanned")
-                    target = scan_result.get("video_frames_target")
+                frame_metrics = telemetry.frame_metrics
+                if frame_metrics.scanned is not None:
+                    progress_value = format_video_scan_progress(frame_metrics)
                     embed.add_field(
                         name=_localize_field_name(
                             translator, "video_frames", guild_id
                         ),
-                        value=f"{scanned}/{target}",
+                        value=str(progress_value)[:1024] if progress_value else "?",
                         inline=True,
                     )
-                    try:
-                        scanned_frames = float(scanned)
-                    except (TypeError, ValueError):
-                        scanned_frames = 0.0
-                    if scanned_frames > 0:
-                        average_latency_per_frame = duration_ms / scanned_frames
+                    if telemetry.average_latency_per_frame_ms is not None:
                         embed.add_field(
                             name=_localize_field_name(
                                 translator, "average_latency_per_frame_ms", guild_id
                             ),
-                            value=f"{average_latency_per_frame:.2f} ms/frame",
+                            value=f"{telemetry.average_latency_per_frame_ms:.2f} ms/frame",
                             inline=True,
                         )
 

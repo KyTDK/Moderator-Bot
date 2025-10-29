@@ -38,6 +38,7 @@ from .helpers import (
     is_tenor_host,
     temp_download as helper_temp_download,
 )
+from .helpers.metrics import build_download_latency_breakdown
 from .utils.file_ops import safe_delete
 
 log = logging.getLogger(__name__)
@@ -262,17 +263,21 @@ class NSFWScanner:
         settings_cache: AttachmentSettingsCache,
         source: str,
         log_context: str,
+        pre_latency_steps: dict[str, dict[str, Any]] | None = None,
+        pre_download_bytes: int | None = None,
     ) -> bool:
         try:
-            return await helper_check_attachment(
-                self,
-                author,
-                temp_filename,
-                nsfw_callback,
-                guild_id,
-                message,
-                settings_cache=settings_cache,
-            )
+                return await helper_check_attachment(
+                    self,
+                    author,
+                    temp_filename,
+                    nsfw_callback,
+                    guild_id,
+                    message,
+                    settings_cache=settings_cache,
+                    pre_latency_steps=pre_latency_steps,
+                    pre_download_bytes=pre_download_bytes,
+                )
         except Exception as scan_exc:
             log.exception("Failed to scan %s %s", log_context, source)
             await self._report_scan_failure(
@@ -309,12 +314,18 @@ class NSFWScanner:
                 source_url,
                 download_cap_bytes=download_cap_bytes,
                 **download_kwargs,
-            ) as temp_filename:
-                processed_path = temp_filename
+            ) as download_result:
+                processed_path = download_result.path
                 cleanup_paths: list[str] = []
+                pre_latency_steps = build_download_latency_breakdown(
+                    download_result.telemetry
+                )
+                pre_download_bytes = download_result.telemetry.bytes_downloaded
                 try:
                     if postprocess is not None:
-                        processed_path, extra_paths = await postprocess(temp_filename)
+                        processed_path, extra_paths = await postprocess(
+                            download_result.path
+                        )
                         if isinstance(extra_paths, str):
                             cleanup_paths = [extra_paths]
                         else:
@@ -328,6 +339,8 @@ class NSFWScanner:
                         settings_cache=settings_cache,
                         source=source_url,
                         log_context=download_context,
+                        pre_latency_steps=pre_latency_steps,
+                        pre_download_bytes=pre_download_bytes,
                     )
                 except Exception:
                     scan_failed = True
@@ -433,9 +446,19 @@ class NSFWScanner:
 
         for attachment in attachments:
             suffix = os.path.splitext(attachment.filename)[1] or ""
+            pre_steps: dict[str, dict[str, Any]] | None = None
+            pre_bytes = getattr(attachment, "size", None)
             with NamedTemporaryFile(delete=False, dir=TMP_DIR, suffix=suffix) as tmp:
                 try:
+                    save_started = time.perf_counter()
                     await attachment.save(tmp.name)
+                    pre_steps = {
+                        "download_attachment_save": {
+                            "duration_ms": (time.perf_counter() - save_started)
+                            * 1000,
+                            "label": "Attachment Save",
+                        }
+                    }
                 except NotFound as exc:
                     safe_delete(tmp.name)
                     print(f"[NSFW] Attachment not found: {attachment.url}")
@@ -456,6 +479,8 @@ class NSFWScanner:
                     settings_cache=settings_cache,
                     source=getattr(attachment, "url", attachment.filename),
                     log_context="attachment",
+                    pre_latency_steps=pre_steps,
+                    pre_download_bytes=pre_bytes,
                 ):
                     return True
             finally:

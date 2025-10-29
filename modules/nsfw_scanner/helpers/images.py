@@ -268,7 +268,18 @@ async def _run_image_pipeline(
         vector_id = best_match.get("vector_id")
         if vector_id is not None:
             try:
+                delete_started = time.perf_counter()
                 await clip_vectors.delete_vectors([vector_id])
+                duration = (time.perf_counter() - delete_started) * 1000
+                if duration > 0:
+                    entry = latency_steps.setdefault(
+                        "vector_delete",
+                        {
+                            "duration_ms": 0.0,
+                            "label": "Vector Delete",
+                        },
+                    )
+                    entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + duration
             except Exception as exc:
                 print(
                     f"[process_image] Failed to delete vector {vector_id}: {exc}"
@@ -338,6 +349,11 @@ async def _run_image_pipeline(
         label="Moderator API",
     )
     if isinstance(response, dict):
+        pipeline_metrics = response.setdefault("pipeline_metrics", {})
+        if isinstance(pipeline_metrics, dict):
+            breakdown = pipeline_metrics.get("moderator_breakdown_ms")
+            if breakdown:
+                latency_steps = merge_latency_breakdown(latency_steps, breakdown)
         response.setdefault("max_similarity", max_similarity)
         response.setdefault("max_category", max_category)
         response.setdefault("high_accuracy", context.high_accuracy)
@@ -450,7 +466,10 @@ async def process_image_batch(
     context: ImageProcessingContext,
     *,
     convert_to_png: bool = False,
-) -> list[tuple[ExtractedFrame, dict[str, Any] | None]]:
+) -> tuple[
+    list[tuple[ExtractedFrame, dict[str, Any] | None]],
+    dict[str, float],
+]:
     """
     Analyse a batch of in-memory frames using shared settings/context.
     Returns list of (frame_data, result_dict).
@@ -459,6 +478,12 @@ async def process_image_batch(
     valid_images: list[Image.Image] = []
 
     decode_tasks: list[asyncio.Task[Image.Image | None]] = []
+    batch_metrics: dict[str, float] = {
+        "decode_latency_ms": 0.0,
+        "similarity_latency_ms": 0.0,
+        "moderation_latency_ms": 0.0,
+        "moderation_wait_latency_ms": 0.0,
+    }
     semaphore = asyncio.Semaphore(16 if context.accelerated else 1)
 
     async def _decode_frame(frame: ExtractedFrame) -> Image.Image | None:
@@ -472,7 +497,11 @@ async def process_image_batch(
     for frame in frame_payloads:
         decode_tasks.append(asyncio.create_task(_decode_frame(frame)))
 
+    decode_started = time.perf_counter()
     decoded_images = await asyncio.gather(*decode_tasks)
+    batch_metrics["decode_latency_ms"] += (
+        time.perf_counter() - decode_started
+    ) * 1000
 
     for frame, image in zip(frame_payloads, decoded_images):
         prepared.append((frame, image))
@@ -482,9 +511,13 @@ async def process_image_batch(
     similarity_batches: List[List[dict[str, Any]]] = []
     if valid_images:
         try:
+            similarity_started = time.perf_counter()
             similarity_batches = await asyncio.to_thread(
                 clip_vectors.query_similar_batch, valid_images, 0
             )
+            batch_metrics["similarity_latency_ms"] += (
+                time.perf_counter() - similarity_started
+            ) * 1000
         except Exception as exc:
             log.warning(
                 "Batch similarity search failed; continuing without matches: %s",
@@ -525,7 +558,12 @@ async def process_image_batch(
         response: dict[str, Any] | None = None
         if image is not None:
             try:
+                wait_started = time.perf_counter()
                 async with _MODERATION_API_SEMAPHORE:
+                    acquired_at = time.perf_counter()
+                    batch_metrics["moderation_wait_latency_ms"] += (
+                        acquired_at - wait_started
+                    ) * 1000
                     response = await _run_image_pipeline(
                         scanner,
                         image_path=None,
@@ -535,6 +573,9 @@ async def process_image_batch(
                         image_bytes=payload_bytes,
                         image_mime=payload_mime,
                     )
+                    batch_metrics["moderation_latency_ms"] += (
+                        time.perf_counter() - acquired_at
+                    ) * 1000
             finally:
                 image.close()
         return frame, response
@@ -555,4 +596,4 @@ async def process_image_batch(
             )
         )
 
-    return results
+    return results, batch_metrics
