@@ -16,6 +16,34 @@ log = logging.getLogger(__name__)
 SLOW_SCAN_THRESHOLD_MS = 20_000.0
 
 
+SCAN_REASON_DESCRIPTIONS: dict[str, str] = {
+    "openai_moderation": "The OpenAI moderation API completed successfully",
+    "openai_moderation_timeout": "The OpenAI moderation API timed out and provided no result",
+    "openai_moderation_http_timeout": "The HTTP request to the OpenAI moderation API timed out",
+    "similarity_match": "Similarity matching decided the final outcome before moderation finished",
+    "no_frames_extracted": "Video processing could not extract frames for moderation",
+    "no_nsfw_frames_detected": "Video scan completed with no NSFW frames detected",
+}
+
+
+SCAN_FAILURE_REASONS: set[str] = {
+    "openai_moderation_timeout",
+    "openai_moderation_http_timeout",
+    "no_frames_extracted",
+}
+
+
+MODERATOR_FAILURE_DESCRIPTIONS: dict[str, str] = {
+    "no_key_available": "No API key was available for the request",
+    "authentication_error": "Authentication with the OpenAI API failed",
+    "rate_limit_error": "OpenAI rate limits prevented the request from completing",
+    "openai_timeout": "The OpenAI moderation API did not respond before timing out",
+    "http_timeout": "The HTTP client timed out waiting for the OpenAI response",
+    "unexpected_api_error": "An unexpected error occurred while calling the OpenAI API",
+    "empty_results": "The OpenAI API returned no usable results",
+}
+
+
 def _format_latency(ms_value: float) -> str:
     seconds = ms_value / 1000.0
     return f"{ms_value:.2f} ms ({seconds:.2f} s)"
@@ -88,12 +116,23 @@ async def log_slow_scan_if_needed(
             inline=True,
         )
 
+    failure_detail_lines: list[str] = []
+
     if isinstance(scan_result, dict):
         outcome_lines: list[str] = []
         if "is_nsfw" in scan_result:
             outcome_lines.append(f"NSFW: {bool(scan_result.get('is_nsfw'))}")
         if scan_result.get("reason"):
-            outcome_lines.append(f"Reason: {scan_result.get('reason')}")
+            reason_value = scan_result.get("reason")
+            reason_line = f"Reason: {reason_value}"
+            reason_description = None
+            if isinstance(reason_value, str):
+                reason_description = SCAN_REASON_DESCRIPTIONS.get(reason_value)
+                if reason_description:
+                    reason_line = f"{reason_line} — {reason_description}"
+                if reason_value in SCAN_FAILURE_REASONS and reason_description:
+                    failure_detail_lines.append(reason_description)
+            outcome_lines.append(reason_line)
         if scan_result.get("category"):
             outcome_lines.append(f"Category: {scan_result.get('category')}")
         if outcome_lines:
@@ -135,10 +174,36 @@ async def log_slow_scan_if_needed(
                     moderator_meta_lines.append(
                         "Failures: " + ", ".join(failure_parts)
                     )
+                for name, count in sorted(failures.items()):
+                    if not count:
+                        continue
+                    description = MODERATOR_FAILURE_DESCRIPTIONS.get(name)
+                    if not description:
+                        continue
+                    if count == 1:
+                        failure_detail_lines.append(description)
+                    else:
+                        failure_detail_lines.append(
+                            f"{description} ({count} occurrences)"
+                        )
     if moderator_meta_lines:
         embed.add_field(
             name="Moderator Metadata",
             value="\n".join(moderator_meta_lines)[:1024],
+            inline=False,
+        )
+
+    if failure_detail_lines:
+        deduped_lines = []
+        seen = set()
+        for line in failure_detail_lines:
+            if line in seen:
+                continue
+            seen.add(line)
+            deduped_lines.append(line)
+        embed.add_field(
+            name="Failure Details",
+            value="\n".join(deduped_lines)[:1024],
             inline=False,
         )
 
