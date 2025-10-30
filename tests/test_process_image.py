@@ -56,6 +56,111 @@ def _guess(_filename):
 filetype_stub.guess = _guess
 sys.modules["filetype"] = filetype_stub
 
+log_channel_stub = types.ModuleType("modules.utils.log_channel")
+
+
+async def _send_log_message(*_args, **_kwargs):
+    return False
+
+
+log_channel_stub.send_log_message = _send_log_message
+sys.modules["modules.utils.log_channel"] = log_channel_stub
+
+mod_logging_stub = types.ModuleType("modules.utils.mod_logging")
+
+
+async def _log_to_channel(*_args, **_kwargs):
+    return None
+
+
+mod_logging_stub.log_to_channel = _log_to_channel
+sys.modules["modules.utils.mod_logging"] = mod_logging_stub
+
+discord_stub = types.ModuleType("discord")
+
+
+class _DummyEmbed:
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+    def add_field(self, *args, **kwargs):
+        return None
+
+    def set_thumbnail(self, *args, **kwargs):
+        return None
+
+    def set_image(self, *args, **kwargs):
+        return None
+
+
+class _DummyColor:
+    @staticmethod
+    def orange():
+        return 0xFFA500
+
+    @staticmethod
+    def red():
+        return 0xFF0000
+
+    @staticmethod
+    def dark_grey():
+        return 0x2F3136
+
+
+class _DummyFile:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+class _DummyAllowedMentions:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+class _DummyClient:
+    pass
+
+
+discord_stub.Embed = _DummyEmbed
+discord_stub.Color = _DummyColor
+discord_stub.File = _DummyFile
+discord_stub.AllowedMentions = _DummyAllowedMentions
+discord_stub.Client = _DummyClient
+discord_stub.abc = types.SimpleNamespace(Messageable=object)
+discord_stub.Forbidden = type("Forbidden", (Exception,), {})
+discord_stub.HTTPException = type("HTTPException", (Exception,), {})
+sys.modules["discord"] = discord_stub
+
+discord_ext_stub = types.ModuleType("discord.ext")
+commands_stub = types.ModuleType("discord.ext.commands")
+
+
+class _DummyBot:
+    pass
+
+
+class _DummyCog:
+    def __init__(self, *args, **_kwargs):
+        pass
+
+
+def _identity_decorator(*_args, **_kwargs):
+    def _wrap(func):
+        return func
+
+    return _wrap
+
+
+commands_stub.Bot = _DummyBot
+commands_stub.Cog = _DummyCog
+commands_stub.command = _identity_decorator
+commands_stub.Cog.listener = staticmethod(_identity_decorator)
+discord_ext_stub.commands = commands_stub
+
+sys.modules["discord.ext"] = discord_ext_stub
+sys.modules["discord.ext.commands"] = commands_stub
+
 # Provide stubs before importing the module to avoid heavy dependencies.
 modules_pkg = importlib.import_module("modules")
 utils_pkg = importlib.import_module("modules.utils")
@@ -164,7 +269,7 @@ async def test_process_image_reuses_png_without_conversion(monkeypatch, tmp_path
 
 
 @pytest.mark.anyio
-async def test_process_image_converts_non_png(monkeypatch, tmp_path):
+async def test_process_image_reuses_jpeg_when_possible(monkeypatch, tmp_path):
     jpeg_path = tmp_path / "sample.jpg"
     Image.new("RGB", (8, 8), (0, 255, 0)).save(jpeg_path, format="JPEG")
 
@@ -194,6 +299,45 @@ async def test_process_image_converts_non_png(monkeypatch, tmp_path):
         scanner=types.SimpleNamespace(bot=None),
         original_filename=str(jpeg_path),
         guild_id=456,
+        clean_up=False,
+    )
+
+    assert result is not None
+    assert result.get("is_nsfw") is False
+    assert convert_calls["count"] == 0
+
+
+@pytest.mark.anyio
+async def test_process_image_converts_unsupported_formats(monkeypatch, tmp_path):
+    bmp_path = tmp_path / "sample.bmp"
+    Image.new("RGB", (8, 8), (0, 0, 255)).save(bmp_path, format="BMP")
+
+    original_convert = images_mod._encode_image_to_png_bytes
+    convert_calls = {"count": 0}
+
+    def tracked_convert(src):
+        convert_calls["count"] += 1
+        return original_convert(src)
+
+    monkeypatch.setattr(images_mod, "_encode_image_to_png_bytes", tracked_convert)
+
+    async def fake_get_settings(_guild_id, _keys):
+        return {
+            images_mod.NSFW_CATEGORY_SETTING: [],
+            "nsfw-high-accuracy": False,
+            "threshold": 0.7,
+        }
+
+    async def fake_is_accelerated(**_kwargs):
+        return False
+
+    monkeypatch.setattr(images_mod.mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
+
+    result = await images_mod.process_image(
+        scanner=types.SimpleNamespace(bot=None),
+        original_filename=str(bmp_path),
+        guild_id=321,
         clean_up=False,
     )
 

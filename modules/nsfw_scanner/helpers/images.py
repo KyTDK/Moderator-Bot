@@ -1,6 +1,7 @@
 import asyncio
 import io
 import logging
+import mimetypes
 import os
 import random
 import time
@@ -36,6 +37,21 @@ from .moderation import moderator_api
 
 
 _MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
+
+_PNG_PASSTHROUGH_EXTS = {
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".jfif",
+    ".webp",
+}
+_PNG_PASSTHROUGH_FORMATS = {
+    "PNG",
+    "JPEG",
+    "JPG",
+    "JFIF",
+    "WEBP",
+}
 
 
 log = logging.getLogger(__name__)
@@ -94,11 +110,16 @@ async def _open_image_from_path(path: str) -> Image.Image:
         image = Image.open(path)
         try:
             image.load()
+            original_format = (image.format or "").upper()
             if image.mode != "RGBA":
                 converted = image.convert("RGBA")
                 converted.load()
+                if original_format:
+                    converted.info["original_format"] = original_format
                 image.close()
                 image = converted
+            elif original_format:
+                image.info["original_format"] = original_format
             return image
         except Exception:
             image.close()
@@ -158,11 +179,16 @@ async def _open_image_from_bytes(data: bytes) -> Image.Image:
         image = Image.open(buffer)
         try:
             image.load()
+            original_format = (image.format or "").upper()
             if image.mode != "RGBA":
                 converted = image.convert("RGBA")
                 converted.load()
+                if original_format:
+                    converted.info["original_format"] = original_format
                 image.close()
                 image = converted
+            elif original_format:
+                image.info["original_format"] = original_format
             return image
         finally:
             buffer.close()
@@ -399,10 +425,21 @@ async def process_image(
             )
             entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + load_duration
         _, ext = os.path.splitext(original_filename)
-        needs_conversion = convert_to_png and ext.lower() != ".png"
+        ext = ext.lower()
+        image_info = getattr(image, "info", {}) if image is not None else {}
+        original_format = str(image_info.get("original_format") or "").upper()
+        passthrough = ext in _PNG_PASSTHROUGH_EXTS or (
+            original_format and original_format in _PNG_PASSTHROUGH_FORMATS
+        )
+        needs_conversion = convert_to_png and not passthrough
         image_path: str | None = None if needs_conversion else original_filename
         image_bytes: bytes | None = None
         image_mime: str | None = None
+        if not needs_conversion:
+            image_mime = Image.MIME.get(original_format)
+            if image_mime is None:
+                guessed_mime, _ = mimetypes.guess_type(original_filename)
+                image_mime = guessed_mime
 
         if needs_conversion:
             encode_started = time.perf_counter()
