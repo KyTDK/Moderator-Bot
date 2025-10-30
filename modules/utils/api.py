@@ -41,12 +41,30 @@ class APIKeyValidationError(Exception):
 FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
 fernet = Fernet(FERNET_KEY)
 
+
+def _float_env(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    if raw is None or not str(raw).strip():
+        return default
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+_OPENAI_TIMEOUT = httpx.Timeout(
+    connect=_float_env("OPENAI_CONNECT_TIMEOUT", 10.0),
+    read=_float_env("OPENAI_READ_TIMEOUT", 45.0),
+    write=_float_env("OPENAI_WRITE_TIMEOUT", 45.0),
+    pool=_float_env("OPENAI_POOL_TIMEOUT", 45.0),
+)
+
 def _get_client(api_key: str) -> AsyncOpenAI:
     if api_key not in _clients:
         _clients[api_key] = AsyncOpenAI(
             api_key=api_key,
             max_retries=0,
-            timeout=httpx.Timeout(20.0, connect=5.0),
+            timeout=_OPENAI_TIMEOUT,
         )
     return _clients[api_key]
 
