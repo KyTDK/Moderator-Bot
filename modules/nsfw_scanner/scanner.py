@@ -277,6 +277,7 @@ class NSFWScanner:
                     settings_cache=settings_cache,
                     pre_latency_steps=pre_latency_steps,
                     pre_download_bytes=pre_download_bytes,
+                    source_url=source,
                 )
         except Exception as scan_exc:
             log.exception("Failed to scan %s %s", log_context, source)

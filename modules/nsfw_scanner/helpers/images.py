@@ -7,7 +7,7 @@ import random
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, List, Optional, Sequence
+from typing import Any, Awaitable, List, Optional, Sequence
 
 from PIL import Image
 
@@ -55,6 +55,35 @@ _PNG_PASSTHROUGH_FORMATS = {
 
 
 log = logging.getLogger(__name__)
+
+
+def _schedule_background_task(coro: Awaitable[None]) -> None:
+    try:
+        task = asyncio.create_task(coro)
+    except RuntimeError:
+        log.debug("Unable to schedule background task; no running event loop")
+        return
+
+    def _handle(task: asyncio.Task) -> None:
+        try:
+            task.result()
+        except Exception:
+            log.debug("Background image task failed", exc_info=True)
+
+    task.add_done_callback(_handle)
+
+
+def _schedule_vector_delete(vector_id: int | None) -> None:
+    if vector_id is None:
+        return
+
+    async def _run() -> None:
+        try:
+            await clip_vectors.delete_vectors([vector_id])
+        except Exception:
+            log.debug("Vector delete failed in background for id %s", vector_id, exc_info=True)
+
+    _schedule_background_task(_run())
 
 
 @dataclass(slots=True)
@@ -294,52 +323,14 @@ async def _run_image_pipeline(
     if refresh_triggered:
         vector_id = best_match.get("vector_id")
         if vector_id is not None:
-            try:
-                delete_started = time.perf_counter()
-                delete_stats = await clip_vectors.delete_vectors([vector_id])
-                duration = (time.perf_counter() - delete_started) * 1000
-                if duration > 0:
-                    entry = latency_steps.setdefault(
-                        "vector_delete",
-                        {
-                            "duration_ms": 0.0,
-                            "label": "Vector Delete",
-                        },
-                    )
-                    entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + duration
-                if delete_stats:
-                    delete_time = float(delete_stats.delete_ms or 0.0)
-                    if delete_time > 0:
-                        delete_entry = latency_steps.setdefault(
-                            "vector_delete_delete",
-                            {
-                                "duration_ms": 0.0,
-                                "label": "Vector Delete (mutation)",
-                            },
-                        )
-                        delete_entry["duration_ms"] = (
-                            float(delete_entry.get("duration_ms") or 0.0) + delete_time
-                        )
-                    flush_time = (
-                        float(delete_stats.flush_ms)
-                        if delete_stats.flush_ms is not None
-                        else 0.0
-                    )
-                    if flush_time > 0:
-                        flush_entry = latency_steps.setdefault(
-                            "vector_delete_flush",
-                            {
-                                "duration_ms": 0.0,
-                                "label": "Vector Delete (flush)",
-                            },
-                        )
-                        flush_entry["duration_ms"] = (
-                            float(flush_entry.get("duration_ms") or 0.0) + flush_time
-                        )
-            except Exception as exc:
-                print(
-                    f"[process_image] Failed to delete vector {vector_id}: {exc}"
-                )
+            latency_steps.setdefault(
+                "vector_delete_async",
+                {
+                    "duration_ms": 0.0,
+                    "label": "Vector Delete (async)",
+                },
+            )
+            _schedule_vector_delete(vector_id)
 
     milvus_available = clip_vectors.is_available()
     allow_similarity_shortcut = (
@@ -430,6 +421,7 @@ async def process_image(
     convert_to_png: bool = True,
     context: ImageProcessingContext | None = None,
     similarity_response: Optional[List[dict[str, Any]]] = None,
+    source_url: str | None = None,
 ) -> dict[str, Any] | None:
     overall_started = time.perf_counter()
     ctx = context
@@ -481,6 +473,7 @@ async def process_image(
             "conversion_performed": needs_conversion,
             "payload_mime": None,
             "passthrough": not needs_conversion,
+            "source_url": source_url,
         }
         try:
             payload_metadata["source_bytes"] = os.path.getsize(original_filename)

@@ -239,6 +239,7 @@ async def check_attachment(
     *,
     pre_latency_steps: dict[str, dict[str, Any]] | None = None,
     pre_download_bytes: int | None = None,
+    source_url: str | None = None,
 ) -> bool:
     if settings_cache is None:
         settings_cache = AttachmentSettingsCache()
@@ -409,6 +410,7 @@ async def check_attachment(
             settings=settings,
             accelerated=accelerated_value,
             context=context,
+            source_url=source_url,
         )
     elif file_type == FILE_TYPE_VIDEO:
         premium_status = None
