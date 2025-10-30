@@ -150,6 +150,7 @@ async def log_slow_scan_if_needed(
         )
 
     moderator_meta_lines: list[str] = []
+    payload_info_lines: list[str] = []
     pipeline_metrics = getattr(telemetry, "pipeline_metrics", None)
     if isinstance(pipeline_metrics, dict):
         metadata = pipeline_metrics.get("moderator_metadata")
@@ -186,10 +187,76 @@ async def log_slow_scan_if_needed(
                         failure_detail_lines.append(
                             f"{description} ({count} occurrences)"
                         )
+            payload_info = metadata.get("payload_info")
+            if isinstance(payload_info, dict) and payload_info:
+                input_kind = payload_info.get("input_kind")
+                if input_kind:
+                    payload_info_lines.append(f"Input Kind: {input_kind}")
+                payload_mime = payload_info.get("payload_mime")
+                if payload_mime:
+                    payload_info_lines.append(f"MIME Sent: `{payload_mime}`")
+                source_ext = payload_info.get("source_extension")
+                original_format = payload_info.get("original_format")
+                source_desc_parts: list[str] = []
+                if source_ext:
+                    source_desc_parts.append(source_ext)
+                if original_format and original_format.lower() != (source_ext or "").strip(" .").lower():
+                    source_desc_parts.append(original_format)
+                if source_desc_parts:
+                    payload_info_lines.append(f"Source Format: {', '.join(source_desc_parts)}")
+                image_size = payload_info.get("image_size")
+                if isinstance(image_size, (list, tuple)) and len(image_size) == 2:
+                    payload_info_lines.append(f"Dimensions: {image_size[0]}×{image_size[1]}")
+                image_mode = payload_info.get("image_mode")
+                if image_mode:
+                    payload_info_lines.append(f"Image Mode: {image_mode}")
+                source_bytes = payload_info.get("source_bytes")
+                payload_bytes = payload_info.get("payload_bytes")
+                byte_parts: list[str] = []
+                if isinstance(payload_bytes, (int, float)):
+                    byte_parts.append(f"payload={int(payload_bytes):,} B")
+                if isinstance(source_bytes, (int, float)) and source_bytes != payload_bytes:
+                    byte_parts.append(f"source={int(source_bytes):,} B")
+                if byte_parts:
+                    payload_info_lines.append("Bytes: " + ", ".join(byte_parts))
+                base64_chars = payload_info.get("base64_chars")
+                if isinstance(base64_chars, (int, float)):
+                    payload_info_lines.append(f"Base64 Size: {int(base64_chars):,} chars")
+                conversion_performed = payload_info.get("conversion_performed")
+                if conversion_performed:
+                    target = payload_info.get("conversion_target") or "unknown"
+                    reason = payload_info.get("conversion_reason") or "unspecified"
+                    encode_ms = payload_info.get("encode_duration_ms")
+                    if isinstance(encode_ms, (int, float)):
+                        payload_info_lines.append(
+                            f"Conversion: yes → {target} ({reason}, {encode_ms:.2f} ms)"
+                        )
+                    else:
+                        payload_info_lines.append(f"Conversion: yes → {target} ({reason})")
+                elif conversion_performed is not None:
+                    payload_info_lines.append("Conversion: no")
+                request_model = payload_info.get("request_model")
+                if request_model:
+                    payload_info_lines.append(f"Request Model: {request_model}")
+                response_model = payload_info.get("response_model")
+                if response_model and response_model != request_model:
+                    payload_info_lines.append(f"Response Model: {response_model}")
+                response_ms = payload_info.get("response_ms")
+                if isinstance(response_ms, (int, float)):
+                    payload_info_lines.append(f"API Response ms (provider): {response_ms:.2f}")
+                response_id = payload_info.get("response_id")
+                if response_id:
+                    payload_info_lines.append(f"Response ID: `{response_id}`")
     if moderator_meta_lines:
         embed.add_field(
             name="Moderator Metadata",
             value="\n".join(moderator_meta_lines)[:1024],
+            inline=False,
+        )
+    if payload_info_lines:
+        embed.add_field(
+            name="Moderator Payload",
+            value="\n".join(payload_info_lines)[:1024],
             inline=False,
         )
 

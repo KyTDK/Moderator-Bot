@@ -41,6 +41,7 @@ class ModeratorLatencyTracker:
             "failures": Counter(),
         }
         self._successful_attempt: bool = False
+        self._payload_details: dict[str, Any] = {}
 
     def start(self, key: str) -> float:
         return time.perf_counter()
@@ -63,6 +64,24 @@ class ModeratorLatencyTracker:
 
     def record_failure(self, reason: str) -> None:
         self._metrics["failures"][reason] += 1
+
+    def merge_payload_details(self, details: dict[str, Any] | None) -> None:
+        if not details:
+            return
+        for key, value in details.items():
+            if value is None:
+                continue
+            self._payload_details[key] = value
+
+    def ensure_payload_detail(self, key: str, value: Any) -> None:
+        if value is None or key in self._payload_details:
+            return
+        self._payload_details[key] = value
+
+    def set_payload_detail(self, key: str, value: Any) -> None:
+        if value is None:
+            return
+        self._payload_details[key] = value
 
     def finalize(self, payload: dict[str, Any]) -> dict[str, Any]:
         breakdown: dict[str, dict[str, Any]] = {}
@@ -89,6 +108,8 @@ class ModeratorLatencyTracker:
         if self._metrics["failures"]:
             metadata["failures"] = dict(self._metrics["failures"])
         metadata["had_successful_attempt"] = self._successful_attempt
+        if self._payload_details:
+            metadata["payload_info"] = self._payload_details
 
         if metadata:
             pipeline_metrics = payload.setdefault("pipeline_metrics", {})
@@ -134,6 +155,7 @@ async def moderator_api(
     max_similarity: float | None = None,
     allowed_categories: list[str] | None = None,
     threshold: float | None = None,
+    payload_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     result: dict[str, Any] = {
         "is_nsfw": None,
@@ -146,6 +168,9 @@ async def moderator_api(
     has_image_input = image_path is not None or image_bytes is not None
 
     latency_tracker = ModeratorLatencyTracker()
+    latency_tracker.merge_payload_details(payload_metadata)
+    latency_tracker.ensure_payload_detail("input_kind", "image" if has_image_input else "text")
+    latency_tracker.ensure_payload_detail("attempt_limit", max_attempts)
 
     def _finalize(payload: dict[str, Any]) -> dict[str, Any]:
         return latency_tracker.finalize(payload)
@@ -158,8 +183,10 @@ async def moderator_api(
         if image_bytes is not None:
             try:
                 payload_timer = latency_tracker.start("payload_prepare_ms")
+                latency_tracker.ensure_payload_detail("payload_bytes", len(image_bytes))
                 b64_data = base64.b64encode(image_bytes).decode()
                 latency_tracker.stop("payload_prepare_ms", payload_timer)
+                latency_tracker.set_payload_detail("base64_chars", len(b64_data))
             except Exception as exc:
                 print(f"[moderator_api] Failed to encode image bytes: {exc}")
                 return _finalize(result)
@@ -169,8 +196,16 @@ async def moderator_api(
                 return _finalize(result)
             try:
                 payload_timer = latency_tracker.start("payload_prepare_ms")
+                try:
+                    latency_tracker.ensure_payload_detail(
+                        "payload_bytes", os.path.getsize(image_path)
+                    )
+                except OSError:
+                    pass
                 b64_data = await asyncio.to_thread(file_to_b64, image_path)
                 latency_tracker.stop("payload_prepare_ms", payload_timer)
+                if b64_data is not None:
+                    latency_tracker.set_payload_detail("base64_chars", len(b64_data))
             except Exception as exc:  # pragma: no cover - best effort logging
                 print(f"[moderator_api] Error reading image {image_path}: {exc}")
                 return _finalize(result)
@@ -178,6 +213,7 @@ async def moderator_api(
             print("[moderator_api] No image content was provided")
             return _finalize(result)
         mime_type = image_mime or "image/jpeg"
+        latency_tracker.ensure_payload_detail("payload_mime", mime_type)
         inputs = [
             {
                 "type": "image_url",
@@ -238,12 +274,25 @@ async def moderator_api(
             resource_timer = latency_tracker.start("resource_latency_ms")
             moderations_resource = await _get_moderations_resource(client)
             latency_tracker.stop("resource_latency_ms", resource_timer)
+            request_model = (
+                "omni-moderation-latest" if has_image_input else "text-moderation-latest"
+            )
+            latency_tracker.ensure_payload_detail("request_model", request_model)
             api_started = latency_tracker.start("api_call_ms")
             response = await moderations_resource.create(
-                model="omni-moderation-latest" if has_image_input else "text-moderation-latest",
+                model=request_model,
                 input=inputs,
             )
             latency_tracker.stop("api_call_ms", api_started)
+            latency_tracker.set_payload_detail(
+                "response_model", getattr(response, "model", None)
+            )
+            latency_tracker.set_payload_detail(
+                "response_id", getattr(response, "id", None)
+            )
+            latency_tracker.set_payload_detail(
+                "response_ms", getattr(response, "response_ms", None)
+            )
         except openai.AuthenticationError:
             latency_tracker.stop("api_call_ms", api_started)
             print("[moderator_api] Authentication failed. Marking key as not working.")

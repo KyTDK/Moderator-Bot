@@ -214,6 +214,7 @@ async def _run_image_pipeline(
     similarity_response: Optional[List[dict[str, Any]]] = None,
     image_bytes: bytes | None = None,
     image_mime: str | None = None,
+    payload_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     total_started = time.perf_counter()
     latency_steps: dict[str, dict[str, Any]] = {}
@@ -368,6 +369,7 @@ async def _run_image_pipeline(
         max_similarity=max_similarity,
         allowed_categories=context.allowed_categories,
         threshold=context.moderation_threshold,
+        payload_metadata=payload_metadata,
     )
     _add_step(
         "moderation_api",
@@ -441,6 +443,23 @@ async def process_image(
                 guessed_mime, _ = mimetypes.guess_type(original_filename)
                 image_mime = guessed_mime
 
+        payload_metadata: dict[str, Any] = {
+            "input_kind": "image",
+            "source_extension": ext or None,
+            "original_format": original_format or None,
+            "image_mode": getattr(image, "mode", None),
+            "image_size": list(image.size) if image else None,
+            "conversion_performed": needs_conversion,
+            "payload_mime": None,
+            "passthrough": not needs_conversion,
+        }
+        try:
+            payload_metadata["source_bytes"] = os.path.getsize(original_filename)
+        except OSError:
+            payload_metadata["source_bytes"] = None
+
+        conversion_reason: str | None = None
+
         if needs_conversion:
             encode_started = time.perf_counter()
             image_bytes = await asyncio.to_thread(_encode_image_to_png_bytes, image)
@@ -455,6 +474,17 @@ async def process_image(
                     },
                 )
                 entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + encode_duration
+            conversion_reason = "unsupported_format"
+            payload_metadata["payload_bytes"] = len(image_bytes or b"")
+            payload_metadata["payload_mime"] = image_mime
+            payload_metadata["conversion_target"] = "image/png"
+            payload_metadata["encode_duration_ms"] = encode_duration
+        else:
+            payload_metadata["payload_mime"] = image_mime
+            payload_metadata["payload_bytes"] = payload_metadata.get("source_bytes")
+            payload_metadata["conversion_target"] = None
+
+        payload_metadata["conversion_reason"] = conversion_reason
 
         response = await _run_image_pipeline(
             scanner,
@@ -464,6 +494,7 @@ async def process_image(
             similarity_response=similarity_response,
             image_bytes=image_bytes,
             image_mime=image_mime,
+            payload_metadata=payload_metadata,
         )
         if isinstance(response, dict):
             pipeline_metrics = response.setdefault("pipeline_metrics", {})
@@ -573,6 +604,7 @@ async def process_image_batch(
             bytes | None,
             str | None,
             Optional[List[dict[str, Any]]],
+            dict[str, Any] | None,
         ]
     ] = []
 
@@ -580,10 +612,32 @@ async def process_image_batch(
         similarity_response = next(similarity_iter, []) if image is not None else None
         payload_bytes: bytes | None = frame.data
         payload_mime: str | None = frame.mime_type
-        if convert_to_png and image is not None and frame.mime_type.lower() != "image/png":
+        frame_mime_lower = (frame.mime_type or "").lower()
+        conversion_performed = (
+            convert_to_png and image is not None and frame_mime_lower != "image/png"
+        )
+        if conversion_performed:
             payload_bytes = await asyncio.to_thread(_encode_image_to_png_bytes, image)
             payload_mime = "image/png"
-        entries.append((frame, image, payload_bytes, payload_mime, similarity_response))
+        payload_metadata: dict[str, Any] | None = {
+            "input_kind": "image",
+            "frame_name": frame.name,
+            "source_extension": os.path.splitext(frame.name)[1].lower() if frame.name else None,
+            "original_format": getattr(image, "info", {}).get("original_format") if image is not None else None,
+            "original_mime": frame.mime_type,
+            "conversion_performed": conversion_performed,
+            "payload_mime": payload_mime,
+            "passthrough": not conversion_performed,
+            "image_size": list(image.size) if image is not None else None,
+            "image_mode": getattr(image, "mode", None) if image is not None else None,
+            "source_bytes": len(frame.data) if frame.data is not None else None,
+            "payload_bytes": len(payload_bytes) if payload_bytes is not None else (len(frame.data) if frame.data is not None else None),
+            "conversion_target": "image/png"
+            if conversion_performed
+            else frame.mime_type,
+            "conversion_reason": "unsupported_format" if conversion_performed else None,
+        }
+        entries.append((frame, image, payload_bytes, payload_mime, similarity_response, payload_metadata))
 
     async def _moderate_entry(
         frame: ExtractedFrame,
@@ -591,6 +645,7 @@ async def process_image_batch(
         payload_bytes: bytes | None,
         payload_mime: str | None,
         similarity_response: Optional[List[dict[str, Any]]],
+        payload_metadata: dict[str, Any] | None,
     ) -> tuple[ExtractedFrame, dict[str, Any] | None]:
         response: dict[str, Any] | None = None
         if image is not None:
@@ -609,6 +664,7 @@ async def process_image_batch(
                         similarity_response=similarity_response,
                         image_bytes=payload_bytes,
                         image_mime=payload_mime,
+                        payload_metadata=payload_metadata,
                     )
                     batch_metrics["moderation_latency_ms"] += (
                         time.perf_counter() - acquired_at
@@ -627,8 +683,9 @@ async def process_image_batch(
                         payload_bytes,
                         payload_mime,
                         similarity_response,
+                        payload_metadata,
                     )
-                    for frame, image, payload_bytes, payload_mime, similarity_response in entries
+                    for frame, image, payload_bytes, payload_mime, similarity_response, payload_metadata in entries
                 )
             )
         )
