@@ -296,7 +296,7 @@ async def _run_image_pipeline(
         if vector_id is not None:
             try:
                 delete_started = time.perf_counter()
-                await clip_vectors.delete_vectors([vector_id])
+                delete_stats = await clip_vectors.delete_vectors([vector_id])
                 duration = (time.perf_counter() - delete_started) * 1000
                 if duration > 0:
                     entry = latency_steps.setdefault(
@@ -307,6 +307,35 @@ async def _run_image_pipeline(
                         },
                     )
                     entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + duration
+                if delete_stats:
+                    delete_time = float(delete_stats.delete_ms or 0.0)
+                    if delete_time > 0:
+                        delete_entry = latency_steps.setdefault(
+                            "vector_delete_delete",
+                            {
+                                "duration_ms": 0.0,
+                                "label": "Vector Delete (mutation)",
+                            },
+                        )
+                        delete_entry["duration_ms"] = (
+                            float(delete_entry.get("duration_ms") or 0.0) + delete_time
+                        )
+                    flush_time = (
+                        float(delete_stats.flush_ms)
+                        if delete_stats.flush_ms is not None
+                        else 0.0
+                    )
+                    if flush_time > 0:
+                        flush_entry = latency_steps.setdefault(
+                            "vector_delete_flush",
+                            {
+                                "duration_ms": 0.0,
+                                "label": "Vector Delete (flush)",
+                            },
+                        )
+                        flush_entry["duration_ms"] = (
+                            float(flush_entry.get("duration_ms") or 0.0) + flush_time
+                        )
             except Exception as exc:
                 print(
                     f"[process_image] Failed to delete vector {vector_id}: {exc}"

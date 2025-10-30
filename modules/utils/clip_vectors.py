@@ -4,7 +4,9 @@ import json
 import logging
 import math
 import os
+import time
 from collections import defaultdict
+from dataclasses import dataclass
 from threading import Event, Lock, Thread
 from typing import Callable, Dict, Iterable, List, Optional, Sequence
 
@@ -51,6 +53,15 @@ _fallback_active = False
 _vector_insert_warned = False
 _vector_search_warned = False
 _vector_delete_warned = False
+
+
+@dataclass(slots=True)
+class VectorDeleteStats:
+    """Details about a vector delete request."""
+
+    total_ms: float
+    delete_ms: float
+    flush_ms: Optional[float]
 
 
 def _make_error_key(exc: Exception) -> str:
@@ -343,7 +354,7 @@ def add_vector(img: Image.Image, metadata: dict) -> None:
         coll.insert(data)
 
 
-async def delete_vectors(ids: Iterable[int]) -> None:
+async def delete_vectors(ids: Iterable[int]) -> Optional[VectorDeleteStats]:
     """Remove vectors identified by their primary keys."""
     global _vector_delete_warned
     coll = _get_collection(timeout=30.0)
@@ -351,21 +362,46 @@ async def delete_vectors(ids: Iterable[int]) -> None:
         if not _vector_delete_warned:
             log.warning("Unable to delete vectors; Milvus collection is not ready")
             _vector_delete_warned = True
-        return
+        return None
     normalized_ids = [int(value) for value in ids if value is not None]
     if not normalized_ids:
-        return
+        return None
     expr = "id in [" + ", ".join(str(value) for value in normalized_ids) + "]"
 
-    def _delete_and_flush() -> None:
+    def _delete_and_flush() -> VectorDeleteStats:
+        start = time.perf_counter()
+        delete_duration = 0.0
+        flush_duration: Optional[float] = None
         with _write_lock:
+            delete_started = time.perf_counter()
             coll.delete(expr)
+            delete_duration = (time.perf_counter() - delete_started) * 1000
+            flush_started = time.perf_counter()
             try:
                 coll.flush()
             except MilvusException as exc:  # pragma: no cover - defensive logging
                 log.warning("Milvus flush after delete failed: %s", exc)
+            else:
+                flush_duration = (time.perf_counter() - flush_started) * 1000
 
-    await asyncio.to_thread(_delete_and_flush)
+        total_duration = (time.perf_counter() - start) * 1000
+        if delete_duration > 1000:
+            log.warning(
+                "Milvus delete for %s ids took %.1f ms", len(normalized_ids), delete_duration
+            )
+        if flush_duration and flush_duration > 1000:
+            log.warning(
+                "Milvus flush after deleting %s ids took %.1f ms",
+                len(normalized_ids),
+                flush_duration,
+            )
+        return VectorDeleteStats(
+            total_ms=total_duration,
+            delete_ms=delete_duration,
+            flush_ms=flush_duration,
+        )
+
+    return await asyncio.to_thread(_delete_and_flush)
 
 
 def query_similar(
