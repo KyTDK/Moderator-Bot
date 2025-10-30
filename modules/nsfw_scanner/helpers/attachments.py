@@ -133,6 +133,8 @@ FIELD_FALLBACKS = {
 
 REASON_FALLBACKS = {
     "openai_moderation": "OpenAI moderation",
+    "openai_moderation_timeout": "OpenAI moderation timeout",
+    "openai_moderation_http_timeout": "OpenAI moderation HTTP timeout",
     "similarity_match": "Similarity match",
     "no_frames_extracted": "No frames extracted",
     "no_nsfw_frames_detected": "No NSFW frames detected",

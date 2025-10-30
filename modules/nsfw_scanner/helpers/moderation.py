@@ -216,6 +216,9 @@ async def moderator_api(
     if resolved_threshold is None:
         resolved_threshold = 0.7
 
+    had_openai_timeout = False
+    had_http_timeout = False
+
     for _ in range(max_attempts):
         latency_tracker.record_attempt()
         key_timer = latency_tracker.start("key_acquire_ms")
@@ -251,10 +254,14 @@ async def moderator_api(
             continue
         except openai.APITimeoutError as exc:
             print(f"[moderator_api] Moderation request timed out: {exc}.")
+            had_openai_timeout = True
+            await api.set_api_key_not_working(api_key=encrypted_key, bot=scanner.bot)
             latency_tracker.record_failure("openai_timeout")
             continue
         except httpx.TimeoutException as exc:
             print(f"[moderator_api] HTTP timeout during moderation request: {exc}.")
+            had_http_timeout = True
+            await api.set_api_key_not_working(api_key=encrypted_key, bot=scanner.bot)
             latency_tracker.record_failure("http_timeout")
             continue
         except Exception as exc:
@@ -346,5 +353,10 @@ async def moderator_api(
                 "summary_categories": summary_categories,
             }
         )
+
+    if had_openai_timeout:
+        result["reason"] = "openai_moderation_timeout"
+    elif had_http_timeout:
+        result["reason"] = "openai_moderation_http_timeout"
 
     return _finalize(result)
