@@ -479,6 +479,10 @@ def iter_extracted_frames(
                         pending_idx = target_idx
                         decode_failures = 0
                         continue
+                    fallback_seek = target_idx + 1
+                    if total_frames > 0:
+                        fallback_seek = min(total_frames - 1, fallback_seek)
+
                     if decode_failures >= max_decode_failures:
                         print(
                             f"[iter_extracted_frames] Decoder repeatedly failed around frame {target_idx}; aborting video scan for {os.path.basename(filename)}."
@@ -486,11 +490,12 @@ def iter_extracted_frames(
                         break
                     if decode_failures == 1:
                         print(
-                            f"[iter_extracted_frames] Failed to decode frame {target_idx}; skipping."
+                            "[iter_extracted_frames] Failed to decode frame "
+                            f"{target_idx} of {os.path.basename(filename)} "
+                            f"(attempt {decode_failures}/{max_decode_failures}, "
+                            f"hwaccel={'on' if hwaccel_in_use else 'off'}); "
+                            f"seeking to frame {fallback_seek} before retrying."
                         )
-                    fallback_seek = target_idx + 1
-                    if total_frames > 0:
-                        fallback_seek = min(total_frames - 1, fallback_seek)
                     try:
                         with _suppress_cv2_stderr():
                             cap.set(cv2.CAP_PROP_POS_FRAMES, fallback_seek)
