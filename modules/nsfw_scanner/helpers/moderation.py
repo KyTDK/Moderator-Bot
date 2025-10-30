@@ -219,7 +219,8 @@ async def moderator_api(
     had_openai_timeout = False
     had_http_timeout = False
 
-    for _ in range(max_attempts):
+    for attempt_index in range(max_attempts):
+        attempt_number = attempt_index + 1
         latency_tracker.record_attempt()
         key_timer = latency_tracker.start("key_acquire_ms")
         client, encrypted_key = await api.get_api_client(guild_id)
@@ -232,6 +233,7 @@ async def moderator_api(
             latency_tracker.stop("key_wait_ms", wait_timer)
             latency_tracker.record_no_key_wait()
             continue
+        api_started: float | None = None
         try:
             resource_timer = latency_tracker.start("resource_latency_ms")
             moderations_resource = await _get_moderations_resource(client)
@@ -243,28 +245,44 @@ async def moderator_api(
             )
             latency_tracker.stop("api_call_ms", api_started)
         except openai.AuthenticationError:
+            latency_tracker.stop("api_call_ms", api_started)
             print("[moderator_api] Authentication failed. Marking key as not working.")
             await api.set_api_key_not_working(api_key=encrypted_key, bot=scanner.bot)
             latency_tracker.record_failure("authentication_error")
             continue
         except openai.RateLimitError as exc:
-            print(f"[moderator_api] Rate limit error: {exc}. Marking key as not working.")
-            await api.set_api_key_not_working(api_key=encrypted_key, bot=scanner.bot)
+            latency_tracker.stop("api_call_ms", api_started)
+            print(
+                f"[moderator_api] Rate limit error on attempt {attempt_number}/{max_attempts}: {exc}."
+            )
             latency_tracker.record_failure("rate_limit_error")
+            if attempt_index < max_attempts - 1:
+                await asyncio.sleep(min(2 ** attempt_index, 5.0))
             continue
         except openai.APITimeoutError as exc:
-            print(f"[moderator_api] Moderation request timed out: {exc}.")
+            latency_tracker.stop("api_call_ms", api_started)
+            print(
+                f"[moderator_api] Moderation request timed out on attempt "
+                f"{attempt_number}/{max_attempts}: {exc}."
+            )
             had_openai_timeout = True
-            await api.set_api_key_not_working(api_key=encrypted_key, bot=scanner.bot)
             latency_tracker.record_failure("openai_timeout")
+            if attempt_index < max_attempts - 1:
+                await asyncio.sleep(min(2 ** attempt_index, 5.0))
             continue
         except httpx.TimeoutException as exc:
-            print(f"[moderator_api] HTTP timeout during moderation request: {exc}.")
+            latency_tracker.stop("api_call_ms", api_started)
+            print(
+                f"[moderator_api] HTTP timeout during moderation request on attempt "
+                f"{attempt_number}/{max_attempts}: {exc}."
+            )
             had_http_timeout = True
-            await api.set_api_key_not_working(api_key=encrypted_key, bot=scanner.bot)
             latency_tracker.record_failure("http_timeout")
+            if attempt_index < max_attempts - 1:
+                await asyncio.sleep(min(2 ** attempt_index, 5.0))
             continue
         except Exception as exc:
+            latency_tracker.stop("api_call_ms", api_started)
             print(f"[moderator_api] Unexpected error from OpenAI API: {exc}.")
             latency_tracker.record_failure("unexpected_api_error")
             continue
