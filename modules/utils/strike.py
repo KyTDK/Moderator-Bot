@@ -1,9 +1,12 @@
 ﻿from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from discord import Interaction, Role
+if TYPE_CHECKING:  # pragma: no cover - imported only for type checking
+    from discord import Interaction, Role
+else:  # pragma: no cover - fallback when discord isn't installed
+    Interaction = Role = Any
 
 from modules.moderation.action_specs import (
     ROLE_ACTION_CANONICAL,
