@@ -17,7 +17,8 @@ except ImportError:  # pragma: no cover - optional dependency handled gracefully
 else:
     register_heif_opener()
 
-from modules.utils import clip_vectors
+from cogs.nsfw import NSFW_CATEGORY_SETTING
+from modules.utils import clip_vectors, mysql
 from modules.utils.log_channel import send_log_message
 
 from ..constants import (
