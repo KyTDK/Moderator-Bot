@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import math
 import time
 from typing import Optional
 
@@ -15,11 +14,7 @@ from .queue_snapshot import QueueSnapshot
 
 
 class FreeQueueMonitor:
-    """Observes queue health, surfaces lag, and optionally adapts limits."""
-
-    ADAPTIVE_COOLDOWN = 15.0
-    ADAPTIVE_MULTIPLIER_CAP = 8.0
-    ADAPTIVE_EXTRA_STEPS = 16
+    """Observes queue health and surfaces lag for operators."""
 
     def __init__(
         self,
@@ -38,8 +33,6 @@ class FreeQueueMonitor:
         self._lag_hits: int = 0
         self._last_report_at: Optional[float] = None
         self._last_dropped_total: int = 0
-        self._adaptive_last: dict[str, float] = {}
-        self._last_adaptive_signature: dict[str, tuple[int, int, int, int]] = {}
         self._rate_calculator = MediaRateCalculator()
         self._backlog_active: bool = False
 
@@ -62,8 +55,6 @@ class FreeQueueMonitor:
             self._lag_hits = 0
             self._last_report_at = None
             self._last_dropped_total = 0
-            self._adaptive_last.clear()
-            self._last_adaptive_signature.clear()
             self._backlog_active = False
 
     @staticmethod
@@ -113,7 +104,6 @@ class FreeQueueMonitor:
         embed = build_backlog_embed(
             free=free,
             accel=accel,
-            config=self._config,
             dropped_delta=dropped_delta,
             rates=rates,
             calculator=self._rate_calculator,
@@ -128,129 +118,6 @@ class FreeQueueMonitor:
 
         self._backlog_active = True
 
-    def _adaptive_recommend(self, snapshot: QueueSnapshot) -> Optional[int]:
-        if snapshot.backlog <= 0:
-            return None
-
-        base_capacity = snapshot.capacity
-        backlog_high = snapshot.backlog_high or 0
-
-        if backlog_high <= 0 and snapshot.backlog <= base_capacity:
-            return None
-
-        wait_pressure = snapshot.wait_pressure
-        backlog_excess = snapshot.backlog_excess
-
-        if backlog_excess <= 0 and not wait_pressure:
-            return None
-
-        increments = 0
-        if backlog_high > 0 and backlog_excess > 0:
-            increments = max(1, math.ceil(backlog_excess / backlog_high))
-        elif backlog_excess > 0:
-            increments = max(1, math.ceil(backlog_excess / snapshot.baseline_workers))
-        elif wait_pressure:
-            increments = 1
-
-        if increments <= 0:
-            return None
-
-        target = base_capacity + increments * snapshot.baseline_workers
-
-        if backlog_high > 0 and snapshot.backlog >= backlog_high:
-            ratio = snapshot.backlog_ratio
-            target = max(target, snapshot.baseline_workers * max(2, math.ceil(ratio)))
-
-        if wait_pressure:
-            target = max(target, base_capacity + snapshot.baseline_workers)
-
-        cap_multiplier = self.ADAPTIVE_MULTIPLIER_CAP
-        max_allowed = max(
-            int(base_capacity * cap_multiplier),
-            base_capacity + snapshot.baseline_workers * self.ADAPTIVE_EXTRA_STEPS,
-        )
-        target = min(target, max_allowed)
-
-        backlog_low = snapshot.backlog_low or 0
-        if backlog_low > 0:
-            target = max(target, snapshot.baseline_workers + 1)
-
-        target = min(target, snapshot.backlog)
-        if target <= base_capacity:
-            return None
-
-        return target
-
-    async def _maybe_apply_adaptive_scale(
-        self,
-        *,
-        queue,
-        tier: str,
-        snapshot: QueueSnapshot,
-        target: int,
-        now: float,
-    ) -> None:
-        base_capacity = snapshot.capacity
-        if target <= base_capacity:
-            return
-
-        last_action = self._adaptive_last.get(tier)
-        if last_action is not None and (now - last_action) < self.ADAPTIVE_COOLDOWN:
-            return
-
-        self._adaptive_last[tier] = now
-        backlog_high = snapshot.backlog_high if snapshot.backlog_high is not None else 0
-        print(
-            f"[FreeQueueLag] Adaptive scaling for {tier}: workers {base_capacity} -> {target} "
-            f"(backlog={snapshot.backlog}, high={backlog_high}, avg_wait={snapshot.avg_wait:.2f}s)"
-        )
-        await queue.ensure_capacity(target)
-        post_snapshot: Optional[QueueSnapshot] = None
-        try:
-            post_snapshot = QueueSnapshot.from_mapping(queue.metrics())
-        except Exception:
-            post_snapshot = None
-        await self._log_adaptive_change(
-            tier=tier,
-            before=snapshot,
-            after=post_snapshot,
-            target=target,
-        )
-
-    async def _handle_adaptive_scaling(self, free: QueueSnapshot, accel: QueueSnapshot) -> None:
-        """Adjust queue limits when adaptive scaling is enabled."""
-        now = time.monotonic()
-        tasks = []
-
-        if self._config.free.adaptive_limits:
-            target = self._adaptive_recommend(free)
-            if target is not None:
-                tasks.append(
-                    self._maybe_apply_adaptive_scale(
-                        queue=self._free_queue,
-                        tier="free",
-                        snapshot=free,
-                        target=target,
-                        now=now,
-                    )
-                )
-
-        if self._config.accelerated.adaptive_limits:
-            target = self._adaptive_recommend(accel)
-            if target is not None:
-                tasks.append(
-                    self._maybe_apply_adaptive_scale(
-                        queue=self._accelerated_queue,
-                        tier="accelerated",
-                        snapshot=accel,
-                        target=target,
-                        now=now,
-                    )
-                )
-
-        if tasks:
-            await asyncio.gather(*tasks)
-
     async def _run(self) -> None:
         await self._bot.wait_until_ready()
         monitor_cfg = self._config.monitor
@@ -263,8 +130,6 @@ class FreeQueueMonitor:
 
                     free_snapshot = QueueSnapshot.from_mapping(self._free_queue.metrics())
                     accel_snapshot = QueueSnapshot.from_mapping(self._accelerated_queue.metrics())
-
-                    await self._handle_adaptive_scaling(free_snapshot, accel_snapshot)
 
                     if self._is_lagging(free_snapshot, accel_snapshot):
                         self._lag_hits += 1
@@ -341,53 +206,6 @@ class FreeQueueMonitor:
         else:
             rate_summary = "none"
         return rates, rate_summary
-
-
-    async def _log_adaptive_change(
-        self,
-        *,
-        tier: str,
-        before: QueueSnapshot,
-        after: Optional[QueueSnapshot],
-        target: int,
-    ) -> None:
-        applied = after.max_workers if after is not None else target
-        applied_autoscale = after.autoscale_max if after is not None else max(before.autoscale_max, target)
-        backlog_ratio = before.backlog_ratio if before.backlog_high else 0.0
-
-        signature = (before.max_workers, applied, applied_autoscale, target)
-        last_signature = self._last_adaptive_signature.get(tier)
-        if last_signature == signature:
-            return
-
-        reasons: list[str] = []
-        if before.backlog_excess > 0:
-            reasons.append(f"backlog above high watermark by {before.backlog_excess}")
-        if before.wait_pressure:
-            reasons.append("wait pressure detected")
-        if not reasons:
-            reasons.append("heuristics recommended scale-up")
-
-        log_lines = [
-            f"[FreeQueueLag][WARN] Adaptive scaling applied for {tier} queue:",
-            f"  workers {before.max_workers} -> {applied} (target requested {target})",
-            f"  autoscale burst {before.autoscale_max} -> {applied_autoscale} (baseline {before.baseline_workers})",
-            (
-                "  backlog snapshot: "
-                f"backlog={before.backlog}, active={before.active_workers}, "
-                f"high={before.backlog_high}, low={before.backlog_low}, ratio={backlog_ratio:.2f}"
-            ),
-            (
-                "  timing: "
-                f"avg_wait={before.avg_wait:.2f}s, avg_run={before.avg_runtime:.2f}s, "
-                f"last_wait={before.last_wait:.2f}s, longest_wait={before.longest_wait:.2f}s"
-            ),
-            "  triggers:" if reasons else "  triggers: (none)",
-        ]
-        log_lines.extend(f"    - {reason}" for reason in reasons)
-
-        print("\n".join(log_lines))
-        self._last_adaptive_signature[tier] = signature
 
 
 __all__ = ["FreeQueueMonitor"]

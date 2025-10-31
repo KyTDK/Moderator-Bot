@@ -6,7 +6,6 @@ import discord
 
 from .media_rates import MediaProcessingRate, MediaRateCalculator
 from .queue_snapshot import QueueSnapshot
-from .config import AggregatedModerationConfig
 
 
 def _format_processing_rates_field(
@@ -33,7 +32,6 @@ def build_backlog_embed(
     *,
     free: QueueSnapshot,
     accel: QueueSnapshot,
-    config: AggregatedModerationConfig,
     dropped_delta: int,
     rates: Iterable[MediaProcessingRate],
     calculator: MediaRateCalculator,
@@ -58,12 +56,12 @@ def build_backlog_embed(
                 (
                     "FREE workers: "
                     f"base {free.baseline_workers} / current {free.max_workers} / "
-                    f"burst {free.autoscale_max} (adaptive={'on' if config.free.adaptive_limits else 'off'})"
+                    f"burst {free.autoscale_max}"
                 ),
                 (
                     "ACCEL workers: "
                     f"base {accel.baseline_workers} / current {accel.max_workers} / "
-                    f"burst {accel.autoscale_max} (adaptive={'on' if config.accelerated.adaptive_limits else 'off'})"
+                    f"burst {accel.autoscale_max}"
                 ),
                 (
                     "Watermarks: "
