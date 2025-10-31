@@ -29,7 +29,7 @@ class AggregatedModerationCog(commands.Cog):
         self.free_queue = WorkerQueue(
             max_workers=self.config.free.max_workers,
             autoscale_max=self.config.free.autoscale_max,
-            backlog_high_watermark=autoscale.backlog_high,
+            backlog_high_watermark=autoscale.free_backlog_high,
             backlog_low_watermark=autoscale.backlog_low,
             autoscale_check_interval=autoscale.check_interval,
             scale_down_grace=autoscale.scale_down_grace,
@@ -39,7 +39,7 @@ class AggregatedModerationCog(commands.Cog):
         self.accelerated_queue = WorkerQueue(
             max_workers=self.config.accelerated.max_workers,
             autoscale_max=self.config.accelerated.autoscale_max,
-            backlog_high_watermark=autoscale.backlog_high,
+            backlog_high_watermark=autoscale.accelerated_backlog_high,
             backlog_low_watermark=autoscale.backlog_low,
             autoscale_check_interval=autoscale.check_interval,
             scale_down_grace=autoscale.scale_down_grace,
