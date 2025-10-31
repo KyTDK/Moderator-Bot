@@ -147,9 +147,18 @@ async def cache_message(msg: discord.Message):
     except Exception as exc:
         print(f"[cache] failed to persist message {msg.id} for guild {msg.guild.id if msg.guild else 'unknown'}: {exc}")
 
-def get_cached_message(guild_id: int, message_id: int) -> CachedMessage | None:
+async def get_cached_message(guild_id: int, message_id: int) -> CachedMessage | None:
     key = f"{guild_id}:{message_id}"
-    data = message_cache.get(key)
+
+    # Prefer the in-memory fallback first as it's already available without I/O
+    data = memory_fallback.get(key)
     if data is None:
-        data = memory_fallback.get(key)
+        try:
+            data = await asyncio.to_thread(message_cache.get, key)
+        except Exception as exc:
+            print(
+                f"[cache] failed to read message {message_id} for guild {guild_id}: {exc}"
+            )
+            data = None
+
     return CachedMessage(data) if data else None

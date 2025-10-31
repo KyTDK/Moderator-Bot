@@ -54,7 +54,7 @@ class EventDispatcherCog(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
         # Get cache
-        cached_before = get_cached_message(payload.guild_id, payload.message_id)
+        cached_before = await get_cached_message(payload.guild_id, payload.message_id)
         if not cached_before:
             # Make CachedMessage with defaults
             cached_before = CachedMessage(DEFAULT_CACHED_MESSAGE.copy())
@@ -79,7 +79,7 @@ class EventDispatcherCog(commands.Cog):
             return
 
         # Get cached message or fallback with defaults
-        cached_message = get_cached_message(payload.guild_id, payload.message_id)
+        cached_message = await get_cached_message(payload.guild_id, payload.message_id)
         if not cached_message:
             cached_message = CachedMessage(DEFAULT_CACHED_MESSAGE.copy())
             cached_message.guild_id = payload.guild_id

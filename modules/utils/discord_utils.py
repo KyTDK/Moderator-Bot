@@ -124,7 +124,7 @@ async def safe_get_message(channel: discord.TextChannel, message_id: int) -> Opt
     Safely get a Message from cache or fetch.
     Returns None if the message is not found or can't be fetched.
     """
-    message = cache.get_cached_message(channel.guild.id, message_id)
+    message = await cache.get_cached_message(channel.guild.id, message_id)
     if message is not None:
         return message
     try:
