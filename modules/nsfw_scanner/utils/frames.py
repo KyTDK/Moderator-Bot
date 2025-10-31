@@ -273,7 +273,6 @@ def _iter_video_frames_ffmpeg(
 
     try:
         frame_iter = _iter_mjpeg_frames_from_pipe(process)
-        frame_count = 0
         for frame_idx, frame_bytes in zip(idxs_list, frame_iter):
             if stop_event and stop_event.is_set():
                 break
@@ -284,7 +283,6 @@ def _iter_video_frames_ffmpeg(
             )
             if extracted is not None:
                 yield extracted
-                frame_count += 1
         if stop_event and process.poll() is None:
             process.terminate()
     finally:

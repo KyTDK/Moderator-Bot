@@ -658,8 +658,14 @@ async def process_image_batch(
             if conversion_performed
             else frame.mime_type,
             "conversion_reason": "unsupported_format" if conversion_performed else None,
+            "video_frame": True,
         }
         entries.append((frame, image, payload_bytes, payload_mime, similarity_response, payload_metadata))
+
+    max_local_concurrency = 8 if context.accelerated else 3
+    local_moderation_semaphore = asyncio.Semaphore(
+        max(1, min(max_local_concurrency, len(entries) or 1))
+    )
 
     async def _moderate_entry(
         frame: ExtractedFrame,
@@ -673,24 +679,25 @@ async def process_image_batch(
         if image is not None:
             try:
                 wait_started = time.perf_counter()
-                async with _MODERATION_API_SEMAPHORE:
-                    acquired_at = time.perf_counter()
-                    batch_metrics["moderation_wait_latency_ms"] += (
-                        acquired_at - wait_started
-                    ) * 1000
-                    response = await _run_image_pipeline(
-                        scanner,
-                        image_path=None,
-                        image=image,
-                        context=context,
-                        similarity_response=similarity_response,
-                        image_bytes=payload_bytes,
-                        image_mime=payload_mime,
-                        payload_metadata=payload_metadata,
-                    )
-                    batch_metrics["moderation_latency_ms"] += (
-                        time.perf_counter() - acquired_at
-                    ) * 1000
+                async with local_moderation_semaphore:
+                    async with _MODERATION_API_SEMAPHORE:
+                        acquired_at = time.perf_counter()
+                        batch_metrics["moderation_wait_latency_ms"] += (
+                            acquired_at - wait_started
+                        ) * 1000
+                        response = await _run_image_pipeline(
+                            scanner,
+                            image_path=None,
+                            image=image,
+                            context=context,
+                            similarity_response=similarity_response,
+                            image_bytes=payload_bytes,
+                            image_mime=payload_mime,
+                            payload_metadata=payload_metadata,
+                        )
+                        batch_metrics["moderation_latency_ms"] += (
+                            time.perf_counter() - acquired_at
+                        ) * 1000
             finally:
                 image.close()
         return frame, response

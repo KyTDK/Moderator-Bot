@@ -27,6 +27,8 @@ _INLINE_PASSTHROUGH_BYTES = int(os.getenv("MODBOT_MODERATION_INLINE_THRESHOLD", 
 _JPEG_TARGET_BYTES = int(os.getenv("MODBOT_MODERATION_TARGET_BYTES", "1250000"))
 _JPEG_INITIAL_QUALITY = int(os.getenv("MODBOT_MODERATION_JPEG_QUALITY", "82"))
 _JPEG_MIN_QUALITY = int(os.getenv("MODBOT_MODERATION_MIN_JPEG_QUALITY", "58"))
+_VIDEO_FRAME_MAX_EDGE = int(os.getenv("MODBOT_MODERATION_VIDEO_MAX_EDGE", "768"))
+_VIDEO_FRAME_TARGET_BYTES = int(os.getenv("MODBOT_MODERATION_VIDEO_TARGET_BYTES", "350000"))
 
 _ALLOW_REMOTE_IMAGES = os.getenv("MODBOT_ENABLE_REMOTE_IMAGE_URLS", "1").lower() not in {
     "0",
@@ -71,10 +73,19 @@ def _prepare_image_payload_sync(
     image_path: str | None,
     image_mime: str | None,
     original_size: int | None,
+    max_image_edge: int | None = None,
+    jpeg_target_bytes: int | None = None,
 ) -> PreparedImagePayload:
     working: Image.Image | None = None
     close_working = False
     original_mime = (image_mime or "").lower() or None
+
+    edge_limit = int(max_image_edge) if max_image_edge else _MAX_IMAGE_EDGE
+    if edge_limit <= 0:
+        edge_limit = _MAX_IMAGE_EDGE
+    target_bytes = int(jpeg_target_bytes) if jpeg_target_bytes else _JPEG_TARGET_BYTES
+    if target_bytes <= 0:
+        target_bytes = _JPEG_TARGET_BYTES
 
     if image is not None:
         try:
@@ -109,7 +120,7 @@ def _prepare_image_payload_sync(
     passthrough_allowed = (
         original_size is not None
         and original_size <= _INLINE_PASSTHROUGH_BYTES
-        and max(width, height) <= _MAX_IMAGE_EDGE
+        and max(width, height) <= edge_limit
         and original_mime in {"image/jpeg", "image/jpg"}
         and image_bytes is not None
     )
@@ -134,8 +145,8 @@ def _prepare_image_payload_sync(
 
     resized = False
     max_edge = max(width, height)
-    if max_edge > _MAX_IMAGE_EDGE and working.size[0] > 0 and working.size[1] > 0:
-        scale = _MAX_IMAGE_EDGE / float(max_edge)
+    if max_edge > edge_limit and working.size[0] > 0 and working.size[1] > 0:
+        scale = edge_limit / float(max_edge)
         new_size = (
             max(1, int(round(working.size[0] * scale))),
             max(1, int(round(working.size[1] * scale))),
@@ -175,7 +186,7 @@ def _prepare_image_payload_sync(
         data = buffer.getvalue()
         final_bytes = data
         chosen_quality = quality
-        if len(data) <= _JPEG_TARGET_BYTES:
+        if len(data) <= target_bytes:
             break
 
     if final_bytes is None:
@@ -205,6 +216,8 @@ async def _prepare_image_payload(
     image_path: str | None,
     image_mime: str | None,
     original_size: int | None,
+    max_image_edge: int | None = None,
+    jpeg_target_bytes: int | None = None,
 ) -> PreparedImagePayload:
     return await asyncio.to_thread(
         _prepare_image_payload_sync,
@@ -213,6 +226,8 @@ async def _prepare_image_payload(
         image_path=image_path,
         image_mime=image_mime,
         original_size=original_size,
+        max_image_edge=max_image_edge,
+        jpeg_target_bytes=jpeg_target_bytes,
     )
 
 
@@ -468,6 +483,12 @@ async def moderator_api(
 
     if has_image_input:
         payload_timer = latency_tracker.start("payload_prepare_ms")
+        max_edge_override = None
+        target_bytes_override = None
+        if isinstance(payload_metadata, dict) and payload_metadata.get("video_frame"):
+            max_edge_override = _VIDEO_FRAME_MAX_EDGE
+            target_bytes_override = _VIDEO_FRAME_TARGET_BYTES
+            latency_tracker.set_payload_detail("video_frame", True)
         try:
             prepared = await _prepare_image_payload(
                 image=image,
@@ -475,6 +496,8 @@ async def moderator_api(
                 image_path=image_path,
                 image_mime=image_mime,
                 original_size=original_size,
+                max_image_edge=max_edge_override,
+                jpeg_target_bytes=target_bytes_override,
             )
         except Exception as exc:
             latency_tracker.stop("payload_prepare_ms", payload_timer)
