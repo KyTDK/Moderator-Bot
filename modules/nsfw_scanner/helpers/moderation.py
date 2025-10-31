@@ -6,7 +6,7 @@ import os
 import time
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Awaitable
+from typing import Any, Awaitable, Callable, Optional
 from urllib.parse import urlparse
 
 import httpx
@@ -16,7 +16,7 @@ from PIL import Image
 from cogs.nsfw import NSFW_CATEGORY_SETTING
 from modules.utils import api, clip_vectors, mysql
 
-from ..constants import ADD_SFW_VECTOR, SFW_VECTOR_MAX_SIMILARITY
+from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY, SFW_VECTOR_MAX_SIMILARITY
 from ..utils.categories import is_allowed_category
 log = logging.getLogger(__name__)
 
@@ -41,6 +41,9 @@ _REMOTE_ALLOWED_HOSTS = {
     "media.discordapp.net",
 }
 _REMOTE_MIN_BYTES = int(os.getenv("MODBOT_MODERATION_REMOTE_MIN_BYTES", "524288"))
+
+
+_MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
 
 
 @dataclass(slots=True)
@@ -429,6 +432,8 @@ async def moderator_api(
     allowed_categories: list[str] | None = None,
     threshold: float | None = None,
     payload_metadata: dict[str, Any] | None = None,
+    on_rate_limiter_acquire: Optional[Callable[[float], None]] = None,
+    on_rate_limiter_release: Optional[Callable[[float], None]] = None,
 ) -> dict[str, Any]:
     result: dict[str, Any] = {
         "is_nsfw": None,
@@ -608,12 +613,28 @@ async def moderator_api(
                 "omni-moderation-latest" if has_image_input else "text-moderation-latest"
             )
             latency_tracker.ensure_payload_detail("request_model", request_model)
-            api_started = latency_tracker.start("api_call_ms")
-            response = await moderations_resource.create(
-                model=request_model,
-                input=inputs,
-            )
-            latency_tracker.stop("api_call_ms", api_started)
+            response = None
+            limiter_wait_started = time.perf_counter()
+            async with _MODERATION_API_SEMAPHORE:
+                limiter_acquired_at = time.perf_counter()
+                if on_rate_limiter_acquire is not None:
+                    try:
+                        on_rate_limiter_acquire(limiter_acquired_at - limiter_wait_started)
+                    except Exception:
+                        log.debug("Rate limiter acquire callback failed", exc_info=True)
+                api_started = latency_tracker.start("api_call_ms")
+                try:
+                    response = await moderations_resource.create(
+                        model=request_model,
+                        input=inputs,
+                    )
+                finally:
+                    latency_tracker.stop("api_call_ms", api_started)
+                    if on_rate_limiter_release is not None:
+                        try:
+                            on_rate_limiter_release(time.perf_counter() - limiter_acquired_at)
+                        except Exception:
+                            log.debug("Rate limiter release callback failed", exc_info=True)
             latency_tracker.set_payload_detail(
                 "response_model", getattr(response, "model", None)
             )

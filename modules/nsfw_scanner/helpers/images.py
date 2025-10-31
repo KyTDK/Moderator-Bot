@@ -7,7 +7,7 @@ import random
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, Awaitable, List, Optional, Sequence
+from typing import Any, Awaitable, Callable, List, Optional, Sequence
 
 from PIL import Image
 
@@ -34,9 +34,6 @@ from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame
 from .metrics import merge_latency_breakdown
 from .moderation import moderator_api
-
-
-_MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
 
 _PNG_PASSTHROUGH_EXTS = {
     ".png",
@@ -244,6 +241,8 @@ async def _run_image_pipeline(
     image_bytes: bytes | None = None,
     image_mime: str | None = None,
     payload_metadata: dict[str, Any] | None = None,
+    on_rate_limiter_acquire: Callable[[float], None] | None = None,
+    on_rate_limiter_release: Callable[[float], None] | None = None,
 ) -> dict[str, Any] | None:
     total_started = time.perf_counter()
     latency_steps: dict[str, dict[str, Any]] = {}
@@ -390,6 +389,8 @@ async def _run_image_pipeline(
         allowed_categories=context.allowed_categories,
         threshold=context.moderation_threshold,
         payload_metadata=payload_metadata,
+        on_rate_limiter_acquire=on_rate_limiter_acquire,
+        on_rate_limiter_release=on_rate_limiter_release,
     )
     _add_step(
         "moderation_api",
@@ -556,6 +557,7 @@ async def process_image_batch(
     context: ImageProcessingContext,
     *,
     convert_to_png: bool = False,
+    max_concurrent_frames: int | None = None,
 ) -> tuple[
     list[tuple[ExtractedFrame, dict[str, Any] | None]],
     dict[str, float],
@@ -663,9 +665,10 @@ async def process_image_batch(
         entries.append((frame, image, payload_bytes, payload_mime, similarity_response, payload_metadata))
 
     max_local_concurrency = 8 if context.accelerated else 3
-    local_moderation_semaphore = asyncio.Semaphore(
-        max(1, min(max_local_concurrency, len(entries) or 1))
-    )
+    local_limit_candidates = [len(entries) or 1, max_local_concurrency, MOD_API_MAX_CONCURRENCY]
+    if isinstance(max_concurrent_frames, int) and max_concurrent_frames > 0:
+        local_limit_candidates.append(max_concurrent_frames)
+    local_moderation_semaphore = asyncio.Semaphore(max(1, min(local_limit_candidates)))
 
     async def _moderate_entry(
         frame: ExtractedFrame,
@@ -678,26 +681,36 @@ async def process_image_batch(
         response: dict[str, Any] | None = None
         if image is not None:
             try:
-                wait_started = time.perf_counter()
+                local_wait_started = time.perf_counter()
                 async with local_moderation_semaphore:
-                    async with _MODERATION_API_SEMAPHORE:
-                        acquired_at = time.perf_counter()
+                    local_acquired_at = time.perf_counter()
+                    if local_acquired_at > local_wait_started:
                         batch_metrics["moderation_wait_latency_ms"] += (
-                            acquired_at - wait_started
+                            local_acquired_at - local_wait_started
                         ) * 1000
-                        response = await _run_image_pipeline(
-                            scanner,
-                            image_path=None,
-                            image=image,
-                            context=context,
-                            similarity_response=similarity_response,
-                            image_bytes=payload_bytes,
-                            image_mime=payload_mime,
-                            payload_metadata=payload_metadata,
+
+                    def _record_rate_wait(elapsed_seconds: float) -> None:
+                        batch_metrics["moderation_wait_latency_ms"] += (
+                            max(elapsed_seconds, 0.0) * 1000
                         )
+
+                    def _record_rate_duration(elapsed_seconds: float) -> None:
                         batch_metrics["moderation_latency_ms"] += (
-                            time.perf_counter() - acquired_at
-                        ) * 1000
+                            max(elapsed_seconds, 0.0) * 1000
+                        )
+
+                    response = await _run_image_pipeline(
+                        scanner,
+                        image_path=None,
+                        image=image,
+                        context=context,
+                        similarity_response=similarity_response,
+                        image_bytes=payload_bytes,
+                        image_mime=payload_mime,
+                        payload_metadata=payload_metadata,
+                        on_rate_limiter_acquire=_record_rate_wait,
+                        on_rate_limiter_release=_record_rate_duration,
+                    )
             finally:
                 image.close()
         return frame, response

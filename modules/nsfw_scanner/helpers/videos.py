@@ -145,7 +145,10 @@ async def process_video(
     motion_flat_limit = 8 if context.accelerated else 12
     high_confidence_threshold = 0.92
     low_risk_threshold = 0.05
-    flush_timeout = 0.035 if context.accelerated else 0.06
+    min_flush_timeout = 0.035 if context.accelerated else 0.06
+    max_flush_timeout = 0.24 if context.accelerated else 0.32
+    avg_interarrival: float | None = None
+    last_frame_timestamp: float | None = None
     metrics_payload: dict[str, Any] = {
         "dedupe_skipped": 0,
         "frames_submitted": 0,
@@ -161,6 +164,8 @@ async def process_video(
         "flush_count": 0,
         "early_exit": None,
         "bytes_downloaded": None,
+        "avg_frame_interarrival_ms": 0.0,
+        "effective_flush_timeout_ms": 0.0,
     }
     latency_steps: dict[str, dict[str, Any]] = {}
 
@@ -204,6 +209,7 @@ async def process_video(
             batch.copy(),
             context,
             convert_to_png=False,
+            max_concurrent_frames=max_concurrent_frames,
         )
         decode_ms = float(batch_metrics.get("decode_latency_ms") or 0.0)
         metrics_payload["decode_latency_ms"] += decode_ms
@@ -281,9 +287,16 @@ async def process_video(
         while True:
             try:
                 wait_started = time.perf_counter()
-                item = await asyncio.wait_for(
-                    queue.get(), timeout=flush_timeout if batch else None
-                )
+                timeout: float | None = None
+                if batch:
+                    if avg_interarrival is not None:
+                        timeout = max(
+                            min_flush_timeout,
+                            min(max_flush_timeout, avg_interarrival * 1.5),
+                        )
+                    else:
+                        timeout = min_flush_timeout
+                item = await asyncio.wait_for(queue.get(), timeout=timeout)
                 metrics_payload["queue_wait_latency_ms"] += (
                     time.perf_counter() - wait_started
                 ) * 1000
@@ -305,6 +318,15 @@ async def process_video(
             if item is None:
                 continue
             frame_data = item
+            now = time.perf_counter()
+            if last_frame_timestamp is not None:
+                inter_arrival = max(now - last_frame_timestamp, 0.0)
+                capped = min(inter_arrival, max_flush_timeout)
+                if avg_interarrival is None:
+                    avg_interarrival = capped
+                else:
+                    avg_interarrival = (avg_interarrival * 0.7) + (capped * 0.3)
+            last_frame_timestamp = now
 
             if flagged:
                 continue
@@ -412,6 +434,14 @@ async def process_video(
     metrics_payload["dedupe_enabled"] = bool(dedupe_enabled)
     metrics_payload["residual_low_risk_streak"] = processed_low_risk_streak
     metrics_payload["residual_motion_plateau"] = motion_plateau
+    if avg_interarrival is not None:
+        metrics_payload["avg_frame_interarrival_ms"] = avg_interarrival * 1000
+        metrics_payload["effective_flush_timeout_ms"] = max(
+            min_flush_timeout,
+            min(max_flush_timeout, avg_interarrival * 1.5),
+        ) * 1000
+    else:
+        metrics_payload["effective_flush_timeout_ms"] = min_flush_timeout * 1000
 
     if flagged_scan is not None:
         flagged_scan.setdefault("pipeline_metrics", {}).update(metrics_payload)
