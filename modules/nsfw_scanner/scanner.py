@@ -265,6 +265,7 @@ class NSFWScanner:
         log_context: str,
         pre_latency_steps: dict[str, dict[str, Any]] | None = None,
         pre_download_bytes: int | None = None,
+        overall_started_at: float | None = None,
     ) -> bool:
         try:
                 return await helper_check_attachment(
@@ -278,6 +279,7 @@ class NSFWScanner:
                     pre_latency_steps=pre_latency_steps,
                     pre_download_bytes=pre_download_bytes,
                     source_url=source,
+                    overall_started_at=overall_started_at,
                 )
         except Exception as scan_exc:
             log.exception("Failed to scan %s %s", log_context, source)
@@ -309,6 +311,7 @@ class NSFWScanner:
         download_kwargs = download_kwargs or {}
         skip_context = skip_context or download_context
         scan_failed = False
+        overall_started_at = time.perf_counter()
         try:
             async with helper_temp_download(
                 self.session,
@@ -342,6 +345,7 @@ class NSFWScanner:
                         log_context=download_context,
                         pre_latency_steps=pre_latency_steps,
                         pre_download_bytes=pre_download_bytes,
+                        overall_started_at=overall_started_at,
                     )
                 except Exception:
                     scan_failed = True
@@ -449,9 +453,11 @@ class NSFWScanner:
             suffix = os.path.splitext(attachment.filename)[1] or ""
             pre_steps: dict[str, dict[str, Any]] | None = None
             pre_bytes = getattr(attachment, "size", None)
+            attachment_started_at: float | None = None
             with NamedTemporaryFile(delete=False, dir=TMP_DIR, suffix=suffix) as tmp:
                 try:
                     save_started = time.perf_counter()
+                    attachment_started_at = save_started
                     await attachment.save(tmp.name)
                     pre_steps = {
                         "download_attachment_save": {
@@ -482,6 +488,7 @@ class NSFWScanner:
                     log_context="attachment",
                     pre_latency_steps=pre_steps,
                     pre_download_bytes=pre_bytes,
+                    overall_started_at=attachment_started_at,
                 ):
                     return True
             finally:
