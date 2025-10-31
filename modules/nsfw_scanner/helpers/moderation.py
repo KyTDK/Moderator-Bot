@@ -1,12 +1,9 @@
 import asyncio
 import base64
-import io
 import logging
 import os
 import time
-from collections import Counter
-from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any, Callable, Optional
 from urllib.parse import urlparse
 
 import httpx
@@ -18,17 +15,14 @@ from modules.utils import api, clip_vectors, mysql
 
 from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY, SFW_VECTOR_MAX_SIMILARITY
 from ..utils.categories import is_allowed_category
+from .latency import ModeratorLatencyTracker
+from .payloads import (
+    VIDEO_FRAME_MAX_EDGE,
+    VIDEO_FRAME_TARGET_BYTES,
+    prepare_image_payload,
+)
+from .vector_tasks import schedule_vector_add
 log = logging.getLogger(__name__)
-
-_RESAMPLING_FILTER = getattr(getattr(Image, "Resampling", Image), "LANCZOS", Image.BICUBIC)
-
-_MAX_IMAGE_EDGE = int(os.getenv("MODBOT_MODERATION_MAX_IMAGE_EDGE", "1536"))
-_INLINE_PASSTHROUGH_BYTES = int(os.getenv("MODBOT_MODERATION_INLINE_THRESHOLD", "262144"))
-_JPEG_TARGET_BYTES = int(os.getenv("MODBOT_MODERATION_TARGET_BYTES", "1250000"))
-_JPEG_INITIAL_QUALITY = int(os.getenv("MODBOT_MODERATION_JPEG_QUALITY", "82"))
-_JPEG_MIN_QUALITY = int(os.getenv("MODBOT_MODERATION_MIN_JPEG_QUALITY", "58"))
-_VIDEO_FRAME_MAX_EDGE = int(os.getenv("MODBOT_MODERATION_VIDEO_MAX_EDGE", "768"))
-_VIDEO_FRAME_TARGET_BYTES = int(os.getenv("MODBOT_MODERATION_VIDEO_TARGET_BYTES", "350000"))
 
 _ALLOW_REMOTE_IMAGES = os.getenv("MODBOT_ENABLE_REMOTE_IMAGE_URLS", "1").lower() not in {
     "0",
@@ -44,194 +38,6 @@ _REMOTE_MIN_BYTES = int(os.getenv("MODBOT_MODERATION_REMOTE_MIN_BYTES", "524288"
 
 
 _MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
-
-
-@dataclass(slots=True)
-class PreparedImagePayload:
-    data: bytes
-    mime: str
-    width: int
-    height: int
-    resized: bool
-    strategy: str
-    quality: int | None
-    original_mime: str | None
-
-
-def _flatten_alpha(image: Image.Image) -> Image.Image:
-    """Return an RGB image with alpha composited on white."""
-    if image.mode not in {"RGBA", "LA"}:
-        return image.convert("RGB") if image.mode != "RGB" else image
-    base = Image.new("RGB", image.size, (255, 255, 255))
-    rgb = image.convert("RGB")
-    alpha = image.split()[-1]
-    base.paste(rgb, mask=alpha)
-    return base
-
-
-def _prepare_image_payload_sync(
-    *,
-    image: Image.Image | None,
-    image_bytes: bytes | None,
-    image_path: str | None,
-    image_mime: str | None,
-    original_size: int | None,
-    max_image_edge: int | None = None,
-    jpeg_target_bytes: int | None = None,
-) -> PreparedImagePayload:
-    working: Image.Image | None = None
-    close_working = False
-    original_mime = (image_mime or "").lower() or None
-
-    edge_limit = int(max_image_edge) if max_image_edge else _MAX_IMAGE_EDGE
-    if edge_limit <= 0:
-        edge_limit = _MAX_IMAGE_EDGE
-    target_bytes = int(jpeg_target_bytes) if jpeg_target_bytes else _JPEG_TARGET_BYTES
-    if target_bytes <= 0:
-        target_bytes = _JPEG_TARGET_BYTES
-
-    if image is not None:
-        try:
-            working = image.copy()
-            working.load()
-            close_working = True
-        except Exception:
-            working = None
-
-    if working is None:
-        if image_bytes is not None:
-            stream = io.BytesIO(image_bytes)
-            loaded = Image.open(stream)
-            loaded.load()
-            working = loaded
-            close_working = True
-        elif image_path is not None and os.path.exists(image_path):
-            loaded = Image.open(image_path)
-            loaded.load()
-            working = loaded
-            close_working = True
-        else:
-            raise ValueError("No image data available for moderation payload preparation")
-
-    try:
-        width, height = working.size
-    except Exception as exc:
-        if close_working and working is not None:
-            working.close()
-        raise RuntimeError("Failed to read image dimensions") from exc
-
-    passthrough_allowed = (
-        original_size is not None
-        and original_size <= _INLINE_PASSTHROUGH_BYTES
-        and max(width, height) <= edge_limit
-        and original_mime in {"image/jpeg", "image/jpg"}
-        and image_bytes is not None
-    )
-    if passthrough_allowed:
-        data_bytes = image_bytes
-        if data_bytes is None and image_path and os.path.exists(image_path):
-            with open(image_path, "rb") as file_obj:
-                data_bytes = file_obj.read()
-        payload = PreparedImagePayload(
-            data=data_bytes or b"",
-            mime=image_mime or "image/jpeg",
-            width=width,
-            height=height,
-            resized=False,
-            strategy="passthrough",
-            quality=None,
-            original_mime=image_mime,
-        )
-        if close_working and working is not None:
-            working.close()
-        return payload
-
-    resized = False
-    max_edge = max(width, height)
-    if max_edge > edge_limit and working.size[0] > 0 and working.size[1] > 0:
-        scale = edge_limit / float(max_edge)
-        new_size = (
-            max(1, int(round(working.size[0] * scale))),
-            max(1, int(round(working.size[1] * scale))),
-        )
-        working = working.resize(new_size, _RESAMPLING_FILTER)
-        width, height = working.size
-        resized = True
-
-    prepared = _flatten_alpha(working)
-
-    buffer = io.BytesIO()
-    chosen_quality = None
-    qualities = [q for q in range(_JPEG_INITIAL_QUALITY, _JPEG_MIN_QUALITY - 1, -10)]
-    if qualities[-1] != _JPEG_MIN_QUALITY:
-        qualities.append(_JPEG_MIN_QUALITY)
-    final_bytes: bytes | None = None
-
-    for quality in qualities:
-        try:
-            buffer.seek(0)
-            buffer.truncate(0)
-            prepared.save(
-                buffer,
-                format="JPEG",
-                quality=max(10, min(95, quality)),
-                optimize=True,
-                progressive=True,
-            )
-        except OSError:
-            buffer.seek(0)
-            buffer.truncate(0)
-            prepared.convert("RGB").save(
-                buffer,
-                format="JPEG",
-                quality=max(10, min(95, quality)),
-            )
-        data = buffer.getvalue()
-        final_bytes = data
-        chosen_quality = quality
-        if len(data) <= target_bytes:
-            break
-
-    if final_bytes is None:
-        raise RuntimeError("Failed to encode moderation payload")
-
-    payload = PreparedImagePayload(
-        data=final_bytes,
-        mime="image/jpeg",
-        width=width,
-        height=height,
-        resized=resized,
-        strategy="compressed_jpeg",
-        quality=chosen_quality,
-        original_mime=image_mime,
-    )
-
-    if close_working and working is not None and working is not prepared:
-        working.close()
-    prepared.close()
-    return payload
-
-
-async def _prepare_image_payload(
-    *,
-    image: Image.Image | None,
-    image_bytes: bytes | None,
-    image_path: str | None,
-    image_mime: str | None,
-    original_size: int | None,
-    max_image_edge: int | None = None,
-    jpeg_target_bytes: int | None = None,
-) -> PreparedImagePayload:
-    return await asyncio.to_thread(
-        _prepare_image_payload_sync,
-        image=image,
-        image_bytes=image_bytes,
-        image_path=image_path,
-        image_mime=image_mime,
-        original_size=original_size,
-        max_image_edge=max_image_edge,
-        jpeg_target_bytes=jpeg_target_bytes,
-    )
 
 
 def _should_use_remote_source(
@@ -252,149 +58,6 @@ def _should_use_remote_source(
     if payload_size is not None and payload_size < _REMOTE_MIN_BYTES:
         return False
     return True
-
-
-def _schedule_background(coro: Awaitable[None]) -> None:
-    try:
-        task = asyncio.create_task(coro)
-    except RuntimeError:
-        log.debug("Unable to schedule background task; no running event loop")
-        return
-
-    def _suppress(task: asyncio.Task) -> None:
-        try:
-            task.result()
-        except Exception:
-            log.debug("Background moderation task raised", exc_info=True)
-
-    task.add_done_callback(_suppress)
-
-
-def _schedule_vector_add(image: Image.Image, metadata: dict[str, Any]) -> None:
-    try:
-        image_copy = image.copy()
-        image_copy.load()
-    except Exception as exc:
-        log.debug("Skipping vector insert; unable to copy image: %s", exc, exc_info=True)
-        return
-
-    async def _run() -> None:
-        try:
-            await asyncio.to_thread(clip_vectors.add_vector, image_copy, metadata)
-        except Exception:
-            log.debug("Vector insert failed in background", exc_info=True)
-        finally:
-            try:
-                image_copy.close()
-            except Exception:
-                pass
-
-    _schedule_background(_run())
-
-
-
-class ModeratorLatencyTracker:
-    _BREAKDOWN_LABELS: dict[str, tuple[str, str]] = {
-        "payload_prepare_ms": ("moderation_payload", "Moderator Payload Prep"),
-        "key_acquire_ms": ("moderation_key_acquire", "API Client Acquire"),
-        "key_wait_ms": ("moderation_key_wait", "API Key Wait"),
-        "resource_latency_ms": ("moderation_resource", "Moderator Client Resolve"),
-        "api_call_ms": ("moderation_request", "Moderator API Request"),
-        "response_parse_ms": (
-            "moderation_response_parse",
-            "Moderator Response Parse",
-        ),
-        "vector_add_ms": ("moderation_vector", "Vector Maintenance"),
-    }
-
-    def __init__(self) -> None:
-        self.timings: dict[str, float] = {
-            key: 0.0 for key in self._BREAKDOWN_LABELS.keys()
-        }
-        self._metrics: dict[str, Any] = {
-            "attempts": 0,
-            "no_key_waits": 0,
-            "failures": Counter(),
-        }
-        self._successful_attempt: bool = False
-        self._payload_details: dict[str, Any] = {}
-
-    def start(self, key: str) -> float:
-        return time.perf_counter()
-
-    def stop(self, key: str, started: float | None) -> None:
-        if started is None:
-            return
-        self.timings[key] = self.timings.get(key, 0.0) + (
-            time.perf_counter() - started
-        ) * 1000
-
-    def record_attempt(self) -> None:
-        self._metrics["attempts"] += 1
-
-    def record_success(self) -> None:
-        self._successful_attempt = True
-
-    def record_no_key_wait(self) -> None:
-        self._metrics["no_key_waits"] += 1
-
-    def record_failure(self, reason: str) -> None:
-        self._metrics["failures"][reason] += 1
-
-    def merge_payload_details(self, details: dict[str, Any] | None) -> None:
-        if not details:
-            return
-        for key, value in details.items():
-            if value is None:
-                continue
-            self._payload_details[key] = value
-
-    def ensure_payload_detail(self, key: str, value: Any) -> None:
-        if value is None or key in self._payload_details:
-            return
-        self._payload_details[key] = value
-
-    def set_payload_detail(self, key: str, value: Any) -> None:
-        if value is None:
-            return
-        self._payload_details[key] = value
-
-    def finalize(self, payload: dict[str, Any]) -> dict[str, Any]:
-        breakdown: dict[str, dict[str, Any]] = {}
-        for raw_key, (output_key, label) in self._BREAKDOWN_LABELS.items():
-            duration = self.timings.get(raw_key, 0.0)
-            if duration > 0:
-                breakdown[output_key] = {
-                    "duration_ms": duration,
-                    "label": label,
-                }
-
-        if breakdown:
-            pipeline_metrics = payload.setdefault("pipeline_metrics", {})
-            moderator_breakdown = pipeline_metrics.setdefault(
-                "moderator_breakdown_ms", {}
-            )
-            moderator_breakdown.update(breakdown)
-
-        metadata: dict[str, Any] = {}
-        if self._metrics["attempts"]:
-            metadata["attempts"] = self._metrics["attempts"]
-        if self._metrics["no_key_waits"]:
-            metadata["no_key_waits"] = self._metrics["no_key_waits"]
-        if self._metrics["failures"]:
-            metadata["failures"] = dict(self._metrics["failures"])
-        metadata["had_successful_attempt"] = self._successful_attempt
-        if self._payload_details:
-            metadata["payload_info"] = self._payload_details
-
-        if metadata:
-            pipeline_metrics = payload.setdefault("pipeline_metrics", {})
-            moderator_metadata = pipeline_metrics.setdefault(
-                "moderator_metadata", {}
-            )
-            moderator_metadata.update(metadata)
-
-        return payload
 
 
 def _should_add_sfw_vector(
@@ -491,11 +154,11 @@ async def moderator_api(
         max_edge_override = None
         target_bytes_override = None
         if isinstance(payload_metadata, dict) and payload_metadata.get("video_frame"):
-            max_edge_override = _VIDEO_FRAME_MAX_EDGE
-            target_bytes_override = _VIDEO_FRAME_TARGET_BYTES
+            max_edge_override = VIDEO_FRAME_MAX_EDGE
+            target_bytes_override = VIDEO_FRAME_TARGET_BYTES
             latency_tracker.set_payload_detail("video_frame", True)
         try:
-            prepared = await _prepare_image_payload(
+            prepared = await prepare_image_payload(
                 image=image,
                 image_bytes=image_bytes,
                 image_path=image_path,
@@ -751,9 +414,10 @@ async def moderator_api(
                 and clip_vectors.is_available()
             ):
                 latency_tracker.set_payload_detail("vector_add_async", True)
-                _schedule_vector_add(
+                schedule_vector_add(
                     image,
                     {"category": normalized_category, "score": score},
+                    logger=log,
                 )
 
             if score < resolved_threshold:
@@ -775,9 +439,10 @@ async def moderator_api(
             and _should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
         ):
             latency_tracker.set_payload_detail("sfw_vector_add_async", True)
-            _schedule_vector_add(
+            schedule_vector_add(
                 image,
                 {"category": None, "score": 0},
+                logger=log,
             )
 
         if guild_flagged_categories:

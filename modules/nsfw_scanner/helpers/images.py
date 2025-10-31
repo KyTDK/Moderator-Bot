@@ -6,8 +6,7 @@ import os
 import random
 import time
 import traceback
-from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, List, Optional, Sequence
+from typing import Any, Callable, List, Optional, Sequence
 
 from PIL import Image
 
@@ -18,8 +17,7 @@ except ImportError:  # pragma: no cover - optional dependency handled gracefully
 else:
     register_heif_opener()
 
-from cogs.nsfw import NSFW_CATEGORY_SETTING
-from modules.utils import clip_vectors, mysql
+from modules.utils import clip_vectors
 from modules.utils.log_channel import send_log_message
 
 from ..constants import (
@@ -32,8 +30,10 @@ from ..constants import (
 from ..utils.categories import is_allowed_category
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame
+from .context import ImageProcessingContext, build_image_processing_context
 from .metrics import merge_latency_breakdown
 from .moderation import moderator_api
+from .vector_tasks import schedule_vector_delete
 
 _PNG_PASSTHROUGH_EXTS = {
     ".png",
@@ -52,83 +52,6 @@ _PNG_PASSTHROUGH_FORMATS = {
 
 
 log = logging.getLogger(__name__)
-
-
-def _schedule_background_task(coro: Awaitable[None]) -> None:
-    try:
-        task = asyncio.create_task(coro)
-    except RuntimeError:
-        log.debug("Unable to schedule background task; no running event loop")
-        return
-
-    def _handle(task: asyncio.Task) -> None:
-        try:
-            task.result()
-        except Exception:
-            log.debug("Background image task failed", exc_info=True)
-
-    task.add_done_callback(_handle)
-
-
-def _schedule_vector_delete(vector_id: int | None) -> None:
-    if vector_id is None:
-        return
-
-    async def _run() -> None:
-        try:
-            await clip_vectors.delete_vectors([vector_id])
-        except Exception:
-            log.debug("Vector delete failed in background for id %s", vector_id, exc_info=True)
-
-    _schedule_background_task(_run())
-
-
-@dataclass(slots=True)
-class ImageProcessingContext:
-    guild_id: int | None
-    settings_map: dict[str, Any]
-    allowed_categories: list[str]
-    moderation_threshold: float
-    high_accuracy: bool
-    accelerated: bool
-
-
-async def build_image_processing_context(
-    guild_id: int | None,
-    settings: dict[str, Any] | None = None,
-    accelerated: bool | None = None,
-) -> ImageProcessingContext:
-    settings_map: dict[str, Any] = settings.copy() if settings else {}
-
-    if not settings_map and guild_id is not None:
-        settings_map = await mysql.get_settings(
-            guild_id,
-            [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
-        ) or {}
-
-    try:
-        moderation_threshold = float(settings_map.get("threshold", 0.7))
-    except (TypeError, ValueError):
-        moderation_threshold = 0.7
-
-    high_accuracy = bool(settings_map.get("nsfw-high-accuracy"))
-    allowed_categories = settings_map.get(NSFW_CATEGORY_SETTING) or []
-
-    accelerated_flag = bool(accelerated)
-    if accelerated_flag is False and accelerated is None and guild_id is not None:
-        try:
-            accelerated_flag = bool(await mysql.is_accelerated(guild_id=guild_id))
-        except Exception:
-            accelerated_flag = False
-
-    return ImageProcessingContext(
-        guild_id=guild_id,
-        settings_map=settings_map,
-        allowed_categories=list(allowed_categories),
-        moderation_threshold=moderation_threshold,
-        high_accuracy=high_accuracy,
-        accelerated=accelerated_flag,
-    )
 
 
 async def _open_image_from_path(path: str) -> Image.Image:
@@ -329,7 +252,7 @@ async def _run_image_pipeline(
                     "label": "Vector Delete (async)",
                 },
             )
-            _schedule_vector_delete(vector_id)
+            schedule_vector_delete(vector_id, logger=log)
 
     milvus_available = clip_vectors.is_available()
     allow_similarity_shortcut = (

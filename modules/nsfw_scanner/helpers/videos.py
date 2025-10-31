@@ -21,11 +21,8 @@ from ..constants import (
 )
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame, frames_are_similar, iter_extracted_frames
-from .images import (
-    ImageProcessingContext,
-    build_image_processing_context,
-    process_image_batch,
-)
+from .context import ImageProcessingContext, build_image_processing_context
+from .images import process_image_batch
 
 FRAME_LIMITS_BY_TIER = {
     "accelerated": ACCELERATED_MAX_FRAMES_PER_VIDEO,
