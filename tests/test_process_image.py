@@ -13,6 +13,11 @@ sys.path.append(str(project_root))
 # Stub cogs.nsfw to avoid heavy Discord dependencies.
 nsfw_stub = types.ModuleType("cogs.nsfw")
 nsfw_stub.NSFW_CATEGORY_SETTING = "nsfw-detection-categories"
+nsfw_stub.NSFW_TEXT_CATEGORY_SETTING = "nsfw-text-categories"
+nsfw_stub.NSFW_TEXT_ENABLED_SETTING = "nsfw-text-enabled"
+nsfw_stub.NSFW_TEXT_THRESHOLD_SETTING = "nsfw-text-threshold"
+nsfw_stub.NSFW_TEXT_ACTION_SETTING = "nsfw-text-action"
+nsfw_stub.NSFW_TEXT_STRIKES_ONLY_SETTING = "nsfw-text-strikes-only"
 sys.modules["cogs.nsfw"] = nsfw_stub
 
 # Stub cv2 to avoid importing OpenCV in tests.
