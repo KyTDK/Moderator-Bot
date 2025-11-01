@@ -445,6 +445,24 @@ async def moderator_api(
                 attempt_number=attempt_number,
                 request_model=request_model,
             )
+            if (
+                image_state
+                and not image_state.get("use_remote")
+                and image_state.get("source_url")
+                and _ALLOW_REMOTE_IMAGES
+                and attempt_index < max_attempts - 1
+            ):
+                log.debug(
+                    "Inline moderation payload triggered internal server error; retrying with remote URL. Context: %s",
+                    context_summary,
+                    exc_info=True,
+                )
+                image_state["use_remote"] = True
+                latency_tracker.record_failure("inline_internal_server_error")
+                latency_tracker.set_payload_detail("remote_retry_due_to_internal_error", True)
+                if isinstance(payload_metadata, dict):
+                    payload_metadata["remote_retry_due_to_internal_error"] = True
+                continue
             print(
                 "[moderator_api] OpenAI internal server error: "
                 f"{exc}. Context: {context_summary}."
