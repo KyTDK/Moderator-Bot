@@ -453,10 +453,7 @@ async def check_attachment(
 
     scan_duration_ms = int(round(resolved_total_latency))
 
-    telemetry = collect_scan_telemetry(
-        scan_result,
-        fallback_total_ms=scan_duration_ms,
-    )
+    telemetry = collect_scan_telemetry(scan_result)
     telemetry_total_latency = telemetry.total_latency_ms
     if telemetry_total_latency is None:
         resolved_total_latency_ms = scan_duration_ms

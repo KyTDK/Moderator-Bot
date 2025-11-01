@@ -67,10 +67,7 @@ async def log_slow_scan_if_needed(
         return
 
     if telemetry is None:
-        telemetry = collect_scan_telemetry(
-            scan_result,
-            fallback_total_ms=total_duration_ms,
-        )
+        telemetry = collect_scan_telemetry(scan_result)
     total_ms = telemetry.total_latency_ms
 
     if total_ms is None or total_ms < threshold_ms:

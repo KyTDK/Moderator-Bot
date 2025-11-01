@@ -159,12 +159,7 @@ class LatencyTracker:
     ) -> tuple[dict[str, Any], float]:
         metrics = pipeline_metrics if isinstance(pipeline_metrics, dict) else {}
 
-        existing_total: float | None = None
-        for key in ("total_latency_ms", "total_duration_ms"):
-            candidate = _coerce_duration(metrics.get(key))
-            if candidate is not None:
-                existing_total = candidate
-                break
+        existing_total = _coerce_duration(metrics.get("total_latency_ms"))
 
         metrics["latency_breakdown_ms"] = merge_latency_breakdown(
             metrics.get("latency_breakdown_ms"),
@@ -376,16 +371,10 @@ def extract_pipeline_metrics(scan_result: Any) -> dict[str, Any] | None:
 
 def extract_total_latency_ms(
     pipeline_metrics: Any,
-    fallback_total_ms: Any = None,
 ) -> float | None:
-    candidate = None
-    if isinstance(pipeline_metrics, dict):
-        candidate = _coerce_duration(pipeline_metrics.get("total_latency_ms"))
-        if candidate is None:
-            candidate = _coerce_duration(pipeline_metrics.get("total_duration_ms"))
-    if candidate is not None:
-        return candidate
-    return _coerce_duration(fallback_total_ms)
+    if not isinstance(pipeline_metrics, dict):
+        return None
+    return _coerce_duration(pipeline_metrics.get("total_latency_ms"))
 
 
 def extract_frame_metrics(
@@ -464,11 +453,9 @@ def compute_average_latency_per_frame(
 
 def collect_scan_telemetry(
     scan_result: Any,
-    *,
-    fallback_total_ms: Any = None,
 ) -> ScanTelemetry:
     pipeline_metrics = extract_pipeline_metrics(scan_result)
-    total_latency_ms = extract_total_latency_ms(pipeline_metrics, fallback_total_ms)
+    total_latency_ms = extract_total_latency_ms(pipeline_metrics)
     frame_metrics = extract_frame_metrics(scan_result, pipeline_metrics)
 
     if isinstance(pipeline_metrics, dict):
@@ -483,7 +470,7 @@ def collect_scan_telemetry(
     frame_lines = format_frame_metrics_lines(frame_metrics)
     breakdown_lines = format_latency_breakdown_lines(breakdown_source)
     average_latency_per_frame = compute_average_latency_per_frame(
-        total_latency_ms if total_latency_ms is not None else fallback_total_ms,
+        total_latency_ms,
         frame_metrics,
     )
     if average_latency_per_frame is not None:
