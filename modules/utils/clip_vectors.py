@@ -57,6 +57,32 @@ def _ensure_clip_loaded() -> None:
         _device = dev
 
 
+try:
+    _RESAMPLE_NEAREST = Image.Resampling.NEAREST  # Pillow >= 9
+except AttributeError:  # pragma: no cover - compatibility fallback
+    _RESAMPLE_NEAREST = Image.NEAREST
+
+
+def _prepare_clip_image(image: Image.Image) -> Image.Image:
+    """Normalize image mode/size to avoid HuggingFace channel inference issues."""
+
+    if not isinstance(image, Image.Image):
+        raise TypeError(f"Expected PIL.Image.Image, received {type(image)!r}")
+
+    prepared = image
+    if prepared.mode != "RGB":
+        # Drop alpha/other modes to ensure 3-channel tensors for CLIP.
+        prepared = prepared.convert("RGB")
+
+    width, height = prepared.size
+    new_width = max(2, width)
+    new_height = max(2, height)
+    if new_width != width or new_height != height:
+        prepared = prepared.resize((new_width, new_height), resample=_RESAMPLE_NEAREST)
+
+    return prepared
+
+
 def embed_batch(images: Sequence[Image.Image]) -> np.ndarray:
     """Return L2-normalised embeddings for a batch of images."""
 
@@ -64,7 +90,9 @@ def embed_batch(images: Sequence[Image.Image]) -> np.ndarray:
         return np.empty((0, 0), dtype="float32")
 
     _ensure_clip_loaded()
-    processed = _proc(images=list(images), return_tensors="pt")
+    images = list(images)
+    prepared_images = [_prepare_clip_image(image) for image in images]
+    processed = _proc(images=prepared_images, return_tensors="pt")
     processed = processed.to(_device) if hasattr(processed, "to") else processed
 
     with torch.no_grad():
