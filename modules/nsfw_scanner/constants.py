@@ -29,6 +29,27 @@ ALLOWED_USER_IDS = _parse_allowed_user_ids(os.getenv("ALLOWED_USER_IDS"))
 TMP_DIR = os.path.join(gettempdir(), "modbot")
 os.makedirs(TMP_DIR, exist_ok=True)
 
+_DEFAULT_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "ModeratorBot/1.0 Chrome/124.0.0.0 Safari/537.36"
+)
+
+
+def _resolve_user_agent(raw: str | None) -> str:
+    if not raw:
+        return _DEFAULT_USER_AGENT
+    cleaned = raw.strip()
+    return cleaned or _DEFAULT_USER_AGENT
+
+
+NSFW_SCANNER_USER_AGENT = _resolve_user_agent(os.getenv("NSFW_SCANNER_USER_AGENT"))
+NSFW_SCANNER_DEFAULT_HEADERS = {
+    "User-Agent": NSFW_SCANNER_USER_AGENT,
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
 # Threshold for similarity search
 _CLIP_THRESHOLD_RAW = os.getenv("CLIP_THRESHOLD")
 try:

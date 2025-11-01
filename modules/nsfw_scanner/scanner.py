@@ -30,6 +30,7 @@ from .constants import (
     ALLOWED_USER_IDS,
     DEFAULT_DOWNLOAD_CAP_BYTES,
     LOG_CHANNEL_ID,
+    NSFW_SCANNER_DEFAULT_HEADERS,
     TMP_DIR,
 )
 from .helpers import (
@@ -88,7 +89,8 @@ class NSFWScanner:
         self._last_reported_milvus_error_key: str | None = None
 
     async def start(self):
-        self.session = aiohttp.ClientSession()
+        session_headers = dict(NSFW_SCANNER_DEFAULT_HEADERS)
+        self.session = aiohttp.ClientSession(headers=session_headers)
         os.makedirs(self.tmp_dir, exist_ok=True)
         self._ensure_clip_failure_notifier()
 
@@ -107,6 +109,15 @@ class NSFWScanner:
         if len(value) <= limit:
             return value
         return value[: limit - 1] + "\u2026"
+
+    @staticmethod
+    def _should_suppress_download_failure(exc: Exception) -> bool:
+        if isinstance(exc, aiohttp.ClientResponseError):
+            status = getattr(exc, "status", None)
+            return status in {404, 410, 451}
+        if isinstance(exc, (FileNotFoundError, NotFound)):
+            return True
+        return False
 
     async def _send_failure_log(
         self,
@@ -166,6 +177,13 @@ class NSFWScanner:
         exc: Exception,
         message: discord.Message | None = None,
     ) -> None:
+        if self._should_suppress_download_failure(exc):
+            log.debug(
+                "Suppressed download failure for %s (%s)",
+                source_url,
+                exc,
+            )
+            return
         await self._send_failure_log(
             title="Download failure",
             source=source_url,
@@ -374,13 +392,22 @@ class NSFWScanner:
         except Exception as download_exc:
             if scan_failed:
                 raise
-            log.exception("Failed to download %s %s", download_context, source_url)
+            suppress_download = self._should_suppress_download_failure(download_exc)
+            if suppress_download:
+                log.debug(
+                    "Skipping %s %s due to %s",
+                    download_context,
+                    source_url,
+                    download_exc,
+                )
+            else:
+                log.exception("Failed to download %s %s", download_context, source_url)
             await self._report_download_failure(
                 source_url=source_url,
                 exc=download_exc,
                 message=message,
             )
-            if propagate_download_exception:
+            if propagate_download_exception and not suppress_download:
                 raise
             return False
 
@@ -562,6 +589,12 @@ class NSFWScanner:
                 if extension == "apng":
                     gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
                     await asyncio.to_thread(apnggif, temp_path, gif_location)
+                    if not os.path.exists(gif_location):
+                        log.warning(
+                            "APNG conversion produced no output for %s; using original sticker payload",
+                            temp_path,
+                        )
+                        return temp_path, []
                     return gif_location, [gif_location]
                 return temp_path, []
 
