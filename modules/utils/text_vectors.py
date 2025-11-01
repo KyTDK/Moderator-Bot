@@ -9,7 +9,7 @@ import numpy as np
 from dotenv import load_dotenv
 try:
     from sentence_transformers import SentenceTransformer
-except ImportError:  # pragma: no cover - optional dependency
+except Exception:  # pragma: no cover - optional dependency / stub conflicts
     SentenceTransformer = None  # type: ignore[assignment]
 
 from .vector_spaces import MilvusVectorSpace, VectorDeleteStats
