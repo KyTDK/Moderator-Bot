@@ -50,6 +50,20 @@ When available the tracker records `video_frames_scanned`, `video_frames_target`
 
 Because Redis operations are idempotent increments and hash updates, the write path stays low-latency even at high scan volumes.
 
+#### Per-Scan Telemetry
+
+Every scan payload carries a `pipeline_metrics` map that mirrors the work performed by the scanners. The helpers in `modules/nsfw_scanner/helpers/metrics.py` feed a `LatencyTracker` (and, for video, a `VideoMetrics` accumulator) so the telemetry is standardised before it reaches `log_media_scan`.
+
+Key fields include:
+
+- `total_latency_ms` / `total_duration_ms` – the wall-clock latency for the scan, including time spent waiting in the worker queue. When an upstream duration already exists it is preserved as `pipeline_total_latency_ms`.
+- `latency_breakdown_ms` – nested map of `{step_name: {"duration_ms": float, "label": str}}`. Common keys are `queue_wait`, `attachment_mime_detection`, `attachment_context_build`, `image_open`, `image_encode`, `frame_decode`, `frame_moderation`, `frame_moderation_wait`, `frame_dedupe`, `frame_extraction`, `frame_queue_wait`, `frame_pipeline`, and `coordination`. The new queue wait entry makes backlog hotspots visible in both Discord embeds and Redis.
+- `bytes_downloaded` – best-effort size of the processed payload (preferring download telemetry, falling back to local file size).
+- `early_exit` – optional string explaining why work stopped early (`high_confidence_hit`, `low_risk_streak`, `flat_motion`, etc.).
+- Video diagnostics – `frames_submitted`, `frames_processed`, `frames_scanned`, `frames_target`, `frames_media_total`, `dedupe_skipped`, `flush_count`, `avg_frame_interarrival_ms`, `effective_flush_timeout_ms`, `residual_low_risk_streak`, `residual_motion_plateau`, plus a `queue_wait_latency_ms` counter. These values flow through to Redis so dashboards can highlight throughput regressions or dedupe effectiveness.
+
+All telemetry helpers also emit preformatted strings (latency breakdown lists, frame summaries) that match the data stored in Redis, ensuring operator alerts and dashboards stay in sync.
+
 ### Reading Metrics
 
 - `modules.metrics.get_media_metric_rollups()` walks the sorted-set indexes to collect the latest rollups, returning the raw counters plus derived statistics (averages, standard deviations, flag rates, bytes stats, frame-normalised latency) and per-acceleration breakdowns. Each rollup also includes `status_counts`, `updated_at`, and the latest flagged snapshot.
