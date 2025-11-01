@@ -60,6 +60,7 @@ class TaskRuntimeDetail:
     backlog_at_start: int
     backlog_at_finish: int
     active_workers_start: int
+    busy_workers_start: int
     max_workers: int
     autoscale_max: int
 
@@ -82,6 +83,7 @@ class TaskRuntimeDetail:
             "backlog_at_start": self.backlog_at_start,
             "backlog_at_finish": self.backlog_at_finish,
             "active_workers_start": self.active_workers_start,
+            "busy_workers_start": self.busy_workers_start,
             "max_workers": self.max_workers,
             "autoscale_max": self.autoscale_max,
         }
@@ -126,6 +128,7 @@ class _InstrumentedTask:
 
         backlog_at_start = queue.queue.qsize()
         active_workers_start = queue._active_workers()
+        busy_workers_start = queue._busy_workers
 
         try:
             await self._coro
@@ -147,6 +150,7 @@ class _InstrumentedTask:
                 backlog_at_start=backlog_at_start,
                 backlog_at_finish=backlog_at_finish,
                 active_workers_start=active_workers_start,
+                busy_workers_start=busy_workers_start,
                 max_workers=queue.max_workers,
                 autoscale_max=queue._autoscale_max,
             )
@@ -198,6 +202,7 @@ class WorkerQueue:
         self._name = name or "queue"
 
         self.workers: list[asyncio.Task] = []
+        self._busy_workers: int = 0
         self.running = False
         self._lock = asyncio.Lock()
         self._autoscaler_task: Optional[asyncio.Task] = None
@@ -557,6 +562,7 @@ class WorkerQueue:
                 if self._pending_stops > 0:
                     self._pending_stops -= 1
                 break
+            self._busy_workers += 1
             try:
                 await task
             except asyncio.CancelledError:
@@ -574,6 +580,8 @@ class WorkerQueue:
                     print(f"[WorkerQueue:{self._name}] Task failed: {exc!r}")
                     traceback.print_exception(type(exc), exc, exc.__traceback__)
             finally:
+                if self._busy_workers > 0:
+                    self._busy_workers -= 1
                 self.queue.task_done()
 
     def metrics(self) -> dict:
@@ -583,6 +591,7 @@ class WorkerQueue:
             "running": self.running,
             "backlog": self.queue.qsize(),
             "active_workers": self._active_workers(),
+            "busy_workers": self._busy_workers,
             "max_workers": self.max_workers,
             "baseline_workers": self._baseline_workers,
             "autoscale_max": self._autoscale_max,

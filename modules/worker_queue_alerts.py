@@ -76,6 +76,7 @@ class SingularTaskReporter:
             name="Queue context",
             value=(
                 f"Queue: ``{queue_name}``\n"
+                f"Busy workers at start: ``{detail.busy_workers_start}``\n"
                 f"Active workers at start: ``{detail.active_workers_start}``\n"
                 f"Configured max/autoscale: ``{detail.max_workers}`` / ``{detail.autoscale_max}``"
             ),

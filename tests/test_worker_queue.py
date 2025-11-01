@@ -100,3 +100,35 @@ def test_worker_queue_skips_non_singular_tasks_for_alerts():
         assert not reported
 
     asyncio.run(runner())
+
+
+def test_worker_queue_metrics_track_busy_workers():
+    async def runner():
+        queue = WorkerQueue(max_workers=1, autoscale_max=1, name="busy")
+        await queue.start()
+
+        initial_metrics = queue.metrics()
+        assert initial_metrics["busy_workers"] == 0
+
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def work():
+            started.set()
+            await release.wait()
+
+        await queue.add_task(work())
+        await asyncio.wait_for(started.wait(), timeout=1)
+
+        running_metrics = queue.metrics()
+        assert running_metrics["busy_workers"] == 1
+
+        release.set()
+        await asyncio.wait_for(queue.queue.join(), timeout=1)
+
+        final_metrics = queue.metrics()
+        assert final_metrics["busy_workers"] == 0
+
+        await asyncio.wait_for(queue.stop(), timeout=1)
+
+    asyncio.run(runner())

@@ -60,12 +60,12 @@ class FreeQueueMonitor:
     @staticmethod
     def _is_lagging(free: QueueSnapshot, accel: QueueSnapshot) -> bool:
         backlog_pressure = free.backlog_high is not None and free.backlog >= free.backlog_high
-        saturation = free.backlog > 0 and free.active_workers >= free.max_workers
+        saturation = free.backlog > 0 and free.busy_workers >= free.max_workers
         high_ratio = free.backlog_high is not None and free.backlog >= int(free.backlog_high * 1.5)
         relative_gap = (free.backlog - accel.backlog) >= max(5, accel.max_workers)
         backlog_growth = free.backlog >= free.max_workers * 4
         near_hard_limit = free.backlog_hard_limit is not None and free.backlog >= max(free.backlog_hard_limit - 5, 0)
-        burst_saturated = free.backlog > free.autoscale_max and free.active_workers >= free.max_workers
+        burst_saturated = free.backlog > free.autoscale_max and free.busy_workers >= free.max_workers
 
         return backlog_pressure and (
             saturation
@@ -84,6 +84,7 @@ class FreeQueueMonitor:
 
         summary = [
             f"free_backlog={free.backlog}",
+            f"free_busy={free.busy_workers}/{free.max_workers}",
             f"free_workers={free.active_workers}/{free.max_workers}",
             f"accelerated_backlog={accel.backlog}",
             f"dropped_total={free.dropped_total}",

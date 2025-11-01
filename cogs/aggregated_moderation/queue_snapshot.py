@@ -31,6 +31,7 @@ class QueueSnapshot:
     name: str
     backlog: int
     active_workers: int
+    busy_workers: int
     max_workers: int
     baseline_workers: int
     autoscale_max: int
@@ -61,6 +62,9 @@ class QueueSnapshot:
             name=str(metrics.get("name") or "queue"),
             backlog=_int(metrics.get("backlog")),
             active_workers=_int(metrics.get("active_workers")),
+            busy_workers=_int(metrics.get("busy_workers"))
+            if metrics.get("busy_workers") is not None
+            else _int(metrics.get("active_workers")),
             max_workers=_int(metrics.get("max_workers"), 1),
             baseline_workers=baseline,
             autoscale_max=_int(metrics.get("autoscale_max")),
@@ -117,14 +121,24 @@ class QueueSnapshot:
         return max(self.avg_wait, self.last_wait, self.longest_wait) >= 10.0
 
     def format_lines(self) -> str:
+        high = self.backlog_high if self.backlog_high is not None else "-"
+        low = self.backlog_low if self.backlog_low is not None else "-"
         parts = [
             f"Backlog: {self.backlog}",
-            f"Workers: {self.active_workers}/{self.max_workers} (baseline {self.baseline_workers}, burst {self.autoscale_max})",
+            (
+                "Workers: "
+                f"busy={self.busy_workers}/{self.max_workers}, "
+                f"allocated={self.active_workers}, "
+                f"baseline {self.baseline_workers}, burst {self.autoscale_max}"
+            ),
             f"Pending stops: {self.pending_stops}",
-            f"Watermarks: high={self.backlog_high}, low={self.backlog_low}",
+            f"Watermarks: high={high}, low={low}",
         ]
         if self.backlog_hard_limit is not None:
-            parts.append(f"Hard limit: {self.backlog_hard_limit} -> shed to {self.backlog_shed_to}")
+            limit = str(self.backlog_hard_limit)
+            if self.backlog_shed_to is not None:
+                limit = f"{limit} -> shed to {self.backlog_shed_to}"
+            parts.append(f"Hard limit: {limit}")
         parts.append(f"Dropped total: {self.dropped_total}")
         parts.append(
             "Task timings: "
@@ -185,19 +199,27 @@ class QueueSnapshot:
     @staticmethod
     def _format_workers(details: Mapping[str, Any]) -> Optional[str]:
         active = QueueSnapshot._int_or_none(details.get("active_workers_start"))
+        busy = QueueSnapshot._int_or_none(details.get("busy_workers_start"))
         max_workers = QueueSnapshot._int_or_none(details.get("max_workers"))
         autoscale = QueueSnapshot._int_or_none(details.get("autoscale_max"))
-        if active is None and max_workers is None:
+        if busy is None and active is None and max_workers is None:
             return None
-        if active is not None and max_workers is not None:
-            base = f"{active}/{max_workers}"
-        elif active is not None:
-            base = f"active={active}"
-        else:
-            base = f"max={max_workers}"
+        parts: list[str] = []
+        if busy is not None:
+            value = str(busy)
+            if max_workers is not None:
+                value = f"{value}/{max_workers}"
+            parts.append(f"busy={value}")
+        if active is not None:
+            if max_workers is not None:
+                parts.append(f"allocated={active}/{max_workers}")
+            else:
+                parts.append(f"allocated={active}")
+        elif max_workers is not None and busy is None:
+            parts.append(f"max={max_workers}")
         if autoscale and (max_workers is None or autoscale > max_workers):
-            base = f"{base} (burst {autoscale})"
-        return base
+            parts.append(f"burst {autoscale}")
+        return ", ".join(parts) if parts else None
 
     @staticmethod
     def _format_backlog(details: Mapping[str, Any]) -> Optional[str]:

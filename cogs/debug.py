@@ -147,13 +147,68 @@ class DebugCog(commands.Cog):
                     workers = len(getattr(q, "workers", []))
                     maxw = getattr(q, "max_workers", "?")
                     return f"[{cog_name}:{queue_name}] backlog={backlog} workers={workers}/{maxw}"
-                return (
-                    f"[{cog_name}:{queue_name}] backlog={data['backlog']} "
-                    f"workers={data['active_workers']}/{data['max_workers']} "
-                    f"baseline={data['baseline_workers']} burst={data['autoscale_max']} "
-                    f"hi={data['backlog_high']} lo={data['backlog_low']} "
-                    f"pending={data.get('pending_stops', 0)} run={data['running']}"
-                )
+                def _int(value, default=0):
+                    try:
+                        if value is None:
+                            return default
+                        return int(value)
+                    except (TypeError, ValueError):
+                        return default
+
+                def _float(value, default=0.0):
+                    try:
+                        if value is None:
+                            return default
+                        return float(value)
+                    except (TypeError, ValueError):
+                        return default
+
+                backlog = _int(data.get("backlog"))
+                max_workers = max(1, _int(data.get("max_workers"), 1))
+                busy = _int(data.get("busy_workers"), _int(data.get("active_workers")))
+                baseline = max(1, _int(data.get("baseline_workers"), 1))
+                burst = _int(data.get("autoscale_max"), max_workers)
+                hi_value = data.get("backlog_high")
+                lo_value = data.get("backlog_low")
+                hi = str(_int(hi_value)) if hi_value is not None else "-"
+                lo = str(_int(lo_value)) if lo_value is not None else "-"
+                pending = _int(data.get("pending_stops"))
+                tasks_completed = _int(data.get("tasks_completed"))
+                dropped = _int(data.get("dropped_tasks_total"))
+                limit = None
+                hard_limit_value = data.get("backlog_hard_limit")
+                if hard_limit_value is not None:
+                    hard_limit = _int(hard_limit_value)
+                    shed_to_value = data.get("backlog_shed_to")
+                    if shed_to_value is not None:
+                        limit = f"{hard_limit}->{_int(shed_to_value)}"
+                    else:
+                        limit = str(hard_limit)
+                wait_avg = _float(data.get("avg_wait_time"))
+                wait_last = _float(data.get("last_wait_time"))
+                wait_long = _float(data.get("longest_wait"))
+                run_avg = _float(data.get("avg_runtime"))
+                run_last = _float(data.get("last_runtime"))
+                run_long = _float(data.get("longest_runtime"))
+                running_flag = bool(data.get("running"))
+                parts = [
+                    f"[{cog_name}:{queue_name}]",
+                    f"backlog={backlog}",
+                    f"busy={busy}/{max_workers}",
+                    f"base={baseline}",
+                    f"burst={burst}",
+                    f"hi={hi}",
+                    f"lo={lo}",
+                    f"pend={pending}",
+                    f"tasks={tasks_completed}",
+                    f"drop={dropped}",
+                    f"wait={wait_avg:.2f}|{wait_last:.2f}|{wait_long:.2f}",
+                    f"run={run_avg:.2f}|{run_last:.2f}|{run_long:.2f}",
+                    f"running={running_flag}",
+                ]
+                if limit is not None:
+                    parts.insert(7, f"limit={limit}")
+                return " ".join(parts)
 
             for cog_name in ("AggregatedModerationCog", "EventDispatcherCog", "ScamDetectionCog"):
                 cog = self.bot.get_cog(cog_name)
