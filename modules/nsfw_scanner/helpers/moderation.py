@@ -297,6 +297,7 @@ async def moderator_api(
             latency_tracker.record_no_key_wait()
             continue
         api_started: float | None = None
+        request_model: str | None = None
         try:
             if has_image_input:
                 inputs = _build_image_inputs(image_state)
@@ -414,7 +415,54 @@ async def moderator_api(
                         payload_metadata["remote_fallback"] = True
                     if attempt_index < max_attempts - 1:
                         continue
-            print(f"[moderator_api] Unexpected error from OpenAI API: {exc}.")
+            context_parts: list[str] = [
+                f"attempt={attempt_number}/{max_attempts}",
+                f"exception_type={type(exc).__name__}",
+            ]
+            status_code = getattr(exc, "status_code", None)
+            if not status_code:
+                response = getattr(exc, "response", None)
+                status_code = getattr(response, "status_code", None)
+            if status_code:
+                context_parts.append(f"status_code={status_code}")
+            if request_model:
+                context_parts.append(f"model={request_model}")
+            context_parts.append(f"has_image_input={has_image_input}")
+            if has_image_input and image_state:
+                context_parts.append(
+                    f"image_remote={bool(image_state.get('use_remote'))}"
+                )
+                payload_bytes = image_state.get("payload_bytes")
+                if isinstance(payload_bytes, (bytes, bytearray)):
+                    context_parts.append(f"image_payload_bytes={len(payload_bytes)}")
+                payload_mime = image_state.get("payload_mime")
+                if payload_mime:
+                    context_parts.append(f"image_payload_mime={payload_mime}")
+                source_url = image_state.get("source_url")
+                if source_url:
+                    context_parts.append(
+                        f"image_source_host={urlparse(source_url).netloc or 'unknown'}"
+                    )
+            if isinstance(payload_metadata, dict):
+                message_id = payload_metadata.get("message_id")
+                if message_id is not None:
+                    context_parts.append(f"message_id={message_id}")
+                if payload_metadata.get("video_frame"):
+                    context_parts.append("video_frame=True")
+                source_url = payload_metadata.get("source_url")
+                if source_url:
+                    context_parts.append(
+                        f"payload_source_host={urlparse(source_url).netloc or 'unknown'}"
+                    )
+            context_summary = ", ".join(context_parts)
+            print(
+                "[moderator_api] Unexpected error from OpenAI API: "
+                f"{exc}. Context: {context_summary}."
+            )
+            log.exception(
+                "Unexpected error from OpenAI moderation API. Context: %s",
+                context_summary,
+            )
             latency_tracker.record_failure("unexpected_api_error")
             continue
 
