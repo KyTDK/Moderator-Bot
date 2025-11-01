@@ -6,7 +6,7 @@ from typing import Any
 
 from PIL import Image
 
-from modules.utils import clip_vectors
+from modules.utils import clip_vectors, text_vectors
 
 from .background_tasks import schedule_background_task
 
@@ -67,4 +67,46 @@ def schedule_vector_add(
         _run(),
         logger=active_logger,
         purpose="vector add",
+    )
+
+
+def schedule_text_vector_delete(
+    vector_id: int | None,
+    *,
+    logger: logging.Logger | None = None,
+) -> None:
+    if vector_id is None:
+        return
+
+    active_logger = logger or log
+
+    async def _run() -> None:
+        await text_vectors.delete_vectors([vector_id])
+
+    schedule_background_task(
+        _run(),
+        logger=active_logger,
+        purpose=f"text vector delete ({vector_id})",
+    )
+
+
+def schedule_text_vector_add(
+    text: str,
+    metadata: dict[str, Any],
+    *,
+    logger: logging.Logger | None = None,
+) -> None:
+    active_logger = logger or log
+
+    content = text.strip()
+    if not content:
+        return
+
+    async def _run() -> None:
+        await asyncio.to_thread(text_vectors.add_vector, content, metadata)
+
+    schedule_background_task(
+        _run(),
+        logger=active_logger,
+        purpose="text vector add",
     )

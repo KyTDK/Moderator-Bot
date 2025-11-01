@@ -10,8 +10,15 @@ import httpx
 import openai
 from PIL import Image
 
-from cogs.nsfw import NSFW_CATEGORY_SETTING
-from modules.utils import api, clip_vectors, mysql
+from modules.nsfw_scanner.settings_keys import (
+    NSFW_HIGH_ACCURACY_SETTING,
+    NSFW_IMAGE_CATEGORY_SETTING,
+    NSFW_TEXT_CATEGORY_SETTING,
+    NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_THRESHOLD_SETTING,
+    NSFW_THRESHOLD_SETTING,
+)
+from modules.utils import api, clip_vectors, mysql, text_vectors
 
 from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY, SFW_VECTOR_MAX_SIMILARITY
 from ..utils.categories import is_allowed_category
@@ -21,7 +28,10 @@ from .payloads import (
     VIDEO_FRAME_TARGET_BYTES,
     prepare_image_payload,
 )
-from .vector_tasks import schedule_vector_add
+from .vector_tasks import (
+    schedule_text_vector_add,
+    schedule_vector_add,
+)
 log = logging.getLogger(__name__)
 
 _ALLOW_REMOTE_IMAGES = os.getenv("MODBOT_ENABLE_REMOTE_IMAGE_URLS", "1").lower() not in {
@@ -111,13 +121,22 @@ async def moderator_api(
     latency_tracker = ModeratorLatencyTracker()
     latency_tracker.merge_payload_details(payload_metadata)
     latency_tracker.ensure_payload_detail("input_kind", "image" if has_image_input else "text")
+    if text:
+        latency_tracker.ensure_payload_detail("text_chars", len(text))
     latency_tracker.ensure_payload_detail("attempt_limit", max_attempts)
 
     def _finalize(payload: dict[str, Any]) -> dict[str, Any]:
         return latency_tracker.finalize(payload)
 
-    if text and not has_image_input:
+    text_preview = None
+    truncated_preview = None
+    use_text_settings = bool(text and not has_image_input)
+    if use_text_settings:
         inputs = text
+        text_preview = text[:256]
+        truncated_preview = text_preview
+        if len(text) > len(text_preview):
+            truncated_preview = text_preview.rstrip() + "..."
 
     original_size = None
     if isinstance(payload_metadata, dict):
@@ -224,18 +243,34 @@ async def moderator_api(
     if guild_id is not None and (
         resolved_allowed_categories is None or resolved_threshold is None
     ):
-        settings_map = await mysql.get_settings(
-            guild_id, [NSFW_CATEGORY_SETTING, "threshold"]
-        )
+        requested_settings = [NSFW_IMAGE_CATEGORY_SETTING, NSFW_THRESHOLD_SETTING]
+        if use_text_settings:
+            requested_settings.extend(
+                [NSFW_TEXT_CATEGORY_SETTING, NSFW_TEXT_THRESHOLD_SETTING, NSFW_TEXT_ENABLED_SETTING]
+            )
+
+        settings_map = await mysql.get_settings(guild_id, requested_settings)
 
     if resolved_allowed_categories is None:
-        resolved_allowed_categories = (settings_map or {}).get(
-            NSFW_CATEGORY_SETTING, []
-        ) or []
+        candidate_categories = []
+        if use_text_settings:
+            candidate_categories = (settings_map or {}).get(
+                NSFW_TEXT_CATEGORY_SETTING, []
+            ) or []
+        if not candidate_categories:
+            candidate_categories = (settings_map or {}).get(
+                NSFW_IMAGE_CATEGORY_SETTING, []
+            ) or []
+        resolved_allowed_categories = candidate_categories
 
     if resolved_threshold is None:
+        threshold_value = None
+        if use_text_settings:
+            threshold_value = (settings_map or {}).get(NSFW_TEXT_THRESHOLD_SETTING)
+        if threshold_value is None:
+            threshold_value = (settings_map or {}).get(NSFW_THRESHOLD_SETTING, 0.7)
         try:
-            resolved_threshold = float((settings_map or {}).get("threshold", 0.7))
+            resolved_threshold = float(threshold_value)
         except (TypeError, ValueError):
             resolved_threshold = 0.7
 
@@ -272,9 +307,7 @@ async def moderator_api(
             resource_timer = latency_tracker.start("resource_latency_ms")
             moderations_resource = await _get_moderations_resource(client)
             latency_tracker.stop("resource_latency_ms", resource_timer)
-            request_model = (
-                "omni-moderation-latest" if has_image_input else "text-moderation-latest"
-            )
+            request_model = "omni-moderation-latest"
             latency_tracker.ensure_payload_detail("request_model", request_model)
             response = None
             limiter_wait_started = time.perf_counter()
@@ -407,18 +440,29 @@ async def moderator_api(
 
             summary_categories[normalized_category] = score
 
-            if (
-                is_flagged
-                and image is not None
-                and not skip_vector_add
-                and clip_vectors.is_available()
-            ):
-                latency_tracker.set_payload_detail("vector_add_async", True)
-                schedule_vector_add(
-                    image,
-                    {"category": normalized_category, "score": score},
-                    logger=log,
-                )
+            if is_flagged and not skip_vector_add:
+                if image is not None and clip_vectors.is_available():
+                    latency_tracker.set_payload_detail("vector_add_async", True)
+                    schedule_vector_add(
+                        image,
+                        {"category": normalized_category, "score": score},
+                        logger=log,
+                    )
+                elif text and text_vectors.is_available():
+                    latency_tracker.set_payload_detail("text_vector_add_async", True)
+                    text_metadata = {
+                        "category": normalized_category,
+                        "score": score,
+                    }
+                    if truncated_preview:
+                        text_metadata["preview"] = truncated_preview
+                    if guild_id is not None:
+                        text_metadata["guild_id"] = guild_id
+                    if isinstance(payload_metadata, dict):
+                        message_id = payload_metadata.get("message_id")
+                        if message_id is not None:
+                            text_metadata["message_id"] = message_id
+                    schedule_text_vector_add(text, text_metadata, logger=log)
 
             if score < resolved_threshold:
                 continue
@@ -432,18 +476,34 @@ async def moderator_api(
 
         latency_tracker.stop("response_parse_ms", parse_timer)
 
-        if (
-            ADD_SFW_VECTOR
-            and image is not None
-            and clip_vectors.is_available()
-            and _should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
-        ):
-            latency_tracker.set_payload_detail("sfw_vector_add_async", True)
-            schedule_vector_add(
-                image,
-                {"category": None, "score": 0},
-                logger=log,
-            )
+        if ADD_SFW_VECTOR and not flagged_any and not skip_vector_add:
+            if (
+                image is not None
+                and clip_vectors.is_available()
+                and _should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
+            ):
+                latency_tracker.set_payload_detail("sfw_vector_add_async", True)
+                schedule_vector_add(
+                    image,
+                    {"category": None, "score": 0},
+                    logger=log,
+                )
+            elif (
+                text
+                and text_vectors.is_available()
+                and _should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
+            ):
+                latency_tracker.set_payload_detail("text_sfw_vector_add_async", True)
+                sfw_metadata = {"category": None, "score": 0}
+                if truncated_preview:
+                    sfw_metadata["preview"] = truncated_preview
+                if guild_id is not None:
+                    sfw_metadata["guild_id"] = guild_id
+                if isinstance(payload_metadata, dict):
+                    message_id = payload_metadata.get("message_id")
+                    if message_id is not None:
+                        sfw_metadata["message_id"] = message_id
+                schedule_text_vector_add(text, sfw_metadata, logger=log)
 
         if guild_flagged_categories:
             guild_flagged_categories.sort(key=lambda item: item[1], reverse=True)

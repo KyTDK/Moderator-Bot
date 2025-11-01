@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover - optional dependency handled gracefully
 else:
     register_heif_opener()
 
-from cogs.nsfw import NSFW_CATEGORY_SETTING
+from modules.nsfw_scanner.settings_keys import NSFW_IMAGE_CATEGORY_SETTING
 from modules.utils import clip_vectors, mysql
 from modules.utils.log_channel import send_log_message
 
@@ -53,6 +53,8 @@ _PNG_PASSTHROUGH_FORMATS = {
 
 
 log = logging.getLogger(__name__)
+
+NSFW_CATEGORY_SETTING = NSFW_IMAGE_CATEGORY_SETTING
 
 
 async def _open_image_from_path(path: str) -> Image.Image:

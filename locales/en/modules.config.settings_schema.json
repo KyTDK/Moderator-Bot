@@ -20,6 +20,12 @@
                 "nsfw-enabled": {
                     "description": "Enable NSFW scanning for messages, reactions, and avatars (other toggles still apply)."
                 },
+                "nsfw-text-enabled": {
+                    "description": "Enable NSFW scanning for message text content."
+                },
+                "nsfw-text-strikes-only": {
+                    "description": "Only run NSFW text detection for members with active strikes."
+                },
                 "monitor-events": {
                     "description": "Enable/disable logging for each type of monitored event."
                 },
@@ -30,14 +36,23 @@
                 "nsfw-detection-action": {
                     "description": "Action to take when a user posts NSFW content."
                 },
+                "nsfw-text-action": {
+                    "description": "Action to take when NSFW content is detected in message text."
+                },
                 "nsfw-detection-categories": {
                     "description": "Categories considered NSFW for detection."
+                },
+                "nsfw-text-categories": {
+                    "description": "Categories considered NSFW for text detection."
                 },
                 "nsfw-high-accuracy": {
                     "description": "Enable high-accuracy NSFW scans for more reliable detection. Accelerated only."
                 },
                 "threshold": {
                     "description": "Threshold for NSFW detection confidence. Lower values are more sensitive."
+                },
+                "nsfw-text-threshold": {
+                    "description": "Threshold for NSFW text detection confidence. Lower values are more sensitive."
                 },
                 "banned-words-action": {
                     "description": "Action to take when a user posts a banned word."

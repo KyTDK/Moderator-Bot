@@ -19,6 +19,15 @@ from discord.ext import commands
 import pillow_avif  # registers AVIF support
 
 from modules.config.premium_plans import PLAN_CORE, PLAN_FREE, PLAN_PRO, PLAN_ULTRA
+from modules.nsfw_scanner.settings_keys import (
+    NSFW_IMAGE_CATEGORY_SETTING,
+    NSFW_TEXT_ACTION_SETTING,
+    NSFW_TEXT_CATEGORY_SETTING,
+    NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_STRIKES_ONLY_SETTING,
+    NSFW_TEXT_THRESHOLD_SETTING,
+    NSFW_THRESHOLD_SETTING,
+)
 from modules.utils import clip_vectors, mysql
 from modules.utils.discord_utils import safe_get_channel
 from modules.utils.log_channel import send_log_message
@@ -37,6 +46,7 @@ from .helpers import (
     AttachmentSettingsCache,
     check_attachment as helper_check_attachment,
     is_tenor_host,
+    process_text,
     temp_download as helper_temp_download,
 )
 from .helpers.metrics import build_download_latency_breakdown
@@ -445,6 +455,28 @@ class NSFWScanner:
 
         download_cap_bytes = await _resolve_download_cap_bytes()
 
+        async def _ensure_scan_settings_map() -> dict[str, Any]:
+            settings = settings_cache.get_scan_settings()
+            if settings is None and guild_id is not None:
+                try:
+                    settings = await mysql.get_settings(
+                        guild_id,
+                        [
+                            NSFW_IMAGE_CATEGORY_SETTING,
+                            NSFW_TEXT_CATEGORY_SETTING,
+                            NSFW_THRESHOLD_SETTING,
+                            NSFW_TEXT_THRESHOLD_SETTING,
+                            NSFW_HIGH_ACCURACY_SETTING,
+                            NSFW_TEXT_ENABLED_SETTING,
+                            NSFW_TEXT_STRIKES_ONLY_SETTING,
+                        ],
+                    )
+                except Exception:
+                    settings = None
+                settings_cache.set_scan_settings(settings)
+                settings = settings_cache.get_scan_settings()
+            return settings or {}
+
         if url:
             return await self._download_and_scan(
                 source_url=url,
@@ -480,6 +512,95 @@ class NSFWScanner:
         if message is None:
             print("Message is None")
             return False
+
+        text_content = (message.content or "").strip()
+        if text_content:
+            text_scanning_enabled = True
+            if guild_id is not None:
+                if settings_cache.has_text_enabled():
+                    text_scanning_enabled = bool(settings_cache.get_text_enabled())
+                else:
+                    try:
+                        text_setting = await mysql.get_settings(guild_id, NSFW_TEXT_ENABLED_SETTING)
+                    except Exception:
+                        text_setting = None
+                    if text_setting is None:
+                        text_scanning_enabled = True
+                    else:
+                        text_scanning_enabled = bool(text_setting)
+                    settings_cache.set_text_enabled(text_scanning_enabled)
+
+                if settings_cache.has_accelerated():
+                    accelerated_allowed = bool(settings_cache.get_accelerated())
+                else:
+                    try:
+                        accelerated_allowed = await mysql.is_accelerated(guild_id=guild_id)
+                    except Exception:
+                        accelerated_allowed = False
+                    settings_cache.set_accelerated(accelerated_allowed)
+                if not accelerated_allowed:
+                    text_scanning_enabled = False
+
+            if text_scanning_enabled:
+                settings_map = await _ensure_scan_settings_map()
+                strikes_only = bool((settings_map or {}).get(NSFW_TEXT_STRIKES_ONLY_SETTING))
+                if strikes_only and guild_id is not None:
+                    author_id = getattr(getattr(message, "author", None), "id", None)
+                    strike_count = 0
+                    if author_id is not None:
+                        try:
+                            strike_count = await mysql.get_strike_count(author_id, guild_id)
+                        except Exception:
+                            strike_count = 0
+                    if strike_count <= 0:
+                        text_scanning_enabled = False
+                text_metadata = {
+                    "message_id": getattr(message, "id", None),
+                    "channel_id": getattr(getattr(message, "channel", None), "id", None),
+                    "author_id": getattr(getattr(message, "author", None), "id", None),
+                }
+                text_result = await process_text(
+                    self,
+                    text_content,
+                    guild_id=guild_id,
+                    settings=settings_map,
+                    payload_metadata=text_metadata,
+                )
+                if text_result and text_result.get("is_nsfw"):
+                    if nsfw_callback:
+                        category = text_result.get("category") or "unspecified"
+                        confidence_value = None
+                        confidence_source = None
+                        score = text_result.get("score")
+                        similarity = text_result.get("similarity")
+                        try:
+                            if score is not None:
+                                confidence_value = float(score)
+                                confidence_source = "score"
+                            elif similarity is not None:
+                                confidence_value = float(similarity)
+                                confidence_source = "similarity"
+                        except (TypeError, ValueError):
+                            confidence_value = None
+                            confidence_source = None
+
+                        category_label = category.replace("_", " ").title()
+                        reason = (
+                            f"Detected potential policy violation (Category: **{category_label}**)."
+                        )
+
+                        await nsfw_callback(
+                            message.author,
+                            self.bot,
+                            guild_id,
+                            reason,
+                            None,
+                            message,
+                            confidence=confidence_value,
+                            confidence_source=confidence_source,
+                            action_setting=NSFW_TEXT_ACTION_SETTING,
+                        )
+                    return True
 
         for attachment in attachments:
             suffix = os.path.splitext(attachment.filename)[1] or ""

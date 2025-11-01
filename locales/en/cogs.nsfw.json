@@ -10,14 +10,30 @@
             "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
           }
         },
+        "add_text_action": {
+          "description": "Add an action to the NSFW text punishment list.",
+          "params": {
+            "action": "Action to perform",
+            "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          }
+        },
         "remove_action": {
           "description": "Remove an action from the NSFW punishment list.",
           "params": {
             "action": "Exact action string to remove (e.g. timeout, delete)"
           }
         },
+        "remove_text_action": {
+          "description": "Remove an action from the NSFW text punishment list.",
+          "params": {
+            "action": "Exact action string to remove (e.g. timeout, delete)"
+          }
+        },
         "view_actions": {
           "description": "View the current list of NSFW punishment actions."
+        },
+        "view_text_actions": {
+          "description": "View the current list of NSFW text punishment actions."
         },
         "add_category": {
           "description": "Add a category to NSFW detection."
@@ -26,6 +42,13 @@
           "violence_graphic": "Violence Graphic",
           "violence": "Violence",
           "sexual": "Sexual",
+          "sexual_minors": "Sexual (Minors)",
+          "harassment": "Harassment",
+          "harassment_threatening": "Harassment (Threatening)",
+          "hate": "Hate",
+          "hate_threatening": "Hate (Threatening)",
+          "illicit": "Illicit",
+          "illicit_violent": "Illicit (Violent)",
           "self_harm_instructions": "Self Harm Instructions",
           "self_harm_intent": "Self Harm Intent",
           "self_harm": "Self Harm"
@@ -44,11 +67,57 @@
         },
         "view_threshold": {
           "description": "View the current NSFW detection threshold."
+        },
+        "add_text_category": {
+          "description": "Add a category to NSFW text detection.",
+          "params": {
+            "category": "Category to include"
+          }
+        },
+        "remove_text_category": {
+          "description": "Remove a category from NSFW text detection.",
+          "params": {
+            "category": "Category to remove"
+          }
+        },
+        "view_text_categories": {
+          "description": "View NSFW text detection categories."
+        },
+        "set_text_threshold": {
+          "description": "Set the threshold for NSFW text detection confidence.",
+          "params": {
+            "threshold": "Confidence threshold (0.0 to 1.0)"
+          }
+        },
+        "view_text_threshold": {
+          "description": "View the current NSFW text detection threshold."
+        },
+        "set_text_scanning": {
+          "description": "Enable or disable NSFW scanning for message text.",
+          "params": {
+            "enabled": "Enable text scanning"
+          }
+        },
+        "view_text_scanning": {
+          "description": "View the current NSFW text scanning state."
+        },
+        "set_text_strike_filter": {
+          "description": "Enable or disable NSFW text detection only for users with strikes.",
+          "params": {
+            "enabled": "Enable strike-only text scanning"
+          }
+        },
+        "view_text_strike_filter": {
+          "description": "View the current NSFW text strike-only filtering state."
         }
       },
       "actions": {
         "none": "No NSFW actions are currently set.",
         "heading": "**Current NSFW actions:**\n{actions}"
+      },
+      "text_actions": {
+        "none": "No NSFW text actions are currently set.",
+        "heading": "**Current NSFW text actions:**\n{actions}"
       },
       "categories": {
         "none": "No categories are currently set.",
@@ -59,6 +128,30 @@
         "set": "NSFW detection threshold set to {value:.2f}.",
         "unset": "NSFW detection threshold is not set.",
         "current": "Current NSFW detection threshold: {value:.2f}"
+      },
+      "text_categories": {
+        "none": "No text categories are currently set.",
+        "heading": "**Current NSFW text categories:**\n{categories}"
+      },
+      "text_threshold": {
+        "invalid": "Text detection threshold must be between 0.0 and 1.0.",
+        "set": "NSFW text detection threshold set to {value:.2f}.",
+        "unset": "NSFW text detection threshold is not set.",
+        "current": "Current NSFW text detection threshold: {value:.2f}"
+      },
+      "text_scanning": {
+        "enabled": "NSFW text scanning has been enabled.",
+        "disabled": "NSFW text scanning has been disabled.",
+        "status": "NSFW text scanning is currently **{state}**.",
+        "enabled_label": "enabled",
+        "disabled_label": "disabled"
+      },
+      "text_strike_filter": {
+        "enabled": "NSFW text strike-only filtering has been enabled.",
+        "disabled": "NSFW text strike-only filtering has been disabled.",
+        "status": "NSFW text strike-only filtering is currently **{state}**.",
+        "enabled_label": "enabled",
+        "disabled_label": "disabled"
       }
     }
   }

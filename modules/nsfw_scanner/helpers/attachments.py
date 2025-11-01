@@ -4,7 +4,14 @@ from typing import Any
 
 import discord
 
-from cogs.nsfw import NSFW_CATEGORY_SETTING
+from modules.nsfw_scanner.settings_keys import (
+    NSFW_HIGH_ACCURACY_SETTING,
+    NSFW_IMAGE_CATEGORY_SETTING,
+    NSFW_TEXT_CATEGORY_SETTING,
+    NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_THRESHOLD_SETTING,
+    NSFW_THRESHOLD_SETTING,
+)
 from modules.metrics import log_media_scan
 from modules.utils import mod_logging, mysql
 from modules.utils.localization import TranslateFn, localize_message
@@ -38,6 +45,8 @@ class AttachmentSettingsCache:
         "check_tenor_gifs",
         "premium_status",
         "premium_plan",
+        "text_enabled",
+        "accelerated",
     )
 
     def __init__(self) -> None:
@@ -46,6 +55,8 @@ class AttachmentSettingsCache:
         self.check_tenor_gifs: Any = _CACHE_MISS
         self.premium_status: Any = _CACHE_MISS
         self.premium_plan: Any = _CACHE_MISS
+        self.text_enabled: Any = _CACHE_MISS
+        self.accelerated: Any = _CACHE_MISS
 
     def has_scan_settings(self) -> bool:
         return self.scan_settings is not _CACHE_MISS
@@ -101,6 +112,28 @@ class AttachmentSettingsCache:
 
     def set_premium_plan(self, value: Any) -> None:
         self.premium_plan = value
+
+    def has_text_enabled(self) -> bool:
+        return self.text_enabled is not _CACHE_MISS
+
+    def get_text_enabled(self) -> bool | None:
+        if self.text_enabled is _CACHE_MISS:
+            return None
+        return bool(self.text_enabled)
+
+    def set_text_enabled(self, value: Any) -> None:
+        self.text_enabled = bool(value)
+
+    def has_accelerated(self) -> bool:
+        return self.accelerated is not _CACHE_MISS
+
+    def get_accelerated(self) -> bool | None:
+        if self.accelerated is _CACHE_MISS:
+            return None
+        return bool(self.accelerated)
+
+    def set_accelerated(self, value: Any) -> None:
+        self.accelerated = bool(value)
 
 DECISION_FALLBACKS = {
     "unknown": "Unknown",
@@ -367,7 +400,15 @@ async def check_attachment(
         settings_started = time.perf_counter()
         settings = await mysql.get_settings(
             guild_id,
-            [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
+            [
+                NSFW_IMAGE_CATEGORY_SETTING,
+                NSFW_TEXT_CATEGORY_SETTING,
+                NSFW_THRESHOLD_SETTING,
+                NSFW_TEXT_THRESHOLD_SETTING,
+                NSFW_HIGH_ACCURACY_SETTING,
+                NSFW_TEXT_ENABLED_SETTING,
+                NSFW_TEXT_STRIKES_ONLY_SETTING,
+            ],
         )
         latency_tracker.record_step(
             "attachment_settings_lookup",
