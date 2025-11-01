@@ -20,6 +20,7 @@ SCAN_REASON_DESCRIPTIONS: dict[str, str] = {
     "openai_moderation": "The OpenAI moderation API completed successfully",
     "openai_moderation_timeout": "The OpenAI moderation API timed out and provided no result",
     "openai_moderation_http_timeout": "The HTTP request to the OpenAI moderation API timed out",
+    "openai_moderation_connection_error": "A connection error prevented the OpenAI moderation API from responding",
     "similarity_match": "Similarity matching decided the final outcome before moderation finished",
     "no_frames_extracted": "Video processing could not extract frames for moderation",
     "no_nsfw_frames_detected": "Video scan completed with no NSFW frames detected",
@@ -29,6 +30,7 @@ SCAN_REASON_DESCRIPTIONS: dict[str, str] = {
 SCAN_FAILURE_REASONS: set[str] = {
     "openai_moderation_timeout",
     "openai_moderation_http_timeout",
+    "openai_moderation_connection_error",
     "no_frames_extracted",
 }
 
@@ -37,6 +39,7 @@ MODERATOR_FAILURE_DESCRIPTIONS: dict[str, str] = {
     "no_key_available": "No API key was available for the request",
     "authentication_error": "Authentication with the OpenAI API failed",
     "rate_limit_error": "OpenAI rate limits prevented the request from completing",
+    "api_connection_error": "The connection to the OpenAI API failed",
     "openai_timeout": "The OpenAI moderation API did not respond before timing out",
     "http_timeout": "The HTTP client timed out waiting for the OpenAI response",
     "unexpected_api_error": "An unexpected error occurred while calling the OpenAI API",

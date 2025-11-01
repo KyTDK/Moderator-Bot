@@ -281,6 +281,7 @@ async def moderator_api(
 
     had_openai_timeout = False
     had_http_timeout = False
+    had_connection_error = False
 
     def _build_error_context(
         *,
@@ -437,6 +438,17 @@ async def moderator_api(
                 f"[moderator_api] Bad request on attempt {attempt_number}/{max_attempts}: {exc}."
             )
             latency_tracker.record_failure("bad_request_error")
+            continue
+        except (openai.APIConnectionError, httpx.RemoteProtocolError) as exc:
+            latency_tracker.stop("api_call_ms", api_started)
+            print(
+                "[moderator_api] Connection error during moderation request on attempt "
+                f"{attempt_number}/{max_attempts}: {exc}."
+            )
+            had_connection_error = True
+            latency_tracker.record_failure("api_connection_error")
+            if attempt_index < max_attempts - 1:
+                await asyncio.sleep(min(2 ** attempt_index, 5.0))
             continue
         except openai.InternalServerError as exc:
             latency_tracker.stop("api_call_ms", api_started)
@@ -648,5 +660,7 @@ async def moderator_api(
         result["reason"] = "openai_moderation_timeout"
     elif had_http_timeout:
         result["reason"] = "openai_moderation_http_timeout"
+    elif had_connection_error:
+        result["reason"] = "openai_moderation_connection_error"
 
     return _finalize(result)
