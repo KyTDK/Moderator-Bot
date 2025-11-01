@@ -14,7 +14,16 @@ async def send_ephemeral_response(
     file: Optional[discord.File] = None,
 ) -> None:
     """Send an ephemeral response, handling followups after a defer."""
+
+    send_kwargs: dict[str, object] = {"ephemeral": True}
+
+    if content is not None:
+        send_kwargs["content"] = content
+
+    if file is not None:
+        send_kwargs["file"] = file
+
     if interaction.response.is_done():
-        await interaction.followup.send(content, file=file, ephemeral=True)
+        await interaction.followup.send(**send_kwargs)
     else:
-        await interaction.response.send_message(content, file=file, ephemeral=True)
+        await interaction.response.send_message(**send_kwargs)
