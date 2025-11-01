@@ -17,12 +17,7 @@ from ..utils.file_types import (
 )
 from ..logging_utils import log_slow_scan_if_needed
 from .images import build_image_processing_context, process_image
-from .metrics import (
-    collect_scan_telemetry,
-    format_video_scan_progress,
-    merge_latency_breakdown,
-    normalize_latency_breakdown,
-)
+from .metrics import LatencyTracker, collect_scan_telemetry, format_video_scan_progress
 from .videos import process_video
 
 REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
@@ -245,58 +240,26 @@ async def check_attachment(
     if settings_cache is None:
         settings_cache = AttachmentSettingsCache()
 
-    latency_steps = normalize_latency_breakdown(pre_latency_steps)
-
-    if overall_started_at is None:
-        overall_started_at = time.perf_counter()
-
-    def _elapsed_total_ms() -> int:
-        return int(max((time.perf_counter() - overall_started_at) * 1000, 0))
-
-    def _record_latency(name: str, duration_ms: float, label: str) -> None:
-        if duration_ms <= 0:
-            return
-        entry = latency_steps.setdefault(
-            name,
-            {
-                "duration_ms": 0.0,
-                "label": label,
-            },
-        )
-        try:
-            entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + float(
-                duration_ms
-            )
-        except (TypeError, ValueError):
-            entry["duration_ms"] = float(duration_ms)
-        if not entry.get("label"):
-            entry["label"] = label
-
-    def _resolve_total_latency_ms(preferred: Any, fallback_ms: int) -> int:
-        try:
-            if preferred is None:
-                raise TypeError
-            resolved = float(preferred)
-        except (TypeError, ValueError):
-            return fallback_ms
-        resolved = int(round(resolved))
-        return resolved if resolved >= 0 else fallback_ms
+    latency_tracker = LatencyTracker(
+        started_at=overall_started_at,
+        steps=pre_latency_steps,
+    )
 
     filename = os.path.basename(temp_filename)
     mime_started = time.perf_counter()
     file_type, detected_mime = determine_file_type(temp_filename)
-    _record_latency(
+    latency_tracker.record_step(
         "attachment_mime_detection",
         (time.perf_counter() - mime_started) * 1000,
-        "MIME Detection",
+        label="MIME Detection",
     )
     try:
         size_started = time.perf_counter()
         file_size = os.path.getsize(temp_filename)
-        _record_latency(
+        latency_tracker.record_step(
             "attachment_filesize",
             (time.perf_counter() - size_started) * 1000,
-            "File Size Lookup",
+            label="File Size Lookup",
         )
     except OSError:
         file_size = None
@@ -320,10 +283,10 @@ async def check_attachment(
             accelerated_cache["value"] = await mysql.is_accelerated(
                 guild_id=guild_id
             )
-            _record_latency(
+            latency_tracker.record_step(
                 "attachment_accelerated_lookup",
                 (time.perf_counter() - lookup_started) * 1000,
-                "Accelerated Lookup",
+                label="Accelerated Lookup",
             )
         except Exception:
             accelerated_cache["value"] = None
@@ -343,9 +306,10 @@ async def check_attachment(
             return
         metrics_recorded = True
 
-        duration_ms = (
-            duration_override_ms if duration_override_ms is not None else _elapsed_total_ms()
-        )
+        if duration_override_ms is not None:
+            duration_ms = int(round(duration_override_ms))
+        else:
+            duration_ms = int(round(latency_tracker.total_duration_ms()))
         channel_id = getattr(getattr(message, "channel", None), "id", None) if message else None
         user_id = getattr(author, "id", None) if author else None
         message_id = getattr(message, "id", None) if message else None
@@ -387,7 +351,11 @@ async def check_attachment(
             print(f"[metrics] Failed to record media scan metric for {filename}: {metrics_exc}")
 
     if guild_id is None:
-        await _emit_metrics(None, "missing_guild", duration_override_ms=_elapsed_total_ms())
+        await _emit_metrics(
+            None,
+            "missing_guild",
+            duration_override_ms=latency_tracker.total_duration_ms(),
+        )
         print("[check_attachment] Guild_id is None")
         return False
 
@@ -401,10 +369,10 @@ async def check_attachment(
             guild_id,
             [NSFW_CATEGORY_SETTING, "threshold", "nsfw-high-accuracy"],
         )
-        _record_latency(
+        latency_tracker.record_step(
             "attachment_settings_lookup",
             (time.perf_counter() - settings_started) * 1000,
-            "Settings Lookup",
+            label="Settings Lookup",
         )
         settings_cache.set_scan_settings(settings)
         settings = settings_cache.get_scan_settings()
@@ -417,10 +385,10 @@ async def check_attachment(
         settings=settings,
         accelerated=accelerated_value,
     )
-    _record_latency(
+    latency_tracker.record_step(
         "attachment_context_build",
         (time.perf_counter() - context_started) * 1000,
-        "Build Scan Context",
+        label="Build Scan Context",
     )
     pipeline_accelerated = bool(context.accelerated)
 
@@ -443,10 +411,10 @@ async def check_attachment(
             else:
                 premium_started = time.perf_counter()
                 premium_status = await mysql.get_premium_status(guild_id)
-                _record_latency(
+                latency_tracker.record_step(
                     "attachment_premium_lookup",
                     (time.perf_counter() - premium_started) * 1000,
-                    "Premium Lookup",
+                    label="Premium Lookup",
                 )
                 settings_cache.set_premium_status(premium_status)
                 premium_status = settings_cache.get_premium_status()
@@ -458,7 +426,11 @@ async def check_attachment(
             premium_status=premium_status,
         )
     else:
-        await _emit_metrics(None, "unsupported_type", duration_override_ms=_elapsed_total_ms())
+        await _emit_metrics(
+            None,
+            "unsupported_type",
+            duration_override_ms=latency_tracker.total_duration_ms(),
+        )
         print(
             f"[check_attachment] Unsupported file type: {detected_mime or file_type} for {filename}"
         )
@@ -466,51 +438,34 @@ async def check_attachment(
 
     translator = _resolve_translator(scanner)
 
-    scan_duration_ms = _elapsed_total_ms()
+    resolved_total_latency = latency_tracker.total_duration_ms()
 
     if isinstance(scan_result, dict):
         pipeline_metrics = scan_result.setdefault("pipeline_metrics", {})
-        existing_breakdown = pipeline_metrics.get("latency_breakdown_ms")
-        pipeline_metrics["latency_breakdown_ms"] = merge_latency_breakdown(
-            existing_breakdown,
-            latency_steps,
+        pipeline_metrics, resolved_total_latency = latency_tracker.merge_into_pipeline(
+            pipeline_metrics
         )
-        existing_total_latency: float | None = None
-        for total_key in ("total_latency_ms", "total_duration_ms"):
-            raw_total = pipeline_metrics.get(total_key)
-            if raw_total is None:
-                continue
-            try:
-                candidate_total = float(raw_total)
-            except (TypeError, ValueError):
-                continue
-            if candidate_total < 0:
-                continue
-            existing_total_latency = candidate_total
-            break
-        if existing_total_latency is not None:
-            pipeline_metrics.setdefault(
-                "pipeline_total_latency_ms",
-                existing_total_latency,
-            )
-        combined_total_latency = _resolve_total_latency_ms(
-            existing_total_latency, scan_duration_ms
-        )
-        pipeline_metrics["total_latency_ms"] = float(combined_total_latency)
-        pipeline_metrics["total_duration_ms"] = float(combined_total_latency)
+        scan_result["pipeline_metrics"] = pipeline_metrics
         if pre_download_bytes is not None and pipeline_metrics.get("bytes_downloaded") is None:
             pipeline_metrics["bytes_downloaded"] = pre_download_bytes
         elif pipeline_metrics.get("bytes_downloaded") is None and file_size is not None:
             pipeline_metrics["bytes_downloaded"] = file_size
 
+    scan_duration_ms = int(round(resolved_total_latency))
+
     telemetry = collect_scan_telemetry(
         scan_result,
         fallback_total_ms=scan_duration_ms,
     )
-    total_latency_ms = telemetry.total_latency_ms
-    resolved_total_latency_ms = _resolve_total_latency_ms(
-        total_latency_ms, scan_duration_ms
-    )
+    telemetry_total_latency = telemetry.total_latency_ms
+    if telemetry_total_latency is None:
+        resolved_total_latency_ms = scan_duration_ms
+    else:
+        try:
+            resolved_total_latency_ms = int(round(float(telemetry_total_latency)))
+        except (TypeError, ValueError):
+            resolved_total_latency_ms = scan_duration_ms
+
     try:
         await log_slow_scan_if_needed(
             bot=scanner.bot,

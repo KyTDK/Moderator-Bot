@@ -2,8 +2,9 @@ import asyncio
 import io
 import os
 import time
-from typing import Any, Optional
+from dataclasses import dataclass, field
 from threading import Event
+from typing import Any, Optional
 
 import discord
 
@@ -23,6 +24,99 @@ from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame, frames_are_similar, iter_extracted_frames
 from .context import ImageProcessingContext, build_image_processing_context
 from .images import process_image_batch
+from .metrics import LatencyTracker
+
+
+def _initial_video_metrics() -> dict[str, Any]:
+    return {
+        "dedupe_skipped": 0,
+        "frames_submitted": 0,
+        "frames_processed": 0,
+        "decode_latency_ms": 0.0,
+        "batch_decode_latency_ms": 0.0,
+        "batch_similarity_latency_ms": 0.0,
+        "moderation_latency_ms": 0.0,
+        "moderation_wait_latency_ms": 0.0,
+        "queue_wait_latency_ms": 0.0,
+        "dedupe_check_latency_ms": 0.0,
+        "extraction_latency_ms": 0.0,
+        "flush_count": 0,
+        "early_exit": None,
+        "bytes_downloaded": None,
+        "avg_frame_interarrival_ms": 0.0,
+        "effective_flush_timeout_ms": 0.0,
+    }
+
+
+@dataclass(slots=True)
+class VideoMetrics:
+    tracker: LatencyTracker
+    data: dict[str, Any] = field(default_factory=_initial_video_metrics)
+
+    def snapshot(self) -> dict[str, Any]:
+        return dict(self.data)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self.data.get(key, default)
+
+    def increment(self, key: str, amount: int = 1) -> None:
+        self.data[key] = int(self.data.get(key) or 0) + int(amount)
+
+    def add_duration(self, key: str, duration_ms: Any) -> None:
+        try:
+            duration = float(duration_ms)
+        except (TypeError, ValueError):
+            return
+        if duration <= 0:
+            return
+        self.data[key] = float(self.data.get(key) or 0.0) + duration
+
+    def set_bytes_downloaded(self, value: Any) -> None:
+        self.data["bytes_downloaded"] = value
+
+    def note_early_exit(self, reason: str) -> None:
+        if self.data.get("early_exit") is None:
+            self.data["early_exit"] = reason
+
+    def has_early_exit(self) -> bool:
+        return self.data.get("early_exit") is not None
+
+    def finalize(
+        self,
+        *,
+        processed_frames: int,
+        target_frames: int,
+        dedupe_enabled: bool,
+        low_risk_streak: int,
+        motion_plateau: int,
+        avg_interarrival: float | None,
+        min_flush_timeout: float,
+        max_flush_timeout: float,
+    ) -> dict[str, Any]:
+        payload = self.data
+        payload["frames_scanned"] = processed_frames
+        payload["frames_target"] = target_frames
+        payload["dedupe_enabled"] = bool(dedupe_enabled)
+        payload["residual_low_risk_streak"] = low_risk_streak
+        payload["residual_motion_plateau"] = motion_plateau
+
+        if avg_interarrival is not None:
+            payload["avg_frame_interarrival_ms"] = avg_interarrival * 1000
+            payload["effective_flush_timeout_ms"] = max(
+                min_flush_timeout,
+                min(max_flush_timeout, avg_interarrival * 1.5),
+            ) * 1000
+        else:
+            payload["effective_flush_timeout_ms"] = min_flush_timeout * 1000
+
+        total_duration_ms = self.tracker.total_duration_ms()
+        payload["total_latency_ms"] = total_duration_ms
+        payload["latency_breakdown_ms"] = {
+            key: value
+            for key, value in self.tracker.steps.items()
+            if isinstance(value, dict)
+        }
+        return payload
 
 FRAME_LIMITS_BY_TIER = {
     "accelerated": ACCELERATED_MAX_FRAMES_PER_VIDEO,
@@ -146,48 +240,15 @@ async def process_video(
     max_flush_timeout = 0.24 if context.accelerated else 0.32
     avg_interarrival: float | None = None
     last_frame_timestamp: float | None = None
-    metrics_payload: dict[str, Any] = {
-        "dedupe_skipped": 0,
-        "frames_submitted": 0,
-        "frames_processed": 0,
-        "decode_latency_ms": 0.0,
-        "batch_decode_latency_ms": 0.0,
-        "batch_similarity_latency_ms": 0.0,
-        "moderation_latency_ms": 0.0,
-        "moderation_wait_latency_ms": 0.0,
-        "queue_wait_latency_ms": 0.0,
-        "dedupe_check_latency_ms": 0.0,
-        "extraction_latency_ms": 0.0,
-        "flush_count": 0,
-        "early_exit": None,
-        "bytes_downloaded": None,
-        "avg_frame_interarrival_ms": 0.0,
-        "effective_flush_timeout_ms": 0.0,
-    }
-    latency_steps: dict[str, dict[str, Any]] = {}
+    latency_tracker = LatencyTracker()
+    metrics = VideoMetrics(latency_tracker)
 
     def _record_latency(name: str, duration_ms: float, label: str) -> None:
-        if duration_ms <= 0:
-            return
-        entry = latency_steps.setdefault(
-            name,
-            {
-                "duration_ms": 0.0,
-                "label": label,
-            },
-        )
-        try:
-            entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + float(
-                duration_ms
-            )
-        except (TypeError, ValueError):
-            entry["duration_ms"] = float(duration_ms)
-        if not entry.get("label"):
-            entry["label"] = label
+        latency_tracker.record_step(name, duration_ms, label=label)
     try:
-        metrics_payload["bytes_downloaded"] = os.path.getsize(original_filename)
+        metrics.set_bytes_downloaded(os.path.getsize(original_filename))
     except OSError:
-        metrics_payload["bytes_downloaded"] = None
+        metrics.set_bytes_downloaded(None)
 
     def _effective_target() -> int:
         if isinstance(frames_to_scan, int) and frames_to_scan > 0:
@@ -200,7 +261,7 @@ async def process_video(
         nonlocal motion_plateau, processed_low_risk_streak
         if not batch:
             return False
-        metrics_payload["frames_submitted"] += len(batch)
+        metrics.increment("frames_submitted", len(batch))
         results, batch_metrics = await process_image_batch(
             scanner,
             batch.copy(),
@@ -209,20 +270,23 @@ async def process_video(
             max_concurrent_frames=max_concurrent_frames,
         )
         decode_ms = float(batch_metrics.get("decode_latency_ms") or 0.0)
-        metrics_payload["decode_latency_ms"] += decode_ms
-        metrics_payload["batch_decode_latency_ms"] += decode_ms
-        metrics_payload["batch_similarity_latency_ms"] += float(
+        metrics.add_duration("decode_latency_ms", decode_ms)
+        metrics.add_duration("batch_decode_latency_ms", decode_ms)
+        metrics.add_duration(
+            "batch_similarity_latency_ms",
             batch_metrics.get("similarity_latency_ms") or 0.0
         )
-        metrics_payload["moderation_latency_ms"] += float(
+        metrics.add_duration(
+            "moderation_latency_ms",
             batch_metrics.get("moderation_latency_ms") or 0.0
         )
-        metrics_payload["moderation_wait_latency_ms"] += float(
+        metrics.add_duration(
+            "moderation_wait_latency_ms",
             batch_metrics.get("moderation_wait_latency_ms") or 0.0
         )
         for frame_data, scan in results:
             processed_frames += 1
-            metrics_payload["frames_processed"] += 1
+            metrics.increment("frames_processed")
             frame_total = getattr(frame_data, "total_frames", None)
             if frame_total is not None:
                 media_total_frames = frame_total if media_total_frames is None else max(media_total_frames, frame_total)
@@ -242,24 +306,24 @@ async def process_video(
                 risk_score = max(numeric_scores) if numeric_scores else 0.0
                 if scan.get("is_nsfw"):
                     if risk_score >= high_confidence_threshold:
-                        if metrics_payload["early_exit"] is None:
-                            metrics_payload["early_exit"] = "high_confidence_hit"
+                        if not metrics.has_early_exit():
+                            metrics.note_early_exit("high_confidence_hit")
                     else:
-                        if metrics_payload["early_exit"] is None:
-                            metrics_payload["early_exit"] = "nsfw_detected"
+                        if not metrics.has_early_exit():
+                            metrics.note_early_exit("nsfw_detected")
                     flagged_file = discord.File(
                         fp=io.BytesIO(frame_data.data),
                         filename=os.path.basename(frame_data.name),
                     )
                     flagged_scan = scan
                     scan.setdefault("pipeline_metrics", {})
-                    scan["pipeline_metrics"].update(metrics_payload)
+                    scan["pipeline_metrics"].update(metrics.snapshot())
                     return True
                 if risk_score <= low_risk_threshold:
                     processed_low_risk_streak += 1
                     if processed_low_risk_streak >= low_risk_limit:
-                        if metrics_payload["early_exit"] is None:
-                            metrics_payload["early_exit"] = "low_risk_streak"
+                        if not metrics.has_early_exit():
+                            metrics.note_early_exit("low_risk_streak")
                         stop_event.set()
                 else:
                     processed_low_risk_streak = 0
@@ -271,8 +335,8 @@ async def process_video(
                 ):
                     motion_plateau += 1
                     if motion_plateau >= motion_flat_limit and not stop_event.is_set():
-                        if metrics_payload["early_exit"] is None:
-                            metrics_payload["early_exit"] = "flat_motion"
+                        if not metrics.has_early_exit():
+                            metrics.note_early_exit("flat_motion")
                         stop_event.set()
                 else:
                     motion_plateau = 0
@@ -294,15 +358,17 @@ async def process_video(
                     else:
                         timeout = min_flush_timeout
                 item = await asyncio.wait_for(queue.get(), timeout=timeout)
-                metrics_payload["queue_wait_latency_ms"] += (
-                    time.perf_counter() - wait_started
-                ) * 1000
+                metrics.add_duration(
+                    "queue_wait_latency_ms",
+                    (time.perf_counter() - wait_started) * 1000,
+                )
             except asyncio.TimeoutError:
-                metrics_payload["queue_wait_latency_ms"] += (
-                    time.perf_counter() - wait_started
-                ) * 1000
+                metrics.add_duration(
+                    "queue_wait_latency_ms",
+                    (time.perf_counter() - wait_started) * 1000,
+                )
                 if batch:
-                    metrics_payload["flush_count"] += 1
+                    metrics.increment("flush_count")
                     flagged = await _process_batch()
                     batch.clear()
                     if flagged:
@@ -332,15 +398,17 @@ async def process_video(
                 dedupe_started = time.perf_counter()
                 signature = frame_data.signature
                 if frames_are_similar(last_signature, signature, threshold=dedupe_threshold):
-                    metrics_payload["dedupe_skipped"] += 1
-                    metrics_payload["dedupe_check_latency_ms"] += (
-                        time.perf_counter() - dedupe_started
-                    ) * 1000
+                    metrics.increment("dedupe_skipped")
+                    metrics.add_duration(
+                        "dedupe_check_latency_ms",
+                        (time.perf_counter() - dedupe_started) * 1000,
+                    )
                     continue
                 last_signature = signature
-                metrics_payload["dedupe_check_latency_ms"] += (
-                    time.perf_counter() - dedupe_started
-                ) * 1000
+                metrics.add_duration(
+                    "dedupe_check_latency_ms",
+                    (time.perf_counter() - dedupe_started) * 1000,
+                )
 
             batch.append(frame_data)
             if len(batch) >= batch_size:
@@ -351,62 +419,62 @@ async def process_video(
                     break
 
         if not flagged and batch:
-            metrics_payload["flush_count"] += 1
+            metrics.increment("flush_count")
             flagged = await _process_batch()
             batch.clear()
     finally:
         stop_event.set()
         await extractor_task
-        metrics_payload["extraction_latency_ms"] += (
-            time.perf_counter() - extraction_started
-        ) * 1000
+        metrics.add_duration(
+            "extraction_latency_ms",
+            (time.perf_counter() - extraction_started) * 1000,
+        )
         safe_delete(original_filename)
 
-    total_duration_ms = max((time.perf_counter() - overall_started) * 1000, 0.0)
-    metrics_payload["total_latency_ms"] = total_duration_ms
+    total_duration_ms = latency_tracker.total_duration_ms()
 
     _record_latency(
         "frame_decode",
-        float(metrics_payload.get("batch_decode_latency_ms") or 0.0),
+        float(metrics.get("batch_decode_latency_ms") or 0.0),
         "Frame Decode",
     )
     _record_latency(
         "frame_similarity",
-        float(metrics_payload.get("batch_similarity_latency_ms") or 0.0),
+        float(metrics.get("batch_similarity_latency_ms") or 0.0),
         "Frame Similarity Search",
     )
     _record_latency(
         "frame_moderation",
-        float(metrics_payload.get("moderation_latency_ms") or 0.0),
+        float(metrics.get("moderation_latency_ms") or 0.0),
         "Frame Moderator Calls",
     )
     _record_latency(
         "frame_moderation_wait",
-        float(metrics_payload.get("moderation_wait_latency_ms") or 0.0),
+        float(metrics.get("moderation_wait_latency_ms") or 0.0),
         "Moderator Queue Wait",
     )
     _record_latency(
         "frame_dedupe",
-        float(metrics_payload.get("dedupe_check_latency_ms") or 0.0),
+        float(metrics.get("dedupe_check_latency_ms") or 0.0),
         "Dedupe Checks",
     )
     _record_latency(
         "frame_extraction",
-        float(metrics_payload.get("extraction_latency_ms") or 0.0),
+        float(metrics.get("extraction_latency_ms") or 0.0),
         "Frame Extraction",
     )
     _record_latency(
         "frame_queue_wait",
-        float(metrics_payload.get("queue_wait_latency_ms") or 0.0),
+        float(metrics.get("queue_wait_latency_ms") or 0.0),
         "Frame Queue Wait",
     )
 
     frame_pipeline_ms = (
-        float(metrics_payload.get("batch_decode_latency_ms") or 0.0)
-        + float(metrics_payload.get("batch_similarity_latency_ms") or 0.0)
-        + float(metrics_payload.get("moderation_latency_ms") or 0.0)
-        + float(metrics_payload.get("moderation_wait_latency_ms") or 0.0)
-        + float(metrics_payload.get("dedupe_check_latency_ms") or 0.0)
+        float(metrics.get("batch_decode_latency_ms") or 0.0)
+        + float(metrics.get("batch_similarity_latency_ms") or 0.0)
+        + float(metrics.get("moderation_latency_ms") or 0.0)
+        + float(metrics.get("moderation_wait_latency_ms") or 0.0)
+        + float(metrics.get("dedupe_check_latency_ms") or 0.0)
     )
     if frame_pipeline_ms > 0:
         _record_latency("frame_pipeline", frame_pipeline_ms, "Frame Pipeline")
@@ -414,31 +482,24 @@ async def process_video(
     overhead_ms = max(
         total_duration_ms
         - frame_pipeline_ms
-        - float(metrics_payload.get("queue_wait_latency_ms") or 0.0)
-        - float(metrics_payload.get("extraction_latency_ms") or 0.0),
+        - float(metrics.get("queue_wait_latency_ms") or 0.0)
+        - float(metrics.get("extraction_latency_ms") or 0.0),
         0.0,
     )
     if overhead_ms > 0:
         _record_latency("coordination", overhead_ms, "Coordinator Overhead")
-    metrics_payload["latency_breakdown_ms"] = {
-        key: value
-        for key, value in latency_steps.items()
-        if isinstance(value, dict)
-    }
 
-    metrics_payload["frames_scanned"] = processed_frames
-    metrics_payload["frames_target"] = _effective_target()
-    metrics_payload["dedupe_enabled"] = bool(dedupe_enabled)
-    metrics_payload["residual_low_risk_streak"] = processed_low_risk_streak
-    metrics_payload["residual_motion_plateau"] = motion_plateau
-    if avg_interarrival is not None:
-        metrics_payload["avg_frame_interarrival_ms"] = avg_interarrival * 1000
-        metrics_payload["effective_flush_timeout_ms"] = max(
-            min_flush_timeout,
-            min(max_flush_timeout, avg_interarrival * 1.5),
-        ) * 1000
-    else:
-        metrics_payload["effective_flush_timeout_ms"] = min_flush_timeout * 1000
+    target_frames = _effective_target()
+    metrics_payload = metrics.finalize(
+        processed_frames=processed_frames,
+        target_frames=target_frames,
+        dedupe_enabled=dedupe_enabled,
+        low_risk_streak=processed_low_risk_streak,
+        motion_plateau=motion_plateau,
+        avg_interarrival=avg_interarrival,
+        min_flush_timeout=min_flush_timeout,
+        max_flush_timeout=max_flush_timeout,
+    )
 
     if flagged_scan is not None:
         flagged_scan.setdefault("pipeline_metrics", {}).update(metrics_payload)
@@ -455,7 +516,7 @@ async def process_video(
         if processed_frames > 0
         else "no_frames_extracted",
         "video_frames_scanned": processed_frames,
-        "video_frames_target": _effective_target(),
+        "video_frames_target": target_frames,
         "video_frames_media_total": media_total_frames,
     }
     safe_scan.setdefault("pipeline_metrics", {}).update(metrics_payload)

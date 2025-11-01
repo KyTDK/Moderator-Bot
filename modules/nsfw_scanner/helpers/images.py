@@ -32,7 +32,7 @@ from ..utils.categories import is_allowed_category
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame
 from .context import ImageProcessingContext, build_image_processing_context
-from .metrics import merge_latency_breakdown
+from .metrics import LatencyTracker
 from .moderation import moderator_api
 from .vector_tasks import schedule_vector_delete
 
@@ -168,41 +168,17 @@ async def _run_image_pipeline(
     on_rate_limiter_acquire: Callable[[float], None] | None = None,
     on_rate_limiter_release: Callable[[float], None] | None = None,
 ) -> dict[str, Any] | None:
-    total_started = time.perf_counter()
-    latency_steps: dict[str, dict[str, Any]] = {}
+    latency_tracker = LatencyTracker()
 
     def _add_step(name: str, duration: float | None, *, label: str | None = None) -> None:
         if duration is None:
             return
-        try:
-            duration_value = float(duration)
-        except (TypeError, ValueError):
-            return
-        duration_value = max(duration_value, 0.0)
-        if duration_value == 0:
-            return
-        entry = latency_steps.setdefault(
-            name,
-            {
-                "duration_ms": 0.0,
-                "label": label or name.replace("_", " ").title(),
-            },
-        )
-        entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + duration_value
-        if label:
-            entry["label"] = label
-        elif not entry.get("label"):
-            entry["label"] = name.replace("_", " ").title()
+        latency_tracker.record_step(name, duration, label=label)
 
     def _finalize(payload: dict[str, Any]) -> dict[str, Any]:
-        total_duration = max((time.perf_counter() - total_started) * 1000, 0.0)
         pipeline_metrics = payload.setdefault("pipeline_metrics", {})
-        pipeline_metrics["latency_breakdown_ms"] = merge_latency_breakdown(
-            pipeline_metrics.get("latency_breakdown_ms"),
-            latency_steps,
-        )
-        current_total = float(pipeline_metrics.get("total_latency_ms") or 0.0)
-        pipeline_metrics["total_latency_ms"] = max(current_total, total_duration)
+        pipeline_metrics, _ = latency_tracker.merge_into_pipeline(pipeline_metrics)
+        payload["pipeline_metrics"] = pipeline_metrics
         return payload
 
     similarity_results = similarity_response
@@ -246,12 +222,13 @@ async def _run_image_pipeline(
     if refresh_triggered:
         vector_id = best_match.get("vector_id")
         if vector_id is not None:
-            latency_steps.setdefault(
-                "vector_delete_async",
+            latency_tracker.merge_steps(
                 {
-                    "duration_ms": 0.0,
-                    "label": "Vector Delete (async)",
-                },
+                    "vector_delete_async": {
+                        "duration_ms": 0.0,
+                        "label": "Vector Delete (async)",
+                    }
+                }
             )
             schedule_vector_delete(vector_id, logger=log)
 
@@ -326,7 +303,7 @@ async def _run_image_pipeline(
         if isinstance(pipeline_metrics, dict):
             breakdown = pipeline_metrics.get("moderator_breakdown_ms")
             if breakdown:
-                latency_steps = merge_latency_breakdown(latency_steps, breakdown)
+                latency_tracker.merge_steps(breakdown)
         response.setdefault("max_similarity", max_similarity)
         response.setdefault("max_category", max_category)
         response.setdefault("high_accuracy", context.high_accuracy)
@@ -348,7 +325,6 @@ async def process_image(
     similarity_response: Optional[List[dict[str, Any]]] = None,
     source_url: str | None = None,
 ) -> dict[str, Any] | None:
-    overall_started = time.perf_counter()
     ctx = context
     if ctx is None:
         ctx = await build_image_processing_context(
@@ -358,20 +334,17 @@ async def process_image(
         )
 
     image: Image.Image | None = None
-    latency_steps: dict[str, dict[str, Any]] = {}
+    latency_tracker = LatencyTracker()
     try:
         load_started = time.perf_counter()
         image = await _open_image_from_path(original_filename)
         load_duration = max((time.perf_counter() - load_started) * 1000, 0.0)
         if load_duration > 0:
-            entry = latency_steps.setdefault(
+            latency_tracker.record_step(
                 "image_open",
-                {
-                    "duration_ms": 0.0,
-                    "label": "Open Image",
-                },
+                load_duration,
+                label="Open Image",
             )
-            entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + load_duration
         _, ext = os.path.splitext(original_filename)
         ext = ext.lower()
         image_info = getattr(image, "info", {}) if image is not None else {}
@@ -413,14 +386,11 @@ async def process_image(
             image_mime = "image/png"
             encode_duration = max((time.perf_counter() - encode_started) * 1000, 0.0)
             if encode_duration > 0:
-                entry = latency_steps.setdefault(
+                latency_tracker.record_step(
                     "image_encode",
-                    {
-                        "duration_ms": 0.0,
-                        "label": "Encode PNG",
-                    },
+                    encode_duration,
+                    label="Encode PNG",
                 )
-                entry["duration_ms"] = float(entry.get("duration_ms") or 0.0) + encode_duration
             conversion_reason = "unsupported_format"
             payload_metadata["payload_bytes"] = len(image_bytes or b"")
             payload_metadata["payload_mime"] = image_mime
@@ -445,15 +415,8 @@ async def process_image(
         )
         if isinstance(response, dict):
             pipeline_metrics = response.setdefault("pipeline_metrics", {})
-            pipeline_metrics["latency_breakdown_ms"] = merge_latency_breakdown(
-                pipeline_metrics.get("latency_breakdown_ms"),
-                latency_steps,
-            )
-            current_total = float(pipeline_metrics.get("total_latency_ms") or 0.0)
-            pipeline_metrics["total_latency_ms"] = max(
-                current_total,
-                max((time.perf_counter() - overall_started) * 1000, 0.0),
-            )
+            pipeline_metrics, _ = latency_tracker.merge_into_pipeline(pipeline_metrics)
+            response["pipeline_metrics"] = pipeline_metrics
         return response
     except Exception as exc:
         print(traceback.format_exc())

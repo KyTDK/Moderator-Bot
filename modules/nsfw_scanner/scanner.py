@@ -307,11 +307,13 @@ class NSFWScanner:
         postprocess: Callable[[str], Awaitable[tuple[str, list[str]]]] | None = None,
         propagate_value_error: bool = False,
         propagate_download_exception: bool = True,
+        overall_started_at: float | None = None,
     ) -> bool:
         download_kwargs = download_kwargs or {}
         skip_context = skip_context or download_context
         scan_failed = False
-        overall_started_at = time.perf_counter()
+        if overall_started_at is None:
+            overall_started_at = time.perf_counter()
         try:
             async with helper_temp_download(
                 self.session,
@@ -391,9 +393,11 @@ class NSFWScanner:
         nsfw_callback=None,
         url: str | None = None,
         member: discord.Member | None = None,
+        overall_started_at: float | None = None,
     ) -> bool:
 
         settings_cache = AttachmentSettingsCache()
+        latency_origin = overall_started_at
 
         async def _resolve_download_cap_bytes() -> int | None:
             if guild_id is None:
@@ -427,6 +431,7 @@ class NSFWScanner:
                 skip_context="media",
                 skip_reason="download failure",
                 propagate_value_error=True,
+                overall_started_at=latency_origin,
             )
         snapshots = getattr(message, "message_snapshots", None)
         snapshot = snapshots[0] if snapshots else None
@@ -477,7 +482,8 @@ class NSFWScanner:
                     continue
                 temp_filename = tmp.name
             try:
-                if await self._scan_local_file(
+                start_point = latency_origin if latency_origin is not None else attachment_started_at
+                flagged = await self._scan_local_file(
                     author=message.author,
                     temp_filename=temp_filename,
                     nsfw_callback=nsfw_callback,
@@ -488,8 +494,10 @@ class NSFWScanner:
                     log_context="attachment",
                     pre_latency_steps=pre_steps,
                     pre_download_bytes=pre_bytes,
-                    overall_started_at=attachment_started_at,
-                ):
+                    overall_started_at=start_point,
+                )
+                latency_origin = None
+                if flagged:
                     return True
             finally:
                 safe_delete(temp_filename)
@@ -525,7 +533,8 @@ class NSFWScanner:
                             _tenor_cache_set(guild_id, check_tenor)
                     if not check_tenor:
                         continue
-                if await self._download_and_scan(
+                start_point = latency_origin
+                flagged = await self._download_and_scan(
                     source_url=gif_url,
                     author=message.author,
                     nsfw_callback=nsfw_callback,
@@ -536,7 +545,10 @@ class NSFWScanner:
                     download_context="embedded media",
                     skip_context="media",
                     download_kwargs={"prefer_video": is_tenor},
-                ):
+                    overall_started_at=start_point,
+                )
+                latency_origin = None
+                if flagged:
                     return True
 
         for sticker in stickers:
@@ -553,7 +565,8 @@ class NSFWScanner:
                     return gif_location, [gif_location]
                 return temp_path, []
 
-            if await self._download_and_scan(
+            start_point = latency_origin
+            flagged = await self._download_and_scan(
                 source_url=sticker_url,
                 author=message.author,
                 nsfw_callback=nsfw_callback,
@@ -564,7 +577,10 @@ class NSFWScanner:
                 download_context="sticker",
                 download_kwargs={"ext": extension},
                 postprocess=_sticker_postprocess,
-            ):
+                overall_started_at=start_point,
+            )
+            latency_origin = None
+            if flagged:
                 return True
 
         custom_emoji_tags = list(set(re.findall(r'<a?:\w+:\d+>', message.content)))
@@ -577,7 +593,8 @@ class NSFWScanner:
             if not emoji_obj:
                 continue
             emoji_url = str(emoji_obj.url)
-            if await self._download_and_scan(
+            start_point = latency_origin
+            flagged = await self._download_and_scan(
                 source_url=emoji_url,
                 author=message.author,
                 nsfw_callback=nsfw_callback,
@@ -588,7 +605,10 @@ class NSFWScanner:
                 download_context="custom emoji",
                 skip_context="emoji",
                 propagate_download_exception=False,
-            ):
+                overall_started_at=start_point,
+            )
+            latency_origin = None
+            if flagged:
                 return True
 
         return False

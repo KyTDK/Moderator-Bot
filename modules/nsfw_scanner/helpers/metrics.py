@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple
 
@@ -54,6 +55,130 @@ def _add_latency_step(
         entry["duration_ms"] = duration_float
     if not entry.get("label"):
         entry["label"] = label
+
+
+class LatencyTracker:
+    """Measure and consolidate latency data for NSFW scans."""
+
+    __slots__ = (
+        "_origin_started_at",
+        "_execution_started_at",
+        "_steps",
+        "_queue_label",
+    )
+
+    QUEUE_STEP_NAME = "queue_wait"
+    DEFAULT_QUEUE_LABEL = "Queue Wait"
+
+    def __init__(
+        self,
+        *,
+        started_at: Any | None = None,
+        steps: Any | None = None,
+        queue_label: str | None = None,
+    ) -> None:
+        self._execution_started_at = time.perf_counter()
+        self._origin_started_at = self._coerce_start(started_at)
+        if self._origin_started_at is None:
+            self._origin_started_at = self._execution_started_at
+            queue_wait_ms = 0.0
+        else:
+            queue_wait_ms = max(
+                (self._execution_started_at - self._origin_started_at) * 1000,
+                0.0,
+            )
+
+        self._steps: dict[str, dict[str, Any]] = normalize_latency_breakdown(steps)
+        self._queue_label = queue_label or self.DEFAULT_QUEUE_LABEL
+        if queue_wait_ms > 0:
+            _add_latency_step(
+                self._steps,
+                self.QUEUE_STEP_NAME,
+                queue_wait_ms,
+                label=self._queue_label,
+            )
+
+    @staticmethod
+    def _coerce_start(value: Any | None) -> float | None:
+        if value is None:
+            return None
+        try:
+            start = float(value)
+        except (TypeError, ValueError):
+            return None
+        return start
+
+    @property
+    def origin_started_at(self) -> float:
+        return self._origin_started_at
+
+    @property
+    def execution_started_at(self) -> float:
+        return self._execution_started_at
+
+    @property
+    def steps(self) -> dict[str, dict[str, Any]]:
+        return self._steps
+
+    def record_step(
+        self,
+        key: str,
+        duration_ms: Any,
+        *,
+        label: str | None = None,
+    ) -> None:
+        resolved_label = label or key.replace("_", " ").title()
+        _add_latency_step(self._steps, key, duration_ms, label=resolved_label)
+
+    def record_duration_since(
+        self,
+        key: str,
+        started_at: float,
+        *,
+        label: str | None = None,
+    ) -> None:
+        try:
+            started_float = float(started_at)
+        except (TypeError, ValueError):
+            return
+        duration = (time.perf_counter() - started_float) * 1000
+        self.record_step(key, duration, label=label)
+
+    def merge_steps(self, steps: Any) -> None:
+        if not steps:
+            return
+        self._steps = merge_latency_breakdown(self._steps, steps)
+
+    def total_duration_ms(self) -> float:
+        elapsed = (time.perf_counter() - self._origin_started_at) * 1000
+        return max(elapsed, 0.0)
+
+    def merge_into_pipeline(
+        self,
+        pipeline_metrics: dict[str, Any] | None,
+    ) -> tuple[dict[str, Any], float]:
+        metrics = pipeline_metrics if isinstance(pipeline_metrics, dict) else {}
+
+        existing_total: float | None = None
+        for key in ("total_latency_ms", "total_duration_ms"):
+            candidate = _coerce_duration(metrics.get(key))
+            if candidate is not None:
+                existing_total = candidate
+                break
+
+        metrics["latency_breakdown_ms"] = merge_latency_breakdown(
+            metrics.get("latency_breakdown_ms"),
+            self._steps,
+        )
+
+        total = self.total_duration_ms()
+        if existing_total is not None:
+            metrics.setdefault("pipeline_total_latency_ms", existing_total)
+            total = max(total, existing_total)
+
+        metrics["total_latency_ms"] = float(total)
+        metrics["total_duration_ms"] = float(total)
+        return metrics, total
 
 
 def build_download_latency_breakdown(
@@ -385,4 +510,3 @@ def collect_scan_telemetry(
         bytes_downloaded=bytes_downloaded,
         early_exit=early_exit,
     )
-

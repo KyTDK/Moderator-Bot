@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import discord
 
 from modules.moderation import strike
@@ -45,6 +47,7 @@ class ModerationHandlers:
                 message=message,
                 guild_id=guild_id,
                 nsfw_callback=handle_nsfw_content,
+                overall_started_at=queue_started_at,
             )
             if not flagged:
                 return
@@ -72,6 +75,7 @@ class ModerationHandlers:
             except (discord.Forbidden, discord.NotFound):
                 print("[NSFW] Could not notify user about message removal.")
 
+        queue_started_at = time.perf_counter()
         await self._enqueue(scan_task(), guild_id=guild_id)
 
     async def handle_reaction_add(self, reaction: discord.Reaction, user: discord.User | discord.Member) -> None:
@@ -204,6 +208,7 @@ class ModerationHandlers:
                 nsfw_callback=handle_nsfw_content,
                 url=str(emoji.url),
                 member=resolved_member,
+                overall_started_at=queue_started_at,
             )
             if not flagged:
                 return
@@ -225,6 +230,7 @@ class ModerationHandlers:
             except discord.HTTPException as exc:
                 print(f"[emoji] failed to remove reaction: {exc}")
 
+        queue_started_at = time.perf_counter()
         await self._enqueue(scan_task(), guild_id=guild.id)
 
     async def _queue_avatar_scan(self, guild: discord.Guild, member: discord.Member, is_join: bool = False) -> None:
@@ -242,6 +248,7 @@ class ModerationHandlers:
                 url=avatar_url,
                 member=member,
                 guild_id=guild.id,
+                overall_started_at=queue_started_at,
             )
             if is_nsfw:
                 action = await mysql.get_settings(guild.id, "nsfw-pfp-action")
@@ -284,6 +291,7 @@ class ModerationHandlers:
                     if exc.code != 50035:
                         print(f"[PFP] Failed to untimeout {member.display_name}: {exc}")
 
+        queue_started_at = time.perf_counter()
         await self._enqueue(scan_task(), guild_id=guild.id)
 
 
