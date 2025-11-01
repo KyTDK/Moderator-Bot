@@ -48,7 +48,7 @@ def build_nsfw_settings() -> dict[str, Setting]:
             name="nsfw-text-enabled",
             description="Enable NSFW scanning for message text content.",
             setting_type=bool,
-            default=True,
+            default=False,
             choices=["true", "false"],
             required_plans=PLAN_CORE,
         ),
