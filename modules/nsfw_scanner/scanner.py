@@ -533,47 +533,44 @@ class NSFWScanner:
             send_text_embed = True
             settings_map: dict[str, Any] | None = None
             if guild_id is not None:
-                if settings_cache.has_text_enabled():
-                    text_scanning_enabled = bool(settings_cache.get_text_enabled())
-                else:
-                    try:
-                        text_setting = await mysql.get_settings(guild_id, NSFW_TEXT_ENABLED_SETTING)
-                    except Exception:
-                        text_setting = None
-                    text_scanning_enabled = _to_bool(text_setting, default=False)
-                    settings_cache.set_text_enabled(text_scanning_enabled)
-
-                if settings_cache.has_accelerated():
-                    accelerated_allowed = bool(settings_cache.get_accelerated())
-                else:
-                    try:
-                        accelerated_allowed = await mysql.is_accelerated(guild_id=guild_id)
-                    except Exception:
-                        accelerated_allowed = False
-                    settings_cache.set_accelerated(accelerated_allowed)
-                if not _to_bool(accelerated_allowed, default=False):
-                    text_scanning_enabled = False
-
-            if text_scanning_enabled:
                 settings_map = await _ensure_scan_settings_map()
-                strikes_only = _to_bool(
-                    (settings_map or {}).get(NSFW_TEXT_STRIKES_ONLY_SETTING),
-                    default=False,
-                )
-                send_text_embed = _to_bool(
-                    (settings_map or {}).get(NSFW_TEXT_SEND_EMBED_SETTING),
-                    default=True,
-                )
-                if strikes_only and guild_id is not None:
-                    author_id = getattr(getattr(message, "author", None), "id", None)
-                    strike_count = 0
-                    if author_id is not None:
+
+                text_enabled_value = settings_map.get(NSFW_TEXT_ENABLED_SETTING)
+                text_scanning_enabled = _to_bool(text_enabled_value, default=False)
+                settings_cache.set_text_enabled(text_scanning_enabled)
+
+                if text_scanning_enabled:
+                    if settings_cache.has_accelerated():
+                        accelerated_allowed = bool(settings_cache.get_accelerated())
+                    else:
                         try:
-                            strike_count = await mysql.get_strike_count(author_id, guild_id)
+                            accelerated_allowed = await mysql.is_accelerated(guild_id=guild_id)
                         except Exception:
-                            strike_count = 0
-                    if strike_count <= 0:
+                            accelerated_allowed = False
+                        settings_cache.set_accelerated(accelerated_allowed)
+                    if not _to_bool(accelerated_allowed, default=False):
                         text_scanning_enabled = False
+
+                if text_scanning_enabled:
+                    strikes_only = _to_bool(
+                        (settings_map or {}).get(NSFW_TEXT_STRIKES_ONLY_SETTING),
+                        default=False,
+                    )
+                    if strikes_only:
+                        author_id = getattr(getattr(message, "author", None), "id", None)
+                        strike_count = 0
+                        if author_id is not None:
+                            try:
+                                strike_count = await mysql.get_strike_count(author_id, guild_id)
+                            except Exception:
+                                strike_count = 0
+                        if strike_count <= 0:
+                            text_scanning_enabled = False
+
+                    send_text_embed = _to_bool(
+                        (settings_map or {}).get(NSFW_TEXT_SEND_EMBED_SETTING),
+                        default=True,
+                    )
 
             if text_scanning_enabled:
                 text_metadata = {
