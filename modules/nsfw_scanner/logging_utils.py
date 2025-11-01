@@ -13,7 +13,7 @@ from .helpers.metrics import ScanTelemetry, collect_scan_telemetry
 log = logging.getLogger(__name__)
 
 
-SLOW_SCAN_THRESHOLD_MS = 10_000.0
+SLOW_SCAN_THRESHOLD_MS = 90_000.0
 
 
 SCAN_REASON_DESCRIPTIONS: dict[str, str] = {
