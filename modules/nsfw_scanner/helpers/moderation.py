@@ -338,8 +338,9 @@ async def moderator_api(
             except Exception:
                 body_preview = None
             if body_preview:
+                sanitized_preview = body_preview[:256].replace("\n", " ")
                 context_parts.append(
-                    f"response_body_preview={body_preview[:256].replace('\n', ' ')}"
+                    f"response_body_preview={sanitized_preview}"
                 )
         return ", ".join(context_parts)
 
