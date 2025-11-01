@@ -24,6 +24,7 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_ACTION_SETTING,
     NSFW_TEXT_CATEGORY_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_SEND_EMBED_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
     NSFW_TEXT_THRESHOLD_SETTING,
     NSFW_THRESHOLD_SETTING,
@@ -89,6 +90,18 @@ def _tenor_cache_set(guild_id: int, value: bool) -> None:
     _tenor_toggle_cache.move_to_end(guild_id)
     while len(_tenor_toggle_cache) > _TENOR_CACHE_MAX:
         _tenor_toggle_cache.popitem(last=False)
+
+
+def _to_bool(value: Any, *, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"1", "true", "yes", "on"}:
+            return True
+        if normalized in {"0", "false", "no", "off"}:
+            return False
+    return bool(value)
 
 class NSFWScanner:
     def __init__(self, bot: commands.Bot):
@@ -469,6 +482,7 @@ class NSFWScanner:
                             NSFW_HIGH_ACCURACY_SETTING,
                             NSFW_TEXT_ENABLED_SETTING,
                             NSFW_TEXT_STRIKES_ONLY_SETTING,
+                            NSFW_TEXT_SEND_EMBED_SETTING,
                         ],
                     )
                 except Exception:
@@ -515,7 +529,9 @@ class NSFWScanner:
 
         text_content = (message.content or "").strip()
         if text_content:
-            text_scanning_enabled = True
+            text_scanning_enabled = False
+            send_text_embed = True
+            settings_map: dict[str, Any] | None = None
             if guild_id is not None:
                 if settings_cache.has_text_enabled():
                     text_scanning_enabled = bool(settings_cache.get_text_enabled())
@@ -524,10 +540,7 @@ class NSFWScanner:
                         text_setting = await mysql.get_settings(guild_id, NSFW_TEXT_ENABLED_SETTING)
                     except Exception:
                         text_setting = None
-                    if text_setting is None:
-                        text_scanning_enabled = True
-                    else:
-                        text_scanning_enabled = bool(text_setting)
+                    text_scanning_enabled = _to_bool(text_setting, default=False)
                     settings_cache.set_text_enabled(text_scanning_enabled)
 
                 if settings_cache.has_accelerated():
@@ -538,12 +551,19 @@ class NSFWScanner:
                     except Exception:
                         accelerated_allowed = False
                     settings_cache.set_accelerated(accelerated_allowed)
-                if not accelerated_allowed:
+                if not _to_bool(accelerated_allowed, default=False):
                     text_scanning_enabled = False
 
             if text_scanning_enabled:
                 settings_map = await _ensure_scan_settings_map()
-                strikes_only = bool((settings_map or {}).get(NSFW_TEXT_STRIKES_ONLY_SETTING))
+                strikes_only = _to_bool(
+                    (settings_map or {}).get(NSFW_TEXT_STRIKES_ONLY_SETTING),
+                    default=False,
+                )
+                send_text_embed = _to_bool(
+                    (settings_map or {}).get(NSFW_TEXT_SEND_EMBED_SETTING),
+                    default=True,
+                )
                 if strikes_only and guild_id is not None:
                     author_id = getattr(getattr(message, "author", None), "id", None)
                     strike_count = 0
@@ -554,6 +574,8 @@ class NSFWScanner:
                             strike_count = 0
                     if strike_count <= 0:
                         text_scanning_enabled = False
+
+            if text_scanning_enabled:
                 text_metadata = {
                     "message_id": getattr(message, "id", None),
                     "channel_id": getattr(getattr(message, "channel", None), "id", None),
@@ -599,6 +621,7 @@ class NSFWScanner:
                             confidence=confidence_value,
                             confidence_source=confidence_source,
                             action_setting=NSFW_TEXT_ACTION_SETTING,
+                            send_embed=send_text_embed,
                         )
                     return True
 

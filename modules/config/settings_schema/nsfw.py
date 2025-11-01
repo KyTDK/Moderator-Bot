@@ -60,6 +60,14 @@ def build_nsfw_settings() -> dict[str, Setting]:
             choices=["true", "false"],
             required_plans=PLAN_CORE,
         ),
+        "nsfw-text-send-embed": Setting(
+            name="nsfw-text-send-embed",
+            description="Send NSFW notification embeds for text violations.",
+            setting_type=bool,
+            default=True,
+            choices=["true", "false"],
+            required_plans=PLAN_CORE,
+        ),
         "nsfw-detection-action": Setting(
             name="nsfw-detection-action",
             description="Action to take when a user posts NSFW content.",

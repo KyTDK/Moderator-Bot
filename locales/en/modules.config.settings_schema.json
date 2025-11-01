@@ -26,6 +26,9 @@
                 "nsfw-text-strikes-only": {
                     "description": "Only run NSFW text detection for members with active strikes."
                 },
+                "nsfw-text-send-embed": {
+                    "description": "Send NSFW notification embeds for text violations."
+                },
                 "monitor-events": {
                     "description": "Enable/disable logging for each type of monitored event."
                 },
