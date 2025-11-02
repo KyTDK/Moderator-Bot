@@ -29,8 +29,14 @@ class _DummyEmbed:
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
+        self.fields = []
+        self.title = kwargs.get("title")
+        self.description = kwargs.get("description")
+        self.color = kwargs.get("color")
+        self.footer = None
 
     def add_field(self, *args, **_kwargs):
+        self.fields.append((args, _kwargs))
         return None
 
     def set_thumbnail(self, *args, **_kwargs):
@@ -38,6 +44,18 @@ class _DummyEmbed:
 
     def set_image(self, *args, **_kwargs):
         return None
+
+    def set_footer(self, *, text=None, icon_url=None):
+        self.footer = {"text": text, "icon_url": icon_url}
+
+    def copy(self):
+        new_embed = _DummyEmbed(*self.args, **self.kwargs)
+        new_embed.fields = list(self.fields)
+        new_embed.title = self.title
+        new_embed.description = self.description
+        new_embed.color = self.color
+        new_embed.footer = self.footer.copy() if self.footer else None
+        return new_embed
 
 
 class _DummyColor:
@@ -80,7 +98,27 @@ discord_stub.Message = type("Message", (), {})
 discord_stub.Guild = type("Guild", (), {})
 discord_stub.Member = type("Member", (), {})
 discord_stub.Role = type("Role", (), {})
-discord_stub.utils = types.SimpleNamespace(get=lambda iterable, **attrs: None)
+discord_utils_stub = types.ModuleType("discord.utils")
+
+
+def _dummy_get(iterable, **attrs):
+    return None
+
+
+def _escape_markdown(value, *, as_needed=False):
+    return value
+
+
+def _escape_mentions(value):
+    return value
+
+
+discord_utils_stub.get = _dummy_get
+discord_utils_stub.escape_markdown = _escape_markdown
+discord_utils_stub.escape_mentions = _escape_mentions
+sys.modules.setdefault("discord.utils", discord_utils_stub)
+
+discord_stub.utils = discord_utils_stub
 discord_stub.app_commands = types.SimpleNamespace(
     CommandTree=object,
     check=lambda func: func,
@@ -154,6 +192,16 @@ mysql_stub.resolve_guild_plan = _unpatched_async
 mysql_stub.is_accelerated = _unpatched_async
 mysql_stub.get_strike_count = _unpatched_async
 sys.modules.setdefault("modules.utils.mysql", mysql_stub)
+
+mod_logging_stub = types.ModuleType("modules.utils.mod_logging")
+
+
+async def _log_to_channel_stub(*_args, **_kwargs):
+    return None
+
+
+mod_logging_stub.log_to_channel = _log_to_channel_stub
+sys.modules.setdefault("modules.utils.mod_logging", mod_logging_stub)
 
 cache_stub = types.ModuleType("modules.cache")
 async def _cache_async(*_args, **_kwargs):
@@ -268,6 +316,13 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
     async def fake_get_strike_count(user_id, guild_id):
         return 1
 
+    async def fake_get_settings(guild_id, keys):
+        if isinstance(keys, list):
+            return settings_payload.copy()
+        if keys == "nsfw-verbose":
+            return True
+        return None
+
     text_calls = []
 
     async def fake_process_text(scanner_arg, text, **kwargs):
@@ -283,6 +338,31 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
     async def fake_callback(*args, **kwargs):
         callback_calls.append((args, kwargs))
 
+    log_calls: list[dict[str, object]] = []
+
+    async def fake_log_to_channel(embed, channel_id, bot, file=None):
+        log_calls.append({"embed": embed, "channel_id": channel_id})
+
+    log_channel_calls: list[dict[str, object]] = []
+
+    async def fake_send_log_message(
+        bot,
+        *,
+        content=None,
+        embed=None,
+        allowed_mentions=None,
+        logger=None,
+        context=None,
+    ):
+        log_channel_calls.append(
+            {
+                "content": content,
+                "embed": embed,
+                "context": context,
+            }
+        )
+        return True
+
     monkeypatch.setattr(scanner_mod, "wait_for_hydration", fake_wait_for_hydration)
     monkeypatch.setattr(
         attachments_mod.AttachmentSettingsCache,
@@ -294,9 +374,12 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
         "set_scan_settings",
         fake_set_scan_settings,
     )
+    monkeypatch.setattr(scanner_mod.mysql, "get_settings", fake_get_settings, raising=False)
     monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan, raising=False)
     monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated, raising=False)
     monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count, raising=False)
+    monkeypatch.setattr(scanner_mod.mod_logging, "log_to_channel", fake_log_to_channel, raising=False)
+    monkeypatch.setattr(scanner_mod, "send_log_message", fake_send_log_message, raising=False)
     monkeypatch.setattr(scanner_mod, "process_text", fake_process_text)
 
     flagged = await scanner.is_nsfw(
@@ -305,11 +388,11 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
         nsfw_callback=fake_callback,
     )
 
-    return flagged, text_calls, callback_calls, author
+    return flagged, text_calls, callback_calls, author, log_calls, log_channel_calls
 
 
 def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
-    flagged, text_calls, callback_calls, author = asyncio.run(
+    flagged, text_calls, callback_calls, author, log_calls, log_channel_calls = asyncio.run(
         _exercise_text_scan(monkeypatch, accelerated_value=True)
     )
     assert flagged is True
@@ -319,12 +402,16 @@ def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
     assert args[0] is author
     assert kwargs["action_setting"] == NSFW_TEXT_ACTION_SETTING
     assert kwargs["send_embed"] is True
+    assert log_calls, "Verbose logging should send an embed to the channel"
+    assert log_channel_calls, "Debug logging should emit to the shared log channel"
 
 
 def test_text_scan_runs_without_accelerated_plan(monkeypatch):
-    flagged, text_calls, callback_calls, _ = asyncio.run(
+    flagged, text_calls, callback_calls, _, log_calls, log_channel_calls = asyncio.run(
         _exercise_text_scan(monkeypatch, accelerated_value=False)
     )
     assert flagged is False
     assert not text_calls, "process_text should not run without accelerated access"
     assert not callback_calls, "No action should be taken without accelerated access"
+    assert not log_calls, "No verbose embeds should be sent when text scan is skipped"
+    assert not log_channel_calls, "No debug logs should be emitted when scan is skipped"
