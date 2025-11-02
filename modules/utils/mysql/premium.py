@@ -39,13 +39,13 @@ def _resolve_activation(status: Optional[str], next_billing: Optional[datetime])
 
 async def is_accelerated(user_id: int | None = None, guild_id: int | None = None) -> bool:
     """Return True if the user or guild should have Accelerated access."""
-    conditions = []
+    conditions: list[str] = []
     params: list[int] = []
 
-    if guild_id:
+    if guild_id is not None:
         conditions.append("guild_id = %s")
         params.append(guild_id)
-    if user_id:
+    if user_id is not None:
         conditions.append("buyer_id = %s")
         params.append(user_id)
 
@@ -53,19 +53,21 @@ async def is_accelerated(user_id: int | None = None, guild_id: int | None = None
         return False
 
     where_clause = " AND ".join(conditions)
-
     query = f"""
-        SELECT 1 FROM premium_guilds
+        SELECT status, next_billing
+        FROM premium_guilds
         WHERE {where_clause}
-          AND (
-                (status = 'active' AND (next_billing IS NULL OR next_billing > UTC_TIMESTAMP()))
-             OR (status = 'cancelled' AND next_billing > UTC_TIMESTAMP())
-          )
         LIMIT 1
     """
 
-    result, _ = await execute_query(query, tuple(params), fetch_one=True)
-    return result is not None
+    row, _ = await execute_query(query, tuple(params), fetch_one=True)
+    if not row:
+        return False
+
+    status = row[0]
+    raw_next_billing = row[1] if len(row) > 1 else None
+    next_billing = _parse_next_billing(raw_next_billing)
+    return _resolve_activation(status, next_billing)
 
 
 async def get_premium_status(guild_id: int) -> Optional[Dict[str, Any]]:
@@ -99,4 +101,3 @@ async def resolve_guild_plan(guild_id: int) -> str:
     tier = status.get("tier") or DEFAULT_PREMIUM_TIER
     plan = tier_to_plan(tier, default=PLAN_CORE)
     return plan or PLAN_CORE
-

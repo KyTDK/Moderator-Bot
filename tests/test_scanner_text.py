@@ -306,9 +306,6 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
     def fake_set_scan_settings(self, value):
         return None
 
-    async def fake_resolve_plan(guild_id):
-        return "core"
-
     async def fake_is_accelerated(*, guild_id=None, user_id=None):
         return accelerated_value
 
@@ -374,7 +371,6 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
         fake_set_scan_settings,
     )
     monkeypatch.setattr(scanner_mod.mysql, "get_settings", fake_get_settings, raising=False)
-    monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan, raising=False)
     monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated, raising=False)
     monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count, raising=False)
 

@@ -148,6 +148,7 @@ class TextScanPipeline:
                     except Exception:
                         accelerated_allowed = False
                     settings_cache.set_accelerated(accelerated_allowed)
+
                 if not to_bool(accelerated_allowed, default=False):
                     text_scanning_enabled = False
 
