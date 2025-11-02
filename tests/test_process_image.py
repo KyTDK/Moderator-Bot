@@ -69,6 +69,7 @@ async def _send_log_message(*_args, **_kwargs):
 
 
 log_channel_stub.send_log_message = _send_log_message
+log_channel_stub.log_serious_issue = _send_log_message
 sys.modules["modules.utils.log_channel"] = log_channel_stub
 
 mod_logging_stub = types.ModuleType("modules.utils.mod_logging")
@@ -121,6 +122,10 @@ class _DummyFile:
 class _DummyAllowedMentions:
     def __init__(self, *args, **kwargs):
         pass
+
+    @staticmethod
+    def none():
+        return _DummyAllowedMentions()
 
 
 class _DummyClient:

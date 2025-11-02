@@ -10,6 +10,22 @@ from modules.utils.discord_utils import safe_get_channel
 
 log = logging.getLogger(__name__)
 
+_SERIOUS_SEVERITY_META: dict[str, tuple[str, discord.Color]] = {
+    "info": (":information_source:", discord.Color.dark_grey()),
+    "warning": (":warning:", discord.Color.orange()),
+    "error": (":rotating_light:", discord.Color.red()),
+    "critical": (":rotating_light:", discord.Color.red()),
+}
+
+
+def _normalize_severity(value: str | None) -> str:
+    if not value:
+        return "error"
+    normalized = value.lower().strip()
+    if normalized not in _SERIOUS_SEVERITY_META:
+        return "error"
+    return normalized
+
 
 def _context_suffix(context: str | None) -> str:
     return f" for {context}" if context else ""
@@ -87,4 +103,42 @@ async def send_log_message(
     return True
 
 
-__all__ = ["resolve_log_channel", "send_log_message"]
+async def log_serious_issue(
+    bot: discord.Client,
+    *,
+    summary: str,
+    details: str | None = None,
+    severity: str | None = None,
+    context: str | None = None,
+    logger: Optional[logging.Logger] = None,
+) -> bool:
+    """Send a standardized serious-issue log message to the configured log channel."""
+
+    normalized_severity = _normalize_severity(severity)
+    emoji, color = _SERIOUS_SEVERITY_META[normalized_severity]
+
+    embed: discord.Embed | None = None
+    if details:
+        embed = discord.Embed(
+            description=details,
+            color=color,
+        )
+    success = await send_log_message(
+        bot,
+        content=f"{emoji} {summary}",
+        embed=embed,
+        allowed_mentions=discord.AllowedMentions.none(),
+        logger=logger,
+        context=context,
+    )
+    if not success:
+        target_logger = logger or log
+        target_logger.warning(
+            "Failed to deliver serious issue log (%s): %s",
+            normalized_severity,
+            summary,
+        )
+    return success
+
+
+__all__ = ["resolve_log_channel", "send_log_message", "log_serious_issue"]

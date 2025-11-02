@@ -1,14 +1,16 @@
 import asyncio
+import contextlib
 import io
 import logging
 import mimetypes
 import os
 import random
+import threading
 import time
 import traceback
 from typing import Any, Callable, List, Optional, Sequence
 
-from PIL import Image
+from PIL import Image, ImageFile
 
 try:
     from pillow_heif import register_heif_opener
@@ -19,7 +21,7 @@ else:
 
 from modules.nsfw_scanner.settings_keys import NSFW_IMAGE_CATEGORY_SETTING
 from modules.utils import clip_vectors, mysql
-from modules.utils.log_channel import send_log_message
+from modules.utils.log_channel import log_serious_issue
 
 from ..constants import (
     CLIP_THRESHOLD,
@@ -56,26 +58,57 @@ log = logging.getLogger(__name__)
 
 NSFW_CATEGORY_SETTING = NSFW_IMAGE_CATEGORY_SETTING
 
+_TRUNCATED_ERROR_MARKERS: tuple[str, ...] = (
+    "image file is truncated",
+    "truncated file read",
+)
+_TRUNCATED_LOAD_LOCK = threading.Lock()
 
-async def _open_image_from_path(path: str) -> Image.Image:
-    def _load() -> Image.Image:
-        image = Image.open(path)
+
+@contextlib.contextmanager
+def _temporary_truncated_loading(enabled: bool):
+    if not enabled:
+        yield
+        return
+
+    with _TRUNCATED_LOAD_LOCK:
+        previous = ImageFile.LOAD_TRUNCATED_IMAGES
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
         try:
-            image.load()
-            original_format = (image.format or "").upper()
-            if image.mode != "RGBA":
-                converted = image.convert("RGBA")
-                converted.load()
-                if original_format:
-                    converted.info["original_format"] = original_format
-                image.close()
-                image = converted
-            elif original_format:
-                image.info["original_format"] = original_format
-            return image
-        except Exception:
+            yield
+        finally:
+            ImageFile.LOAD_TRUNCATED_IMAGES = previous
+
+
+def _prepare_loaded_image(image: Image.Image) -> Image.Image:
+    try:
+        image.load()
+        original_format = (image.format or "").upper()
+        if image.mode != "RGBA":
+            converted = image.convert("RGBA")
+            converted.load()
+            if original_format:
+                converted.info["original_format"] = original_format
             image.close()
-            raise
+            image = converted
+        elif original_format:
+            image.info["original_format"] = original_format
+        return image
+    except Exception:
+        image.close()
+        raise
+
+
+def _is_truncated_image_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return any(marker in message for marker in _TRUNCATED_ERROR_MARKERS)
+
+
+async def _open_image_from_path(path: str, *, allow_truncated: bool = False) -> Image.Image:
+    def _load() -> Image.Image:
+        with _temporary_truncated_loading(allow_truncated):
+            image = Image.open(path)
+            return _prepare_loaded_image(image)
 
     return await asyncio.to_thread(_load)
 
@@ -99,49 +132,53 @@ async def _notify_image_open_failure(
         display_name = filename
 
     error_summary = f"{type(exc).__name__}: {exc}"
-    message = (
-        ":warning: Failed to open image during NSFW scan. "
-        f"File: `{display_name}`. Error: `{error_summary}`"
+    await log_serious_issue(
+        bot,
+        summary="Failed to open image during NSFW scan.",
+        details=f"File: `{display_name}`\nError: `{error_summary}`",
+        severity="error",
+        context="nsfw_scanner.image_open",
+        logger=log,
     )
 
-    try:
-        success = await send_log_message(
-            bot,
-            content=message,
-            context="nsfw_scanner.image_open",
-        )
-    except Exception:  # pragma: no cover - best effort logging
-        log.debug(
-            "Failed to report image open failure to LOG_CHANNEL_ID=%s",
-            LOG_CHANNEL_ID,
-            exc_info=True,
-        )
+
+async def _notify_truncated_image_recovery(
+    scanner,
+    *,
+    filename: str,
+    exc: Exception,
+) -> None:
+    if not LOG_CHANNEL_ID:
         return
 
-    if not success:
-        log.debug(
-            "Failed to report image open failure to LOG_CHANNEL_ID=%s",
-            LOG_CHANNEL_ID,
-        )
+    bot = getattr(scanner, "bot", None)
+    if bot is None:
+        return
+
+    try:
+        display_name = os.path.basename(filename) or filename
+    except Exception:
+        display_name = filename
+
+    await log_serious_issue(
+        bot,
+        summary="Recovered truncated image during NSFW scan.",
+        details=(
+            f"File: `{display_name}`\n"
+            f"Recovered after original error: `{type(exc).__name__}: {exc}`"
+        ),
+        severity="warning",
+        context="nsfw_scanner.image_open",
+        logger=log,
+    )
 
 
 async def _open_image_from_bytes(data: bytes) -> Image.Image:
     def _load() -> Image.Image:
         buffer = io.BytesIO(data)
-        image = Image.open(buffer)
         try:
-            image.load()
-            original_format = (image.format or "").upper()
-            if image.mode != "RGBA":
-                converted = image.convert("RGBA")
-                converted.load()
-                if original_format:
-                    converted.info["original_format"] = original_format
-                image.close()
-                image = converted
-            elif original_format:
-                image.info["original_format"] = original_format
-            return image
+            image = Image.open(buffer)
+            return _prepare_loaded_image(image)
         finally:
             buffer.close()
 
@@ -340,13 +377,32 @@ async def process_image(
     latency_tracker = LatencyTracker()
     try:
         load_started = time.perf_counter()
-        image = await _open_image_from_path(original_filename)
+        truncated_error: Exception | None = None
+        try:
+            image = await _open_image_from_path(original_filename)
+        except Exception as exc:
+            if not _is_truncated_image_error(exc):
+                raise
+            truncated_error = exc
+            try:
+                image = await _open_image_from_path(
+                    original_filename,
+                    allow_truncated=True,
+                )
+            except Exception as recovery_exc:
+                raise exc from recovery_exc
         load_duration = max((time.perf_counter() - load_started) * 1000, 0.0)
         if load_duration > 0:
             latency_tracker.record_step(
                 "image_open",
                 load_duration,
                 label="Open Image",
+            )
+        if truncated_error is not None:
+            await _notify_truncated_image_recovery(
+                scanner,
+                filename=original_filename,
+                exc=truncated_error,
             )
         _, ext = os.path.splitext(original_filename)
         ext = ext.lower()
