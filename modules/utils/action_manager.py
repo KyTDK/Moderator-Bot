@@ -12,6 +12,20 @@ class ActionListManager:
     def __init__(self, setting_key: str):
         self.setting_key = setting_key
 
+    @staticmethod
+    def _sanitize_actions(actions: list[str]) -> tuple[list[str], bool]:
+        cleaned: list[str] = []
+        changed = False
+        for entry in actions:
+            base, _, param = entry.partition(":")
+            if base.lower() == "broadcast":
+                channel_part, sep, message = param.partition("|")
+                if not sep or not channel_part.isdigit() or not message:
+                    changed = True
+                    continue
+            cleaned.append(entry)
+        return cleaned, changed
+
     async def add_action(
         self,
         guild_id: int,
@@ -22,6 +36,10 @@ class ActionListManager:
         actions = await get_settings(guild_id, self.setting_key) or []
         if not isinstance(actions, list):
             actions = [actions]
+
+        actions, removed_invalid = self._sanitize_actions(actions)
+        if removed_invalid:
+            await update_settings(guild_id, self.setting_key, actions)
 
         normalized = [a.split(":")[0] for a in actions]
         if new_action.split(":")[0] in normalized:
@@ -51,6 +69,11 @@ class ActionListManager:
         translator: TranslateFn | None = None,
     ) -> str:
         actions = await get_settings(guild_id, self.setting_key) or []
+        actions = actions if isinstance(actions, list) else [actions]
+
+        actions, removed_invalid = self._sanitize_actions(actions)
+        if removed_invalid:
+            await update_settings(guild_id, self.setting_key, actions)
 
         # Exact match attempt
         if ":" in action:
@@ -95,7 +118,11 @@ class ActionListManager:
 
     async def view_actions(self, guild_id: int) -> list:
         actions = await get_settings(guild_id, self.setting_key) or []
-        return actions if isinstance(actions, list) else [actions]
+        actions = actions if isinstance(actions, list) else [actions]
+        actions, removed_invalid = self._sanitize_actions(actions)
+        if removed_invalid:
+            await update_settings(guild_id, self.setting_key, actions)
+        return actions
 
     async def autocomplete(self, interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
         actions = await self.view_actions(interaction.guild.id)

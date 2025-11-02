@@ -41,14 +41,28 @@ def _coerce_strike_action_entry(value: Any) -> list[str]:
     return [str(value)]
 
 
-def _normalize_strike_actions_mapping(data: Any) -> dict[str, list[str]]:
+def _normalize_strike_actions_mapping(data: Any) -> tuple[dict[str, list[str]], bool]:
     if not isinstance(data, dict):
-        return {}
+        return {}, False
 
     normalized: dict[str, list[str]] = {}
+    removed = False
     for key, value in data.items():
-        normalized[key] = _coerce_strike_action_entry(value)
-    return normalized
+        entries = _coerce_strike_action_entry(value)
+        cleaned: list[str] = []
+        for entry in entries:
+            base, _, param = entry.partition(":")
+            if base.lower() == "broadcast":
+                channel_part, sep, message = param.partition("|")
+                if not sep or not channel_part.isdigit() or not message:
+                    removed = True
+                    continue
+            cleaned.append(entry)
+        if cleaned:
+            normalized[key] = cleaned
+        elif entries:
+            removed = True
+    return normalized, removed
 
 
 def add_settings_listener(listener: SettingsListener) -> None:
@@ -120,6 +134,8 @@ async def get_settings(
     requires_plan = any(getattr(schema, "required_plans", None) for schema in relevant_schemas)
     active_plan = await resolve_guild_plan(guild_id) if requires_plan else PLAN_FREE
 
+    pending_cleanup: dict[str, Any | None] = {}
+
     def process_key(key: str) -> Any:
         schema = SETTINGS_SCHEMA.get(key)
         if schema is None:
@@ -148,11 +164,34 @@ async def get_settings(
             value = [v for v in value if v != "none"]
 
         if key == "strike-actions" and isinstance(value, dict):
-            value = _normalize_strike_actions_mapping(value)
+            value, removed_invalid = _normalize_strike_actions_mapping(value)
+            if removed_invalid:
+                pending_cleanup[key] = value if value else None
 
         return value
 
     result = {k: process_key(k) for k in requested}
+
+    if pending_cleanup:
+        updated_raw = dict(raw)
+        for key, cleaned in pending_cleanup.items():
+            if cleaned:
+                updated_raw[key] = cleaned
+            else:
+                updated_raw.pop(key, None)
+
+        settings_json = json.dumps(updated_raw)
+        await execute_query(
+            """
+            INSERT INTO settings (guild_id, settings_json)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE settings_json = VALUES(settings_json)
+            """,
+            (guild_id, settings_json),
+        )
+
+        for key, cleaned in pending_cleanup.items():
+            _notify_settings_listeners(guild_id, key, cleaned)
 
     if settings_key is not None and len(requested) == 1:
         return result[requested[0]]
@@ -188,7 +227,7 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
     else:
         processed_value = settings_value
         if settings_key == "strike-actions" and isinstance(processed_value, dict):
-            processed_value = _normalize_strike_actions_mapping(processed_value)
+            processed_value, _ = _normalize_strike_actions_mapping(processed_value)
 
         public_value = processed_value
 

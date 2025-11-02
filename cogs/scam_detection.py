@@ -344,6 +344,10 @@ class ScamDetectionCog(commands.Cog):
     @app_commands.describe(
         action=locale_string("cogs.scam_detection.meta.add_action.action"),
         duration=locale_string("cogs.scam_detection.meta.add_action.duration"),
+        channel=locale_string(
+            "cogs.scam_detection.meta.add_action.channel",
+            default="Channel to broadcast messages to.",
+        ),
     )
     @app_commands.choices(action=action_choices())
     async def scam_add_action(
@@ -352,6 +356,7 @@ class ScamDetectionCog(commands.Cog):
         action: str,
         duration: str = None,
         role: discord.Role = None,
+        channel: discord.TextChannel = None,
         reason: str = None,
     ):
         gid = interaction.guild.id
@@ -365,6 +370,7 @@ class ScamDetectionCog(commands.Cog):
                 "action": action,
                 "duration": duration,
                 "role": role,
+                "channel": channel,
                 "valid_actions": VALID_ACTION_VALUES,
                 "param": reason,
                 "translator": self.bot.translate,

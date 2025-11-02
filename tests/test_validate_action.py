@@ -184,3 +184,33 @@ def test_warn_with_role_error():
     )
     assert result is None
     assert "You cannot attach a role to a warn action." in inter.followup.messages[0]
+
+
+def test_broadcast_requires_channel():
+    inter = DummyInteraction()
+    result = asyncio.run(
+        validate_action(
+            inter,
+            action="broadcast",
+            param="Hello",
+            valid_actions=["broadcast"],
+        )
+    )
+    assert result is None
+    assert "You must specify a channel" in inter.followup.messages[0]
+
+
+def test_broadcast_success():
+    inter = DummyInteraction()
+    channel = SimpleNamespace(id=555)
+    result = asyncio.run(
+        validate_action(
+            inter,
+            action="broadcast",
+            param="Hello",
+            channel=channel,
+            valid_actions=["broadcast"],
+        )
+    )
+    assert result == "broadcast:555|Hello"
+    assert inter.followup.messages == []

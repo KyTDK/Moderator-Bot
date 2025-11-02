@@ -153,6 +153,10 @@ class NSFWCog(commands.Cog):
     @app_commands.describe(
         action=NSFW_META.child("add_action", "params").string("action"),
         duration=NSFW_META.child("add_action", "params").string("duration"),
+        channel=NSFW_META.child("add_action", "params").string(
+            "channel",
+            default="Channel to broadcast messages to.",
+        ),
     )
     @app_commands.choices(action=action_choices())
     async def add_nsfw_action(
@@ -161,6 +165,7 @@ class NSFWCog(commands.Cog):
         action: str,
         duration: str = None,
         role: discord.Role = None,
+        channel: discord.TextChannel = None,
         reason: str = None,
     ):
         gid = interaction.guild.id
@@ -173,6 +178,7 @@ class NSFWCog(commands.Cog):
                 "action": action,
                 "duration": duration,
                 "role": role,
+                "channel": channel,
                 "valid_actions": VALID_ACTION_VALUES,
                 "param": reason,
                 "translator": self.bot.translate,
@@ -186,6 +192,10 @@ class NSFWCog(commands.Cog):
     @app_commands.describe(
         action=NSFW_META.child("add_text_action", "params").string("action"),
         duration=NSFW_META.child("add_text_action", "params").string("duration"),
+        channel=NSFW_META.child("add_text_action", "params").string(
+            "channel",
+            default="Channel to broadcast messages to.",
+        ),
     )
     @app_commands.choices(action=action_choices())
     async def add_text_action(
@@ -194,6 +204,7 @@ class NSFWCog(commands.Cog):
         action: str,
         duration: str = None,
         role: discord.Role = None,
+        channel: discord.TextChannel = None,
         reason: str = None,
     ):
         if not await require_accelerated(interaction):
@@ -207,6 +218,7 @@ class NSFWCog(commands.Cog):
                 "action": action,
                 "duration": duration,
                 "role": role,
+                "channel": channel,
                 "valid_actions": VALID_ACTION_VALUES,
                 "param": reason,
                 "translator": self.bot.translate,

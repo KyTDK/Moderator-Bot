@@ -288,6 +288,10 @@ class BannedWordsCog(commands.Cog):
     @app_commands.describe(
         action=ADD_ACTION_PARAMS.string("action"),
         duration=ADD_ACTION_PARAMS.string("duration"),
+        channel=ADD_ACTION_PARAMS.string(
+            "channel",
+            default="Channel to broadcast messages to.",
+        ),
     )
     @app_commands.choices(action=action_choices())
     async def add_banned_action(
@@ -296,6 +300,7 @@ class BannedWordsCog(commands.Cog):
         action: str,
         duration: str = None,
         role: discord.Role = None,
+        channel: discord.TextChannel = None,
         reason: str = None,
     ):
         await process_add_action(
@@ -307,6 +312,7 @@ class BannedWordsCog(commands.Cog):
                 "action": action,
                 "duration": duration,
                 "role": role,
+                "channel": channel,
                 "valid_actions": VALID_ACTION_VALUES,
                 "param": reason,
                 "translator": self.bot.translate,

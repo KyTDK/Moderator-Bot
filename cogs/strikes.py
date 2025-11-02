@@ -188,6 +188,10 @@ class StrikesCog(commands.Cog):
         number_of_strikes=locale_string("cogs.strikes.meta.add_action.params.number_of_strikes"),
         action=locale_string("cogs.strikes.meta.add_action.params.action"),
         duration=locale_string("cogs.strikes.meta.add_action.params.duration"),
+        channel=locale_string(
+            "cogs.strikes.meta.add_action.params.channel",
+            default="Channel to broadcast messages to.",
+        ),
     )
     @app_commands.choices(action=action_choices(exclude=("delete", "strike")))
     async def add_strike_action(
@@ -197,6 +201,7 @@ class StrikesCog(commands.Cog):
         action: str,
         duration: str = None,
         role: discord.Role = None,
+        channel: discord.TextChannel = None,
         reason: str = None,
     ):
         await interaction.response.defer(ephemeral=True)
@@ -208,6 +213,7 @@ class StrikesCog(commands.Cog):
             action=action,
             duration=duration,
             role=role,
+            channel=channel,
             valid_actions=VALID_ACTION_VALUES,
             param=reason,
             translator=self.bot.translate,

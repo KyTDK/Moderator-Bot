@@ -213,9 +213,21 @@ class BannedURLsCog(commands.Cog):
     @app_commands.describe(
         action=locale_string("cogs.banned_urls.meta.actions.add.options.action"),
         duration=locale_string("cogs.banned_urls.meta.actions.add.options.duration"),
+        channel=locale_string(
+            "cogs.banned_urls.meta.actions.add.options.channel",
+            default="Channel to broadcast messages to.",
+        ),
     )
     @app_commands.choices(action=action_choices())
-    async def add_banned_action(self, interaction: Interaction, action: str, duration: str = None, role: discord.Role = None, reason: str = None):
+    async def add_banned_action(
+        self,
+        interaction: Interaction,
+        action: str,
+        duration: str = None,
+        role: discord.Role = None,
+        channel: discord.TextChannel = None,
+        reason: str = None,
+    ):
         await process_add_action(
             interaction,
             manager=manager,
@@ -225,6 +237,7 @@ class BannedURLsCog(commands.Cog):
                 "action": action,
                 "duration": duration,
                 "role": role,
+                "channel": channel,
                 "valid_actions": VALID_ACTION_VALUES,
                 "param": reason,
                 "translator": self.bot.translate,

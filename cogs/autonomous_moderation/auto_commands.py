@@ -112,12 +112,19 @@ class AutonomousCommandsCog(commands.Cog):
     )
     @app_commands.default_permissions(manage_guild=True)
     @app_commands.choices(action=action_choices(include=[("Auto", "auto")]))
+    @app_commands.describe(
+        channel=locale_string(
+            "cogs.autonomous_moderation.meta.add_action.channel",
+            default="Channel to broadcast messages to.",
+        )
+    )
     async def add_action(
         self,
         interaction: Interaction,
         action: str,
         duration: str = None,
         role: discord.Role = None,
+        channel: discord.TextChannel = None,
         reason: str = None,
     ):
         if not await can_run(interaction):
@@ -132,6 +139,7 @@ class AutonomousCommandsCog(commands.Cog):
                 "action": action,
                 "duration": duration,
                 "role": role,
+                "channel": channel,
                 "valid_actions": VALID_ACTION_VALUES + ["auto"],
                 "param": reason,
                 "translator": self.bot.translate,

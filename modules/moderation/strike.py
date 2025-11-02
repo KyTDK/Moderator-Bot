@@ -67,6 +67,7 @@ STRIKE_TEXTS_FALLBACK: dict[str, str] = {
     "action_give_role": "Give Role {role}",
     "action_remove_role": "Remove Role {role}",
     "action_warn": "Warn: {message}",
+    "action_broadcast": "Broadcast to {channel}: {message}",
     "action_strike": "Strike",
     "strike_count": "**Strike Count:** {count} strike(s).",
     "strike_until_ban": "{remaining} more strike(s) before a permanent ban.",
@@ -334,15 +335,20 @@ async def perform_disciplinary_action(
                     results.append(disciplinary_texts["broadcast_missing"])
                     continue
 
-                target_channel = None
-                if messages:
-                    target_channel = messages[0].channel
-                elif hasattr(user.guild, "system_channel"):
-                    target_channel = user.guild.system_channel
+                channel_id_str, sep, message_text = param.partition("|")
+                channel_id = int(channel_id_str) if channel_id_str.isdigit() else None
+
+                if not channel_id or not sep or not message_text:
+                    results.append(disciplinary_texts["broadcast_no_channel"])
+                    continue
+
+                target_channel = user.guild.get_channel(channel_id)
+                if target_channel is None:
+                    target_channel = bot.get_channel(channel_id)
 
                 if target_channel and target_channel.permissions_for(user.guild.me).send_messages:
                     try:
-                        await target_channel.send(param)
+                        await target_channel.send(message_text)
                         results.append(disciplinary_texts["broadcast_sent"])
                     except Exception as exc:  # pragma: no cover - network failure
                         print(f"[Broadcast] Failed to send message: {exc}")
@@ -477,6 +483,23 @@ async def strike(
         elif base == "warn":
             action_desc_parts.append(
                 strike_texts["action_warn"].format(message=param)
+            )
+        elif base == "broadcast":
+            channel_id_str, sep, message_text = param.partition("|")
+            channel_id = int(channel_id_str) if channel_id_str.isdigit() else None
+            channel_obj = None
+            if channel_id:
+                channel_obj = user.guild.get_channel(channel_id)
+            channel_label = (
+                channel_obj.mention
+                if channel_obj and hasattr(channel_obj, "mention")
+                else (f"<#{channel_id}>" if channel_id else channel_id_str)
+            )
+            action_desc_parts.append(
+                strike_texts["action_broadcast"].format(
+                    channel=channel_label,
+                    message=message_text if sep else param,
+                )
             )
         elif base == "strike":
             action_desc_parts.append(strike_texts["action_strike"])

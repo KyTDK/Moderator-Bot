@@ -13,6 +13,8 @@ class ActionSpec:
     requires_duration: bool = False
     allows_role: bool = False
     requires_role: bool = False
+    allows_channel: bool = False
+    requires_channel: bool = False
     requires_message: bool = False
     missing_message_key: str | None = None
     missing_message_fallback: str | None = None
@@ -52,6 +54,8 @@ _ACTION_SPECS: Mapping[str, ActionSpec] = {
     ),
     "broadcast": ActionSpec(
         canonical_name="broadcast",
+        allows_channel=True,
+        requires_channel=True,
         requires_message=True,
         missing_message_key="broadcast_message_required",
         missing_message_fallback="You must provide a broadcast message.",

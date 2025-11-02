@@ -5,8 +5,10 @@ from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - imported only for type checking
     from discord import Interaction, Role
+    from discord.abc import GuildChannel
 else:  # pragma: no cover - fallback when discord isn't installed
     Interaction = Role = Any
+    GuildChannel = Any
 
 from modules.moderation.action_specs import (
     ROLE_ACTION_CANONICAL,
@@ -40,6 +42,7 @@ async def validate_action(
     *,
     duration: str | None = None,
     role: Role | None = None,
+    channel: GuildChannel | None = None,
     valid_actions: Iterable[str] = (),
     allow_duration: bool = True,
     timeout_required: bool = True,
@@ -203,6 +206,26 @@ async def validate_action(
             )
         )
 
+    if channel:
+        if not spec or not getattr(spec, "allows_channel", False):
+            errors.append(
+                _format_message(
+                    translator,
+                    "channel_not_supported",
+                    "`{action}` does not use a channel.",
+                    placeholders={"action": canonical_action},
+                )
+            )
+    elif spec and getattr(spec, "requires_channel", False):
+        errors.append(
+            _format_message(
+                translator,
+                "channel_required",
+                "You must specify a channel for `{action}`.",
+                placeholders={"action": canonical_action},
+            )
+        )
+
     if spec and spec.requires_message and not param and canonical_action != "warn":
         errors.append(
             _format_message(
@@ -224,6 +247,8 @@ async def validate_action(
         return f"{canonical_action}:{role.id}"
 
     if param and spec and spec.requires_message:
+        if canonical_action == "broadcast" and channel:
+            return f"{canonical_action}:{channel.id}|{param}"
         return f"{canonical_action}:{param}"
 
     return canonical_action
