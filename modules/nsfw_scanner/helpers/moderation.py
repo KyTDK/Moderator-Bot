@@ -473,13 +473,27 @@ async def moderator_api(
             )
             record_fallback_context("internal_server_error", context_summary)
             had_internal_error = True
+            current_payload_mime = None
+            if isinstance(image_state, ImageModerationState):
+                current_payload_mime = image_state.payload_mime
             can_retry_with_png = (
                 has_image_input
                 and isinstance(image_state, ImageModerationState)
                 and not image_state.use_remote
                 and not image_state.png_retry_attempted
                 and attempt_index < max_attempts - 1
+                and current_payload_mime != "image/png"
             )
+            if (
+                current_payload_mime == "image/png"
+                and attempt_index < max_attempts - 1
+            ):
+                latency_tracker.record_failure("internal_server_error")
+                latency_tracker.set_payload_detail("internal_retry", True)
+                if isinstance(payload_metadata, dict):
+                    payload_metadata["internal_retry"] = True
+                await asyncio.sleep(min(2 ** attempt_index, 5.0))
+                continue
             if can_retry_with_png:
                 log.debug(
                     "Inline moderation payload triggered internal server error; retrying with PNG payload. Context: %s",
