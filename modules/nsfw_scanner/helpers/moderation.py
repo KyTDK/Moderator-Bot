@@ -680,6 +680,7 @@ async def moderator_api(
                         if message_id is not None:
                             text_metadata["message_id"] = message_id
                     schedule_text_vector_add(text, text_metadata, logger=log)
+                    latency_tracker.set_payload_detail("text_vector_added", True)
 
             if score < resolved_threshold:
                 continue
@@ -748,6 +749,7 @@ async def moderator_api(
                     if message_id is not None:
                         sfw_metadata["message_id"] = message_id
                 schedule_text_vector_add(text, sfw_metadata, logger=log)
+                latency_tracker.set_payload_detail("text_vector_added", True)
 
         if guild_flagged_categories:
             guild_flagged_categories.sort(key=lambda item: item[1], reverse=True)

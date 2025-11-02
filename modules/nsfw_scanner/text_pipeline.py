@@ -95,18 +95,30 @@ def _build_text_verbose_embed(
                 embed.add_field(name="Score", value=f"{float(score):.3f}", inline=True)
             except (TypeError, ValueError):
                 embed.add_field(name="Score", value=str(score), inline=True)
-        similarity = result.get("similarity")
-        if similarity is not None:
-            try:
-                embed.add_field(name="Similarity", value=f"{float(similarity):.3f}", inline=True)
-            except (TypeError, ValueError):
-                embed.add_field(name="Similarity", value=str(similarity), inline=True)
         threshold = result.get("threshold") or result.get("text_threshold")
         if threshold is not None:
             try:
                 embed.add_field(name="Threshold", value=f"{float(threshold):.3f}", inline=True)
             except (TypeError, ValueError):
                 embed.add_field(name="Threshold", value=str(threshold), inline=True)
+        similarity = result.get("similarity")
+        if similarity is None:
+            similarity = result.get("max_similarity")
+        try:
+            similarity_value = f"{float(similarity):.3f}"
+        except (TypeError, ValueError):
+            similarity_value = str(similarity) if similarity is not None else "n/a"
+        embed.add_field(name="Similarity", value=similarity_value or "n/a", inline=True)
+        vector_added = None
+        pipeline_metrics = result.get("pipeline_metrics")
+        if isinstance(pipeline_metrics, dict):
+            moderator_metadata = pipeline_metrics.get("moderator_metadata")
+            if isinstance(moderator_metadata, dict):
+                payload_info = moderator_metadata.get("payload_info")
+                if isinstance(payload_info, dict):
+                    vector_added = payload_info.get("text_vector_added")
+        vector_label = "yes" if vector_added else "no"
+        embed.add_field(name="Added To Vectors", value=vector_label, inline=True)
     if debug_lines:
         embed.add_field(
             name="Debug Context",
