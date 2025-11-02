@@ -3,7 +3,7 @@
         "utils": {
             "action_command_helpers": {
                 "action_limit": {
-                    "denied": "Multiple automated actions are reserved for Accelerated servers. Remove an existing action or upgrade with `{command}`."
+                    "denied": "Multiple automated actions are reserved for Accelerated servers. Kept `{kept}` and removed the rest. Upgrade with `{command}` to configure more."
                 }
             }
         }

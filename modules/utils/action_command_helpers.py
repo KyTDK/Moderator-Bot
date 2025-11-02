@@ -20,21 +20,23 @@ async def _enforce_action_limit(
     existing_actions: Sequence[str],
     new_action: str,
     translator: TranslateFn | None,
-) -> tuple[bool, str | None]:
+    manager: ActionListManager,
+) -> tuple[bool, str | None, Sequence[str]]:
     """
     Ensure free-tier guilds do not configure more than the allowed number
     of automated actions. Returns (allowed, denial_message).
     """
+    existing_list = list(existing_actions)
     limit = max(0, _FREE_ACTION_LIMIT)
     if len(existing_actions) < limit:
-        return True, None
+        return True, None, existing_list
 
     base = new_action.split(":", 1)[0].strip().lower()
     existing_bases = {
-        entry.split(":", 1)[0].strip().lower() for entry in existing_actions
+        entry.split(":", 1)[0].strip().lower() for entry in existing_list
     }
     if base in existing_bases:
-        return True, None
+        return True, None, existing_list
 
     try:
         accelerated = await mysql.is_accelerated(guild_id=guild_id)
@@ -42,23 +44,45 @@ async def _enforce_action_limit(
         accelerated = False
 
     if accelerated:
-        return True, None
+        return True, None, existing_actions
 
+    trimmed: list[str] = []
+    base_tracker: set[str] = set()
+    for action in existing_list:
+        if len(trimmed) >= limit:
+            break
+        action_base = action.split(":", 1)[0].strip().lower()
+        if action_base in base_tracker:
+            continue
+        trimmed.append(action)
+        base_tracker.add(action_base)
+
+    if not trimmed and existing_list:
+        trimmed = [existing_list[0]]
+
+    updated_actions = await manager.set_actions(
+        guild_id,
+        trimmed,
+        current_actions=existing_list,
+    )
     fallback = (
         "Multiple automated actions are reserved for Accelerated servers. "
-        "Remove an existing action or upgrade with `/accelerated subscribe`."
+        "Kept `{kept}` and removed the rest. Upgrade with `{command}` to configure more."
     )
-    message = (
-        translator(
+    kept_action = updated_actions[0] if updated_actions else "none"
+    if callable(translator):
+        message = translator(
             "modules.utils.action_command_helpers.action_limit.denied",
-            placeholders={"command": "/accelerated subscribe"},
+            placeholders={
+                "command": "/accelerated subscribe",
+                "kept": kept_action,
+            },
             fallback=fallback,
             guild_id=guild_id,
         )
-        if callable(translator)
-        else fallback
-    )
-    return False, message
+    else:
+        message = fallback.format(command="/accelerated subscribe", kept=kept_action)
+    return False, message, updated_actions
 
 
 async def process_add_action(
@@ -78,11 +102,12 @@ async def process_add_action(
         return
 
     existing_actions: Sequence[str] = await manager.view_actions(interaction.guild.id)
-    allowed, denial_message = await _enforce_action_limit(
+    allowed, denial_message, normalized_actions = await _enforce_action_limit(
         guild_id=interaction.guild.id,
         existing_actions=existing_actions,
         new_action=action_str,
         translator=translator,
+        manager=manager,
     )
     if not allowed:
         await send_ephemeral_response(interaction, content=denial_message)
@@ -92,7 +117,7 @@ async def process_add_action(
         interaction.guild.id,
         action_str,
         translator=translator,
-        existing_actions=existing_actions,
+        existing_actions=list(normalized_actions),
     )
     await send_ephemeral_response(interaction, content=message)
 

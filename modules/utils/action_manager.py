@@ -26,6 +26,24 @@ class ActionListManager:
             cleaned.append(entry)
         return cleaned, changed
 
+    async def set_actions(
+        self,
+        guild_id: int,
+        new_actions: list[str],
+        *,
+        current_actions: list[str] | None = None,
+    ) -> list[str]:
+        actions = list(new_actions)
+        actions, removed_invalid = self._sanitize_actions(actions)
+        if current_actions is not None:
+            current = list(current_actions)
+        else:
+            current = await get_settings(guild_id, self.setting_key) or []
+            current = current if isinstance(current, list) else [current]
+        if removed_invalid or actions != current:
+            await update_settings(guild_id, self.setting_key, actions)
+        return actions
+
     async def add_action(
         self,
         guild_id: int,
