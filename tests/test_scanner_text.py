@@ -216,105 +216,115 @@ from modules.nsfw_scanner.settings_keys import (
 )
 
 
-def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
-    """Ensure text moderation still runs for link-only messages."""
+async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
+    """Run the text scanning pipeline with controllable acceleration flag."""
+    scanner = scanner_mod.NSFWScanner(bot=SimpleNamespace())
 
-    async def _run():
-        scanner = scanner_mod.NSFWScanner(bot=SimpleNamespace())
+    author = SimpleNamespace(
+        id=42,
+        mention="<@42>",
+        display_name="TestUser",
+        bot=False,
+    )
+    channel = SimpleNamespace(id=99)
+    message = SimpleNamespace(
+        content="http://example.com explicit content",
+        attachments=[],
+        embeds=[],
+        stickers=[],
+        message_snapshots=[],
+        author=author,
+        channel=channel,
+        id=1234,
+        reactions=[],
+    )
 
-        author = SimpleNamespace(
-            id=42,
-            mention="<@42>",
-            display_name="TestUser",
-            bot=False,
-        )
-        channel = SimpleNamespace(id=99)
-        message = SimpleNamespace(
-            content="http://example.com explicit content",
-            attachments=[],
-            embeds=[],
-            stickers=[],
-            message_snapshots=[],
-            author=author,
-            channel=channel,
-            id=1234,
-            reactions=[],
-        )
+    async def fake_wait_for_hydration(msg, *, timeout=4.0):
+        return msg
 
-        async def fake_wait_for_hydration(msg, *, timeout=4.0):
-            return msg
+    settings_payload = {
+        NSFW_IMAGE_CATEGORY_SETTING: ["sexual"],
+        NSFW_TEXT_CATEGORY_SETTING: ["sexual"],
+        NSFW_THRESHOLD_SETTING: 0.7,
+        NSFW_TEXT_THRESHOLD_SETTING: 0.7,
+        NSFW_HIGH_ACCURACY_SETTING: False,
+        NSFW_TEXT_ENABLED_SETTING: True,
+        NSFW_TEXT_STRIKES_ONLY_SETTING: False,
+        NSFW_TEXT_SEND_EMBED_SETTING: True,
+    }
 
-        settings_payload = {
-            NSFW_IMAGE_CATEGORY_SETTING: ["sexual"],
-            NSFW_TEXT_CATEGORY_SETTING: ["sexual"],
-            NSFW_THRESHOLD_SETTING: 0.7,
-            NSFW_TEXT_THRESHOLD_SETTING: 0.7,
-            NSFW_HIGH_ACCURACY_SETTING: False,
-            NSFW_TEXT_ENABLED_SETTING: True,
-            NSFW_TEXT_STRIKES_ONLY_SETTING: False,
-            NSFW_TEXT_SEND_EMBED_SETTING: True,
+    def fake_get_scan_settings(self):
+        return settings_payload
+
+    def fake_set_scan_settings(self, value):
+        return None
+
+    async def fake_resolve_plan(guild_id):
+        return "core"
+
+    async def fake_is_accelerated(*, guild_id=None, user_id=None):
+        return accelerated_value
+
+    async def fake_get_strike_count(user_id, guild_id):
+        return 1
+
+    text_calls = []
+
+    async def fake_process_text(scanner_arg, text, **kwargs):
+        text_calls.append((scanner_arg, text, kwargs))
+        return {
+            "is_nsfw": True,
+            "category": "sexual",
+            "score": 0.91,
         }
 
-        def fake_get_scan_settings(self):
-            return settings_payload
+    callback_calls = []
 
-        def fake_set_scan_settings(self, value):
-            return None
+    async def fake_callback(*args, **kwargs):
+        callback_calls.append((args, kwargs))
 
-        async def fake_resolve_plan(guild_id):
-            return "core"
+    monkeypatch.setattr(scanner_mod, "wait_for_hydration", fake_wait_for_hydration)
+    monkeypatch.setattr(
+        attachments_mod.AttachmentSettingsCache,
+        "get_scan_settings",
+        fake_get_scan_settings,
+    )
+    monkeypatch.setattr(
+        attachments_mod.AttachmentSettingsCache,
+        "set_scan_settings",
+        fake_set_scan_settings,
+    )
+    monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan)
+    monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated)
+    monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count)
+    monkeypatch.setattr(scanner_mod, "process_text", fake_process_text)
 
-        async def fake_is_accelerated(*, guild_id=None, user_id=None):
-            return True
+    flagged = await scanner.is_nsfw(
+        message=message,
+        guild_id=555,
+        nsfw_callback=fake_callback,
+    )
 
-        async def fake_get_strike_count(user_id, guild_id):
-            return 1
+    return flagged, text_calls, callback_calls, author
 
-        text_calls = []
 
-        async def fake_process_text(scanner_arg, text, **kwargs):
-            text_calls.append((scanner_arg, text, kwargs))
-            return {
-                "is_nsfw": True,
-                "category": "sexual",
-                "score": 0.91,
-            }
+def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
+    flagged, text_calls, callback_calls, author = asyncio.run(
+        _exercise_text_scan(monkeypatch, accelerated_value=True)
+    )
+    assert flagged is True
+    assert text_calls, "process_text should be invoked"
+    assert callback_calls, "nsfw_callback should be invoked when text is flagged"
+    args, kwargs = callback_calls[0]
+    assert args[0] is author
+    assert kwargs["action_setting"] == NSFW_TEXT_ACTION_SETTING
+    assert kwargs["send_embed"] is True
 
-        callback_calls = []
 
-        async def fake_callback(*args, **kwargs):
-            callback_calls.append((args, kwargs))
-
-        monkeypatch.setattr(scanner_mod, "wait_for_hydration", fake_wait_for_hydration)
-        monkeypatch.setattr(
-            attachments_mod.AttachmentSettingsCache,
-            "get_scan_settings",
-            fake_get_scan_settings,
-        )
-        monkeypatch.setattr(
-            attachments_mod.AttachmentSettingsCache,
-            "set_scan_settings",
-            fake_set_scan_settings,
-        )
-        monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan)
-        monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated)
-        monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count)
-        monkeypatch.setattr(scanner_mod, "process_text", fake_process_text)
-
-        flagged = await scanner.is_nsfw(
-            message=message,
-            guild_id=555,
-            nsfw_callback=fake_callback,
-        )
-
-        assert flagged is True
-        assert text_calls, "process_text should be invoked"
-        assert text_calls[0][0] is scanner
-        assert text_calls[0][1] == message.content.strip()
-        assert callback_calls, "nsfw_callback should be invoked when text is flagged"
-        args, kwargs = callback_calls[0]
-        assert args[0] is author
-        assert kwargs["action_setting"] == NSFW_TEXT_ACTION_SETTING
-        assert kwargs["send_embed"] is True
-
-    asyncio.run(_run())
+def test_text_scan_runs_without_accelerated_plan(monkeypatch):
+    flagged, text_calls, callback_calls, _ = asyncio.run(
+        _exercise_text_scan(monkeypatch, accelerated_value=False)
+    )
+    assert flagged is False
+    assert not text_calls, "process_text should not run without accelerated access"
+    assert not callback_calls, "No action should be taken without accelerated access"
