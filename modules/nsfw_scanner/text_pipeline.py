@@ -13,8 +13,11 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_SEND_EMBED_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
 )
-import modules.utils.log_channel as log_channel
 from modules.utils import mod_logging, mysql
+import modules.utils.log_channel as log_channel
+
+# Provide module-level alias so existing monkeypatches on TextScanPipeline can override it.
+send_log_message = log_channel.send_log_message
 
 from modules.nsfw_scanner.helpers import process_text
 from modules.nsfw_scanner.scanner_utils import to_bool
@@ -265,7 +268,7 @@ class TextScanPipeline:
             try:
                 log_embed = verbose_embed.copy()
                 log_embed.title = "NSFW Text Scan Debug"
-                await log_channel.send_log_message(
+                await send_log_message(
                     self._bot,
                     embed=log_embed,
                     allowed_mentions=discord.AllowedMentions.none(),
