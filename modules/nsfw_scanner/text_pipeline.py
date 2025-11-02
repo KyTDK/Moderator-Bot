@@ -238,18 +238,16 @@ class TextScanPipeline:
                 settings_cache.set_verbose(verbose_enabled)
 
         verbose_embed: discord.Embed | None = None
-        if text_result is not None:
-            should_log = bool(text_result.get("is_nsfw")) or verbose_enabled
-            if should_log:
-                verbose_embed = _build_text_verbose_embed(
-                    author=getattr(message, "author", None),
-                    channel=getattr(message, "channel", None),
-                    guild_id=guild_id,
-                    text_content=text_content,
-                    result=text_result,
-                    message=message,
-                    debug_lines=debug_lines if debug_lines else None,
-                )
+        if verbose_enabled and text_result is not None:
+            verbose_embed = _build_text_verbose_embed(
+                author=getattr(message, "author", None),
+                channel=getattr(message, "channel", None),
+                guild_id=guild_id,
+                text_content=text_content,
+                result=text_result,
+                message=message,
+                debug_lines=debug_lines if debug_lines else None,
+            )
 
         if verbose_enabled and verbose_embed is not None:
             channel_obj = getattr(message, "channel", None)
@@ -264,7 +262,7 @@ class TextScanPipeline:
                 except Exception as exc:
                     print(f"[verbose-text] Failed to send text verbose embed: {exc}")
 
-        if verbose_embed is not None:
+        if verbose_enabled and verbose_embed is not None:
             try:
                 log_embed = verbose_embed.copy()
                 log_embed.title = "NSFW Text Scan Debug"

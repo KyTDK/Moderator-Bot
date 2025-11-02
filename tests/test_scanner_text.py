@@ -265,7 +265,7 @@ from modules.nsfw_scanner.settings_keys import (
 )
 
 
-async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
+async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool, verbose_value: bool = True):
     """Run the text scanning pipeline with controllable acceleration flag."""
     author = SimpleNamespace(
         id=42,
@@ -316,7 +316,7 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
         if isinstance(keys, list):
             return settings_payload.copy()
         if keys == "nsfw-verbose":
-            return True
+            return verbose_value
         return None
 
     text_calls = []
@@ -423,3 +423,14 @@ def test_text_scan_runs_without_accelerated_plan(monkeypatch):
     assert not callback_calls, "No action should be taken without accelerated access"
     assert log_calls, "Verbose logging should be emitted when verbose mode is enabled"
     assert log_channel_calls, "Debug logs should be emitted when verbose mode is enabled"
+
+
+def test_text_scan_does_not_log_without_verbose(monkeypatch):
+    flagged, text_calls, callback_calls, _, log_calls, log_channel_calls = asyncio.run(
+        _exercise_text_scan(monkeypatch, accelerated_value=True, verbose_value=False)
+    )
+    assert flagged is True
+    assert text_calls, "process_text should run when text scanning is enabled"
+    assert callback_calls, "Actions should fire when acceleration allows it"
+    assert not log_calls, "Verbose channel logging should be suppressed without nsfw-verbose"
+    assert not log_channel_calls, "Debug logs should be suppressed without nsfw-verbose"
