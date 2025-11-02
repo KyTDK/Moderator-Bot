@@ -73,7 +73,17 @@ discord_stub.Forbidden = type("Forbidden", (Exception,), {})
 discord_stub.HTTPException = type("HTTPException", (Exception,), {})
 discord_stub.NotFound = type("NotFound", (Exception,), {})
 discord_stub.Interaction = type("Interaction", (), {})
-discord_stub.app_commands = types.SimpleNamespace(CommandTree=object)
+discord_stub.User = type("User", (), {})
+discord_stub.TextChannel = type("TextChannel", (), {})
+discord_stub.Message = type("Message", (), {})
+discord_stub.Guild = type("Guild", (), {})
+discord_stub.Member = type("Member", (), {})
+discord_stub.Role = type("Role", (), {})
+discord_stub.utils = types.SimpleNamespace(get=lambda iterable, **attrs: None)
+discord_stub.app_commands = types.SimpleNamespace(
+    CommandTree=object,
+    check=lambda func: func,
+)
 discord_stub.abc = types.SimpleNamespace(Messageable=object)
 
 errors_stub = types.ModuleType("discord.errors")
@@ -87,6 +97,7 @@ discord_ext_stub = types.ModuleType("discord.ext")
 commands_stub = types.ModuleType("discord.ext.commands")
 app_commands_module = types.ModuleType("discord.app_commands")
 app_commands_module.CommandTree = object
+app_commands_module.check = lambda func: func
 
 
 class _DummyBot:
@@ -142,6 +153,17 @@ mysql_stub.resolve_guild_plan = _unpatched_async
 mysql_stub.is_accelerated = _unpatched_async
 mysql_stub.get_strike_count = _unpatched_async
 sys.modules.setdefault("modules.utils.mysql", mysql_stub)
+
+cache_stub = types.ModuleType("modules.cache")
+async def _cache_async(*_args, **_kwargs):
+    return None
+cache_stub.get_cached_message = _cache_async
+cache_stub.cache_message = _cache_async
+sys.modules.setdefault("modules.cache", cache_stub)
+
+filetype_stub = types.ModuleType("filetype")
+filetype_stub.guess = lambda *_args, **_kwargs: None
+sys.modules.setdefault("filetype", filetype_stub)
 
 import pytest
 
