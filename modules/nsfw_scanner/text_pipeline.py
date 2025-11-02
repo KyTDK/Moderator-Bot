@@ -10,7 +10,6 @@ from discord.utils import escape_markdown, escape_mentions
 from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_ACTION_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
-    NSFW_TEXT_SEND_EMBED_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
 )
 from modules.utils import mod_logging, mysql
@@ -140,7 +139,6 @@ class TextScanPipeline:
         settings_map = settings_map or {}
 
         text_scanning_enabled = False
-        send_text_embed = True
         actions_allowed = False
         accelerated_allowed: bool | None = None
         strikes_only = False
@@ -176,11 +174,6 @@ class TextScanPipeline:
                 if strike_count <= 0:
                     return False
 
-            raw_send_embed = settings_map.get(NSFW_TEXT_SEND_EMBED_SETTING)
-            if isinstance(raw_send_embed, str):
-                send_text_embed = raw_send_embed.lower() == "true"
-            else:
-                send_text_embed = raw_send_embed if raw_send_embed is not None else True
         else:
             actions_allowed = False
 
@@ -194,7 +187,7 @@ class TextScanPipeline:
                 debug_lines.append(f"User strike count: {strike_count}")
         else:
             debug_lines.append("Strikes-only mode: no")
-        debug_lines.append(f"Send moderation embed: {'yes' if send_text_embed else 'no'}")
+        debug_lines.append("Send moderation embed: no")
 
         author_id = getattr(getattr(message, "author", None), "id", None)
         text_metadata = {
@@ -305,6 +298,9 @@ class TextScanPipeline:
         if not (text_result and text_result.get("is_nsfw")):
             return False
 
+        if message is not None:
+            setattr(message, "_nsfw_text_flagged", True)
+
         if nsfw_callback and actions_allowed:
             category = text_result.get("category") or "unspecified"
             confidence_value = None
@@ -335,7 +331,7 @@ class TextScanPipeline:
                 confidence=confidence_value,
                 confidence_source=confidence_source,
                 action_setting=NSFW_TEXT_ACTION_SETTING,
-                send_embed=send_text_embed,
+                send_embed=False,
             )
 
             return True

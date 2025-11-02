@@ -109,15 +109,6 @@
         },
         "view_text_strike_filter": {
           "description": "View the current NSFW text strike-only filtering state."
-        },
-        "set_text_embed": {
-          "description": "Enable or disable NSFW text notification embeds.",
-          "params": {
-            "enabled": "Send embeds for text violations"
-          }
-        },
-        "view_text_embed": {
-          "description": "View the current NSFW text embed setting."
         }
       },
       "actions": {
@@ -159,13 +150,6 @@
         "enabled": "NSFW text strike-only filtering has been enabled.",
         "disabled": "NSFW text strike-only filtering has been disabled.",
         "status": "NSFW text strike-only filtering is currently **{state}**.",
-        "enabled_label": "enabled",
-        "disabled_label": "disabled"
-      },
-      "text_send_embed": {
-        "enabled": "NSFW text notification embeds have been enabled.",
-        "disabled": "NSFW text notification embeds have been disabled.",
-        "status": "NSFW text notification embeds are currently **{state}**.",
         "enabled_label": "enabled",
         "disabled_label": "disabled"
       }

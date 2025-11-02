@@ -20,7 +20,6 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_ACTION_SETTING,
     NSFW_TEXT_CATEGORY_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
-    NSFW_TEXT_SEND_EMBED_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
     NSFW_TEXT_THRESHOLD_SETTING,
 )
@@ -446,42 +445,6 @@ class NSFWCog(commands.Cog):
         texts = self.bot.translate("cogs.nsfw.text_strike_filter", guild_id=guild_id)
         enabled_value = await mysql.get_settings(guild_id, NSFW_TEXT_STRIKES_ONLY_SETTING)
         enabled = _parse_bool_setting(enabled_value, default=False)
-        await interaction.response.send_message(
-            texts["status"].format(
-                state=texts["enabled_label" if enabled else "disabled_label"]
-            ),
-            ephemeral=True,
-        )
-
-    @nsfw_group.command(
-        name="set_text_embed",
-        description=NSFW_META.string("set_text_embed", "description"),
-    )
-    @app_commands.describe(
-        enabled=NSFW_META.child("set_text_embed", "params").string("enabled")
-    )
-    async def set_text_embed(self, interaction: Interaction, enabled: bool):
-        if not await require_accelerated(interaction):
-            return
-        guild_id = interaction.guild.id
-        texts = self.bot.translate("cogs.nsfw.text_send_embed", guild_id=guild_id)
-        await mysql.update_settings(guild_id, NSFW_TEXT_SEND_EMBED_SETTING, enabled)
-        await interaction.response.send_message(
-            texts["enabled" if enabled else "disabled"],
-            ephemeral=True,
-        )
-
-    @nsfw_group.command(
-        name="view_text_embed",
-        description=NSFW_META.string("view_text_embed", "description"),
-    )
-    async def view_text_embed(self, interaction: Interaction):
-        if not await require_accelerated(interaction):
-            return
-        guild_id = interaction.guild.id
-        texts = self.bot.translate("cogs.nsfw.text_send_embed", guild_id=guild_id)
-        raw_value = await mysql.get_settings(guild_id, NSFW_TEXT_SEND_EMBED_SETTING)
-        enabled = _parse_bool_setting(raw_value, default=True)
         await interaction.response.send_message(
             texts["status"].format(
                 state=texts["enabled_label" if enabled else "disabled_label"]

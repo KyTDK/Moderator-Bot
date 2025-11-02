@@ -59,6 +59,9 @@ class ModerationHandlers:
             if not flagged:
                 return
 
+            if getattr(message, "_nsfw_text_flagged", False):
+                return
+
             notify_channel = await mysql.get_settings(guild_id, "nsfw-channel-notify")
             if not notify_channel:
                 return

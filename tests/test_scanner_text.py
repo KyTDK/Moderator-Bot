@@ -258,7 +258,6 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_ACTION_SETTING,
     NSFW_TEXT_CATEGORY_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
-    NSFW_TEXT_SEND_EMBED_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
     NSFW_TEXT_THRESHOLD_SETTING,
     NSFW_THRESHOLD_SETTING,
@@ -304,7 +303,6 @@ async def _exercise_text_scan(
         NSFW_HIGH_ACCURACY_SETTING: False,
         NSFW_TEXT_ENABLED_SETTING: True,
         NSFW_TEXT_STRIKES_ONLY_SETTING: False,
-        NSFW_TEXT_SEND_EMBED_SETTING: True,
     }
 
     def fake_get_scan_settings(self):
@@ -417,6 +415,7 @@ def test_text_scan_does_not_log_without_verbose(monkeypatch):
     assert flagged is True
     assert text_calls, "process_text should run when text scanning is enabled"
     assert callback_calls, "Actions should fire when acceleration allows it"
+    assert callback_calls[0][1]["send_embed"] is False
     assert not log_calls, "Verbose channel logging should be suppressed without nsfw-verbose"
     assert not log_channel_calls, "Debug logs should be suppressed without nsfw-verbose"
 
@@ -433,3 +432,4 @@ def test_text_scan_runs_when_media_scanning_disabled(monkeypatch):
     assert flagged is True
     assert text_calls, "process_text should still run when media scanning is disabled"
     assert callback_calls, "Text actions should still fire when only text scanning is enabled"
+    assert callback_calls[0][1]["send_embed"] is False
