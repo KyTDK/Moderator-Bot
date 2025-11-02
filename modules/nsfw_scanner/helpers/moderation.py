@@ -5,11 +5,13 @@ from typing import Any, Callable, Optional
 
 import httpx
 import openai
+import discord
 from PIL import Image
 
 from modules.utils import api, clip_vectors, text_vectors
+from modules.utils.log_channel import send_log_message
 
-from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY
+from ..constants import ADD_SFW_VECTOR, LOG_CHANNEL_ID, MOD_API_MAX_CONCURRENCY
 from ..utils.categories import is_allowed_category
 from .latency import ModeratorLatencyTracker
 from .moderation_errors import build_error_context, format_exception_for_log
@@ -32,6 +34,105 @@ log = logging.getLogger(__name__)
 
 
 _MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
+
+
+def _truncate_text(value: str, limit: int = 1024) -> str:
+    if not isinstance(value, str) or len(value) <= limit:
+        return value
+    return value[: limit - 1] + "\u2026"
+
+
+async def _report_moderation_fallback_to_log(
+    scanner,
+    *,
+    fallback_notice: str,
+    image_state: ImageModerationState,
+    payload_metadata: dict[str, Any] | None,
+) -> None:
+    bot = getattr(scanner, "bot", None)
+    if bot is None:
+        return
+
+    metadata: dict[str, Any] | None = payload_metadata if isinstance(payload_metadata, dict) else None
+    if metadata is not None and metadata.get("fallback_notice_reported"):
+        return
+
+    if metadata is not None:
+        metadata["fallback_notice_reported"] = True
+
+    embed = discord.Embed(
+        title="Moderator API fallback triggered",
+        description=fallback_notice,
+        color=discord.Color.orange(),
+    )
+
+    events = sorted(image_state.fallback_events)
+    if events:
+        embed.add_field(
+            name="Fallback events",
+            value=_truncate_text(", ".join(events)),
+            inline=False,
+        )
+
+    if metadata:
+        guild_id = metadata.get("guild_id")
+        if guild_id is not None:
+            embed.add_field(name="Guild ID", value=str(guild_id), inline=True)
+
+        channel_id = metadata.get("channel_id")
+        if channel_id is not None:
+            embed.add_field(name="Channel ID", value=str(channel_id), inline=True)
+
+        strategy = metadata.get("moderation_payload_strategy")
+        if strategy:
+            embed.add_field(name="Payload strategy", value=str(strategy), inline=True)
+
+        jump_url = metadata.get("message_jump_url")
+        message_id = metadata.get("message_id")
+        if jump_url:
+            embed.add_field(
+                name="Message",
+                value=_truncate_text(f"[Jump to message]({jump_url})"),
+                inline=False,
+            )
+        elif message_id is not None:
+            embed.add_field(name="Message ID", value=str(message_id), inline=False)
+
+        source_url = metadata.get("source_url")
+        if source_url:
+            embed.add_field(
+                name="Source URL",
+                value=_truncate_text(source_url),
+                inline=False,
+            )
+
+    try:
+        payload_details = image_state.logging_details()
+    except Exception:
+        payload_details = []
+
+    if payload_details:
+        embed.add_field(
+            name="Payload details",
+            value=_truncate_text(" | ".join(payload_details)),
+            inline=False,
+        )
+
+    try:
+        success = await send_log_message(
+            bot,
+            embed=embed,
+            allowed_mentions=discord.AllowedMentions.none(),
+            context="nsfw_scanner.moderation_fallback",
+        )
+    except Exception:
+        log.debug(
+            "Failed to report moderation fallback to LOG_CHANNEL_ID=%s", LOG_CHANNEL_ID, exc_info=True
+        )
+        return
+
+    if not success:
+        log.debug("Failed to report moderation fallback to LOG_CHANNEL_ID=%s", LOG_CHANNEL_ID)
 
 
 async def _get_moderations_resource(client):
@@ -511,6 +612,22 @@ async def moderator_api(
                 latency_tracker.set_payload_detail("fallback_notice", fallback_notice)
                 if isinstance(payload_metadata, dict):
                     payload_metadata["fallback_notice"] = fallback_notice
+                try:
+                    await _report_moderation_fallback_to_log(
+                        scanner,
+                        fallback_notice=fallback_notice,
+                        image_state=image_state,
+                        payload_metadata=metadata_dict,
+                    )
+                except Exception:
+                    guild_for_log = None
+                    if isinstance(metadata_dict, dict):
+                        guild_for_log = metadata_dict.get("guild_id")
+                    log.debug(
+                        "Failed to schedule moderation fallback log for guild %s",
+                        guild_for_log,
+                        exc_info=True,
+                    )
 
         if ADD_SFW_VECTOR and not flagged_any and not skip_vector_add:
             if (

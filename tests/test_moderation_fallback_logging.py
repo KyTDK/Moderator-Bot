@@ -1,0 +1,210 @@
+import asyncio
+import base64
+import os
+import sys
+import types
+from pathlib import Path
+
+import importlib
+
+
+project_root = Path(__file__).resolve().parents[1]
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
+os.environ.setdefault(
+    "FERNET_SECRET_KEY",
+    base64.urlsafe_b64encode(b"0" * 32).decode(),
+)
+
+class _DummyEmbed:
+    def __init__(self, *_, **kwargs):
+        self.title = kwargs.get("title")
+        self.description = kwargs.get("description")
+        self.color = kwargs.get("color")
+        self.fields: list[dict[str, object]] = []
+        self.footer = None
+
+    def add_field(self, *, name, value, inline=True):
+        self.fields.append({"name": name, "value": value, "inline": inline})
+
+    def set_footer(self, *, text=None):
+        self.footer = text
+
+    def set_thumbnail(self, *_, **__):
+        return None
+
+    def set_image(self, *_, **__):
+        return None
+
+
+class _DummyColor:
+    @staticmethod
+    def orange():
+        return 0xFFA500
+
+    @staticmethod
+    def red():
+        return 0xFF0000
+
+    @staticmethod
+    def dark_grey():
+        return 0x2F3136
+
+
+class _DummyAllowedMentions:
+    @staticmethod
+    def none():
+        return _DummyAllowedMentions()
+
+
+discord_stub = types.ModuleType("discord")
+discord_stub.Embed = _DummyEmbed
+discord_stub.Color = _DummyColor
+discord_stub.AllowedMentions = _DummyAllowedMentions
+discord_stub.Client = type("Client", (), {})
+discord_stub.File = type("File", (), {})
+discord_stub.Forbidden = type("Forbidden", (Exception,), {})
+discord_stub.HTTPException = type("HTTPException", (Exception,), {})
+discord_stub.NotFound = type("NotFound", (Exception,), {})
+discord_stub.Interaction = type("Interaction", (), {})
+discord_stub.User = type("User", (), {})
+discord_stub.TextChannel = type("TextChannel", (), {})
+discord_stub.Message = type("Message", (), {})
+discord_stub.Guild = type("Guild", (), {})
+discord_stub.Member = type("Member", (), {})
+discord_stub.Role = type("Role", (), {})
+discord_stub.utils = types.SimpleNamespace(get=lambda *_args, **_kwargs: None)
+discord_stub.app_commands = types.SimpleNamespace(check=lambda func: func)
+discord_stub.abc = types.SimpleNamespace(Messageable=object)
+
+sys.modules["discord"] = discord_stub
+
+discord_ext_stub = types.ModuleType("discord.ext")
+commands_stub = types.ModuleType("discord.ext.commands")
+
+
+class _DummyBot:
+    pass
+
+
+class _DummyCog:
+    def __init__(self, *_, **__):
+        pass
+
+
+def _identity_decorator(*_args, **_kwargs):
+    def _wrap(func):
+        return func
+
+    return _wrap
+
+
+commands_stub.Bot = _DummyBot
+commands_stub.Cog = _DummyCog
+commands_stub.command = _identity_decorator
+commands_stub.Cog.listener = staticmethod(_identity_decorator)
+discord_ext_stub.commands = commands_stub
+
+sys.modules["discord.ext"] = discord_ext_stub
+sys.modules["discord.ext.commands"] = commands_stub
+
+importlib.import_module("modules")
+utils_pkg = importlib.import_module("modules.utils")
+
+log_channel_stub = types.ModuleType("modules.utils.log_channel")
+
+mysql_stub = types.ModuleType("modules.utils.mysql")
+mysql_stub.get_premium_status = lambda *_args, **_kwargs: None
+mysql_stub.set_premium_status = lambda *_args, **_kwargs: None
+mysql_stub.MYSQL_CONFIG = {}
+mysql_stub.fernet = None
+sys.modules["modules.utils.mysql"] = mysql_stub
+setattr(utils_pkg, "mysql", mysql_stub)
+
+mod_logging_stub = types.ModuleType("modules.utils.mod_logging")
+mod_logging_stub.log_to_channel = lambda *_args, **_kwargs: None
+sys.modules["modules.utils.mod_logging"] = mod_logging_stub
+setattr(utils_pkg, "mod_logging", mod_logging_stub)
+
+
+async def _send_log_message(*_args, **_kwargs):
+    return True
+
+
+def _resolve_log_channel(*_args, **_kwargs):
+    return None
+
+
+def _log_serious_issue(*_args, **_kwargs):
+    return False
+
+
+log_channel_stub.send_log_message = _send_log_message
+log_channel_stub.resolve_log_channel = _resolve_log_channel
+log_channel_stub.log_serious_issue = _log_serious_issue
+sys.modules.setdefault("modules.utils.log_channel", log_channel_stub)
+setattr(utils_pkg, "log_channel", log_channel_stub)
+
+moderation = importlib.import_module("modules.nsfw_scanner.helpers.moderation")
+moderation_state = importlib.import_module("modules.nsfw_scanner.helpers.moderation_state")
+
+
+def test_report_moderation_fallback_to_log(monkeypatch):
+    captured: dict[str, object] = {"calls": 0}
+
+    async def _fake_send_log_message(*args, **kwargs):
+        captured["calls"] = captured.get("calls", 0) + 1
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return True
+
+    monkeypatch.setattr(moderation, "send_log_message", _fake_send_log_message)
+
+    scanner = types.SimpleNamespace(bot=object())
+    metadata = {
+        "guild_id": 123,
+        "channel_id": 456,
+        "message_id": 789,
+        "message_jump_url": "https://example.com/message",
+        "source_url": "https://cdn.example.com/image.png",
+        "moderation_payload_strategy": "remote_url",
+    }
+
+    state = moderation_state.ImageModerationState(
+        payload_bytes=b"bytes",
+        payload_mime="image/jpeg",
+        source_url="https://cdn.example.com/image.png",
+        use_remote=True,
+    )
+    state.mark_fallback("remote_retry")
+
+    fallback_notice = state.fallback_message()
+    assert fallback_notice
+
+    asyncio.run(
+        moderation._report_moderation_fallback_to_log(
+            scanner,
+            fallback_notice=fallback_notice,
+            image_state=state,
+            payload_metadata=metadata,
+        )
+    )
+
+    assert captured["calls"] == 1
+    kwargs = captured["kwargs"]
+    assert kwargs["embed"].title == "Moderator API fallback triggered"
+    assert kwargs["embed"].description == fallback_notice
+    assert kwargs["context"] == "nsfw_scanner.moderation_fallback"
+    assert kwargs["allowed_mentions"].__class__ is _DummyAllowedMentions
+    assert metadata.get("fallback_notice_reported") is True
+
+    asyncio.run(
+        moderation._report_moderation_fallback_to_log(
+            scanner,
+            fallback_notice=fallback_notice,
+            image_state=state,
+            payload_metadata=metadata,
+        )
+    )
+    assert captured["calls"] == 1
