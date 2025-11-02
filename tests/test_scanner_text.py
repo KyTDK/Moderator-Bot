@@ -385,7 +385,6 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
     import modules.nsfw_scanner.constants as scanner_constants
 
     monkeypatch.setattr(scanner_constants, "LOG_CHANNEL_ID", 123, raising=False)
-    monkeypatch.setattr(log_channel_module, "LOG_CHANNEL_ID", 123, raising=False)
 
     monkeypatch.setattr(mod_logging_module, "log_to_channel", fake_log_to_channel, raising=False)
     monkeypatch.setattr(log_channel_module, "send_log_message", fake_send_log_message, raising=False)
