@@ -72,18 +72,19 @@ class ModerationHandlers:
             return
 
         async def scan_task():
-            flagged = await self._scanner.is_nsfw(
+            scan_outcome = await self._scanner.is_nsfw(
                 message=message,
                 guild_id=guild_id,
                 nsfw_callback=handle_nsfw_content,
                 overall_started_at=queue_started_at,
                 scan_text=text_scanning_allowed,
                 scan_media=nsfw_enabled,
+                return_details=True,
             )
-            if not flagged:
+            if not scan_outcome["flagged"]:
                 return
 
-            if getattr(message, "_nsfw_text_flagged", False):
+            if scan_outcome.get("text_flagged"):
                 return
 
             notify_channel = await mysql.get_settings(guild_id, "nsfw-channel-notify")

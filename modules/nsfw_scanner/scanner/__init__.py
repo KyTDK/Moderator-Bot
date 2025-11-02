@@ -3,31 +3,23 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import re
 import time
-import uuid
 from collections.abc import Awaitable, Callable
 from typing import Any
-from tempfile import NamedTemporaryFile
-from urllib.parse import urlparse
 
 import aiohttp
 import discord
-from apnggif import apnggif
-from cogs.hydration import wait_for_hydration
 from discord.errors import NotFound
 from discord.ext import commands
 import pillow_avif  # registers AVIF support
 
+from cogs.hydration import wait_for_hydration
 from modules.config.premium_plans import PLAN_CORE, PLAN_FREE, PLAN_PRO, PLAN_ULTRA
-
-from modules.nsfw_scanner.tenor_cache import TenorToggleCache
-from modules.nsfw_scanner.text_pipeline import TextScanPipeline
 from modules.utils import clip_vectors, mod_logging, mysql
 from modules.utils.discord_utils import safe_get_channel
 from modules.utils.log_channel import send_log_message
 
-from .constants import (
+from ..constants import (
     ACCELERATED_DOWNLOAD_CAP_BYTES,
     ACCELERATED_PRO_DOWNLOAD_CAP_BYTES,
     ACCELERATED_ULTRA_DOWNLOAD_CAP_BYTES,
@@ -37,14 +29,20 @@ from .constants import (
     NSFW_SCANNER_DEFAULT_HEADERS,
     TMP_DIR,
 )
-from .helpers import (
+from ..helpers import (
     AttachmentSettingsCache,
     check_attachment as helper_check_attachment,
-    is_tenor_host,
     temp_download as helper_temp_download,
 )
-from .helpers.metrics import build_download_latency_breakdown
-from .utils.file_ops import safe_delete
+from ..helpers.metrics import build_download_latency_breakdown
+from ..tenor_cache import TenorToggleCache
+from ..text_pipeline import TextScanPipeline
+from ..utils.file_ops import safe_delete
+from .contexts import MediaScanContext, ScanOutcome
+from .media import MediaScanner
+from .settings import resolve_download_cap_bytes, resolve_settings_map
+
+__all__ = ["NSFWScanner", "wait_for_hydration"]
 
 log = logging.getLogger(__name__)
 
@@ -60,6 +58,7 @@ _PLAN_DOWNLOAD_CAPS: dict[str, int | None] = {
 
 _TENOR_CACHE_TTL = 600.0
 _TENOR_CACHE_MAX = 512
+
 
 class NSFWScanner:
     def __init__(self, bot: commands.Bot):
@@ -158,7 +157,7 @@ class NSFWScanner:
             channel_name = getattr(channel, "name", None) or getattr(channel, "id", "Unknown")
             embed.add_field(
                 name="Channel",
-                value=self._truncate(f"{channel_name} (`{channel.id}`)", 1024),
+                value=self._truncate(f"{channel_name}", 1024),
                 inline=False,
             )
 
@@ -287,19 +286,19 @@ class NSFWScanner:
         overall_started_at: float | None = None,
     ) -> bool:
         try:
-                return await helper_check_attachment(
-                    self,
-                    author,
-                    temp_filename,
-                    nsfw_callback,
-                    guild_id,
-                    message,
-                    settings_cache=settings_cache,
-                    pre_latency_steps=pre_latency_steps,
-                    pre_download_bytes=pre_download_bytes,
-                    source_url=source,
-                    overall_started_at=overall_started_at,
-                )
+            return await helper_check_attachment(
+                self,
+                author,
+                temp_filename,
+                nsfw_callback,
+                guild_id,
+                message,
+                settings_cache=settings_cache,
+                pre_latency_steps=pre_latency_steps,
+                pre_download_bytes=pre_download_bytes,
+                source_url=source,
+                overall_started_at=overall_started_at,
+            )
         except Exception as scan_exc:
             log.exception("Failed to scan %s %s", log_context, source)
             await self._report_scan_failure(
@@ -425,67 +424,47 @@ class NSFWScanner:
         *,
         scan_text: bool = True,
         scan_media: bool = True,
-    ) -> bool:
-
+        return_details: bool = False,
+    ):
         settings_cache = AttachmentSettingsCache()
-        latency_origin = overall_started_at
+        outcome = ScanOutcome()
 
-        async def _resolve_download_cap_bytes() -> int | None:
-            if guild_id is None:
-                return DEFAULT_DOWNLOAD_CAP_BYTES
+        download_cap_bytes = await resolve_download_cap_bytes(
+            guild_id,
+            settings_cache,
+            _PLAN_DOWNLOAD_CAPS,
+            DEFAULT_DOWNLOAD_CAP_BYTES,
+        )
+        media_context = MediaScanContext(
+            message=message,
+            guild_id=guild_id,
+            nsfw_callback=nsfw_callback,
+            settings_cache=settings_cache,
+            download_cap_bytes=download_cap_bytes,
+            author=member or (getattr(message, "author", None) if message else None),
+            latency_origin=overall_started_at,
+        )
+        media_scanner = MediaScanner(self, media_context)
 
-            if settings_cache.has_premium_plan():
-                plan = settings_cache.get_premium_plan()
-            else:
-                plan = None
-                try:
-                    plan = await mysql.resolve_guild_plan(guild_id)
-                except Exception:
-                    plan = None
-                settings_cache.set_premium_plan(plan)
-
-            normalized_plan = (plan or PLAN_FREE).lower()
-            return _PLAN_DOWNLOAD_CAPS.get(normalized_plan, DEFAULT_DOWNLOAD_CAP_BYTES)
-
-        download_cap_bytes = await _resolve_download_cap_bytes()
-
-        settings_map = settings_cache.get_scan_settings()
-        if settings_map is None:
-            if guild_id is not None:
-                try:
-                    settings_map = await mysql.get_settings(guild_id)
-                except Exception:
-                    settings_map = {}
-                settings_cache.set_scan_settings(settings_map)
-                settings_map = settings_cache.get_scan_settings()
-            else:
-                settings_map = {}
+        settings_map = await resolve_settings_map(guild_id, settings_cache)
 
         if url:
-            return await self._download_and_scan(
-                source_url=url,
-                author=member,
-                nsfw_callback=nsfw_callback,
-                guild_id=guild_id,
-                message=message,
-                settings_cache=settings_cache,
-                download_cap_bytes=download_cap_bytes,
+            outcome.media_flagged = await media_scanner.scan_remote_media(
+                url=url,
                 download_context="media from url",
                 skip_context="media",
                 skip_reason="download failure",
                 propagate_value_error=True,
-                overall_started_at=latency_origin,
             )
-        snapshots = getattr(message, "message_snapshots", None)
-        snapshot = snapshots[0] if snapshots else None
+            return outcome.packed(return_details)
 
-        text_content = ""
-        if message is not None:
-            text_content = (message.content or "").strip()
+        if message is None:
+            return outcome.packed(return_details)
 
-        text_flagged = False
+        text_content = (message.content or "").strip()
+
         if scan_text and text_content:
-            text_flagged = await self._text_pipeline.scan(
+            outcome.text_flagged = await self._text_pipeline.scan(
                 scanner=self,
                 message=message,
                 guild_id=guild_id,
@@ -493,190 +472,42 @@ class NSFWScanner:
                 settings_cache=settings_cache,
                 settings_map=settings_map,
             )
-            if text_flagged:
-                return True
+            if outcome.text_flagged:
+                return outcome.packed(return_details)
 
         if not scan_media:
-            return bool(text_flagged)
+            return outcome.packed(return_details)
 
-        attachments = message.attachments if message.attachments else (snapshot.attachments if snapshot else [])
-        embeds = message.embeds if message.embeds else (snapshot.embeds if snapshot else [])
-        stickers = message.stickers if message.stickers else (snapshot.stickers if snapshot else [])
+        snapshots = getattr(message, "message_snapshots", None)
+        snapshot = snapshots[0] if snapshots else None
 
-        # hydration fallback
-        if not (attachments or embeds or stickers) and "http" in (text_content or ""):
-            hydrated = await wait_for_hydration(message)
-            if hydrated is not None:
-                message = hydrated
-            attachments = getattr(message, "attachments", None) or []
-            embeds = getattr(message, "embeds", None) or []
-            stickers = getattr(message, "stickers", None) or []
-
+        message, attachments, embeds, stickers = await media_scanner.gather_targets(
+            message,
+            snapshot,
+            text_content,
+        )
         if message is None:
-            print("Message is None")
-            return False
+            return outcome.packed(return_details)
 
-        for attachment in attachments:
-            suffix = os.path.splitext(attachment.filename)[1] or ""
-            pre_steps: dict[str, dict[str, Any]] | None = None
-            pre_bytes = getattr(attachment, "size", None)
-            attachment_started_at: float | None = None
-            with NamedTemporaryFile(delete=False, dir=TMP_DIR, suffix=suffix) as tmp:
-                try:
-                    save_started = time.perf_counter()
-                    attachment_started_at = save_started
-                    await attachment.save(tmp.name)
-                    pre_steps = {
-                        "download_attachment_save": {
-                            "duration_ms": (time.perf_counter() - save_started)
-                            * 1000,
-                            "label": "Attachment Save",
-                        }
-                    }
-                except NotFound as exc:
-                    safe_delete(tmp.name)
-                    print(f"[NSFW] Attachment not found: {attachment.url}")
-                    await self._report_download_failure(
-                        source_url=attachment.url,
-                        exc=exc,
-                        message=message,
-                    )
-                    continue
-                temp_filename = tmp.name
-            try:
-                start_point = latency_origin if latency_origin is not None else attachment_started_at
-                flagged = await self._scan_local_file(
-                    author=message.author,
-                    temp_filename=temp_filename,
-                    nsfw_callback=nsfw_callback,
-                    guild_id=guild_id,
-                    message=message,
-                    settings_cache=settings_cache,
-                    source=getattr(attachment, "url", attachment.filename),
-                    log_context="attachment",
-                    pre_latency_steps=pre_steps,
-                    pre_download_bytes=pre_bytes,
-                    overall_started_at=start_point,
-                )
-                latency_origin = None
-                if flagged:
-                    return True
-            finally:
-                safe_delete(temp_filename)
+        media_context.update_message(message)
 
-        for embed in embeds:
-            possible_urls = []
-            if embed.video and embed.video.url:
-                possible_urls.append(embed.video.url)
-            if embed.image and embed.image.url:
-                possible_urls.append(embed.image.url)
-            if embed.thumbnail and embed.thumbnail.url:
-                possible_urls.append(embed.thumbnail.url)
+        if attachments and await media_scanner.scan_attachments(attachments):
+            outcome.media_flagged = True
+            return outcome.packed(return_details)
 
-            for gif_url in possible_urls:
-                domain = urlparse(gif_url).netloc.lower()
-                is_tenor = is_tenor_host(domain)
-                if is_tenor:
-                    check_tenor = True
-                    if guild_id is not None:
-                        cached_toggle = self._tenor_cache.get(guild_id)
-                        if cached_toggle is not None:
-                            check_tenor = cached_toggle
-                            settings_cache.set_check_tenor(check_tenor)
-                        elif settings_cache.has_check_tenor():
-                            check_tenor = bool(settings_cache.get_check_tenor())
-                            self._tenor_cache.set(guild_id, check_tenor)
-                        else:
-                            setting_value = await mysql.get_settings(
-                                guild_id, "check-tenor-gifs"
-                            )
-                            check_tenor = bool(setting_value)
-                            settings_cache.set_check_tenor(check_tenor)
-                            self._tenor_cache.set(guild_id, check_tenor)
-                    if not check_tenor:
-                        continue
-                start_point = latency_origin
-                flagged = await self._download_and_scan(
-                    source_url=gif_url,
-                    author=message.author,
-                    nsfw_callback=nsfw_callback,
-                    guild_id=guild_id,
-                    message=message,
-                    settings_cache=settings_cache,
-                    download_cap_bytes=download_cap_bytes,
-                    download_context="embedded media",
-                    skip_context="media",
-                    download_kwargs={"prefer_video": is_tenor},
-                    overall_started_at=start_point,
-                )
-                latency_origin = None
-                if flagged:
-                    return True
+        if embeds and await media_scanner.scan_embeds(embeds):
+            outcome.media_flagged = True
+            return outcome.packed(return_details)
 
-        for sticker in stickers:
-            sticker_url = sticker.url
-            if not sticker_url:
-                continue
+        if stickers and await media_scanner.scan_stickers(stickers):
+            outcome.media_flagged = True
+            return outcome.packed(return_details)
 
-            extension = sticker.format.name.lower()
+        if await media_scanner.scan_custom_emojis(getattr(message, "content", "") or ""):
+            outcome.media_flagged = True
+            return outcome.packed(return_details)
 
-            async def _sticker_postprocess(temp_path: str) -> tuple[str, list[str]]:
-                if extension == "apng":
-                    gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
-                    await asyncio.to_thread(apnggif, temp_path, gif_location)
-                    if not os.path.exists(gif_location):
-                        log.warning(
-                            "APNG conversion produced no output for %s; using original sticker payload",
-                            temp_path,
-                        )
-                        return temp_path, []
-                    return gif_location, [gif_location]
-                return temp_path, []
+        return outcome.packed(return_details)
 
-            start_point = latency_origin
-            flagged = await self._download_and_scan(
-                source_url=sticker_url,
-                author=message.author,
-                nsfw_callback=nsfw_callback,
-                guild_id=guild_id,
-                message=message,
-                settings_cache=settings_cache,
-                download_cap_bytes=download_cap_bytes,
-                download_context="sticker",
-                download_kwargs={"ext": extension},
-                postprocess=_sticker_postprocess,
-                overall_started_at=start_point,
-            )
-            latency_origin = None
-            if flagged:
-                return True
-
-        custom_emoji_tags = list(set(re.findall(r'<a?:\w+:\d+>', message.content)))
-        for tag in custom_emoji_tags:
-            match = re.match(r'<a?:(\w+):(\d+)>', tag)
-            if not match:
-                continue
-            name, eid = match.groups()
-            emoji_obj = self.bot.get_emoji(int(eid))
-            if not emoji_obj:
-                continue
-            emoji_url = str(emoji_obj.url)
-            start_point = latency_origin
-            flagged = await self._download_and_scan(
-                source_url=emoji_url,
-                author=message.author,
-                nsfw_callback=nsfw_callback,
-                guild_id=guild_id,
-                message=message,
-                settings_cache=settings_cache,
-                download_cap_bytes=download_cap_bytes,
-                download_context="custom emoji",
-                skip_context="emoji",
-                propagate_download_exception=False,
-                overall_started_at=start_point,
-            )
-            latency_origin = None
-            if flagged:
-                return True
-
-        return False
+    async def _resolve_tenor_setting(self, guild_id: int):
+        return await mysql.get_settings(guild_id, "check-tenor-gifs")

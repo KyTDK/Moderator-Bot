@@ -139,59 +139,60 @@ class TextScanPipeline:
 
         settings_map = settings_map or {}
 
-        text_scanning_enabled = False
-        actions_allowed = False
-        accelerated_allowed: bool | None = None
-        strikes_only = False
-        strike_count: int | None = None
+        if guild_id is None:
+            settings_cache.set_text_enabled(False)
+            return False
 
-        if guild_id is not None:
-            text_scanning_enabled = bool(settings_map.get(NSFW_TEXT_ENABLED_SETTING))
-            settings_cache.set_text_enabled(text_scanning_enabled)
-            if text_scanning_enabled:
-                raw_excluded = settings_map.get(NSFW_TEXT_EXCLUDED_CHANNELS_SETTING) or []
-                try:
-                    excluded_channels = {int(cid) for cid in raw_excluded}
-                except (TypeError, ValueError):
-                    excluded_channels = {
-                        int(str(cid)) for cid in raw_excluded if str(cid).isdigit()
-                    }
-                channel_id = getattr(getattr(message, "channel", None), "id", None)
-                if channel_id is not None and channel_id in excluded_channels:
-                    return False
+        text_scanning_enabled = bool(settings_map.get(NSFW_TEXT_ENABLED_SETTING))
+        settings_cache.set_text_enabled(text_scanning_enabled)
         if not text_scanning_enabled:
             return False
 
-        if guild_id is not None and text_scanning_enabled:
-            if settings_cache.has_accelerated():
-                accelerated_allowed = settings_cache.get_accelerated()
-            else:
+        def _normalize_channel_ids(raw_values: Any) -> set[int]:
+            normalized: set[int] = set()
+            for cid in raw_values or []:
                 try:
-                    accelerated_allowed = await mysql.is_accelerated(guild_id=guild_id)
-                except Exception:
-                    accelerated_allowed = False
-                settings_cache.set_accelerated(accelerated_allowed)
+                    normalized.add(int(cid))
+                except (TypeError, ValueError):
+                    text_id = str(cid)
+                    if text_id.isdigit():
+                        normalized.add(int(text_id))
+            return normalized
 
-            actions_allowed = bool(accelerated_allowed)
+        channel_id = getattr(getattr(message, "channel", None), "id", None)
+        excluded_channels = _normalize_channel_ids(settings_map.get(NSFW_TEXT_EXCLUDED_CHANNELS_SETTING))
+        if channel_id is not None and channel_id in excluded_channels:
+            return False
 
-            strikes_only = bool(settings_map.get(NSFW_TEXT_STRIKES_ONLY_SETTING))
-            if strikes_only:
-                author_id = getattr(getattr(message, "author", None), "id", None)
+        async def _resolve_accelerated() -> bool:
+            if settings_cache.has_accelerated():
+                return bool(settings_cache.get_accelerated())
+            try:
+                value = await mysql.is_accelerated(guild_id=guild_id)
+            except Exception:
+                value = False
+            settings_cache.set_accelerated(value)
+            return bool(value)
+
+        accelerated_allowed = await _resolve_accelerated()
+        actions_allowed = bool(accelerated_allowed)
+
+        strikes_only = bool(settings_map.get(NSFW_TEXT_STRIKES_ONLY_SETTING))
+        strike_count: int | None = None
+        if strikes_only:
+            author_id = getattr(getattr(message, "author", None), "id", None)
+            if author_id is None:
+                return False
+            try:
+                strike_count = await mysql.get_strike_count(author_id, guild_id)
+            except Exception:
                 strike_count = 0
-                if author_id is not None:
-                    try:
-                        strike_count = await mysql.get_strike_count(author_id, guild_id)
-                    except Exception:
-                        strike_count = 0
-                if strike_count <= 0:
-                    return False
+            if strike_count is None or strike_count <= 0:
+                return False
 
-        else:
-            actions_allowed = False
-
-        debug_lines: list[str] = []
-        if accelerated_allowed is not None:
-            debug_lines.append(f"Accelerated plan: {'yes' if accelerated_allowed else 'no'}")
+        debug_lines: list[str] = [
+            f"Accelerated plan: {'yes' if accelerated_allowed else 'no'}",
+        ]
         debug_lines.append(f"Actions allowed: {'yes' if actions_allowed else 'no'}")
         if strikes_only:
             debug_lines.append("Strikes-only mode: yes")
@@ -309,9 +310,6 @@ class TextScanPipeline:
 
         if not (text_result and text_result.get("is_nsfw")):
             return False
-
-        if message is not None:
-            setattr(message, "_nsfw_text_flagged", True)
 
         if nsfw_callback and actions_allowed:
             category = text_result.get("category") or "unspecified"

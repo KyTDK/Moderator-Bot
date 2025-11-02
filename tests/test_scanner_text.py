@@ -402,19 +402,28 @@ async def _exercise_text_scan(
     scanner = scanner_mod.NSFWScanner(bot=SimpleNamespace())
     scanner._text_pipeline = text_pipeline_module.TextScanPipeline(bot=scanner.bot)
 
-    flagged = await scanner.is_nsfw(
+    outcome = await scanner.is_nsfw(
         message=message,
         guild_id=555,
         nsfw_callback=fake_callback,
         scan_media=scan_media,
         scan_text=scan_text,
+        return_details=True,
     )
 
-    return flagged, text_calls, callback_calls, author, log_calls, log_channel_calls
+    return (
+        outcome["flagged"],
+        text_calls,
+        callback_calls,
+        author,
+        log_calls,
+        log_channel_calls,
+        outcome,
+    )
 
 
 def test_text_scan_does_not_log_without_verbose(monkeypatch):
-    flagged, text_calls, callback_calls, _, log_calls, log_channel_calls = asyncio.run(
+    flagged, text_calls, callback_calls, _, log_calls, log_channel_calls, outcome = asyncio.run(
         _exercise_text_scan(monkeypatch, accelerated_value=True, verbose_value=False)
     )
     assert flagged is True
@@ -423,6 +432,7 @@ def test_text_scan_does_not_log_without_verbose(monkeypatch):
     assert callback_calls[0][1]["send_embed"] is False
     assert not log_calls, "Verbose channel logging should be suppressed without nsfw-verbose"
     assert not log_channel_calls, "Debug logs should be suppressed without nsfw-verbose"
+    assert outcome["text_flagged"] is True, "Scanner should report text-based hits"
 
 
 def test_text_scan_skipped_when_channel_excluded(monkeypatch):
@@ -439,7 +449,7 @@ def test_text_scan_skipped_when_channel_excluded(monkeypatch):
 
 
 def test_text_scan_runs_when_media_scanning_disabled(monkeypatch):
-    flagged, text_calls, callback_calls, _, _, _ = asyncio.run(
+    flagged, text_calls, callback_calls, _, _, _, outcome = asyncio.run(
         _exercise_text_scan(
             monkeypatch,
             accelerated_value=True,
@@ -450,4 +460,5 @@ def test_text_scan_runs_when_media_scanning_disabled(monkeypatch):
     assert flagged is True
     assert text_calls, "process_text should still run when media scanning is disabled"
     assert callback_calls, "Text actions should still fire when only text scanning is enabled"
+    assert outcome["text_flagged"] is True, "Scanner should report text-based hits"
     assert callback_calls[0][1]["send_embed"] is False
