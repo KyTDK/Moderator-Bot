@@ -419,7 +419,7 @@ def test_text_scan_runs_without_accelerated_plan(monkeypatch):
         _exercise_text_scan(monkeypatch, accelerated_value=False)
     )
     assert flagged is False
-    assert not text_calls, "process_text should not run without accelerated access"
+    assert text_calls, "process_text should still run when text scanning is enabled"
     assert not callback_calls, "No action should be taken without accelerated access"
-    assert not log_calls, "No verbose embeds should be sent when text scan is skipped"
-    assert not log_channel_calls, "No debug logs should be emitted when scan is skipped"
+    assert log_calls, "Verbose logging should be emitted when verbose mode is enabled"
+    assert log_channel_calls, "Debug logs should be emitted when verbose mode is enabled"

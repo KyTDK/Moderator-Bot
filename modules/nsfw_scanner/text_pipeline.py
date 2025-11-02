@@ -34,6 +34,7 @@ def _build_text_verbose_embed(
     text_content: str,
     result: dict[str, Any] | None,
     message: discord.Message | None,
+    debug_lines: list[str] | None = None,
 ) -> discord.Embed:
     sanitized = escape_mentions(escape_markdown(text_content.strip()))
     snippet = sanitized[:512]
@@ -103,6 +104,12 @@ def _build_text_verbose_embed(
                 embed.add_field(name="Threshold", value=f"{float(threshold):.3f}", inline=True)
             except (TypeError, ValueError):
                 embed.add_field(name="Threshold", value=str(threshold), inline=True)
+    if debug_lines:
+        embed.add_field(
+            name="Debug Context",
+            value="\n".join(debug_lines)[:1024],
+            inline=False,
+        )
 
     return embed
 
@@ -133,48 +140,63 @@ class TextScanPipeline:
 
         text_scanning_enabled = False
         send_text_embed = True
+        actions_allowed = False
+        accelerated_allowed: bool | None = None
+        strikes_only = False
+        strike_count: int | None = None
 
         if guild_id is not None:
             text_enabled_value = settings_map.get(NSFW_TEXT_ENABLED_SETTING) if settings_map else None
             text_scanning_enabled = to_bool(text_enabled_value, default=False)
             settings_cache.set_text_enabled(text_scanning_enabled)
-
-            if text_scanning_enabled:
-                if settings_cache.has_accelerated():
-                    accelerated_allowed = bool(settings_cache.get_accelerated())
-                else:
-                    try:
-                        accelerated_allowed = await mysql.is_accelerated(guild_id=guild_id)
-                    except Exception:
-                        accelerated_allowed = False
-                    settings_cache.set_accelerated(accelerated_allowed)
-
-                if not to_bool(accelerated_allowed, default=False):
-                    text_scanning_enabled = False
-
-            if text_scanning_enabled:
-                strikes_only = to_bool(
-                    (settings_map or {}).get(NSFW_TEXT_STRIKES_ONLY_SETTING),
-                    default=False,
-                )
-                if strikes_only:
-                    author_id = getattr(getattr(message, "author", None), "id", None)
-                    strike_count = 0
-                    if author_id is not None:
-                        try:
-                            strike_count = await mysql.get_strike_count(author_id, guild_id)
-                        except Exception:
-                            strike_count = 0
-                    if strike_count <= 0:
-                        text_scanning_enabled = False
-
-                send_text_embed = to_bool(
-                    (settings_map or {}).get(NSFW_TEXT_SEND_EMBED_SETTING),
-                    default=True,
-                )
-
         if not text_scanning_enabled:
             return False
+
+        if guild_id is not None and text_scanning_enabled:
+            if settings_cache.has_accelerated():
+                accelerated_allowed = bool(settings_cache.get_accelerated())
+            else:
+                try:
+                    accelerated_allowed = bool(await mysql.is_accelerated(guild_id=guild_id))
+                except Exception:
+                    accelerated_allowed = False
+                settings_cache.set_accelerated(accelerated_allowed)
+
+            actions_allowed = to_bool(accelerated_allowed, default=False)
+
+            strikes_only = to_bool(
+                (settings_map or {}).get(NSFW_TEXT_STRIKES_ONLY_SETTING),
+                default=False,
+            )
+            if strikes_only:
+                author_id = getattr(getattr(message, "author", None), "id", None)
+                strike_count = 0
+                if author_id is not None:
+                    try:
+                        strike_count = await mysql.get_strike_count(author_id, guild_id)
+                    except Exception:
+                        strike_count = 0
+                if strike_count <= 0:
+                    actions_allowed = False
+
+            send_text_embed = to_bool(
+                (settings_map or {}).get(NSFW_TEXT_SEND_EMBED_SETTING),
+                default=True,
+            )
+        else:
+            actions_allowed = False
+
+        debug_lines: list[str] = []
+        if accelerated_allowed is not None:
+            debug_lines.append(f"Accelerated plan: {'yes' if accelerated_allowed else 'no'}")
+        debug_lines.append(f"Actions allowed: {'yes' if actions_allowed else 'no'}")
+        if strikes_only:
+            debug_lines.append("Strikes-only mode: yes")
+            if strike_count is not None:
+                debug_lines.append(f"User strike count: {strike_count}")
+        else:
+            debug_lines.append("Strikes-only mode: no")
+        debug_lines.append(f"Send moderation embed: {'yes' if send_text_embed else 'no'}")
 
         author_id = getattr(getattr(message, "author", None), "id", None)
         text_metadata = {
@@ -226,6 +248,7 @@ class TextScanPipeline:
                     text_content=text_content,
                     result=text_result,
                     message=message,
+                    debug_lines=debug_lines if debug_lines else None,
                 )
 
         if verbose_enabled and verbose_embed is not None:
@@ -257,7 +280,7 @@ class TextScanPipeline:
         if not (text_result and text_result.get("is_nsfw")):
             return False
 
-        if nsfw_callback:
+        if nsfw_callback and actions_allowed:
             category = text_result.get("category") or "unspecified"
             confidence_value = None
             confidence_source = None
@@ -290,7 +313,9 @@ class TextScanPipeline:
                 send_embed=send_text_embed,
             )
 
-        return True
+            return True
+
+        return actions_allowed
 
 
 __all__ = ["TextScanPipeline"]
