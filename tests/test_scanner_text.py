@@ -384,6 +384,7 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
     import modules.nsfw_scanner.text_pipeline as text_pipeline_module
 
     monkeypatch.setattr(mod_logging_module, "log_to_channel", fake_log_to_channel, raising=False)
+    monkeypatch.setattr(log_channel_module, "send_log_message", fake_send_log_message, raising=False)
     monkeypatch.setattr(text_pipeline_module, "send_log_message", fake_send_log_message, raising=False)
     monkeypatch.setattr(text_pipeline_module, "process_text", fake_process_text, raising=False)
 
