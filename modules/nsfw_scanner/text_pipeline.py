@@ -165,6 +165,16 @@ class TextScanPipeline:
                     value="NSFW text scanning is disabled by settings.",
                     inline=False,
                 )
+                embed.add_field(
+                    name="Raw Setting Value",
+                    value=repr(text_enabled_value),
+                    inline=False,
+                )
+                embed.add_field(
+                    name="Settings Map Keys",
+                    value=", ".join(sorted(settings_map.keys())) if settings_map else "(none)",
+                    inline=False,
+                )
                 allowed_mentions = None
                 if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
                     allowed_mentions = discord.AllowedMentions.none()
