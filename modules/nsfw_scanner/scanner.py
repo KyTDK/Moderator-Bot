@@ -479,7 +479,20 @@ class NSFWScanner:
                     settings = None
                 settings_cache.set_scan_settings(settings)
                 settings = settings_cache.get_scan_settings()
-            return settings or {}
+            resolved = settings or {}
+            if (
+                guild_id is not None
+                and NSFW_TEXT_ENABLED_SETTING not in resolved
+            ):
+                try:
+                    text_enabled_value = await mysql.get_settings(guild_id, NSFW_TEXT_ENABLED_SETTING)
+                except Exception:
+                    text_enabled_value = None
+                if text_enabled_value is not None:
+                    resolved = dict(resolved)
+                    resolved[NSFW_TEXT_ENABLED_SETTING] = text_enabled_value
+                    settings_cache.set_scan_settings(resolved)
+            return resolved
 
         if url:
             return await self._download_and_scan(
