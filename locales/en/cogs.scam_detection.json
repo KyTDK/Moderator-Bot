@@ -26,7 +26,8 @@
         "add_action": {
           "description": "Add an action to the scam punishment list.",
           "action": "Action to perform",
-          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+          "duration": "Only required for timeout (e.g. 10m, 1h, 3d)",
+          "channel": "Channel to broadcast messages to."
         },
         "remove_action": {
           "description": "Remove an action from the scam punishment list.",

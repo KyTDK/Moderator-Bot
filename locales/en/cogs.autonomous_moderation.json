@@ -10,7 +10,8 @@
           "description": "Show the currently configured moderation rules."
         },
         "add_action": {
-          "description": "Add enforcement actions"
+          "description": "Add enforcement actions",
+          "channel": "Channel to broadcast messages to."
         },
         "remove_action": {
           "description": "Remove a specific action from the list of punishments.",

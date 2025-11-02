@@ -25,7 +25,8 @@
           "params": {
             "number_of_strikes": "Number of strikes required to trigger the action.",
             "action": "Action to add.",
-            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise."
+            "duration": "Duration (only for timeout, e.g., 1h, 30m). Leave empty otherwise.",
+            "channel": "Channel to broadcast messages to."
           }
         },
         "remove_action": {

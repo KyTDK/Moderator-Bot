@@ -20,7 +20,8 @@
             "description": "Add a moderation action to be triggered when a banned URL is detected.",
             "options": {
               "action": "Action to perform",
-              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
+              "duration": "Only required for timeout (e.g. 10m, 1h, 3d)",
+              "channel": "Channel to broadcast messages to."
             }
           },
           "remove": {
