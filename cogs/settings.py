@@ -299,10 +299,10 @@ class Settings(commands.Cog):
             "dashboard_url": dash_url,
             "locale": locale or (getattr(translator, "default_locale", None) or "en"),
             "default": getattr(translator, "default_locale", None) or "en",
-            "name": "",
-            "description": "",
-            "qualified_name": "",
-            "page": "1",
+            "name": "{name}",
+            "description": "{description}",
+            "qualified_name": "{qualified_name}",
+            "page": "{page}",
         }
 
         texts = self.bot.translate(
