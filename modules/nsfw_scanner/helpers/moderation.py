@@ -106,6 +106,66 @@ async def _report_moderation_fallback_to_log(
                 inline=False,
             )
 
+        tracker_snapshot = metadata.get("moderation_tracker")
+        if isinstance(tracker_snapshot, dict):
+            attempt_parts: list[str] = []
+            attempts = tracker_snapshot.get("attempts")
+            if attempts:
+                attempt_parts.append(f"attempts={attempts}")
+            no_key_waits = tracker_snapshot.get("no_key_waits")
+            if no_key_waits:
+                attempt_parts.append(f"no_key_waits={no_key_waits}")
+            if attempt_parts:
+                embed.add_field(
+                    name="Attempt stats",
+                    value=_truncate_text(" | ".join(attempt_parts)),
+                    inline=False,
+                )
+
+            failures = tracker_snapshot.get("failures") or {}
+            if failures:
+                failure_summary = ", ".join(
+                    f"{reason}:{count}" for reason, count in sorted(failures.items())
+                )
+                embed.add_field(
+                    name="Failure breakdown",
+                    value=_truncate_text(failure_summary),
+                    inline=False,
+                )
+
+            payload_info = tracker_snapshot.get("payload_details") or {}
+            if payload_info:
+                payload_summary = " | ".join(
+                    f"{key}={payload_info[key]}" for key in sorted(payload_info.keys())
+                )
+                embed.add_field(
+                    name="Payload metadata",
+                    value=_truncate_text(payload_summary),
+                    inline=False,
+                )
+
+            timings = tracker_snapshot.get("timings_ms") or {}
+            if timings:
+                timing_summary = ", ".join(
+                    f"{key}:{round(value, 1)}"
+                    for key, value in sorted(timings.items(), key=lambda item: item[1], reverse=True)[:4]
+                    if value
+                )
+                if timing_summary:
+                    embed.add_field(
+                        name="Timing breakdown (ms)",
+                        value=_truncate_text(timing_summary),
+                        inline=False,
+                    )
+
+        fallback_contexts = metadata.get("fallback_contexts")
+        if fallback_contexts:
+            embed.add_field(
+                name="Fallback context",
+                value=_truncate_text("\n".join(str(item) for item in fallback_contexts)),
+                inline=False,
+            )
+
     try:
         payload_details = image_state.logging_details()
     except Exception:
@@ -180,6 +240,17 @@ async def moderator_api(
 
     def _finalize(payload: dict[str, Any]) -> dict[str, Any]:
         return latency_tracker.finalize(payload)
+
+    def record_fallback_context(label: str, message: str | None = None) -> None:
+        if not isinstance(payload_metadata, dict):
+            return
+        text = (message or "").strip() if isinstance(message, str) else ""
+        if text and len(text) > 512:
+            text = text[:509] + "..."
+        entry = f"{label}: {text}" if text else label
+        contexts = payload_metadata.setdefault("fallback_contexts", [])
+        if entry not in contexts:
+            contexts.append(entry)
 
     text_preview = None
     truncated_preview = None
@@ -349,6 +420,7 @@ async def moderator_api(
                 )
                 image_state.force_inline()
                 image_state.mark_fallback("remote_fallback")
+                record_fallback_context("remote_fallback", format_exception_for_log(exc))
                 latency_tracker.record_failure("remote_bad_request")
                 latency_tracker.set_payload_detail("remote_fallback", True)
                 if isinstance(payload_metadata, dict):
@@ -399,6 +471,7 @@ async def moderator_api(
                 image_state=image_state if isinstance(image_state, ImageModerationState) else None,
                 payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
+            record_fallback_context("internal_server_error", context_summary)
             had_internal_error = True
             can_retry_with_png = (
                 has_image_input
@@ -415,6 +488,7 @@ async def moderator_api(
                 )
                 image_state.png_retry_attempted = True
                 image_state.mark_fallback("png_retry")
+                record_fallback_context("png_retry", context_summary)
                 try:
                     png_prepared = await prepare_image_payload(
                         image=image,
@@ -459,6 +533,7 @@ async def moderator_api(
                 )
                 image_state.force_remote()
                 image_state.mark_fallback("remote_retry")
+                record_fallback_context("remote_retry", context_summary)
                 latency_tracker.set_payload_detail("payload_strategy", "remote_url")
                 if isinstance(metadata_dict, dict):
                     metadata_dict["moderation_payload_strategy"] = "remote_url"
@@ -612,6 +687,8 @@ async def moderator_api(
                 latency_tracker.set_payload_detail("fallback_notice", fallback_notice)
                 if isinstance(payload_metadata, dict):
                     payload_metadata["fallback_notice"] = fallback_notice
+                if isinstance(metadata_dict, dict):
+                    metadata_dict["moderation_tracker"] = latency_tracker.snapshot()
                 try:
                     await _report_moderation_fallback_to_log(
                         scanner,

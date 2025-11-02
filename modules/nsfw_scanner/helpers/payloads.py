@@ -113,6 +113,24 @@ def prepare_image_payload_sync(
             working.close()
         raise RuntimeError("Failed to read image dimensions") from exc
 
+    auto_format = target_format is None
+    if auto_format:
+        has_alpha_channel = False
+        try:
+            if working.mode in {"RGBA", "LA"}:
+                has_alpha_channel = True
+            else:
+                bands = working.getbands() if hasattr(working, "getbands") else ()
+                if "A" in bands:
+                    has_alpha_channel = True
+                elif isinstance(getattr(working, "info", None), dict):
+                    if working.info.get("transparency") is not None:
+                        has_alpha_channel = True
+        except Exception:
+            has_alpha_channel = False
+        if has_alpha_channel:
+            format_preference = "png"
+
     passthrough_allowed = (
         format_preference == "jpeg"
         and original_size is not None

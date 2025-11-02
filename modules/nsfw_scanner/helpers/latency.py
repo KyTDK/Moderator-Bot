@@ -70,6 +70,16 @@ class ModeratorLatencyTracker:
             return
         self._payload_details[key] = value
 
+    def snapshot(self) -> dict[str, Any]:
+        """Return a shallow copy of the timing, metric, and payload detail data."""
+        return {
+            "attempts": self._metrics["attempts"],
+            "no_key_waits": self._metrics["no_key_waits"],
+            "failures": dict(self._metrics["failures"]),
+            "timings_ms": dict(self.timings),
+            "payload_details": dict(self._payload_details),
+        }
+
     def finalize(self, payload: dict[str, Any]) -> dict[str, Any]:
         breakdown: dict[str, dict[str, Any]] = {}
         for raw_key, (output_key, label) in self._BREAKDOWN_LABELS.items():
