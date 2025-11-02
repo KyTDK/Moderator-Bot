@@ -294,9 +294,9 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
         "set_scan_settings",
         fake_set_scan_settings,
     )
-    monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan)
-    monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated)
-    monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count)
+    monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan, raising=False)
+    monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated, raising=False)
+    monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count, raising=False)
     monkeypatch.setattr(scanner_mod, "process_text", fake_process_text)
 
     flagged = await scanner.is_nsfw(
