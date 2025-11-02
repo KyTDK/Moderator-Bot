@@ -170,6 +170,7 @@ def build_general_settings() -> dict[str, Setting]:
             default=False,
             hidden=True,
             choices=["true", "false"],
+            required_plans=PLAN_CORE,
             description_key="modules.config.settings_schema.check-links.description",
         ),
         "exclude-scam-channels": Setting(

@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from dotenv import load_dotenv
 from modules.utils import mod_logging
-from modules.utils.mysql import execute_query, get_settings, update_settings
+from modules.utils.mysql import execute_query, get_settings, update_settings, is_accelerated
 from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
 from modules.utils.action_command_helpers import (
@@ -22,6 +22,7 @@ from modules.worker_queue import WorkerQueue
 from modules.worker_queue_alerts import SingularTaskReporter
 from modules.core.moderator_bot import ModeratorBot
 from modules.i18n.strings import locale_string
+from modules.utils.discord_utils import require_accelerated
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -181,7 +182,15 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
     normalized_urls = extract_urls(message, 
                                    normalize=True)
 
-    check_links   = await get_settings(guild_id, CHECK_LINKS_SETTING)
+    check_links = bool(await get_settings(guild_id, CHECK_LINKS_SETTING))
+
+    if check_links:
+        try:
+            accelerated = await is_accelerated(guild_id=guild_id)
+        except Exception:  # pragma: no cover - defensive
+            accelerated = False
+        if not accelerated:
+            check_links = False
 
     if check_links:
         for url in normalized_urls:
@@ -319,6 +328,8 @@ class ScamDetectionCog(commands.Cog):
         gid = interaction.guild.id
         texts = self.bot.translate("cogs.scam_detection.check_links",
                                     guild_id=gid)
+        if not await require_accelerated(interaction):
+            return
         if action.value == "status":
             flag = await get_settings(gid, CHECK_LINKS_SETTING)
             await interaction.response.send_message(
