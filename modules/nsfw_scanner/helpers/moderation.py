@@ -1,31 +1,25 @@
 import asyncio
-import base64
-import hashlib
 import logging
-import os
 import time
 from typing import Any, Callable, Optional
-from urllib.parse import urlparse
 
 import httpx
 import openai
 from PIL import Image
 
-from modules.nsfw_scanner.settings_keys import (
-    NSFW_HIGH_ACCURACY_SETTING,
-    NSFW_IMAGE_CATEGORY_SETTING,
-    NSFW_TEXT_CATEGORY_SETTING,
-    NSFW_TEXT_ENABLED_SETTING,
-    NSFW_TEXT_THRESHOLD_SETTING,
-    NSFW_THRESHOLD_SETTING,
-)
-from modules.utils import api, clip_vectors, mysql, text_vectors
+from modules.utils import api, clip_vectors, text_vectors
 
-from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY, SFW_VECTOR_MAX_SIMILARITY
+from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY
 from ..utils.categories import is_allowed_category
 from .latency import ModeratorLatencyTracker
+from .moderation_errors import build_error_context
+from .moderation_state import ImageModerationState
+from .moderation_utils import (
+    ALLOW_REMOTE_IMAGES,
+    resolve_moderation_settings,
+    should_add_sfw_vector,
+)
 from .payloads import (
-    PreparedImagePayload,
     VIDEO_FRAME_MAX_EDGE,
     VIDEO_FRAME_TARGET_BYTES,
     prepare_image_payload,
@@ -36,52 +30,8 @@ from .vector_tasks import (
 )
 log = logging.getLogger(__name__)
 
-_ALLOW_REMOTE_IMAGES = os.getenv("MODBOT_ENABLE_REMOTE_IMAGE_URLS", "1").lower() not in {
-    "0",
-    "false",
-    "no",
-    "off",
-}
-_REMOTE_ALLOWED_HOSTS = {
-    "cdn.discordapp.com",
-    "media.discordapp.net",
-}
-_REMOTE_MIN_BYTES = int(os.getenv("MODBOT_MODERATION_REMOTE_MIN_BYTES", "524288"))
-
 
 _MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
-
-
-def _should_use_remote_source(
-    source_url: str | None,
-    *,
-    payload_size: int | None,
-) -> bool:
-    if not _ALLOW_REMOTE_IMAGES or not source_url:
-        return False
-    try:
-        parsed = urlparse(source_url)
-    except Exception:
-        return False
-    if parsed.scheme not in {"https"}:
-        return False
-    if parsed.hostname not in _REMOTE_ALLOWED_HOSTS:
-        return False
-    if payload_size is not None and payload_size < _REMOTE_MIN_BYTES:
-        return False
-    return True
-
-
-def _should_add_sfw_vector(
-    flagged_any: bool,
-    skip_vector_add: bool,
-    max_similarity: float | None,
-) -> bool:
-    if flagged_any or skip_vector_add:
-        return False
-    if max_similarity is None:
-        return True
-    return max_similarity <= SFW_VECTOR_MAX_SIMILARITY
 
 
 async def _get_moderations_resource(client):
@@ -144,83 +94,13 @@ async def moderator_api(
     if isinstance(payload_metadata, dict):
         original_size = payload_metadata.get("payload_bytes") or payload_metadata.get("source_bytes")
 
-    image_state: dict[str, Any] | None = None
-
-    def _apply_prepared_payload(
-        prepared_payload: PreparedImagePayload,
-        *,
-        source_url_value: str | None,
-        quality_label: str | None = None,
-    ) -> None:
-        nonlocal image_state
-
-        payload_bytes = prepared_payload.data
-        payload_mime = prepared_payload.mime or "image/jpeg"
-        payload_size = len(payload_bytes)
-
-        latency_tracker.set_payload_detail("payload_width", prepared_payload.width)
-        latency_tracker.set_payload_detail("payload_height", prepared_payload.height)
-        latency_tracker.set_payload_detail("payload_bytes", payload_size)
-        latency_tracker.set_payload_detail("payload_strategy", prepared_payload.strategy)
-        latency_tracker.set_payload_detail("payload_mime", payload_mime)
-        if prepared_payload.quality is not None:
-            latency_tracker.set_payload_detail("payload_quality", prepared_payload.quality)
-        else:
-            latency_tracker.set_payload_detail("payload_quality", quality_label or "n/a")
-        latency_tracker.set_payload_detail("payload_resized", prepared_payload.resized)
-
-        if isinstance(payload_metadata, dict):
-            payload_metadata["moderation_payload_bytes"] = payload_size
-            payload_metadata["moderation_payload_mime"] = payload_mime
-            payload_metadata["moderation_payload_strategy"] = prepared_payload.strategy
-            payload_metadata["moderation_payload_resized"] = prepared_payload.resized
-            payload_metadata["moderation_payload_quality"] = prepared_payload.quality
-
-        state = dict(image_state or {})
-        state.update(
-            {
-                "payload_bytes": payload_bytes,
-                "payload_mime": payload_mime,
-                "base64_data": None,
-                "source_url": source_url_value,
-            }
-        )
-        if "use_remote" not in state:
-            state["use_remote"] = _should_use_remote_source(
-                source_url_value,
-                payload_size=payload_size,
-            )
-        state.setdefault("png_retry_attempted", False)
-        image_state = state
-
-    def _build_image_inputs(state: dict[str, Any] | None) -> list[dict[str, Any]]:
-        if not state:
-            return []
-        if state.get("use_remote") and state.get("source_url"):
-            return [
-                {
-                    "type": "image_url",
-                    "image_url": {"url": state["source_url"]},
-                }
-            ]
-
-        if state.get("base64_data") is None:
-            state["base64_data"] = base64.b64encode(state["payload_bytes"]).decode()
-            latency_tracker.set_payload_detail("base64_chars", len(state["base64_data"]))
-
-        return [
-            {
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:{state['payload_mime']};base64,{state['base64_data']}",
-                },
-            }
-        ]
+    image_state: ImageModerationState | None = None
+    metadata_dict: dict[str, Any] | None = payload_metadata if isinstance(payload_metadata, dict) else None
+    max_edge_override = None
+    target_bytes_override = None
 
     if has_image_input:
         payload_timer = latency_tracker.start("payload_prepare_ms")
-        max_edge_override = None
-        target_bytes_override = None
         if isinstance(payload_metadata, dict) and payload_metadata.get("video_frame"):
             max_edge_override = VIDEO_FRAME_MAX_EDGE
             target_bytes_override = VIDEO_FRAME_TARGET_BYTES
@@ -244,162 +124,32 @@ async def moderator_api(
 
         source_url = payload_metadata.get("source_url") if isinstance(payload_metadata, dict) else None
         quality_label = "passthrough" if prepared.strategy == "passthrough" else None
-        _apply_prepared_payload(
+        image_state = ImageModerationState.from_prepared_payload(
             prepared,
-            source_url_value=source_url,
+            latency_tracker=latency_tracker,
+            payload_metadata=metadata_dict,
+            source_url=source_url,
+            allow_remote=ALLOW_REMOTE_IMAGES,
             quality_label=quality_label,
         )
 
-        if image_state and image_state.get("use_remote"):
-            latency_tracker.set_payload_detail("payload_strategy", "remote_url")
-
-        inputs = _build_image_inputs(image_state)
+        inputs = image_state.build_inputs(latency_tracker)
 
     if not inputs:
         print("[moderator_api] No inputs were provided")
         return _finalize(result)
 
-    resolved_allowed_categories = allowed_categories
-    resolved_threshold = threshold
-    settings_map: dict[str, Any] | None = None
-
-    if guild_id is not None and (
-        resolved_allowed_categories is None or resolved_threshold is None
-    ):
-        requested_settings = [NSFW_IMAGE_CATEGORY_SETTING, NSFW_THRESHOLD_SETTING]
-        if use_text_settings:
-            requested_settings.extend(
-                [NSFW_TEXT_CATEGORY_SETTING, NSFW_TEXT_THRESHOLD_SETTING, NSFW_TEXT_ENABLED_SETTING]
-            )
-
-        settings_map = await mysql.get_settings(guild_id, requested_settings)
-
-    if resolved_allowed_categories is None:
-        candidate_categories = []
-        if use_text_settings:
-            candidate_categories = (settings_map or {}).get(
-                NSFW_TEXT_CATEGORY_SETTING, []
-            ) or []
-        if not candidate_categories:
-            candidate_categories = (settings_map or {}).get(
-                NSFW_IMAGE_CATEGORY_SETTING, []
-            ) or []
-        resolved_allowed_categories = candidate_categories
-
-    if resolved_threshold is None:
-        threshold_value = None
-        if use_text_settings:
-            threshold_value = (settings_map or {}).get(NSFW_TEXT_THRESHOLD_SETTING)
-        if threshold_value is None:
-            threshold_value = (settings_map or {}).get(NSFW_THRESHOLD_SETTING, 0.7)
-        try:
-            resolved_threshold = float(threshold_value)
-        except (TypeError, ValueError):
-            resolved_threshold = 0.7
-
-    if resolved_allowed_categories is None:
-        resolved_allowed_categories = []
-    if resolved_threshold is None:
-        resolved_threshold = 0.7
+    resolved_allowed_categories, resolved_threshold = await resolve_moderation_settings(
+        guild_id=guild_id,
+        use_text_settings=use_text_settings,
+        allowed_categories=allowed_categories,
+        threshold=threshold,
+    )
 
     had_openai_timeout = False
     had_http_timeout = False
     had_connection_error = False
     had_internal_error = False
-
-    def _build_error_context(
-        *,
-        exc: Exception,
-        attempt_number: int,
-        request_model: str | None,
-    ) -> str:
-        context_parts: list[str] = [
-            f"attempt={attempt_number}/{max_attempts}",
-            f"exception_type={type(exc).__name__}",
-        ]
-        status_code = getattr(exc, "status_code", None)
-        if not status_code:
-            response = getattr(exc, "response", None)
-            status_code = getattr(response, "status_code", None)
-        if status_code:
-            context_parts.append(f"status_code={status_code}")
-        if request_model:
-            context_parts.append(f"model={request_model}")
-        context_parts.append(f"has_image_input={has_image_input}")
-        if has_image_input and image_state:
-            context_parts.append(f"image_remote={bool(image_state.get('use_remote'))}")
-            payload_bytes = image_state.get("payload_bytes")
-            if isinstance(payload_bytes, (bytes, bytearray)):
-                context_parts.append(f"image_payload_bytes={len(payload_bytes)}")
-                try:
-                    payload_hash = hashlib.sha256(payload_bytes).hexdigest()[:16]
-                except Exception:
-                    payload_hash = None
-                if payload_hash:
-                    context_parts.append(f"image_payload_sha256={payload_hash}")
-            payload_mime = image_state.get("payload_mime")
-            if payload_mime:
-                context_parts.append(f"image_payload_mime={payload_mime}")
-            source_url = image_state.get("source_url")
-            if source_url:
-                context_parts.append(
-                    f"image_source_host={urlparse(source_url).netloc or 'unknown'}"
-                )
-        if isinstance(payload_metadata, dict):
-            message_id = payload_metadata.get("message_id")
-            if message_id is not None:
-                context_parts.append(f"message_id={message_id}")
-            if payload_metadata.get("video_frame"):
-                context_parts.append("video_frame=True")
-            source_url = payload_metadata.get("source_url")
-            if source_url:
-                context_parts.append(
-                    f"payload_source_host={urlparse(source_url).netloc or 'unknown'}"
-                )
-        request_id = getattr(exc, "request_id", None)
-        if request_id:
-            context_parts.append(f"request_id={request_id}")
-        response = getattr(exc, "response", None)
-        if response is not None:
-            retry_after = response.headers.get("retry-after")
-            if retry_after:
-                context_parts.append(f"retry_after={retry_after}")
-            header_request_id = (
-                response.headers.get("x-request-id")
-                or response.headers.get("request-id")
-            )
-            if header_request_id:
-                context_parts.append(f"header_request_id={header_request_id}")
-            error_json = None
-            try:
-                error_json = response.json()
-            except Exception:
-                error_json = None
-            if isinstance(error_json, dict):
-                error_payload = error_json.get("error")
-                if isinstance(error_payload, dict):
-                    error_type = error_payload.get("type")
-                    if error_type:
-                        context_parts.append(f"error_type={error_type}")
-                    error_code = error_payload.get("code")
-                    if error_code:
-                        context_parts.append(f"error_code={error_code}")
-                    error_message = error_payload.get("message")
-                    if error_message:
-                        sanitized_message = error_message[:256].replace("\n", " ")
-                        context_parts.append(
-                            f"error_message={sanitized_message}"
-                        )
-            try:
-                body_preview = response.text
-            except Exception:
-                body_preview = None
-            if body_preview:
-                sanitized_preview = body_preview[:256].replace("\n", " ")
-                context_parts.append(
-                    f"response_body_preview={sanitized_preview}"
-                )
-        return ", ".join(context_parts)
 
     for attempt_index in range(max_attempts):
         attempt_number = attempt_index + 1
@@ -419,7 +169,11 @@ async def moderator_api(
         request_model: str | None = None
         try:
             if has_image_input:
-                inputs = _build_image_inputs(image_state)
+                if not isinstance(image_state, ImageModerationState):
+                    print("[moderator_api] Unable to build image payload for moderation request.")
+                    latency_tracker.record_failure("no_image_payload")
+                    break
+                inputs = image_state.build_inputs(latency_tracker)
                 if not inputs:
                     print("[moderator_api] Unable to build image payload for moderation request.")
                     latency_tracker.record_failure("no_image_payload")
@@ -477,13 +231,14 @@ async def moderator_api(
             continue
         except openai.BadRequestError as exc:
             latency_tracker.stop("api_call_ms", api_started)
-            if image_state and image_state.get("use_remote"):
+            if image_state and image_state.use_remote:
                 log.debug(
                     "Remote image URL moderation failed; falling back to inline payload: %s",
                     exc,
                     exc_info=True,
                 )
-                image_state["use_remote"] = False
+                image_state.force_inline()
+                image_state.mark_fallback("remote_fallback")
                 latency_tracker.record_failure("remote_bad_request")
                 latency_tracker.set_payload_detail("remote_fallback", True)
                 if isinstance(payload_metadata, dict):
@@ -497,10 +252,14 @@ async def moderator_api(
             continue
         except (openai.APIConnectionError, httpx.RemoteProtocolError) as exc:
             latency_tracker.stop("api_call_ms", api_started)
-            context_summary = _build_error_context(
+            context_summary = build_error_context(
                 exc=exc,
                 attempt_number=attempt_number,
+                max_attempts=max_attempts,
                 request_model=request_model,
+                has_image_input=has_image_input,
+                image_state=image_state if isinstance(image_state, ImageModerationState) else None,
+                payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
             print(
                 "[moderator_api] Connection error during moderation request on attempt "
@@ -518,17 +277,21 @@ async def moderator_api(
             continue
         except openai.InternalServerError as exc:
             latency_tracker.stop("api_call_ms", api_started)
-            context_summary = _build_error_context(
+            context_summary = build_error_context(
                 exc=exc,
                 attempt_number=attempt_number,
+                max_attempts=max_attempts,
                 request_model=request_model,
+                has_image_input=has_image_input,
+                image_state=image_state if isinstance(image_state, ImageModerationState) else None,
+                payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
             had_internal_error = True
             can_retry_with_png = (
                 has_image_input
-                and image_state
-                and not image_state.get("use_remote")
-                and not image_state.get("png_retry_attempted")
+                and isinstance(image_state, ImageModerationState)
+                and not image_state.use_remote
+                and not image_state.png_retry_attempted
                 and attempt_index < max_attempts - 1
             )
             if can_retry_with_png:
@@ -537,7 +300,8 @@ async def moderator_api(
                     context_summary,
                     exc_info=True,
                 )
-                png_source_url = image_state.get("source_url")
+                image_state.png_retry_attempted = True
+                image_state.mark_fallback("png_retry")
                 try:
                     png_prepared = await prepare_image_payload(
                         image=image,
@@ -550,18 +314,18 @@ async def moderator_api(
                         target_format="png",
                     )
                 except Exception as png_exc:
-                    image_state["png_retry_attempted"] = True
                     log.debug(
                         "PNG fallback payload preparation failed: %s",
                         png_exc,
                         exc_info=True,
                     )
                 else:
-                    image_state["png_retry_attempted"] = True
-                    _apply_prepared_payload(
+                    image_state.refresh_payload(
                         png_prepared,
-                        source_url_value=png_source_url,
+                        latency_tracker=latency_tracker,
+                        payload_metadata=metadata_dict,
                         quality_label="png",
+                        allow_remote=False,
                     )
                     latency_tracker.set_payload_detail("png_retry_due_to_internal_error", True)
                     if isinstance(payload_metadata, dict):
@@ -570,9 +334,9 @@ async def moderator_api(
                     continue
             if (
                 image_state
-                and not image_state.get("use_remote")
-                and image_state.get("source_url")
-                and _ALLOW_REMOTE_IMAGES
+                and not image_state.use_remote
+                and image_state.source_url
+                and ALLOW_REMOTE_IMAGES
                 and attempt_index < max_attempts - 1
             ):
                 log.debug(
@@ -580,7 +344,11 @@ async def moderator_api(
                     context_summary,
                     exc_info=True,
                 )
-                image_state["use_remote"] = True
+                image_state.force_remote()
+                image_state.mark_fallback("remote_retry")
+                latency_tracker.set_payload_detail("payload_strategy", "remote_url")
+                if isinstance(metadata_dict, dict):
+                    metadata_dict["moderation_payload_strategy"] = "remote_url"
                 latency_tracker.record_failure("inline_internal_server_error")
                 latency_tracker.set_payload_detail("remote_retry_due_to_internal_error", True)
                 if isinstance(payload_metadata, dict):
@@ -623,7 +391,7 @@ async def moderator_api(
             continue
         except Exception as exc:
             latency_tracker.stop("api_call_ms", api_started)
-            if image_state and image_state.get("use_remote"):
+            if image_state and image_state.use_remote:
                 message = str(exc).lower()
                 if "image_url" in message or "fetch" in message or "download" in message:
                     log.debug(
@@ -631,17 +399,22 @@ async def moderator_api(
                         exc,
                         exc_info=True,
                     )
-                    image_state["use_remote"] = False
+                    image_state.force_inline()
+                    image_state.mark_fallback("remote_fallback")
                     latency_tracker.record_failure("remote_fetch_error")
                     latency_tracker.set_payload_detail("remote_fallback", True)
                     if isinstance(payload_metadata, dict):
                         payload_metadata["remote_fallback"] = True
                     if attempt_index < max_attempts - 1:
                         continue
-            context_summary = _build_error_context(
+            context_summary = build_error_context(
                 exc=exc,
                 attempt_number=attempt_number,
+                max_attempts=max_attempts,
                 request_model=request_model,
+                has_image_input=has_image_input,
+                image_state=image_state,
+                payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
             print(
                 "[moderator_api] Unexpected error from OpenAI API: "
@@ -712,11 +485,20 @@ async def moderator_api(
 
         latency_tracker.stop("response_parse_ms", parse_timer)
 
+        fallback_notice: str | None = None
+        if has_image_input and isinstance(image_state, ImageModerationState):
+            fallback_notice = image_state.fallback_message()
+            if fallback_notice:
+                log.info("[moderator_api] %s", fallback_notice)
+                latency_tracker.set_payload_detail("fallback_notice", fallback_notice)
+                if isinstance(payload_metadata, dict):
+                    payload_metadata["fallback_notice"] = fallback_notice
+
         if ADD_SFW_VECTOR and not flagged_any and not skip_vector_add:
             if (
                 image is not None
                 and clip_vectors.is_available()
-                and _should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
+                and should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
             ):
                 latency_tracker.set_payload_detail("sfw_vector_add_async", True)
                 schedule_vector_add(
@@ -727,7 +509,7 @@ async def moderator_api(
             elif (
                 text
                 and text_vectors.is_available()
-                and _should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
+                and should_add_sfw_vector(flagged_any, skip_vector_add, max_similarity)
             ):
                 latency_tracker.set_payload_detail("text_sfw_vector_add_async", True)
                 sfw_metadata = {"category": None, "score": 0}
@@ -753,6 +535,7 @@ async def moderator_api(
                     "reason": "openai_moderation",
                     "threshold": resolved_threshold,
                     "summary_categories": summary_categories,
+                    **({"fallback_notice": fallback_notice} if fallback_notice else {}),
                 }
             )
 
@@ -764,6 +547,7 @@ async def moderator_api(
                 "flagged_any": flagged_any,
                 "threshold": resolved_threshold,
                 "summary_categories": summary_categories,
+                **({"fallback_notice": fallback_notice} if fallback_notice else {}),
             }
         )
 
