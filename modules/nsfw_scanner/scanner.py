@@ -6,7 +6,6 @@ import os
 import re
 import time
 import uuid
-from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from typing import Any
 from tempfile import NamedTemporaryFile
@@ -14,7 +13,6 @@ from urllib.parse import urlparse
 
 import aiohttp
 import discord
-from discord.utils import escape_markdown, escape_mentions
 from apnggif import apnggif
 from cogs.hydration import wait_for_hydration
 from discord.errors import NotFound
@@ -32,6 +30,8 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_THRESHOLD_SETTING,
     NSFW_THRESHOLD_SETTING,
 )
+from modules.nsfw_scanner.tenor_cache import TenorToggleCache
+from modules.nsfw_scanner.text_pipeline import TextScanPipeline
 from modules.utils import clip_vectors, mod_logging, mysql
 from modules.utils.discord_utils import safe_get_channel
 from modules.utils.log_channel import send_log_message
@@ -50,7 +50,6 @@ from .helpers import (
     AttachmentSettingsCache,
     check_attachment as helper_check_attachment,
     is_tenor_host,
-    process_text,
     temp_download as helper_temp_download,
 )
 from .helpers.metrics import build_download_latency_breakdown
@@ -70,41 +69,6 @@ _PLAN_DOWNLOAD_CAPS: dict[str, int | None] = {
 
 _TENOR_CACHE_TTL = 600.0
 _TENOR_CACHE_MAX = 512
-_tenor_toggle_cache: "OrderedDict[int, tuple[float, bool]]" = OrderedDict()
-
-
-def _tenor_cache_get(guild_id: int) -> bool | None:
-    entry = _tenor_toggle_cache.get(guild_id)
-    if not entry:
-        return None
-    expires_at, value = entry
-    if expires_at <= time.monotonic():
-        _tenor_toggle_cache.pop(guild_id, None)
-        return None
-    refreshed_expiry = time.monotonic() + _TENOR_CACHE_TTL
-    _tenor_toggle_cache[guild_id] = (refreshed_expiry, value)
-    _tenor_toggle_cache.move_to_end(guild_id)
-    return value
-
-
-def _tenor_cache_set(guild_id: int, value: bool) -> None:
-    expires_at = time.monotonic() + _TENOR_CACHE_TTL
-    _tenor_toggle_cache[guild_id] = (expires_at, bool(value))
-    _tenor_toggle_cache.move_to_end(guild_id)
-    while len(_tenor_toggle_cache) > _TENOR_CACHE_MAX:
-        _tenor_toggle_cache.popitem(last=False)
-
-
-def _to_bool(value: Any, *, default: bool = False) -> bool:
-    if value is None:
-        return default
-    if isinstance(value, str):
-        normalized = value.strip().lower()
-        if normalized in {"1", "true", "yes", "on"}:
-            return True
-        if normalized in {"0", "false", "no", "off"}:
-            return False
-    return bool(value)
 
 class NSFWScanner:
     def __init__(self, bot: commands.Bot):
@@ -113,6 +77,8 @@ class NSFWScanner:
         self.tmp_dir = TMP_DIR
         self._clip_failure_callback_registered = False
         self._last_reported_milvus_error_key: str | None = None
+        self._tenor_cache = TenorToggleCache(ttl=_TENOR_CACHE_TTL, max_items=_TENOR_CACHE_MAX)
+        self._text_pipeline = TextScanPipeline(bot=bot)
 
     async def start(self):
         session_headers = dict(NSFW_SCANNER_DEFAULT_HEADERS)
@@ -135,87 +101,6 @@ class NSFWScanner:
         if len(value) <= limit:
             return value
         return value[: limit - 1] + "\u2026"
-
-    @staticmethod
-    def _build_text_verbose_embed(
-        *,
-        author: discord.abc.User | None,
-        channel: discord.abc.Messageable | None,
-        guild_id: int | None,
-        text_content: str,
-        result: dict[str, Any] | None,
-        message: discord.Message | None,
-    ) -> discord.Embed:
-        sanitized = escape_mentions(escape_markdown(text_content.strip()))
-        snippet = sanitized[:512]
-        if len(sanitized) > 512:
-            snippet = sanitized[:509].rstrip() + "..."
-
-        is_flagged = bool(result and result.get("is_nsfw"))
-        decision_label = "Flagged" if is_flagged else "Allowed"
-        color = discord.Color.red() if is_flagged else discord.Color.orange()
-
-        lines: list[str] = []
-        if author is not None:
-            mention = getattr(author, "mention", None)
-            if not mention:
-                author_id = getattr(author, "id", None)
-                mention = f"<@{author_id}>" if author_id else "Unknown user"
-            lines.append(f"User: {mention}")
-        if channel is not None:
-            channel_name = getattr(channel, "mention", None) or getattr(channel, "name", None)
-            channel_id = getattr(channel, "id", None)
-            if channel_name and channel_id:
-                lines.append(f"Channel: {channel_name} (`{channel_id}`)")
-            elif channel_id is not None:
-                lines.append(f"Channel ID: `{channel_id}`")
-        if message is not None and getattr(message, "jump_url", None):
-            lines.append(f"[Jump to message]({message.jump_url})")
-        if guild_id is not None:
-            lines.append(f"Guild ID: `{guild_id}`")
-        lines.append(f"Decision: **{decision_label}**")
-
-        embed = discord.Embed(
-            title="NSFW Text Scan Report",
-            description="\n".join(lines),
-            color=color,
-        )
-
-        if snippet:
-            code_block = snippet.replace("```", "`\u200b``")
-            embed.add_field(
-                name="Content Snippet",
-                value=f"```{code_block}```",
-                inline=False,
-            )
-
-        if isinstance(result, dict):
-            category = result.get("category")
-            if category:
-                embed.add_field(name="Category", value=str(category), inline=True)
-            reason = result.get("reason")
-            if reason:
-                embed.add_field(name="Reason", value=str(reason)[:1024], inline=True)
-            score = result.get("score")
-            if score is not None:
-                try:
-                    embed.add_field(name="Score", value=f"{float(score):.3f}", inline=True)
-                except (TypeError, ValueError):
-                    embed.add_field(name="Score", value=str(score), inline=True)
-            similarity = result.get("similarity")
-            if similarity is not None:
-                try:
-                    embed.add_field(name="Similarity", value=f"{float(similarity):.3f}", inline=True)
-                except (TypeError, ValueError):
-                    embed.add_field(name="Similarity", value=str(similarity), inline=True)
-            threshold = result.get("threshold") or result.get("text_threshold")
-            if threshold is not None:
-                try:
-                    embed.add_field(name="Threshold", value=f"{float(threshold):.3f}", inline=True)
-                except (TypeError, ValueError):
-                    embed.add_field(name="Threshold", value=str(threshold), inline=True)
-
-        return embed
 
     @staticmethod
     def _should_suppress_download_failure(exc: Exception) -> bool:
@@ -599,162 +484,16 @@ class NSFWScanner:
 
         text_content = (message.content or "").strip()
         if text_content:
-            text_scanning_enabled = False
-            send_text_embed = True
-            settings_map: dict[str, Any] | None = None
-            if guild_id is not None:
-                settings_map = await _ensure_scan_settings_map()
-
-                text_enabled_value = settings_map.get(NSFW_TEXT_ENABLED_SETTING)
-                text_scanning_enabled = _to_bool(text_enabled_value, default=False)
-                settings_cache.set_text_enabled(text_scanning_enabled)
-
-                if text_scanning_enabled:
-                    if settings_cache.has_accelerated():
-                        accelerated_allowed = bool(settings_cache.get_accelerated())
-                    else:
-                        try:
-                            accelerated_allowed = await mysql.is_accelerated(guild_id=guild_id)
-                        except Exception:
-                            accelerated_allowed = False
-                        settings_cache.set_accelerated(accelerated_allowed)
-                    if not _to_bool(accelerated_allowed, default=False):
-                        text_scanning_enabled = False
-
-                if text_scanning_enabled:
-                    strikes_only = _to_bool(
-                        (settings_map or {}).get(NSFW_TEXT_STRIKES_ONLY_SETTING),
-                        default=False,
-                    )
-                    if strikes_only:
-                        author_id = getattr(getattr(message, "author", None), "id", None)
-                        strike_count = 0
-                        if author_id is not None:
-                            try:
-                                strike_count = await mysql.get_strike_count(author_id, guild_id)
-                            except Exception:
-                                strike_count = 0
-                        if strike_count <= 0:
-                            text_scanning_enabled = False
-
-                    send_text_embed = _to_bool(
-                        (settings_map or {}).get(NSFW_TEXT_SEND_EMBED_SETTING),
-                        default=True,
-                    )
-
-            if text_scanning_enabled:
-                author_id = getattr(getattr(message, "author", None), "id", None)
-                text_metadata = {
-                    "message_id": getattr(message, "id", None),
-                    "channel_id": getattr(getattr(message, "channel", None), "id", None),
-                    "author_id": author_id,
-                }
-                if author_id is not None:
-                    text_metadata["user_id"] = author_id
-                if guild_id is not None:
-                    text_metadata["guild_id"] = guild_id
-                text_result = await process_text(
-                    self,
-                    text_content,
-                    guild_id=guild_id,
-                    settings=settings_map,
-                    payload_metadata=text_metadata,
-                )
-                log.debug(
-                    "Text scan completed: guild_id=%s message_id=%s result=%s",
-                    guild_id,
-                    getattr(message, "id", None),
-                    text_result,
-                )
-
-                verbose_enabled = False
-                if message is not None and guild_id is not None:
-                    if settings_cache.has_verbose():
-                        verbose_enabled = bool(settings_cache.get_verbose())
-                    else:
-                        try:
-                            verbose_enabled = bool(
-                                await mysql.get_settings(guild_id, "nsfw-verbose")
-                            )
-                        except Exception:
-                            verbose_enabled = False
-                        settings_cache.set_verbose(verbose_enabled)
-
-                verbose_embed: discord.Embed | None = None
-                if text_result is not None and message is not None:
-                    should_log = bool(text_result.get("is_nsfw")) or verbose_enabled
-                    if should_log:
-                        verbose_embed = self._build_text_verbose_embed(
-                            author=getattr(message, "author", None),
-                            channel=getattr(message, "channel", None),
-                            guild_id=guild_id,
-                            text_content=text_content,
-                            result=text_result,
-                            message=message,
-                        )
-
-                if verbose_enabled and verbose_embed is not None:
-                    channel_obj = getattr(message, "channel", None)
-                    channel_id = getattr(channel_obj, "id", None)
-                    if channel_id is not None:
-                        try:
-                            await mod_logging.log_to_channel(
-                                embed=verbose_embed,
-                                channel_id=channel_id,
-                                bot=self.bot,
-                            )
-                        except Exception as exc:
-                            print(f"[verbose-text] Failed to send text verbose embed: {exc}")
-
-                if verbose_embed is not None:
-                    try:
-                        log_embed = verbose_embed.copy()
-                        log_embed.title = "NSFW Text Scan Debug"
-                        await send_log_message(
-                            self.bot,
-                            embed=log_embed,
-                            allowed_mentions=discord.AllowedMentions.none(),
-                            context="nsfw_scanner.text_scan",
-                        )
-                    except Exception as exc:
-                        log.debug("Failed to send text scan log: %s", exc, exc_info=True)
-
-                if text_result and text_result.get("is_nsfw"):
-                    if nsfw_callback:
-                        category = text_result.get("category") or "unspecified"
-                        confidence_value = None
-                        confidence_source = None
-                        score = text_result.get("score")
-                        similarity = text_result.get("similarity")
-                        try:
-                            if score is not None:
-                                confidence_value = float(score)
-                                confidence_source = "score"
-                            elif similarity is not None:
-                                confidence_value = float(similarity)
-                                confidence_source = "similarity"
-                        except (TypeError, ValueError):
-                            confidence_value = None
-                            confidence_source = None
-
-                        category_label = category.replace("_", " ").title()
-                        reason = (
-                            f"Detected potential policy violation (Category: **{category_label}**)."
-                        )
-
-                        await nsfw_callback(
-                            message.author,
-                            self.bot,
-                            guild_id,
-                            reason,
-                            None,
-                            message,
-                            confidence=confidence_value,
-                            confidence_source=confidence_source,
-                            action_setting=NSFW_TEXT_ACTION_SETTING,
-                            send_embed=send_text_embed,
-                        )
-                    return True
+            text_flagged = await self._text_pipeline.scan(
+                scanner=self,
+                message=message,
+                guild_id=guild_id,
+                nsfw_callback=nsfw_callback,
+                settings_cache=settings_cache,
+                ensure_settings_map=_ensure_scan_settings_map,
+            )
+            if text_flagged:
+                return True
 
         # hydration fallback
         if not (attachments or embeds or stickers) and "http" in (message.content or ""):
@@ -832,20 +571,20 @@ class NSFWScanner:
                 if is_tenor:
                     check_tenor = True
                     if guild_id is not None:
-                        cached_toggle = _tenor_cache_get(guild_id)
+                        cached_toggle = self._tenor_cache.get(guild_id)
                         if cached_toggle is not None:
                             check_tenor = cached_toggle
                             settings_cache.set_check_tenor(check_tenor)
                         elif settings_cache.has_check_tenor():
                             check_tenor = bool(settings_cache.get_check_tenor())
-                            _tenor_cache_set(guild_id, check_tenor)
+                            self._tenor_cache.set(guild_id, check_tenor)
                         else:
                             setting_value = await mysql.get_settings(
                                 guild_id, "check-tenor-gifs"
                             )
                             check_tenor = bool(setting_value)
                             settings_cache.set_check_tenor(check_tenor)
-                            _tenor_cache_set(guild_id, check_tenor)
+                            self._tenor_cache.set(guild_id, check_tenor)
                     if not check_tenor:
                         continue
                 start_point = latency_origin

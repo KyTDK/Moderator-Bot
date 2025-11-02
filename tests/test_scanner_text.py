@@ -378,9 +378,14 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
     monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan, raising=False)
     monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated, raising=False)
     monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count, raising=False)
-    monkeypatch.setattr(scanner_mod.mod_logging, "log_to_channel", fake_log_to_channel, raising=False)
-    monkeypatch.setattr(scanner_mod, "send_log_message", fake_send_log_message, raising=False)
-    monkeypatch.setattr(scanner_mod, "process_text", fake_process_text)
+
+    import modules.utils.mod_logging as mod_logging_module
+    import modules.utils.log_channel as log_channel_module
+    import modules.nsfw_scanner.text_pipeline as text_pipeline_module
+
+    monkeypatch.setattr(mod_logging_module, "log_to_channel", fake_log_to_channel, raising=False)
+    monkeypatch.setattr(text_pipeline_module, "send_log_message", fake_send_log_message, raising=False)
+    monkeypatch.setattr(text_pipeline_module, "process_text", fake_process_text, raising=False)
 
     flagged = await scanner.is_nsfw(
         message=message,
