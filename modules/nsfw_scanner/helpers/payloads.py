@@ -66,10 +66,15 @@ def prepare_image_payload_sync(
     original_size: int | None,
     max_image_edge: int | None = None,
     jpeg_target_bytes: int | None = None,
+    target_format: str | None = None,
 ) -> PreparedImagePayload:
     working: Image.Image | None = None
     close_working = False
     original_mime = (image_mime or "").lower() or None
+
+    format_preference = (target_format or "jpeg").lower()
+    if format_preference not in {"jpeg", "png"}:
+        format_preference = "jpeg"
 
     edge_limit = int(max_image_edge) if max_image_edge else MAX_IMAGE_EDGE
     if edge_limit <= 0:
@@ -109,7 +114,8 @@ def prepare_image_payload_sync(
         raise RuntimeError("Failed to read image dimensions") from exc
 
     passthrough_allowed = (
-        original_size is not None
+        format_preference == "jpeg"
+        and original_size is not None
         and original_size <= INLINE_PASSTHROUGH_BYTES
         and max(width, height) <= edge_limit
         and original_mime in {"image/jpeg", "image/jpg"}
@@ -146,11 +152,36 @@ def prepare_image_payload_sync(
         width, height = working.size
         resized = True
 
-    working = flatten_alpha(working)
-
     buffer = io.BytesIO()
     prepared = working
     try:
+        if format_preference == "png":
+            if prepared.mode not in {"RGB", "RGBA"}:
+                bands = prepared.getbands() if hasattr(prepared, "getbands") else ()
+                if "A" in bands:
+                    prepared = prepared.convert("RGBA")
+                else:
+                    prepared = prepared.convert("RGB")
+            buffer.seek(0)
+            buffer.truncate(0)
+            prepared.save(buffer, format="PNG", optimize=True)
+            data = buffer.getvalue()
+            if not data:
+                raise RuntimeError("Failed to encode moderation payload as PNG")
+            payload = PreparedImagePayload(
+                data=data,
+                mime="image/png",
+                width=width,
+                height=height,
+                resized=resized,
+                strategy="converted_png",
+                quality=None,
+                original_mime=image_mime,
+            )
+            return payload
+
+        working = flatten_alpha(working)
+        prepared = working
         if prepared.mode != "RGB":
             prepared = prepared.convert("RGB")
 
@@ -218,6 +249,7 @@ def prepare_image_payload(
     original_size: int | None,
     max_image_edge: int | None = None,
     jpeg_target_bytes: int | None = None,
+    target_format: str | None = None,
 ) -> asyncio.Future[PreparedImagePayload]:
     return asyncio.to_thread(
         prepare_image_payload_sync,
@@ -228,4 +260,5 @@ def prepare_image_payload(
         original_size=original_size,
         max_image_edge=max_image_edge,
         jpeg_target_bytes=jpeg_target_bytes,
+        target_format=target_format,
     )

@@ -25,6 +25,7 @@ from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY, SFW_VECTOR_MAX_
 from ..utils.categories import is_allowed_category
 from .latency import ModeratorLatencyTracker
 from .payloads import (
+    PreparedImagePayload,
     VIDEO_FRAME_MAX_EDGE,
     VIDEO_FRAME_TARGET_BYTES,
     prepare_image_payload,
@@ -145,6 +146,53 @@ async def moderator_api(
 
     image_state: dict[str, Any] | None = None
 
+    def _apply_prepared_payload(
+        prepared_payload: PreparedImagePayload,
+        *,
+        source_url_value: str | None,
+        quality_label: str | None = None,
+    ) -> None:
+        nonlocal image_state
+
+        payload_bytes = prepared_payload.data
+        payload_mime = prepared_payload.mime or "image/jpeg"
+        payload_size = len(payload_bytes)
+
+        latency_tracker.set_payload_detail("payload_width", prepared_payload.width)
+        latency_tracker.set_payload_detail("payload_height", prepared_payload.height)
+        latency_tracker.set_payload_detail("payload_bytes", payload_size)
+        latency_tracker.set_payload_detail("payload_strategy", prepared_payload.strategy)
+        latency_tracker.set_payload_detail("payload_mime", payload_mime)
+        if prepared_payload.quality is not None:
+            latency_tracker.set_payload_detail("payload_quality", prepared_payload.quality)
+        else:
+            latency_tracker.set_payload_detail("payload_quality", quality_label or "n/a")
+        latency_tracker.set_payload_detail("payload_resized", prepared_payload.resized)
+
+        if isinstance(payload_metadata, dict):
+            payload_metadata["moderation_payload_bytes"] = payload_size
+            payload_metadata["moderation_payload_mime"] = payload_mime
+            payload_metadata["moderation_payload_strategy"] = prepared_payload.strategy
+            payload_metadata["moderation_payload_resized"] = prepared_payload.resized
+            payload_metadata["moderation_payload_quality"] = prepared_payload.quality
+
+        state = dict(image_state or {})
+        state.update(
+            {
+                "payload_bytes": payload_bytes,
+                "payload_mime": payload_mime,
+                "base64_data": None,
+                "source_url": source_url_value,
+            }
+        )
+        if "use_remote" not in state:
+            state["use_remote"] = _should_use_remote_source(
+                source_url_value,
+                payload_size=payload_size,
+            )
+        state.setdefault("png_retry_attempted", False)
+        image_state = state
+
     def _build_image_inputs(state: dict[str, Any] | None) -> list[dict[str, Any]]:
         if not state:
             return []
@@ -194,42 +242,16 @@ async def moderator_api(
 
         latency_tracker.stop("payload_prepare_ms", payload_timer)
 
-        payload_bytes = prepared.data
-        payload_mime = prepared.mime or "image/jpeg"
-        payload_size = len(payload_bytes)
+        source_url = payload_metadata.get("source_url") if isinstance(payload_metadata, dict) else None
+        quality_label = "passthrough" if prepared.strategy == "passthrough" else None
+        _apply_prepared_payload(
+            prepared,
+            source_url_value=source_url,
+            quality_label=quality_label,
+        )
 
-        latency_tracker.set_payload_detail("payload_width", prepared.width)
-        latency_tracker.set_payload_detail("payload_height", prepared.height)
-        latency_tracker.set_payload_detail("payload_bytes", payload_size)
-        latency_tracker.set_payload_detail("payload_strategy", prepared.strategy)
-        latency_tracker.set_payload_detail("payload_mime", payload_mime)
-        if prepared.quality is not None:
-            latency_tracker.set_payload_detail("payload_quality", prepared.quality)
-        latency_tracker.set_payload_detail("payload_resized", prepared.resized)
-
-        if isinstance(payload_metadata, dict):
-            payload_metadata["moderation_payload_bytes"] = payload_size
-            payload_metadata["moderation_payload_mime"] = payload_mime
-            payload_metadata["moderation_payload_strategy"] = prepared.strategy
-            payload_metadata["moderation_payload_resized"] = prepared.resized
-            payload_metadata["moderation_payload_quality"] = prepared.quality
-
-        source_url = None
-        if isinstance(payload_metadata, dict):
-            source_url = payload_metadata.get("source_url")
-
-        image_state = {
-            "payload_bytes": payload_bytes,
-            "payload_mime": payload_mime,
-            "base64_data": None,
-            "use_remote": _should_use_remote_source(source_url, payload_size=payload_size),
-            "source_url": source_url,
-        }
-
-        if image_state["use_remote"]:
+        if image_state and image_state.get("use_remote"):
             latency_tracker.set_payload_detail("payload_strategy", "remote_url")
-        else:
-            latency_tracker.set_payload_detail("payload_strategy", prepared.strategy)
 
         inputs = _build_image_inputs(image_state)
 
@@ -492,6 +514,50 @@ async def moderator_api(
                 request_model=request_model,
             )
             had_internal_error = True
+            can_retry_with_png = (
+                has_image_input
+                and image_state
+                and not image_state.get("use_remote")
+                and not image_state.get("png_retry_attempted")
+                and attempt_index < max_attempts - 1
+            )
+            if can_retry_with_png:
+                log.debug(
+                    "Inline moderation payload triggered internal server error; retrying with PNG payload. Context: %s",
+                    context_summary,
+                    exc_info=True,
+                )
+                png_source_url = image_state.get("source_url")
+                try:
+                    png_prepared = await prepare_image_payload(
+                        image=image,
+                        image_bytes=image_bytes,
+                        image_path=image_path,
+                        image_mime=image_mime,
+                        original_size=original_size,
+                        max_image_edge=max_edge_override,
+                        jpeg_target_bytes=target_bytes_override,
+                        target_format="png",
+                    )
+                except Exception as png_exc:
+                    image_state["png_retry_attempted"] = True
+                    log.debug(
+                        "PNG fallback payload preparation failed: %s",
+                        png_exc,
+                        exc_info=True,
+                    )
+                else:
+                    image_state["png_retry_attempted"] = True
+                    _apply_prepared_payload(
+                        png_prepared,
+                        source_url_value=png_source_url,
+                        quality_label="png",
+                    )
+                    latency_tracker.set_payload_detail("png_retry_due_to_internal_error", True)
+                    if isinstance(payload_metadata, dict):
+                        payload_metadata["png_retry_due_to_internal_error"] = True
+                    latency_tracker.record_failure("internal_server_error")
+                    continue
             if (
                 image_state
                 and not image_state.get("use_remote")
