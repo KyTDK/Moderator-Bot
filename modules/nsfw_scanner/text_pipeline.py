@@ -234,7 +234,10 @@ class TextScanPipeline:
         if verbose_enabled and verbose_embed is not None:
             channel_obj = getattr(message, "channel", None)
             channel_id = getattr(channel_obj, "id", None)
-            if channel_id is not None:
+            should_send_to_channel = (
+                channel_id is not None and (not LOG_CHANNEL_ID or channel_id != LOG_CHANNEL_ID)
+            )
+            if should_send_to_channel:
                 try:
                     await mod_logging.log_to_channel(
                         embed=verbose_embed,
