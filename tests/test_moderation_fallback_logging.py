@@ -157,6 +157,9 @@ except Exception:  # pragma: no cover - fallback when discord.py is unavailable
 
     tasks_stub.loop = _loop
 
+    async def _async_noop(*_args, **_kwargs):
+        return None
+
     class _DummyBot:
         def __init__(self, *_, **__):
             self.loop = asyncio.new_event_loop()
@@ -164,8 +167,8 @@ except Exception:  # pragma: no cover - fallback when discord.py is unavailable
             self.guilds = []
             self.tree = types.SimpleNamespace(
                 translator=None,
-                set_translator=lambda *_a, **_k: asyncio.Future(),  # type: ignore[arg-type]
-                sync=lambda *_a, **_k: asyncio.Future(),  # type: ignore[arg-type]
+                set_translator=_async_noop,
+                sync=_async_noop,
             )
             self._closed = False
 
@@ -247,13 +250,28 @@ utils_pkg = importlib.import_module("modules.utils")
 
 log_channel_stub = types.ModuleType("modules.utils.log_channel")
 
-mysql_stub = types.ModuleType("modules.utils.mysql")
-mysql_stub.get_premium_status = lambda *_args, **_kwargs: None
-mysql_stub.set_premium_status = lambda *_args, **_kwargs: None
-mysql_stub.MYSQL_CONFIG = {}
-mysql_stub.fernet = None
-sys.modules["modules.utils.mysql"] = mysql_stub
-setattr(utils_pkg, "mysql", mysql_stub)
+try:
+    importlib.import_module("modules.utils.mysql")
+except Exception:
+    mysql_stub = types.ModuleType("modules.utils.mysql")
+    mysql_stub.get_premium_status = lambda *_args, **_kwargs: None
+    mysql_stub.set_premium_status = lambda *_args, **_kwargs: None
+    mysql_stub.MYSQL_CONFIG = {}
+    mysql_stub.fernet = None
+    async def _async_noop(*_args, **_kwargs):
+        return None
+    mysql_stub.get_settings = _async_noop  # pragma: no cover - minimal shim
+    mysql_stub.get_guild_locale = _async_noop  # pragma: no cover - minimal shim
+    mysql_stub.get_all_guild_locales = _async_noop  # pragma: no cover - minimal shim
+    mysql_stub.add_settings_listener = lambda *_args, **_kwargs: None
+    mysql_stub.remove_settings_listener = lambda *_args, **_kwargs: None
+    class _ShardAssignment:
+        def __init__(self, shard_id=0, shard_count=1):
+            self.shard_id = shard_id
+            self.shard_count = shard_count
+    mysql_stub.ShardAssignment = _ShardAssignment
+    sys.modules["modules.utils.mysql"] = mysql_stub
+    setattr(utils_pkg, "mysql", mysql_stub)
 
 mod_logging_stub = types.ModuleType("modules.utils.mod_logging")
 mod_logging_stub.log_to_channel = lambda *_args, **_kwargs: None
@@ -329,7 +347,7 @@ def test_report_moderation_fallback_to_log(monkeypatch):
     assert kwargs["embed"].title == "Moderator API fallback triggered"
     assert kwargs["embed"].description == fallback_notice
     assert kwargs["context"] == "nsfw_scanner.moderation_fallback"
-    assert kwargs["allowed_mentions"].__class__ is _DummyAllowedMentions
+    assert kwargs["allowed_mentions"].__class__ is _ALLOWED_MENTIONS_TYPE
     assert metadata.get("fallback_notice_reported") is True
 
     asyncio.run(
