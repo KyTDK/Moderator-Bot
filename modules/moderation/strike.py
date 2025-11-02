@@ -128,7 +128,8 @@ async def perform_disciplinary_action(
     now = datetime.now(timezone.utc)
     results: list[str] = []
 
-    actions = [action_string] if isinstance(action_string, str) else action_string
+    raw_actions = [action_string] if isinstance(action_string, str) else action_string
+    actions = list(raw_actions)
     messages = message if isinstance(message, list) else ([message] if message else [])
 
     disciplinary_texts = get_translated_mapping(
@@ -137,6 +138,22 @@ async def perform_disciplinary_action(
         DISCIPLINARY_TEXTS_FALLBACK,
         guild_id=user.guild.id,
     )
+
+    if len(actions) > 1:
+        guild = getattr(user, "guild", None)
+        guild_id = getattr(guild, "id", None)
+        accelerated = False
+        if guild_id is not None:
+            try:
+                accelerated = await mysql.is_accelerated(guild_id=guild_id)
+            except Exception:
+                accelerated = False
+        if not accelerated:
+            _logger.debug(
+                "Guild %s lacks Accelerated; limiting disciplinary actions to the first entry.",
+                guild_id,
+            )
+            actions = actions[:1]
 
     for action in actions:
         try:

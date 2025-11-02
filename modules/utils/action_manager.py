@@ -32,14 +32,18 @@ class ActionListManager:
         new_action: str,
         *,
         translator: TranslateFn | None = None,
+        existing_actions: list[str] | None = None,
     ) -> str:
-        actions = await get_settings(guild_id, self.setting_key) or []
-        if not isinstance(actions, list):
-            actions = [actions]
+        if existing_actions is not None:
+            actions = list(existing_actions)
+        else:
+            actions = await get_settings(guild_id, self.setting_key) or []
+            if not isinstance(actions, list):
+                actions = [actions]
 
-        actions, removed_invalid = self._sanitize_actions(actions)
-        if removed_invalid:
-            await update_settings(guild_id, self.setting_key, actions)
+            actions, removed_invalid = self._sanitize_actions(actions)
+            if removed_invalid:
+                await update_settings(guild_id, self.setting_key, actions)
 
         normalized = [a.split(":")[0] for a in actions]
         if new_action.split(":")[0] in normalized:
