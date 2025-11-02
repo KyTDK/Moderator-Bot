@@ -176,7 +176,11 @@ class TextScanPipeline:
                 if strike_count <= 0:
                     return False
 
-            send_text_embed = settings_map.get(NSFW_TEXT_SEND_EMBED_SETTING, True)
+            raw_send_embed = settings_map.get(NSFW_TEXT_SEND_EMBED_SETTING)
+            if isinstance(raw_send_embed, str):
+                send_text_embed = raw_send_embed.lower() == "true"
+            else:
+                send_text_embed = raw_send_embed if raw_send_embed is not None else True
         else:
             actions_allowed = False
 

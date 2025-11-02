@@ -20,16 +20,7 @@ from discord.ext import commands
 import pillow_avif  # registers AVIF support
 
 from modules.config.premium_plans import PLAN_CORE, PLAN_FREE, PLAN_PRO, PLAN_ULTRA
-from modules.nsfw_scanner.settings_keys import (
-    NSFW_IMAGE_CATEGORY_SETTING,
-    NSFW_TEXT_ACTION_SETTING,
-    NSFW_TEXT_CATEGORY_SETTING,
-    NSFW_TEXT_ENABLED_SETTING,
-    NSFW_TEXT_SEND_EMBED_SETTING,
-    NSFW_TEXT_STRIKES_ONLY_SETTING,
-    NSFW_TEXT_THRESHOLD_SETTING,
-    NSFW_THRESHOLD_SETTING,
-)
+
 from modules.nsfw_scanner.tenor_cache import TenorToggleCache
 from modules.nsfw_scanner.text_pipeline import TextScanPipeline
 from modules.utils import clip_vectors, mod_logging, mysql
