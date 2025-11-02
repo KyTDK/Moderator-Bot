@@ -180,7 +180,7 @@ class TextScanPipeline:
                     except Exception:
                         strike_count = 0
                 if strike_count <= 0:
-                    actions_allowed = False
+                    return False
 
             send_text_embed_value = settings_map.get(NSFW_TEXT_SEND_EMBED_SETTING, True)
             if not isinstance(send_text_embed_value, bool):
