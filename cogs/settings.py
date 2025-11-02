@@ -424,7 +424,11 @@ class Settings(commands.Cog):
         if avatar:
             embed.set_thumbnail(url=avatar)
 
-        groups = [cmd for cmd in self.bot.tree.walk_commands() if isinstance(cmd, app_commands.Group)]
+        groups = [
+            cmd
+            for cmd in self.bot.tree.get_commands()
+            if isinstance(cmd, app_commands.Group) and cmd.name
+        ]
         groups.sort(key=lambda c: c.name.lower())
 
         overview_line_template = overview_texts.get(
