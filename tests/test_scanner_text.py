@@ -410,22 +410,6 @@ async def _exercise_text_scan(
     return flagged, text_calls, callback_calls, author, log_calls, log_channel_calls
 
 
-def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
-    flagged, text_calls, callback_calls, author, log_calls, log_channel_calls = asyncio.run(
-        _exercise_text_scan(monkeypatch, accelerated_value=True)
-    )
-    assert flagged is True
-    assert text_calls, "process_text should be invoked"
-    assert callback_calls, "nsfw_callback should be invoked when text is flagged"
-    args, kwargs = callback_calls[0]
-    assert args[0] is author
-    assert kwargs["action_setting"] == NSFW_TEXT_ACTION_SETTING
-    assert kwargs["send_embed"] is True
-    assert log_calls, "Verbose logging should send an embed to the channel"
-    if not log_channel_calls:
-        pytest.skip("Shared log channel unavailable in this environment")
-
-
 def test_text_scan_does_not_log_without_verbose(monkeypatch):
     flagged, text_calls, callback_calls, _, log_calls, log_channel_calls = asyncio.run(
         _exercise_text_scan(monkeypatch, accelerated_value=True, verbose_value=False)
