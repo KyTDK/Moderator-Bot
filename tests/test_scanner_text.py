@@ -72,6 +72,8 @@ discord_stub.Client = type("Client", (), {})
 discord_stub.Forbidden = type("Forbidden", (Exception,), {})
 discord_stub.HTTPException = type("HTTPException", (Exception,), {})
 discord_stub.NotFound = type("NotFound", (Exception,), {})
+discord_stub.Interaction = type("Interaction", (), {})
+discord_stub.app_commands = types.SimpleNamespace(CommandTree=object)
 discord_stub.abc = types.SimpleNamespace(Messageable=object)
 
 errors_stub = types.ModuleType("discord.errors")
@@ -83,6 +85,8 @@ discord_stub.errors = errors_stub
 
 discord_ext_stub = types.ModuleType("discord.ext")
 commands_stub = types.ModuleType("discord.ext.commands")
+app_commands_module = types.ModuleType("discord.app_commands")
+app_commands_module.CommandTree = object
 
 
 class _DummyBot:
@@ -110,6 +114,34 @@ discord_ext_stub.commands = commands_stub
 sys.modules.setdefault("discord", discord_stub)
 sys.modules.setdefault("discord.ext", discord_ext_stub)
 sys.modules.setdefault("discord.ext.commands", commands_stub)
+sys.modules.setdefault("discord.app_commands", app_commands_module)
+
+clip_vectors_stub = types.ModuleType("modules.utils.clip_vectors")
+clip_vectors_stub.query_similar = lambda *_args, **_kwargs: []
+clip_vectors_stub.delete_vectors = lambda *_args, **_kwargs: None
+clip_vectors_stub.is_available = lambda: False
+clip_vectors_stub.register_failure_callback = lambda *_args, **_kwargs: None
+sys.modules.setdefault("modules.utils.clip_vectors", clip_vectors_stub)
+
+text_vectors_stub = types.ModuleType("modules.utils.text_vectors")
+text_vectors_stub.query_similar = lambda *_args, **_kwargs: []
+text_vectors_stub.delete_vectors = lambda *_args, **_kwargs: None
+text_vectors_stub.is_available = lambda: False
+text_vectors_stub.register_failure_callback = lambda *_args, **_kwargs: None
+sys.modules.setdefault("modules.utils.text_vectors", text_vectors_stub)
+
+mysql_stub = types.ModuleType("modules.utils.mysql")
+
+
+async def _unpatched_async(*_args, **_kwargs):
+    raise AssertionError("mysql stub function should be monkeypatched by the test")
+
+
+mysql_stub.get_settings = _unpatched_async
+mysql_stub.resolve_guild_plan = _unpatched_async
+mysql_stub.is_accelerated = _unpatched_async
+mysql_stub.get_strike_count = _unpatched_async
+sys.modules.setdefault("modules.utils.mysql", mysql_stub)
 
 import pytest
 
