@@ -514,14 +514,13 @@ class NSFWScanner:
         stickers = message.stickers if message.stickers else (snapshot.stickers if snapshot else [])
 
         # hydration fallback
-        if not (attachments or embeds or stickers) and "http" in message.content:
-            message = await wait_for_hydration(message)
-            attachments = message.attachments
-            embeds = message.embeds
-            stickers = message.stickers
-
-            if not (attachments or embeds or stickers):
-                return False
+        if not (attachments or embeds or stickers) and "http" in (message.content or ""):
+            hydrated = await wait_for_hydration(message)
+            if hydrated is not None:
+                message = hydrated
+            attachments = getattr(message, "attachments", None) or []
+            embeds = getattr(message, "embeds", None) or []
+            stickers = getattr(message, "stickers", None) or []
 
         if message is None:
             print("Message is None")
