@@ -262,7 +262,6 @@ class TextScanPipeline:
                 except Exception as exc:
                     print(f"[verbose-text] Failed to send text verbose embed: {exc}")
 
-        if verbose_enabled and verbose_embed is not None:
             try:
                 log_embed = verbose_embed.copy()
                 log_embed.title = "NSFW Text Scan Debug"
