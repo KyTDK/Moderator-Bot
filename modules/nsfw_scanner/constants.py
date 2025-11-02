@@ -60,10 +60,10 @@ except (TypeError, ValueError):
 _TEXT_THRESHOLD_RAW = os.getenv("TEXT_SIMILARITY_THRESHOLD")
 try:
     TEXT_SIMILARITY_THRESHOLD = (
-        float(_TEXT_THRESHOLD_RAW) if _TEXT_THRESHOLD_RAW is not None else 0.82
+        float(_TEXT_THRESHOLD_RAW) if _TEXT_THRESHOLD_RAW is not None else 0.75
     )
 except (TypeError, ValueError):
-    TEXT_SIMILARITY_THRESHOLD = 0.82
+    TEXT_SIMILARITY_THRESHOLD = 0.75
 HIGH_ACCURACY_SIMILARITY = 0.90  # Min similarity to skip API when high-accuracy is enabled
 # Max frames per video
 MAX_FRAMES_PER_VIDEO = 5
