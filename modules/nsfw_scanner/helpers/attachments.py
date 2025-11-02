@@ -437,6 +437,21 @@ async def check_attachment(
     )
     pipeline_accelerated = bool(context.accelerated)
 
+    payload_metadata: dict[str, Any] | None = {
+        "guild_id": guild_id,
+        "channel_id": getattr(getattr(message, "channel", None), "id", None)
+        if message
+        else None,
+        "message_id": getattr(message, "id", None) if message else None,
+        "author_id": getattr(author, "id", None) if author else None,
+        "user_id": getattr(author, "id", None) if author else None,
+        "message_jump_url": getattr(message, "jump_url", None) if message else None,
+        "source_url": source_url,
+    }
+    payload_metadata = {
+        key: value for key, value in (payload_metadata or {}).items() if value is not None
+    }
+
     if file_type == FILE_TYPE_IMAGE:
         scan_result = await process_image(
             scanner,
@@ -447,6 +462,7 @@ async def check_attachment(
             accelerated=accelerated_value,
             context=context,
             source_url=source_url,
+            payload_metadata=payload_metadata,
         )
     elif file_type == FILE_TYPE_VIDEO:
         premium_status = None
@@ -469,6 +485,7 @@ async def check_attachment(
             guild_id=guild_id,
             context=context,
             premium_status=premium_status,
+            payload_metadata=payload_metadata,
         )
     else:
         await _emit_metrics(

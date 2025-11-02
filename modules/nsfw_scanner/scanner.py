@@ -573,11 +573,16 @@ class NSFWScanner:
                     )
 
             if text_scanning_enabled:
+                author_id = getattr(getattr(message, "author", None), "id", None)
                 text_metadata = {
                     "message_id": getattr(message, "id", None),
                     "channel_id": getattr(getattr(message, "channel", None), "id", None),
-                    "author_id": getattr(getattr(message, "author", None), "id", None),
+                    "author_id": author_id,
                 }
+                if author_id is not None:
+                    text_metadata["user_id"] = author_id
+                if guild_id is not None:
+                    text_metadata["guild_id"] = guild_id
                 text_result = await process_text(
                     self,
                     text_content,

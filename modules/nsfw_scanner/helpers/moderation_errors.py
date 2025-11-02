@@ -35,15 +35,33 @@ def build_error_context(
         context_parts.extend(image_state.logging_details())
 
     if isinstance(payload_metadata, dict):
+        guild_id = payload_metadata.get("guild_id")
+        if guild_id is not None:
+            context_parts.append(f"guild_id={guild_id}")
+        channel_id = payload_metadata.get("channel_id")
+        if channel_id is not None:
+            context_parts.append(f"channel_id={channel_id}")
+        user_id = payload_metadata.get("user_id")
+        author_id = payload_metadata.get("author_id")
+        if user_id is not None:
+            context_parts.append(f"user_id={user_id}")
+        elif author_id is not None:
+            context_parts.append(f"user_id={author_id}")
+        if author_id is not None and author_id != user_id:
+            context_parts.append(f"author_id={author_id}")
         message_id = payload_metadata.get("message_id")
         if message_id is not None:
             context_parts.append(f"message_id={message_id}")
+        message_jump_url = payload_metadata.get("message_jump_url")
+        if message_jump_url:
+            context_parts.append(f"message_jump_url={message_jump_url}")
         if payload_metadata.get("video_frame"):
             context_parts.append("video_frame=True")
         source_url = payload_metadata.get("source_url")
         if source_url:
             from urllib.parse import urlparse
 
+            context_parts.append(f"source_url={source_url}")
             context_parts.append(
                 f"payload_source_host={urlparse(source_url).netloc or 'unknown'}"
             )

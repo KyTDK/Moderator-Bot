@@ -326,6 +326,7 @@ async def process_image(
     context: ImageProcessingContext | None = None,
     similarity_response: Optional[List[dict[str, Any]]] = None,
     source_url: str | None = None,
+    payload_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     ctx = context
     if ctx is None:
@@ -364,21 +365,23 @@ async def process_image(
                 guessed_mime, _ = mimetypes.guess_type(original_filename)
                 image_mime = guessed_mime
 
-        payload_metadata: dict[str, Any] = {
-            "input_kind": "image",
-            "source_extension": ext or None,
-            "original_format": original_format or None,
-            "image_mode": getattr(image, "mode", None),
-            "image_size": list(image.size) if image else None,
-            "conversion_performed": needs_conversion,
-            "payload_mime": None,
-            "passthrough": not needs_conversion,
-            "source_url": source_url,
-        }
+        metadata: dict[str, Any] = dict(payload_metadata or {})
+        if guild_id is not None:
+            metadata.setdefault("guild_id", guild_id)
+        metadata.setdefault("input_kind", "image")
+        metadata["source_extension"] = ext or None
+        metadata["original_format"] = original_format or None
+        metadata["image_mode"] = getattr(image, "mode", None)
+        metadata["image_size"] = list(image.size) if image else None
+        metadata["conversion_performed"] = needs_conversion
+        metadata.setdefault("payload_mime", None)
+        metadata["passthrough"] = not needs_conversion
+        if source_url and not metadata.get("source_url"):
+            metadata["source_url"] = source_url
         try:
-            payload_metadata["source_bytes"] = os.path.getsize(original_filename)
+            metadata["source_bytes"] = os.path.getsize(original_filename)
         except OSError:
-            payload_metadata["source_bytes"] = None
+            metadata["source_bytes"] = None
 
         conversion_reason: str | None = None
 
@@ -394,16 +397,16 @@ async def process_image(
                     label="Encode PNG",
                 )
             conversion_reason = "unsupported_format"
-            payload_metadata["payload_bytes"] = len(image_bytes or b"")
-            payload_metadata["payload_mime"] = image_mime
-            payload_metadata["conversion_target"] = "image/png"
-            payload_metadata["encode_duration_ms"] = encode_duration
+            metadata["payload_bytes"] = len(image_bytes or b"")
+            metadata["payload_mime"] = image_mime
+            metadata["conversion_target"] = "image/png"
+            metadata["encode_duration_ms"] = encode_duration
         else:
-            payload_metadata["payload_mime"] = image_mime
-            payload_metadata["payload_bytes"] = payload_metadata.get("source_bytes")
-            payload_metadata["conversion_target"] = None
+            metadata["payload_mime"] = image_mime
+            metadata["payload_bytes"] = metadata.get("source_bytes")
+            metadata["conversion_target"] = None
 
-        payload_metadata["conversion_reason"] = conversion_reason
+        metadata["conversion_reason"] = conversion_reason
 
         response = await _run_image_pipeline(
             scanner,
@@ -413,7 +416,7 @@ async def process_image(
             similarity_response=similarity_response,
             image_bytes=image_bytes,
             image_mime=image_mime,
-            payload_metadata=payload_metadata,
+            payload_metadata=metadata,
         )
         if isinstance(response, dict):
             pipeline_metrics = response.setdefault("pipeline_metrics", {})
@@ -447,6 +450,7 @@ async def process_image_batch(
     *,
     convert_to_png: bool = False,
     max_concurrent_frames: int | None = None,
+    payload_metadata: dict[str, Any] | None = None,
 ) -> tuple[
     list[tuple[ExtractedFrame, dict[str, Any] | None]],
     dict[str, float],
@@ -510,6 +514,10 @@ async def process_image_batch(
     results: list[tuple[ExtractedFrame, dict[str, Any] | None]] = []
     similarity_iter = iter(similarity_batches)
 
+    base_metadata = dict(payload_metadata or {})
+    if context.guild_id is not None:
+        base_metadata.setdefault("guild_id", context.guild_id)
+
     entries: list[
         tuple[
             ExtractedFrame,
@@ -532,26 +540,40 @@ async def process_image_batch(
         if conversion_performed:
             payload_bytes = await asyncio.to_thread(_encode_image_to_png_bytes, image)
             payload_mime = "image/png"
-        payload_metadata: dict[str, Any] | None = {
-            "input_kind": "image",
-            "frame_name": frame.name,
-            "source_extension": os.path.splitext(frame.name)[1].lower() if frame.name else None,
-            "original_format": getattr(image, "info", {}).get("original_format") if image is not None else None,
-            "original_mime": frame.mime_type,
-            "conversion_performed": conversion_performed,
-            "payload_mime": payload_mime,
-            "passthrough": not conversion_performed,
-            "image_size": list(image.size) if image is not None else None,
-            "image_mode": getattr(image, "mode", None) if image is not None else None,
-            "source_bytes": len(frame.data) if frame.data is not None else None,
-            "payload_bytes": len(payload_bytes) if payload_bytes is not None else (len(frame.data) if frame.data is not None else None),
-            "conversion_target": "image/png"
-            if conversion_performed
-            else frame.mime_type,
-            "conversion_reason": "unsupported_format" if conversion_performed else None,
-            "video_frame": True,
-        }
-        entries.append((frame, image, payload_bytes, payload_mime, similarity_response, payload_metadata))
+        frame_metadata: dict[str, Any] | None = dict(base_metadata)
+        frame_metadata.setdefault("input_kind", "image")
+        frame_metadata["frame_name"] = frame.name
+        frame_metadata["source_extension"] = (
+            os.path.splitext(frame.name)[1].lower() if frame.name else None
+        )
+        frame_metadata["original_format"] = (
+            getattr(image, "info", {}).get("original_format") if image is not None else None
+        )
+        frame_metadata["original_mime"] = frame.mime_type
+        frame_metadata["conversion_performed"] = conversion_performed
+        frame_metadata["payload_mime"] = payload_mime
+        frame_metadata["passthrough"] = not conversion_performed
+        frame_metadata["image_size"] = list(image.size) if image is not None else None
+        frame_metadata["image_mode"] = getattr(image, "mode", None) if image is not None else None
+        frame_metadata["source_bytes"] = (
+            len(frame.data) if frame.data is not None else None
+        )
+        frame_metadata["payload_bytes"] = (
+            len(payload_bytes)
+            if payload_bytes is not None
+            else (len(frame.data) if frame.data is not None else None)
+        )
+        frame_metadata["conversion_target"] = (
+            "image/png" if conversion_performed else frame.mime_type
+        )
+        frame_metadata["conversion_reason"] = (
+            "unsupported_format" if conversion_performed else None
+        )
+        frame_metadata["video_frame"] = True
+        frame_index = getattr(frame, "index", None)
+        if frame_index is not None:
+            frame_metadata.setdefault("frame_index", frame_index)
+        entries.append((frame, image, payload_bytes, payload_mime, similarity_response, frame_metadata))
 
     max_local_concurrency = 8 if context.accelerated else 3
     local_limit_candidates = [len(entries) or 1, max_local_concurrency, MOD_API_MAX_CONCURRENCY]

@@ -172,6 +172,7 @@ async def process_video(
     *,
     context: ImageProcessingContext | None = None,
     premium_status: Optional[dict[str, Any]] = None,
+    payload_metadata: dict[str, Any] | None = None,
 ) -> tuple[Optional[discord.File], dict[str, Any] | None]:
     overall_started = time.perf_counter()
     frames_to_scan, max_concurrent_frames = await _resolve_video_limits(
@@ -181,6 +182,9 @@ async def process_video(
 
     if context is None:
         context = await build_image_processing_context(guild_id)
+
+    payload_metadata = dict(payload_metadata or {})
+    payload_metadata.setdefault("guild_id", guild_id)
 
     stop_event = Event()
     queue_max = max(4, max_concurrent_frames * (2 if context.accelerated else 1))
@@ -268,6 +272,7 @@ async def process_video(
             context,
             convert_to_png=False,
             max_concurrent_frames=max_concurrent_frames,
+            payload_metadata=payload_metadata,
         )
         decode_ms = float(batch_metrics.get("decode_latency_ms") or 0.0)
         metrics.add_duration("decode_latency_ms", decode_ms)

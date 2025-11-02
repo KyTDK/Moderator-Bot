@@ -95,7 +95,11 @@ async def moderator_api(
         original_size = payload_metadata.get("payload_bytes") or payload_metadata.get("source_bytes")
 
     image_state: ImageModerationState | None = None
-    metadata_dict: dict[str, Any] | None = payload_metadata if isinstance(payload_metadata, dict) else None
+    metadata_dict: dict[str, Any] | None = (
+        payload_metadata if isinstance(payload_metadata, dict) else None
+    )
+    if metadata_dict is not None and guild_id is not None:
+        metadata_dict.setdefault("guild_id", guild_id)
     max_edge_override = None
     target_bytes_override = None
 
