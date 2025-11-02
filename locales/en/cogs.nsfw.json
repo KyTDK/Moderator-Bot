@@ -6,6 +6,7 @@
         "add_action": {
           "description": "Add an action to the NSFW punishment list.",
           "params": {
+            "channel": "Channel to broadcast messages to.",
             "action": "Action to perform",
             "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
           }
@@ -13,6 +14,7 @@
         "add_text_action": {
           "description": "Add an action to the NSFW text punishment list.",
           "params": {
+            "channel": "Channel to broadcast messages to.",
             "action": "Action to perform",
             "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
           }

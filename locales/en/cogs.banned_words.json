@@ -26,6 +26,7 @@
         "add_action": {
           "description": "Add a moderation action to be triggered when a banned word is detected.",
           "params": {
+            "channel": "Channel to broadcast messages to.",
             "action": "Action to perform",
             "duration": "Only required for timeout (e.g. 10m, 1h, 3d)"
           }
