@@ -21,7 +21,6 @@ send_log_message = log_channel.send_log_message
 
 from modules.nsfw_scanner.helpers import process_text
 from modules.nsfw_scanner.constants import LOG_CHANNEL_ID
-from modules.nsfw_scanner.scanner_utils import to_bool
 
 if TYPE_CHECKING:
     from modules.nsfw_scanner.scanner import NSFWScanner
@@ -148,8 +147,10 @@ class TextScanPipeline:
         strike_count: int | None = None
 
         if guild_id is not None:
-            text_enabled_value = settings_map.get(NSFW_TEXT_ENABLED_SETTING)
-            text_scanning_enabled = to_bool(text_enabled_value, default=False)
+            text_enabled_value = settings_map.get(NSFW_TEXT_ENABLED_SETTING, False)
+            if not isinstance(text_enabled_value, bool):
+                text_enabled_value = bool(text_enabled_value)
+            text_scanning_enabled = text_enabled_value
             settings_cache.set_text_enabled(text_scanning_enabled)
         if not text_scanning_enabled:
             return False
@@ -164,12 +165,12 @@ class TextScanPipeline:
                     accelerated_allowed = False
                 settings_cache.set_accelerated(accelerated_allowed)
 
-            actions_allowed = to_bool(accelerated_allowed, default=False)
+            actions_allowed = bool(accelerated_allowed)
 
-            strikes_only = to_bool(
-                settings_map.get(NSFW_TEXT_STRIKES_ONLY_SETTING),
-                default=False,
-            )
+            strikes_only_value = settings_map.get(NSFW_TEXT_STRIKES_ONLY_SETTING, False)
+            if not isinstance(strikes_only_value, bool):
+                strikes_only_value = bool(strikes_only_value)
+            strikes_only = strikes_only_value
             if strikes_only:
                 author_id = getattr(getattr(message, "author", None), "id", None)
                 strike_count = 0
@@ -181,10 +182,10 @@ class TextScanPipeline:
                 if strike_count <= 0:
                     actions_allowed = False
 
-            send_text_embed = to_bool(
-                settings_map.get(NSFW_TEXT_SEND_EMBED_SETTING),
-                default=True,
-            )
+            send_text_embed_value = settings_map.get(NSFW_TEXT_SEND_EMBED_SETTING, True)
+            if not isinstance(send_text_embed_value, bool):
+                send_text_embed_value = bool(send_text_embed_value)
+            send_text_embed = send_text_embed_value
         else:
             actions_allowed = False
 
