@@ -85,6 +85,24 @@ class NSFWScanner:
         self.session = aiohttp.ClientSession(headers=session_headers)
         os.makedirs(self.tmp_dir, exist_ok=True)
         self._ensure_clip_failure_notifier()
+        if LOG_CHANNEL_ID:
+            embed = discord.Embed(
+                title="NSFW Scanner Ready",
+                description="Text scanning pipeline initialised and ready.",
+                color=discord.Color.green(),
+            )
+            allowed_mentions = None
+            if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
+                allowed_mentions = discord.AllowedMentions.none()
+            try:
+                await send_log_message(
+                    self.bot,
+                    embed=embed,
+                    allowed_mentions=allowed_mentions,
+                    context="nsfw_scanner.startup",
+                )
+            except Exception:
+                pass
 
     async def stop(self):
         if self.session:
