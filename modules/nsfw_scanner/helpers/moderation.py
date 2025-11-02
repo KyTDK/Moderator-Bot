@@ -230,6 +230,9 @@ async def moderator_api(
                 f"[moderator_api] Rate limit error on attempt {attempt_number}/{max_attempts}: {exc}."
             )
             latency_tracker.record_failure("rate_limit_error")
+            await api.mark_api_key_rate_limited(
+                encrypted_key, cooldown=None
+            )
             if attempt_index < max_attempts - 1:
                 await asyncio.sleep(min(2 ** attempt_index, 5.0))
             continue

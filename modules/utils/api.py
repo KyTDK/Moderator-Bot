@@ -59,6 +59,8 @@ _OPENAI_TIMEOUT = httpx.Timeout(
     pool=_float_env("OPENAI_POOL_TIMEOUT", 45.0),
 )
 
+_RATE_LIMIT_COOLDOWN = _float_env("OPENAI_RATE_LIMIT_COOLDOWN", 15.0)
+
 def _get_client(api_key: str) -> AsyncOpenAI:
     if api_key not in _clients:
         _clients[api_key] = AsyncOpenAI(
@@ -99,10 +101,16 @@ async def get_next_shared_api_key():
         for k, ts in list(_quarantine.items()):
             if ts <= now:
                 _quarantine.pop(k, None)
-                _working_keys.append(k)
+                if k not in _working_keys:
+                    _working_keys.append(k)
         if not _working_keys:
             _working_keys = await get_working_api_keys()
             random.shuffle(_working_keys)
+
+        if _working_keys:
+            _working_keys = [
+                k for k in _working_keys if _quarantine.get(k, 0) <= now
+            ]
 
         if _working_keys:
             return _working_keys.pop(0)
@@ -183,6 +191,22 @@ async def set_api_key_not_working(api_key, bot=None):
                     pass  # User has DMs off or blocked the bot
 
     return affected_rows > 0
+
+
+async def mark_api_key_rate_limited(api_key: str, cooldown: float | None = None) -> None:
+    if not api_key:
+        return
+    effective_cooldown = cooldown if cooldown is not None else _RATE_LIMIT_COOLDOWN
+    if effective_cooldown <= 0:
+        return
+    expires_at = time.monotonic() + effective_cooldown
+    async with _lock:
+        existing_expiry = _quarantine.get(api_key)
+        if existing_expiry and existing_expiry > expires_at:
+            expires_at = existing_expiry
+        _quarantine[api_key] = expires_at
+        if api_key in _working_keys:
+            _working_keys.remove(api_key)
 
 
 async def is_api_key_working(api_key: str) -> bool:
