@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from typing import Any
 
 from modules.nsfw_scanner.settings_keys import (
@@ -14,48 +13,9 @@ from modules.nsfw_scanner.settings_keys import (
 from modules.utils import mysql
 
 __all__ = [
-    "ALLOW_REMOTE_IMAGES",
-    "REMOTE_ALLOWED_HOSTS",
-    "REMOTE_MIN_BYTES",
-    "should_use_remote_source",
     "should_add_sfw_vector",
     "resolve_moderation_settings",
 ]
-
-
-ALLOW_REMOTE_IMAGES = os.getenv("MODBOT_ENABLE_REMOTE_IMAGE_URLS", "1").lower() not in {
-    "0",
-    "false",
-    "no",
-    "off",
-}
-REMOTE_ALLOWED_HOSTS = {
-    "cdn.discordapp.com",
-    "media.discordapp.net",
-}
-REMOTE_MIN_BYTES = int(os.getenv("MODBOT_MODERATION_REMOTE_MIN_BYTES", "524288"))
-
-
-def should_use_remote_source(
-    source_url: str | None,
-    *,
-    payload_size: int | None,
-) -> bool:
-    if not ALLOW_REMOTE_IMAGES or not source_url:
-        return False
-    try:
-        from urllib.parse import urlparse
-
-        parsed = urlparse(source_url)
-    except Exception:
-        return False
-    if parsed.scheme not in {"https"}:
-        return False
-    if parsed.hostname not in REMOTE_ALLOWED_HOSTS:
-        return False
-    if payload_size is not None and payload_size < REMOTE_MIN_BYTES:
-        return False
-    return True
 
 
 def should_add_sfw_vector(

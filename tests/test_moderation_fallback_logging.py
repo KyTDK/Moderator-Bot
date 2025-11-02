@@ -319,16 +319,16 @@ def test_report_moderation_fallback_to_log(monkeypatch):
         "message_id": 789,
         "message_jump_url": "https://example.com/message",
         "source_url": "https://cdn.example.com/image.png",
-        "moderation_payload_strategy": "remote_url",
+        "moderation_payload_strategy": "passthrough",
     }
 
     state = moderation_state.ImageModerationState(
         payload_bytes=b"bytes",
         payload_mime="image/jpeg",
         source_url="https://cdn.example.com/image.png",
-        use_remote=True,
+        use_remote=False,
     )
-    state.mark_fallback("remote_retry")
+    state.mark_fallback("png_retry")
 
     fallback_notice = state.fallback_message()
     assert fallback_notice

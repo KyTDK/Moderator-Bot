@@ -17,7 +17,6 @@ from .latency import ModeratorLatencyTracker
 from .moderation_errors import build_error_context, format_exception_for_log
 from .moderation_state import ImageModerationState
 from .moderation_utils import (
-    ALLOW_REMOTE_IMAGES,
     resolve_moderation_settings,
     should_add_sfw_vector,
 )
@@ -305,7 +304,6 @@ async def moderator_api(
             latency_tracker=latency_tracker,
             payload_metadata=metadata_dict,
             source_url=source_url,
-            allow_remote=ALLOW_REMOTE_IMAGES,
             quality_label=quality_label,
         )
 
@@ -412,21 +410,6 @@ async def moderator_api(
             continue
         except openai.BadRequestError as exc:
             latency_tracker.stop("api_call_ms", api_started)
-            if image_state and image_state.use_remote:
-                log.debug(
-                    "Remote image URL moderation failed; falling back to inline payload: %s",
-                    exc,
-                    exc_info=True,
-                )
-                image_state.force_inline()
-                image_state.mark_fallback("remote_fallback")
-                record_fallback_context("remote_fallback", format_exception_for_log(exc))
-                latency_tracker.record_failure("remote_bad_request")
-                latency_tracker.set_payload_detail("remote_fallback", True)
-                if isinstance(payload_metadata, dict):
-                    payload_metadata["remote_fallback"] = True
-                if attempt_index < max_attempts - 1:
-                    continue
             error_message = format_exception_for_log(exc)
             print(
                 "[moderator_api] Bad request on attempt "
@@ -479,7 +462,6 @@ async def moderator_api(
             can_retry_with_png = (
                 has_image_input
                 and isinstance(image_state, ImageModerationState)
-                and not image_state.use_remote
                 and not image_state.png_retry_attempted
                 and attempt_index < max_attempts - 1
                 and current_payload_mime != "image/png"
@@ -526,36 +508,12 @@ async def moderator_api(
                         latency_tracker=latency_tracker,
                         payload_metadata=metadata_dict,
                         quality_label="png",
-                        allow_remote=False,
                     )
                     latency_tracker.set_payload_detail("png_retry_due_to_internal_error", True)
                     if isinstance(payload_metadata, dict):
                         payload_metadata["png_retry_due_to_internal_error"] = True
                     latency_tracker.record_failure("internal_server_error")
                     continue
-            if (
-                image_state
-                and not image_state.use_remote
-                and image_state.source_url
-                and ALLOW_REMOTE_IMAGES
-                and attempt_index < max_attempts - 1
-            ):
-                log.debug(
-                    "Inline moderation payload triggered internal server error; retrying with remote URL. Context: %s",
-                    context_summary,
-                    exc_info=True,
-                )
-                image_state.force_remote()
-                image_state.mark_fallback("remote_retry")
-                record_fallback_context("remote_retry", context_summary)
-                latency_tracker.set_payload_detail("payload_strategy", "remote_url")
-                if isinstance(metadata_dict, dict):
-                    metadata_dict["moderation_payload_strategy"] = "remote_url"
-                latency_tracker.record_failure("inline_internal_server_error")
-                latency_tracker.set_payload_detail("remote_retry_due_to_internal_error", True)
-                if isinstance(payload_metadata, dict):
-                    payload_metadata["remote_retry_due_to_internal_error"] = True
-                continue
             error_message = format_exception_for_log(exc)
             print(
                 "[moderator_api] OpenAI internal server error: "
@@ -597,22 +555,6 @@ async def moderator_api(
             continue
         except Exception as exc:
             latency_tracker.stop("api_call_ms", api_started)
-            if image_state and image_state.use_remote:
-                message = str(exc).lower()
-                if "image_url" in message or "fetch" in message or "download" in message:
-                    log.debug(
-                        "Remote moderation fetch error detected; retrying with inline payload: %s",
-                        exc,
-                        exc_info=True,
-                    )
-                    image_state.force_inline()
-                    image_state.mark_fallback("remote_fallback")
-                    latency_tracker.record_failure("remote_fetch_error")
-                    latency_tracker.set_payload_detail("remote_fallback", True)
-                    if isinstance(payload_metadata, dict):
-                        payload_metadata["remote_fallback"] = True
-                    if attempt_index < max_attempts - 1:
-                        continue
             context_summary = build_error_context(
                 exc=exc,
                 attempt_number=attempt_number,

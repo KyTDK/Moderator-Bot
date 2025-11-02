@@ -8,8 +8,6 @@ from urllib.parse import urlparse
 
 from .latency import ModeratorLatencyTracker
 from .payloads import PreparedImagePayload
-from .moderation_utils import should_use_remote_source
-
 __all__ = ["ImageModerationState"]
 
 
@@ -31,7 +29,6 @@ class ImageModerationState:
         latency_tracker: ModeratorLatencyTracker,
         payload_metadata: dict[str, Any] | None,
         source_url: str | None,
-        allow_remote: bool,
         quality_label: str | None = None,
     ) -> "ImageModerationState":
         state = cls(
@@ -45,7 +42,6 @@ class ImageModerationState:
             latency_tracker=latency_tracker,
             payload_metadata=payload_metadata,
             quality_label=quality_label,
-            allow_remote=allow_remote,
         )
         return state
 
@@ -56,7 +52,6 @@ class ImageModerationState:
         latency_tracker: ModeratorLatencyTracker,
         payload_metadata: dict[str, Any] | None,
         quality_label: str | None = None,
-        allow_remote: bool | None = None,
     ) -> None:
         payload_bytes = prepared.data
         payload_mime = prepared.mime or "image/jpeg"
@@ -80,34 +75,14 @@ class ImageModerationState:
         self.payload_bytes = payload_bytes
         self.payload_mime = payload_mime
         self.base64_data = None
-
-        if allow_remote is None:
-            allow_remote_flag = self.use_remote
-        else:
-            allow_remote_flag = bool(allow_remote)
-
+        self.use_remote = False
         strategy_label = prepared.strategy
-        if self.source_url and allow_remote_flag:
-            self.use_remote = should_use_remote_source(self.source_url, payload_size=payload_size)
-        else:
-            self.use_remote = False
-
-        if self.use_remote and self.source_url:
-            strategy_label = "remote_url"
 
         latency_tracker.set_payload_detail("payload_strategy", strategy_label)
         if isinstance(payload_metadata, dict):
             payload_metadata["moderation_payload_strategy"] = strategy_label
 
     def build_inputs(self, latency_tracker: ModeratorLatencyTracker) -> list[dict[str, Any]]:
-        if self.use_remote and self.source_url:
-            return [
-                {
-                    "type": "image_url",
-                    "image_url": {"url": self.source_url},
-                }
-            ]
-
         if self.base64_data is None:
             self.base64_data = base64.b64encode(self.payload_bytes).decode()
             latency_tracker.set_payload_detail("base64_chars", len(self.base64_data))
@@ -123,13 +98,6 @@ class ImageModerationState:
 
     def force_inline(self) -> None:
         self.use_remote = False
-        self.base64_data = None
-
-    def force_remote(self) -> None:
-        if self.source_url:
-            self.use_remote = True
-        else:
-            self.use_remote = False
         self.base64_data = None
 
     def mark_fallback(self, event: str) -> None:
