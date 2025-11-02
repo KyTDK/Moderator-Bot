@@ -4,7 +4,7 @@ from typing import Any
 
 from .moderation_state import ImageModerationState
 
-__all__ = ["build_error_context"]
+__all__ = ["build_error_context", "format_exception_for_log"]
 
 
 def build_error_context(
@@ -109,3 +109,24 @@ def build_error_context(
                 f"response_body_preview={sanitized_preview}"
             )
     return ", ".join(context_parts)
+
+
+def format_exception_for_log(exc: Exception, *, limit: int = 256) -> str:
+    """Return a sanitized, truncated string representation of ``exc`` for logs."""
+
+    try:
+        message = str(exc)
+    except Exception:  # pragma: no cover - extremely defensive
+        message = repr(exc)
+
+    if not message:
+        message = type(exc).__name__
+
+    sanitized = message.replace("\r", " ").replace("\n", " ")
+    sanitized = " ".join(sanitized.split())
+
+    if len(sanitized) <= limit:
+        return sanitized
+
+    truncated = sanitized[: limit - 3].rstrip()
+    return f"{truncated}..."

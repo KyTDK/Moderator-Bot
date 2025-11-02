@@ -12,7 +12,7 @@ from modules.utils import api, clip_vectors, text_vectors
 from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY
 from ..utils.categories import is_allowed_category
 from .latency import ModeratorLatencyTracker
-from .moderation_errors import build_error_context
+from .moderation_errors import build_error_context, format_exception_for_log
 from .moderation_state import ImageModerationState
 from .moderation_utils import (
     ALLOW_REMOTE_IMAGES,
@@ -226,8 +226,10 @@ async def moderator_api(
             continue
         except openai.RateLimitError as exc:
             latency_tracker.stop("api_call_ms", api_started)
+            error_message = format_exception_for_log(exc)
             print(
-                f"[moderator_api] Rate limit error on attempt {attempt_number}/{max_attempts}: {exc}."
+                "[moderator_api] Rate limit error on attempt "
+                f"{attempt_number}/{max_attempts}: {error_message}."
             )
             latency_tracker.record_failure("rate_limit_error")
             await api.mark_api_key_rate_limited(
@@ -252,8 +254,10 @@ async def moderator_api(
                     payload_metadata["remote_fallback"] = True
                 if attempt_index < max_attempts - 1:
                     continue
+            error_message = format_exception_for_log(exc)
             print(
-                f"[moderator_api] Bad request on attempt {attempt_number}/{max_attempts}: {exc}."
+                "[moderator_api] Bad request on attempt "
+                f"{attempt_number}/{max_attempts}: {error_message}."
             )
             latency_tracker.record_failure("bad_request_error")
             continue
@@ -268,9 +272,10 @@ async def moderator_api(
                 image_state=image_state if isinstance(image_state, ImageModerationState) else None,
                 payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
+            error_message = format_exception_for_log(exc)
             print(
                 "[moderator_api] Connection error during moderation request on attempt "
-                f"{attempt_number}/{max_attempts}: {exc}. Context: {context_summary}"
+                f"{attempt_number}/{max_attempts}: {error_message}. Context: {context_summary}"
             )
             log.debug(
                 "Connection error during moderation request. Context: %s",
@@ -361,12 +366,14 @@ async def moderator_api(
                 if isinstance(payload_metadata, dict):
                     payload_metadata["remote_retry_due_to_internal_error"] = True
                 continue
+            error_message = format_exception_for_log(exc)
             print(
                 "[moderator_api] OpenAI internal server error: "
-                f"{exc}. Context: {context_summary}."
+                f"{error_message}. Context: {context_summary}."
             )
             log.error(
-                "Internal server error from OpenAI moderation API. Context: %s",
+                "Internal server error from OpenAI moderation API (%s). Context: %s",
+                error_message,
                 context_summary,
                 exc_info=True,
             )
@@ -376,9 +383,10 @@ async def moderator_api(
             continue
         except openai.APITimeoutError as exc:
             latency_tracker.stop("api_call_ms", api_started)
+            error_message = format_exception_for_log(exc)
             print(
                 f"[moderator_api] Moderation request timed out on attempt "
-                f"{attempt_number}/{max_attempts}: {exc}."
+                f"{attempt_number}/{max_attempts}: {error_message}."
             )
             had_openai_timeout = True
             latency_tracker.record_failure("openai_timeout")
@@ -387,9 +395,10 @@ async def moderator_api(
             continue
         except httpx.TimeoutException as exc:
             latency_tracker.stop("api_call_ms", api_started)
+            error_message = format_exception_for_log(exc)
             print(
                 f"[moderator_api] HTTP timeout during moderation request on attempt "
-                f"{attempt_number}/{max_attempts}: {exc}."
+                f"{attempt_number}/{max_attempts}: {error_message}."
             )
             had_http_timeout = True
             latency_tracker.record_failure("http_timeout")
@@ -423,12 +432,14 @@ async def moderator_api(
                 image_state=image_state,
                 payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
+            error_message = format_exception_for_log(exc)
             print(
                 "[moderator_api] Unexpected error from OpenAI API: "
-                f"{exc}. Context: {context_summary}."
+                f"{error_message}. Context: {context_summary}."
             )
             log.exception(
-                "Unexpected error from OpenAI moderation API. Context: %s",
+                "Unexpected error from OpenAI moderation API (%s). Context: %s",
+                error_message,
                 context_summary,
             )
             latency_tracker.record_failure("unexpected_api_error")
