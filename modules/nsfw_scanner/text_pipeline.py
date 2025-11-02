@@ -344,6 +344,86 @@ class TextScanPipeline:
 
             return True
 
+        if text_result and text_result.get("is_nsfw") and not actions_allowed:
+            reasons: list[str] = []
+            if accelerated_allowed is False:
+                reasons.append("Accelerated plan is not active.")
+            if strikes_only and (strike_count is None or strike_count <= 0):
+                reasons.append("Strikes-only mode with no prior strikes.")
+            if nsfw_callback is None:
+                reasons.append("No NSFW callback configured.")
+            if not reasons:
+                reasons.append("Actions are disabled by configuration.")
+
+            description_parts: list[str] = []
+            if guild_id is not None:
+                description_parts.append(f"Guild `{guild_id}`")
+            message_id = getattr(message, "id", None)
+            if message_id is not None:
+                description_parts.append(f"Message `{message_id}`")
+
+            embed = discord.Embed(
+                title="NSFW Text Action Skipped",
+                description="\n".join(description_parts) or "Text action skipped.",
+                color=discord.Color.orange(),
+            )
+            embed.add_field(
+                name="Reason",
+                value="\n".join(reasons),
+                inline=False,
+            )
+            if text_result:
+                embed.add_field(
+                    name="Category",
+                    value=str(text_result.get("category") or "unknown"),
+                    inline=True,
+                )
+                embed.add_field(
+                    name="Score",
+                    value=str(text_result.get("score") if text_result.get("score") is not None else "n/a"),
+                    inline=True,
+                )
+            embed.add_field(
+                name="Accelerated",
+                value="yes" if accelerated_allowed else "no",
+                inline=True,
+            )
+            embed.add_field(
+                name="Actions Allowed",
+                value="yes" if actions_allowed else "no",
+                inline=True,
+            )
+            embed.add_field(
+                name="Strikes-Only Mode",
+                value="yes" if strikes_only else "no",
+                inline=True,
+            )
+            if strikes_only:
+                embed.add_field(
+                    name="Strike Count",
+                    value=str(strike_count or 0),
+                    inline=True,
+                )
+            if debug_lines:
+                embed.add_field(
+                    name="Debug Context",
+                    value="\n".join(debug_lines)[:1024],
+                    inline=False,
+                )
+
+            allowed_mentions = None
+            if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
+                allowed_mentions = discord.AllowedMentions.none()
+            try:
+                await send_log_message(
+                    self._bot,
+                    embed=embed,
+                    allowed_mentions=allowed_mentions,
+                    context="nsfw_scanner.text_actions_blocked",
+                )
+            except Exception:
+                pass
+
         return actions_allowed
 
 
