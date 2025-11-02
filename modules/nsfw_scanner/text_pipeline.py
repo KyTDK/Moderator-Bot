@@ -20,6 +20,7 @@ import modules.utils.log_channel as log_channel
 send_log_message = log_channel.send_log_message
 
 from modules.nsfw_scanner.helpers import process_text
+from modules.nsfw_scanner.constants import LOG_CHANNEL_ID
 from modules.nsfw_scanner.scanner_utils import to_bool
 
 if TYPE_CHECKING:
@@ -153,6 +154,29 @@ class TextScanPipeline:
             text_scanning_enabled = to_bool(text_enabled_value, default=False)
             settings_cache.set_text_enabled(text_scanning_enabled)
         if not text_scanning_enabled:
+            if guild_id is not None and LOG_CHANNEL_ID:
+                embed = discord.Embed(
+                    title="NSFW Text Scan Skipped",
+                    description=f"Guild `{guild_id}` • message ID `{getattr(message, 'id', 'unknown')}`",
+                    color=discord.Color.orange(),
+                )
+                embed.add_field(
+                    name="Reason",
+                    value="NSFW text scanning is disabled by settings.",
+                    inline=False,
+                )
+                allowed_mentions = None
+                if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
+                    allowed_mentions = discord.AllowedMentions.none()
+                try:
+                    await send_log_message(
+                        self._bot,
+                        embed=embed,
+                        allowed_mentions=allowed_mentions,
+                        context="nsfw_scanner.text_scan_skipped",
+                    )
+                except Exception:
+                    pass
             return False
 
         if guild_id is not None and text_scanning_enabled:
@@ -266,10 +290,13 @@ class TextScanPipeline:
                         value=f"`{type(exc).__name__}`: {exc}",
                         inline=False,
                     )
+                    allowed_mentions = None
+                    if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
+                        allowed_mentions = discord.AllowedMentions.none()
                     await send_log_message(
                         self._bot,
                         embed=error_embed,
-                        allowed_mentions=discord.AllowedMentions.none(),
+                        allowed_mentions=allowed_mentions,
                         context="nsfw_scanner.text_verbose_failure",
                     )
 
@@ -305,6 +332,29 @@ class TextScanPipeline:
                     allowed_mentions=allowed_mentions,
                     context="nsfw_scanner.text_scan_log_failure",
                 )
+        elif LOG_CHANNEL_ID:
+            try:
+                log_embed = _build_text_verbose_embed(
+                    author=getattr(message, "author", None),
+                    channel=getattr(message, "channel", None),
+                    guild_id=guild_id,
+                    text_content=text_content,
+                    result=text_result or {"is_nsfw": False, "reason": "no_result"},
+                    message=message,
+                    debug_lines=debug_lines if debug_lines else None,
+                )
+                log_embed.title = "NSFW Text Scan Summary"
+                allowed_mentions = None
+                if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
+                    allowed_mentions = discord.AllowedMentions.none()
+                await send_log_message(
+                    self._bot,
+                    embed=log_embed,
+                    allowed_mentions=allowed_mentions,
+                    context="nsfw_scanner.text_scan_summary",
+                )
+            except Exception:
+                pass
 
         if not (text_result and text_result.get("is_nsfw")):
             return False
