@@ -201,8 +201,6 @@ api_stub.is_api_key_working = _api_is_api_key_working
 api_stub.set_api_key_working = _api_set_api_key_working
 sys.modules.setdefault("modules.utils.api", api_stub)
 
-import pytest
-
 from modules.nsfw_scanner import scanner as scanner_mod
 from modules.nsfw_scanner.settings_keys import (
     NSFW_HIGH_ACCURACY_SETTING,
@@ -217,101 +215,103 @@ from modules.nsfw_scanner.settings_keys import (
 )
 
 
-@pytest.mark.asyncio
-async def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
+def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
     """Ensure text moderation still runs for link-only messages."""
 
-    scanner = scanner_mod.NSFWScanner(bot=SimpleNamespace())
+    async def _run():
+        scanner = scanner_mod.NSFWScanner(bot=SimpleNamespace())
 
-    author = SimpleNamespace(
-        id=42,
-        mention="<@42>",
-        display_name="TestUser",
-        bot=False,
-    )
-    channel = SimpleNamespace(id=99)
-    message = SimpleNamespace(
-        content="http://example.com explicit content",
-        attachments=[],
-        embeds=[],
-        stickers=[],
-        message_snapshots=[],
-        author=author,
-        channel=channel,
-        id=1234,
-        reactions=[],
-    )
+        author = SimpleNamespace(
+            id=42,
+            mention="<@42>",
+            display_name="TestUser",
+            bot=False,
+        )
+        channel = SimpleNamespace(id=99)
+        message = SimpleNamespace(
+            content="http://example.com explicit content",
+            attachments=[],
+            embeds=[],
+            stickers=[],
+            message_snapshots=[],
+            author=author,
+            channel=channel,
+            id=1234,
+            reactions=[],
+        )
 
-    async def fake_wait_for_hydration(msg, *, timeout=4.0):
-        assert timeout == 4.0
-        return msg
+        async def fake_wait_for_hydration(msg, *, timeout=4.0):
+            assert timeout == 4.0
+            return msg
 
-    async def fake_get_settings(guild_id, keys):
-        assert guild_id == 555
-        if isinstance(keys, list):
-            return {
-                NSFW_IMAGE_CATEGORY_SETTING: ["sexual"],
-                NSFW_TEXT_CATEGORY_SETTING: ["sexual"],
-                NSFW_THRESHOLD_SETTING: 0.7,
-                NSFW_TEXT_THRESHOLD_SETTING: 0.7,
-                NSFW_HIGH_ACCURACY_SETTING: False,
-                NSFW_TEXT_ENABLED_SETTING: True,
-                NSFW_TEXT_STRIKES_ONLY_SETTING: False,
-                NSFW_TEXT_SEND_EMBED_SETTING: True,
+        async def fake_get_settings(guild_id, keys):
+            assert guild_id == 555
+            if isinstance(keys, list):
+                return {
+                    NSFW_IMAGE_CATEGORY_SETTING: ["sexual"],
+                    NSFW_TEXT_CATEGORY_SETTING: ["sexual"],
+                    NSFW_THRESHOLD_SETTING: 0.7,
+                    NSFW_TEXT_THRESHOLD_SETTING: 0.7,
+                    NSFW_HIGH_ACCURACY_SETTING: False,
+                    NSFW_TEXT_ENABLED_SETTING: True,
+                    NSFW_TEXT_STRIKES_ONLY_SETTING: False,
+                    NSFW_TEXT_SEND_EMBED_SETTING: True,
+                }
+            fallback = {
+                "check-tenor-gifs": False,
             }
-        fallback = {
-            "check-tenor-gifs": False,
-        }
-        return fallback.get(keys)
+            return fallback.get(keys)
 
-    async def fake_resolve_plan(guild_id):
-        assert guild_id == 555
-        return "core"
+        async def fake_resolve_plan(guild_id):
+            assert guild_id == 555
+            return "core"
 
-    async def fake_is_accelerated(*, guild_id=None, user_id=None):
-        assert guild_id == 555
-        assert user_id is None
-        return True
+        async def fake_is_accelerated(*, guild_id=None, user_id=None):
+            assert guild_id == 555
+            assert user_id is None
+            return True
 
-    async def fake_get_strike_count(user_id, guild_id):
-        assert user_id == author.id
-        assert guild_id == 555
-        return 1
+        async def fake_get_strike_count(user_id, guild_id):
+            assert user_id == author.id
+            assert guild_id == 555
+            return 1
 
-    text_calls = []
+        text_calls = []
 
-    async def fake_process_text(scanner_arg, text, **kwargs):
-        text_calls.append((scanner_arg, text, kwargs))
-        return {
-            "is_nsfw": True,
-            "category": "sexual",
-            "score": 0.91,
-        }
+        async def fake_process_text(scanner_arg, text, **kwargs):
+            text_calls.append((scanner_arg, text, kwargs))
+            return {
+                "is_nsfw": True,
+                "category": "sexual",
+                "score": 0.91,
+            }
 
-    callback_calls = []
+        callback_calls = []
 
-    async def fake_callback(*args, **kwargs):
-        callback_calls.append((args, kwargs))
+        async def fake_callback(*args, **kwargs):
+            callback_calls.append((args, kwargs))
 
-    monkeypatch.setattr(scanner_mod, "wait_for_hydration", fake_wait_for_hydration)
-    monkeypatch.setattr(scanner_mod.mysql, "get_settings", fake_get_settings)
-    monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan)
-    monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated)
-    monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count)
-    monkeypatch.setattr(scanner_mod, "process_text", fake_process_text)
+        monkeypatch.setattr(scanner_mod, "wait_for_hydration", fake_wait_for_hydration)
+        monkeypatch.setattr(scanner_mod.mysql, "get_settings", fake_get_settings)
+        monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan)
+        monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated)
+        monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count)
+        monkeypatch.setattr(scanner_mod, "process_text", fake_process_text)
 
-    flagged = await scanner.is_nsfw(
-        message=message,
-        guild_id=555,
-        nsfw_callback=fake_callback,
-    )
+        flagged = await scanner.is_nsfw(
+            message=message,
+            guild_id=555,
+            nsfw_callback=fake_callback,
+        )
 
-    assert flagged is True
-    assert text_calls, "process_text should be invoked"
-    assert text_calls[0][0] is scanner
-    assert text_calls[0][1] == message.content.strip()
-    assert callback_calls, "nsfw_callback should be invoked when text is flagged"
-    args, kwargs = callback_calls[0]
-    assert args[0] is author
-    assert kwargs["action_setting"] == NSFW_TEXT_ACTION_SETTING
-    assert kwargs["send_embed"] is True
+        assert text_calls, "process_text should be invoked"
+        assert text_calls[0][0] is scanner
+        assert text_calls[0][1] == message.content.strip()
+        assert callback_calls, "nsfw_callback should be invoked when text is flagged"
+        args, kwargs = callback_calls[0]
+        assert args[0] is author
+        assert kwargs["action_setting"] == NSFW_TEXT_ACTION_SETTING
+        assert kwargs["send_embed"] is True
+        assert flagged is True
+
+    asyncio.run(_run())
