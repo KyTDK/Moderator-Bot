@@ -39,6 +39,9 @@
                 "nsfw-text-action": {
                     "description": "Action to take when NSFW content is detected in message text."
                 },
+                "nsfw-text-excluded-channels": {
+                    "description": "Channels where NSFW text scanning is disabled."
+                },
                 "nsfw-detection-categories": {
                     "description": "Categories considered NSFW for detection."
                 },

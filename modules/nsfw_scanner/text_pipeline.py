@@ -10,6 +10,7 @@ from discord.utils import escape_markdown, escape_mentions
 from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_ACTION_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
 )
 from modules.utils import mod_logging, mysql
@@ -147,6 +148,17 @@ class TextScanPipeline:
         if guild_id is not None:
             text_scanning_enabled = bool(settings_map.get(NSFW_TEXT_ENABLED_SETTING))
             settings_cache.set_text_enabled(text_scanning_enabled)
+            if text_scanning_enabled:
+                raw_excluded = settings_map.get(NSFW_TEXT_EXCLUDED_CHANNELS_SETTING) or []
+                try:
+                    excluded_channels = {int(cid) for cid in raw_excluded}
+                except (TypeError, ValueError):
+                    excluded_channels = {
+                        int(str(cid)) for cid in raw_excluded if str(cid).isdigit()
+                    }
+                channel_id = getattr(getattr(message, "channel", None), "id", None)
+                if channel_id is not None and channel_id in excluded_channels:
+                    return False
         if not text_scanning_enabled:
             return False
 

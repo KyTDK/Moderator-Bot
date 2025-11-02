@@ -79,6 +79,15 @@ def build_nsfw_settings() -> dict[str, Setting]:
             choices=["strike", "kick", "ban", "timeout", "delete"],
             description_key="modules.config.settings_schema.nsfw-text-action.description",
         ),
+        "nsfw-text-excluded-channels": Setting(
+            name="nsfw-text-excluded-channels",
+            description="Channels where NSFW text scanning is disabled.",
+            setting_type=list[discord.TextChannel],
+            default=[],
+            required_plans=PLAN_CORE,
+            hidden=True,
+            description_key="modules.config.settings_schema.nsfw-text-excluded-channels.description",
+        ),
         "nsfw-detection-categories": Setting(
             name="nsfw-detection-categories",
             description="Categories considered NSFW for detection.",

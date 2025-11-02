@@ -7,6 +7,7 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_IMAGE_CATEGORY_SETTING,
     NSFW_TEXT_CATEGORY_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
     NSFW_TEXT_THRESHOLD_SETTING,
     NSFW_THRESHOLD_SETTING,
 )
@@ -91,7 +92,12 @@ async def resolve_moderation_settings(
         requested_settings = [NSFW_IMAGE_CATEGORY_SETTING, NSFW_THRESHOLD_SETTING]
         if use_text_settings:
             requested_settings.extend(
-                [NSFW_TEXT_CATEGORY_SETTING, NSFW_TEXT_THRESHOLD_SETTING, NSFW_TEXT_ENABLED_SETTING]
+                [
+                    NSFW_TEXT_CATEGORY_SETTING,
+                    NSFW_TEXT_THRESHOLD_SETTING,
+                    NSFW_TEXT_ENABLED_SETTING,
+                    NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
+                ]
             )
         settings_map = await mysql.get_settings(guild_id, requested_settings)
 

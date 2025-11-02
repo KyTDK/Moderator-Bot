@@ -83,6 +83,21 @@
         "view_text_categories": {
           "description": "View NSFW text detection categories."
         },
+        "add_text_excluded_channel": {
+          "description": "Exclude a channel from NSFW text scanning.",
+          "params": {
+            "channel": "Channel to exclude"
+          }
+        },
+        "remove_text_excluded_channel": {
+          "description": "Allow NSFW text scanning in a previously excluded channel.",
+          "params": {
+            "channel": "Channel to re-include"
+          }
+        },
+        "view_text_excluded_channels": {
+          "description": "View channels excluded from NSFW text scanning."
+        },
         "set_text_threshold": {
           "description": "Set the threshold for NSFW text detection confidence.",
           "params": {
@@ -132,6 +147,14 @@
       "text_categories": {
         "none": "No text categories are currently set.",
         "heading": "**Current NSFW text categories:**\n{categories}"
+      },
+      "text_excluded_channels": {
+        "added": "{channel} will be skipped during NSFW text scanning.",
+        "already_added": "{channel} is already excluded from NSFW text scanning.",
+        "removed": "{channel} will once again be scanned for NSFW text.",
+        "not_found": "{channel} is not currently excluded from NSFW text scanning.",
+        "list_empty": "No channels are excluded from NSFW text scanning.",
+        "list": "**Channels excluded from NSFW text scanning:**\n{channels}"
       },
       "text_threshold": {
         "invalid": "Text detection threshold must be between 0.0 and 1.0.",

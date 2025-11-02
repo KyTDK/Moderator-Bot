@@ -8,6 +8,7 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_IMAGE_CATEGORY_SETTING,
     NSFW_TEXT_CATEGORY_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
     NSFW_TEXT_THRESHOLD_SETTING,
     NSFW_THRESHOLD_SETTING,
@@ -45,6 +46,7 @@ async def build_image_processing_context(
                 NSFW_TEXT_THRESHOLD_SETTING,
                 NSFW_HIGH_ACCURACY_SETTING,
                 NSFW_TEXT_ENABLED_SETTING,
+                NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
                 NSFW_TEXT_STRIKES_ONLY_SETTING,
             ],
         ) or {}

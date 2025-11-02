@@ -20,6 +20,7 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_ACTION_SETTING,
     NSFW_TEXT_CATEGORY_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
     NSFW_TEXT_THRESHOLD_SETTING,
 )
@@ -111,6 +112,18 @@ TEXT_CATEGORY_CHOICES = IMAGE_CATEGORY_CHOICES + [
 class NSFWCog(commands.Cog):
     def __init__(self, bot: ModeratorBot):
         self.bot = bot
+
+    @staticmethod
+    def _normalise_channel_ids(values) -> list[int]:
+        normalised: list[int] = []
+        for value in values or []:
+            try:
+                channel_id = int(value)
+            except (TypeError, ValueError):
+                continue
+            if channel_id not in normalised:
+                normalised.append(channel_id)
+        return normalised
 
     async def _add_category_setting(self, interaction: Interaction, manager: ListManager, category: str) -> None:
         if not await require_accelerated(interaction):
@@ -345,6 +358,93 @@ class NSFWCog(commands.Cog):
             interaction,
             text_category_manager,
             "cogs.nsfw.text_categories",
+        )
+
+    @nsfw_group.command(
+        name="add_text_excluded_channel",
+        description=NSFW_META.string("add_text_excluded_channel", "description"),
+    )
+    @app_commands.describe(
+        channel=NSFW_META.child("add_text_excluded_channel", "params").string("channel")
+    )
+    async def add_text_excluded_channel(
+        self,
+        interaction: Interaction,
+        channel: discord.TextChannel,
+    ) -> None:
+        if not await require_accelerated(interaction):
+            return
+        guild_id = interaction.guild.id
+        texts = self.bot.translate("cogs.nsfw.text_excluded_channels", guild_id=guild_id)
+        existing = await mysql.get_settings(guild_id, NSFW_TEXT_EXCLUDED_CHANNELS_SETTING) or []
+        normalised = self._normalise_channel_ids(existing)
+        if channel.id in normalised:
+            await interaction.response.send_message(
+                texts["already_added"].format(channel=channel.mention),
+                ephemeral=True,
+            )
+            return
+        normalised.append(channel.id)
+        await mysql.update_settings(guild_id, NSFW_TEXT_EXCLUDED_CHANNELS_SETTING, normalised)
+        await interaction.response.send_message(
+            texts["added"].format(channel=channel.mention),
+            ephemeral=True,
+        )
+
+    @nsfw_group.command(
+        name="remove_text_excluded_channel",
+        description=NSFW_META.string("remove_text_excluded_channel", "description"),
+    )
+    @app_commands.describe(
+        channel=NSFW_META.child("remove_text_excluded_channel", "params").string("channel")
+    )
+    async def remove_text_excluded_channel(
+        self,
+        interaction: Interaction,
+        channel: discord.TextChannel,
+    ) -> None:
+        if not await require_accelerated(interaction):
+            return
+        guild_id = interaction.guild.id
+        texts = self.bot.translate("cogs.nsfw.text_excluded_channels", guild_id=guild_id)
+        existing = await mysql.get_settings(guild_id, NSFW_TEXT_EXCLUDED_CHANNELS_SETTING) or []
+        normalised = self._normalise_channel_ids(existing)
+        if channel.id not in normalised:
+            await interaction.response.send_message(
+                texts["not_found"].format(channel=channel.mention),
+                ephemeral=True,
+            )
+            return
+        normalised.remove(channel.id)
+        await mysql.update_settings(guild_id, NSFW_TEXT_EXCLUDED_CHANNELS_SETTING, normalised)
+        await interaction.response.send_message(
+            texts["removed"].format(channel=channel.mention),
+            ephemeral=True,
+        )
+
+    @nsfw_group.command(
+        name="view_text_excluded_channels",
+        description=NSFW_META.string("view_text_excluded_channels", "description"),
+    )
+    async def view_text_excluded_channels(self, interaction: Interaction) -> None:
+        if not await require_accelerated(interaction):
+            return
+        guild_id = interaction.guild.id
+        texts = self.bot.translate("cogs.nsfw.text_excluded_channels", guild_id=guild_id)
+        existing = await mysql.get_settings(guild_id, NSFW_TEXT_EXCLUDED_CHANNELS_SETTING) or []
+        normalised = self._normalise_channel_ids(existing)
+        if not normalised:
+            await interaction.response.send_message(texts["list_empty"], ephemeral=True)
+            return
+        mentions = []
+        for channel_id in normalised:
+            channel = interaction.guild.get_channel(channel_id)
+            mention = channel.mention if channel else f"<#{channel_id}>"
+            mentions.append(mention)
+        formatted = "\n".join(f"{index + 1}. {mention}" for index, mention in enumerate(mentions))
+        await interaction.response.send_message(
+            texts["list"].format(channels=formatted),
+            ephemeral=True,
         )
 
     @nsfw_group.command(

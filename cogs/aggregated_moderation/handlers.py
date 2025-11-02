@@ -6,7 +6,10 @@ import discord
 
 from modules.moderation import strike
 from modules.nsfw_scanner import handle_nsfw_content
-from modules.nsfw_scanner.settings_keys import NSFW_TEXT_ENABLED_SETTING
+from modules.nsfw_scanner.settings_keys import (
+    NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
+)
 from modules.utils import mod_logging, mysql
 from modules.utils.discord_utils import safe_get_channel, safe_get_member, safe_get_message
 
@@ -29,7 +32,22 @@ class ModerationHandlers:
         text_scanning_enabled = bool(
             await mysql.get_settings(guild_id, NSFW_TEXT_ENABLED_SETTING)
         )
-        if not nsfw_enabled and not text_scanning_enabled:
+        text_excluded_channels = await mysql.get_settings(
+            guild_id, NSFW_TEXT_EXCLUDED_CHANNELS_SETTING
+        ) or []
+        try:
+            normalized_text_excluded = {int(cid) for cid in text_excluded_channels}
+        except (TypeError, ValueError):
+            normalized_text_excluded = {
+                int(str(cid))
+                for cid in text_excluded_channels
+                if str(cid).isdigit()
+            }
+        text_scanning_allowed = (
+            text_scanning_enabled and message.channel.id not in normalized_text_excluded
+        )
+
+        if not nsfw_enabled and not text_scanning_allowed:
             return
 
         scan_age_restricted = await mysql.get_settings(guild_id, "scan-age-restricted")
@@ -44,7 +62,13 @@ class ModerationHandlers:
             return
 
         excluded = await mysql.get_settings(guild_id, "exclude-channels") or []
-        if message.channel.id in [int(c) for c in excluded]:
+        try:
+            normalized_excluded = {int(c) for c in excluded}
+        except (TypeError, ValueError):
+            normalized_excluded = {
+                int(str(c)) for c in excluded if str(c).isdigit()
+            }
+        if message.channel.id in normalized_excluded:
             return
 
         async def scan_task():
@@ -53,7 +77,7 @@ class ModerationHandlers:
                 guild_id=guild_id,
                 nsfw_callback=handle_nsfw_content,
                 overall_started_at=queue_started_at,
-                scan_text=text_scanning_enabled,
+                scan_text=text_scanning_allowed,
                 scan_media=nsfw_enabled,
             )
             if not flagged:

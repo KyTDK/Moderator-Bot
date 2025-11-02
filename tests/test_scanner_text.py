@@ -258,6 +258,7 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_ACTION_SETTING,
     NSFW_TEXT_CATEGORY_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
     NSFW_TEXT_THRESHOLD_SETTING,
     NSFW_THRESHOLD_SETTING,
@@ -271,6 +272,7 @@ async def _exercise_text_scan(
     verbose_value: bool = True,
     scan_media: bool = True,
     scan_text: bool = True,
+    excluded_channels: list[int] | None = None,
 ):
     """Run the text scanning pipeline with controllable acceleration flag."""
     author = SimpleNamespace(
@@ -303,6 +305,7 @@ async def _exercise_text_scan(
         NSFW_HIGH_ACCURACY_SETTING: False,
         NSFW_TEXT_ENABLED_SETTING: True,
         NSFW_TEXT_STRIKES_ONLY_SETTING: False,
+        NSFW_TEXT_EXCLUDED_CHANNELS_SETTING: list(excluded_channels or []),
     }
 
     def fake_get_scan_settings(self):
@@ -326,6 +329,8 @@ async def _exercise_text_scan(
             return verbose_value
         if keys == NSFW_TEXT_ENABLED_SETTING:
             return settings_payload[NSFW_TEXT_ENABLED_SETTING]
+        if keys == NSFW_TEXT_EXCLUDED_CHANNELS_SETTING:
+            return settings_payload[NSFW_TEXT_EXCLUDED_CHANNELS_SETTING]
         return None
 
     text_calls = []
@@ -418,6 +423,19 @@ def test_text_scan_does_not_log_without_verbose(monkeypatch):
     assert callback_calls[0][1]["send_embed"] is False
     assert not log_calls, "Verbose channel logging should be suppressed without nsfw-verbose"
     assert not log_channel_calls, "Debug logs should be suppressed without nsfw-verbose"
+
+
+def test_text_scan_skipped_when_channel_excluded(monkeypatch):
+    flagged, text_calls, callback_calls, *_ = asyncio.run(
+        _exercise_text_scan(
+            monkeypatch,
+            accelerated_value=True,
+            excluded_channels=[99],
+        )
+    )
+    assert not flagged, "Message should not be flagged when channel is excluded"
+    assert not text_calls, "Text scanning should be skipped for excluded channels"
+    assert not callback_calls, "No actions should fire when scanning is skipped"
 
 
 def test_text_scan_runs_when_media_scanning_disabled(monkeypatch):
