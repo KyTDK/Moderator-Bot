@@ -274,12 +274,15 @@ class TextScanPipeline:
                     )
 
             try:
-                log_embed = verbose_embed.copy()
+                log_embed = verbose_embed.copy() if hasattr(verbose_embed, "copy") else verbose_embed
                 log_embed.title = "NSFW Text Scan Debug"
+                allowed_mentions = None
+                if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
+                    allowed_mentions = discord.AllowedMentions.none()
                 await send_log_message(
                     self._bot,
                     embed=log_embed,
-                    allowed_mentions=discord.AllowedMentions.none(),
+                    allowed_mentions=allowed_mentions,
                     context="nsfw_scanner.text_scan",
                 )
             except Exception as exc:
@@ -293,10 +296,13 @@ class TextScanPipeline:
                     value=f"`{type(exc).__name__}`: {exc}",
                     inline=False,
                 )
+                allowed_mentions = None
+                if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
+                    allowed_mentions = discord.AllowedMentions.none()
                 await send_log_message(
                     self._bot,
                     embed=error_embed,
-                    allowed_mentions=discord.AllowedMentions.none(),
+                    allowed_mentions=allowed_mentions,
                     context="nsfw_scanner.text_scan_log_failure",
                 )
 
