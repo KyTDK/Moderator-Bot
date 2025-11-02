@@ -458,41 +458,15 @@ class NSFWScanner:
 
         download_cap_bytes = await _resolve_download_cap_bytes()
 
-        async def _ensure_scan_settings_map() -> dict[str, Any]:
-            settings = settings_cache.get_scan_settings()
-            if settings is None and guild_id is not None:
-                try:
-                    settings = await mysql.get_settings(
-                        guild_id,
-                        [
-                            NSFW_IMAGE_CATEGORY_SETTING,
-                            NSFW_TEXT_CATEGORY_SETTING,
-                            NSFW_THRESHOLD_SETTING,
-                            NSFW_TEXT_THRESHOLD_SETTING,
-                            NSFW_HIGH_ACCURACY_SETTING,
-                            NSFW_TEXT_ENABLED_SETTING,
-                            NSFW_TEXT_STRIKES_ONLY_SETTING,
-                            NSFW_TEXT_SEND_EMBED_SETTING,
-                        ],
-                    )
-                except Exception:
-                    settings = None
-                settings_cache.set_scan_settings(settings)
-                settings = settings_cache.get_scan_settings()
-            resolved = settings or {}
-            if (
-                guild_id is not None
-                and NSFW_TEXT_ENABLED_SETTING not in resolved
-            ):
-                try:
-                    text_enabled_value = await mysql.get_settings(guild_id, NSFW_TEXT_ENABLED_SETTING)
-                except Exception:
-                    text_enabled_value = None
-                if text_enabled_value is not None:
-                    resolved = dict(resolved)
-                    resolved[NSFW_TEXT_ENABLED_SETTING] = text_enabled_value
-                    settings_cache.set_scan_settings(resolved)
-            return resolved
+        settings_map = settings_cache.get_scan_settings()
+        if settings_map is None and guild_id is not None:
+            try:
+                settings_map = await mysql.get_settings(guild_id)
+            except Exception:
+                settings_map = {}
+            settings_cache.set_scan_settings(settings_map)
+            settings_map = settings_cache.get_scan_settings()
+        settings_map = settings_map or {}
 
         if url:
             return await self._download_and_scan(
@@ -524,7 +498,7 @@ class NSFWScanner:
                 guild_id=guild_id,
                 nsfw_callback=nsfw_callback,
                 settings_cache=settings_cache,
-                ensure_settings_map=_ensure_scan_settings_map,
+                settings_map=settings_map,
             )
             if text_flagged:
                 return True

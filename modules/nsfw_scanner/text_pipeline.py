@@ -132,15 +132,13 @@ class TextScanPipeline:
         guild_id: int | None,
         nsfw_callback: Callable[..., Awaitable[None]] | None,
         settings_cache: "AttachmentSettingsCache",
-        ensure_settings_map: Callable[[], Awaitable[dict[str, Any]]],
+        settings_map: dict[str, Any] | None,
     ) -> bool:
         text_content = (message.content or "").strip()
         if not text_content:
             return False
 
-        settings_map: dict[str, Any] | None = None
-        if guild_id is not None:
-            settings_map = await ensure_settings_map()
+        settings_map = settings_map or {}
 
         text_scanning_enabled = False
         send_text_embed = True
@@ -150,7 +148,7 @@ class TextScanPipeline:
         strike_count: int | None = None
 
         if guild_id is not None:
-            text_enabled_value = settings_map.get(NSFW_TEXT_ENABLED_SETTING) if settings_map else None
+            text_enabled_value = settings_map.get(NSFW_TEXT_ENABLED_SETTING)
             text_scanning_enabled = to_bool(text_enabled_value, default=False)
             settings_cache.set_text_enabled(text_scanning_enabled)
         if not text_scanning_enabled:
@@ -169,7 +167,7 @@ class TextScanPipeline:
             actions_allowed = to_bool(accelerated_allowed, default=False)
 
             strikes_only = to_bool(
-                (settings_map or {}).get(NSFW_TEXT_STRIKES_ONLY_SETTING),
+                settings_map.get(NSFW_TEXT_STRIKES_ONLY_SETTING),
                 default=False,
             )
             if strikes_only:
@@ -184,7 +182,7 @@ class TextScanPipeline:
                     actions_allowed = False
 
             send_text_embed = to_bool(
-                (settings_map or {}).get(NSFW_TEXT_SEND_EMBED_SETTING),
+                settings_map.get(NSFW_TEXT_SEND_EMBED_SETTING),
                 default=True,
             )
         else:

@@ -319,7 +319,9 @@ async def _exercise_text_scan(
     async def fake_get_strike_count(user_id, guild_id):
         return 1
 
-    async def fake_get_settings(guild_id, keys):
+    async def fake_get_settings(guild_id, keys=None):
+        if keys is None:
+            return settings_payload.copy()
         if isinstance(keys, list):
             return settings_payload.copy()
         if keys == "nsfw-verbose":

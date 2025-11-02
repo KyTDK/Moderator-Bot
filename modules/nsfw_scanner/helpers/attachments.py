@@ -4,16 +4,6 @@ from typing import Any
 
 import discord
 
-from modules.nsfw_scanner.settings_keys import (
-    NSFW_HIGH_ACCURACY_SETTING,
-    NSFW_IMAGE_CATEGORY_SETTING,
-    NSFW_TEXT_CATEGORY_SETTING,
-    NSFW_TEXT_ENABLED_SETTING,
-    NSFW_TEXT_SEND_EMBED_SETTING,
-    NSFW_TEXT_STRIKES_ONLY_SETTING,
-    NSFW_TEXT_THRESHOLD_SETTING,
-    NSFW_THRESHOLD_SETTING,
-)
 from modules.metrics import log_media_scan
 from modules.utils import mod_logging, mysql
 from modules.utils.localization import TranslateFn, localize_message
@@ -401,19 +391,10 @@ async def check_attachment(
     settings = settings_cache.get_scan_settings()
     if settings is None and guild_id is not None:
         settings_started = time.perf_counter()
-        settings = await mysql.get_settings(
-            guild_id,
-            [
-                NSFW_IMAGE_CATEGORY_SETTING,
-                NSFW_TEXT_CATEGORY_SETTING,
-                NSFW_THRESHOLD_SETTING,
-                NSFW_TEXT_THRESHOLD_SETTING,
-                NSFW_HIGH_ACCURACY_SETTING,
-                NSFW_TEXT_ENABLED_SETTING,
-                NSFW_TEXT_STRIKES_ONLY_SETTING,
-                NSFW_TEXT_SEND_EMBED_SETTING,
-            ],
-        )
+        try:
+            settings = await mysql.get_settings(guild_id)
+        except Exception:
+            settings = {}
         latency_tracker.record_step(
             "attachment_settings_lookup",
             (time.perf_counter() - settings_started) * 1000,
