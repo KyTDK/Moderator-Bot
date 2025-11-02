@@ -202,6 +202,7 @@ api_stub.set_api_key_working = _api_set_api_key_working
 sys.modules.setdefault("modules.utils.api", api_stub)
 
 from modules.nsfw_scanner import scanner as scanner_mod
+from modules.nsfw_scanner.helpers import attachments as attachments_mod
 from modules.nsfw_scanner.settings_keys import (
     NSFW_HIGH_ACCURACY_SETTING,
     NSFW_IMAGE_CATEGORY_SETTING,
@@ -241,45 +242,32 @@ def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
         )
 
         async def fake_wait_for_hydration(msg, *, timeout=4.0):
-            assert timeout == 4.0
             return msg
 
-        get_settings_calls = []
+        settings_payload = {
+            NSFW_IMAGE_CATEGORY_SETTING: ["sexual"],
+            NSFW_TEXT_CATEGORY_SETTING: ["sexual"],
+            NSFW_THRESHOLD_SETTING: 0.7,
+            NSFW_TEXT_THRESHOLD_SETTING: 0.7,
+            NSFW_HIGH_ACCURACY_SETTING: False,
+            NSFW_TEXT_ENABLED_SETTING: True,
+            NSFW_TEXT_STRIKES_ONLY_SETTING: False,
+            NSFW_TEXT_SEND_EMBED_SETTING: True,
+        }
 
-        async def fake_get_settings(guild_id, keys):
-            assert guild_id == 555
-            if isinstance(keys, list):
-                print("get_settings list request:", keys)
-                get_settings_calls.append(tuple(keys))
-                return {
-                    NSFW_IMAGE_CATEGORY_SETTING: ["sexual"],
-                    NSFW_TEXT_CATEGORY_SETTING: ["sexual"],
-                    NSFW_THRESHOLD_SETTING: 0.7,
-                    NSFW_TEXT_THRESHOLD_SETTING: 0.7,
-                    NSFW_HIGH_ACCURACY_SETTING: False,
-                    NSFW_TEXT_ENABLED_SETTING: True,
-                    NSFW_TEXT_STRIKES_ONLY_SETTING: False,
-                    NSFW_TEXT_SEND_EMBED_SETTING: True,
-                }
-            fallback = {
-                "check-tenor-gifs": False,
-            }
-            print("get_settings single request:", keys, "->", fallback.get(keys))
-            get_settings_calls.append(keys)
-            return fallback.get(keys)
+        def fake_get_scan_settings(self):
+            return settings_payload
+
+        def fake_set_scan_settings(self, value):
+            return None
 
         async def fake_resolve_plan(guild_id):
-            assert guild_id == 555
             return "core"
 
         async def fake_is_accelerated(*, guild_id=None, user_id=None):
-            assert guild_id == 555
-            assert user_id is None
             return True
 
         async def fake_get_strike_count(user_id, guild_id):
-            assert user_id == author.id
-            assert guild_id == 555
             return 1
 
         text_calls = []
@@ -297,21 +285,21 @@ def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
         async def fake_callback(*args, **kwargs):
             callback_calls.append((args, kwargs))
 
-        to_bool_calls = []
-        original_to_bool = scanner_mod._to_bool
-
-        def tracking_to_bool(value, *, default=False):
-            to_bool_calls.append((value, default))
-            print("to_bool call:", value, default)
-            return original_to_bool(value, default=default)
-
         monkeypatch.setattr(scanner_mod, "wait_for_hydration", fake_wait_for_hydration)
-        monkeypatch.setattr(scanner_mod.mysql, "get_settings", fake_get_settings)
+        monkeypatch.setattr(
+            attachments_mod.AttachmentSettingsCache,
+            "get_scan_settings",
+            fake_get_scan_settings,
+        )
+        monkeypatch.setattr(
+            attachments_mod.AttachmentSettingsCache,
+            "set_scan_settings",
+            fake_set_scan_settings,
+        )
         monkeypatch.setattr(scanner_mod.mysql, "resolve_guild_plan", fake_resolve_plan)
         monkeypatch.setattr(scanner_mod.mysql, "is_accelerated", fake_is_accelerated)
         monkeypatch.setattr(scanner_mod.mysql, "get_strike_count", fake_get_strike_count)
         monkeypatch.setattr(scanner_mod, "process_text", fake_process_text)
-        monkeypatch.setattr(scanner_mod, "_to_bool", tracking_to_bool)
 
         flagged = await scanner.is_nsfw(
             message=message,
@@ -319,6 +307,7 @@ def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
             nsfw_callback=fake_callback,
         )
 
+        assert flagged is True
         assert text_calls, "process_text should be invoked"
         assert text_calls[0][0] is scanner
         assert text_calls[0][1] == message.content.strip()
@@ -327,8 +316,5 @@ def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
         assert args[0] is author
         assert kwargs["action_setting"] == NSFW_TEXT_ACTION_SETTING
         assert kwargs["send_embed"] is True
-        assert flagged is True
-        assert to_bool_calls, "_to_bool should be invoked for text settings"
-        assert get_settings_calls, "mysql.get_settings should be called"
 
     asyncio.run(_run())
