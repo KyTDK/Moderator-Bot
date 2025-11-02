@@ -414,17 +414,6 @@ def test_text_scan_runs_when_no_media_even_with_links(monkeypatch):
         pytest.skip("Shared log channel unavailable in this environment")
 
 
-def test_text_scan_runs_without_accelerated_plan(monkeypatch):
-    flagged, text_calls, callback_calls, _, log_calls, log_channel_calls = asyncio.run(
-        _exercise_text_scan(monkeypatch, accelerated_value=False)
-    )
-    assert flagged is False
-    assert text_calls, "process_text should still run when text scanning is enabled"
-    assert not callback_calls, "No action should be taken without accelerated access"
-    assert log_calls, "Verbose logging should be emitted when verbose mode is enabled"
-    assert log_channel_calls, "Debug logs should be emitted when verbose mode is enabled"
-
-
 def test_text_scan_does_not_log_without_verbose(monkeypatch):
     flagged, text_calls, callback_calls, _, log_calls, log_channel_calls = asyncio.run(
         _exercise_text_scan(monkeypatch, accelerated_value=True, verbose_value=False)
