@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import hashlib
 import logging
 import os
 import time
@@ -282,6 +283,7 @@ async def moderator_api(
     had_openai_timeout = False
     had_http_timeout = False
     had_connection_error = False
+    had_internal_error = False
 
     def _build_error_context(
         *,
@@ -307,6 +309,12 @@ async def moderator_api(
             payload_bytes = image_state.get("payload_bytes")
             if isinstance(payload_bytes, (bytes, bytearray)):
                 context_parts.append(f"image_payload_bytes={len(payload_bytes)}")
+                try:
+                    payload_hash = hashlib.sha256(payload_bytes).hexdigest()[:16]
+                except Exception:
+                    payload_hash = None
+                if payload_hash:
+                    context_parts.append(f"image_payload_sha256={payload_hash}")
             payload_mime = image_state.get("payload_mime")
             if payload_mime:
                 context_parts.append(f"image_payload_mime={payload_mime}")
@@ -334,6 +342,32 @@ async def moderator_api(
             retry_after = response.headers.get("retry-after")
             if retry_after:
                 context_parts.append(f"retry_after={retry_after}")
+            header_request_id = (
+                response.headers.get("x-request-id")
+                or response.headers.get("request-id")
+            )
+            if header_request_id:
+                context_parts.append(f"header_request_id={header_request_id}")
+            error_json = None
+            try:
+                error_json = response.json()
+            except Exception:
+                error_json = None
+            if isinstance(error_json, dict):
+                error_payload = error_json.get("error")
+                if isinstance(error_payload, dict):
+                    error_type = error_payload.get("type")
+                    if error_type:
+                        context_parts.append(f"error_type={error_type}")
+                    error_code = error_payload.get("code")
+                    if error_code:
+                        context_parts.append(f"error_code={error_code}")
+                    error_message = error_payload.get("message")
+                    if error_message:
+                        sanitized_message = error_message[:256].replace("\n", " ")
+                        context_parts.append(
+                            f"error_message={sanitized_message}"
+                        )
             try:
                 body_preview = response.text
             except Exception:
@@ -457,6 +491,7 @@ async def moderator_api(
                 attempt_number=attempt_number,
                 request_model=request_model,
             )
+            had_internal_error = True
             if (
                 image_state
                 and not image_state.get("use_remote")
@@ -662,5 +697,7 @@ async def moderator_api(
         result["reason"] = "openai_moderation_http_timeout"
     elif had_connection_error:
         result["reason"] = "openai_moderation_connection_error"
+    elif had_internal_error:
+        result["reason"] = "openai_moderation_internal_error"
 
     return _finalize(result)
