@@ -220,13 +220,6 @@ class TextScanPipeline:
             payload_metadata=text_metadata,
         )
 
-        log.debug(
-            "Text scan completed: guild_id=%s message_id=%s result=%s",
-            guild_id,
-            getattr(message, "id", None),
-            text_result,
-        )
-
         verbose_enabled = False
         if message is not None and guild_id is not None:
             if settings_cache.has_verbose():
@@ -263,7 +256,22 @@ class TextScanPipeline:
                         bot=self._bot,
                     )
                 except Exception as exc:
-                    print(f"[verbose-text] Failed to send text verbose embed: {exc}")
+                    error_embed = discord.Embed(
+                        title="NSFW Text Verbose Delivery Failed",
+                        description=f"Channel `{channel_id}`",
+                        color=discord.Color.red(),
+                    )
+                    error_embed.add_field(
+                        name="Error",
+                        value=f"`{type(exc).__name__}`: {exc}",
+                        inline=False,
+                    )
+                    await send_log_message(
+                        self._bot,
+                        embed=error_embed,
+                        allowed_mentions=discord.AllowedMentions.none(),
+                        context="nsfw_scanner.text_verbose_failure",
+                    )
 
             try:
                 log_embed = verbose_embed.copy()
@@ -275,7 +283,22 @@ class TextScanPipeline:
                     context="nsfw_scanner.text_scan",
                 )
             except Exception as exc:
-                log.debug("Failed to send text scan log: %s", exc, exc_info=True)
+                error_embed = discord.Embed(
+                    title="NSFW Text Scan Log Failure",
+                    description="Failed to send verbose debug embed.",
+                    color=discord.Color.red(),
+                )
+                error_embed.add_field(
+                    name="Error",
+                    value=f"`{type(exc).__name__}`: {exc}",
+                    inline=False,
+                )
+                await send_log_message(
+                    self._bot,
+                    embed=error_embed,
+                    allowed_mentions=discord.AllowedMentions.none(),
+                    context="nsfw_scanner.text_scan_log_failure",
+                )
 
         if not (text_result and text_result.get("is_nsfw")):
             return False
