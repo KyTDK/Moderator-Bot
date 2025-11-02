@@ -7,7 +7,6 @@ from modules.utils import text_vectors
 
 from ..constants import (
     ADD_SFW_VECTOR,
-    HIGH_ACCURACY_SIMILARITY,
     TEXT_SIMILARITY_THRESHOLD,
     VECTOR_REFRESH_DIVISOR,
 )
@@ -65,14 +64,7 @@ async def process_text(
             schedule_text_vector_delete(vector_id)
 
     milvus_available = text_vectors.is_available()
-    allow_similarity_shortcut = (
-        matches
-        and not refresh_triggered
-        and (
-            not ctx.high_accuracy
-            or max_similarity >= HIGH_ACCURACY_SIMILARITY
-        )
-    )
+    allow_similarity_shortcut = matches and not refresh_triggered
 
     if allow_similarity_shortcut:
         for match in matches:
