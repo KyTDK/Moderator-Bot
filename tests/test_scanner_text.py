@@ -265,7 +265,14 @@ from modules.nsfw_scanner.settings_keys import (
 )
 
 
-async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool, verbose_value: bool = True):
+async def _exercise_text_scan(
+    monkeypatch,
+    *,
+    accelerated_value: bool,
+    verbose_value: bool = True,
+    scan_media: bool = True,
+    scan_text: bool = True,
+):
     """Run the text scanning pipeline with controllable acceleration flag."""
     author = SimpleNamespace(
         id=42,
@@ -393,6 +400,8 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool, verbose_v
         message=message,
         guild_id=555,
         nsfw_callback=fake_callback,
+        scan_media=scan_media,
+        scan_text=scan_text,
     )
 
     return flagged, text_calls, callback_calls, author, log_calls, log_channel_calls
@@ -423,3 +432,17 @@ def test_text_scan_does_not_log_without_verbose(monkeypatch):
     assert callback_calls, "Actions should fire when acceleration allows it"
     assert not log_calls, "Verbose channel logging should be suppressed without nsfw-verbose"
     assert not log_channel_calls, "Debug logs should be suppressed without nsfw-verbose"
+
+
+def test_text_scan_runs_when_media_scanning_disabled(monkeypatch):
+    flagged, text_calls, callback_calls, _, _, _ = asyncio.run(
+        _exercise_text_scan(
+            monkeypatch,
+            accelerated_value=True,
+            scan_media=False,
+            scan_text=True,
+        )
+    )
+    assert flagged is True
+    assert text_calls, "process_text should still run when media scanning is disabled"
+    assert callback_calls, "Text actions should still fire when only text scanning is enabled"

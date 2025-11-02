@@ -6,6 +6,7 @@ import discord
 
 from modules.moderation import strike
 from modules.nsfw_scanner import handle_nsfw_content
+from modules.nsfw_scanner.settings_keys import NSFW_TEXT_ENABLED_SETTING
 from modules.utils import mod_logging, mysql
 from modules.utils.discord_utils import safe_get_channel, safe_get_member, safe_get_message
 
@@ -24,7 +25,11 @@ class ModerationHandlers:
             return
 
         guild_id = message.guild.id
-        if not await self._nsfw_enabled(guild_id):
+        nsfw_enabled = await self._nsfw_enabled(guild_id)
+        text_scanning_enabled = bool(
+            await mysql.get_settings(guild_id, NSFW_TEXT_ENABLED_SETTING)
+        )
+        if not nsfw_enabled and not text_scanning_enabled:
             return
 
         scan_age_restricted = await mysql.get_settings(guild_id, "scan-age-restricted")
@@ -48,6 +53,8 @@ class ModerationHandlers:
                 guild_id=guild_id,
                 nsfw_callback=handle_nsfw_content,
                 overall_started_at=queue_started_at,
+                scan_text=text_scanning_enabled,
+                scan_media=nsfw_enabled,
             )
             if not flagged:
                 return

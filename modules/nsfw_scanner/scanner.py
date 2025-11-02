@@ -413,6 +413,9 @@ class NSFWScanner:
         url: str | None = None,
         member: discord.Member | None = None,
         overall_started_at: float | None = None,
+        *,
+        scan_text: bool = True,
+        scan_media: bool = True,
     ) -> bool:
 
         settings_cache = AttachmentSettingsCache()
@@ -478,12 +481,12 @@ class NSFWScanner:
         snapshots = getattr(message, "message_snapshots", None)
         snapshot = snapshots[0] if snapshots else None
 
-        attachments = message.attachments if message.attachments else (snapshot.attachments if snapshot else [])
-        embeds = message.embeds if message.embeds else (snapshot.embeds if snapshot else [])
-        stickers = message.stickers if message.stickers else (snapshot.stickers if snapshot else [])
+        text_content = ""
+        if message is not None:
+            text_content = (message.content or "").strip()
 
-        text_content = (message.content or "").strip()
-        if text_content:
+        text_flagged = False
+        if scan_text and text_content:
             text_flagged = await self._text_pipeline.scan(
                 scanner=self,
                 message=message,
@@ -495,8 +498,15 @@ class NSFWScanner:
             if text_flagged:
                 return True
 
+        if not scan_media:
+            return bool(text_flagged)
+
+        attachments = message.attachments if message.attachments else (snapshot.attachments if snapshot else [])
+        embeds = message.embeds if message.embeds else (snapshot.embeds if snapshot else [])
+        stickers = message.stickers if message.stickers else (snapshot.stickers if snapshot else [])
+
         # hydration fallback
-        if not (attachments or embeds or stickers) and "http" in (message.content or ""):
+        if not (attachments or embeds or stickers) and "http" in (text_content or ""):
             hydrated = await wait_for_hydration(message)
             if hydrated is not None:
                 message = hydrated
