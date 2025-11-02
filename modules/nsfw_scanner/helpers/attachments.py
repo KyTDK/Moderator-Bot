@@ -493,9 +493,6 @@ async def check_attachment(
             "unsupported_type",
             duration_override_ms=latency_tracker.total_duration_ms(),
         )
-        print(
-            f"[check_attachment] Unsupported file type: {detected_mime or file_type} for {filename}"
-        )
         return False
 
     translator = _resolve_translator(scanner)
