@@ -231,6 +231,7 @@ images_spec = importlib.util.spec_from_file_location(
 images_mod = importlib.util.module_from_spec(images_spec)
 assert images_spec.loader is not None
 images_spec.loader.exec_module(images_mod)
+context_mod = importlib.import_module("modules.nsfw_scanner.helpers.context")
 
 
 @pytest.fixture
@@ -256,11 +257,13 @@ async def test_process_image_reuses_png_without_conversion(monkeypatch, tmp_path
         }
 
     monkeypatch.setattr(images_mod.mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(context_mod.mysql, "get_settings", fake_get_settings)
 
     async def fake_is_accelerated(**_kwargs):
         return False
 
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
+    monkeypatch.setattr(context_mod.mysql, "is_accelerated", fake_is_accelerated)
 
     result = await images_mod.process_image(
         scanner=types.SimpleNamespace(bot=None),
@@ -298,7 +301,9 @@ async def test_process_image_reuses_jpeg_when_possible(monkeypatch, tmp_path):
         return False
 
     monkeypatch.setattr(images_mod.mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(context_mod.mysql, "get_settings", fake_get_settings)
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
+    monkeypatch.setattr(context_mod.mysql, "is_accelerated", fake_is_accelerated)
 
     result = await images_mod.process_image(
         scanner=types.SimpleNamespace(bot=None),
@@ -337,7 +342,9 @@ async def test_process_image_converts_unsupported_formats(monkeypatch, tmp_path)
         return False
 
     monkeypatch.setattr(images_mod.mysql, "get_settings", fake_get_settings)
+    monkeypatch.setattr(context_mod.mysql, "get_settings", fake_get_settings)
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
+    monkeypatch.setattr(context_mod.mysql, "is_accelerated", fake_is_accelerated)
 
     result = await images_mod.process_image(
         scanner=types.SimpleNamespace(bot=None),
