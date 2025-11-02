@@ -389,20 +389,22 @@ async def check_attachment(
     scan_result: dict[str, Any] | None = None
 
     settings = settings_cache.get_scan_settings()
-    if settings is None and guild_id is not None:
-        settings_started = time.perf_counter()
-        try:
-            settings = await mysql.get_settings(guild_id)
-        except Exception:
+    if settings is None:
+        if guild_id is not None:
+            settings_started = time.perf_counter()
+            try:
+                settings = await mysql.get_settings(guild_id)
+            except Exception:
+                settings = {}
+            latency_tracker.record_step(
+                "attachment_settings_lookup",
+                (time.perf_counter() - settings_started) * 1000,
+                label="Settings Lookup",
+            )
+            settings_cache.set_scan_settings(settings)
+            settings = settings_cache.get_scan_settings()
+        else:
             settings = {}
-        latency_tracker.record_step(
-            "attachment_settings_lookup",
-            (time.perf_counter() - settings_started) * 1000,
-            label="Settings Lookup",
-        )
-        settings_cache.set_scan_settings(settings)
-        settings = settings_cache.get_scan_settings()
-    settings = settings or {}
 
     accelerated_value = await _get_accelerated()
     context_started = time.perf_counter()
@@ -416,7 +418,7 @@ async def check_attachment(
         (time.perf_counter() - context_started) * 1000,
         label="Build Scan Context",
     )
-    pipeline_accelerated = bool(context.accelerated)
+    pipeline_accelerated = context.accelerated
 
     payload_metadata: dict[str, Any] | None = {
         "guild_id": guild_id,
@@ -521,9 +523,9 @@ async def check_attachment(
         verbose_enabled = False
         if message is not None and guild_id is not None:
             if settings_cache.has_verbose():
-                verbose_enabled = bool(settings_cache.get_verbose())
+                verbose_enabled = settings_cache.get_verbose()
             else:
-                verbose_enabled = bool(await mysql.get_settings(guild_id, "nsfw-verbose"))
+                verbose_enabled = settings.get("nsfw-verbose")
                 settings_cache.set_verbose(verbose_enabled)
         if message is not None and verbose_enabled:
             decision_key = "unknown"

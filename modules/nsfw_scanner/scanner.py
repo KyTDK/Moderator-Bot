@@ -459,14 +459,16 @@ class NSFWScanner:
         download_cap_bytes = await _resolve_download_cap_bytes()
 
         settings_map = settings_cache.get_scan_settings()
-        if settings_map is None and guild_id is not None:
-            try:
-                settings_map = await mysql.get_settings(guild_id)
-            except Exception:
+        if settings_map is None:
+            if guild_id is not None:
+                try:
+                    settings_map = await mysql.get_settings(guild_id)
+                except Exception:
+                    settings_map = {}
+                settings_cache.set_scan_settings(settings_map)
+                settings_map = settings_cache.get_scan_settings()
+            else:
                 settings_map = {}
-            settings_cache.set_scan_settings(settings_map)
-            settings_map = settings_cache.get_scan_settings()
-        settings_map = settings_map or {}
 
         if url:
             return await self._download_and_scan(

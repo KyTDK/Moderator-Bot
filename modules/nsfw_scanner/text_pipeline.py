@@ -147,30 +147,24 @@ class TextScanPipeline:
         strike_count: int | None = None
 
         if guild_id is not None:
-            text_enabled_value = settings_map.get(NSFW_TEXT_ENABLED_SETTING, False)
-            if not isinstance(text_enabled_value, bool):
-                text_enabled_value = bool(text_enabled_value)
-            text_scanning_enabled = text_enabled_value
+            text_scanning_enabled = bool(settings_map.get(NSFW_TEXT_ENABLED_SETTING))
             settings_cache.set_text_enabled(text_scanning_enabled)
         if not text_scanning_enabled:
             return False
 
         if guild_id is not None and text_scanning_enabled:
             if settings_cache.has_accelerated():
-                accelerated_allowed = bool(settings_cache.get_accelerated())
+                accelerated_allowed = settings_cache.get_accelerated()
             else:
                 try:
-                    accelerated_allowed = bool(await mysql.is_accelerated(guild_id=guild_id))
+                    accelerated_allowed = await mysql.is_accelerated(guild_id=guild_id)
                 except Exception:
                     accelerated_allowed = False
                 settings_cache.set_accelerated(accelerated_allowed)
 
             actions_allowed = bool(accelerated_allowed)
 
-            strikes_only_value = settings_map.get(NSFW_TEXT_STRIKES_ONLY_SETTING, False)
-            if not isinstance(strikes_only_value, bool):
-                strikes_only_value = bool(strikes_only_value)
-            strikes_only = strikes_only_value
+            strikes_only = bool(settings_map.get(NSFW_TEXT_STRIKES_ONLY_SETTING))
             if strikes_only:
                 author_id = getattr(getattr(message, "author", None), "id", None)
                 strike_count = 0
@@ -182,10 +176,7 @@ class TextScanPipeline:
                 if strike_count <= 0:
                     return False
 
-            send_text_embed_value = settings_map.get(NSFW_TEXT_SEND_EMBED_SETTING, True)
-            if not isinstance(send_text_embed_value, bool):
-                send_text_embed_value = bool(send_text_embed_value)
-            send_text_embed = send_text_embed_value
+            send_text_embed = settings_map.get(NSFW_TEXT_SEND_EMBED_SETTING, True)
         else:
             actions_allowed = False
 
@@ -223,14 +214,9 @@ class TextScanPipeline:
         verbose_enabled = False
         if message is not None and guild_id is not None:
             if settings_cache.has_verbose():
-                verbose_enabled = bool(settings_cache.get_verbose())
+                verbose_enabled = settings_cache.get_verbose()
             else:
-                try:
-                    verbose_enabled = bool(
-                        await mysql.get_settings(guild_id, "nsfw-verbose")
-                    )
-                except Exception:
-                    verbose_enabled = False
+                verbose_enabled = settings_map.get("nsfw-verbose")
                 settings_cache.set_verbose(verbose_enabled)
 
         verbose_embed: discord.Embed | None = None

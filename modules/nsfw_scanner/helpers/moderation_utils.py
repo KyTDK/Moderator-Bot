@@ -95,27 +95,29 @@ async def resolve_moderation_settings(
             )
         settings_map = await mysql.get_settings(guild_id, requested_settings)
 
-    resolved_categories = allowed_categories
-    if resolved_categories is None:
-        resolved_categories = []
-        settings_source = settings_map or {}
-        if use_text_settings:
-            resolved_categories = settings_source.get(NSFW_TEXT_CATEGORY_SETTING) or []
-        if not resolved_categories:
-            resolved_categories = settings_source.get(NSFW_IMAGE_CATEGORY_SETTING) or []
+    settings_source = settings_map or {}
 
-    resolved_threshold = threshold
-    if resolved_threshold is None:
-        settings_source = settings_map or {}
-        threshold_value = None
-        if use_text_settings:
-            threshold_value = settings_source.get(NSFW_TEXT_THRESHOLD_SETTING)
+    if allowed_categories is None:
+        resolved_categories = settings_source.get(NSFW_TEXT_CATEGORY_SETTING) if use_text_settings else None
+        if not resolved_categories:
+            resolved_categories = settings_source.get(NSFW_IMAGE_CATEGORY_SETTING, [])
+    else:
+        resolved_categories = allowed_categories
+
+    if threshold is None:
+        threshold_value = (
+            settings_source.get(NSFW_TEXT_THRESHOLD_SETTING)
+            if use_text_settings
+            else None
+        )
         if threshold_value is None:
             threshold_value = settings_source.get(NSFW_THRESHOLD_SETTING, 0.7)
         try:
             resolved_threshold = float(threshold_value)
         except (TypeError, ValueError):
             resolved_threshold = 0.7
+    else:
+        resolved_threshold = threshold
 
     if resolved_categories is None:
         resolved_categories = []
