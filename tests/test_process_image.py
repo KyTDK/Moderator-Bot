@@ -85,6 +85,34 @@ sys.modules["modules.utils.mod_logging"] = mod_logging_stub
 discord_stub = types.ModuleType("discord")
 
 
+class _DummyLocale(str):
+    __slots__ = ("value",)
+
+    def __new__(cls, value: str) -> "_DummyLocale":
+        instance = str.__new__(cls, value)
+        instance.value = value
+        return instance
+
+
+for _name, _value in {
+    "english_us": "en-US",
+    "english_gb": "en-GB",
+    "french": "fr",
+    "spanish": "es",
+    "polish": "pl",
+    "portuguese_brazil": "pt-BR",
+    "portuguese": "pt",
+    "russian": "ru",
+    "swedish": "sv",
+    "vietnamese": "vi",
+    "chinese_simplified": "zh-CN",
+}.items():
+    setattr(_DummyLocale, _name, _DummyLocale(_value))
+
+
+discord_stub.Locale = _DummyLocale
+
+
 class _DummyEmbed:
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -144,6 +172,17 @@ sys.modules["discord"] = discord_stub
 
 discord_ext_stub = types.ModuleType("discord.ext")
 commands_stub = types.ModuleType("discord.ext.commands")
+tasks_stub = types.ModuleType("discord.ext.tasks")
+
+
+def _loop(*_args, **_kwargs):
+    def _decorator(func):
+        return func
+
+    return _decorator
+
+
+tasks_stub.loop = _loop
 
 
 class _DummyBot:
@@ -164,12 +203,15 @@ def _identity_decorator(*_args, **_kwargs):
 
 commands_stub.Bot = _DummyBot
 commands_stub.Cog = _DummyCog
+commands_stub.AutoShardedBot = _DummyBot
 commands_stub.command = _identity_decorator
 commands_stub.Cog.listener = staticmethod(_identity_decorator)
 discord_ext_stub.commands = commands_stub
+discord_ext_stub.tasks = tasks_stub
 
 sys.modules["discord.ext"] = discord_ext_stub
 sys.modules["discord.ext.commands"] = commands_stub
+sys.modules["discord.ext.tasks"] = tasks_stub
 
 # Provide stubs before importing the module to avoid heavy dependencies.
 modules_pkg = importlib.import_module("modules")

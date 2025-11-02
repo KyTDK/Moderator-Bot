@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import enum
 import os
 import sys
 import types
@@ -59,6 +60,34 @@ class _DummyAllowedMentions:
 
 
 discord_stub = types.ModuleType("discord")
+
+
+class _DummyLocale(str):
+    __slots__ = ("value",)
+
+    def __new__(cls, value: str) -> "_DummyLocale":
+        instance = str.__new__(cls, value)
+        instance.value = value
+        return instance
+
+
+for _name, _value in {
+    "english_us": "en-US",
+    "english_gb": "en-GB",
+    "french": "fr",
+    "spanish": "es",
+    "polish": "pl",
+    "portuguese_brazil": "pt-BR",
+    "portuguese": "pt",
+    "russian": "ru",
+    "swedish": "sv",
+    "vietnamese": "vi",
+    "chinese_simplified": "zh-CN",
+}.items():
+    setattr(_DummyLocale, _name, _DummyLocale(_value))
+
+
+discord_stub.Locale = _DummyLocale
 discord_stub.Embed = _DummyEmbed
 discord_stub.Color = _DummyColor
 discord_stub.AllowedMentions = _DummyAllowedMentions
@@ -75,13 +104,24 @@ discord_stub.Guild = type("Guild", (), {})
 discord_stub.Member = type("Member", (), {})
 discord_stub.Role = type("Role", (), {})
 discord_stub.utils = types.SimpleNamespace(get=lambda *_args, **_kwargs: None)
-discord_stub.app_commands = types.SimpleNamespace(check=lambda func: func)
 discord_stub.abc = types.SimpleNamespace(Messageable=object)
 
 sys.modules["discord"] = discord_stub
 
 discord_ext_stub = types.ModuleType("discord.ext")
 commands_stub = types.ModuleType("discord.ext.commands")
+tasks_stub = types.ModuleType("discord.ext.tasks")
+app_commands_module = types.ModuleType("discord.app_commands")
+
+
+def _loop(*_args, **_kwargs):
+    def _decorator(func):
+        return func
+
+    return _decorator
+
+
+tasks_stub.loop = _loop
 
 
 class _DummyBot:
@@ -102,12 +142,61 @@ def _identity_decorator(*_args, **_kwargs):
 
 commands_stub.Bot = _DummyBot
 commands_stub.Cog = _DummyCog
+commands_stub.AutoShardedBot = _DummyBot
 commands_stub.command = _identity_decorator
 commands_stub.Cog.listener = staticmethod(_identity_decorator)
 discord_ext_stub.commands = commands_stub
+discord_ext_stub.tasks = tasks_stub
 
 sys.modules["discord.ext"] = discord_ext_stub
 sys.modules["discord.ext.commands"] = commands_stub
+sys.modules["discord.ext.tasks"] = tasks_stub
+sys.modules["discord.app_commands"] = app_commands_module
+
+
+class _Translator:
+    async def load(self) -> None:  # pragma: no cover - compatibility shim
+        return None
+
+    async def translate(self, *_args, **_kwargs):  # pragma: no cover - compatibility shim
+        raise NotImplementedError
+
+
+class _TranslationContextLocation(enum.Enum):
+    command_name = enum.auto()
+    command_description = enum.auto()
+    group_name = enum.auto()
+    group_description = enum.auto()
+    parameter_name = enum.auto()
+    parameter_description = enum.auto()
+    choice_name = enum.auto()
+
+
+class _TranslationContext:
+    def __init__(self, *, location, data=None):
+        self.location = location
+        self.data = data
+
+
+class _LocaleStr(str):
+    __slots__ = ("extras", "message")
+
+    def __new__(cls, value: str, **extras):
+        instance = str.__new__(cls, value)
+        instance.extras = extras
+        instance.message = value
+        return instance
+
+
+def _locale_str(value: str, /, **extras):
+    return _LocaleStr(value, **extras)
+
+
+app_commands_module.Translator = _Translator
+app_commands_module.TranslationContextLocation = _TranslationContextLocation
+app_commands_module.TranslationContext = _TranslationContext
+app_commands_module.locale_str = _locale_str
+discord_stub.app_commands = app_commands_module
 
 importlib.import_module("modules")
 utils_pkg = importlib.import_module("modules.utils")

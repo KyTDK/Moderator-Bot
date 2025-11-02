@@ -1,4 +1,5 @@
 import asyncio
+import enum
 import pytest
 import sys
 from pathlib import Path
@@ -24,6 +25,34 @@ pillow_avif_stub = types.ModuleType("pillow_avif")
 sys.modules.setdefault("pillow_avif", pillow_avif_stub)
 
 discord_stub = types.ModuleType("discord")
+
+
+class _DummyLocale(str):
+    __slots__ = ("value",)
+
+    def __new__(cls, value: str) -> "_DummyLocale":
+        instance = str.__new__(cls, value)
+        instance.value = value
+        return instance
+
+
+for _name, _value in {
+    "english_us": "en-US",
+    "english_gb": "en-GB",
+    "french": "fr",
+    "spanish": "es",
+    "polish": "pl",
+    "portuguese_brazil": "pt-BR",
+    "portuguese": "pt",
+    "russian": "ru",
+    "swedish": "sv",
+    "vietnamese": "vi",
+    "chinese_simplified": "zh-CN",
+}.items():
+    setattr(_DummyLocale, _name, _DummyLocale(_value))
+
+
+discord_stub.Locale = _DummyLocale
 
 
 class _DummyEmbed:
@@ -120,10 +149,6 @@ discord_utils_stub.escape_mentions = _escape_mentions
 sys.modules.setdefault("discord.utils", discord_utils_stub)
 
 discord_stub.utils = discord_utils_stub
-discord_stub.app_commands = types.SimpleNamespace(
-    CommandTree=object,
-    check=lambda func: func,
-)
 discord_stub.abc = types.SimpleNamespace(Messageable=object, User=object)
 
 errors_stub = types.ModuleType("discord.errors")
@@ -135,9 +160,65 @@ discord_stub.errors = errors_stub
 
 discord_ext_stub = types.ModuleType("discord.ext")
 commands_stub = types.ModuleType("discord.ext.commands")
+tasks_stub = types.ModuleType("discord.ext.tasks")
+
+
+def _loop(*_args, **_kwargs):
+    def _decorator(func):
+        return func
+
+    return _decorator
+
+
+tasks_stub.loop = _loop
 app_commands_module = types.ModuleType("discord.app_commands")
 app_commands_module.CommandTree = object
 app_commands_module.check = lambda func: func
+
+
+class _Translator:
+    async def load(self) -> None:  # pragma: no cover - compatibility shim
+        return None
+
+    async def translate(self, *_args, **_kwargs):  # pragma: no cover - compatibility shim
+        raise NotImplementedError
+
+
+class _TranslationContextLocation(enum.Enum):
+    command_name = enum.auto()
+    command_description = enum.auto()
+    group_name = enum.auto()
+    group_description = enum.auto()
+    parameter_name = enum.auto()
+    parameter_description = enum.auto()
+    choice_name = enum.auto()
+
+
+class _TranslationContext:
+    def __init__(self, *, location, data=None):
+        self.location = location
+        self.data = data
+
+
+class _LocaleStr(str):
+    __slots__ = ("extras", "message")
+
+    def __new__(cls, value: str, **extras):
+        instance = str.__new__(cls, value)
+        instance.extras = extras
+        instance.message = value
+        return instance
+
+
+def _locale_str(value: str, /, **extras):
+    return _LocaleStr(value, **extras)
+
+
+app_commands_module.Translator = _Translator
+app_commands_module.TranslationContextLocation = _TranslationContextLocation
+app_commands_module.TranslationContext = _TranslationContext
+app_commands_module.locale_str = _locale_str
+discord_stub.app_commands = app_commands_module
 
 
 class _DummyBot:
@@ -158,13 +239,16 @@ def _identity_decorator(*_args, **_kwargs):
 
 commands_stub.Bot = _DummyBot
 commands_stub.Cog = _DummyCog
+commands_stub.AutoShardedBot = _DummyBot
 commands_stub.command = _identity_decorator
 commands_stub.Cog.listener = staticmethod(_identity_decorator)
 discord_ext_stub.commands = commands_stub
+discord_ext_stub.tasks = tasks_stub
 
 sys.modules.setdefault("discord", discord_stub)
 sys.modules.setdefault("discord.ext", discord_ext_stub)
 sys.modules.setdefault("discord.ext.commands", commands_stub)
+sys.modules.setdefault("discord.ext.tasks", tasks_stub)
 sys.modules.setdefault("discord.app_commands", app_commands_module)
 
 clip_vectors_stub = types.ModuleType("modules.utils.clip_vectors")
