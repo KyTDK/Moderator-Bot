@@ -238,6 +238,16 @@ sys.modules["modules.utils.clip_vectors"] = clip_vectors_stub
 setattr(utils_pkg, "clip_vectors", clip_vectors_stub)
 
 mysql_stub = types.ModuleType("modules.utils.mysql")
+mysql_stub._settings_listeners: list[types.FunctionType | types.MethodType] = []
+
+
+class _ShardAssignment:
+    def __init__(self, shard_id=0, shard_count=1):
+        self.shard_id = shard_id
+        self.shard_count = shard_count
+
+
+mysql_stub.ShardAssignment = _ShardAssignment
 
 
 async def _get_settings(_guild_id, _keys):
@@ -254,6 +264,39 @@ async def _is_accelerated(*_args, **_kwargs):
 
 mysql_stub.get_settings = _get_settings
 mysql_stub.is_accelerated = _is_accelerated
+async def _get_guild_locale(_guild_id):
+    return None
+
+
+async def _get_all_guild_locales():
+    return {}
+
+
+async def _add_guild(*_args, **_kwargs):
+    return None
+
+
+async def _remove_guild(*_args, **_kwargs):
+    return None
+
+
+def _add_settings_listener(callback):
+    mysql_stub._settings_listeners.append(callback)
+
+
+def _remove_settings_listener(callback):
+    try:
+        mysql_stub._settings_listeners.remove(callback)
+    except ValueError:
+        pass
+
+
+mysql_stub.get_guild_locale = _get_guild_locale
+mysql_stub.get_all_guild_locales = _get_all_guild_locales
+mysql_stub.add_guild = _add_guild
+mysql_stub.remove_guild = _remove_guild
+mysql_stub.add_settings_listener = _add_settings_listener
+mysql_stub.remove_settings_listener = _remove_settings_listener
 sys.modules["modules.utils.mysql"] = mysql_stub
 setattr(utils_pkg, "mysql", mysql_stub)
 
