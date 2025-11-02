@@ -458,15 +458,6 @@ class ScamDetectionCog(commands.Cog):
 
             if not is_scam:
                 return
-            
-            # Log the user and message
-            await execute_query(
-                """INSERT INTO scam_users
-                    (user_id,guild_id,matched_message_id,matched_pattern,matched_url)
-                VALUES (%s,%s,%s,%s,%s)
-                ON DUPLICATE KEY UPDATE first_detected=first_detected""",
-                (message.author.id, gid, message.id, matched_pattern, matched_url),
-            )
 
             if action_flag:
                 try:

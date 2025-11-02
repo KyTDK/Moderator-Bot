@@ -20,7 +20,6 @@ async def cleanup_orphaned_guilds(active_guild_ids):
         "banned_words",
         "timeouts",
         "scam_messages",
-        "scam_users",
         "scam_urls",
         "strikes",
         "api_pool",
