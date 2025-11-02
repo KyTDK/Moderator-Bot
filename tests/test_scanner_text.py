@@ -266,8 +266,6 @@ from modules.nsfw_scanner.settings_keys import (
 
 async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
     """Run the text scanning pipeline with controllable acceleration flag."""
-    scanner = scanner_mod.NSFWScanner(bot=SimpleNamespace())
-
     author = SimpleNamespace(
         id=42,
         mention="<@42>",
@@ -390,6 +388,9 @@ async def _exercise_text_scan(monkeypatch, *, accelerated_value: bool):
     monkeypatch.setattr(log_channel_module, "send_log_message", fake_send_log_message, raising=False)
     monkeypatch.setattr(text_pipeline_module, "send_log_message", fake_send_log_message, raising=False)
     monkeypatch.setattr(text_pipeline_module, "process_text", fake_process_text, raising=False)
+
+    scanner = scanner_mod.NSFWScanner(bot=SimpleNamespace())
+    scanner._text_pipeline = text_pipeline_module.TextScanPipeline(bot=scanner.bot)
 
     flagged = await scanner.is_nsfw(
         message=message,
