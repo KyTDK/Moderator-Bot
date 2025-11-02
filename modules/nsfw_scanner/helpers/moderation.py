@@ -497,9 +497,19 @@ async def moderator_api(
             continue
         except (openai.APIConnectionError, httpx.RemoteProtocolError) as exc:
             latency_tracker.stop("api_call_ms", api_started)
+            context_summary = _build_error_context(
+                exc=exc,
+                attempt_number=attempt_number,
+                request_model=request_model,
+            )
             print(
                 "[moderator_api] Connection error during moderation request on attempt "
-                f"{attempt_number}/{max_attempts}: {exc}."
+                f"{attempt_number}/{max_attempts}: {exc}. Context: {context_summary}"
+            )
+            log.debug(
+                "Connection error during moderation request. Context: %s",
+                context_summary,
+                exc_info=True,
             )
             had_connection_error = True
             latency_tracker.record_failure("api_connection_error")
