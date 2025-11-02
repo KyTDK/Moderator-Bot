@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -84,7 +85,7 @@ discord_stub.app_commands = types.SimpleNamespace(
     CommandTree=object,
     check=lambda func: func,
 )
-discord_stub.abc = types.SimpleNamespace(Messageable=object)
+discord_stub.abc = types.SimpleNamespace(Messageable=object, User=object)
 
 errors_stub = types.ModuleType("discord.errors")
 errors_stub.NotFound = discord_stub.NotFound
@@ -174,6 +175,31 @@ frames_stub.ExtractedFrame = object
 frames_stub.iter_extracted_frames = lambda *_args, **_kwargs: iter(())
 frames_stub.frames_are_similar = lambda *_args, **_kwargs: False
 sys.modules.setdefault("modules.nsfw_scanner.utils.frames", frames_stub)
+
+api_stub = types.ModuleType("modules.utils.api")
+
+
+async def _api_get_api_client(_guild_id):
+    return None, None
+
+
+async def _api_set_api_key_not_working(*_args, **_kwargs):
+    return None
+
+
+async def _api_is_api_key_working(*_args, **_kwargs):
+    return False
+
+
+async def _api_set_api_key_working(*_args, **_kwargs):
+    return None
+
+
+api_stub.get_api_client = _api_get_api_client
+api_stub.set_api_key_not_working = _api_set_api_key_not_working
+api_stub.is_api_key_working = _api_is_api_key_working
+api_stub.set_api_key_working = _api_set_api_key_working
+sys.modules.setdefault("modules.utils.api", api_stub)
 
 import pytest
 
