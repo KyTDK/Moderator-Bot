@@ -515,19 +515,6 @@ class NSFWScanner:
         embeds = message.embeds if message.embeds else (snapshot.embeds if snapshot else [])
         stickers = message.stickers if message.stickers else (snapshot.stickers if snapshot else [])
 
-        # hydration fallback
-        if not (attachments or embeds or stickers) and "http" in (message.content or ""):
-            hydrated = await wait_for_hydration(message)
-            if hydrated is not None:
-                message = hydrated
-            attachments = getattr(message, "attachments", None) or []
-            embeds = getattr(message, "embeds", None) or []
-            stickers = getattr(message, "stickers", None) or []
-
-        if message is None:
-            print("Message is None")
-            return False
-
         text_content = (message.content or "").strip()
         if text_content:
             text_scanning_enabled = False
@@ -627,6 +614,19 @@ class NSFWScanner:
                             send_embed=send_text_embed,
                         )
                     return True
+
+        # hydration fallback
+        if not (attachments or embeds or stickers) and "http" in (message.content or ""):
+            hydrated = await wait_for_hydration(message)
+            if hydrated is not None:
+                message = hydrated
+            attachments = getattr(message, "attachments", None) or []
+            embeds = getattr(message, "embeds", None) or []
+            stickers = getattr(message, "stickers", None) or []
+
+        if message is None:
+            print("Message is None")
+            return False
 
         for attachment in attachments:
             suffix = os.path.splitext(attachment.filename)[1] or ""
