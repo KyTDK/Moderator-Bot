@@ -18,185 +18,229 @@ os.environ.setdefault(
     base64.urlsafe_b64encode(b"0" * 32).decode(),
 )
 
-class _DummyEmbed:
-    def __init__(self, *_, **kwargs):
-        self.title = kwargs.get("title")
-        self.description = kwargs.get("description")
-        self.color = kwargs.get("color")
-        self.fields: list[dict[str, object]] = []
-        self.footer = None
+try:
+    import discord  # type: ignore
+    from discord import app_commands as app_commands_module  # type: ignore
 
-    def add_field(self, *, name, value, inline=True):
-        self.fields.append({"name": name, "value": value, "inline": inline})
+    _ALLOWED_MENTIONS_TYPE = discord.AllowedMentions
+except Exception:  # pragma: no cover - fallback when discord.py is unavailable
+    discord_stub = types.ModuleType("discord")
 
-    def set_footer(self, *, text=None):
-        self.footer = text
+    class _DummyEmbed:
+        def __init__(self, *_, **kwargs):
+            self.title = kwargs.get("title")
+            self.description = kwargs.get("description")
+            self.color = kwargs.get("color")
+            self.fields: list[dict[str, object]] = []
+            self.footer = None
 
-    def set_thumbnail(self, *_, **__):
-        return None
+        def add_field(self, *, name, value, inline=True):
+            self.fields.append({"name": name, "value": value, "inline": inline})
 
-    def set_image(self, *_, **__):
-        return None
+        def set_footer(self, *, text=None):
+            self.footer = text
 
+        def set_thumbnail(self, *_, **__):
+            return None
 
-class _DummyColor:
-    @staticmethod
-    def orange():
-        return 0xFFA500
+        def set_image(self, *_, **__):
+            return None
 
-    @staticmethod
-    def red():
-        return 0xFF0000
+    class _DummyColor:
+        @staticmethod
+        def orange():
+            return 0xFFA500
 
-    @staticmethod
-    def dark_grey():
-        return 0x2F3136
+        @staticmethod
+        def red():
+            return 0xFF0000
 
+        @staticmethod
+        def dark_grey():
+            return 0x2F3136
 
-class _DummyAllowedMentions:
-    @staticmethod
-    def none():
-        return _DummyAllowedMentions()
+    class _DummyAllowedMentions:
+        @staticmethod
+        def none():
+            return _DummyAllowedMentions()
 
+    class _DummyLocale(str):
+        __slots__ = ("value",)
 
-discord_stub = types.ModuleType("discord")
+        def __new__(cls, value: str) -> "_DummyLocale":
+            instance = str.__new__(cls, value)
+            instance.value = value
+            return instance
 
+    for _name, _value in {
+        "english_us": "en-US",
+        "english_gb": "en-GB",
+        "french": "fr",
+        "spanish": "es",
+        "polish": "pl",
+        "portuguese_brazil": "pt-BR",
+        "portuguese": "pt",
+        "russian": "ru",
+        "swedish": "sv",
+        "vietnamese": "vi",
+        "chinese_simplified": "zh-CN",
+    }.items():
+        setattr(_DummyLocale, _name, _DummyLocale(_value))
 
-class _DummyLocale(str):
-    __slots__ = ("value",)
+    class _DummyIntents:
+        def __init__(self):
+            self.members = False
+            self.presences = False
+            self.message_content = False
+            self.voice_states = False
 
-    def __new__(cls, value: str) -> "_DummyLocale":
-        instance = str.__new__(cls, value)
-        instance.value = value
-        return instance
+        @classmethod
+        def default(cls):
+            return cls()
 
+    class _DummyMemberCacheFlags:
+        def __init__(self):
+            self.voice = False
 
-for _name, _value in {
-    "english_us": "en-US",
-    "english_gb": "en-GB",
-    "french": "fr",
-    "spanish": "es",
-    "polish": "pl",
-    "portuguese_brazil": "pt-BR",
-    "portuguese": "pt",
-    "russian": "ru",
-    "swedish": "sv",
-    "vietnamese": "vi",
-    "chinese_simplified": "zh-CN",
-}.items():
-    setattr(_DummyLocale, _name, _DummyLocale(_value))
+        @classmethod
+        def none(cls):
+            return cls()
 
+    class _DummyView:
+        def __init__(self):
+            self.items = []
 
-discord_stub.Locale = _DummyLocale
-discord_stub.Embed = _DummyEmbed
-discord_stub.Color = _DummyColor
-discord_stub.AllowedMentions = _DummyAllowedMentions
-discord_stub.Client = type("Client", (), {})
-discord_stub.File = type("File", (), {})
-discord_stub.Forbidden = type("Forbidden", (Exception,), {})
-discord_stub.HTTPException = type("HTTPException", (Exception,), {})
-discord_stub.NotFound = type("NotFound", (Exception,), {})
-discord_stub.Interaction = type("Interaction", (), {})
-discord_stub.User = type("User", (), {})
-discord_stub.TextChannel = type("TextChannel", (), {})
-discord_stub.Message = type("Message", (), {})
-discord_stub.Guild = type("Guild", (), {})
-discord_stub.Member = type("Member", (), {})
-discord_stub.Role = type("Role", (), {})
-discord_stub.utils = types.SimpleNamespace(get=lambda *_args, **_kwargs: None)
-discord_stub.abc = types.SimpleNamespace(Messageable=object)
+        def add_item(self, item):
+            self.items.append(item)
 
-sys.modules["discord"] = discord_stub
+    class _DummyButton:
+        def __init__(self, *_, **kwargs):
+            self.label = kwargs.get("label")
+            self.url = kwargs.get("url")
+            self.emoji = kwargs.get("emoji")
 
-discord_ext_stub = types.ModuleType("discord.ext")
-commands_stub = types.ModuleType("discord.ext.commands")
-tasks_stub = types.ModuleType("discord.ext.tasks")
-app_commands_module = types.ModuleType("discord.app_commands")
+    discord_stub.Locale = _DummyLocale
+    discord_stub.Embed = _DummyEmbed
+    discord_stub.Color = _DummyColor
+    discord_stub.AllowedMentions = _DummyAllowedMentions
+    discord_stub.Client = type("Client", (), {})
+    discord_stub.File = type("File", (), {})
+    discord_stub.Forbidden = type("Forbidden", (Exception,), {})
+    discord_stub.HTTPException = type("HTTPException", (Exception,), {})
+    discord_stub.NotFound = type("NotFound", (Exception,), {})
+    discord_stub.Interaction = type("Interaction", (), {})
+    discord_stub.User = type("User", (), {})
+    discord_stub.TextChannel = type("TextChannel", (), {})
+    discord_stub.Message = type("Message", (), {})
+    discord_stub.Guild = type("Guild", (), {})
+    discord_stub.Member = type("Member", (), {})
+    discord_stub.Role = type("Role", (), {})
+    discord_stub.Intents = _DummyIntents
+    discord_stub.MemberCacheFlags = _DummyMemberCacheFlags
+    discord_stub.utils = types.SimpleNamespace(get=lambda *_args, **_kwargs: None)
+    discord_stub.abc = types.SimpleNamespace(Messageable=object)
+    discord_stub.ui = types.SimpleNamespace(View=_DummyView, Button=_DummyButton)
 
+    sys.modules["discord"] = discord_stub
+    discord = discord_stub
 
-def _loop(*_args, **_kwargs):
-    def _decorator(func):
-        return func
+    discord_ext_stub = types.ModuleType("discord.ext")
+    commands_stub = types.ModuleType("discord.ext.commands")
+    tasks_stub = types.ModuleType("discord.ext.tasks")
+    app_commands_module = types.ModuleType("discord.app_commands")
 
-    return _decorator
+    def _loop(*_args, **_kwargs):
+        def _decorator(func):
+            return func
 
+        return _decorator
 
-tasks_stub.loop = _loop
+    tasks_stub.loop = _loop
 
+    class _DummyBot:
+        def __init__(self, *_, **__):
+            self.loop = asyncio.new_event_loop()
+            self._connection = types.SimpleNamespace(shard_id=None, shard_count=None)
+            self.guilds = []
+            self.tree = types.SimpleNamespace(
+                translator=None,
+                set_translator=lambda *_a, **_k: asyncio.Future(),  # type: ignore[arg-type]
+                sync=lambda *_a, **_k: asyncio.Future(),  # type: ignore[arg-type]
+            )
+            self._closed = False
 
-class _DummyBot:
-    pass
+        def is_closed(self):
+            return self._closed
 
+        async def wait_until_ready(self):
+            return None
 
-class _DummyCog:
-    def __init__(self, *_, **__):
-        pass
+        async def load_extension(self, *_args, **_kwargs):
+            return None
 
+    class _DummyCog:
+        def __init__(self, *_, **__):
+            pass
 
-def _identity_decorator(*_args, **_kwargs):
-    def _wrap(func):
-        return func
+    def _identity_decorator(*_args, **_kwargs):
+        def _wrap(func):
+            return func
 
-    return _wrap
+        return _wrap
 
+    commands_stub.Bot = _DummyBot
+    commands_stub.Cog = _DummyCog
+    commands_stub.AutoShardedBot = _DummyBot
+    commands_stub.command = _identity_decorator
+    commands_stub.Cog.listener = staticmethod(_identity_decorator)
+    discord_ext_stub.commands = commands_stub
+    discord_ext_stub.tasks = tasks_stub
 
-commands_stub.Bot = _DummyBot
-commands_stub.Cog = _DummyCog
-commands_stub.AutoShardedBot = _DummyBot
-commands_stub.command = _identity_decorator
-commands_stub.Cog.listener = staticmethod(_identity_decorator)
-discord_ext_stub.commands = commands_stub
-discord_ext_stub.tasks = tasks_stub
+    sys.modules["discord.ext"] = discord_ext_stub
+    sys.modules["discord.ext.commands"] = commands_stub
+    sys.modules["discord.ext.tasks"] = tasks_stub
+    sys.modules["discord.app_commands"] = app_commands_module
 
-sys.modules["discord.ext"] = discord_ext_stub
-sys.modules["discord.ext.commands"] = commands_stub
-sys.modules["discord.ext.tasks"] = tasks_stub
-sys.modules["discord.app_commands"] = app_commands_module
+    class _Translator:
+        async def load(self) -> None:  # pragma: no cover - compatibility shim
+            return None
 
+        async def translate(self, *_args, **_kwargs):  # pragma: no cover - compatibility shim
+            raise NotImplementedError
 
-class _Translator:
-    async def load(self) -> None:  # pragma: no cover - compatibility shim
-        return None
+    class _TranslationContextLocation(enum.Enum):
+        command_name = enum.auto()
+        command_description = enum.auto()
+        group_name = enum.auto()
+        group_description = enum.auto()
+        parameter_name = enum.auto()
+        parameter_description = enum.auto()
+        choice_name = enum.auto()
 
-    async def translate(self, *_args, **_kwargs):  # pragma: no cover - compatibility shim
-        raise NotImplementedError
+    class _TranslationContext:
+        def __init__(self, *, location, data=None):
+            self.location = location
+            self.data = data
 
+    class _LocaleStr(str):
+        __slots__ = ("extras", "message")
 
-class _TranslationContextLocation(enum.Enum):
-    command_name = enum.auto()
-    command_description = enum.auto()
-    group_name = enum.auto()
-    group_description = enum.auto()
-    parameter_name = enum.auto()
-    parameter_description = enum.auto()
-    choice_name = enum.auto()
+        def __new__(cls, value: str, **extras):
+            instance = str.__new__(cls, value)
+            instance.extras = extras
+            instance.message = value
+            return instance
 
+    def _locale_str(value: str, /, **extras):
+        return _LocaleStr(value, **extras)
 
-class _TranslationContext:
-    def __init__(self, *, location, data=None):
-        self.location = location
-        self.data = data
+    app_commands_module.Translator = _Translator
+    app_commands_module.TranslationContextLocation = _TranslationContextLocation
+    app_commands_module.TranslationContext = _TranslationContext
+    app_commands_module.locale_str = _locale_str
+    discord_stub.app_commands = app_commands_module
 
-
-class _LocaleStr(str):
-    __slots__ = ("extras", "message")
-
-    def __new__(cls, value: str, **extras):
-        instance = str.__new__(cls, value)
-        instance.extras = extras
-        instance.message = value
-        return instance
-
-
-def _locale_str(value: str, /, **extras):
-    return _LocaleStr(value, **extras)
-
-
-app_commands_module.Translator = _Translator
-app_commands_module.TranslationContextLocation = _TranslationContextLocation
-app_commands_module.TranslationContext = _TranslationContext
-app_commands_module.locale_str = _locale_str
-discord_stub.app_commands = app_commands_module
+    _ALLOWED_MENTIONS_TYPE = _DummyAllowedMentions
 
 importlib.import_module("modules")
 utils_pkg = importlib.import_module("modules.utils")
