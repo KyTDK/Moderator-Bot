@@ -165,6 +165,16 @@ filetype_stub = types.ModuleType("filetype")
 filetype_stub.guess = lambda *_args, **_kwargs: None
 sys.modules.setdefault("filetype", filetype_stub)
 
+nsfw_utils_stub = types.ModuleType("modules.nsfw_scanner.utils")
+nsfw_utils_stub.__path__ = [str(PROJECT_ROOT / "modules" / "nsfw_scanner" / "utils")]
+sys.modules.setdefault("modules.nsfw_scanner.utils", nsfw_utils_stub)
+
+frames_stub = types.ModuleType("modules.nsfw_scanner.utils.frames")
+frames_stub.ExtractedFrame = object
+frames_stub.iter_extracted_frames = lambda *_args, **_kwargs: iter(())
+frames_stub.frames_are_similar = lambda *_args, **_kwargs: False
+sys.modules.setdefault("modules.nsfw_scanner.utils.frames", frames_stub)
+
 import pytest
 
 from modules.nsfw_scanner import scanner as scanner_mod
