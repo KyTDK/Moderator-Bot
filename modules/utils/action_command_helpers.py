@@ -11,7 +11,7 @@ from modules.utils.interaction_responses import send_ephemeral_response
 from modules.utils.localization import TranslateFn
 from modules.utils.strike import validate_action
 
-_FREE_ACTION_LIMIT = 1
+_FREE_ACTION_LIMIT = 2
 
 
 async def _enforce_action_limit(
@@ -65,23 +65,29 @@ async def _enforce_action_limit(
         trimmed,
         current_actions=existing_list,
     )
+    kept_actions = list(updated_actions)
+    kept_display = ", ".join(f"`{action}`" for action in kept_actions) or "`none`"
     fallback = (
-        "Multiple automated actions are reserved for Accelerated servers. "
-        "Kept `{kept}` and removed the rest. Upgrade with `{command}` to configure more."
+        "Free servers can configure up to {limit} automated actions. "
+        "Kept {kept} and removed the rest. Upgrade with {command} to configure more."
     )
-    kept_action = updated_actions[0] if updated_actions else "none"
     if callable(translator):
         message = translator(
             "modules.utils.action_command_helpers.action_limit.denied",
             placeholders={
+                "limit": limit,
+                "kept": kept_display,
                 "command": "/accelerated subscribe",
-                "kept": kept_action,
             },
             fallback=fallback,
             guild_id=guild_id,
         )
     else:
-        message = fallback.format(command="/accelerated subscribe", kept=kept_action)
+        message = fallback.format(
+            limit=limit,
+            kept=kept_display,
+            command="/accelerated subscribe",
+        )
     return False, message, updated_actions
 
 

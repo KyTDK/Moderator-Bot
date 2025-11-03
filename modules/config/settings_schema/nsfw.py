@@ -64,7 +64,7 @@ def build_nsfw_settings() -> dict[str, Setting]:
             name="nsfw-detection-action",
             description="Action to take when a user posts NSFW content.",
             setting_type=list[str],
-            default=["delete"],
+            default=["delete", "strike"],
             hidden=True,
             choices=["strike", "kick", "ban", "timeout", "delete"],
             description_key="modules.config.settings_schema.nsfw-detection-action.description",
