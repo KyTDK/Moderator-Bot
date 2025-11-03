@@ -155,6 +155,8 @@ async def set_api_key_not_working(api_key, bot=None):
 
     async with _lock:
         _quarantine[api_key] = time.monotonic() + 60
+        if api_key in _working_keys:
+            _working_keys.remove(api_key)
         if api_key not in _non_working_keys:
             _non_working_keys.append(api_key)
 
