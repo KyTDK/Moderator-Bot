@@ -1,26 +1,80 @@
+from __future__ import annotations
+
 import logging
 from collections.abc import Iterable
-from typing import Optional
+from typing import Any, Optional, TYPE_CHECKING
 
-import discord
-from discord import Interaction, app_commands
-from discord.ext import commands
+try:
+    import discord  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - optional dependency in tests
+    discord = None  # type: ignore[assignment]
+
+try:
+    from discord.ext import commands  # type: ignore
+except (ModuleNotFoundError, ImportError, AttributeError):  # pragma: no cover
+    commands = None  # type: ignore[assignment]
+
+if discord is not None:
+    app_commands = getattr(discord, "app_commands", None)
+    if app_commands is None:
+        try:
+            from discord import app_commands as _app_commands  # type: ignore
+        except (ImportError, AttributeError):  # pragma: no cover
+            app_commands = None
+        else:
+            app_commands = _app_commands
+else:  # pragma: no cover - triggered during tests without discord.py
+    app_commands = None
+
+if TYPE_CHECKING:
+    from discord import Interaction  # type: ignore
+else:
+    Interaction = Any
+
+_ForbiddenError = getattr(discord, "Forbidden", Exception) if discord is not None else Exception
+_HTTPException = getattr(discord, "HTTPException", Exception) if discord is not None else Exception
+_NotFoundError = getattr(discord, "NotFound", Exception) if discord is not None else Exception
+_DiscordUtilsGet = getattr(getattr(discord, "utils", None), "get", None) if discord is not None else None
+
+
+def _app_command_check(predicate):
+    if app_commands is not None and hasattr(app_commands, "check"):
+        return app_commands.check(predicate)
+    return predicate
 
 from modules import cache
-from modules.utils import mysql
+
+_mysql = None
+
+
+def _ensure_mysql_module():
+    """Lazily import mysql utilities to avoid configuration requirements during tests."""
+
+    global _mysql
+    if _mysql is not None:
+        return _mysql
+    from modules.utils import mysql as mysql_module  # local import to defer config validation
+    _mysql = mysql_module
+    return _mysql
 
 def has_roles(*role_names: str):
     async def predicate(interaction: Interaction) -> bool:
-        # Check if the user has any of the specified roles by name
+        if _DiscordUtilsGet is None:
+            raise RuntimeError("discord.py is required to evaluate role checks.")
+
+        roles = getattr(interaction.user, "roles", ()) if interaction else ()
         for role_name in role_names:
-            if discord.utils.get(interaction.user.roles, name=role_name):
+            if _DiscordUtilsGet(roles, name=role_name):
                 return True
         return False
-    return app_commands.check(predicate)
+    return _app_command_check(predicate)
 
 
 def has_role_or_permission(*role_names: str):
     async def predicate(interaction: Interaction) -> bool:
+        if _DiscordUtilsGet is None:
+            raise RuntimeError("discord.py is required to evaluate role and permission checks.")
+
         user = interaction.user
 
         # Check if the user has moderate_members permission
@@ -33,16 +87,18 @@ def has_role_or_permission(*role_names: str):
 
         return False
 
-    return app_commands.check(predicate)
+    return _app_command_check(predicate)
 
 async def message_user(user: discord.User, content: str, embed: discord.Embed = None):
     # Attempt to send a DM
+    if user is None or not hasattr(user, "send"):
+        raise RuntimeError("discord.py User instance required to message users.")
+
     try:
         message = await user.send(content, embed=embed) if embed else await user.send(content)
-    except discord.Forbidden:
+    except _ForbiddenError:
         # ignore
         message = None
-        pass
     return message
 
 async def safe_get_channel(bot: commands.Bot, channel_id: int) -> discord.TextChannel:
@@ -50,7 +106,7 @@ async def safe_get_channel(bot: commands.Bot, channel_id: int) -> discord.TextCh
     if chan is None:
         try:
             chan = await bot.fetch_channel(channel_id)
-        except discord.HTTPException as e:
+        except _HTTPException as e:
             print(f"failed to fetch channel {channel_id}: {e}")
     return chan
 
@@ -69,13 +125,13 @@ async def safe_get_user(bot: discord.Client, user_id: int, *, force_fetch: bool 
     try:
         user = await bot.fetch_user(user_id)   # 1 REST call
         return user
-    except discord.NotFound:
+    except _NotFoundError:
         # user_id no longer exists (account deleted)
         return None
-    except discord.Forbidden:
+    except _ForbiddenError:
         # we don't share a guild and the user has DMs disabled
         return cached
-    except discord.HTTPException as e:
+    except _HTTPException as e:
         # network / rate-limit issue - log and fail gracefully
         print(f"[safe_get_user] fetch_user({user_id}) failed: {e}")
         return cached
@@ -95,9 +151,9 @@ async def safe_get_member(guild: discord.Guild, user_id: int, *, force_fetch: bo
     try:
         fetched = await guild.fetch_member(user_id)
         return fetched or member
-    except (discord.NotFound, discord.Forbidden):
+    except (_NotFoundError, _ForbiddenError):
         return member if member is not None else None
-    except discord.HTTPException as e:
+    except _HTTPException as e:
         print(f"[safe_get_member] fetch_member({user_id}) failed: {e}")
         return member if member is not None else None
 
@@ -131,9 +187,9 @@ async def safe_get_message(channel: discord.TextChannel, message_id: int) -> Opt
         message = await channel.fetch_message(message_id)
         await cache.cache_message(message)  # Cache the message for future use
         return message
-    except (discord.NotFound, discord.Forbidden):
+    except (_NotFoundError, _ForbiddenError):
         return None
-    except discord.HTTPException as e:
+    except _HTTPException as e:
         print(f"[safe_get_message] fetch_message({message_id}) failed: {e}")
         return None
     
@@ -142,6 +198,11 @@ async def require_accelerated(interaction: Interaction):
     Check if the command is being used in a server with an Accelerated subscription.
     If not, respond with an error message.
     """
+    try:
+        mysql = _ensure_mysql_module()
+    except Exception as exc:  # pragma: no cover - configuration missing in tests
+        raise RuntimeError("MySQL utilities are unavailable; ensure configuration is set.") from exc
+
     if not await mysql.is_accelerated(guild_id=interaction.guild.id):
         translator = getattr(interaction.client, "translate", None)
         fallback = "This command is only available for Accelerated (Premium) servers. Use `/accelerated subscribe` to enable it."

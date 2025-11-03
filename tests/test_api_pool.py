@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import types
 from pathlib import Path
 
 import pytest
@@ -13,27 +12,23 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
 
-mysql_stub = types.ModuleType("modules.utils.mysql")
-
-
-async def _unpatched_execute_query(*_args, **_kwargs):
-    raise AssertionError("execute_query should be monkeypatched in tests")
-
-
-mysql_stub.execute_query = _unpatched_execute_query
-sys.modules.setdefault("modules.utils.mysql", mysql_stub)
-
-discord_utils_stub = types.ModuleType("modules.utils.discord_utils")
-
-
-async def _safe_get_user_stub(*_args, **_kwargs):
-    return None
-
-
-discord_utils_stub.safe_get_user = _safe_get_user_stub
-sys.modules.setdefault("modules.utils.discord_utils", discord_utils_stub)
-
 from modules.utils import api
+
+
+@pytest.fixture(autouse=True)
+def _stub_safe_get_user(monkeypatch):
+    async def _safe_get_user_stub(*_args, **_kwargs):
+        return None
+
+    monkeypatch.setattr(api, "safe_get_user", _safe_get_user_stub, raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _prevent_unpatched_execute_query(monkeypatch):
+    async def _unpatched_execute_query(*_args, **_kwargs):
+        raise AssertionError("execute_query should be monkeypatched in tests")
+
+    monkeypatch.setattr(api.mysql, "execute_query", _unpatched_execute_query, raising=False)
 
 
 @pytest.fixture

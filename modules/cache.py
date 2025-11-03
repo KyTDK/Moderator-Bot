@@ -5,10 +5,31 @@ import tempfile
 
 import aiohttp
 import discord
-import diskcache as dc
+
+try:
+    import diskcache as dc
+except ModuleNotFoundError:  # pragma: no cover - optional dependency during tests
+    dc = None
+
+    class _InMemoryCache:
+        """Lightweight fallback when diskcache is unavailable."""
+
+        def __init__(self, *_args, **_kwargs):
+            self._store: dict[str, dict] = {}
+
+        def set(self, key: str, value: dict, expire: int | None = None):  # noqa: ARG002
+            self._store[key] = value
+
+        def get(self, key: str, default=None):
+            return self._store.get(key, default)
+
 
 cache_dir = os.path.join(tempfile.gettempdir(), "modbot_messages")
-message_cache = dc.Cache(cache_dir, size_limit=10**9)
+if dc is not None:
+    message_cache = dc.Cache(cache_dir, size_limit=10**9)
+else:
+    message_cache = _InMemoryCache()
+
 MEMORY_FALLBACK_LIMIT = 512
 memory_fallback: "OrderedDict[str, dict]" = OrderedDict()
 

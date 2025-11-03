@@ -6,10 +6,20 @@ from threading import Lock
 from typing import Any, Iterable, List, Sequence
 
 import numpy as np
-import torch
+
+try:
+    import torch
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    torch = None
+
 from PIL import Image
 from dotenv import load_dotenv
-from transformers import CLIPModel, CLIPProcessor
+
+try:
+    from transformers import CLIPModel, CLIPProcessor
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    CLIPModel = None
+    CLIPProcessor = None
 
 from .vector_spaces import MilvusVectorSpace, VectorDeleteStats
 
@@ -26,13 +36,15 @@ _model = None
 _proc = None
 _device = None
 _init_lock = Lock()
-_preferred_device = "cuda" if torch.cuda.is_available() else "cpu"
+_preferred_device = "cuda" if torch is not None and torch.cuda.is_available() else "cpu"
 
-if _preferred_device == "cuda":
+if torch is not None and _preferred_device == "cuda":
     _device_details = torch.cuda.get_device_name(torch.cuda.current_device())
     _startup_message = f"CLIP vectors configured to use CUDA device: {_device_details}"
-else:
+elif torch is not None:
     _startup_message = "CLIP vectors running on CPU; CUDA device not detected"
+else:
+    _startup_message = "CLIP vectors disabled: PyTorch not installed"
 
 log.info(_startup_message)
 print(_startup_message)
@@ -44,6 +56,11 @@ def _ensure_clip_loaded() -> None:
     global _model, _proc, _device
     if _model is not None and _proc is not None and _device is not None:
         return
+
+    if torch is None or CLIPModel is None or CLIPProcessor is None:
+        raise RuntimeError(
+            "CLIP vector support requires the optional 'torch' and 'transformers' dependencies."
+        )
 
     # Older torch builds lack torch.Lock, so fall back to multiprocessing lock
     with _init_lock:
@@ -88,6 +105,11 @@ def embed_batch(images: Sequence[Image.Image]) -> np.ndarray:
 
     if not images:
         return np.empty((0, 0), dtype="float32")
+
+    if torch is None:
+        raise RuntimeError(
+            "CLIP vector support is unavailable because PyTorch is not installed."
+        )
 
     _ensure_clip_loaded()
     images = list(images)

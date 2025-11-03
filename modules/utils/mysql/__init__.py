@@ -21,6 +21,7 @@ from .instances import (
     clear_instance_heartbeat,
     update_instance_heartbeat,
 )
+from . import premium
 from .captcha import (
     CaptchaEmbedRecord,
     delete_captcha_embed_record,
@@ -66,6 +67,7 @@ __all__ = [
     "remove_guild",
     "update_instance_heartbeat",
     "clear_instance_heartbeat",
+    "premium",
     "CaptchaEmbedRecord",
     "get_captcha_embed_record",
     "upsert_captcha_embed_record",

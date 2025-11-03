@@ -2,9 +2,13 @@ from discord import Embed, Forbidden, HTTPException
 from discord.ext import commands
 
 from modules.utils import mysql
-from modules.utils.discord_utils import safe_get_channel
+from modules.utils import discord_utils
 
 async def log_to_channel(embed: Embed, channel_id: int, bot: commands.Bot, file=None):
+    safe_get_channel = getattr(discord_utils, "safe_get_channel", None)
+    if safe_get_channel is None:
+        raise RuntimeError("safe_get_channel is unavailable in modules.utils.discord_utils")
+
     channel = None
     guild_id = None
     try:
