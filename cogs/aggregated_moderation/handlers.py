@@ -4,6 +4,7 @@ import time
 
 import discord
 
+from modules.cache import CachedMessage
 from modules.moderation import strike
 from modules.nsfw_scanner import handle_nsfw_content
 from modules.nsfw_scanner.settings_keys import (
@@ -112,6 +113,16 @@ class ModerationHandlers:
 
         queue_started_at = time.perf_counter()
         await self._enqueue(scan_task(), guild_id=guild_id)
+
+    async def handle_message_edit(self, cached_before: CachedMessage, after: discord.Message) -> None:
+        if after.author.bot or after.guild is None:
+            return
+
+        before_content = getattr(cached_before, "content", None)
+        if before_content is not None and before_content == after.content:
+            return
+
+        await self.handle_message(after)
 
     async def handle_reaction_add(self, reaction: discord.Reaction, user: discord.User | discord.Member) -> None:
         guild = reaction.message.guild

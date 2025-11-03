@@ -287,39 +287,6 @@ class TextScanPipeline:
                         context="nsfw_scanner.text_verbose_failure",
                     )
 
-            try:
-                log_embed = verbose_embed.copy() if hasattr(verbose_embed, "copy") else verbose_embed
-                log_embed.title = "NSFW Text Scan Debug"
-                allowed_mentions = None
-                if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
-                    allowed_mentions = discord.AllowedMentions.none()
-                await send_log_message(
-                    self._bot,
-                    embed=log_embed,
-                    allowed_mentions=allowed_mentions,
-                    context="nsfw_scanner.text_scan",
-                )
-            except Exception as exc:
-                error_embed = discord.Embed(
-                    title="NSFW Text Scan Log Failure",
-                    description="Failed to send verbose debug embed.",
-                    color=discord.Color.red(),
-                )
-                error_embed.add_field(
-                    name="Error",
-                    value=f"`{type(exc).__name__}`: {exc}",
-                    inline=False,
-                )
-                allowed_mentions = None
-                if hasattr(discord, "AllowedMentions") and hasattr(discord.AllowedMentions, "none"):
-                    allowed_mentions = discord.AllowedMentions.none()
-                await send_log_message(
-                    self._bot,
-                    embed=error_embed,
-                    allowed_mentions=allowed_mentions,
-                    context="nsfw_scanner.text_scan_log_failure",
-                )
-
         if not (text_result and text_result.get("is_nsfw")):
             return False
 

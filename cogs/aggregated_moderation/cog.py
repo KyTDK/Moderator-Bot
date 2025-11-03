@@ -83,6 +83,9 @@ class AggregatedModerationCog(commands.Cog):
     async def handle_message(self, message: discord.Message):
         await self.handlers.handle_message(message)
 
+    async def handle_message_edit(self, cached_before, after: discord.Message):
+        await self.handlers.handle_message_edit(cached_before, after)
+
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         await self.handlers.handle_reaction_add(reaction, user)

@@ -68,6 +68,7 @@ class EventDispatcherCog(commands.Cog):
             return
 
         # Handle message edit
+        await self.bot.get_cog("AggregatedModerationCog").handle_message_edit(cached_before, after)
         await self.bot.get_cog("BannedWordsCog").handle_message_edit(cached_before, after)
         await self.bot.get_cog("MonitoringCog").handle_message_edit(cached_before, after)
         await self.bot.get_cog("AutonomousModeratorCog").handle_message_edit(cached_before, after)
