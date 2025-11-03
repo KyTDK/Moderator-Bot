@@ -190,23 +190,15 @@ if "modules.utils.mysql" not in sys.modules:
     setattr(modules_parent, "utils", utils_parent)
 
 if "modules.worker_queue" not in sys.modules:
-    worker_queue_stub = types.ModuleType("modules.worker_queue")
-
-    class _DummyWorkerQueue:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        async def add_task(self, coro):
-            await coro
-
-        async def start(self):
-            return None
-
-        async def stop(self):
-            return None
-
-    worker_queue_stub.WorkerQueue = _DummyWorkerQueue
-    sys.modules["modules.worker_queue"] = worker_queue_stub
+    worker_queue_path = PROJECT_ROOT / "modules" / "worker_queue.py"
+    worker_queue_spec = importlib.util.spec_from_file_location(
+        "modules.worker_queue",
+        worker_queue_path,
+    )
+    assert worker_queue_spec is not None and worker_queue_spec.loader is not None
+    worker_queue_module = importlib.util.module_from_spec(worker_queue_spec)
+    sys.modules["modules.worker_queue"] = worker_queue_module
+    worker_queue_spec.loader.exec_module(worker_queue_module)
 
 if "modules.worker_queue_alerts" not in sys.modules:
     worker_queue_alerts_stub = types.ModuleType("modules.worker_queue_alerts")
