@@ -23,9 +23,7 @@ from cogs.voice_moderation.transcriber import (
 # Reduce noisy warnings from decoder flushes at the end of cycles
 logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
 
-# Fixed harvest window for transcription chunks (seconds)
-# Keeps segments reasonably sized even if a speaker talks continuously.
-HARVEST_WINDOW_SECONDS: float = 20.0
+HARVEST_WINDOW_SECONDS: float = 3.0
 
 def _ensure_opus_loaded() -> None:
     """Ensure opus is loaded for voice receive/PCM decode."""

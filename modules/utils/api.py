@@ -1,6 +1,7 @@
 import asyncio
 import random
 import time
+from dataclasses import dataclass
 from typing import Mapping
 
 import httpx
@@ -19,6 +20,7 @@ _working_keys = []
 _non_working_keys = []
 _quarantine: dict[str, float] = {}
 _clients = {}
+_rate_limit_state: dict[str, "RateLimitState"] = {}
 
 
 class APIKeyValidationError(Exception):
@@ -59,7 +61,24 @@ _OPENAI_TIMEOUT = httpx.Timeout(
     pool=_float_env("OPENAI_POOL_TIMEOUT", 45.0),
 )
 
-_RATE_LIMIT_COOLDOWN = _float_env("OPENAI_RATE_LIMIT_COOLDOWN", 15.0)
+_RATE_LIMIT_BASE_COOLDOWN = _float_env(
+    "OPENAI_RATE_LIMIT_BASE_COOLDOWN",
+    _float_env("OPENAI_RATE_LIMIT_COOLDOWN", 180.0),
+)
+_RATE_LIMIT_MAX_COOLDOWN = _float_env("OPENAI_RATE_LIMIT_MAX_COOLDOWN", 3600.0)
+_RATE_LIMIT_BACKOFF_DECAY = _float_env("OPENAI_RATE_LIMIT_BACKOFF_DECAY", 900.0)
+
+
+@dataclass(slots=True)
+class RateLimitState:
+    strike_count: int
+    last_failure: float
+
+
+@dataclass(slots=True)
+class RateLimitPenalty:
+    cooldown_seconds: float
+    strike_count: int
 
 def _get_client(api_key: str) -> AsyncOpenAI:
     if api_key not in _clients:
@@ -101,6 +120,9 @@ async def get_next_shared_api_key():
         for k, ts in list(_quarantine.items()):
             if ts <= now:
                 _quarantine.pop(k, None)
+                state = _rate_limit_state.get(k)
+                if state is not None and now - state.last_failure > _RATE_LIMIT_BACKOFF_DECAY:
+                    _rate_limit_state.pop(k, None)
                 if k not in _working_keys:
                     _working_keys.append(k)
         if not _working_keys:
@@ -141,6 +163,7 @@ async def set_api_key_working(api_key):
         return
     async with _lock:
         _quarantine.pop(api_key, None)
+        _rate_limit_state.pop(api_key, None)
         if api_key in _non_working_keys:
             _non_working_keys.remove(api_key)
         if api_key not in _working_keys:
@@ -155,6 +178,7 @@ async def set_api_key_not_working(api_key, bot=None):
 
     async with _lock:
         _quarantine[api_key] = time.monotonic() + 60
+        _rate_limit_state.pop(api_key, None)
         if api_key in _working_keys:
             _working_keys.remove(api_key)
         if api_key not in _non_working_keys:
@@ -195,20 +219,40 @@ async def set_api_key_not_working(api_key, bot=None):
     return affected_rows > 0
 
 
-async def mark_api_key_rate_limited(api_key: str, cooldown: float | None = None) -> None:
+async def mark_api_key_rate_limited(
+    api_key: str,
+    cooldown: float | None = None,
+) -> RateLimitPenalty | None:
     if not api_key:
-        return
-    effective_cooldown = cooldown if cooldown is not None else _RATE_LIMIT_COOLDOWN
-    if effective_cooldown <= 0:
-        return
-    expires_at = time.monotonic() + effective_cooldown
+        return None
     async with _lock:
+        now = time.monotonic()
+        base_cooldown = cooldown if cooldown is not None else _RATE_LIMIT_BASE_COOLDOWN
+        if base_cooldown <= 0:
+            return None
+        state = _rate_limit_state.get(api_key)
+        if state is not None and now - state.last_failure <= _RATE_LIMIT_BACKOFF_DECAY:
+            strike_count = state.strike_count + 1
+        else:
+            strike_count = 1
+        effective_cooldown = base_cooldown * (2 ** (strike_count - 1))
+        if effective_cooldown > _RATE_LIMIT_MAX_COOLDOWN:
+            effective_cooldown = _RATE_LIMIT_MAX_COOLDOWN
+        expires_at = now + effective_cooldown
         existing_expiry = _quarantine.get(api_key)
         if existing_expiry and existing_expiry > expires_at:
             expires_at = existing_expiry
         _quarantine[api_key] = expires_at
         if api_key in _working_keys:
             _working_keys.remove(api_key)
+        _rate_limit_state[api_key] = RateLimitState(
+            strike_count=strike_count,
+            last_failure=now,
+        )
+    return RateLimitPenalty(
+        cooldown_seconds=effective_cooldown,
+        strike_count=strike_count,
+    )
 
 
 async def is_api_key_working(api_key: str) -> bool:

@@ -191,6 +191,7 @@ class VoiceModeratorCog(commands.Cog):
 
         st.busy_task.add_done_callback(_done_callback)
 
+
     async def _run_cycle_for_channel(
         self,
         *,
@@ -208,9 +209,43 @@ class VoiceModeratorCog(commands.Cog):
         log_channel: Optional[int],
         transcript_channel_id: Optional[int],
     ):
-        # Use the voice IO helper to handle connection and harvesting
         st = self._get_state(guild.id)
         utterances: list[tuple[int, str, datetime]] = []
+
+        transcript_texts = self.bot.translate(
+            "cogs.voice_moderation.transcript",
+            guild_id=guild.id,
+        )
+        author_label = transcript_texts["author_label"]
+        utterance_label = transcript_texts["utterance_label"]
+        divider = transcript_texts["divider"]
+        unknown_speaker = transcript_texts["unknown_speaker"]
+        unknown_prefix = transcript_texts["unknown_prefix"]
+
+        member_cache: dict[int, tuple[str, str, str]] = {}
+
+        async def _resolve_participant(uid: int) -> tuple[str, str, str]:
+            if uid <= 0:
+                return unknown_speaker, unknown_prefix, unknown_speaker
+            cached = member_cache.get(uid)
+            if cached:
+                return cached
+            member = await safe_get_member(guild, uid)
+            if member is not None:
+                info = (
+                    f"{member.mention} ({member.display_name}, id = {uid})",
+                    member.mention,
+                    member.display_name,
+                )
+            else:
+                fallback = transcript_texts["user_fallback"].format(id=uid)
+                info = (
+                    fallback,
+                    f"<@{uid}>",
+                    fallback,
+                )
+            member_cache[uid] = info
+            return info
 
         async def _record_voice_metrics(
             *,
@@ -278,6 +313,165 @@ class VoiceModeratorCog(commands.Cog):
                 )
             except Exception as metrics_exc:
                 print(f"[metrics] Voice metrics logging failed for guild {guild.id}: {metrics_exc}")
+
+        chunk_queue: asyncio.Queue[Optional[list[tuple[int, str, datetime]]]] | None = None
+        pipeline_task: Optional[asyncio.Task[None]] = None
+        processed_violation_keys: set[tuple[int, str, str]] = set()
+        vhist_blob = (
+            "Violation history:\n"
+            "Not provided by policy; do not consider prior violations.\n\n"
+        )
+
+        async def _build_transcript_block(
+            chunk: list[tuple[int, str, datetime]]
+        ) -> str:
+            if not chunk:
+                return ""
+            parts: list[str] = []
+            for uid, text, _ts in sorted(chunk, key=lambda x: x[2]):
+                author_str, _, _ = await _resolve_participant(uid)
+                parts.append(
+                    f"{author_label}: {author_str}\n{utterance_label}: {text}\n{divider}"
+                )
+            return "\n".join(parts)
+
+        async def _build_embed_lines(
+            all_utts: list[tuple[int, str, datetime]]
+        ) -> list[str]:
+            lines: list[str] = []
+            for uid, text, ts in sorted(all_utts, key=lambda x: x[2]):
+                unix = int(ts.timestamp())
+                stamp = f"<t:{unix}:t>"
+                _, prefix, who = await _resolve_participant(uid)
+                lines.append(
+                    transcript_texts["line"].format(
+                        timestamp=stamp,
+                        prefix=prefix,
+                        name=who,
+                        text=text,
+                    )
+                )
+            return lines
+
+        async def _pipeline_worker() -> None:
+            assert chunk_queue is not None
+            while True:
+                chunk = await chunk_queue.get()
+                try:
+                    if chunk is None:
+                        break
+                    if transcript_only:
+                        continue
+                    transcript_blob = await _build_transcript_block(chunk)
+                    if not transcript_blob.strip():
+                        continue
+                    pipeline_started = time.perf_counter()
+                    try:
+                        report, total_tokens, request_cost, usage, status = (
+                            await run_moderation_pipeline_voice(
+                                guild_id=guild.id,
+                                api_key=AUTOMOD_OPENAI_KEY,
+                                system_prompt=VOICE_SYSTEM_PROMPT,
+                                rules=rules,
+                                transcript_only=transcript_only,
+                                violation_history_blob=vhist_blob,
+                                transcript=transcript_blob,
+                                base_system_tokens=BASE_SYSTEM_TOKENS,
+                                default_model=AIMOD_MODEL,
+                                high_accuracy=high_accuracy,
+                                text_format=VoiceModerationReport,
+                                estimate_tokens_fn=am_helpers.estimate_tokens,
+                            )
+                        )
+                    except Exception as e:
+                        duration_ms = int(
+                            max((time.perf_counter() - pipeline_started) * 1000, 0)
+                        )
+                        await _record_voice_metrics(
+                            status="exception",
+                            report_obj=None,
+                            total_tokens=0,
+                            request_cost=0.0,
+                            usage_snapshot={},
+                            duration_ms=duration_ms,
+                            error=str(e),
+                        )
+                        continue
+
+                    duration_ms = int(
+                        max((time.perf_counter() - pipeline_started) * 1000, 0)
+                    )
+                    await _record_voice_metrics(
+                        status=status,
+                        report_obj=report,
+                        total_tokens=total_tokens,
+                        request_cost=request_cost,
+                        usage_snapshot=usage,
+                        duration_ms=duration_ms,
+                    )
+
+                    if not report or not getattr(report, "violations", None):
+                        continue
+
+                    aggregated: dict[int, dict[str, Any]] = {}
+                    for v in report.violations:
+                        try:
+                            uid = int(getattr(v, "user_id", 0))
+                        except Exception:
+                            continue
+                        if not uid:
+                            continue
+                        actions = list(getattr(v, "actions", []) or [])
+                        rule = (getattr(v, "rule", "") or "").strip()
+                        reason = (getattr(v, "reason", "") or "").strip()
+                        if not actions or not rule:
+                            continue
+                        key = (uid, rule, reason)
+                        if key in processed_violation_keys:
+                            continue
+                        processed_violation_keys.add(key)
+                        agg = aggregated.setdefault(
+                            uid, {"actions": set(), "reasons": [], "rules": set()}
+                        )
+                        agg["actions"].update(actions)
+                        if reason:
+                            agg["reasons"].append(reason)
+                        if rule:
+                            agg["rules"].add(rule)
+
+                    for uid, data in aggregated.items():
+                        member = await safe_get_member(guild, uid)
+                        if not member:
+                            continue
+                        all_actions = list(data["actions"]) if data.get("actions") else []
+                        configured = am_helpers.resolve_configured_actions(
+                            {"vcmod-detection-action": action_setting},
+                            all_actions,
+                            "vcmod-detection-action",
+                        )
+
+                        out_reason, out_rule = am_helpers.summarize_reason_rule(
+                            self.bot, guild, data.get("reasons"), data.get("rules")
+                        )
+
+                        await am_helpers.apply_actions_and_log(
+                            bot=self.bot,
+                            member=member,
+                            configured_actions=configured,
+                            reason=out_reason,
+                            rule=out_rule,
+                            messages=[],
+                            aimod_debug=aimod_debug,
+                            ai_channel_id=log_channel,
+                            monitor_channel_id=None,
+                            ai_actions=all_actions,
+                            fanout=False,
+                            violation_cache=violation_cache,
+                        )
+                finally:
+                    assert chunk_queue is not None
+                    chunk_queue.task_done()
+
         async def _transcribe_worker(
             payload: tuple[dict[int, bytes], dict[int, datetime], dict[int, float]]
         ) -> None:
@@ -293,6 +487,8 @@ class VoiceModeratorCog(commands.Cog):
                 )
                 if chunk_utts:
                     utterances.extend(chunk_utts)
+                    if chunk_queue is not None:
+                        await chunk_queue.put(chunk_utts)
             except Exception as e:
                 print(f"[VCMod] transcribe task failed: {e}")
 
@@ -302,13 +498,16 @@ class VoiceModeratorCog(commands.Cog):
             worker_fn=_transcribe_worker,
         )
 
+        actual_listen_seconds = 0.0
+
         if do_listen:
-            # Harvest and transcribe repeatedly every window seconds during the listen duration
+            chunk_queue = asyncio.Queue()
+            pipeline_task = asyncio.create_task(_pipeline_worker())
+
             start = time.monotonic()
             deadline = start + listen_delta.total_seconds()
             while True:
                 iteration_start = time.monotonic()
-                # Harvest only, fast path
                 st.voice, eligible_map, end_ts_map, duration_map_s = await harvest_pcm_chunk(
                     guild=guild,
                     channel=channel,
@@ -318,25 +517,38 @@ class VoiceModeratorCog(commands.Cog):
                     window_seconds=HARVEST_WINDOW_SECONDS,
                 )
                 if eligible_map:
-                    enqueue_wait = await dispatcher.submit((eligible_map, end_ts_map, duration_map_s))
+                    enqueue_wait = await dispatcher.submit(
+                        (eligible_map, end_ts_map, duration_map_s)
+                    )
                     if enqueue_wait >= 0.5:
                         print(
                             f"[VCMod] Throttled harvest by {enqueue_wait:.2f}s while waiting for transcription backlog"
                         )
 
-                # stop once listen window elapsed
                 if time.monotonic() >= deadline:
                     break
 
                 elapsed = time.monotonic() - iteration_start
                 sleep_for = HARVEST_WINDOW_SECONDS - elapsed
                 if sleep_for > 0:
-                    # Respect the listen deadline even if window is longer
-                    await asyncio.sleep(min(sleep_for, max(0.0, deadline - time.monotonic())))
-            # Wait for all queued work to finish before processing results
+                    await asyncio.sleep(
+                        min(sleep_for, max(0.0, deadline - time.monotonic()))
+                    )
+
+            listen_end = time.monotonic()
+            actual_listen_seconds = max(
+                0.0,
+                min(listen_delta.total_seconds(), listen_end - start),
+            )
+
             await dispatcher.drain_and_close()
+
+            if chunk_queue is not None:
+                await chunk_queue.put(None)
+                await chunk_queue.join()
+            if pipeline_task:
+                await pipeline_task
         else:
-            # Saver mode: no listening/transcribing in this cycle
             await harvest_pcm_chunk(
                 guild=guild,
                 channel=channel,
@@ -346,40 +558,20 @@ class VoiceModeratorCog(commands.Cog):
                 window_seconds=HARVEST_WINDOW_SECONDS,
             )
             return
+
         if not utterances:
             return
 
-        transcript_texts = self.bot.translate(
-            "cogs.voice_moderation.transcript",
-            guild_id=guild.id,
-        )
-
-        # Build transcript text for AI in chronological order (segment-level)
-        lines: list[str] = []
-        author_label = transcript_texts["author_label"]
-        utterance_label = transcript_texts["utterance_label"]
-        divider = transcript_texts["divider"]
-        unknown_speaker = transcript_texts["unknown_speaker"]
-        for uid, text, _ts in sorted(utterances, key=lambda x: x[2]):
-            # Treat uid==0 as unmapped speaker; avoid showing id 0
-            if uid and uid > 0:
-                member = await safe_get_member(guild, uid)
-                if member is not None:
-                    name = member.display_name
-                    mention = member.mention
-                    author_str = f"{mention} ({name}, id = {uid})"
-                else:
-                    author_str = transcript_texts["user_fallback"].format(id=uid)
-            else:
-                author_str = unknown_speaker
-            lines.append(
-                f"{author_label}: {author_str}\n{utterance_label}: {text}\n{divider}"
-            )
-
-        transcript = "\n".join(lines)
+        async def _sleep_after_cycle() -> None:
+            idle_seconds = idle_delta.total_seconds()
+            if (
+                actual_listen_seconds > 0.0
+                and actual_listen_seconds < listen_delta.total_seconds()
+            ):
+                idle_seconds = min(idle_seconds, max(5.0, actual_listen_seconds))
+            await asyncio.sleep(idle_seconds)
 
         def _chunk_text(s: str, limit: int = 3900) -> list[str]:
-            """Split text into chunks <= limit, preferring newline boundaries."""
             if len(s) <= limit:
                 return [s]
             parts: list[str] = []
@@ -388,7 +580,6 @@ class VoiceModeratorCog(commands.Cog):
             while i < n:
                 j = min(i + limit, n)
                 if j < n:
-                    # try to break at the last newline within the window
                     k = s.rfind("\n", i, j)
                     if k != -1 and k > i:
                         j = k + 1
@@ -398,192 +589,49 @@ class VoiceModeratorCog(commands.Cog):
 
         if transcript_channel_id:
             try:
-                # Build a chat-style transcript with real timestamps (end of harvested audio)
-                pretty_lines: list[str] = []
-                for uid, text, ts in sorted(utterances, key=lambda x: x[2]):
-                    # Discord-localized timestamp (short time)
-                    unix = int(ts.timestamp())
-                    stamp = f"<t:{unix}:t>"
-                    if uid and uid > 0:
-                        member = await safe_get_member(guild, uid)
-                        if member is not None:
-                            who = member.display_name
-                            who_prefix = member.mention
-                        else:
-                            who = transcript_texts["user_fallback"].format(id=uid)
-                            who_prefix = f"<@{uid}>"
-                    else:
-                        who = unknown_speaker
-                        who_prefix = transcript_texts["unknown_prefix"]
-                    pretty_lines.append(
-                        transcript_texts["line"].format(
-                            timestamp=stamp,
-                            prefix=who_prefix,
-                            name=who,
-                            text=text,
+                pretty_lines = await _build_embed_lines(utterances)
+                if pretty_lines:
+                    embed_transcript = "\n".join(pretty_lines)
+                    chunks = _chunk_text(embed_transcript, limit=3900)
+                    total = len(chunks)
+                    transcript_mode = (
+                        transcript_texts["footer_high"]
+                        if high_quality_transcription
+                        else transcript_texts["footer_normal"]
+                    )
+
+                    for idx, part in enumerate(chunks, start=1):
+                        title = (
+                            transcript_texts["title_single"]
+                            if total == 1
+                            else transcript_texts["title_part"].format(
+                                index=idx, total=total
+                            )
                         )
-                    )
-                embed_transcript = "\n".join(pretty_lines)
-
-                chunks = _chunk_text(embed_transcript, limit=3900)  # margin under 4096
-                total = len(chunks)
-                # Post each chunk as its own embed
-                transcript_mode = (
-                    transcript_texts["footer_high"]
-                    if high_quality_transcription
-                    else transcript_texts["footer_normal"]
-                )
-
-                for idx, part in enumerate(chunks, start=1):
-                    title = (
-                        transcript_texts["title_single"]
-                        if total == 1
-                        else transcript_texts["title_part"].format(index=idx, total=total)
-                    )
-                    embed = discord.Embed(
-                        title=title,
-                        description=part,
-                        colour=discord.Colour.blurple(),
-                        timestamp=discord.utils.utcnow(),
-                    )
-                    embed.add_field(
-                        name=transcript_texts["field_channel"],
-                        value=channel.mention,
-                        inline=True,
-                    )
-                    embed.add_field(
-                        name=transcript_texts["field_utterances"],
-                        value=str(len(utterances)),
-                        inline=True,
-                    )
-                    embed.set_footer(text=transcript_mode)
-                    await mod_logging.log_to_channel(embed, transcript_channel_id, self.bot)
-
+                        embed = discord.Embed(
+                            title=title,
+                            description=part,
+                            colour=discord.Colour.blurple(),
+                            timestamp=discord.utils.utcnow(),
+                        )
+                        embed.add_field(
+                            name=transcript_texts["field_channel"],
+                            value=channel.mention,
+                            inline=True,
+                        )
+                        embed.add_field(
+                            name=transcript_texts["field_utterances"],
+                            value=str(len(utterances)),
+                            inline=True,
+                        )
+                        embed.set_footer(text=transcript_mode)
+                        await mod_logging.log_to_channel(
+                            embed, transcript_channel_id, self.bot
+                        )
             except Exception as e:
                 print(f"[VCMod] failed to post transcript: {e}")
-        # Violation history: disable for voice to avoid biasing attribution/actions.
-        # Keep the block explicit so the prompt reminds the model not to use history.
-        vhist_blob = (
-            "Violation history:\nNot provided by policy; do not consider prior violations.\n\n"
-        )
 
-        # Run the shared moderation pipeline
-        pipeline_started = time.perf_counter()
-        try:
-            report, total_tokens, request_cost, usage, status = await run_moderation_pipeline_voice(
-                guild_id=guild.id,
-                api_key=AUTOMOD_OPENAI_KEY,
-                system_prompt=VOICE_SYSTEM_PROMPT,
-                rules=rules,
-                transcript_only=transcript_only,
-                violation_history_blob=vhist_blob,
-                transcript=transcript,
-                base_system_tokens=BASE_SYSTEM_TOKENS,
-                default_model=AIMOD_MODEL,
-                high_accuracy=high_accuracy,
-                text_format=VoiceModerationReport,
-                estimate_tokens_fn=am_helpers.estimate_tokens,
-            )
-        except Exception as e:
-            print(f"[VCMod] pipeline failed: {e}")
-            duration_ms = int(max((time.perf_counter() - pipeline_started) * 1000, 0))
-            await _record_voice_metrics(
-                status="exception",
-                report_obj=None,
-                total_tokens=0,
-                request_cost=0.0,
-                usage_snapshot={},
-                duration_ms=duration_ms,
-                error=str(e),
-            )
-            await asyncio.sleep(idle_delta.total_seconds())
-            return
-        duration_ms = int(max((time.perf_counter() - pipeline_started) * 1000, 0))
-        await _record_voice_metrics(
-            status=status,
-            report_obj=report,
-            total_tokens=total_tokens,
-            request_cost=request_cost,
-            usage_snapshot=usage,
-            duration_ms=duration_ms,
-        )
-
-        # No violations
-        if not report:
-            # budget reached notification (debug only)
-            if status == "budget" and aimod_debug and log_channel:
-                budget_texts = self.bot.translate(
-                    "cogs.voice_moderation.budget",
-                    guild_id=guild.id,
-                )
-                embed = discord.Embed(
-                    title=budget_texts["title"],
-                    description=budget_texts["description"],
-                    colour=discord.Colour.orange(),
-                )
-                await mod_logging.log_to_channel(embed, log_channel, self.bot)
-            await asyncio.sleep(idle_delta.total_seconds())
-            return
-
-        if not getattr(report, "violations", None):
-            if aimod_debug and log_channel:
-                embed = am_helpers.build_no_violations_embed(
-                    self.bot, guild, len(utterances), "vc"
-                )
-                await mod_logging.log_to_channel(embed, log_channel, self.bot)
-            await asyncio.sleep(idle_delta.total_seconds())
-            return
-
-        # Aggregate by user
-        aggregated: dict[int, dict] = {}
-        for v in report.violations:
-            try:
-                uid = int(getattr(v, "user_id", 0))
-            except Exception:
-                continue
-            if not uid:
-                continue
-            actions = list(getattr(v, "actions", []) or [])
-            rule = (getattr(v, "rule", "") or "").strip()
-            reason = (getattr(v, "reason", "") or "").strip()
-            if not actions or not rule:
-                continue
-
-            agg = aggregated.setdefault(uid, {"actions": set(), "reasons": [], "rules": set()})
-            agg["actions"].update(actions)
-            if reason:
-                agg["reasons"].append(reason)
-            if rule:
-                agg["rules"].add(rule)
-
-        # Apply actions
-        for uid, data in aggregated.items():
-            member = await safe_get_member(guild, uid)
-            if not member:
-                continue
-            all_actions = list(data["actions"]) if data.get("actions") else []
-            configured = am_helpers.resolve_configured_actions(
-                {"vcmod-detection-action": action_setting}, all_actions, "vcmod-detection-action"
-            )
-
-            out_reason, out_rule = am_helpers.summarize_reason_rule(
-                self.bot, guild, data.get("reasons"), data.get("rules")
-            )
-
-            await am_helpers.apply_actions_and_log(
-                bot=self.bot,
-                member=member,
-                configured_actions=configured,
-                reason=out_reason,
-                rule=out_rule,
-                messages=[],
-                aimod_debug=aimod_debug,
-                ai_channel_id=log_channel,
-                monitor_channel_id=None,
-                ai_actions=all_actions,
-                fanout=False,
-                violation_cache=violation_cache,
-            )
+        await _sleep_after_cycle()
 
 
 async def setup_voice_moderation(bot: commands.Bot):

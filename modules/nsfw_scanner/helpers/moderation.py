@@ -397,19 +397,25 @@ async def moderator_api(
         except openai.RateLimitError as exc:
             latency_tracker.stop("api_call_ms", api_started)
             error_message = format_exception_for_log(exc)
+            penalty = await api.mark_api_key_rate_limited(
+                encrypted_key,
+                cooldown=None,
+            )
+            if penalty is not None:
+                cooldown_seconds = penalty.cooldown_seconds
+                cooldown_fragment = (
+                    "Putting API key on cooldown for "
+                    f"{int(round(cooldown_seconds))}s "
+                    f"(strike {penalty.strike_count})."
+                )
+            else:
+                cooldown_fragment = "Putting API key on cooldown."
             print(
                 "[moderator_api] Rate limit error on attempt "
                 f"{attempt_number}/{max_attempts}: {error_message}. "
-                "Marking API key as not working."
+                f"{cooldown_fragment}"
             )
             latency_tracker.record_failure("rate_limit_error")
-            await api.mark_api_key_rate_limited(
-                encrypted_key, cooldown=None
-            )
-            await api.set_api_key_not_working(
-                api_key=encrypted_key,
-                bot=getattr(scanner, "bot", None),
-            )
             if attempt_index < max_attempts - 1:
                 await asyncio.sleep(min(2 ** attempt_index, 5.0))
             continue
