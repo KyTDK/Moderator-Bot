@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Awaitable, Callable, Optional, Sequence, TYPE_CHECKING
 
 import discord
@@ -32,6 +32,20 @@ def _resolve_blurple_colour() -> Optional[Any]:
         return blurple_factory()
     except Exception:
         return None
+
+
+def _resolve_embed_timestamp() -> datetime:
+    """Return a timezone-aware UTC timestamp compatible with discord embeds."""
+    utils_module = getattr(discord, "utils", None)
+    utcnow = getattr(utils_module, "utcnow", None) if utils_module is not None else None
+    if callable(utcnow):
+        try:
+            ts = utcnow()
+            if isinstance(ts, datetime):
+                return ts
+        except Exception:
+            pass
+    return datetime.now(timezone.utc)
 
 
 @dataclass
@@ -248,7 +262,7 @@ class LiveTranscriptEmitter:
             embed = discord.Embed(
                 title=f"{transcript_texts['title_single']}{title_suffix}",
                 description=part,
-                timestamp=discord.utils.utcnow(),
+                timestamp=_resolve_embed_timestamp(),
             )
             blurple_colour = _resolve_blurple_colour()
             if blurple_colour is not None:
