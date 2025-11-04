@@ -3,7 +3,7 @@ FROM pytorch/pytorch:2.5.1-cuda12.1-cudnn9-runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_ROOT_USER_ACTION=ignore
 
 RUN --mount=type=cache,target=/var/cache/apt \
     --mount=type=cache,target=/var/lib/apt/lists \
@@ -19,7 +19,7 @@ COPY requirements.txt .
 
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python -m pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install --prefer-binary -r requirements.txt
     
 COPY . .
 

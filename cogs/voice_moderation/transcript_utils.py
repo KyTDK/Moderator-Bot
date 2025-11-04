@@ -17,6 +17,23 @@ else:
 
 ParticipantResolver = Callable[[int], Awaitable[Optional[DiscordMember]]]
 
+
+def _resolve_blurple_colour() -> Optional[Any]:
+    """Return the blurple colour factory if available across discord variants."""
+    colour_cls = getattr(discord, "Colour", None)
+    if colour_cls is None:
+        colour_cls = getattr(discord, "Color", None)
+    if colour_cls is None:
+        return None
+    blurple_factory = getattr(colour_cls, "blurple", None)
+    if not callable(blurple_factory):
+        return None
+    try:
+        return blurple_factory()
+    except Exception:
+        return None
+
+
 @dataclass
 class ParticipantInfo:
     detail: str
@@ -231,9 +248,11 @@ class LiveTranscriptEmitter:
             embed = discord.Embed(
                 title=f"{transcript_texts['title_single']}{title_suffix}",
                 description=part,
-                colour=discord.Colour.blurple(),
                 timestamp=discord.utils.utcnow(),
             )
+            blurple_colour = _resolve_blurple_colour()
+            if blurple_colour is not None:
+                embed.colour = blurple_colour
             embed.add_field(
                 name=transcript_texts["field_channel"],
                 value=self._channel.mention,
