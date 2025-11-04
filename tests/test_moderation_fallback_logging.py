@@ -307,8 +307,7 @@ log_channel_stub.send_prebuilt_log_embed = _stub_log_to_developer_channel
 log_channel_stub.send_developer_log_message = _stub_log_to_developer_channel
 log_channel_stub.send_log_message = _stub_log_to_developer_channel
 log_channel_stub.resolve_log_channel = _resolve_log_channel
-log_channel_stub.log_developer_issue = _log_serious_issue
-log_channel_stub.log_serious_issue = _log_serious_issue
+
 sys.modules.setdefault("modules.utils.log_channel", log_channel_stub)
 setattr(utils_pkg, "log_channel", log_channel_stub)
 

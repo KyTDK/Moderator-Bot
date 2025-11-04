@@ -269,24 +269,5 @@ __all__ = [
     "resolve_log_channel",
     "send_developer_log_embed",
     "send_developer_log_message",
-    # Backwards compatibility exports (deprecated names)
-    "LogField",
-    "build_log_embed",
-    "log_serious_issue",
-    "log_to_channel",
-    "send_log_message",
-    "send_prebuilt_log_embed",
 ]
-
-
-# ---------------------------------------------------------------------------
-# Backwards compatibility layer
-# ---------------------------------------------------------------------------
-
-LogField = DeveloperLogField
-build_log_embed = build_developer_log_embed
-send_log_message = send_developer_log_message
-send_prebuilt_log_embed = send_developer_log_embed
-log_to_channel = log_to_developer_channel
-log_serious_issue = log_developer_issue
 
