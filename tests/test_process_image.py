@@ -370,6 +370,7 @@ async def test_process_image_reuses_png_without_conversion(monkeypatch, tmp_path
 
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
     monkeypatch.setattr(context_mod.mysql, "is_accelerated", fake_is_accelerated)
+    monkeypatch.setattr(image_processing_mod, "moderator_api", _moderator_api, raising=False)
 
     result = await images_mod.process_image(
         scanner=types.SimpleNamespace(bot=None),
@@ -410,6 +411,7 @@ async def test_process_image_reuses_jpeg_when_possible(monkeypatch, tmp_path):
     monkeypatch.setattr(context_mod.mysql, "get_settings", fake_get_settings)
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
     monkeypatch.setattr(context_mod.mysql, "is_accelerated", fake_is_accelerated)
+    monkeypatch.setattr(image_processing_mod, "moderator_api", _moderator_api, raising=False)
 
     result = await images_mod.process_image(
         scanner=types.SimpleNamespace(bot=None),
@@ -451,6 +453,7 @@ async def test_process_image_converts_unsupported_formats(monkeypatch, tmp_path)
     monkeypatch.setattr(context_mod.mysql, "get_settings", fake_get_settings)
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
     monkeypatch.setattr(context_mod.mysql, "is_accelerated", fake_is_accelerated)
+    monkeypatch.setattr(image_processing_mod, "moderator_api", _moderator_api, raising=False)
 
     result = await images_mod.process_image(
         scanner=types.SimpleNamespace(bot=None),
@@ -477,6 +480,7 @@ async def test_process_image_uses_precomputed_settings(monkeypatch, tmp_path):
 
     monkeypatch.setattr(images_mod.mysql, "get_settings", fail_get_settings)
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fail_is_accelerated)
+    monkeypatch.setattr(image_processing_mod, "moderator_api", _moderator_api, raising=False)
 
     settings = {
         images_mod.NSFW_CATEGORY_SETTING: [],
