@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import os
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
@@ -32,8 +33,13 @@ AIMOD_MODEL = os.getenv("AIMOD_MODEL", "gpt-5-nano")
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10))
 
-_TRANSCRIBE_WORKER_COUNT = 2
-_TRANSCRIBE_QUEUE_MAX = 4
+_TRANSCRIBE_WORKER_COUNT = 3
+_TRANSCRIBE_QUEUE_MAX = 6
+
+_LIVE_FLUSH_MIN_UTTERANCES = 3
+_LIVE_FLUSH_MAX_UTTERANCES = 12
+_LIVE_FLUSH_MIN_INTERVAL_S = 2.5
+_LIVE_FLUSH_MAX_LATENCY_S = 8.0
 
 class _GuildVCState:
     def __init__(self) -> None:
@@ -58,6 +64,35 @@ class VoiceModeratorCog(commands.Cog):
             st = _GuildVCState()
             self._state[guild_id] = st
         return st
+
+    async def _teardown_state(self, guild: discord.Guild) -> None:
+        st = self._get_state(guild.id)
+        if st.busy_task and not st.busy_task.done():
+            st.busy_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await st.busy_task
+        st.busy_task = None
+
+        vc = guild.voice_client or st.voice
+        st.voice = None
+
+        if vc is not None:
+            sink = getattr(vc, "_mod_sink", None)
+            if sink is not None and hasattr(vc, "stop_listening"):
+                with contextlib.suppress(Exception):
+                    vc.stop_listening()
+                with contextlib.suppress(Exception):
+                    sink.cleanup()
+            with contextlib.suppress(Exception):
+                setattr(vc, "_mod_pool", None)
+                setattr(vc, "_mod_sink", None)
+            if vc.is_connected():
+                with contextlib.suppress(Exception):
+                    await vc.disconnect(force=True)
+
+        st.channel_ids = []
+        st.index = 0
+        st.next_start = datetime.now(timezone.utc)
 
     @tasks.loop(seconds=10)
     async def loop(self):
@@ -96,14 +131,7 @@ class VoiceModeratorCog(commands.Cog):
         idle_str = settings.get("vcmod-idle-duration") or "30s"
 
         if not enabled or not AUTOMOD_OPENAI_KEY:
-            # Ensure we disconnect if previously connected
-            st = self._get_state(guild.id)
-            if st.voice and st.voice.is_connected():
-                try:
-                    await st.voice.disconnect(force=True)
-                except Exception:
-                    pass
-                st.voice = None
+            await self._teardown_state(guild)
             return
 
         # Resolve channel IDs list
@@ -117,6 +145,7 @@ class VoiceModeratorCog(commands.Cog):
                 continue
 
         if not channel_ids:
+            await self._teardown_state(guild)
             return
 
         st = self._get_state(guild.id)
@@ -353,6 +382,114 @@ class VoiceModeratorCog(commands.Cog):
                 )
             return lines
 
+        def _chunk_text(s: str, limit: int = 3900) -> list[str]:
+            if len(s) <= limit:
+                return [s]
+            parts: list[str] = []
+            i = 0
+            n = len(s)
+            while i < n:
+                j = min(i + limit, n)
+                if j < n:
+                    k = s.rfind("\n", i, j)
+                    if k != -1 and k > i:
+                        j = k + 1
+                parts.append(s[i:j])
+                i = j
+            return parts
+
+        live_lock = asyncio.Lock()
+        live_buffer: list[tuple[int, str, datetime]] = []
+        live_last_flush = time.monotonic()
+        live_flush_count = 0
+
+        async def _emit_live_transcript(
+            chunk: list[tuple[int, str, datetime]], *, force: bool = False
+        ) -> None:
+            if not transcript_channel_id:
+                return
+
+            nonlocal live_last_flush, live_flush_count
+
+            async with live_lock:
+                if chunk:
+                    live_buffer.extend(chunk)
+
+                if not live_buffer:
+                    return
+
+                now_mono = time.monotonic()
+                should_flush = force
+                if not should_flush:
+                    buffer_len = len(live_buffer)
+                    if buffer_len >= _LIVE_FLUSH_MAX_UTTERANCES:
+                        should_flush = True
+                    elif (
+                        buffer_len >= _LIVE_FLUSH_MIN_UTTERANCES
+                        and (now_mono - live_last_flush) >= _LIVE_FLUSH_MIN_INTERVAL_S
+                    ):
+                        should_flush = True
+                    elif (now_mono - live_last_flush) >= _LIVE_FLUSH_MAX_LATENCY_S:
+                        should_flush = True
+
+                if not should_flush:
+                    return
+
+                flush_chunk = sorted(live_buffer, key=lambda x: x[2])
+                live_buffer.clear()
+                live_last_flush = now_mono
+                live_flush_count += 1
+
+            try:
+                pretty_lines = await _build_embed_lines(flush_chunk)
+            except Exception as exc:
+                print(f"[VCMod] failed to build live transcript: {exc}")
+                return
+
+            if not pretty_lines:
+                return
+
+            transcript_mode = (
+                transcript_texts["footer_high"]
+                if high_quality_transcription
+                else transcript_texts["footer_normal"]
+            )
+
+            payload = "\n".join(pretty_lines)
+            chunks = _chunk_text(payload, limit=3900)
+            total_parts = len(chunks)
+
+            for idx, part in enumerate(chunks, start=1):
+                if total_parts == 1:
+                    title_suffix = f" (live {live_flush_count})"
+                else:
+                    title_suffix = f" (live {live_flush_count}.{idx}/{total_parts})"
+
+                embed = discord.Embed(
+                    title=f"{transcript_texts['title_single']}{title_suffix}",
+                    description=part,
+                    colour=discord.Colour.blurple(),
+                    timestamp=discord.utils.utcnow(),
+                )
+                embed.add_field(
+                    name=transcript_texts["field_channel"],
+                    value=channel.mention,
+                    inline=True,
+                )
+                embed.add_field(
+                    name=transcript_texts["field_utterances"],
+                    value=str(len(flush_chunk)),
+                    inline=True,
+                )
+                embed.set_footer(text=transcript_mode)
+                try:
+                    await mod_logging.log_to_channel(
+                        embed, transcript_channel_id, self.bot
+                    )
+                except Exception as exc:
+                    print(f"[VCMod] failed to post live transcript: {exc}")
+                    break
+
         async def _pipeline_worker() -> None:
             assert chunk_queue is not None
             while True:
@@ -487,6 +624,7 @@ class VoiceModeratorCog(commands.Cog):
                 )
                 if chunk_utts:
                     utterances.extend(chunk_utts)
+                    await _emit_live_transcript(chunk_utts)
                     if chunk_queue is not None:
                         await chunk_queue.put(chunk_utts)
             except Exception as e:
@@ -500,64 +638,76 @@ class VoiceModeratorCog(commands.Cog):
 
         actual_listen_seconds = 0.0
 
-        if do_listen:
-            chunk_queue = asyncio.Queue()
-            pipeline_task = asyncio.create_task(_pipeline_worker())
+        try:
+            if do_listen:
+                chunk_queue = asyncio.Queue()
+                pipeline_task = asyncio.create_task(_pipeline_worker())
 
-            start = time.monotonic()
-            deadline = start + listen_delta.total_seconds()
-            while True:
-                iteration_start = time.monotonic()
-                st.voice, eligible_map, end_ts_map, duration_map_s = await harvest_pcm_chunk(
+                start = time.monotonic()
+                deadline = start + listen_delta.total_seconds()
+                while True:
+                    iteration_start = time.monotonic()
+                    (
+                        st.voice,
+                        eligible_map,
+                        end_ts_map,
+                        duration_map_s,
+                    ) = await harvest_pcm_chunk(
+                        guild=guild,
+                        channel=channel,
+                        voice=st.voice,
+                        do_listen=True,
+                        idle_delta=idle_delta,
+                        window_seconds=HARVEST_WINDOW_SECONDS,
+                    )
+                    if eligible_map:
+                        enqueue_wait = await dispatcher.submit(
+                            (eligible_map, end_ts_map, duration_map_s)
+                        )
+                        if enqueue_wait >= 0.5:
+                            print(
+                                f"[VCMod] Throttled harvest by {enqueue_wait:.2f}s while waiting for transcription backlog"
+                            )
+
+                    if time.monotonic() >= deadline:
+                        break
+
+                    elapsed = time.monotonic() - iteration_start
+                    sleep_for = HARVEST_WINDOW_SECONDS - elapsed
+                    if sleep_for > 0:
+                        await asyncio.sleep(
+                            min(sleep_for, max(0.0, deadline - time.monotonic()))
+                        )
+
+                listen_end = time.monotonic()
+                actual_listen_seconds = max(
+                    0.0,
+                    min(listen_delta.total_seconds(), listen_end - start),
+                )
+            else:
+                await harvest_pcm_chunk(
                     guild=guild,
                     channel=channel,
                     voice=st.voice,
-                    do_listen=True,
+                    do_listen=False,
                     idle_delta=idle_delta,
                     window_seconds=HARVEST_WINDOW_SECONDS,
                 )
-                if eligible_map:
-                    enqueue_wait = await dispatcher.submit(
-                        (eligible_map, end_ts_map, duration_map_s)
-                    )
-                    if enqueue_wait >= 0.5:
-                        print(
-                            f"[VCMod] Throttled harvest by {enqueue_wait:.2f}s while waiting for transcription backlog"
-                        )
-
-                if time.monotonic() >= deadline:
-                    break
-
-                elapsed = time.monotonic() - iteration_start
-                sleep_for = HARVEST_WINDOW_SECONDS - elapsed
-                if sleep_for > 0:
-                    await asyncio.sleep(
-                        min(sleep_for, max(0.0, deadline - time.monotonic()))
-                    )
-
-            listen_end = time.monotonic()
-            actual_listen_seconds = max(
-                0.0,
-                min(listen_delta.total_seconds(), listen_end - start),
-            )
-
-            await dispatcher.drain_and_close()
-
+                return
+        except asyncio.CancelledError:
+            raise
+        finally:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await dispatcher.drain_and_close()
             if chunk_queue is not None:
-                await chunk_queue.put(None)
-                await chunk_queue.join()
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await chunk_queue.put(None)
+                    await chunk_queue.join()
             if pipeline_task:
-                await pipeline_task
-        else:
-            await harvest_pcm_chunk(
-                guild=guild,
-                channel=channel,
-                voice=st.voice,
-                do_listen=False,
-                idle_delta=idle_delta,
-                window_seconds=HARVEST_WINDOW_SECONDS,
-            )
-            return
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await pipeline_task
+
+        await _emit_live_transcript([], force=True)
 
         if not utterances:
             return
@@ -570,22 +720,6 @@ class VoiceModeratorCog(commands.Cog):
             ):
                 idle_seconds = min(idle_seconds, max(5.0, actual_listen_seconds))
             await asyncio.sleep(idle_seconds)
-
-        def _chunk_text(s: str, limit: int = 3900) -> list[str]:
-            if len(s) <= limit:
-                return [s]
-            parts: list[str] = []
-            i = 0
-            n = len(s)
-            while i < n:
-                j = min(i + limit, n)
-                if j < n:
-                    k = s.rfind("\n", i, j)
-                    if k != -1 and k > i:
-                        j = k + 1
-                parts.append(s[i:j])
-                i = j
-            return parts
 
         if transcript_channel_id:
             try:
