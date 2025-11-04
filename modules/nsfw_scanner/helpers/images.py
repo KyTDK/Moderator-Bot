@@ -38,7 +38,6 @@ __all__ = [
     "process_image_batch",
     "log",
     "log_developer_issue",
-    "log_serious_issue",
     "_PNG_PASSTHROUGH_EXTS",
     "_PNG_PASSTHROUGH_FORMATS",
     "_TRUNCATED_ERROR_MARKERS",
@@ -62,6 +61,3 @@ mysql = mysql
 
 # Expose logger from image_logging for callers expecting the previous module-level logger.
 logging_log  # keep import for side effects / lint
-
-# Backwards compatibility alias for historical imports.
-log_serious_issue = log_developer_issue
