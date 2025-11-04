@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from datetime import timedelta, datetime, timezone
 from typing import Optional, Tuple, List, Dict
 import sys
@@ -75,6 +76,7 @@ async def _ensure_connected(
     guild: discord.Guild,
     channel: discord.VoiceChannel,
     voice: Optional[discord.VoiceClient],
+    self_mute: bool,
 ) -> Optional[voice_recv.VoiceRecvClient]:
     """Ensure we’re connected to `channel` with VoiceRecvClient (self_deaf=False)."""
     try:
@@ -120,6 +122,9 @@ async def _ensure_connected(
                 voice = None
 
         if current and current.is_connected() and isinstance(current, voice_recv.VoiceRecvClient):
+            with contextlib.suppress(Exception):
+                if hasattr(current, "ws"):
+                    await current.ws.voice_state(channel.id, self_deaf=False, self_mute=self_mute)  # type: ignore[attr-defined]
             return current
 
         # Fresh connect with a retry if Discord still thinks we're attached elsewhere.
@@ -127,7 +132,7 @@ async def _ensure_connected(
             try:
                 return await channel.connect(
                     self_deaf=False,
-                    self_mute=True,
+                    self_mute=self_mute,
                     cls=voice_recv.VoiceRecvClient,
                 )
             except discord.ClientException as e:
@@ -152,6 +157,7 @@ async def harvest_pcm_chunk(
     voice: Optional[discord.VoiceClient],
     do_listen: bool,
     idle_delta: timedelta,
+    self_mute: bool = True,
     window_seconds: float = HARVEST_WINDOW_SECONDS,
 ) -> Tuple[Optional[discord.VoiceClient], Dict[int, bytes], Dict[int, datetime], Dict[int, float]]:
     """Ensure connected and sink present, then harvest a PCM chunk only (no transcription).
@@ -162,7 +168,7 @@ async def harvest_pcm_chunk(
     # Prereqs
     _ensure_opus_loaded()
 
-    vc = await _ensure_connected(guild=guild, channel=channel, voice=voice)
+    vc = await _ensure_connected(guild=guild, channel=channel, voice=voice, self_mute=self_mute)
     if not vc:
         await asyncio.sleep(5)
         return None, {}, {}, {}

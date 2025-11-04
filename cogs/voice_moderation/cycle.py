@@ -272,6 +272,7 @@ async def run_voice_cycle(
                     voice=state.voice,
                     do_listen=True,
                     idle_delta=config.idle_delta,
+                    self_mute=not config.join_announcement,
                     window_seconds=HARVEST_WINDOW_SECONDS,
                 )
 
@@ -316,6 +317,7 @@ async def run_voice_cycle(
                 voice=state.voice,
                 do_listen=False,
                 idle_delta=config.idle_delta,
+                self_mute=not config.join_announcement,
                 window_seconds=HARVEST_WINDOW_SECONDS,
             )
             await announcement_manager.maybe_announce(
