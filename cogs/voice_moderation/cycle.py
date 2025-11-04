@@ -27,6 +27,13 @@ from .voice_io import HARVEST_WINDOW_SECONDS, harvest_pcm_chunk, transcribe_harv
 
 RecordMetricsFn = Callable[..., Awaitable[None]]
 
+_TRANSCRIBE_WORKER_COUNT = 3
+_TRANSCRIBE_QUEUE_MAX = 6
+_LIVE_FLUSH_MIN_UTTERANCES = 3
+_LIVE_FLUSH_MAX_UTTERANCES = 12
+_LIVE_FLUSH_MIN_INTERVAL_S = 2.5
+_LIVE_FLUSH_MAX_LATENCY_S = 8.0
+
 
 @dataclass
 class VoiceCycleConfig:
@@ -73,10 +80,10 @@ async def run_voice_cycle(
         channel=channel,
         transcript_channel_id=config.transcript_channel_id,
         high_quality=config.high_quality_transcription,
-        min_utterances=3,
-        max_utterances=12,
-        min_interval=2.5,
-        max_latency=8.0,
+        min_utterances=_LIVE_FLUSH_MIN_UTTERANCES,
+        max_utterances=_LIVE_FLUSH_MAX_UTTERANCES,
+        min_interval=_LIVE_FLUSH_MIN_INTERVAL_S,
+        max_latency=_LIVE_FLUSH_MAX_LATENCY_S,
     )
 
     chunk_queue: asyncio.Queue[Optional[list[tuple[int, str, datetime]]]] | None = None
@@ -237,8 +244,8 @@ async def run_voice_cycle(
             print(f"[VCMod] transcribe task failed: {exc}")
 
     dispatcher = TranscriptionWorkQueue(
-        worker_count=3,
-        max_queue_size=6,
+        worker_count=_TRANSCRIBE_WORKER_COUNT,
+        max_queue_size=_TRANSCRIBE_QUEUE_MAX,
         worker_fn=_transcribe_worker,
     )
 
