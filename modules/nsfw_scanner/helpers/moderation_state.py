@@ -20,6 +20,7 @@ class ImageModerationState:
     base64_data: str | None = None
     png_retry_attempted: bool = False
     fallback_events: list[str] = field(default_factory=list)
+    remote_disabled: bool = False
 
     @classmethod
     def from_prepared_payload(
@@ -75,7 +76,10 @@ class ImageModerationState:
         self.payload_bytes = payload_bytes
         self.payload_mime = payload_mime
         self.base64_data = None
-        self.use_remote = False
+        if not self.remote_disabled and self.source_url:
+            self.use_remote = True
+        else:
+            self.use_remote = False
         strategy_label = prepared.strategy
 
         latency_tracker.set_payload_detail("payload_strategy", strategy_label)
@@ -83,6 +87,20 @@ class ImageModerationState:
             payload_metadata["moderation_payload_strategy"] = strategy_label
 
     def build_inputs(self, latency_tracker: ModeratorLatencyTracker) -> list[dict[str, Any]]:
+        if self.use_remote and self.source_url:
+            parsed = urlparse(self.source_url)
+            latency_tracker.set_payload_detail("image_remote", True)
+            latency_tracker.set_payload_detail("image_remote_host", parsed.netloc or "unknown")
+            return [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": self.source_url,
+                    },
+                }
+            ]
+
+        latency_tracker.set_payload_detail("image_remote", False)
         if self.base64_data is None:
             self.base64_data = base64.b64encode(self.payload_bytes).decode()
             latency_tracker.set_payload_detail("base64_chars", len(self.base64_data))
@@ -97,6 +115,7 @@ class ImageModerationState:
         ]
 
     def force_inline(self) -> None:
+        self.remote_disabled = True
         self.use_remote = False
         self.base64_data = None
 
@@ -114,6 +133,8 @@ class ImageModerationState:
 
     def logging_details(self) -> list[str]:
         details: list[str] = [f"image_remote={bool(self.use_remote)}"]
+        if self.remote_disabled:
+            details.append("image_remote_disabled=True")
         try:
             payload_length = len(self.payload_bytes or b"")
         except TypeError:

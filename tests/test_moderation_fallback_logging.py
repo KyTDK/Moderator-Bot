@@ -298,6 +298,7 @@ sys.modules.setdefault("modules.utils.log_channel", log_channel_stub)
 setattr(utils_pkg, "log_channel", log_channel_stub)
 
 moderation = importlib.import_module("modules.nsfw_scanner.helpers.moderation")
+moderation_logging = importlib.import_module("modules.nsfw_scanner.helpers.moderation_logging")
 moderation_state = importlib.import_module("modules.nsfw_scanner.helpers.moderation_state")
 
 
@@ -310,7 +311,7 @@ def test_report_moderation_fallback_to_log(monkeypatch):
         captured["kwargs"] = kwargs
         return True
 
-    monkeypatch.setattr(moderation, "send_log_message", _fake_send_log_message)
+    monkeypatch.setattr(moderation_logging, "send_log_message", _fake_send_log_message)
 
     scanner = types.SimpleNamespace(bot=object())
     metadata = {

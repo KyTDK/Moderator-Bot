@@ -5,16 +5,18 @@ from typing import Any, Callable, Optional
 
 import httpx
 import openai
-import discord
 from PIL import Image
 
 from modules.utils import api, clip_vectors, text_vectors
-from modules.utils.log_channel import send_log_message
 
-from ..constants import ADD_SFW_VECTOR, LOG_CHANNEL_ID, MOD_API_MAX_CONCURRENCY
+from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY
 from ..utils.categories import is_allowed_category
 from .latency import ModeratorLatencyTracker
+from .moderation_context import RemoteFallbackContext
 from .moderation_errors import build_error_context, format_exception_for_log
+from .moderation_logging import (
+    report_moderation_fallback_to_log,
+)
 from .moderation_state import ImageModerationState
 from .moderation_utils import (
     resolve_moderation_settings,
@@ -34,164 +36,8 @@ log = logging.getLogger(__name__)
 
 _MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
 
-
-def _truncate_text(value: str, limit: int = 1024) -> str:
-    if not isinstance(value, str) or len(value) <= limit:
-        return value
-    return value[: limit - 1] + "\u2026"
-
-
-async def _report_moderation_fallback_to_log(
-    scanner,
-    *,
-    fallback_notice: str,
-    image_state: ImageModerationState,
-    payload_metadata: dict[str, Any] | None,
-) -> None:
-    bot = getattr(scanner, "bot", None)
-    if bot is None:
-        return
-
-    metadata: dict[str, Any] | None = payload_metadata if isinstance(payload_metadata, dict) else None
-    if metadata is not None and metadata.get("fallback_notice_reported"):
-        return
-
-    if metadata is not None:
-        metadata["fallback_notice_reported"] = True
-
-    embed = discord.Embed(
-        title="Moderator API fallback triggered",
-        description=fallback_notice,
-        color=discord.Color.orange(),
-    )
-
-    events = sorted(image_state.fallback_events)
-    if events:
-        embed.add_field(
-            name="Fallback events",
-            value=_truncate_text(", ".join(events)),
-            inline=False,
-        )
-
-    if metadata:
-        guild_id = metadata.get("guild_id")
-        if guild_id is not None:
-            embed.add_field(name="Guild ID", value=str(guild_id), inline=True)
-
-        channel_id = metadata.get("channel_id")
-        if channel_id is not None:
-            embed.add_field(name="Channel ID", value=str(channel_id), inline=True)
-
-        strategy = metadata.get("moderation_payload_strategy")
-        if strategy:
-            embed.add_field(name="Payload strategy", value=str(strategy), inline=True)
-
-        jump_url = metadata.get("message_jump_url")
-        message_id = metadata.get("message_id")
-        if jump_url:
-            embed.add_field(
-                name="Message",
-                value=_truncate_text(f"[Jump to message]({jump_url})"),
-                inline=False,
-            )
-        elif message_id is not None:
-            embed.add_field(name="Message ID", value=str(message_id), inline=False)
-
-        source_url = metadata.get("source_url")
-        if source_url:
-            embed.add_field(
-                name="Source URL",
-                value=_truncate_text(source_url),
-                inline=False,
-            )
-
-        tracker_snapshot = metadata.get("moderation_tracker")
-        if isinstance(tracker_snapshot, dict):
-            attempt_parts: list[str] = []
-            attempts = tracker_snapshot.get("attempts")
-            if attempts:
-                attempt_parts.append(f"attempts={attempts}")
-            no_key_waits = tracker_snapshot.get("no_key_waits")
-            if no_key_waits:
-                attempt_parts.append(f"no_key_waits={no_key_waits}")
-            if attempt_parts:
-                embed.add_field(
-                    name="Attempt stats",
-                    value=_truncate_text(" | ".join(attempt_parts)),
-                    inline=False,
-                )
-
-            failures = tracker_snapshot.get("failures") or {}
-            if failures:
-                failure_summary = ", ".join(
-                    f"{reason}:{count}" for reason, count in sorted(failures.items())
-                )
-                embed.add_field(
-                    name="Failure breakdown",
-                    value=_truncate_text(failure_summary),
-                    inline=False,
-                )
-
-            payload_info = tracker_snapshot.get("payload_details") or {}
-            if payload_info:
-                payload_summary = " | ".join(
-                    f"{key}={payload_info[key]}" for key in sorted(payload_info.keys())
-                )
-                embed.add_field(
-                    name="Payload metadata",
-                    value=_truncate_text(payload_summary),
-                    inline=False,
-                )
-
-            timings = tracker_snapshot.get("timings_ms") or {}
-            if timings:
-                timing_summary = ", ".join(
-                    f"{key}:{round(value, 1)}"
-                    for key, value in sorted(timings.items(), key=lambda item: item[1], reverse=True)[:4]
-                    if value
-                )
-                if timing_summary:
-                    embed.add_field(
-                        name="Timing breakdown (ms)",
-                        value=_truncate_text(timing_summary),
-                        inline=False,
-                    )
-
-        fallback_contexts = metadata.get("fallback_contexts")
-        if fallback_contexts:
-            embed.add_field(
-                name="Fallback context",
-                value=_truncate_text("\n".join(str(item) for item in fallback_contexts)),
-                inline=False,
-            )
-
-    try:
-        payload_details = image_state.logging_details()
-    except Exception:
-        payload_details = []
-
-    if payload_details:
-        embed.add_field(
-            name="Payload details",
-            value=_truncate_text(" | ".join(payload_details)),
-            inline=False,
-        )
-
-    try:
-        success = await send_log_message(
-            bot,
-            embed=embed,
-            allowed_mentions=discord.AllowedMentions.none(),
-            context="nsfw_scanner.moderation_fallback",
-        )
-    except Exception:
-        log.debug(
-            "Failed to report moderation fallback to LOG_CHANNEL_ID=%s", LOG_CHANNEL_ID, exc_info=True
-        )
-        return
-
-    if not success:
-        log.debug("Failed to report moderation fallback to LOG_CHANNEL_ID=%s", LOG_CHANNEL_ID)
+# Backwards compatibility for call sites/tests that refer to the old helper.
+_report_moderation_fallback_to_log = report_moderation_fallback_to_log
 
 
 async def _get_moderations_resource(client):
@@ -240,17 +86,6 @@ async def moderator_api(
     def _finalize(payload: dict[str, Any]) -> dict[str, Any]:
         return latency_tracker.finalize(payload)
 
-    def record_fallback_context(label: str, message: str | None = None) -> None:
-        if not isinstance(payload_metadata, dict):
-            return
-        text = (message or "").strip() if isinstance(message, str) else ""
-        if text and len(text) > 512:
-            text = text[:509] + "..."
-        entry = f"{label}: {text}" if text else label
-        contexts = payload_metadata.setdefault("fallback_contexts", [])
-        if entry not in contexts:
-            contexts.append(entry)
-
     text_preview = None
     truncated_preview = None
     use_text_settings = bool(text and not has_image_input)
@@ -266,13 +101,24 @@ async def moderator_api(
         original_size = payload_metadata.get("payload_bytes") or payload_metadata.get("source_bytes")
 
     image_state: ImageModerationState | None = None
-    metadata_dict: dict[str, Any] | None = (
+    payload_dict: dict[str, Any] | None = (
         payload_metadata if isinstance(payload_metadata, dict) else None
     )
+    metadata_dict: dict[str, Any] | None = payload_dict
     if metadata_dict is not None and guild_id is not None:
         metadata_dict.setdefault("guild_id", guild_id)
     max_edge_override = None
     target_bytes_override = None
+
+    fallback_ctx = RemoteFallbackContext(
+        scanner=scanner,
+        has_image_input=has_image_input,
+        image_state=image_state,
+        latency_tracker=latency_tracker,
+        payload_metadata=payload_dict,
+        metadata_dict=metadata_dict,
+        max_attempts=max_attempts,
+    )
 
     if has_image_input:
         payload_timer = latency_tracker.start("payload_prepare_ms")
@@ -306,6 +152,7 @@ async def moderator_api(
             source_url=source_url,
             quality_label=quality_label,
         )
+        fallback_ctx.image_state = image_state
 
         inputs = image_state.build_inputs(latency_tracker)
 
@@ -422,11 +269,23 @@ async def moderator_api(
         except openai.BadRequestError as exc:
             latency_tracker.stop("api_call_ms", api_started)
             error_message = format_exception_for_log(exc)
+            latency_tracker.record_failure("bad_request_error")
+            remote_handled = await fallback_ctx.handle_remote_inline_fallback(
+                label="remote_bad_request",
+                error_message=error_message,
+                attempt_number=attempt_number,
+            )
+            if remote_handled:
+                print(
+                    "[moderator_api] Bad request on attempt "
+                    f"{attempt_number}/{max_attempts}: {error_message}. "
+                    "Retrying with inline payload."
+                )
+                continue
             print(
                 "[moderator_api] Bad request on attempt "
                 f"{attempt_number}/{max_attempts}: {error_message}."
             )
-            latency_tracker.record_failure("bad_request_error")
             continue
         except (openai.APIConnectionError, httpx.RemoteProtocolError) as exc:
             latency_tracker.stop("api_call_ms", api_started)
@@ -440,6 +299,21 @@ async def moderator_api(
                 payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
             error_message = format_exception_for_log(exc)
+            had_connection_error = True
+            latency_tracker.record_failure("api_connection_error")
+            remote_handled = await fallback_ctx.handle_remote_inline_fallback(
+                label="remote_connection_error",
+                error_message=f"{error_message}. Context: {context_summary}",
+                attempt_number=attempt_number,
+                context_summary=context_summary,
+            )
+            if remote_handled:
+                print(
+                    "[moderator_api] Connection error during moderation request on attempt "
+                    f"{attempt_number}/{max_attempts}: {error_message}. "
+                    "Retrying with inline payload."
+                )
+                continue
             print(
                 "[moderator_api] Connection error during moderation request on attempt "
                 f"{attempt_number}/{max_attempts}: {error_message}. Context: {context_summary}"
@@ -449,8 +323,6 @@ async def moderator_api(
                 context_summary,
                 exc_info=True,
             )
-            had_connection_error = True
-            latency_tracker.record_failure("api_connection_error")
             if attempt_index < max_attempts - 1:
                 await asyncio.sleep(min(2 ** attempt_index, 5.0))
             continue
@@ -465,8 +337,23 @@ async def moderator_api(
                 image_state=image_state if isinstance(image_state, ImageModerationState) else None,
                 payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
-            record_fallback_context("internal_server_error", context_summary)
+            fallback_ctx.record_fallback_context("internal_server_error", context_summary)
             had_internal_error = True
+            error_message = format_exception_for_log(exc)
+            remote_handled = await fallback_ctx.handle_remote_inline_fallback(
+                label="remote_internal_error",
+                error_message=f"{error_message}. Context: {context_summary}",
+                attempt_number=attempt_number,
+                context_summary=context_summary,
+                failure_reason="internal_server_error",
+            )
+            if remote_handled:
+                print(
+                    "[moderator_api] Internal server error from remote payload on attempt "
+                    f"{attempt_number}/{max_attempts}: {error_message}. "
+                    "Retrying with inline payload."
+                )
+                continue
             current_payload_mime = None
             if isinstance(image_state, ImageModerationState):
                 current_payload_mime = image_state.payload_mime
@@ -495,7 +382,7 @@ async def moderator_api(
                 )
                 image_state.png_retry_attempted = True
                 image_state.mark_fallback("png_retry")
-                record_fallback_context("png_retry", context_summary)
+                fallback_ctx.record_fallback_context("png_retry", context_summary)
                 try:
                     png_prepared = await prepare_image_payload(
                         image=image,
@@ -525,7 +412,6 @@ async def moderator_api(
                         payload_metadata["png_retry_due_to_internal_error"] = True
                     latency_tracker.record_failure("internal_server_error")
                     continue
-            error_message = format_exception_for_log(exc)
             print(
                 "[moderator_api] OpenAI internal server error: "
                 f"{error_message}. Context: {context_summary}."
@@ -543,24 +429,48 @@ async def moderator_api(
         except openai.APITimeoutError as exc:
             latency_tracker.stop("api_call_ms", api_started)
             error_message = format_exception_for_log(exc)
+            had_openai_timeout = True
+            latency_tracker.record_failure("openai_timeout")
+            remote_handled = await fallback_ctx.handle_remote_inline_fallback(
+                label="remote_openai_timeout",
+                error_message=error_message,
+                attempt_number=attempt_number,
+            )
+            if remote_handled:
+                print(
+                    f"[moderator_api] Moderation request timed out on attempt "
+                    f"{attempt_number}/{max_attempts}: {error_message}. "
+                    "Retrying with inline payload."
+                )
+                continue
             print(
                 f"[moderator_api] Moderation request timed out on attempt "
                 f"{attempt_number}/{max_attempts}: {error_message}."
             )
-            had_openai_timeout = True
-            latency_tracker.record_failure("openai_timeout")
             if attempt_index < max_attempts - 1:
                 await asyncio.sleep(min(2 ** attempt_index, 5.0))
             continue
         except httpx.TimeoutException as exc:
             latency_tracker.stop("api_call_ms", api_started)
             error_message = format_exception_for_log(exc)
+            had_http_timeout = True
+            latency_tracker.record_failure("http_timeout")
+            remote_handled = await fallback_ctx.handle_remote_inline_fallback(
+                label="remote_http_timeout",
+                error_message=error_message,
+                attempt_number=attempt_number,
+            )
+            if remote_handled:
+                print(
+                    f"[moderator_api] HTTP timeout during moderation request on attempt "
+                    f"{attempt_number}/{max_attempts}: {error_message}. "
+                    "Retrying with inline payload."
+                )
+                continue
             print(
                 f"[moderator_api] HTTP timeout during moderation request on attempt "
                 f"{attempt_number}/{max_attempts}: {error_message}."
             )
-            had_http_timeout = True
-            latency_tracker.record_failure("http_timeout")
             if attempt_index < max_attempts - 1:
                 await asyncio.sleep(min(2 ** attempt_index, 5.0))
             continue
@@ -576,6 +486,20 @@ async def moderator_api(
                 payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
             error_message = format_exception_for_log(exc)
+            latency_tracker.record_failure("unexpected_api_error")
+            remote_handled = await fallback_ctx.handle_remote_inline_fallback(
+                label="remote_unexpected_error",
+                error_message=f"{error_message}. Context: {context_summary}",
+                attempt_number=attempt_number,
+                context_summary=context_summary,
+            )
+            if remote_handled:
+                print(
+                    "[moderator_api] Unexpected error from OpenAI API for remote payload on attempt "
+                    f"{attempt_number}/{max_attempts}: {error_message}. "
+                    "Retrying with inline payload."
+                )
+                continue
             print(
                 "[moderator_api] Unexpected error from OpenAI API: "
                 f"{error_message}. Context: {context_summary}."
@@ -585,7 +509,6 @@ async def moderator_api(
                 error_message,
                 context_summary,
             )
-            latency_tracker.record_failure("unexpected_api_error")
             continue
 
         if not response or not response.results:
@@ -658,7 +581,7 @@ async def moderator_api(
                 if isinstance(metadata_dict, dict):
                     metadata_dict["moderation_tracker"] = latency_tracker.snapshot()
                 try:
-                    await _report_moderation_fallback_to_log(
+                    await report_moderation_fallback_to_log(
                         scanner,
                         fallback_notice=fallback_notice,
                         image_state=image_state,

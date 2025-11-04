@@ -322,6 +322,8 @@ images_mod = importlib.util.module_from_spec(images_spec)
 assert images_spec.loader is not None
 images_spec.loader.exec_module(images_mod)
 context_mod = importlib.import_module("modules.nsfw_scanner.helpers.context")
+image_processing_mod = importlib.import_module("modules.nsfw_scanner.helpers.image_processing")
+image_logging_mod = importlib.import_module("modules.nsfw_scanner.helpers.image_logging")
 
 
 @pytest.fixture
@@ -337,7 +339,7 @@ async def test_process_image_reuses_png_without_conversion(monkeypatch, tmp_path
     def fail_convert(*_args, **_kwargs):
         raise AssertionError("_encode_image_to_png_bytes should not be called for PNG input")
 
-    monkeypatch.setattr(images_mod, "_encode_image_to_png_bytes", fail_convert)
+    monkeypatch.setattr(image_processing_mod, "_encode_image_to_png_bytes", fail_convert)
 
     async def fake_get_settings(_guild_id, _keys):
         return {
@@ -371,14 +373,14 @@ async def test_process_image_reuses_jpeg_when_possible(monkeypatch, tmp_path):
     jpeg_path = tmp_path / "sample.jpg"
     Image.new("RGB", (8, 8), (0, 255, 0)).save(jpeg_path, format="JPEG")
 
-    original_convert = images_mod._encode_image_to_png_bytes
+    original_convert = image_processing_mod._encode_image_to_png_bytes
     convert_calls = {"count": 0}
 
     def tracked_convert(src):
         convert_calls["count"] += 1
         return original_convert(src)
 
-    monkeypatch.setattr(images_mod, "_encode_image_to_png_bytes", tracked_convert)
+    monkeypatch.setattr(image_processing_mod, "_encode_image_to_png_bytes", tracked_convert)
 
     async def fake_get_settings(_guild_id, _keys):
         return {
@@ -412,14 +414,14 @@ async def test_process_image_converts_unsupported_formats(monkeypatch, tmp_path)
     bmp_path = tmp_path / "sample.bmp"
     Image.new("RGB", (8, 8), (0, 0, 255)).save(bmp_path, format="BMP")
 
-    original_convert = images_mod._encode_image_to_png_bytes
+    original_convert = image_processing_mod._encode_image_to_png_bytes
     convert_calls = {"count": 0}
 
     def tracked_convert(src):
         convert_calls["count"] += 1
         return original_convert(src)
 
-    monkeypatch.setattr(images_mod, "_encode_image_to_png_bytes", tracked_convert)
+    monkeypatch.setattr(image_processing_mod, "_encode_image_to_png_bytes", tracked_convert)
 
     async def fake_get_settings(_guild_id, _keys):
         return {
@@ -479,3 +481,81 @@ async def test_process_image_uses_precomputed_settings(monkeypatch, tmp_path):
 
     assert result is not None
     assert result.get("is_nsfw") is False
+
+
+@pytest.mark.anyio
+async def test_process_image_logs_truncated_recovery_metadata(monkeypatch, tmp_path):
+    monkeypatch.setattr(image_logging_mod, "LOG_CHANNEL_ID", 999, raising=False)
+
+    log_calls: list[dict[str, object]] = []
+
+    async def capture_log(
+        _bot,
+        *,
+        summary: str,
+        details: str | None = None,
+        severity: str | None = None,
+        context: str | None = None,
+        logger=None,
+    ) -> bool:
+        log_calls.append(
+            {
+                "summary": summary,
+                "details": details,
+                "severity": severity,
+                "context": context,
+            }
+        )
+        return True
+
+    monkeypatch.setattr(image_logging_mod, "log_serious_issue", capture_log)
+
+    open_attempts: list[bool] = []
+
+    def _fresh_image() -> Image.Image:
+        img = Image.new("RGBA", (6, 6), (0, 0, 255, 255))
+        img.info["original_format"] = "JPEG"
+        return img
+
+    async def fake_open(path, *, allow_truncated=False):
+        open_attempts.append(allow_truncated)
+        if not allow_truncated:
+            raise OSError("image file is truncated")
+        return _fresh_image()
+
+    monkeypatch.setattr(image_processing_mod, "_open_image_from_path", fake_open)
+
+    async def fake_run_pipeline(*_args, **_kwargs):
+        return {"is_nsfw": False}
+
+    monkeypatch.setattr(image_processing_mod, "_run_image_pipeline", fake_run_pipeline)
+
+    jpg_path = tmp_path / "truncated.jpg"
+    Image.new("RGB", (4, 4), (0, 0, 0)).save(jpg_path, format="JPEG")
+
+    result = await images_mod.process_image(
+        scanner=types.SimpleNamespace(bot=object()),
+        original_filename=str(jpg_path),
+        guild_id=777,
+        source_url="https://example.com/truncated.jpg",
+        clean_up=False,
+    )
+
+    assert result is not None
+    assert open_attempts == [False, True]
+    assert log_calls, "Expected truncated recovery log entry"
+    entry = log_calls[0]
+    assert entry["summary"] == "Recovered truncated image during NSFW scan."
+    details = entry["details"] or ""
+    assert "**Fallback Mode**: `LOAD_TRUNCATED_IMAGES`" in details
+    assert "**Fallback Result**: `Success`" in details
+    assert "**Guild ID**: `777`" in details
+    assert "<https://example.com/truncated.jpg>" in details
+    assert "**Extension**: `.jpg`" in details
+    assert "**Source Bytes**:" in details
+    assert "**Error**: `OSError: image file is truncated`" in details
+
+
+def test_is_truncated_image_error_handles_decoder_stream():
+    error = OSError("unrecognized data stream contents when reading image file")
+    assert images_mod._is_truncated_image_error(error) is True
