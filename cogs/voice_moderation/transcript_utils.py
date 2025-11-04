@@ -277,7 +277,13 @@ class LiveTranscriptEmitter:
                 value=str(len(flush_chunk)),
                 inline=True,
             )
-            embed.set_footer(text=transcript_mode)
+            if hasattr(embed, "set_footer"):
+                try:
+                    embed.set_footer(text=transcript_mode)
+                except Exception:
+                    setattr(embed, "footer", transcript_mode)
+            else:
+                setattr(embed, "footer", transcript_mode)
             try:
                 await mod_logging.log_to_channel(
                     embed, self._transcript_channel_id, self._bot
