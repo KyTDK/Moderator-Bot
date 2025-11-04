@@ -3,6 +3,7 @@ import contextlib
 import os
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
+from functools import partial
 from typing import Any, Optional
 import time
 
@@ -20,6 +21,10 @@ from cogs.autonomous_moderation import helpers as am_helpers
 from cogs.voice_moderation.models import VoiceModerationReport
 from cogs.voice_moderation.prompt import VOICE_SYSTEM_PROMPT, BASE_SYSTEM_TOKENS
 from cogs.voice_moderation.transcribe_queue import TranscriptionWorkQueue
+from cogs.voice_moderation.transcript_utils import (
+    LiveTranscriptEmitter,
+    TranscriptFormatter,
+)
 from cogs.voice_moderation.voice_io import (
     HARVEST_WINDOW_SECONDS,
     harvest_pcm_chunk,
@@ -93,6 +98,81 @@ class VoiceModeratorCog(commands.Cog):
         st.channel_ids = []
         st.index = 0
         st.next_start = datetime.now(timezone.utc)
+
+    async def _record_voice_metrics(
+        self,
+        *,
+        guild: discord.Guild,
+        channel: discord.VoiceChannel,
+        transcript_only: bool,
+        high_accuracy: bool,
+        listen_delta: timedelta,
+        idle_delta: timedelta,
+        utterance_count: int,
+        status: str,
+        report_obj: VoiceModerationReport | None,
+        total_tokens: int,
+        request_cost: float,
+        usage_snapshot: dict[str, Any],
+        duration_ms: int,
+        error: str | None = None,
+    ) -> None:
+        violations_payload: list[dict[str, Any]] = []
+        if report_obj and getattr(report_obj, "violations", None):
+            for violation in list(report_obj.violations)[:10]:
+                violations_payload.append(
+                    {
+                        "user_id": getattr(violation, "user_id", None),
+                        "rule": getattr(violation, "rule", None),
+                        "reason": getattr(violation, "reason", None),
+                        "actions": list(getattr(violation, "actions", []) or []),
+                    }
+                )
+
+        scan_payload: dict[str, Any] = {
+            "is_nsfw": bool(violations_payload),
+            "reason": status,
+            "violations": violations_payload,
+            "violations_count": len(violations_payload),
+            "total_tokens": int(total_tokens),
+            "request_cost_usd": float(request_cost or 0),
+            "usage_snapshot": usage_snapshot or {},
+            "transcript_only": bool(transcript_only),
+            "high_accuracy": bool(high_accuracy),
+        }
+        if error:
+            scan_payload["error"] = error
+
+        extra_context = {
+            "status": status,
+            "utterance_count": utterance_count,
+            "listen_window_seconds": listen_delta.total_seconds(),
+            "idle_window_seconds": idle_delta.total_seconds(),
+            "transcript_only": bool(transcript_only),
+            "high_accuracy": bool(high_accuracy),
+        }
+
+        try:
+            await log_media_scan(
+                guild_id=guild.id,
+                channel_id=getattr(channel, "id", None),
+                user_id=None,
+                message_id=None,
+                content_type="voice",
+                detected_mime=None,
+                filename=None,
+                file_size=None,
+                source="voice_pipeline",
+                scan_result=scan_payload,
+                status=status,
+                scan_duration_ms=duration_ms,
+                accelerated=await mysql.is_accelerated(guild_id=guild.id),
+                reference=f"voice:{guild.id}:{getattr(channel, 'id', 'unknown')}",
+                extra_context=extra_context,
+                scanner="voice_moderation",
+            )
+        except Exception as metrics_exc:
+            print(f"[metrics] Voice metrics logging failed for guild {guild.id}: {metrics_exc}")
 
     @tasks.loop(seconds=10)
     async def loop(self):
@@ -245,103 +325,23 @@ class VoiceModeratorCog(commands.Cog):
             "cogs.voice_moderation.transcript",
             guild_id=guild.id,
         )
-        author_label = transcript_texts["author_label"]
-        utterance_label = transcript_texts["utterance_label"]
-        divider = transcript_texts["divider"]
-        unknown_speaker = transcript_texts["unknown_speaker"]
-        unknown_prefix = transcript_texts["unknown_prefix"]
 
-        member_cache: dict[int, tuple[str, str, str]] = {}
-
-        async def _resolve_participant(uid: int) -> tuple[str, str, str]:
-            if uid <= 0:
-                return unknown_speaker, unknown_prefix, unknown_speaker
-            cached = member_cache.get(uid)
-            if cached:
-                return cached
-            member = await safe_get_member(guild, uid)
-            if member is not None:
-                info = (
-                    f"{member.mention} ({member.display_name}, id = {uid})",
-                    member.mention,
-                    member.display_name,
-                )
-            else:
-                fallback = transcript_texts["user_fallback"].format(id=uid)
-                info = (
-                    fallback,
-                    f"<@{uid}>",
-                    fallback,
-                )
-            member_cache[uid] = info
-            return info
-
-        async def _record_voice_metrics(
-            *,
-            status: str,
-            report_obj: VoiceModerationReport | None,
-            total_tokens: int,
-            request_cost: float,
-            usage_snapshot: dict[str, Any],
-            duration_ms: int,
-            error: str | None = None,
-        ) -> None:
-            violations_payload: list[dict[str, Any]] = []
-            if report_obj and getattr(report_obj, "violations", None):
-                for violation in list(report_obj.violations)[:10]:
-                    violations_payload.append(
-                        {
-                            "user_id": getattr(violation, "user_id", None),
-                            "rule": getattr(violation, "rule", None),
-                            "reason": getattr(violation, "reason", None),
-                            "actions": list(getattr(violation, "actions", []) or []),
-                        }
-                    )
-
-            scan_payload: dict[str, Any] = {
-                "is_nsfw": bool(violations_payload),
-                "reason": status,
-                "violations": violations_payload,
-                "violations_count": len(violations_payload),
-                "total_tokens": int(total_tokens),
-                "request_cost_usd": float(request_cost or 0),
-                "usage_snapshot": usage_snapshot or {},
-                "transcript_only": bool(transcript_only),
-                "high_accuracy": bool(high_accuracy),
-            }
-            if error:
-                scan_payload["error"] = error
-
-            extra_context = {
-                "status": status,
-                "utterance_count": len(utterances),
-                "listen_window_seconds": listen_delta.total_seconds(),
-                "idle_window_seconds": idle_delta.total_seconds(),
-                "transcript_only": bool(transcript_only),
-                "high_accuracy": bool(high_accuracy),
-            }
-
-            try:
-                await log_media_scan(
-                    guild_id=guild.id,
-                    channel_id=getattr(channel, "id", None),
-                    user_id=None,
-                    message_id=None,
-                    content_type="voice",
-                    detected_mime=None,
-                    filename=None,
-                    file_size=None,
-                    source="voice_pipeline",
-                    scan_result=scan_payload,
-                    status=status,
-                    scan_duration_ms=duration_ms,
-                    accelerated=await mysql.is_accelerated(guild_id=guild.id),
-                    reference=f"voice:{guild.id}:{getattr(channel, 'id', 'unknown')}",
-                    extra_context=extra_context,
-                    scanner="voice_moderation",
-                )
-            except Exception as metrics_exc:
-                print(f"[metrics] Voice metrics logging failed for guild {guild.id}: {metrics_exc}")
+        formatter = TranscriptFormatter(
+            guild=guild,
+            transcript_texts=transcript_texts,
+            member_resolver=partial(safe_get_member, guild),
+        )
+        live_emitter = LiveTranscriptEmitter(
+            formatter=formatter,
+            bot=self.bot,
+            channel=channel,
+            transcript_channel_id=transcript_channel_id,
+            high_quality=high_quality_transcription,
+            min_utterances=_LIVE_FLUSH_MIN_UTTERANCES,
+            max_utterances=_LIVE_FLUSH_MAX_UTTERANCES,
+            min_interval=_LIVE_FLUSH_MIN_INTERVAL_S,
+            max_latency=_LIVE_FLUSH_MAX_LATENCY_S,
+        )
 
         chunk_queue: asyncio.Queue[Optional[list[tuple[int, str, datetime]]]] | None = None
         pipeline_task: Optional[asyncio.Task[None]] = None
@@ -350,145 +350,6 @@ class VoiceModeratorCog(commands.Cog):
             "Violation history:\n"
             "Not provided by policy; do not consider prior violations.\n\n"
         )
-
-        async def _build_transcript_block(
-            chunk: list[tuple[int, str, datetime]]
-        ) -> str:
-            if not chunk:
-                return ""
-            parts: list[str] = []
-            for uid, text, _ts in sorted(chunk, key=lambda x: x[2]):
-                author_str, _, _ = await _resolve_participant(uid)
-                parts.append(
-                    f"{author_label}: {author_str}\n{utterance_label}: {text}\n{divider}"
-                )
-            return "\n".join(parts)
-
-        async def _build_embed_lines(
-            all_utts: list[tuple[int, str, datetime]]
-        ) -> list[str]:
-            lines: list[str] = []
-            for uid, text, ts in sorted(all_utts, key=lambda x: x[2]):
-                unix = int(ts.timestamp())
-                stamp = f"<t:{unix}:t>"
-                _, prefix, who = await _resolve_participant(uid)
-                lines.append(
-                    transcript_texts["line"].format(
-                        timestamp=stamp,
-                        prefix=prefix,
-                        name=who,
-                        text=text,
-                    )
-                )
-            return lines
-
-        def _chunk_text(s: str, limit: int = 3900) -> list[str]:
-            if len(s) <= limit:
-                return [s]
-            parts: list[str] = []
-            i = 0
-            n = len(s)
-            while i < n:
-                j = min(i + limit, n)
-                if j < n:
-                    k = s.rfind("\n", i, j)
-                    if k != -1 and k > i:
-                        j = k + 1
-                parts.append(s[i:j])
-                i = j
-            return parts
-
-        live_lock = asyncio.Lock()
-        live_buffer: list[tuple[int, str, datetime]] = []
-        live_last_flush = time.monotonic()
-        live_flush_count = 0
-
-        async def _emit_live_transcript(
-            chunk: list[tuple[int, str, datetime]], *, force: bool = False
-        ) -> None:
-            if not transcript_channel_id:
-                return
-
-            nonlocal live_last_flush, live_flush_count
-
-            async with live_lock:
-                if chunk:
-                    live_buffer.extend(chunk)
-
-                if not live_buffer:
-                    return
-
-                now_mono = time.monotonic()
-                should_flush = force
-                if not should_flush:
-                    buffer_len = len(live_buffer)
-                    if buffer_len >= _LIVE_FLUSH_MAX_UTTERANCES:
-                        should_flush = True
-                    elif (
-                        buffer_len >= _LIVE_FLUSH_MIN_UTTERANCES
-                        and (now_mono - live_last_flush) >= _LIVE_FLUSH_MIN_INTERVAL_S
-                    ):
-                        should_flush = True
-                    elif (now_mono - live_last_flush) >= _LIVE_FLUSH_MAX_LATENCY_S:
-                        should_flush = True
-
-                if not should_flush:
-                    return
-
-                flush_chunk = sorted(live_buffer, key=lambda x: x[2])
-                live_buffer.clear()
-                live_last_flush = now_mono
-                live_flush_count += 1
-
-            try:
-                pretty_lines = await _build_embed_lines(flush_chunk)
-            except Exception as exc:
-                print(f"[VCMod] failed to build live transcript: {exc}")
-                return
-
-            if not pretty_lines:
-                return
-
-            transcript_mode = (
-                transcript_texts["footer_high"]
-                if high_quality_transcription
-                else transcript_texts["footer_normal"]
-            )
-
-            payload = "\n".join(pretty_lines)
-            chunks = _chunk_text(payload, limit=3900)
-            total_parts = len(chunks)
-
-            for idx, part in enumerate(chunks, start=1):
-                if total_parts == 1:
-                    title_suffix = f" (live {live_flush_count})"
-                else:
-                    title_suffix = f" (live {live_flush_count}.{idx}/{total_parts})"
-
-                embed = discord.Embed(
-                    title=f"{transcript_texts['title_single']}{title_suffix}",
-                    description=part,
-                    colour=discord.Colour.blurple(),
-                    timestamp=discord.utils.utcnow(),
-                )
-                embed.add_field(
-                    name=transcript_texts["field_channel"],
-                    value=channel.mention,
-                    inline=True,
-                )
-                embed.add_field(
-                    name=transcript_texts["field_utterances"],
-                    value=str(len(flush_chunk)),
-                    inline=True,
-                )
-                embed.set_footer(text=transcript_mode)
-                try:
-                    await mod_logging.log_to_channel(
-                        embed, transcript_channel_id, self.bot
-                    )
-                except Exception as exc:
-                    print(f"[VCMod] failed to post live transcript: {exc}")
-                    break
 
         async def _pipeline_worker() -> None:
             assert chunk_queue is not None
@@ -499,7 +360,7 @@ class VoiceModeratorCog(commands.Cog):
                         break
                     if transcript_only:
                         continue
-                    transcript_blob = await _build_transcript_block(chunk)
+                    transcript_blob = await formatter.build_transcript_block(chunk)
                     if not transcript_blob.strip():
                         continue
                     pipeline_started = time.perf_counter()
@@ -524,7 +385,14 @@ class VoiceModeratorCog(commands.Cog):
                         duration_ms = int(
                             max((time.perf_counter() - pipeline_started) * 1000, 0)
                         )
-                        await _record_voice_metrics(
+                        await self._record_voice_metrics(
+                            guild=guild,
+                            channel=channel,
+                            transcript_only=transcript_only,
+                            high_accuracy=high_accuracy,
+                            listen_delta=listen_delta,
+                            idle_delta=idle_delta,
+                            utterance_count=len(utterances),
                             status="exception",
                             report_obj=None,
                             total_tokens=0,
@@ -538,7 +406,14 @@ class VoiceModeratorCog(commands.Cog):
                     duration_ms = int(
                         max((time.perf_counter() - pipeline_started) * 1000, 0)
                     )
-                    await _record_voice_metrics(
+                    await self._record_voice_metrics(
+                        guild=guild,
+                        channel=channel,
+                        transcript_only=transcript_only,
+                        high_accuracy=high_accuracy,
+                        listen_delta=listen_delta,
+                        idle_delta=idle_delta,
+                        utterance_count=len(utterances),
                         status=status,
                         report_obj=report,
                         total_tokens=total_tokens,
@@ -624,7 +499,7 @@ class VoiceModeratorCog(commands.Cog):
                 )
                 if chunk_utts:
                     utterances.extend(chunk_utts)
-                    await _emit_live_transcript(chunk_utts)
+                    await live_emitter.add_chunk(chunk_utts)
                     if chunk_queue is not None:
                         await chunk_queue.put(chunk_utts)
             except Exception as e:
@@ -707,7 +582,7 @@ class VoiceModeratorCog(commands.Cog):
                 with contextlib.suppress(asyncio.CancelledError, Exception):
                     await pipeline_task
 
-        await _emit_live_transcript([], force=True)
+        await live_emitter.flush(force=True)
 
         if not utterances:
             return
@@ -723,10 +598,10 @@ class VoiceModeratorCog(commands.Cog):
 
         if transcript_channel_id:
             try:
-                pretty_lines = await _build_embed_lines(utterances)
+                pretty_lines = await formatter.build_embed_lines(utterances)
                 if pretty_lines:
                     embed_transcript = "\n".join(pretty_lines)
-                    chunks = _chunk_text(embed_transcript, limit=3900)
+                    chunks = TranscriptFormatter.chunk_text(embed_transcript, limit=3900)
                     total = len(chunks)
                     transcript_mode = (
                         transcript_texts["footer_high"]

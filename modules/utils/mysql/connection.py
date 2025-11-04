@@ -257,12 +257,23 @@ else:
                         guild_id BIGINT PRIMARY KEY,
                         name VARCHAR(255) NOT NULL,
                         owner_id BIGINT NOT NULL,
+                        total_members INT UNSIGNED NOT NULL DEFAULT 0,
                         locale VARCHAR(16) NULL,
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         UNIQUE KEY (guild_id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                     """
                 )
+                await cur.execute("SHOW COLUMNS FROM guilds LIKE 'total_members'")
+                column = await cur.fetchone()
+                if not column:
+                    await cur.execute(
+                        """
+                        ALTER TABLE guilds
+                        ADD COLUMN total_members INT UNSIGNED NOT NULL DEFAULT 0
+                        AFTER owner_id
+                        """
+                    )
                 await cur.execute(
                     """
                     CREATE TABLE IF NOT EXISTS captcha_embeds (

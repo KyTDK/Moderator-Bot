@@ -44,19 +44,33 @@ async def get_all_guild_locales() -> Dict[int, Optional[str]]:
     return result
 
 
-async def add_guild(guild_id: int, name: str, owner_id: int, locale: Optional[str]):
+async def add_guild(
+    guild_id: int,
+    name: str,
+    owner_id: int,
+    locale: Optional[str],
+    total_members: Optional[int],
+) -> None:
     """Add a new guild to the database."""
+
+    members_value = 0
+    if total_members is not None:
+        try:
+            members_value = max(int(total_members), 0)
+        except (TypeError, ValueError):
+            members_value = 0
 
     await execute_query(
         """
-        INSERT INTO guilds (guild_id, name, owner_id, locale)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO guilds (guild_id, name, owner_id, locale, total_members)
+        VALUES (%s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
             name = VALUES(name),
             owner_id = VALUES(owner_id),
-            locale = VALUES(locale)
+            locale = VALUES(locale),
+            total_members = VALUES(total_members)
         """,
-        (guild_id, name, owner_id, locale),
+        (guild_id, name, owner_id, locale, members_value),
     )
 
 
@@ -67,4 +81,3 @@ async def remove_guild(guild_id: int):
         "DELETE FROM guilds WHERE guild_id = %s",
         (guild_id,),
     )
-

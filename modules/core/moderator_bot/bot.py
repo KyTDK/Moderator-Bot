@@ -162,7 +162,10 @@ class ModeratorBot(
                 guild.name,
             )
             return
-        await mysql.add_guild(guild.id, guild.name, owner_id, normalized_locale)
+        member_count = getattr(guild, "member_count", None)
+        if member_count is None:
+            member_count = getattr(guild, "approximate_member_count", None)
+        await mysql.add_guild(guild.id, guild.name, owner_id, normalized_locale, member_count)
         await self.refresh_guild_locale_override(guild.id)
         dash_url = f"https://modbot.neomechanical.com/dashboard/{guild.id}"
 

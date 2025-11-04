@@ -117,7 +117,16 @@ class BackgroundTaskMixin(GuildLocaleMixin):
                     guild.name,
                 )
                 return False
-            await mysql.add_guild(guild.id, guild.name, owner_id, normalized_locale)
+            member_count = getattr(guild, "member_count", None)
+            if member_count is None:
+                member_count = getattr(guild, "approximate_member_count", None)
+            await mysql.add_guild(
+                guild.id,
+                guild.name,
+                owner_id,
+                normalized_locale,
+                member_count,
+            )
             await self.refresh_guild_locale_override(guild.id)
         except Exception as exc:
             print(f"[ERROR] Failed to sync guild {guild.id}: {exc}")
