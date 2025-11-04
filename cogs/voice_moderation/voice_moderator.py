@@ -1,338 +1,92 @@
+from __future__ import annotations
+
 import asyncio
 import contextlib
-import io
 import os
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
-from functools import partial
-from typing import Any, Optional
-import time
+from typing import Optional
 
 import discord
 from discord.ext import commands, tasks
-import httpx
-
 from dotenv import load_dotenv
 
-from modules.metrics import log_media_scan
-from modules.utils import mysql, mod_logging
-from modules.utils.discord_utils import safe_get_member
+from modules.utils import mysql
 from modules.utils.time import parse_duration
 
-from cogs.autonomous_moderation import helpers as am_helpers
-from cogs.voice_moderation.models import VoiceModerationReport
-from cogs.voice_moderation.prompt import VOICE_SYSTEM_PROMPT, BASE_SYSTEM_TOKENS
-from cogs.voice_moderation.transcribe_queue import TranscriptionWorkQueue
-from cogs.voice_moderation.transcript_utils import (
-    LiveTranscriptEmitter,
-    TranscriptFormatter,
-)
-from cogs.voice_moderation.voice_io import (
-    HARVEST_WINDOW_SECONDS,
-    harvest_pcm_chunk,
-    transcribe_harvest_chunk,
-)
-from modules.ai.pipeline import run_moderation_pipeline_voice
+from .announcements import AnnouncementManager
+from .cycle import VoiceCycleConfig, run_voice_cycle
+from .metrics import record_voice_metrics
+from .state import GuildVCState
 
 load_dotenv()
 AUTOMOD_OPENAI_KEY = os.getenv("AUTOMOD_OPENAI_KEY")
 AIMOD_MODEL = os.getenv("AIMOD_MODEL", "gpt-5-nano")
 VCMOD_TTS_MODEL = os.getenv("VCMOD_TTS_MODEL", "gpt-4o-mini-tts")
 VCMOD_TTS_VOICE = os.getenv("VCMOD_TTS_VOICE", "alloy")
-_VC_TTS_ENDPOINT = "https://api.openai.com/v1/audio/speech"
-_VC_TTS_TIMEOUT = httpx.Timeout(20.0)
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10))
 
-async def _synthesize_tts(text: str) -> Optional[bytes]:
-    if not text or not AUTOMOD_OPENAI_KEY:
-        return None
-    payload = {
-        "model": VCMOD_TTS_MODEL,
-        "voice": VCMOD_TTS_VOICE,
-        "input": text,
-        "format": "wav",
-    }
-    headers = {
-        "Authorization": f"Bearer {AUTOMOD_OPENAI_KEY}",
-        "Content-Type": "application/json",
-    }
-    try:
-        async with httpx.AsyncClient(timeout=_VC_TTS_TIMEOUT) as client:
-            response = await client.post(_VC_TTS_ENDPOINT, headers=headers, json=payload)
-            response.raise_for_status()
-            return response.content
-    except Exception as exc:
-        print(f"[VCMod] TTS synthesis failed: {exc}")
-        return None
-
-
-async def _play_tts_audio(
-    *,
-    voice_client: discord.VoiceClient,
-    audio_bytes: bytes,
-    loop: asyncio.AbstractEventLoop,
-) -> bool:
-    if not audio_bytes:
-        return False
-    stream = io.BytesIO(audio_bytes)
-    try:
-        audio_source = discord.PCMVolumeTransformer(
-            discord.FFmpegPCMAudio(stream, pipe=True, before_options="-f wav"),
-            volume=1.0,
-        )
-    except Exception as exc:
-        print(f"[VCMod] Failed to create TTS audio source: {exc}")
-        return False
-
-    finished = asyncio.Event()
-
-    def _on_finished(error: Exception | None) -> None:
-        if error:
-            print(f"[VCMod] TTS playback error: {error}")
-        loop.call_soon_threadsafe(finished.set)
-
-    try:
-        if voice_client.is_playing():
-            voice_client.stop()
-        voice_client.play(audio_source, after=_on_finished)
-    except Exception as exc:
-        print(f"[VCMod] Failed to start TTS playback: {exc}")
-        return False
-
-    try:
-        await asyncio.wait_for(finished.wait(), timeout=15.0)
-    except asyncio.TimeoutError:
-        print("[VCMod] TTS playback timed out; stopping playback.")
-        with contextlib.suppress(Exception):
-            if voice_client.is_playing():
-                voice_client.stop()
-        return False
-    return True
-
-
-async def _play_announcement_tts(
-    *,
-    voice_client: discord.VoiceClient,
-    text: str,
-    loop: asyncio.AbstractEventLoop,
-) -> bool:
-    if not text:
-        return False
-    audio_bytes = await _synthesize_tts(text)
-    if not audio_bytes:
-        return False
-    return await _play_tts_audio(
-        voice_client=voice_client,
-        audio_bytes=audio_bytes,
-        loop=loop,
-    )
-
-_TRANSCRIBE_WORKER_COUNT = 3
-_TRANSCRIBE_QUEUE_MAX = 6
-
-_LIVE_FLUSH_MIN_UTTERANCES = 3
-_LIVE_FLUSH_MAX_UTTERANCES = 12
-_LIVE_FLUSH_MIN_INTERVAL_S = 2.5
-_LIVE_FLUSH_MAX_LATENCY_S = 8.0
-
-class _GuildVCState:
-    def __init__(self) -> None:
-        self.channel_ids: list[int] = []
-        self.index: int = 0
-        self.busy_task: Optional[asyncio.Task] = None
-        self.voice: Optional[discord.VoiceClient] = None
-        self.next_start: datetime = datetime.now(timezone.utc)
-        self.last_announce_key: Optional[tuple[int, int]] = None
 
 class VoiceModeratorCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self._state: dict[int, _GuildVCState] = {}
+        self._states: dict[int, GuildVCState] = {}
+        self._announcements = AnnouncementManager(
+            api_key=AUTOMOD_OPENAI_KEY,
+            model=VCMOD_TTS_MODEL,
+            voice=VCMOD_TTS_VOICE,
+        )
         self.loop.start()
 
     def cog_unload(self) -> None:
         self.loop.cancel()
 
-    def _get_state(self, guild_id: int) -> _GuildVCState:
-        st = self._state.get(guild_id)
-        if not st:
-            st = _GuildVCState()
-            self._state[guild_id] = st
-        return st
+    def _get_state(self, guild_id: int) -> GuildVCState:
+        state = self._states.get(guild_id)
+        if not state:
+            state = GuildVCState()
+            self._states[guild_id] = state
+        return state
 
     async def _teardown_state(self, guild: discord.Guild) -> None:
-        st = self._get_state(guild.id)
-        if st.busy_task and not st.busy_task.done():
-            st.busy_task.cancel()
+        state = self._get_state(guild.id)
+        if state.busy_task and not state.busy_task.done():
+            state.busy_task.cancel()
             with contextlib.suppress(asyncio.CancelledError, Exception):
-                await st.busy_task
-        st.busy_task = None
+                await state.busy_task
+        state.busy_task = None
 
-        vc = guild.voice_client or st.voice
-        st.voice = None
-        st.last_announce_key = None
+        voice = guild.voice_client or state.voice
+        state.voice = None
+        state.last_announce_key = None
 
-        if vc is not None:
-            sink = getattr(vc, "_mod_sink", None)
-            if sink is not None and hasattr(vc, "stop_listening"):
+        if voice is not None:
+            sink = getattr(voice, "_mod_sink", None)
+            if sink is not None and hasattr(voice, "stop_listening"):
                 with contextlib.suppress(Exception):
-                    vc.stop_listening()
+                    voice.stop_listening()
                 with contextlib.suppress(Exception):
                     sink.cleanup()
             with contextlib.suppress(Exception):
-                setattr(vc, "_mod_pool", None)
-                setattr(vc, "_mod_sink", None)
-            if vc.is_connected():
+                setattr(voice, "_mod_pool", None)
+                setattr(voice, "_mod_sink", None)
+            if voice.is_connected():
                 with contextlib.suppress(Exception):
-                    await vc.disconnect(force=True)
+                    await voice.disconnect(force=True)
 
-        st.channel_ids = []
-        st.index = 0
-        st.next_start = datetime.now(timezone.utc)
-
-    async def _record_voice_metrics(
-        self,
-        *,
-        guild: discord.Guild,
-        channel: discord.VoiceChannel,
-        transcript_only: bool,
-        high_accuracy: bool,
-        listen_delta: timedelta,
-        idle_delta: timedelta,
-        utterance_count: int,
-        status: str,
-        report_obj: VoiceModerationReport | None,
-        total_tokens: int,
-        request_cost: float,
-        usage_snapshot: dict[str, Any],
-        duration_ms: int,
-        error: str | None = None,
-    ) -> None:
-        violations_payload: list[dict[str, Any]] = []
-        if report_obj and getattr(report_obj, "violations", None):
-            for violation in list(report_obj.violations)[:10]:
-                violations_payload.append(
-                    {
-                        "user_id": getattr(violation, "user_id", None),
-                        "rule": getattr(violation, "rule", None),
-                        "reason": getattr(violation, "reason", None),
-                        "actions": list(getattr(violation, "actions", []) or []),
-                    }
-                )
-
-        scan_payload: dict[str, Any] = {
-            "is_nsfw": bool(violations_payload),
-            "reason": status,
-            "violations": violations_payload,
-            "violations_count": len(violations_payload),
-            "total_tokens": int(total_tokens),
-            "request_cost_usd": float(request_cost or 0),
-            "usage_snapshot": usage_snapshot or {},
-            "transcript_only": bool(transcript_only),
-            "high_accuracy": bool(high_accuracy),
-        }
-        if error:
-            scan_payload["error"] = error
-
-        extra_context = {
-            "status": status,
-            "utterance_count": utterance_count,
-            "listen_window_seconds": listen_delta.total_seconds(),
-            "idle_window_seconds": idle_delta.total_seconds(),
-            "transcript_only": bool(transcript_only),
-            "high_accuracy": bool(high_accuracy),
-        }
-
-        try:
-            await log_media_scan(
-                guild_id=guild.id,
-                channel_id=getattr(channel, "id", None),
-                user_id=None,
-                message_id=None,
-                content_type="voice",
-                detected_mime=None,
-                filename=None,
-                file_size=None,
-                source="voice_pipeline",
-                scan_result=scan_payload,
-                status=status,
-                scan_duration_ms=duration_ms,
-                accelerated=await mysql.is_accelerated(guild_id=guild.id),
-                reference=f"voice:{guild.id}:{getattr(channel, 'id', 'unknown')}",
-                extra_context=extra_context,
-                scanner="voice_moderation",
-            )
-        except Exception as metrics_exc:
-            print(f"[metrics] Voice metrics logging failed for guild {guild.id}: {metrics_exc}")
-
-    async def _maybe_announce_join(
-        self,
-        *,
-        state: _GuildVCState,
-        guild: discord.Guild,
-        channel: discord.VoiceChannel,
-        transcript_only: bool,
-        announcement_enabled: bool,
-        announcement_texts: Optional[dict[str, Any]],
-    ) -> None:
-        if not announcement_enabled or not AUTOMOD_OPENAI_KEY:
-            return
-
-        vc = state.voice
-        if vc is None:
-            return
-
-        if not vc.is_connected():
-            state.last_announce_key = None
-            return
-
-        key = (channel.id, id(vc))
-        if state.last_announce_key == key:
-            return
-
-        message_key = "transcript_only" if transcript_only else "ai_active"
-        text: Optional[str] = None
-        if isinstance(announcement_texts, dict):
-            try:
-                value = announcement_texts.get(message_key)
-                if isinstance(value, str):
-                    text = value
-            except Exception:
-                text = None
-
-        if not text:
-            if transcript_only:
-                text = (
-                    "Moderator Bot checking in. I'm only transcribing this channel; "
-                    "AI moderation actions are disabled."
-                )
-            else:
-                text = (
-                    "Moderator Bot checking in. Live AI voice moderation is active in this channel."
-                )
-
-        state.last_announce_key = key
-        played = await _play_announcement_tts(
-            voice_client=vc,
-            text=text,
-            loop=self.bot.loop,
-        )
-        if not played:
-            print(
-                f"[VCMod] Failed to play join announcement for guild {guild.id} channel {channel.id}"
-            )
+        state.reset_cycle()
 
     @tasks.loop(seconds=10)
-    async def loop(self):
+    async def loop(self) -> None:
         now = datetime.now(timezone.utc)
         for guild in list(self.bot.guilds):
             try:
                 await self._tick_guild(guild, now)
-            except Exception as e:
-                print(f"[VCMod] tick failed for {guild.id}: {e}")
+            except Exception as exc:
+                print(f"[VCMod] tick failed for {guild.id}: {exc}")
 
-    async def _tick_guild(self, guild: discord.Guild, now: datetime):
+    async def _tick_guild(self, guild: discord.Guild, now: datetime) -> None:
         settings = await mysql.get_settings(
             guild.id,
             [
@@ -364,13 +118,10 @@ class VoiceModeratorCog(commands.Cog):
             await self._teardown_state(guild)
             return
 
-        # Resolve channel IDs list
         channel_ids: list[int] = []
-        for ch in (channels or []):
+        for entry in channels or []:
             try:
-                # settings store IDs; ensure int
-                cid = int(getattr(ch, "id", ch))
-                channel_ids.append(cid)
+                channel_ids.append(int(getattr(entry, "id", entry)))
             except Exception:
                 continue
 
@@ -378,34 +129,31 @@ class VoiceModeratorCog(commands.Cog):
             await self._teardown_state(guild)
             return
 
-        st = self._get_state(guild.id)
-        st.channel_ids = channel_ids
+        state = self._get_state(guild.id)
+        state.channel_ids = channel_ids
 
-        if st.busy_task and not st.busy_task.done():
-            return  # already working on this guild
-
-        if now < st.next_start:
+        if state.busy_task and not state.busy_task.done():
+            return
+        if now < state.next_start:
             return
 
-        # Pick next channel
-        if st.index >= len(channel_ids):
-            st.index = 0
+        if state.index >= len(channel_ids):
+            state.index = 0
 
-        chan_id = channel_ids[st.index]
+        chan_id = channel_ids[state.index]
         channel = guild.get_channel(chan_id)
         if not isinstance(channel, discord.VoiceChannel):
-            # Try to fetch, but avoid REST spam
             try:
                 fetched = await self.bot.fetch_channel(chan_id)
                 if isinstance(fetched, discord.VoiceChannel):
                     channel = fetched
                 else:
-                    st.index += 1
-                    st.next_start = datetime.now(timezone.utc)
+                    state.index += 1
+                    state.next_start = datetime.now(timezone.utc)
                     return
             except Exception:
-                st.index += 1
-                st.next_start = datetime.now(timezone.utc)
+                state.index += 1
+                state.next_start = datetime.now(timezone.utc)
                 return
 
         high_accuracy = settings.get("vcmod-high-accuracy") or False
@@ -423,7 +171,7 @@ class VoiceModeratorCog(commands.Cog):
 
         do_listen = not saver_mode
 
-        async def _run():
+        async def _run() -> None:
             await self._run_cycle_for_channel(
                 guild=guild,
                 channel=channel,
@@ -441,17 +189,16 @@ class VoiceModeratorCog(commands.Cog):
                 join_announcement=join_announcement,
             )
 
-        st.busy_task = self.bot.loop.create_task(_run())
+        state.busy_task = self.bot.loop.create_task(_run())
 
-        def _done_callback(_):
+        def _done_callback(_future: asyncio.Future) -> None:
             try:
-                st.index += 1
-                st.next_start = datetime.now(timezone.utc)
+                state.index += 1
+                state.next_start = datetime.now(timezone.utc)
             except Exception:
-                st.next_start = datetime.now(timezone.utc) + timedelta(seconds=10)
+                state.next_start = datetime.now(timezone.utc) + timedelta(seconds=10)
 
-        st.busy_task.add_done_callback(_done_callback)
-
+        state.busy_task.add_done_callback(_done_callback)
 
     async def _run_cycle_for_channel(
         self,
@@ -470,10 +217,8 @@ class VoiceModeratorCog(commands.Cog):
         log_channel: Optional[int],
         transcript_channel_id: Optional[int],
         join_announcement: bool,
-    ):
-        st = self._get_state(guild.id)
-        utterances: list[tuple[int, str, datetime]] = []
-
+    ) -> None:
+        state = self._get_state(guild.id)
         transcript_texts = self.bot.translate(
             "cogs.voice_moderation.transcript",
             guild_id=guild.id,
@@ -483,342 +228,35 @@ class VoiceModeratorCog(commands.Cog):
             guild_id=guild.id,
         )
 
-        formatter = TranscriptFormatter(
+        config = VoiceCycleConfig(
             guild=guild,
-            transcript_texts=transcript_texts,
-            member_resolver=partial(safe_get_member, guild),
-        )
-        live_emitter = LiveTranscriptEmitter(
-            formatter=formatter,
-            bot=self.bot,
             channel=channel,
+            do_listen=do_listen,
+            listen_delta=listen_delta,
+            idle_delta=idle_delta,
+            high_accuracy=high_accuracy,
+            high_quality_transcription=high_quality_transcription,
+            rules=rules,
+            transcript_only=transcript_only,
+            action_setting=action_setting,
+            aimod_debug=aimod_debug,
+            log_channel=log_channel,
             transcript_channel_id=transcript_channel_id,
-            high_quality=high_quality_transcription,
-            min_utterances=_LIVE_FLUSH_MIN_UTTERANCES,
-            max_utterances=_LIVE_FLUSH_MAX_UTTERANCES,
-            min_interval=_LIVE_FLUSH_MIN_INTERVAL_S,
-            max_latency=_LIVE_FLUSH_MAX_LATENCY_S,
+            join_announcement=join_announcement,
+            transcript_texts=transcript_texts,
+            announcement_texts=announcement_texts,
         )
 
-        chunk_queue: asyncio.Queue[Optional[list[tuple[int, str, datetime]]]] | None = None
-        pipeline_task: Optional[asyncio.Task[None]] = None
-        processed_violation_keys: set[tuple[int, str, str]] = set()
-        vhist_blob = (
-            "Violation history:\n"
-            "Not provided by policy; do not consider prior violations.\n\n"
+        await run_voice_cycle(
+            bot=self.bot,
+            state=state,
+            config=config,
+            api_key=AUTOMOD_OPENAI_KEY or "",
+            aimod_model=AIMOD_MODEL,
+            announcement_manager=self._announcements,
+            violation_cache=violation_cache,
+            record_metrics=record_voice_metrics,
         )
-
-        async def _pipeline_worker() -> None:
-            assert chunk_queue is not None
-            while True:
-                chunk = await chunk_queue.get()
-                try:
-                    if chunk is None:
-                        break
-                    if transcript_only:
-                        continue
-                    transcript_blob = await formatter.build_transcript_block(chunk)
-                    if not transcript_blob.strip():
-                        continue
-                    pipeline_started = time.perf_counter()
-                    try:
-                        report, total_tokens, request_cost, usage, status = (
-                            await run_moderation_pipeline_voice(
-                                guild_id=guild.id,
-                                api_key=AUTOMOD_OPENAI_KEY,
-                                system_prompt=VOICE_SYSTEM_PROMPT,
-                                rules=rules,
-                                transcript_only=transcript_only,
-                                violation_history_blob=vhist_blob,
-                                transcript=transcript_blob,
-                                base_system_tokens=BASE_SYSTEM_TOKENS,
-                                default_model=AIMOD_MODEL,
-                                high_accuracy=high_accuracy,
-                                text_format=VoiceModerationReport,
-                                estimate_tokens_fn=am_helpers.estimate_tokens,
-                            )
-                        )
-                    except Exception as e:
-                        duration_ms = int(
-                            max((time.perf_counter() - pipeline_started) * 1000, 0)
-                        )
-                        await self._record_voice_metrics(
-                            guild=guild,
-                            channel=channel,
-                            transcript_only=transcript_only,
-                            high_accuracy=high_accuracy,
-                            listen_delta=listen_delta,
-                            idle_delta=idle_delta,
-                            utterance_count=len(utterances),
-                            status="exception",
-                            report_obj=None,
-                            total_tokens=0,
-                            request_cost=0.0,
-                            usage_snapshot={},
-                            duration_ms=duration_ms,
-                            error=str(e),
-                        )
-                        continue
-
-                    duration_ms = int(
-                        max((time.perf_counter() - pipeline_started) * 1000, 0)
-                    )
-                    await self._record_voice_metrics(
-                        guild=guild,
-                        channel=channel,
-                        transcript_only=transcript_only,
-                        high_accuracy=high_accuracy,
-                        listen_delta=listen_delta,
-                        idle_delta=idle_delta,
-                        utterance_count=len(utterances),
-                        status=status,
-                        report_obj=report,
-                        total_tokens=total_tokens,
-                        request_cost=request_cost,
-                        usage_snapshot=usage,
-                        duration_ms=duration_ms,
-                    )
-
-                    if not report or not getattr(report, "violations", None):
-                        continue
-
-                    aggregated: dict[int, dict[str, Any]] = {}
-                    for v in report.violations:
-                        try:
-                            uid = int(getattr(v, "user_id", 0))
-                        except Exception:
-                            continue
-                        if not uid:
-                            continue
-                        actions = list(getattr(v, "actions", []) or [])
-                        rule = (getattr(v, "rule", "") or "").strip()
-                        reason = (getattr(v, "reason", "") or "").strip()
-                        if not actions or not rule:
-                            continue
-                        key = (uid, rule, reason)
-                        if key in processed_violation_keys:
-                            continue
-                        processed_violation_keys.add(key)
-                        agg = aggregated.setdefault(
-                            uid, {"actions": set(), "reasons": [], "rules": set()}
-                        )
-                        agg["actions"].update(actions)
-                        if reason:
-                            agg["reasons"].append(reason)
-                        if rule:
-                            agg["rules"].add(rule)
-
-                    for uid, data in aggregated.items():
-                        member = await safe_get_member(guild, uid)
-                        if not member:
-                            continue
-                        all_actions = list(data["actions"]) if data.get("actions") else []
-                        configured = am_helpers.resolve_configured_actions(
-                            {"vcmod-detection-action": action_setting},
-                            all_actions,
-                            "vcmod-detection-action",
-                        )
-
-                        out_reason, out_rule = am_helpers.summarize_reason_rule(
-                            self.bot, guild, data.get("reasons"), data.get("rules")
-                        )
-
-                        await am_helpers.apply_actions_and_log(
-                            bot=self.bot,
-                            member=member,
-                            configured_actions=configured,
-                            reason=out_reason,
-                            rule=out_rule,
-                            messages=[],
-                            aimod_debug=aimod_debug,
-                            ai_channel_id=log_channel,
-                            monitor_channel_id=None,
-                            ai_actions=all_actions,
-                            fanout=False,
-                            violation_cache=violation_cache,
-                        )
-                finally:
-                    assert chunk_queue is not None
-                    chunk_queue.task_done()
-
-        async def _transcribe_worker(
-            payload: tuple[dict[int, bytes], dict[int, datetime], dict[int, float]]
-        ) -> None:
-            eligible_map, end_ts_map, duration_map_s = payload
-            try:
-                chunk_utts, _ = await transcribe_harvest_chunk(
-                    guild_id=guild.id,
-                    api_key=AUTOMOD_OPENAI_KEY or "",
-                    eligible_map=eligible_map,
-                    end_ts_map=end_ts_map,
-                    duration_map_s=duration_map_s,
-                    high_quality=high_quality_transcription,
-                )
-                if chunk_utts:
-                    utterances.extend(chunk_utts)
-                    await live_emitter.add_chunk(chunk_utts)
-                    if chunk_queue is not None:
-                        await chunk_queue.put(chunk_utts)
-            except Exception as e:
-                print(f"[VCMod] transcribe task failed: {e}")
-
-        dispatcher = TranscriptionWorkQueue(
-            worker_count=_TRANSCRIBE_WORKER_COUNT,
-            max_queue_size=_TRANSCRIBE_QUEUE_MAX,
-            worker_fn=_transcribe_worker,
-        )
-
-        actual_listen_seconds = 0.0
-
-        try:
-            if do_listen:
-                chunk_queue = asyncio.Queue()
-                pipeline_task = asyncio.create_task(_pipeline_worker())
-
-                start = time.monotonic()
-                deadline = start + listen_delta.total_seconds()
-                while True:
-                    iteration_start = time.monotonic()
-                    (
-                        st.voice,
-                        eligible_map,
-                        end_ts_map,
-                        duration_map_s,
-                    ) = await harvest_pcm_chunk(
-                        guild=guild,
-                        channel=channel,
-                        voice=st.voice,
-                        do_listen=True,
-                        idle_delta=idle_delta,
-                        window_seconds=HARVEST_WINDOW_SECONDS,
-                    )
-                    await self._maybe_announce_join(
-                        state=st,
-                        guild=guild,
-                        channel=channel,
-                        transcript_only=transcript_only,
-                        announcement_enabled=join_announcement,
-                        announcement_texts=announcement_texts,
-                    )
-                    if eligible_map:
-                        enqueue_wait = await dispatcher.submit(
-                            (eligible_map, end_ts_map, duration_map_s)
-                        )
-                        if enqueue_wait >= 0.5:
-                            print(
-                                f"[VCMod] Throttled harvest by {enqueue_wait:.2f}s while waiting for transcription backlog"
-                            )
-
-                    if time.monotonic() >= deadline:
-                        break
-
-                    elapsed = time.monotonic() - iteration_start
-                    sleep_for = HARVEST_WINDOW_SECONDS - elapsed
-                    if sleep_for > 0:
-                        await asyncio.sleep(
-                            min(sleep_for, max(0.0, deadline - time.monotonic()))
-                        )
-
-                listen_end = time.monotonic()
-                actual_listen_seconds = max(
-                    0.0,
-                    min(listen_delta.total_seconds(), listen_end - start),
-                )
-            else:
-                (
-                    st.voice,
-                    _eligible_map,
-                    _end_ts_map,
-                    _duration_map_s,
-                ) = await harvest_pcm_chunk(
-                    guild=guild,
-                    channel=channel,
-                    voice=st.voice,
-                    do_listen=False,
-                    idle_delta=idle_delta,
-                    window_seconds=HARVEST_WINDOW_SECONDS,
-                )
-                await self._maybe_announce_join(
-                    state=st,
-                    guild=guild,
-                    channel=channel,
-                    transcript_only=transcript_only,
-                    announcement_enabled=join_announcement,
-                    announcement_texts=announcement_texts,
-                )
-                return
-        except asyncio.CancelledError:
-            raise
-        finally:
-            with contextlib.suppress(asyncio.CancelledError, Exception):
-                await dispatcher.drain_and_close()
-            if chunk_queue is not None:
-                with contextlib.suppress(asyncio.CancelledError, Exception):
-                    await chunk_queue.put(None)
-                    await chunk_queue.join()
-            if pipeline_task:
-                with contextlib.suppress(asyncio.CancelledError, Exception):
-                    await pipeline_task
-
-        await live_emitter.flush(force=True)
-
-        if not utterances:
-            return
-
-        async def _sleep_after_cycle() -> None:
-            idle_seconds = idle_delta.total_seconds()
-            if (
-                actual_listen_seconds > 0.0
-                and actual_listen_seconds < listen_delta.total_seconds()
-            ):
-                idle_seconds = min(idle_seconds, max(5.0, actual_listen_seconds))
-            await asyncio.sleep(idle_seconds)
-
-        if transcript_channel_id:
-            try:
-                pretty_lines = await formatter.build_embed_lines(utterances)
-                if pretty_lines:
-                    embed_transcript = "\n".join(pretty_lines)
-                    chunks = TranscriptFormatter.chunk_text(embed_transcript, limit=3900)
-                    total = len(chunks)
-                    transcript_mode = (
-                        transcript_texts["footer_high"]
-                        if high_quality_transcription
-                        else transcript_texts["footer_normal"]
-                    )
-
-                    for idx, part in enumerate(chunks, start=1):
-                        title = (
-                            transcript_texts["title_single"]
-                            if total == 1
-                            else transcript_texts["title_part"].format(
-                                index=idx, total=total
-                            )
-                        )
-                        embed = discord.Embed(
-                            title=title,
-                            description=part,
-                            colour=discord.Colour.blurple(),
-                            timestamp=discord.utils.utcnow(),
-                        )
-                        embed.add_field(
-                            name=transcript_texts["field_channel"],
-                            value=channel.mention,
-                            inline=True,
-                        )
-                        embed.add_field(
-                            name=transcript_texts["field_utterances"],
-                            value=str(len(utterances)),
-                            inline=True,
-                        )
-                        embed.set_footer(text=transcript_mode)
-                        await mod_logging.log_to_channel(
-                            embed, transcript_channel_id, self.bot
-                        )
-            except Exception as e:
-                print(f"[VCMod] failed to post transcript: {e}")
-
-        await _sleep_after_cycle()
 
 
 async def setup_voice_moderation(bot: commands.Bot):
