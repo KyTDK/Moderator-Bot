@@ -202,12 +202,15 @@
                 "vcmod-transcript-channel": {
                     "description": "Channel where VC transcripts are posted."
                 },
-                "vcmod-transcript-only": {
-                    "description": "When enabled, the bot will only transcribe voice chat without applying AI rule checks or moderation actions. This significantly reduces budget usage."
-                },
-                "captcha-verification-enabled": {
-                    "description": "Require newcomers to pass a captcha challenge before they gain access."
-                },
+        "vcmod-transcript-only": {
+            "description": "When enabled, the bot will only transcribe voice chat without applying AI rule checks or moderation actions. This significantly reduces budget usage."
+        },
+        "vcmod-join-announcement": {
+            "description": "Play a short text-to-speech announcement when the bot joins a monitored voice channel."
+        },
+        "captcha-verification-enabled": {
+            "description": "Require newcomers to pass a captcha challenge before they gain access."
+        },
                 "captcha-grace-period": {
                     "description": "How long newcomers have to finish captcha verification (e.g. 10m, 1h)."
                 },

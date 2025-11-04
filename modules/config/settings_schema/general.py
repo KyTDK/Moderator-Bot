@@ -391,6 +391,16 @@ def build_general_settings() -> dict[str, Setting]:
             choices=["true", "false"],
             description_key="modules.config.settings_schema.vcmod-transcript-only.description",
         ),
+        "vcmod-join-announcement": Setting(
+            name="vcmod-join-announcement",
+            description="Play a TTS announcement when the bot joins a monitored voice channel.",
+            setting_type=bool,
+            default=False,
+            hidden=False,
+            required_plans=PLAN_CORE,
+            choices=["true", "false"],
+            description_key="modules.config.settings_schema.vcmod-join-announcement.description",
+        ),
         # Captcha settings
         "captcha-verification-enabled": Setting(
             name="captcha-verification-enabled",

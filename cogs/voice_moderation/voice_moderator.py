@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import io
 import os
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
@@ -9,6 +10,7 @@ import time
 
 import discord
 from discord.ext import commands, tasks
+import httpx
 
 from dotenv import load_dotenv
 
@@ -35,8 +37,96 @@ from modules.ai.pipeline import run_moderation_pipeline_voice
 load_dotenv()
 AUTOMOD_OPENAI_KEY = os.getenv("AUTOMOD_OPENAI_KEY")
 AIMOD_MODEL = os.getenv("AIMOD_MODEL", "gpt-5-nano")
+VCMOD_TTS_MODEL = os.getenv("VCMOD_TTS_MODEL", "gpt-4o-mini-tts")
+VCMOD_TTS_VOICE = os.getenv("VCMOD_TTS_VOICE", "alloy")
+_VC_TTS_ENDPOINT = "https://api.openai.com/v1/audio/speech"
+_VC_TTS_TIMEOUT = httpx.Timeout(20.0)
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10))
+
+async def _synthesize_tts(text: str) -> Optional[bytes]:
+    if not text or not AUTOMOD_OPENAI_KEY:
+        return None
+    payload = {
+        "model": VCMOD_TTS_MODEL,
+        "voice": VCMOD_TTS_VOICE,
+        "input": text,
+        "format": "wav",
+    }
+    headers = {
+        "Authorization": f"Bearer {AUTOMOD_OPENAI_KEY}",
+        "Content-Type": "application/json",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=_VC_TTS_TIMEOUT) as client:
+            response = await client.post(_VC_TTS_ENDPOINT, headers=headers, json=payload)
+            response.raise_for_status()
+            return response.content
+    except Exception as exc:
+        print(f"[VCMod] TTS synthesis failed: {exc}")
+        return None
+
+
+async def _play_tts_audio(
+    *,
+    voice_client: discord.VoiceClient,
+    audio_bytes: bytes,
+    loop: asyncio.AbstractEventLoop,
+) -> bool:
+    if not audio_bytes:
+        return False
+    stream = io.BytesIO(audio_bytes)
+    try:
+        audio_source = discord.PCMVolumeTransformer(
+            discord.FFmpegPCMAudio(stream, pipe=True, before_options="-f wav"),
+            volume=1.0,
+        )
+    except Exception as exc:
+        print(f"[VCMod] Failed to create TTS audio source: {exc}")
+        return False
+
+    finished = asyncio.Event()
+
+    def _on_finished(error: Exception | None) -> None:
+        if error:
+            print(f"[VCMod] TTS playback error: {error}")
+        loop.call_soon_threadsafe(finished.set)
+
+    try:
+        if voice_client.is_playing():
+            voice_client.stop()
+        voice_client.play(audio_source, after=_on_finished)
+    except Exception as exc:
+        print(f"[VCMod] Failed to start TTS playback: {exc}")
+        return False
+
+    try:
+        await asyncio.wait_for(finished.wait(), timeout=15.0)
+    except asyncio.TimeoutError:
+        print("[VCMod] TTS playback timed out; stopping playback.")
+        with contextlib.suppress(Exception):
+            if voice_client.is_playing():
+                voice_client.stop()
+        return False
+    return True
+
+
+async def _play_announcement_tts(
+    *,
+    voice_client: discord.VoiceClient,
+    text: str,
+    loop: asyncio.AbstractEventLoop,
+) -> bool:
+    if not text:
+        return False
+    audio_bytes = await _synthesize_tts(text)
+    if not audio_bytes:
+        return False
+    return await _play_tts_audio(
+        voice_client=voice_client,
+        audio_bytes=audio_bytes,
+        loop=loop,
+    )
 
 _TRANSCRIBE_WORKER_COUNT = 3
 _TRANSCRIBE_QUEUE_MAX = 6
@@ -53,6 +143,7 @@ class _GuildVCState:
         self.busy_task: Optional[asyncio.Task] = None
         self.voice: Optional[discord.VoiceClient] = None
         self.next_start: datetime = datetime.now(timezone.utc)
+        self.last_announce_key: Optional[tuple[int, int]] = None
 
 class VoiceModeratorCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -80,6 +171,7 @@ class VoiceModeratorCog(commands.Cog):
 
         vc = guild.voice_client or st.voice
         st.voice = None
+        st.last_announce_key = None
 
         if vc is not None:
             sink = getattr(vc, "_mod_sink", None)
@@ -174,6 +266,63 @@ class VoiceModeratorCog(commands.Cog):
         except Exception as metrics_exc:
             print(f"[metrics] Voice metrics logging failed for guild {guild.id}: {metrics_exc}")
 
+    async def _maybe_announce_join(
+        self,
+        *,
+        state: _GuildVCState,
+        guild: discord.Guild,
+        channel: discord.VoiceChannel,
+        transcript_only: bool,
+        announcement_enabled: bool,
+        announcement_texts: Optional[dict[str, Any]],
+    ) -> None:
+        if not announcement_enabled or not AUTOMOD_OPENAI_KEY:
+            return
+
+        vc = state.voice
+        if vc is None:
+            return
+
+        if not vc.is_connected():
+            state.last_announce_key = None
+            return
+
+        key = (channel.id, id(vc))
+        if state.last_announce_key == key:
+            return
+
+        message_key = "transcript_only" if transcript_only else "ai_active"
+        text: Optional[str] = None
+        if isinstance(announcement_texts, dict):
+            try:
+                value = announcement_texts.get(message_key)
+                if isinstance(value, str):
+                    text = value
+            except Exception:
+                text = None
+
+        if not text:
+            if transcript_only:
+                text = (
+                    "Moderator Bot checking in. I'm only transcribing this channel; "
+                    "AI moderation actions are disabled."
+                )
+            else:
+                text = (
+                    "Moderator Bot checking in. Live AI voice moderation is active in this channel."
+                )
+
+        state.last_announce_key = key
+        played = await _play_announcement_tts(
+            voice_client=vc,
+            text=text,
+            loop=self.bot.loop,
+        )
+        if not played:
+            print(
+                f"[VCMod] Failed to play join announcement for guild {guild.id} channel {channel.id}"
+            )
+
     @tasks.loop(seconds=10)
     async def loop(self):
         now = datetime.now(timezone.utc)
@@ -201,6 +350,7 @@ class VoiceModeratorCog(commands.Cog):
                 "monitor-channel",
                 "vcmod-transcript-channel",
                 "vcmod-transcript-only",
+                "vcmod-join-announcement",
             ],
         )
 
@@ -265,6 +415,7 @@ class VoiceModeratorCog(commands.Cog):
         log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
         transcript_channel_id = settings.get("vcmod-transcript-channel")
         transcript_only = settings.get("vcmod-transcript-only") or False
+        join_announcement = settings.get("vcmod-join-announcement") or False
         high_quality_transcription = settings.get("vcmod-high-quality-transcription") or False
 
         listen_delta = parse_duration(listen_str) or timedelta(minutes=2)
@@ -287,6 +438,7 @@ class VoiceModeratorCog(commands.Cog):
                 aimod_debug=aimod_debug,
                 log_channel=log_channel,
                 transcript_channel_id=transcript_channel_id,
+                join_announcement=join_announcement,
             )
 
         st.busy_task = self.bot.loop.create_task(_run())
@@ -317,12 +469,17 @@ class VoiceModeratorCog(commands.Cog):
         aimod_debug: bool,
         log_channel: Optional[int],
         transcript_channel_id: Optional[int],
+        join_announcement: bool,
     ):
         st = self._get_state(guild.id)
         utterances: list[tuple[int, str, datetime]] = []
 
         transcript_texts = self.bot.translate(
             "cogs.voice_moderation.transcript",
+            guild_id=guild.id,
+        )
+        announcement_texts = self.bot.translate(
+            "cogs.voice_moderation.announce",
             guild_id=guild.id,
         )
 
@@ -535,6 +692,14 @@ class VoiceModeratorCog(commands.Cog):
                         idle_delta=idle_delta,
                         window_seconds=HARVEST_WINDOW_SECONDS,
                     )
+                    await self._maybe_announce_join(
+                        state=st,
+                        guild=guild,
+                        channel=channel,
+                        transcript_only=transcript_only,
+                        announcement_enabled=join_announcement,
+                        announcement_texts=announcement_texts,
+                    )
                     if eligible_map:
                         enqueue_wait = await dispatcher.submit(
                             (eligible_map, end_ts_map, duration_map_s)
@@ -560,13 +725,26 @@ class VoiceModeratorCog(commands.Cog):
                     min(listen_delta.total_seconds(), listen_end - start),
                 )
             else:
-                await harvest_pcm_chunk(
+                (
+                    st.voice,
+                    _eligible_map,
+                    _end_ts_map,
+                    _duration_map_s,
+                ) = await harvest_pcm_chunk(
                     guild=guild,
                     channel=channel,
                     voice=st.voice,
                     do_listen=False,
                     idle_delta=idle_delta,
                     window_seconds=HARVEST_WINDOW_SECONDS,
+                )
+                await self._maybe_announce_join(
+                    state=st,
+                    guild=guild,
+                    channel=channel,
+                    transcript_only=transcript_only,
+                    announcement_enabled=join_announcement,
+                    announcement_texts=announcement_texts,
                 )
                 return
         except asyncio.CancelledError:

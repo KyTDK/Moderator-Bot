@@ -16,6 +16,10 @@
                 "footer_high": "High accuracy transcript",
                 "footer_normal": "Normal accuracy transcript"
             },
+            "announce": {
+                "ai_active": "Moderator Bot checking in. Live AI voice moderation is active in this channel.",
+                "transcript_only": "Moderator Bot checking in. I'm only transcribing this channel; AI moderation actions are disabled."
+            },
             "budget": {
                 "title": "VC Moderation Budget Reached",
                 "description": "Skipping analysis for this cycle due to budget limit."
