@@ -76,12 +76,13 @@ class ImageModerationState:
         self.payload_bytes = payload_bytes
         self.payload_mime = payload_mime
         self.base64_data = None
-        if not self.remote_disabled and self.source_url:
-            self.use_remote = True
-        else:
-            self.use_remote = False
         strategy_label = prepared.strategy
-
+        allow_remote = (
+            not self.remote_disabled
+            and bool(self.source_url)
+            and strategy_label == "passthrough"
+        )
+        self.use_remote = allow_remote
         latency_tracker.set_payload_detail("payload_strategy", strategy_label)
         if isinstance(payload_metadata, dict):
             payload_metadata["moderation_payload_strategy"] = strategy_label
