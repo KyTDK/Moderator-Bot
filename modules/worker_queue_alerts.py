@@ -6,7 +6,7 @@ from typing import Optional, TYPE_CHECKING
 
 import discord
 
-from modules.utils.log_channel import send_log_message
+from modules.utils.log_channel import send_developer_log_embed
 
 if TYPE_CHECKING:
     from modules.worker_queue import TaskMetadata, TaskRuntimeDetail
@@ -43,7 +43,7 @@ class SingularTaskReporter:
             "threshold ``{threshold:.2f}s``)."
         ).format(queue=queue_name, runtime=detail.runtime, threshold=self.threshold)
 
-        if not await send_log_message(
+        if not await send_developer_log_embed(
             self.bot,
             content=content,
             embed=embed,

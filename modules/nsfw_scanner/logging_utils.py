@@ -5,7 +5,7 @@ from typing import Any
 
 import discord
 
-from modules.utils.log_channel import send_log_message
+from modules.utils.log_channel import DeveloperLogField, log_to_developer_channel
 
 from .constants import LOG_CHANNEL_ID
 from .helpers.metrics import ScanTelemetry, collect_scan_telemetry
@@ -76,15 +76,9 @@ async def log_slow_scan_if_needed(
     if total_ms is None or total_ms < threshold_ms:
         return
 
-    embed = discord.Embed(
-        title="Slow NSFW scan detected",
-        color=discord.Color.orange(),
-    )
-    embed.add_field(
-        name="Total Latency",
-        value=_format_latency(total_ms),
-        inline=False,
-    )
+    fields: list[DeveloperLogField] = [
+        DeveloperLogField(name="Total Latency", value=_format_latency(total_ms), inline=False),
+    ]
 
     media_lines: list[str] = []
     if filename:
@@ -94,26 +88,34 @@ async def log_slow_scan_if_needed(
     if detected_mime:
         media_lines.append(f"MIME: `{detected_mime}`")
     if media_lines:
-        embed.add_field(name="Media", value="\n".join(media_lines)[:1024], inline=False)
+        fields.append(
+            DeveloperLogField(name="Media", value="\n".join(media_lines)[:1024], inline=False)
+        )
 
     if telemetry.frame_lines:
-        embed.add_field(
-            name="Frame Metrics",
-            value="\n".join(telemetry.frame_lines)[:1024],
-            inline=False,
+        fields.append(
+            DeveloperLogField(
+                name="Frame Metrics",
+                value="\n".join(telemetry.frame_lines)[:1024],
+                inline=False,
+            )
         )
 
     if telemetry.bytes_downloaded is not None:
-        embed.add_field(
-            name="Bytes Downloaded",
-            value=f"{telemetry.bytes_downloaded:,}",
-            inline=True,
+        fields.append(
+            DeveloperLogField(
+                name="Bytes Downloaded",
+                value=f"{telemetry.bytes_downloaded:,}",
+                inline=True,
+            )
         )
     if telemetry.early_exit:
-        embed.add_field(
-            name="Early Exit",
-            value=str(telemetry.early_exit)[:1024],
-            inline=True,
+        fields.append(
+            DeveloperLogField(
+                name="Early Exit",
+                value=str(telemetry.early_exit)[:1024],
+                inline=True,
+            )
         )
 
     failure_detail_lines: list[str] = []
@@ -136,17 +138,21 @@ async def log_slow_scan_if_needed(
         if scan_result.get("category"):
             outcome_lines.append(f"Category: {scan_result.get('category')}")
         if outcome_lines:
-            embed.add_field(
-                name="Scan Outcome",
-                value="\n".join(outcome_lines)[:1024],
-                inline=False,
+            fields.append(
+                DeveloperLogField(
+                    name="Scan Outcome",
+                    value="\n".join(outcome_lines)[:1024],
+                    inline=False,
+                )
             )
 
     if telemetry.breakdown_lines:
-        embed.add_field(
-            name="Latency Breakdown",
-            value="\n".join(telemetry.breakdown_lines)[:1024],
-            inline=False,
+        fields.append(
+            DeveloperLogField(
+                name="Latency Breakdown",
+                value="\n".join(telemetry.breakdown_lines)[:1024],
+                inline=False,
+            )
         )
 
     moderator_meta_lines: list[str] = []
@@ -248,16 +254,20 @@ async def log_slow_scan_if_needed(
                 if response_id:
                     payload_info_lines.append(f"Response ID: `{response_id}`")
     if moderator_meta_lines:
-        embed.add_field(
-            name="Moderator Metadata",
-            value="\n".join(moderator_meta_lines)[:1024],
-            inline=False,
+        fields.append(
+            DeveloperLogField(
+                name="Moderator Metadata",
+                value="\n".join(moderator_meta_lines)[:1024],
+                inline=False,
+            )
         )
     if payload_info_lines:
-        embed.add_field(
-            name="Moderator Payload",
-            value="\n".join(payload_info_lines)[:1024],
-            inline=False,
+        fields.append(
+            DeveloperLogField(
+                name="Moderator Payload",
+                value="\n".join(payload_info_lines)[:1024],
+                inline=False,
+            )
         )
 
     if failure_detail_lines:
@@ -268,10 +278,12 @@ async def log_slow_scan_if_needed(
                 continue
             seen.add(line)
             deduped_lines.append(line)
-        embed.add_field(
-            name="Failure Details",
-            value="\n".join(deduped_lines)[:1024],
-            inline=False,
+        fields.append(
+            DeveloperLogField(
+                name="Failure Details",
+                value="\n".join(deduped_lines)[:1024],
+                inline=False,
+            )
         )
 
     context_lines: list[str] = []
@@ -292,19 +304,21 @@ async def log_slow_scan_if_needed(
             context_lines.append(f"[Jump to message]({message.jump_url})")
 
     if context_lines:
-        embed.add_field(
-            name="Context",
-            value="\n".join(context_lines)[:1024],
-            inline=False,
+        fields.append(
+            DeveloperLogField(
+                name="Context",
+                value="\n".join(context_lines)[:1024],
+                inline=False,
+            )
         )
 
-    embed.set_footer(text=f"Exceeded {threshold_ms / 1000:.0f}s threshold")
-
     try:
-        success = await send_log_message(
+        success = await log_to_developer_channel(
             bot,
-            embed=embed,
-            allowed_mentions=discord.AllowedMentions.none(),
+            summary="Slow NSFW scan detected",
+            severity="warning",
+            fields=fields,
+            footer=f"Exceeded {threshold_ms / 1000:.0f}s threshold",
             context="nsfw_scanner.slow_scan",
         )
     except Exception:  # pragma: no cover - defensive logging

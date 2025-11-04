@@ -17,7 +17,7 @@ from modules.utils import mod_logging, mysql
 import modules.utils.log_channel as log_channel
 
 # Provide module-level alias so existing monkeypatches on TextScanPipeline can override it.
-send_log_message = log_channel.send_log_message
+send_log_message = log_channel.send_developer_log_embed
 
 from modules.nsfw_scanner.helpers import process_text
 from modules.nsfw_scanner.constants import LOG_CHANNEL_ID

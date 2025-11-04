@@ -16,8 +16,7 @@ import pillow_avif  # registers AVIF support
 from cogs.hydration import wait_for_hydration
 from modules.config.premium_plans import PLAN_CORE, PLAN_FREE, PLAN_PRO, PLAN_ULTRA
 from modules.utils import clip_vectors, mod_logging, mysql
-from modules.utils.discord_utils import safe_get_channel
-from modules.utils.log_channel import send_log_message
+from modules.utils.log_channel import DeveloperLogField, log_to_developer_channel
 
 from ..constants import (
     ACCELERATED_DOWNLOAD_CAP_BYTES,
@@ -114,39 +113,46 @@ class NSFWScanner:
             return
 
         description = self._truncate(f"Source: {source}", 2048)
-        embed = discord.Embed(title=title, description=description, color=discord.Color.red())
-
         error_value = self._truncate(f"`{type(exc).__name__}: {exc}`")
-        embed.add_field(name="Error", value=error_value or "(no details)", inline=False)
+
+        fields: list[DeveloperLogField] = [
+            DeveloperLogField(name="Error", value=error_value or "(no details)", inline=False),
+        ]
 
         if message is not None and getattr(message, "jump_url", None):
-            embed.add_field(
-                name="Message",
-                value=f"[Jump to message]({message.jump_url})",
-                inline=False,
+            fields.append(
+                DeveloperLogField(
+                    name="Message",
+                    value=f"[Jump to message]({message.jump_url})",
+                    inline=False,
+                )
             )
 
         guild = getattr(message, "guild", None)
         if guild is not None:
-            embed.add_field(
-                name="Guild",
-                value=self._truncate(f"{getattr(guild, 'name', 'Unknown')} (`{guild.id}`)", 1024),
-                inline=False,
+            guild_value = self._truncate(
+                f"{getattr(guild, 'name', 'Unknown')} (`{getattr(guild, 'id', 'unknown')}`)",
+                1024,
             )
+            fields.append(DeveloperLogField(name="Guild", value=guild_value, inline=False))
 
         channel = getattr(message, "channel", None)
         if channel is not None and getattr(channel, "id", None):
             channel_name = getattr(channel, "name", None) or getattr(channel, "id", "Unknown")
-            embed.add_field(
-                name="Channel",
-                value=self._truncate(f"{channel_name}", 1024),
-                inline=False,
+            fields.append(
+                DeveloperLogField(
+                    name="Channel",
+                    value=self._truncate(f"{channel_name}", 1024),
+                    inline=False,
+                )
             )
 
-        success = await send_log_message(
+        success = await log_to_developer_channel(
             self.bot,
-            embed=embed,
-            allowed_mentions=discord.AllowedMentions.none(),
+            summary=title,
+            severity="error",
+            description=description,
+            fields=fields,
             context=context,
         )
         if not success:
@@ -206,39 +212,24 @@ class NSFWScanner:
             f"{clip_vectors.MILVUS_HOST}:{clip_vectors.MILVUS_PORT}. "
             "Moderator Bot is falling back to the OpenAI `moderator_api` path until the vector index is available again."
         )
-        embed = discord.Embed(
-            title="Milvus connection failure",
-            description=description,
-            color=discord.Color.red(),
-        )
-        embed.add_field(
-            name="Exception",
-            value=f"`{type(exc).__name__}: {exc}`",
-            inline=False,
-        )
-        embed.set_footer(text="OpenAI moderation fallback active")
+        embed_fields = [
+            DeveloperLogField(
+                name="Exception",
+                value=f"`{type(exc).__name__}: {exc}`",
+                inline=False,
+            )
+        ]
 
         try:
-            channel = await safe_get_channel(self.bot, LOG_CHANNEL_ID)
-        except Exception as lookup_exc:
-            log.warning(
-                "Milvus failure detected but log channel %s could not be resolved: %s",
-                LOG_CHANNEL_ID,
-                lookup_exc,
-            )
-            return
-
-        if channel is None:
-            log.warning(
-                "Milvus failure detected but log channel %s could not be found",
-                LOG_CHANNEL_ID,
-            )
-            return
-
-        try:
-            await channel.send(
-                content=mention or None,
-                embed=embed,
+            success = await log_to_developer_channel(
+                self.bot,
+                summary="Milvus connection failure",
+                severity="error",
+                description=description,
+                fields=embed_fields,
+                mention=mention or None,
+                footer="OpenAI moderation fallback active",
+                context="nsfw_scanner.milvus_failure",
             )
         except Exception as send_exc:
             log.warning(
@@ -246,9 +237,16 @@ class NSFWScanner:
                 LOG_CHANNEL_ID,
                 send_exc,
             )
-        else:
+            return
+
+        if success:
             log.warning(
                 "Milvus failure reported to channel %s; OpenAI moderation fallback active",
+                LOG_CHANNEL_ID,
+            )
+        else:
+            log.warning(
+                "Milvus failure detected but no message was delivered to LOG_CHANNEL_ID=%s",
                 LOG_CHANNEL_ID,
             )
 

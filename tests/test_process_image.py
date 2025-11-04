@@ -68,8 +68,23 @@ async def _send_log_message(*_args, **_kwargs):
     return False
 
 
+class _DummyLogField:
+    def __init__(self, name, value, inline=False):
+        self.name = name
+        self.value = value
+        self.inline = inline
+
+
+log_channel_stub.DeveloperLogField = _DummyLogField
+log_channel_stub.LogField = _DummyLogField
+log_channel_stub.send_developer_log_message = _send_log_message
 log_channel_stub.send_log_message = _send_log_message
-log_channel_stub.log_serious_issue = _send_log_message
+log_channel_stub.log_developer_issue = _send_log_message
+log_channel_stub.log_developer_issue = _send_log_message
+log_channel_stub.log_to_developer_channel = _send_log_message
+log_channel_stub.log_to_channel = _send_log_message
+log_channel_stub.send_developer_log_embed = _send_log_message
+log_channel_stub.send_prebuilt_log_embed = _send_log_message
 sys.modules["modules.utils.log_channel"] = log_channel_stub
 
 mod_logging_stub = types.ModuleType("modules.utils.mod_logging")
@@ -508,7 +523,7 @@ async def test_process_image_logs_truncated_recovery_metadata(monkeypatch, tmp_p
         )
         return True
 
-    monkeypatch.setattr(image_logging_mod, "log_serious_issue", capture_log)
+    monkeypatch.setattr(image_logging_mod, "log_developer_issue", capture_log)
 
     open_attempts: list[bool] = []
 

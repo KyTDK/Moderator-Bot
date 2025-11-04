@@ -23,7 +23,7 @@ from .image_logging import (
     _notify_image_open_failure,
     _notify_truncated_image_recovery,
     log as logging_log,
-    log_serious_issue,
+    log_developer_issue,
 )
 from .image_pipeline import _run_image_pipeline
 from .image_processing import NSFW_CATEGORY_SETTING, process_image
@@ -37,6 +37,7 @@ __all__ = [
     "process_image",
     "process_image_batch",
     "log",
+    "log_developer_issue",
     "log_serious_issue",
     "_PNG_PASSTHROUGH_EXTS",
     "_PNG_PASSTHROUGH_FORMATS",
@@ -61,3 +62,6 @@ mysql = mysql
 
 # Expose logger from image_logging for callers expecting the previous module-level logger.
 logging_log  # keep import for side effects / lint
+
+# Backwards compatibility alias for historical imports.
+log_serious_issue = log_developer_issue

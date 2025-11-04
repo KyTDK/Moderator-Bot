@@ -5,7 +5,7 @@ import time
 from typing import Optional
 
 from modules.nsfw_scanner.constants import LOG_CHANNEL_ID
-from modules.utils.log_channel import send_log_message
+from modules.utils.log_channel import send_developer_log_embed
 
 from .config import AggregatedModerationConfig
 from .alert_payloads import build_backlog_cleared_embed, build_backlog_embed
@@ -109,7 +109,7 @@ class FreeQueueMonitor:
             rates=rates,
             calculator=self._rate_calculator,
         )
-        if not await send_log_message(
+        if not await send_developer_log_embed(
             self._bot,
             embed=embed,
             context="free_queue_backlog",
@@ -189,7 +189,7 @@ class FreeQueueMonitor:
             rates=rates,
             calculator=self._rate_calculator,
         )
-        if not await send_log_message(
+        if not await send_developer_log_embed(
             self._bot,
             embed=embed,
             context="free_queue_backlog",

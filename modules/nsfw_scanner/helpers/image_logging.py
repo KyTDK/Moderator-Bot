@@ -3,7 +3,7 @@ import os
 from typing import Any, Mapping
 
 from modules.nsfw_scanner.constants import LOG_CHANNEL_ID
-from modules.utils.log_channel import log_serious_issue
+from modules.utils.log_channel import log_developer_issue
 
 log = logging.getLogger(__name__)
 
@@ -151,7 +151,7 @@ async def _notify_image_open_failure(
         metadata=metadata,
         error_summary=error_summary,
     )
-    await log_serious_issue(
+    await log_developer_issue(
         bot,
         summary="Failed to open image during NSFW scan.",
         details=details,
@@ -186,7 +186,7 @@ async def _notify_truncated_image_recovery(
         metadata=metadata,
         error_summary=f"{type(exc).__name__}: {exc}",
     )
-    await log_serious_issue(
+    await log_developer_issue(
         bot,
         summary="Recovered truncated image during NSFW scan.",
         details=details,
@@ -198,7 +198,7 @@ async def _notify_truncated_image_recovery(
 
 __all__ = [
     "log",
-    "log_serious_issue",
+    "log_developer_issue",
     "_get_file_size",
     "_format_metadata_value",
     "_format_image_log_details",

@@ -279,8 +279,15 @@ sys.modules["modules.utils.mod_logging"] = mod_logging_stub
 setattr(utils_pkg, "mod_logging", mod_logging_stub)
 
 
-async def _send_log_message(*_args, **_kwargs):
+async def _stub_log_to_developer_channel(*_args, **_kwargs):
     return True
+
+
+class _StubLogField:
+    def __init__(self, name, value, inline=False):
+        self.name = name
+        self.value = value
+        self.inline = inline
 
 
 def _resolve_log_channel(*_args, **_kwargs):
@@ -291,8 +298,16 @@ def _log_serious_issue(*_args, **_kwargs):
     return False
 
 
-log_channel_stub.send_log_message = _send_log_message
+log_channel_stub.DeveloperLogField = _StubLogField
+log_channel_stub.LogField = _StubLogField
+log_channel_stub.log_to_developer_channel = _stub_log_to_developer_channel
+log_channel_stub.log_to_channel = _stub_log_to_developer_channel
+log_channel_stub.send_developer_log_embed = _stub_log_to_developer_channel
+log_channel_stub.send_prebuilt_log_embed = _stub_log_to_developer_channel
+log_channel_stub.send_developer_log_message = _stub_log_to_developer_channel
+log_channel_stub.send_log_message = _stub_log_to_developer_channel
 log_channel_stub.resolve_log_channel = _resolve_log_channel
+log_channel_stub.log_developer_issue = _log_serious_issue
 log_channel_stub.log_serious_issue = _log_serious_issue
 sys.modules.setdefault("modules.utils.log_channel", log_channel_stub)
 setattr(utils_pkg, "log_channel", log_channel_stub)
@@ -305,13 +320,13 @@ moderation_state = importlib.import_module("modules.nsfw_scanner.helpers.moderat
 def test_report_moderation_fallback_to_log(monkeypatch):
     captured: dict[str, object] = {"calls": 0}
 
-    async def _fake_send_log_message(*args, **kwargs):
+    async def _fake_log_to_developer_channel(*args, **kwargs):
         captured["calls"] = captured.get("calls", 0) + 1
         captured["args"] = args
         captured["kwargs"] = kwargs
         return True
 
-    monkeypatch.setattr(moderation_logging, "send_log_message", _fake_send_log_message)
+    monkeypatch.setattr(moderation_logging, "log_to_developer_channel", _fake_log_to_developer_channel)
 
     scanner = types.SimpleNamespace(bot=object())
     metadata = {
@@ -345,10 +360,15 @@ def test_report_moderation_fallback_to_log(monkeypatch):
 
     assert captured["calls"] == 1
     kwargs = captured["kwargs"]
-    assert kwargs["embed"].title == "Moderator API fallback triggered"
-    assert kwargs["embed"].description == fallback_notice
+    assert kwargs["summary"] == "Moderator API fallback triggered"
+    assert kwargs["description"] == fallback_notice
+    assert kwargs["severity"] == "warning"
     assert kwargs["context"] == "nsfw_scanner.moderation_fallback"
-    assert kwargs["allowed_mentions"].__class__ is _ALLOWED_MENTIONS_TYPE
+
+    fields = {field.name: field.value for field in kwargs.get("fields", [])}
+    assert "Guild ID" in fields and "123" in fields["Guild ID"]
+    assert "Channel ID" in fields and "456" in fields["Channel ID"]
+    assert "Message" in fields and "example.com/message" in fields["Message"]
     assert metadata.get("fallback_notice_reported") is True
 
     asyncio.run(

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
-from typing import Optional
+from typing import Optional, Sequence
 
 import discord
 
@@ -10,25 +11,37 @@ from modules.utils.discord_utils import safe_get_channel
 
 log = logging.getLogger(__name__)
 
-_SERIOUS_SEVERITY_META: dict[str, tuple[str, discord.Color]] = {
+_SEVERITY_META: dict[str, tuple[str, discord.Color]] = {
+    "debug": (":grey_question:", discord.Color.dark_grey()),
     "info": (":information_source:", discord.Color.dark_grey()),
+    "notice": (":speech_balloon:", discord.Color.blue()),
+    "success": (":white_check_mark:", discord.Color.green()),
     "warning": (":warning:", discord.Color.orange()),
     "error": (":rotating_light:", discord.Color.red()),
     "critical": (":rotating_light:", discord.Color.red()),
 }
 
 
-def _normalize_severity(value: str | None) -> str:
-    if not value:
-        return "error"
-    normalized = value.lower().strip()
-    if normalized not in _SERIOUS_SEVERITY_META:
-        return "error"
-    return normalized
+@dataclass(slots=True)
+class DeveloperLogField:
+    """Structured embed field describing developer log channel metadata."""
+
+    name: str
+    value: str
+    inline: bool = False
 
 
 def _context_suffix(context: str | None) -> str:
     return f" for {context}" if context else ""
+
+
+def _normalize_severity(value: str | None, *, default: str = "info") -> str:
+    if not value:
+        return default
+    normalized = value.lower().strip()
+    if normalized not in _SEVERITY_META:
+        return default
+    return normalized
 
 
 async def resolve_log_channel(
@@ -38,10 +51,7 @@ async def resolve_log_channel(
     context: str | None = None,
     raise_on_exception: bool = False,
 ) -> Optional[discord.abc.Messageable]:
-    """Resolve the configured log channel, returning ``None`` on failure.
-
-    When ``raise_on_exception`` is True, unexpected lookup failures will be re-raised.
-    """
+    """Resolve the configured developer log channel, returning ``None`` when unavailable."""
     if not LOG_CHANNEL_ID:
         return None
 
@@ -70,7 +80,7 @@ async def resolve_log_channel(
     return channel
 
 
-async def send_log_message(
+async def send_developer_log_message(
     bot: discord.Client,
     *,
     content: str | None = None,
@@ -79,7 +89,11 @@ async def send_log_message(
     logger: Optional[logging.Logger] = None,
     context: str | None = None,
 ) -> bool:
-    """Attempt to send a payload to the shared log channel."""
+    """Send a plain developer log message to ``LOG_CHANNEL_ID``.
+
+    Use this helper strictly for operator/developer alerts. For end-user messaging,
+    prefer the general utilities in ``modules.utils.mod_logging``.
+    """
     channel = await resolve_log_channel(bot, logger=logger, context=context)
     if channel is None:
         return False
@@ -103,7 +117,122 @@ async def send_log_message(
     return True
 
 
-async def log_serious_issue(
+def build_developer_log_embed(
+    *,
+    title: str,
+    description: str | None = None,
+    severity: str | None = None,
+    fields: Sequence[DeveloperLogField] | None = None,
+    footer: str | None = None,
+    timestamp: bool = False,
+    color: discord.Color | None = None,
+) -> discord.Embed:
+    """Construct an embed tailored to the developer log channel layout."""
+    normalized = _normalize_severity(severity, default="info")
+    _, severity_color = _SEVERITY_META[normalized]
+    embed_color = color or severity_color
+    embed = discord.Embed(title=title, description=description, color=embed_color)
+    if timestamp:
+        embed.timestamp = discord.utils.utcnow()
+    for field in fields or ():
+        embed.add_field(name=field.name, value=field.value, inline=field.inline)
+    if footer:
+        embed.set_footer(text=footer)
+    return embed
+
+
+async def send_developer_log_embed(
+    bot: discord.Client,
+    *,
+    embed: discord.Embed,
+    content: str | None = None,
+    context: str | None = None,
+    logger: Optional[logging.Logger] = None,
+    allowed_mentions: discord.AllowedMentions | None = None,
+) -> bool:
+    """Send a prepared embed to the developer log channel."""
+    mentions = allowed_mentions or discord.AllowedMentions.none()
+    return await send_developer_log_message(
+        bot,
+        content=content,
+        embed=embed,
+        allowed_mentions=mentions,
+        logger=logger,
+        context=context,
+    )
+
+
+def _compose_content(
+    *,
+    summary: str,
+    severity: str,
+    content: str | None,
+    mention: str | None,
+) -> tuple[str | None, discord.AllowedMentions]:
+    normalized = _normalize_severity(severity, default="info")
+    emoji, _ = _SEVERITY_META[normalized]
+    base = content or f"{emoji} {summary}"
+    if mention:
+        combined = f"{mention} {base}".strip()
+        allowed = discord.AllowedMentions(users=True, roles=True)
+        return combined, allowed
+    return base, discord.AllowedMentions.none()
+
+
+async def log_to_developer_channel(
+    bot: discord.Client,
+    *,
+    summary: str,
+    severity: str | None = None,
+    description: str | None = None,
+    fields: Sequence[DeveloperLogField] | None = None,
+    footer: str | None = None,
+    timestamp: bool = False,
+    mention: str | None = None,
+    content: str | None = None,
+    context: str | None = None,
+    logger: Optional[logging.Logger] = None,
+    color: discord.Color | None = None,
+) -> bool:
+    """Send a structured developer-facing log entry to ``LOG_CHANNEL_ID``."""
+    normalized = _normalize_severity(severity, default="info")
+    embed_needed = any(
+        (
+            description,
+            fields,
+            footer,
+            timestamp,
+            color is not None,
+        )
+    )
+    embed = None
+    if embed_needed:
+        embed = build_developer_log_embed(
+            title=summary,
+            description=description,
+            severity=normalized,
+            fields=fields,
+            footer=footer,
+            timestamp=timestamp,
+            color=color,
+        )
+    message_content, allowed_mentions = _compose_content(
+        summary=summary,
+        severity=normalized,
+        content=content,
+        mention=mention,
+    )
+    return await send_developer_log_message(
+        bot,
+        content=message_content,
+        embed=embed,
+        allowed_mentions=allowed_mentions,
+        logger=logger,
+        context=context,
+    )
+
+
+async def log_developer_issue(
     bot: discord.Client,
     *,
     summary: str,
@@ -112,33 +241,52 @@ async def log_serious_issue(
     context: str | None = None,
     logger: Optional[logging.Logger] = None,
 ) -> bool:
-    """Send a standardized serious-issue log message to the configured log channel."""
-
-    normalized_severity = _normalize_severity(severity)
-    emoji, color = _SERIOUS_SEVERITY_META[normalized_severity]
-
-    embed: discord.Embed | None = None
-    if details:
-        embed = discord.Embed(
-            description=details,
-            color=color,
-        )
-    success = await send_log_message(
+    """Send a standardized serious issue notification to the developer log channel."""
+    normalized = _normalize_severity(severity, default="error")
+    success = await log_to_developer_channel(
         bot,
-        content=f"{emoji} {summary}",
-        embed=embed,
-        allowed_mentions=discord.AllowedMentions.none(),
-        logger=logger,
+        summary=summary,
+        severity=normalized,
+        description=details,
         context=context,
+        logger=logger,
     )
     if not success:
         target_logger = logger or log
         target_logger.warning(
-            "Failed to deliver serious issue log (%s): %s",
-            normalized_severity,
+            "Failed to deliver developer log (%s): %s",
+            normalized,
             summary,
         )
     return success
 
 
-__all__ = ["resolve_log_channel", "send_log_message", "log_serious_issue"]
+__all__ = [
+    "DeveloperLogField",
+    "build_developer_log_embed",
+    "log_developer_issue",
+    "log_to_developer_channel",
+    "resolve_log_channel",
+    "send_developer_log_embed",
+    "send_developer_log_message",
+    # Backwards compatibility exports (deprecated names)
+    "LogField",
+    "build_log_embed",
+    "log_serious_issue",
+    "log_to_channel",
+    "send_log_message",
+    "send_prebuilt_log_embed",
+]
+
+
+# ---------------------------------------------------------------------------
+# Backwards compatibility layer
+# ---------------------------------------------------------------------------
+
+LogField = DeveloperLogField
+build_log_embed = build_developer_log_embed
+send_log_message = send_developer_log_message
+send_prebuilt_log_embed = send_developer_log_embed
+log_to_channel = log_to_developer_channel
+log_serious_issue = log_developer_issue
+

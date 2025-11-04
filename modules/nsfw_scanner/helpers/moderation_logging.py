@@ -3,9 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-import discord
-
-from modules.utils.log_channel import send_log_message
+from modules.utils.log_channel import DeveloperLogField, log_to_developer_channel
 
 from ..constants import LOG_CHANNEL_ID
 from .moderation_state import ImageModerationState
@@ -47,23 +45,11 @@ async def report_remote_payload_failure(
         metadata["remote_failure_reported"] = True
 
     description = truncate_text(error_message, 1024)
-    embed = discord.Embed(
-        title="Moderator API remote payload failed",
-        description=description,
-        color=discord.Color.red(),
-        timestamp=discord.utils.utcnow(),
-    )
-    embed.add_field(
-        name="Attempt",
-        value=f"{attempt_number}/{max_attempts}",
-        inline=True,
-    )
+    fields: list[DeveloperLogField] = [
+        DeveloperLogField(name="Attempt", value=f"{attempt_number}/{max_attempts}", inline=True),
+    ]
     if LOG_CHANNEL_ID:
-        embed.add_field(
-            name="Log Channel ID",
-            value=str(LOG_CHANNEL_ID),
-            inline=True,
-        )
+        fields.append(DeveloperLogField(name="Log Channel ID", value=str(LOG_CHANNEL_ID), inline=True))
     if isinstance(image_state, ImageModerationState):
         log_details = []
         try:
@@ -71,16 +57,20 @@ async def report_remote_payload_failure(
         except Exception:
             log_details = []
         if image_state.source_url:
-            embed.add_field(
-                name="Image URL",
-                value=truncate_text(image_state.source_url, 1024),
-                inline=False,
+            fields.append(
+                DeveloperLogField(
+                    name="Image URL",
+                    value=truncate_text(image_state.source_url, 1024),
+                    inline=False,
+                )
             )
         if log_details:
-            embed.add_field(
-                name="Image details",
-                value=truncate_text(" | ".join(log_details), 1024),
-                inline=False,
+            fields.append(
+                DeveloperLogField(
+                    name="Image details",
+                    value=truncate_text(" | ".join(log_details), 1024),
+                    inline=False,
+                )
             )
 
     context_lines: list[str] = []
@@ -122,17 +112,22 @@ async def report_remote_payload_failure(
         context_lines.append(f"context={context_summary}")
 
     if context_lines:
-        embed.add_field(
-            name="Context",
-            value=truncate_text("\n".join(context_lines), 1024),
-            inline=False,
+        fields.append(
+            DeveloperLogField(
+                name="Context",
+                value=truncate_text("\n".join(context_lines), 1024),
+                inline=False,
+            )
         )
 
     try:
-        await send_log_message(
+        success = await log_to_developer_channel(
             bot,
-            embed=embed,
-            allowed_mentions=discord.AllowedMentions.none(),
+            summary="Moderator API remote payload failed",
+            severity="error",
+            description=description,
+            fields=fields,
+            timestamp=True,
             context="nsfw_scanner.moderation_remote",
         )
     except Exception:
@@ -140,6 +135,13 @@ async def report_remote_payload_failure(
             "Failed to report remote payload failure to LOG_CHANNEL_ID=%s",
             LOG_CHANNEL_ID,
             exc_info=True,
+        )
+        return
+
+    if not success:
+        log.debug(
+            "Failed to report remote payload failure to LOG_CHANNEL_ID=%s",
+            LOG_CHANNEL_ID,
         )
 
 
@@ -161,50 +163,52 @@ async def report_moderation_fallback_to_log(
     if metadata is not None:
         metadata["fallback_notice_reported"] = True
 
-    embed = discord.Embed(
-        title="Moderator API fallback triggered",
-        description=fallback_notice,
-        color=discord.Color.orange(),
-    )
+    fields: list[DeveloperLogField] = []
 
     events = sorted(image_state.fallback_events)
     if events:
-        embed.add_field(
-            name="Fallback events",
-            value=truncate_text(", ".join(events)),
-            inline=False,
+        fields.append(
+            DeveloperLogField(
+                name="Fallback events",
+                value=truncate_text(", ".join(events)),
+                inline=False,
+            )
         )
 
     if metadata:
         guild_id = metadata.get("guild_id")
         if guild_id is not None:
-            embed.add_field(name="Guild ID", value=str(guild_id), inline=True)
+            fields.append(DeveloperLogField(name="Guild ID", value=str(guild_id), inline=True))
 
         channel_id = metadata.get("channel_id")
         if channel_id is not None:
-            embed.add_field(name="Channel ID", value=str(channel_id), inline=True)
+            fields.append(DeveloperLogField(name="Channel ID", value=str(channel_id), inline=True))
 
         strategy = metadata.get("moderation_payload_strategy")
         if strategy:
-            embed.add_field(name="Payload strategy", value=str(strategy), inline=True)
+            fields.append(DeveloperLogField(name="Payload strategy", value=str(strategy), inline=True))
 
         jump_url = metadata.get("message_jump_url")
         message_id = metadata.get("message_id")
         if jump_url:
-            embed.add_field(
-                name="Message",
-                value=truncate_text(f"[Jump to message]({jump_url})"),
-                inline=False,
+            fields.append(
+                DeveloperLogField(
+                    name="Message",
+                    value=truncate_text(f"[Jump to message]({jump_url})"),
+                    inline=False,
+                )
             )
         elif message_id is not None:
-            embed.add_field(name="Message ID", value=str(message_id), inline=False)
+            fields.append(DeveloperLogField(name="Message ID", value=str(message_id), inline=False))
 
         source_url = metadata.get("source_url")
         if source_url:
-            embed.add_field(
-                name="Source URL",
-                value=truncate_text(source_url),
-                inline=False,
+            fields.append(
+                DeveloperLogField(
+                    name="Source URL",
+                    value=truncate_text(source_url),
+                    inline=False,
+                )
             )
 
         tracker_snapshot = metadata.get("moderation_tracker")
@@ -217,10 +221,12 @@ async def report_moderation_fallback_to_log(
             if no_key_waits:
                 attempt_parts.append(f"no_key_waits={no_key_waits}")
             if attempt_parts:
-                embed.add_field(
-                    name="Attempt stats",
-                    value=truncate_text(" | ".join(attempt_parts)),
-                    inline=False,
+                fields.append(
+                    DeveloperLogField(
+                        name="Attempt stats",
+                        value=truncate_text(" | ".join(attempt_parts)),
+                        inline=False,
+                    )
                 )
 
             failures = tracker_snapshot.get("failures") or {}
@@ -228,10 +234,12 @@ async def report_moderation_fallback_to_log(
                 failure_summary = ", ".join(
                     f"{reason}:{count}" for reason, count in sorted(failures.items())
                 )
-                embed.add_field(
-                    name="Failure breakdown",
-                    value=truncate_text(failure_summary),
-                    inline=False,
+                fields.append(
+                    DeveloperLogField(
+                        name="Failure breakdown",
+                        value=truncate_text(failure_summary),
+                        inline=False,
+                    )
                 )
 
             payload_info = tracker_snapshot.get("payload_details") or {}
@@ -239,10 +247,12 @@ async def report_moderation_fallback_to_log(
                 payload_summary = " | ".join(
                     f"{key}={payload_info[key]}" for key in sorted(payload_info.keys())
                 )
-                embed.add_field(
-                    name="Payload metadata",
-                    value=truncate_text(payload_summary),
-                    inline=False,
+                fields.append(
+                    DeveloperLogField(
+                        name="Payload metadata",
+                        value=truncate_text(payload_summary),
+                        inline=False,
+                    )
                 )
 
             timings = tracker_snapshot.get("timings_ms") or {}
@@ -253,18 +263,22 @@ async def report_moderation_fallback_to_log(
                     if value
                 )
                 if timing_summary:
-                    embed.add_field(
-                        name="Timing breakdown (ms)",
-                        value=truncate_text(timing_summary),
-                        inline=False,
+                    fields.append(
+                        DeveloperLogField(
+                            name="Timing breakdown (ms)",
+                            value=truncate_text(timing_summary),
+                            inline=False,
+                        )
                     )
 
         fallback_contexts = metadata.get("fallback_contexts")
         if fallback_contexts:
-            embed.add_field(
-                name="Fallback context",
-                value=truncate_text("\n".join(str(item) for item in fallback_contexts)),
-                inline=False,
+            fields.append(
+                DeveloperLogField(
+                    name="Fallback context",
+                    value=truncate_text("\n".join(str(item) for item in fallback_contexts)),
+                    inline=False,
+                )
             )
 
     try:
@@ -273,17 +287,21 @@ async def report_moderation_fallback_to_log(
         payload_details = []
 
     if payload_details:
-        embed.add_field(
-            name="Payload details",
-            value=truncate_text(" | ".join(payload_details)),
-            inline=False,
+        fields.append(
+            DeveloperLogField(
+                name="Payload details",
+                value=truncate_text(" | ".join(payload_details)),
+                inline=False,
+            )
         )
 
     try:
-        success = await send_log_message(
+        success = await log_to_developer_channel(
             bot,
-            embed=embed,
-            allowed_mentions=discord.AllowedMentions.none(),
+            summary="Moderator API fallback triggered",
+            severity="warning",
+            description=fallback_notice,
+            fields=fields,
             context="nsfw_scanner.moderation_fallback",
         )
     except Exception:

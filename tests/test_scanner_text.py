@@ -437,9 +437,9 @@ async def _exercise_text_scan(
     async def fake_log_to_channel(embed, channel_id, bot, file=None):
         log_calls.append({"embed": embed, "channel_id": channel_id})
 
-    log_channel_calls: list[dict[str, object]] = []
+    log_embed_calls: list[dict[str, object]] = []
 
-    async def fake_send_log_message(
+    async def fake_send_developer_log_embed(
         bot,
         *,
         content=None,
@@ -448,7 +448,7 @@ async def _exercise_text_scan(
         logger=None,
         context=None,
     ):
-        log_channel_calls.append(
+        log_embed_calls.append(
             {
                 "content": content,
                 "embed": embed,
@@ -479,8 +479,8 @@ async def _exercise_text_scan(
 
     monkeypatch.setattr(scanner_constants, "LOG_CHANNEL_ID", 123, raising=False)
     monkeypatch.setattr(mod_logging_module, "log_to_channel", fake_log_to_channel, raising=False)
-    monkeypatch.setattr(log_channel_module, "send_log_message", fake_send_log_message, raising=False)
-    monkeypatch.setattr(text_pipeline_module, "send_log_message", fake_send_log_message, raising=False)
+    monkeypatch.setattr(log_channel_module, "send_developer_log_embed", fake_send_developer_log_embed, raising=False)
+    monkeypatch.setattr(text_pipeline_module, "send_developer_log_embed", fake_send_developer_log_embed, raising=False)
     monkeypatch.setattr(text_pipeline_module, "process_text", fake_process_text, raising=False)
 
     scanner = scanner_mod.NSFWScanner(bot=SimpleNamespace())
@@ -501,13 +501,13 @@ async def _exercise_text_scan(
         callback_calls,
         author,
         log_calls,
-        log_channel_calls,
+        log_embed_calls,
         outcome,
     )
 
 
 def test_text_scan_does_not_log_without_verbose(monkeypatch):
-    flagged, text_calls, callback_calls, _, log_calls, log_channel_calls, outcome = asyncio.run(
+    flagged, text_calls, callback_calls, _, log_calls, log_embed_calls, outcome = asyncio.run(
         _exercise_text_scan(monkeypatch, accelerated_value=True, verbose_value=False)
     )
     assert flagged is True
@@ -515,7 +515,7 @@ def test_text_scan_does_not_log_without_verbose(monkeypatch):
     assert callback_calls, "Actions should fire when acceleration allows it"
     assert callback_calls[0][1]["send_embed"] is False
     assert not log_calls, "Verbose channel logging should be suppressed without nsfw-verbose"
-    assert not log_channel_calls, "Debug logs should be suppressed without nsfw-verbose"
+    assert not log_embed_calls, "Debug logs should be suppressed without nsfw-verbose"
     assert outcome["text_flagged"] is True, "Scanner should report text-based hits"
 
 
