@@ -345,8 +345,21 @@ def anyio_backend():
     return "asyncio"
 
 
+@pytest.fixture
+def stub_image_pipeline(monkeypatch):
+    async def _success(*_args, **_kwargs):
+        return {"is_nsfw": False, "reason": "openai_moderation"}
+
+    monkeypatch.setattr(
+        image_processing_mod,
+        "_run_image_pipeline",
+        _success,
+        raising=False,
+    )
+
+
 @pytest.mark.anyio
-async def test_process_image_reuses_png_without_conversion(monkeypatch, tmp_path):
+async def test_process_image_reuses_png_without_conversion(monkeypatch, tmp_path, stub_image_pipeline):
     png_path = tmp_path / "sample.png"
     Image.new("RGBA", (8, 8), (255, 0, 0, 255)).save(png_path)
 
@@ -370,7 +383,6 @@ async def test_process_image_reuses_png_without_conversion(monkeypatch, tmp_path
 
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
     monkeypatch.setattr(context_mod.mysql, "is_accelerated", fake_is_accelerated)
-    monkeypatch.setattr(image_processing_mod, "moderator_api", _moderator_api, raising=False)
 
     result = await images_mod.process_image(
         scanner=types.SimpleNamespace(bot=None),
@@ -384,7 +396,7 @@ async def test_process_image_reuses_png_without_conversion(monkeypatch, tmp_path
 
 
 @pytest.mark.anyio
-async def test_process_image_reuses_jpeg_when_possible(monkeypatch, tmp_path):
+async def test_process_image_reuses_jpeg_when_possible(monkeypatch, tmp_path, stub_image_pipeline):
     jpeg_path = tmp_path / "sample.jpg"
     Image.new("RGB", (8, 8), (0, 255, 0)).save(jpeg_path, format="JPEG")
 
@@ -411,7 +423,6 @@ async def test_process_image_reuses_jpeg_when_possible(monkeypatch, tmp_path):
     monkeypatch.setattr(context_mod.mysql, "get_settings", fake_get_settings)
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
     monkeypatch.setattr(context_mod.mysql, "is_accelerated", fake_is_accelerated)
-    monkeypatch.setattr(image_processing_mod, "moderator_api", _moderator_api, raising=False)
 
     result = await images_mod.process_image(
         scanner=types.SimpleNamespace(bot=None),
@@ -426,7 +437,7 @@ async def test_process_image_reuses_jpeg_when_possible(monkeypatch, tmp_path):
 
 
 @pytest.mark.anyio
-async def test_process_image_converts_unsupported_formats(monkeypatch, tmp_path):
+async def test_process_image_converts_unsupported_formats(monkeypatch, tmp_path, stub_image_pipeline):
     bmp_path = tmp_path / "sample.bmp"
     Image.new("RGB", (8, 8), (0, 0, 255)).save(bmp_path, format="BMP")
 
@@ -453,7 +464,6 @@ async def test_process_image_converts_unsupported_formats(monkeypatch, tmp_path)
     monkeypatch.setattr(context_mod.mysql, "get_settings", fake_get_settings)
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fake_is_accelerated)
     monkeypatch.setattr(context_mod.mysql, "is_accelerated", fake_is_accelerated)
-    monkeypatch.setattr(image_processing_mod, "moderator_api", _moderator_api, raising=False)
 
     result = await images_mod.process_image(
         scanner=types.SimpleNamespace(bot=None),
@@ -468,7 +478,7 @@ async def test_process_image_converts_unsupported_formats(monkeypatch, tmp_path)
 
 
 @pytest.mark.anyio
-async def test_process_image_uses_precomputed_settings(monkeypatch, tmp_path):
+async def test_process_image_uses_precomputed_settings(monkeypatch, tmp_path, stub_image_pipeline):
     png_path = tmp_path / "precomputed.png"
     Image.new("RGBA", (4, 4), (0, 0, 255, 255)).save(png_path)
 
@@ -480,7 +490,6 @@ async def test_process_image_uses_precomputed_settings(monkeypatch, tmp_path):
 
     monkeypatch.setattr(images_mod.mysql, "get_settings", fail_get_settings)
     monkeypatch.setattr(images_mod.mysql, "is_accelerated", fail_is_accelerated)
-    monkeypatch.setattr(image_processing_mod, "moderator_api", _moderator_api, raising=False)
 
     settings = {
         images_mod.NSFW_CATEGORY_SETTING: [],
