@@ -264,18 +264,34 @@ class LiveTranscriptEmitter:
                 description=part,
                 timestamp=_resolve_embed_timestamp(),
             )
+            # Ensure description attribute is accessible even when discord.Embed is stubbed.
+            try:
+                embed.description = part
+            except Exception:
+                setattr(embed, "description", part)
             blurple_colour = _resolve_blurple_colour()
             if blurple_colour is not None:
-                embed.colour = blurple_colour
-            embed.add_field(
-                name=transcript_texts["field_channel"],
-                value=self._channel.mention,
-                inline=True,
+                try:
+                    embed.colour = blurple_colour
+                except Exception:
+                    setattr(embed, "colour", blurple_colour)
+
+            def _append_field(name: str, value: str, inline: bool) -> None:
+                if hasattr(embed, "add_field"):
+                    try:
+                        embed.add_field(name=name, value=value, inline=inline)
+                        return
+                    except Exception:
+                        pass
+                fields = list(getattr(embed, "fields", []))
+                fields.append({"name": name, "value": value, "inline": inline})
+                setattr(embed, "fields", fields)
+
+            _append_field(
+                transcript_texts["field_channel"], self._channel.mention, True
             )
-            embed.add_field(
-                name=transcript_texts["field_utterances"],
-                value=str(len(flush_chunk)),
-                inline=True,
+            _append_field(
+                transcript_texts["field_utterances"], str(len(flush_chunk)), True
             )
             if hasattr(embed, "set_footer"):
                 try:
