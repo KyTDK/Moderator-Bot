@@ -350,7 +350,7 @@ def test_report_moderation_fallback_to_log(monkeypatch):
     assert fallback_notice
 
     asyncio.run(
-        moderation._report_moderation_fallback_to_log(
+        moderation_logging.report_moderation_fallback_to_log(
             scanner,
             fallback_notice=fallback_notice,
             image_state=state,
@@ -372,7 +372,7 @@ def test_report_moderation_fallback_to_log(monkeypatch):
     assert metadata.get("fallback_notice_reported") is True
 
     asyncio.run(
-        moderation._report_moderation_fallback_to_log(
+        moderation_logging.report_moderation_fallback_to_log(
             scanner,
             fallback_notice=fallback_notice,
             image_state=state,

@@ -14,9 +14,7 @@ from ..utils.categories import is_allowed_category
 from .latency import ModeratorLatencyTracker
 from .moderation_context import RemoteFallbackContext
 from .moderation_errors import build_error_context, format_exception_for_log
-from .moderation_logging import (
-    report_moderation_fallback_to_log,
-)
+from .moderation_logging import report_moderation_fallback_to_log
 from .moderation_state import ImageModerationState
 from .moderation_utils import (
     resolve_moderation_settings,
@@ -35,10 +33,6 @@ log = logging.getLogger(__name__)
 
 
 _MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
-
-# Backwards compatibility for call sites/tests that refer to the old helper.
-_report_moderation_fallback_to_log = report_moderation_fallback_to_log
-
 
 async def _get_moderations_resource(client):
     """
