@@ -12,11 +12,10 @@ from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 from modules.utils import mysql
-from modules.utils.time import parse_duration
-
 from .announcements import AnnouncementManager
 from .cycle import VoiceCycleConfig, run_voice_cycle
 from .metrics import record_voice_metrics
+from .settings import VoiceSettings
 from .state import GuildVCState
 
 load_dotenv()
@@ -24,6 +23,7 @@ AUTOMOD_OPENAI_KEY = os.getenv("AUTOMOD_OPENAI_KEY")
 AIMOD_MODEL = os.getenv("AIMOD_MODEL", "gpt-5-nano")
 VCMOD_TTS_MODEL = os.getenv("VCMOD_TTS_MODEL", "gpt-4o-mini-tts")
 VCMOD_TTS_VOICE = os.getenv("VCMOD_TTS_VOICE", "alloy")
+VCMOD_TTS_FORMAT = os.getenv("VCMOD_TTS_FORMAT", "mp3")
 
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10))
 
@@ -36,6 +36,7 @@ class VoiceModeratorCog(commands.Cog):
             api_key=AUTOMOD_OPENAI_KEY,
             model=VCMOD_TTS_MODEL,
             voice=VCMOD_TTS_VOICE,
+            response_format=VCMOD_TTS_FORMAT,
         )
         self.loop.start()
 
@@ -87,7 +88,7 @@ class VoiceModeratorCog(commands.Cog):
                 print(f"[VCMod] tick failed for {guild.id}: {exc}")
 
     async def _tick_guild(self, guild: discord.Guild, now: datetime) -> None:
-        settings = await mysql.get_settings(
+        raw_settings = await mysql.get_settings(
             guild.id,
             [
                 "vcmod-enabled",
@@ -108,85 +109,38 @@ class VoiceModeratorCog(commands.Cog):
             ],
         )
 
-        enabled = settings.get("vcmod-enabled") or False
-        channels = settings.get("vcmod-channels") or []
-        saver_mode = settings.get("vcmod-saver-mode") or False
-        listen_str = settings.get("vcmod-listen-duration") or "2m"
-        idle_str = settings.get("vcmod-idle-duration") or "30s"
+        voice_settings = VoiceSettings.from_raw(raw_settings)
 
-        if not enabled or not AUTOMOD_OPENAI_KEY:
+        if not voice_settings.enabled or not AUTOMOD_OPENAI_KEY:
             await self._teardown_state(guild)
             return
 
-        channel_ids: list[int] = []
-        for entry in channels or []:
-            try:
-                channel_ids.append(int(getattr(entry, "id", entry)))
-            except Exception:
-                continue
-
-        if not channel_ids:
+        if not voice_settings.channel_ids:
             await self._teardown_state(guild)
             return
 
         state = self._get_state(guild.id)
-        state.channel_ids = channel_ids
+        state.channel_ids = voice_settings.channel_ids
 
         if state.busy_task and not state.busy_task.done():
             return
         if now < state.next_start:
             return
 
-        if state.index >= len(channel_ids):
+        if state.index >= len(state.channel_ids):
             state.index = 0
 
-        chan_id = channel_ids[state.index]
-        channel = guild.get_channel(chan_id)
-        if not isinstance(channel, discord.VoiceChannel):
-            try:
-                fetched = await self.bot.fetch_channel(chan_id)
-                if isinstance(fetched, discord.VoiceChannel):
-                    channel = fetched
-                else:
-                    state.index += 1
-                    state.next_start = datetime.now(timezone.utc)
-                    return
-            except Exception:
-                state.index += 1
-                state.next_start = datetime.now(timezone.utc)
-                return
-
-        high_accuracy = settings.get("vcmod-high-accuracy") or False
-        rules = settings.get("vcmod-rules") or ""
-        action_setting = settings.get("vcmod-detection-action") or ["auto"]
-        aimod_debug = settings.get("aimod-debug") or False
-        log_channel = settings.get("aimod-channel") or settings.get("monitor-channel")
-        transcript_channel_id = settings.get("vcmod-transcript-channel")
-        transcript_only = settings.get("vcmod-transcript-only") or False
-        join_announcement = settings.get("vcmod-join-announcement") or False
-        high_quality_transcription = settings.get("vcmod-high-quality-transcription") or False
-
-        listen_delta = parse_duration(listen_str) or timedelta(minutes=2)
-        idle_delta = parse_duration(idle_str) or timedelta(seconds=30)
-
-        do_listen = not saver_mode
+        channel = await self._resolve_channel(guild, voice_settings, state.index)
+        if channel is None:
+            state.index += 1
+            state.next_start = datetime.now(timezone.utc)
+            return
 
         async def _run() -> None:
             await self._run_cycle_for_channel(
                 guild=guild,
+                settings=voice_settings,
                 channel=channel,
-                do_listen=do_listen,
-                listen_delta=listen_delta,
-                idle_delta=idle_delta,
-                high_accuracy=high_accuracy,
-                high_quality_transcription=high_quality_transcription,
-                rules=rules,
-                transcript_only=transcript_only,
-                action_setting=action_setting,
-                aimod_debug=aimod_debug,
-                log_channel=log_channel,
-                transcript_channel_id=transcript_channel_id,
-                join_announcement=join_announcement,
             )
 
         state.busy_task = self.bot.loop.create_task(_run())
@@ -200,23 +154,30 @@ class VoiceModeratorCog(commands.Cog):
 
         state.busy_task.add_done_callback(_done_callback)
 
+    async def _resolve_channel(
+        self,
+        guild: discord.Guild,
+        settings: VoiceSettings,
+        index: int,
+    ) -> Optional[discord.VoiceChannel]:
+        if index >= len(settings.channel_ids):
+            return None
+        chan_id = settings.channel_ids[index]
+        channel = guild.get_channel(chan_id)
+        if isinstance(channel, discord.VoiceChannel):
+            return channel
+        try:
+            fetched = await self.bot.fetch_channel(chan_id)
+        except Exception:
+            return None
+        return fetched if isinstance(fetched, discord.VoiceChannel) else None
+
     async def _run_cycle_for_channel(
         self,
         *,
         guild: discord.Guild,
+        settings: VoiceSettings,
         channel: discord.VoiceChannel,
-        do_listen: bool,
-        listen_delta: timedelta,
-        idle_delta: timedelta,
-        high_accuracy: bool,
-        high_quality_transcription: bool,
-        rules: str,
-        transcript_only: bool,
-        action_setting: list[str],
-        aimod_debug: bool,
-        log_channel: Optional[int],
-        transcript_channel_id: Optional[int],
-        join_announcement: bool,
     ) -> None:
         state = self._get_state(guild.id)
         transcript_texts = self.bot.translate(
@@ -231,18 +192,18 @@ class VoiceModeratorCog(commands.Cog):
         config = VoiceCycleConfig(
             guild=guild,
             channel=channel,
-            do_listen=do_listen,
-            listen_delta=listen_delta,
-            idle_delta=idle_delta,
-            high_accuracy=high_accuracy,
-            high_quality_transcription=high_quality_transcription,
-            rules=rules,
-            transcript_only=transcript_only,
-            action_setting=action_setting,
-            aimod_debug=aimod_debug,
-            log_channel=log_channel,
-            transcript_channel_id=transcript_channel_id,
-            join_announcement=join_announcement,
+            do_listen=not settings.saver_mode,
+            listen_delta=settings.listen_delta,
+            idle_delta=settings.idle_delta,
+            high_accuracy=settings.high_accuracy,
+            high_quality_transcription=settings.high_quality_transcription,
+            rules=settings.rules,
+            transcript_only=settings.transcript_only,
+            action_setting=settings.action_setting,
+            aimod_debug=settings.aimod_debug,
+            log_channel=settings.log_channel,
+            transcript_channel_id=settings.transcript_channel_id,
+            join_announcement=settings.join_announcement,
             transcript_texts=transcript_texts,
             announcement_texts=announcement_texts,
         )

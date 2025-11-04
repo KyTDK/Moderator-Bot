@@ -7,7 +7,7 @@ import io
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import discord
 import httpx
@@ -28,10 +28,12 @@ class AnnouncementManager:
         voice: str,
         cache_dir: Optional[os.PathLike[str] | str] = None,
         timeout_seconds: float = 20.0,
+        response_format: str = "mp3",
     ) -> None:
         self._api_key = api_key
         self._model = model
         self._voice = voice
+        self._response_format = (response_format or "mp3").lower()
         base_dir = Path(cache_dir) if cache_dir else Path(tempfile.gettempdir()) / "moderator_bot_voice_tts"
         base_dir.mkdir(parents=True, exist_ok=True)
         self._cache_dir = base_dir
@@ -45,37 +47,72 @@ class AnnouncementManager:
             self._locks[cache_key] = lock
         return lock
 
-    def _cache_path(self, text: str) -> Path:
-        digest = hashlib.sha256(f"{self._model}:{self._voice}:{text}".encode("utf-8")).hexdigest()
-        return self._cache_dir / f"{digest}.wav"
+    @staticmethod
+    def _cache_key(model: str, voice: str, text: str) -> str:
+        return hashlib.sha256(f"{model}:{voice}:{text}".encode("utf-8")).hexdigest()
 
-    async def _load_cached_audio(self, path: Path) -> Optional[bytes]:
-        if not path.exists():
-            return None
-        return await asyncio.to_thread(path.read_bytes)
+    def _existing_cache_path(self, key: str) -> Optional[Path]:
+        for candidate in self._cache_dir.glob(f"{key}.*"):
+            if candidate.is_file():
+                return candidate
+        return None
 
-    async def _store_cached_audio(self, path: Path, audio: bytes) -> None:
+    def _resolve_cache_path(self, key: str, fmt: Optional[str]) -> Path:
+        ext = (fmt or self._response_format or "mp3").lstrip(".")
+        return self._cache_dir / f"{key}.{ext}"
+
+    @staticmethod
+    def _detect_format(audio: bytes, content_type: Optional[str] = None) -> str:
+        if content_type:
+            lower = content_type.lower()
+            if "wav" in lower:
+                return "wav"
+            if "mpeg" in lower or "mp3" in lower:
+                return "mp3"
+            if "ogg" in lower:
+                return "ogg"
+        if audio.startswith(b"RIFF"):
+            return "wav"
+        if audio.startswith(b"OggS"):
+            return "ogg"
+        if audio.startswith(b"ID3"):
+            return "mp3"
+        if len(audio) >= 2 and audio[0] == 0xFF and audio[1] in (0xF3, 0xFB, 0xF2):
+            return "mp3"
+        return "mp3"
+
+    async def _load_cached_audio(self, key: str) -> Tuple[Optional[bytes], Optional[str]]:
+        path = self._existing_cache_path(key)
+        if not path:
+            return None, None
+        data = await asyncio.to_thread(path.read_bytes)
+        fmt = self._detect_format(data, None)
+        return data, fmt
+
+    async def _store_cached_audio(self, key: str, audio: bytes, fmt: str) -> None:
+        path = self._resolve_cache_path(key, fmt)
         await asyncio.to_thread(path.write_bytes, audio)
 
-    async def _synthesize_tts(self, text: str) -> Optional[bytes]:
+    async def _synthesize_tts(self, text: str) -> Tuple[Optional[bytes], Optional[str]]:
         if not text or not self._api_key:
-            return None
+            return None, None
 
-        path = self._cache_path(text)
-        cached = await self._load_cached_audio(path)
-        if cached:
-            return cached
+        key = self._cache_key(self._model, self._voice, text)
+        cached_bytes, cached_fmt = await self._load_cached_audio(key)
+        if cached_bytes:
+            return cached_bytes, cached_fmt
 
-        async with self._lock_for(path.name):
-            cached = await self._load_cached_audio(path)
-            if cached:
-                return cached
+        async with self._lock_for(key):
+            cached_bytes, cached_fmt = await self._load_cached_audio(key)
+            if cached_bytes:
+                return cached_bytes, cached_fmt
 
+            fmt_hint = None
             payload = {
                 "model": self._model,
                 "voice": self._voice,
                 "input": text,
-                "format": "wav",
+                "format": self._response_format,
             }
             headers = {
                 "Authorization": f"Bearer {self._api_key}",
@@ -86,27 +123,36 @@ class AnnouncementManager:
                     response = await client.post(self._DEFAULT_ENDPOINT, headers=headers, json=payload)
                     response.raise_for_status()
                     audio_bytes = response.content
+                    fmt_hint = self._detect_format(audio_bytes, response.headers.get("content-type"))
             except Exception as exc:
                 print(f"[VCMod] TTS synthesis failed: {exc}")
-                return None
+                return None, None
 
+            fmt = fmt_hint or self._response_format or "mp3"
             try:
-                await self._store_cached_audio(path, audio_bytes)
+                await self._store_cached_audio(key, audio_bytes, fmt)
             except Exception as exc:
                 print(f"[VCMod] Failed to cache TTS audio: {exc}")
+            return audio_bytes, fmt
 
-        return await self._load_cached_audio(path)
+        return await self._load_cached_audio(key)
 
-    async def _play_audio(self, voice_client: discord.VoiceClient, audio_bytes: bytes) -> bool:
+    async def _play_audio(
+        self,
+        voice_client: discord.VoiceClient,
+        audio_bytes: bytes,
+        fmt: Optional[str],
+    ) -> bool:
         if not audio_bytes:
             return False
 
         stream = io.BytesIO(audio_bytes)
         try:
-            source = discord.PCMVolumeTransformer(
-                discord.FFmpegPCMAudio(stream, pipe=True, before_options="-f wav"),
-                volume=1.0,
-            )
+            ffmpeg_kwargs: Dict[str, Any] = {"pipe": True}
+            detected_fmt = fmt or self._detect_format(audio_bytes, None)
+            if detected_fmt:
+                ffmpeg_kwargs["before_options"] = f"-f {detected_fmt}"
+            source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(stream, **ffmpeg_kwargs), volume=1.0)
         except Exception as exc:
             print(f"[VCMod] Failed to create TTS audio source: {exc}")
             return False
@@ -179,12 +225,12 @@ class AnnouncementManager:
             return
 
         text = self._resolve_text(texts, transcript_only)
-        audio = await self._synthesize_tts(text)
-        if not audio:
+        audio_bytes, audio_fmt = await self._synthesize_tts(text)
+        if not audio_bytes:
             print(f"[VCMod] Failed to prepare join announcement for guild {guild.id} channel {channel.id}")
             return
 
         state.last_announce_key = key
-        played = await self._play_audio(voice_client, audio)
+        played = await self._play_audio(voice_client, audio_bytes, audio_fmt)
         if not played:
             print(f"[VCMod] Failed to play join announcement for guild {guild.id} channel {channel.id}")

@@ -55,6 +55,87 @@ class VoiceCycleConfig:
     announcement_texts: Optional[Dict[str, Any]]
 
 
+def _collect_violation_batches(
+    report: Optional[VoiceModerationReport],
+    processed_cache: set[tuple[int, str, str]],
+) -> dict[int, dict[str, Any]]:
+    if not report or not getattr(report, "violations", None):
+        return {}
+
+    aggregated: dict[int, dict[str, Any]] = {}
+    for violation in report.violations:
+        try:
+            uid = int(getattr(violation, "user_id", 0))
+        except Exception:
+            continue
+        if not uid:
+            continue
+        actions = list(getattr(violation, "actions", []) or [])
+        rule = (getattr(violation, "rule", "") or "").strip()
+        reason = (getattr(violation, "reason", "") or "").strip()
+        if not actions or not rule:
+            continue
+        key = (uid, rule, reason)
+        if key in processed_cache:
+            continue
+        processed_cache.add(key)
+        entry = aggregated.setdefault(uid, {"actions": set(), "reasons": [], "rules": set()})
+        entry["actions"].update(actions)
+        if reason:
+            entry["reasons"].append(reason)
+        if rule:
+            entry["rules"].add(rule)
+    return aggregated
+
+
+async def _apply_violation_actions(
+    *,
+    bot: commands.Bot,
+    guild: discord.Guild,
+    aggregated: dict[int, dict[str, Any]],
+    action_setting: list[str],
+    aimod_debug: bool,
+    log_channel: Optional[int],
+    violation_cache: Dict[int, deque[tuple[str, str]]],
+) -> None:
+    if not aggregated:
+        return
+
+    for uid, data in aggregated.items():
+        member = await safe_get_member(guild, uid)
+        if not member:
+            continue
+
+        all_actions = list(data.get("actions", []))
+        configured = am_helpers.resolve_configured_actions(
+            {"vcmod-detection-action": action_setting},
+            all_actions,
+            "vcmod-detection-action",
+        )
+
+        out_reason, out_rule = am_helpers.summarize_reason_rule(
+            bot,
+            guild,
+            data.get("reasons"),
+            data.get("rules"),
+        )
+
+        await am_helpers.apply_actions_and_log(
+            bot=bot,
+            member=member,
+            configured_actions=configured,
+            reason=out_reason,
+            rule=out_rule,
+            messages=[],
+            aimod_debug=aimod_debug,
+            ai_channel_id=log_channel,
+            monitor_channel_id=None,
+            ai_actions=all_actions,
+            fanout=False,
+            violation_cache=violation_cache,
+        )
+
+
 async def run_voice_cycle(
     *,
     bot: commands.Bot,
@@ -160,66 +241,16 @@ async def run_voice_cycle(
                     duration_ms=duration_ms,
                 )
 
-                if not report or not getattr(report, "violations", None):
-                    continue
-
-                aggregated: dict[int, dict[str, Any]] = {}
-                for violation in report.violations:
-                    try:
-                        uid = int(getattr(violation, "user_id", 0))
-                    except Exception:
-                        continue
-                    if not uid:
-                        continue
-                    actions = list(getattr(violation, "actions", []) or [])
-                    rule = (getattr(violation, "rule", "") or "").strip()
-                    reason = (getattr(violation, "reason", "") or "").strip()
-                    if not actions or not rule:
-                        continue
-                    key = (uid, rule, reason)
-                    if key in processed_violation_keys:
-                        continue
-                    processed_violation_keys.add(key)
-                    agg = aggregated.setdefault(uid, {"actions": set(), "reasons": [], "rules": set()})
-                    agg["actions"].update(actions)
-                    if reason:
-                        agg["reasons"].append(reason)
-                    if rule:
-                        agg["rules"].add(rule)
-
-                for uid, data in aggregated.items():
-                    member = await safe_get_member(guild, uid)
-                    if not member:
-                        continue
-
-                    all_actions = list(data["actions"]) if data.get("actions") else []
-                    configured = am_helpers.resolve_configured_actions(
-                        {"vcmod-detection-action": config.action_setting},
-                        all_actions,
-                        "vcmod-detection-action",
-                    )
-
-                    out_reason, out_rule = am_helpers.summarize_reason_rule(
-                        bot,
-                        guild,
-                        data.get("reasons"),
-                        data.get("rules"),
-                    )
-
-                    await am_helpers.apply_actions_and_log(
-                        bot=bot,
-                        member=member,
-                        configured_actions=configured,
-                        reason=out_reason,
-                        rule=out_rule,
-                        messages=[],
-                        aimod_debug=config.aimod_debug,
-                        ai_channel_id=config.log_channel,
-                        monitor_channel_id=None,
-                        ai_actions=all_actions,
-                        fanout=False,
-                        violation_cache=violation_cache,
-                    )
+                aggregated = _collect_violation_batches(report, processed_violation_keys)
+                await _apply_violation_actions(
+                    bot=bot,
+                    guild=guild,
+                    aggregated=aggregated,
+                    action_setting=config.action_setting,
+                    aimod_debug=config.aimod_debug,
+                    log_channel=config.log_channel,
+                    violation_cache=violation_cache,
+                )
             finally:
                 assert chunk_queue is not None
                 chunk_queue.task_done()
