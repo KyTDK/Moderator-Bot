@@ -1,11 +1,13 @@
 import asyncio
 import contextlib
+import math
 from datetime import timedelta, datetime, timezone
 from typing import Optional, Tuple, List, Dict
 import sys
 import os
 import logging
 import time
+from array import array
 
 import discord
 from discord.ext import voice_recv
@@ -25,6 +27,43 @@ from cogs.voice_moderation.transcriber import (
 logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
 
 HARVEST_WINDOW_SECONDS: float = 1.5
+_MIN_SPOKEN_DURATION_S = 0.35
+_MIN_RMS_THRESHOLD = 900.0
+
+
+def _pcm_rms(pcm: bytes) -> float:
+    """Compute RMS amplitude for s16le PCM data."""
+    if not pcm or len(pcm) < 4:
+        return 0.0
+    samples = array("h")
+    try:
+        samples.frombytes(pcm)
+    except Exception:
+        return 0.0
+    if not samples:
+        return 0.0
+    accum = 0.0
+    for sample in samples:
+        accum += sample * sample
+    mean_square = accum / len(samples)
+    return math.sqrt(mean_square)
+
+
+def _filter_pcm_by_energy(
+    pcm_map: Dict[int, bytes],
+    duration_map_s: Dict[int, float],
+) -> Dict[int, bytes]:
+    """Filter out near-silent or extremely short PCM chunks to cut down on noise hallucinations."""
+    filtered: Dict[int, bytes] = {}
+    for uid, pcm in pcm_map.items():
+        duration = duration_map_s.get(uid, 0.0)
+        if duration < _MIN_SPOKEN_DURATION_S:
+            continue
+        rms = _pcm_rms(pcm)
+        if rms < _MIN_RMS_THRESHOLD:
+            continue
+        filtered[uid] = pcm
+    return filtered
 
 def _ensure_opus_loaded() -> None:
     """Ensure opus is loaded for voice receive/PCM decode."""
@@ -266,8 +305,18 @@ async def transcribe_harvest_chunk(
     if not eligible_map:
         return [], 0.0
 
+    filtered_map = _filter_pcm_by_energy(eligible_map, duration_map_s)
+    if not filtered_map:
+        print("[VC IO] Skipping chunk; below energy/duration thresholds.")
+        return [], 0.0
+    if len(filtered_map) < len(eligible_map):
+        print(
+            f"[VC IO] Filtered {len(eligible_map) - len(filtered_map)} low-energy "
+            f"tracks out of {len(eligible_map)} before transcription."
+        )
+
     # Budget pre-check from estimated minutes
-    est_minutes = estimate_minutes_from_pcm_map(eligible_map)
+    est_minutes = estimate_minutes_from_pcm_map(filtered_map)
     price_per_minute = (
         TRANSCRIPTION_PRICE_PER_MINUTE_USD
         if high_quality
@@ -285,7 +334,7 @@ async def transcribe_harvest_chunk(
     segs, actual_cost, used_remote = await transcribe_pcm_map(
         guild_id=guild_id,
         api_key=api_key,
-        pcm_map=eligible_map,
+        pcm_map=filtered_map,
         high_quality=high_quality,
     )
 
