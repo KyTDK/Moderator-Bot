@@ -4,14 +4,18 @@ import asyncio
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Awaitable, Callable, Optional, Sequence
+from typing import Any, Awaitable, Callable, Optional, Sequence, TYPE_CHECKING
 
 import discord
 from discord.ext import commands
 
 from modules.utils import mod_logging
+if TYPE_CHECKING:
+    from discord import Member as DiscordMember
+else:
+    DiscordMember = Any
 
-ParticipantResolver = Callable[[int], Awaitable[Optional[discord.Member]]]
+ParticipantResolver = Callable[[int], Awaitable[Optional[DiscordMember]]]
 
 @dataclass
 class ParticipantInfo:
