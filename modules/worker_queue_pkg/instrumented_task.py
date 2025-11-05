@@ -51,8 +51,6 @@ class InstrumentedTask:
         wait_duration = started_at - self._enqueued_at
         queue = self._queue
         queue._record_wait(wait_duration)
-        if wait_duration > queue._slow_wait_threshold:
-            queue._maybe_log_wait(wait_duration, self._backlog_at_enqueue, self._name)
 
         backlog_at_start = queue.queue.qsize()
         active_workers_start = queue._active_workers()

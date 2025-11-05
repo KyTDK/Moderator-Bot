@@ -37,7 +37,6 @@ class AggregatedModerationCog(commands.Cog):
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
             developer_log_context="aggregated_moderation.free_queue",
-            slow_task_logging=False,
         )
         self.accelerated_queue = WorkerQueue(
             max_workers=self.config.accelerated.max_workers,
@@ -50,7 +49,6 @@ class AggregatedModerationCog(commands.Cog):
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
             developer_log_context="aggregated_moderation.accelerated_queue",
-            slow_task_logging=False,
         )
 
         self.queue_monitor = FreeQueueMonitor(
