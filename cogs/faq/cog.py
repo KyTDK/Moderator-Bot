@@ -349,6 +349,8 @@ class FAQCog(commands.Cog):
                     DeveloperLogField("Content", content_preview, inline=False),
                 ],
             )
+
+        embed = self._build_response_embed(guild_id, message.author, result)
         try:
             await mod_logging.log_to_channel(embed, message.channel.id, self.bot)
         except discord.Forbidden:
