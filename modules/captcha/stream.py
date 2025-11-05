@@ -56,7 +56,7 @@ class CaptchaStreamListener(RedisStreamConsumer):
         session_store: CaptchaSessionStore,
         settings_update_callback: SettingsUpdateCallback | None = None,
     ) -> None:
-        super().__init__(config, logger=_logger)
+        super().__init__(config, logger=_logger, redis_factory=redis_from_url)
         self._bot = bot
         self._config_ext = config
         self._processor = CaptchaCallbackProcessor(bot, session_store)

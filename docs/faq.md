@@ -217,6 +217,8 @@ Responses are appended to `FAQ_RESPONSE_STREAM` and include:
 
 The bot acknowledges and deletes each command after processing, so make sure your publisher monitors the response stream (and/or sets reasonable retention limits) to pick up results promptly.
 
+The stream plumbing is powered by the reusable `modules.utils.redis_stream.RedisStreamConsumer`, so any future feature that needs Redis stream ingestion can subclass the same wrapper instead of re-implementing connection, polling, and ack logic.
+
 ---
 
 ## Operational Considerations

@@ -10,10 +10,14 @@ from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Seque
 try:  # pragma: no cover - optional dependency
     from redis.asyncio import Redis as RedisClient
     from redis.asyncio import from_url as redis_from_url
-    from redis.exceptions import ResponseError
+    from redis.exceptions import (
+        ConnectionError as RedisConnectionError,
+        ResponseError,
+    )
 except ModuleNotFoundError:  # pragma: no cover - handled gracefully by consumers
     RedisClient = None  # type: ignore[assignment]
     redis_from_url = None  # type: ignore[assignment]
+    RedisConnectionError = Exception  # type: ignore[assignment]
     ResponseError = Exception  # type: ignore[assignment]
 
 __all__ = [
@@ -91,7 +95,7 @@ class RedisStreamConsumer:
         logger: logging.Logger | None = None,
         delete_after_ack: bool = False,
         name: str | None = None,
-        redis_factory: callable | None = None,
+        redis_factory: Callable[..., RedisClient] | None = None,
     ) -> None:
         self._config = config
         self._logger = logger or logging.getLogger(
@@ -138,6 +142,16 @@ class RedisStreamConsumer:
         redis = factory(self._config.redis_url, decode_responses=True)
         try:
             await self._ensure_consumer_group(redis)
+        except (RedisConnectionError, OSError) as exc:
+            await redis.close()
+            await redis.connection_pool.disconnect()
+            self._logger.error(
+                "Unable to connect to Redis stream %s at %s: %s",
+                self._config.stream,
+                self._config.redis_url,
+                exc,
+            )
+            return False
         except Exception:
             await redis.close()
             await redis.connection_pool.disconnect()
