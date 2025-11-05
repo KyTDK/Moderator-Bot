@@ -87,8 +87,8 @@ def get_last_error() -> Exception | None:
     return _TEXT_VECTOR_SPACE.get_last_error()
 
 
-def add_vector(text: str, metadata: dict[str, Any]) -> None:
-    _TEXT_VECTOR_SPACE.add_vector(text, metadata)
+def add_vector(text: str, metadata: dict[str, Any]) -> int | None:
+    return _TEXT_VECTOR_SPACE.add_vector(text, metadata)
 
 
 async def delete_vectors(ids: Iterable[int]) -> VectorDeleteStats | None:

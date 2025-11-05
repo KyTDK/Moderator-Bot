@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "group_description": "Configure and respond with server FAQs.",
+    "add": {
+      "description": "Add a new FAQ entry for this server.",
+      "params": {
+        "question": "Question to match against member messages.",
+        "answer": "Answer to send when the question is recognised."
+      }
+    },
+    "remove": {
+      "description": "Remove an existing FAQ entry.",
+      "params": {
+        "entry_id": "Numeric identifier shown in /faq list."
+      }
+    },
+    "list": {
+      "description": "List configured FAQs for this server."
+    }
+  },
+  "add": {
+    "success": "Added FAQ #{entry_id}.",
+    "limit_reached": "Your current plan allows up to {limit} FAQs. Upgrade to {plan} for additional capacity.",
+    "failure": "Could not add the FAQ: {reason}"
+  },
+  "remove": {
+    "success": "Removed FAQ #{entry_id}.",
+    "not_found": "No FAQ with ID {entry_id} exists.",
+    "failure": "Could not remove the FAQ: {reason}"
+  },
+  "list": {
+    "empty": "No FAQs have been configured yet.",
+    "embed_title": "Server FAQs",
+    "embed_description": "Configure more FAQs with /faq add.",
+    "entry_value": "**Q:** {question}\n**A:** {answer}",
+    "question_label": "#{entry_id}:",
+    "overflow": "Showing first 25 FAQs. {remaining} more entries not displayed."
+  },
+  "response": {
+    "title": "Helpful FAQ Answer",
+    "description": "{user}, I found a matching FAQ answer (confidence {confidence}%).",
+    "question_label": "Question",
+    "answer_label": "Answer"
+  }
+}

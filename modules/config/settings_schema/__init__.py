@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .base import Setting
+from .faq import build_faq_settings
 from .general import build_general_settings
 from .nsfw import build_nsfw_settings
 
@@ -9,6 +10,7 @@ def _build_settings_schema() -> dict[str, Setting]:
     settings: dict[str, Setting] = {}
     settings.update(build_general_settings())
     settings.update(build_nsfw_settings())
+    settings.update(build_faq_settings())
     return settings
 
 

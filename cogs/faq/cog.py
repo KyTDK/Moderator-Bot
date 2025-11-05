@@ -1,0 +1,267 @@
+from __future__ import annotations
+
+import discord
+from discord import Color, Embed, Interaction, app_commands
+from discord.ext import commands
+
+from modules.config.premium_plans import PLAN_DISPLAY_NAMES
+from modules.core.moderator_bot import ModeratorBot
+from modules.faq.models import FAQEntry, FAQSearchResult
+from modules.faq.service import (
+    FAQEntryNotFoundError,
+    FAQLimitError,
+    FAQServiceError,
+    add_faq_entry,
+    delete_faq_entry,
+    find_best_faq_answer,
+    list_faq_entries,
+)
+from modules.faq.settings_keys import FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING
+from modules.i18n.strings import locale_namespace
+from modules.utils import mod_logging, mysql
+from modules.utils.interaction_responses import send_ephemeral_response
+
+LOCALE = locale_namespace("cogs", "faq")
+META = LOCALE.child("meta")
+ADD_LOCALE = META.child("add")
+REMOVE_LOCALE = META.child("remove")
+LIST_LOCALE = META.child("list")
+RESPONSE_LOCALE = LOCALE.child("response")
+
+
+def _trim_field_value(value: str, limit: int = 1024) -> str:
+    if len(value) <= limit:
+        return value
+    truncated = value[: limit - 3].rstrip()
+    return f"{truncated}..."
+
+
+class FAQCog(commands.Cog):
+    """Slash commands and message handler for FAQ responses."""
+
+    def __init__(self, bot: ModeratorBot) -> None:
+        self.bot = bot
+
+    faq_group = app_commands.Group(
+        name="faq",
+        description=META.string("group_description"),
+        default_permissions=discord.Permissions(manage_messages=True),
+        guild_only=True,
+    )
+
+    @faq_group.command(
+        name="add",
+        description=ADD_LOCALE.string("description"),
+    )
+    @app_commands.describe(
+        question=ADD_LOCALE.child("params").string("question"),
+        answer=ADD_LOCALE.child("params").string("answer"),
+    )
+    async def add_faq(
+        self,
+        interaction: Interaction,
+        question: str,
+        answer: str,
+    ) -> None:
+        if not interaction.guild:
+            await send_ephemeral_response(interaction, content="Guild context required.")
+            return
+
+        guild_id = interaction.guild.id
+        await interaction.response.defer(ephemeral=True, thinking=True)
+
+        try:
+            entry = await add_faq_entry(guild_id, question, answer)
+        except FAQLimitError as exc:
+            plan_name = PLAN_DISPLAY_NAMES.get(exc.plan, exc.plan.title())
+            message = self.bot.translate(
+                "cogs.faq.add.limit_reached",
+                guild_id=guild_id,
+                placeholders={
+                    "limit": exc.limit,
+                    "plan": plan_name,
+                },
+            )
+            await interaction.followup.send(message, ephemeral=True)
+            return
+        except FAQServiceError as exc:
+            message = self.bot.translate(
+                "cogs.faq.add.failure",
+                guild_id=guild_id,
+                placeholders={"reason": str(exc)},
+            )
+            await interaction.followup.send(message, ephemeral=True)
+            return
+
+        message = self.bot.translate(
+            "cogs.faq.add.success",
+            guild_id=guild_id,
+            placeholders={"entry_id": entry.entry_id},
+        )
+        await interaction.followup.send(message, ephemeral=True)
+
+    @faq_group.command(
+        name="remove",
+        description=REMOVE_LOCALE.string("description"),
+    )
+    @app_commands.describe(
+        entry_id=REMOVE_LOCALE.child("params").string("entry_id"),
+    )
+    async def remove_faq(self, interaction: Interaction, entry_id: int) -> None:
+        if not interaction.guild:
+            await send_ephemeral_response(interaction, content="Guild context required.")
+            return
+
+        guild_id = interaction.guild.id
+        await interaction.response.defer(ephemeral=True)
+        try:
+            entry = await delete_faq_entry(guild_id, entry_id)
+        except FAQEntryNotFoundError:
+            message = self.bot.translate(
+                "cogs.faq.remove.not_found",
+                guild_id=guild_id,
+                placeholders={"entry_id": entry_id},
+            )
+            await interaction.followup.send(message, ephemeral=True)
+            return
+        except FAQServiceError as exc:
+            message = self.bot.translate(
+                "cogs.faq.remove.failure",
+                guild_id=guild_id,
+                placeholders={"reason": str(exc)},
+            )
+            await interaction.followup.send(message, ephemeral=True)
+            return
+
+        message = self.bot.translate(
+            "cogs.faq.remove.success",
+            guild_id=guild_id,
+            placeholders={"entry_id": entry.entry_id},
+        )
+        await interaction.followup.send(message, ephemeral=True)
+
+    @faq_group.command(
+        name="list",
+        description=LIST_LOCALE.string("description"),
+    )
+    async def list_faq(self, interaction: Interaction) -> None:
+        if not interaction.guild:
+            await send_ephemeral_response(interaction, content="Guild context required.")
+            return
+
+        guild_id = interaction.guild.id
+        entries = await list_faq_entries(guild_id)
+        if not entries:
+            message = self.bot.translate(
+                "cogs.faq.list.empty",
+                guild_id=guild_id,
+            )
+            await interaction.response.send_message(message, ephemeral=True)
+            return
+
+        embed = self._build_faq_list_embed(guild_id, entries)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    def _build_faq_list_embed(self, guild_id: int, entries: list[FAQEntry]) -> Embed:
+        title = self.bot.translate("cogs.faq.list.embed_title", guild_id=guild_id)
+        description = self.bot.translate("cogs.faq.list.embed_description", guild_id=guild_id)
+        embed = Embed(title=title, description=description, color=Color.blurple())
+        for entry in entries[:25]:
+            question_label = self.bot.translate(
+                "cogs.faq.list.question_label",
+                guild_id=guild_id,
+                placeholders={"entry_id": entry.entry_id},
+            )
+            field_value = self.bot.translate(
+                "cogs.faq.list.entry_value",
+                guild_id=guild_id,
+                placeholders={
+                    "question": _trim_field_value(entry.question, limit=256),
+                    "answer": _trim_field_value(entry.answer),
+                },
+            )
+            embed.add_field(
+                name=question_label,
+                value=field_value,
+                inline=False,
+            )
+        if len(entries) > 25:
+            overflow = self.bot.translate(
+                "cogs.faq.list.overflow",
+                guild_id=guild_id,
+                placeholders={"remaining": len(entries) - 25},
+            )
+            embed.set_footer(text=overflow)
+        return embed
+
+    async def handle_message(self, message: discord.Message) -> None:
+        if message.author.bot or not message.guild:
+            return
+
+        guild_id = message.guild.id
+        faq_settings = await mysql.get_settings(
+            guild_id,
+            [FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING],
+        )
+
+        enabled = faq_settings.get(FAQ_ENABLED_SETTING) if isinstance(faq_settings, dict) else faq_settings
+        if not enabled:
+            return
+
+        threshold = None
+        if isinstance(faq_settings, dict):
+            threshold = faq_settings.get(FAQ_THRESHOLD_SETTING)
+
+        result = await find_best_faq_answer(
+            guild_id,
+            message.content,
+            threshold=threshold,
+        )
+        if result is None:
+            return
+
+        embed = self._build_response_embed(guild_id, message.author, result)
+        try:
+            await mod_logging.log_to_channel(embed, message.channel.id, self.bot)
+        except discord.Forbidden:
+            return
+
+    def _build_response_embed(
+        self,
+        guild_id: int,
+        author: discord.abc.User,
+        result: FAQSearchResult,
+    ) -> Embed:
+        entry = result.entry
+        similarity_percent = round(result.similarity * 100)
+
+        title = self.bot.translate("cogs.faq.response.title", guild_id=guild_id)
+        description = self.bot.translate(
+            "cogs.faq.response.description",
+            guild_id=guild_id,
+            placeholders={
+                "user": author.mention,
+                "confidence": similarity_percent,
+            },
+        )
+
+        embed = Embed(title=title, description=description, color=Color.green())
+
+        question_label = self.bot.translate("cogs.faq.response.question_label", guild_id=guild_id)
+        answer_label = self.bot.translate("cogs.faq.response.answer_label", guild_id=guild_id)
+
+        embed.add_field(
+            name=f"{question_label} (#{entry.entry_id})",
+            value=_trim_field_value(entry.question),
+            inline=False,
+        )
+        embed.add_field(
+            name=answer_label,
+            value=_trim_field_value(entry.answer),
+            inline=False,
+        )
+        return embed
+
+
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(FAQCog(bot))

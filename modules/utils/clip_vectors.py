@@ -160,8 +160,8 @@ def get_last_error() -> Exception | None:
     return _IMAGE_VECTOR_SPACE.get_last_error()
 
 
-def add_vector(image: Image.Image, metadata: dict[str, Any]) -> None:
-    _IMAGE_VECTOR_SPACE.add_vector(image, metadata)
+def add_vector(image: Image.Image, metadata: dict[str, Any]) -> int | None:
+    return _IMAGE_VECTOR_SPACE.add_vector(image, metadata)
 
 
 async def delete_vectors(ids: Iterable[int]) -> VectorDeleteStats | None:

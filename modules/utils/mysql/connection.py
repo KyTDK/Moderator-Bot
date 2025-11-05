@@ -176,6 +176,21 @@ else:
                 )
                 await cur.execute(
                     """
+                    CREATE TABLE IF NOT EXISTS faq_entries (
+                        guild_id BIGINT NOT NULL,
+                        entry_id INT NOT NULL,
+                        question TEXT NOT NULL,
+                        answer TEXT NOT NULL,
+                        vector_id BIGINT NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        PRIMARY KEY (guild_id, entry_id),
+                        INDEX idx_faq_vector (vector_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                    """
+                )
+                await cur.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS api_pool (
                         user_id BIGINT NOT NULL,
                         guild_id BIGINT NOT NULL,

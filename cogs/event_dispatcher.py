@@ -48,6 +48,7 @@ class EventDispatcherCog(commands.Cog):
             "NicheModerationCog",
             "AdaptiveModerationCog",
             "BannedURLsCog",
+            "FAQCog",
         ]
 
         for name in cog_names:

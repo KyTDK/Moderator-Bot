@@ -351,7 +351,7 @@ class MilvusVectorSpace:
     # Vector operations
     # ------------------------------------------------------------------
 
-    def add_vector(self, item: Any, metadata: dict[str, Any]) -> None:
+    def add_vector(self, item: Any, metadata: dict[str, Any]) -> Optional[int]:
         coll = self._get_collection()
         if coll is None:
             if not self._vector_insert_warned:
@@ -360,18 +360,28 @@ class MilvusVectorSpace:
                     self.collection_name,
                 )
                 self._vector_insert_warned = True
-            return
+            return None
 
         vectors = self.embed_batch([item])
         if vectors.size == 0:
-            return
+            return None
 
         vector = vectors[0]
         category = metadata.get("category") or "safe"
+        metadata.setdefault("category", category)
         meta = json.dumps(metadata)
         with self._write_lock:
             data = [[vector.tolist()], [category], [meta]]
-            coll.insert(data)
+            insert_result = coll.insert(data)
+
+        primary_keys = getattr(insert_result, "primary_keys", None) if insert_result is not None else None
+        if primary_keys:
+            pk = primary_keys[0]
+            try:
+                return int(pk)
+            except (TypeError, ValueError):
+                return pk
+        return None
 
     async def delete_vectors(self, ids: Iterable[int]) -> Optional[VectorDeleteStats]:
         coll = self._get_collection()
@@ -436,6 +446,8 @@ class MilvusVectorSpace:
         threshold: float = 0.80,
         k: int = 20,
         min_votes: int = 1,
+        categories: Optional[Sequence[str]] = None,
+        filter_expr: Optional[str] = None,
     ) -> List[List[Dict[str, Any]]]:
         coll = self._get_collection()
         if coll is None:
@@ -459,13 +471,27 @@ class MilvusVectorSpace:
             "params": {"nprobe": self._nprobe},
         }
 
+        expr = filter_expr
+        if expr is None and categories:
+            normalized_categories = [cat for cat in dict.fromkeys(categories) if cat]
+            if normalized_categories:
+                if len(normalized_categories) == 1:
+                    expr = f"category == {json.dumps(normalized_categories[0])}"
+                else:
+                    expr = f"category in {json.dumps(normalized_categories)}"
+
         results = coll.search(
             data=[vec.tolist() for vec in vectors],
             anns_field="vector",
             param=search_params,
             limit=k,
             output_fields=["category", "meta"],
+            expr=expr,
         )
+
+        allowed_categories: Optional[set[str]] = None
+        if categories:
+            allowed_categories = {cat for cat in categories if cat}
 
         formatted: List[List[Dict[str, Any]]] = []
         for vector_hits in results or []:
@@ -481,6 +507,8 @@ class MilvusVectorSpace:
                 if sim < threshold:
                     continue
                 category = hit.entity.get("category")
+                if allowed_categories is not None and category not in allowed_categories:
+                    continue
                 meta_json = hit.entity.get("meta")
                 meta = json.loads(meta_json) if meta_json else {}
                 meta["similarity"] = sim
@@ -488,6 +516,8 @@ class MilvusVectorSpace:
                     meta["vector_id"] = int(hit.id)
                 except (TypeError, ValueError):
                     meta["vector_id"] = hit.id
+                if category is not None and "category" not in meta:
+                    meta["category"] = category
 
                 votes[category].append(sim)
                 if category not in top_hit or sim > top_hit[category]["similarity"]:
@@ -510,11 +540,15 @@ class MilvusVectorSpace:
         threshold: float = 0.80,
         k: int = 20,
         min_votes: int = 1,
+        categories: Optional[Sequence[str]] = None,
+        filter_expr: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         result = self.query_similar_batch(
             [item],
             threshold=threshold,
             k=k,
             min_votes=min_votes,
+            categories=categories,
+            filter_expr=filter_expr,
         )
         return result[0] if result else []

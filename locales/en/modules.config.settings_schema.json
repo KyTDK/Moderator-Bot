@@ -75,6 +75,13 @@
                 "exclude-bannedwords-channels": {
                     "description": "Channels to exclude from banned words detection."
                 },
+                "faq-enabled": {
+                    "description": "Enable automatic FAQ responses for this server."
+                },
+                "faq-threshold": {
+                    "description": "Similarity threshold for FAQ matches (0.10 – 1.00).",
+                    "invalid": "FAQ threshold must be between {min} and {max}."
+                },
                 "strike-actions": {
                     "description": "Actions to take for each strike level."
                 },
