@@ -48,6 +48,7 @@ async def strike(
     interaction: Optional[Interaction] = None,
     expiry: Optional[str] = None,
     skip_punishments: bool = False,
+    hide_issuer: bool = False,
     log_to_channel: bool = True,
 ) -> Optional[Embed]:
     if interaction:
@@ -185,9 +186,10 @@ async def strike(
         timestamp=now,
     )
 
+    issued_value = f"{strike_by.mention} ({strike_by})"
     embed.add_field(
         name=strike_texts["issued_by"],
-        value=f"{strike_by.mention} ({strike_by})",
+        value=issued_value,
         inline=False,
     )
     embed.set_footer(
@@ -195,12 +197,27 @@ async def strike(
         icon_url=user.guild.icon.url if user.guild.icon else None,
     )
 
+    user_embed = embed
+    if hide_issuer:
+        user_embed = embed.copy()
+        hidden_value = strike_texts.get(
+            "issued_by_hidden",
+            STRIKE_TEXTS_FALLBACK["issued_by_hidden"],
+        )
+        if user_embed.fields:
+            user_embed.set_field_at(
+                0,
+                name=strike_texts["issued_by"],
+                value=hidden_value,
+                inline=False,
+            )
+
     if await mysql.get_settings(user.guild.id, "dm-on-strike"):
         try:
-            await message_user(user, "", embed=embed)
+            await message_user(user, "", embed=user_embed)
         except Exception:
             if interaction:
-                await interaction.channel.send(user.mention, embed=embed)
+                await interaction.channel.send(user.mention, embed=user_embed)
             return embed
 
     embed.title = strike_texts["embed_title_public"].format(name=user.display_name)

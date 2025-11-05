@@ -1,6 +1,7 @@
 import json
 import os
 import asyncio
+from typing import Awaitable, Callable, Any
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
@@ -426,12 +427,17 @@ class ScamDetectionCog(commands.Cog):
         )
         await interaction.response.send_message(message, ephemeral=True)
 
-    async def add_to_queue(self, coro, guild_id: int):
+    async def add_to_queue(
+        self,
+        task_factory: Callable[[], Awaitable[Any]],
+        guild_id: int,
+    ):
         """Enqueue scam detection work for premium-enabled guilds only."""
         accelerated = await get_settings(guild_id, "scam-accelerated")
         if not accelerated:
             return
-        await self.accelerated_queue.add_task(coro)
+        task = task_factory()
+        await self.accelerated_queue.add_task(task)
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
@@ -484,7 +490,7 @@ class ScamDetectionCog(commands.Cog):
                 )
             except Exception:
                 pass
-        await self.add_to_queue(scan_task(), guild_id=gid)
+        await self.add_to_queue(scan_task, guild_id=gid)
 
     @tasks.loop(hours=6)
     async def scam_schedule(self):

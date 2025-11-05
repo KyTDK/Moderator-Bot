@@ -52,6 +52,7 @@ STRIKE_TEXTS_FALLBACK: dict[str, str] = {
     "reason": "**Reason:** {reason}",
     "expires": "**Expires:** {expiry}",
     "issued_by": "Issued By",
+    "issued_by_hidden": "Issued by the moderation team",
     "expiry_never": "Never",
     "footer": "Server: {server}",
 }

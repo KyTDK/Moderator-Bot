@@ -14,6 +14,7 @@ async def issue_strike_command(
     reason: str,
     expiry: str | None,
     skip_punishments: bool,
+    hide_issuer: bool,
 ) -> None:
     """Execute the strike command workflow."""
     try:
@@ -24,6 +25,7 @@ async def issue_strike_command(
             interaction=interaction,
             expiry=TimeString(expiry),
             skip_punishments=skip_punishments,
+            hide_issuer=hide_issuer,
         )
     except ValueError as ve:
         await interaction.response.send_message(str(ve), ephemeral=True)

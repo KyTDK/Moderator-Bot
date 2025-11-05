@@ -4,7 +4,8 @@
       "meta": {
         "strike": {
           "params": {
-            "skip_punishments": "Skip configured punishments for this strike."
+            "skip_punishments": "Skip configured punishments for this strike.",
+            "hide_issuer": "Hide your name from the strike notification sent to the user."
           }
         }
       },

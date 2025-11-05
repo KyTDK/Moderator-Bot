@@ -43,6 +43,7 @@ class StrikesCog(commands.Cog):
         reason=locale_string("cogs.strikes.meta.strike.params.reason"),
         expiry=locale_string("cogs.strikes.meta.strike.params.expiry"),
         skip_punishments=locale_string("cogs.strikes.meta.strike.params.skip_punishments"),
+        hide_issuer=locale_string("cogs.strikes.meta.strike.params.hide_issuer"),
     )
     @app_commands.default_permissions(moderate_members=True)
     @app_commands.guild_only()
@@ -53,6 +54,7 @@ class StrikesCog(commands.Cog):
         reason: str,
         expiry: Optional[str] = None,
         skip_punishments: bool = False,
+        hide_issuer: bool = False,
     ):
         """Strike a specific user."""
         await issue_strike_command(
@@ -62,6 +64,7 @@ class StrikesCog(commands.Cog):
             reason=reason,
             expiry=expiry,
             skip_punishments=skip_punishments,
+            hide_issuer=hide_issuer,
         )
 
     @strike_group.command(
