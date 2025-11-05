@@ -334,6 +334,9 @@ class MilvusVectorSpace:
     def is_available(self) -> bool:
         if not self._milvus_available:
             return False
+        self._ensure_collection_initializer_started()
+        if not self._collection_ready.is_set():
+            return False
         with self._collection_state_lock:
             return self._collection is not None
 
@@ -346,6 +349,25 @@ class MilvusVectorSpace:
     def get_last_error(self) -> Optional[Exception]:
         with self._collection_state_lock:
             return self._collection_error
+
+    def get_debug_info(self) -> dict[str, Any]:
+        self._ensure_collection_initializer_started()
+        info = {
+            "milvus_dependency": self._milvus_available,
+            "init_started": self._collection_init_started.is_set(),
+            "ready_event": self._collection_ready.is_set(),
+            "fallback_active": False,
+            "collection_ready": False,
+            "last_error": None,
+            "host": self.host,
+            "port": self.port,
+        }
+        with self._collection_state_lock:
+            info["fallback_active"] = self._fallback_active
+            info["collection_ready"] = self._collection is not None
+            if self._collection_error is not None:
+                info["last_error"] = f"{self._collection_error.__class__.__name__}: {self._collection_error}"
+        return info
 
     # ------------------------------------------------------------------
     # Vector operations

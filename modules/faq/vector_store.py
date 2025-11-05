@@ -36,6 +36,10 @@ def is_fallback_active() -> bool:
     return _FAQ_VECTOR_SPACE.is_fallback_active()
 
 
+def get_debug_info() -> Dict[str, Any]:
+    return _FAQ_VECTOR_SPACE.get_debug_info()
+
+
 async def add_entry(entry: FAQEntry) -> int | None:
     metadata = {
         "guild_id": entry.guild_id,
@@ -102,4 +106,5 @@ __all__ = [
     "query_text",
     "is_available",
     "is_fallback_active",
+    "get_debug_info",
 ]

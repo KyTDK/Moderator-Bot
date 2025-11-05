@@ -12,6 +12,7 @@ from modules.config.premium_plans import PLAN_DISPLAY_NAMES
 from modules.core.moderator_bot import ModeratorBot
 from modules.faq.config import FAQStreamConfig
 from modules.faq.models import FAQEntry, FAQSearchResult
+from modules.faq import vector_store
 from modules.faq.service import (
     FAQEntryNotFoundError,
     FAQLimitError,
@@ -329,6 +330,19 @@ class FAQCog(commands.Cog):
         if result.used_fallback:
             threshold_label = str(threshold) if threshold is not None else "<default>"
             content_preview = _trim_field_value(message.content or "", limit=256) or "(empty)"
+            vector_status = vector_store.get_debug_info()
+            vector_status_lines = [
+                f"available={vector_status.get('collection_ready')}",
+                f"fallback_active={vector_status.get('fallback_active')}",
+                f"init_started={vector_status.get('init_started')}",
+                f"ready_event={vector_status.get('ready_event')}",
+                f"milvus_dependency={vector_status.get('milvus_dependency')}",
+                f"endpoint={vector_status.get('host')}:{vector_status.get('port')}",
+            ]
+            last_error = vector_status.get("last_error")
+            if last_error:
+                vector_status_lines.append(f"last_error={last_error}")
+            vector_status_field = "\n".join(vector_status_lines)
             await log_to_developer_channel(
                 self.bot,
                 summary="FAQ fallback matcher engaged",
@@ -347,6 +361,7 @@ class FAQCog(commands.Cog):
                         inline=False,
                     ),
                     DeveloperLogField("Content", content_preview, inline=False),
+                    DeveloperLogField("Vector store", vector_status_field, inline=False),
                 ],
             )
 
