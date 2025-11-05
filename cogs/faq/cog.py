@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any
+
 import discord
 from discord import Color, Embed, Interaction, app_commands
 from discord.ext import commands
@@ -24,13 +26,29 @@ from modules.faq.stream import FAQStreamProcessor
 from modules.i18n.strings import locale_namespace
 from modules.utils import mod_logging, mysql
 from modules.utils.interaction_responses import send_ephemeral_response
+from modules.utils.localization import LocalizedError
 
 LOCALE = locale_namespace("cogs", "faq")
 META = LOCALE.child("meta")
 ADD_LOCALE = META.child("add")
 REMOVE_LOCALE = META.child("remove")
 LIST_LOCALE = META.child("list")
+ENABLE_LOCALE = META.child("enable")
 RESPONSE_LOCALE = LOCALE.child("response")
+
+
+def _parse_bool_setting(value: Any, *, default: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return default
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"1", "true", "yes", "on"}:
+            return True
+        if normalized in {"0", "false", "no", "off"}:
+            return False
+    return bool(value)
 
 
 def _trim_field_value(value: str, limit: int = 1024) -> str:
@@ -201,6 +219,53 @@ class FAQCog(commands.Cog):
             embed.set_footer(text=overflow)
         return embed
 
+    @faq_group.command(
+        name="enable",
+        description=ENABLE_LOCALE.string("description"),
+    )
+    @app_commands.describe(
+        enabled=ENABLE_LOCALE.child("params").string("enabled"),
+    )
+    async def set_faq_enabled(self, interaction: Interaction, enabled: bool) -> None:
+        if not interaction.guild:
+            await send_ephemeral_response(interaction, content="Guild context required.")
+            return
+
+        guild_id = interaction.guild.id
+        previous_value = await mysql.get_settings(guild_id, FAQ_ENABLED_SETTING)
+        previous_enabled = _parse_bool_setting(previous_value, default=False)
+
+        if previous_enabled == enabled:
+            message_key = "already_enabled" if enabled else "already_disabled"
+            message = self.bot.translate(
+                f"cogs.faq.enable.{message_key}",
+                guild_id=guild_id,
+            )
+            await interaction.response.send_message(message, ephemeral=True)
+            return
+
+        try:
+            await mysql.update_settings(guild_id, FAQ_ENABLED_SETTING, enabled)
+        except LocalizedError as exc:
+            message = exc.localize(self.bot.translate, guild_id=guild_id)
+            await interaction.response.send_message(message, ephemeral=True)
+            return
+        except Exception as exc:
+            message = self.bot.translate(
+                "cogs.faq.enable.failure",
+                guild_id=guild_id,
+                placeholders={"reason": str(exc)},
+            )
+            await interaction.response.send_message(message, ephemeral=True)
+            return
+
+        message_key = "success_enabled" if enabled else "success_disabled"
+        message = self.bot.translate(
+            f"cogs.faq.enable.{message_key}",
+            guild_id=guild_id,
+        )
+        await interaction.response.send_message(message, ephemeral=True)
+
     async def handle_message(self, message: discord.Message) -> None:
         if message.author.bot or not message.guild:
             return
@@ -211,7 +276,12 @@ class FAQCog(commands.Cog):
             [FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING],
         )
 
-        enabled = faq_settings.get(FAQ_ENABLED_SETTING) if isinstance(faq_settings, dict) else faq_settings
+        enabled_value = (
+            faq_settings.get(FAQ_ENABLED_SETTING)
+            if isinstance(faq_settings, dict)
+            else faq_settings
+        )
+        enabled = _parse_bool_setting(enabled_value, default=False)
         if not enabled:
             return
 

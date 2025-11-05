@@ -16,6 +16,12 @@
             "entry_id": "Numeric identifier shown in /faq list."
           }
         },
+        "enable": {
+          "description": "Enable or disable automatic FAQ responses.",
+          "params": {
+            "enabled": "Should automatic FAQ responses be enabled?"
+          }
+        },
         "list": {
           "description": "List configured FAQs for this server."
         }
@@ -43,6 +49,13 @@
         "description": "{user}, I found a matching FAQ answer (confidence {confidence}%).",
         "question_label": "Question",
         "answer_label": "Answer"
+      },
+      "enable": {
+        "success_enabled": "FAQ responses are now enabled.",
+        "success_disabled": "FAQ responses are now disabled.",
+        "already_enabled": "FAQ responses were already enabled.",
+        "already_disabled": "FAQ responses were already disabled.",
+        "failure": "Could not update FAQ settings: {reason}"
       }
     }
   }

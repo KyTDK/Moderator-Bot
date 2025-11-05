@@ -13,6 +13,8 @@ This document describes the public interface for managing FAQ entries from exter
 
 Settings are stored through the standard guild settings API (`modules/utils/mysql`). Update them the same way you manage other feature toggles.
 
+Guild moderators can also toggle the feature directly inside Discord with the `/faq enable` command (Manage Messages permission required). Pass `enabled: true` to turn responses on, or `enabled: false` to disable them.
+
 ---
 
 ## Redis Command Stream
