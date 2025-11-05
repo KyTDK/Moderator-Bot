@@ -209,10 +209,6 @@ class WorkerQueue:
                 if q >= self._backlog_high and active < self._autoscale_max:
                     await self.resize_workers(self._autoscale_max)
                     low_since = None
-                    self._notifier.info(
-                        f"[WorkerQueue:{self._name}] Backlog {q} >= {self._backlog_high}, scaling up to {self._autoscale_max}",
-                        event_key="scale_up_backlog",
-                    )
                     continue
 
                 wait_ema = float(self._metrics_wait_ema or 0.0)
@@ -225,10 +221,6 @@ class WorkerQueue:
                 ):
                     await self.resize_workers(self._autoscale_max)
                     low_since = None
-                    self._notifier.warning(
-                        f"[WorkerQueue:{self._name}] Wait {wait_signal:.2f}s >= {self._slow_wait_threshold:.2f}s, scaling up to {self._autoscale_max}",
-                        event_key="scale_up_wait",
-                    )
                     continue
 
                 if self._autoscale_max < self._adaptive_ceiling:
@@ -251,10 +243,6 @@ class WorkerQueue:
                                 self._adaptive_backlog_hits = 0
                                 self._adaptive_recovery_hits = 0
                                 await self.resize_workers(self._autoscale_max)
-                                self._notifier.info(
-                                    f"[WorkerQueue:{self._name}] Sustained backlog detected; increasing autoscale_max to {self._autoscale_max}",
-                                    event_key="adaptive_bump",
-                                )
                                 continue
 
                 over_baseline = max(0, active - self._baseline_workers - self._pending_stops)
@@ -264,10 +252,6 @@ class WorkerQueue:
                         low_since = now
                     elif (now - low_since) >= self._scale_down_grace:
                         await self.resize_workers(self._baseline_workers)
-                        self._notifier.info(
-                            f"[WorkerQueue:{self._name}] Backlog stable (<= {self._backlog_low}), scaling down to baseline {self._baseline_workers}",
-                            event_key="scale_down",
-                        )
                         low_since = None
                 else:
                     low_since = None
@@ -286,10 +270,6 @@ class WorkerQueue:
                         self._recompute_adaptive_ceiling()
                         if self.max_workers > self._autoscale_max:
                             await self.resize_workers(self._autoscale_max)
-                        self._notifier.info(
-                            f"[WorkerQueue:{self._name}] Backlog eased; restoring autoscale_max to {self._autoscale_max}",
-                            event_key="adaptive_reset",
-                        )
         except asyncio.CancelledError:
             pass
 
