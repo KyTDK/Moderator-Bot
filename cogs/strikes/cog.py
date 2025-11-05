@@ -33,9 +33,6 @@ class StrikesCog(commands.Cog):
 
     def __init__(self, bot: ModeratorBot):
         self.bot = bot
-        existing = self.bot.tree.get_command(self.strike_group.name)
-        if existing is None:
-            self.bot.tree.add_command(self.strike_group)
 
     @app_commands.command(
         name="strike",
@@ -176,12 +173,6 @@ class StrikesCog(commands.Cog):
             interaction=interaction,
             user=user,
             channel=channel,
-        )
-
-    async def cog_unload(self):
-        self.bot.tree.remove_command(
-            self.strike_group.name,
-            type=discord.AppCommandType.chat_input,
         )
 
 

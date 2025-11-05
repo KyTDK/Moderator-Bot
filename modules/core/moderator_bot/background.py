@@ -158,16 +158,41 @@ class BackgroundTaskMixin(GuildLocaleMixin):
 
     async def _load_extensions(self) -> None:
         try:
-            for filename in os.listdir("./cogs"):
-                path = os.path.join("cogs", filename)
-                if not (os.path.isfile(path) and filename.endswith(".py")):
-                    continue
+            entries = sorted(os.listdir("./cogs"))
+            py_modules = [
+                entry[:-3]
+                for entry in entries
+                if entry.endswith(".py") and os.path.isfile(os.path.join("cogs", entry))
+            ]
+
+            for module in py_modules:
+                module_name = f"cogs.{module}"
                 try:
-                    await self.load_extension(f"cogs.{filename[:-3]}")
+                    await self.load_extension(module_name)
                     if self._log_cog_loads:
-                        print(f"Loaded Cog: {filename[:-3]}")
+                        print(f"Loaded Cog: {module_name}")
                 except Exception as exc:
-                    print(f"[FATAL] Failed to load cog {filename}:")
+                    print(f"[FATAL] Failed to load cog {module}.py:")
+                    traceback.print_exception(type(exc), exc, exc.__traceback__)
+                    raise
+
+            skip_modules = set(py_modules)
+            package_entries = sorted(
+                entry
+                for entry in entries
+                if os.path.isdir(os.path.join("cogs", entry))
+                and os.path.isfile(os.path.join("cogs", entry, "__init__.py"))
+                and entry not in skip_modules
+            )
+
+            for entry in package_entries:
+                module_name = f"cogs.{entry}"
+                try:
+                    await self.load_extension(module_name)
+                    if self._log_cog_loads:
+                        print(f"Loaded Cog: {module_name}")
+                except Exception as exc:
+                    print(f"[FATAL] Failed to load cog package {entry}:")
                     traceback.print_exception(type(exc), exc, exc.__traceback__)
                     raise
         except Exception:
