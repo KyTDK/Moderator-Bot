@@ -19,6 +19,7 @@ def anyio_backend():
 from modules.config.premium_plans import PLAN_FREE
 from modules.faq.models import FAQEntry
 from modules.faq import service
+from modules.faq.service import backfill, operations, search
 
 service.configure_developer_logging(bot=None)
 
@@ -31,8 +32,8 @@ async def test_add_entry_enforces_plan_limit(monkeypatch):
     async def fake_count(_guild_id: int) -> int:
         return 5
 
-    monkeypatch.setattr(service, "_resolve_plan", fake_resolve_plan)
-    monkeypatch.setattr(service.storage, "count_entries", fake_count)
+    monkeypatch.setattr(operations, "_resolve_plan", fake_resolve_plan)
+    monkeypatch.setattr(operations.storage, "count_entries", fake_count)
 
     with pytest.raises(service.FAQLimitError):
         await service.add_faq_entry(1234, "Question?", "Answer.")
@@ -56,12 +57,12 @@ async def test_add_entry_updates_vector_id(monkeypatch):
         assert entry.entry_id == 1
         return 987
 
-    monkeypatch.setattr(service, "_resolve_plan", fake_resolve_plan)
-    monkeypatch.setattr(service.storage, "count_entries", fake_count)
-    monkeypatch.setattr(service.storage, "insert_entry", fake_insert)
-    monkeypatch.setattr(service.storage, "update_vector_id", fake_update_vector_id)
-    monkeypatch.setattr(service.vector_store, "is_available", lambda: True)
-    monkeypatch.setattr(service.vector_store, "add_entry", fake_add_entry_vector)
+    monkeypatch.setattr(operations, "_resolve_plan", fake_resolve_plan)
+    monkeypatch.setattr(operations.storage, "count_entries", fake_count)
+    monkeypatch.setattr(operations.storage, "insert_entry", fake_insert)
+    monkeypatch.setattr(operations.storage, "update_vector_id", fake_update_vector_id)
+    monkeypatch.setattr(operations.vector_store, "is_available", lambda: True)
+    monkeypatch.setattr(operations.vector_store, "add_entry", fake_add_entry_vector)
 
     entry = await service.add_faq_entry(42, "How to test?", "With pytest.")
     assert entry.vector_id == 987
@@ -79,7 +80,7 @@ async def test_add_entry_backfills_when_vectors_initially_unavailable(monkeypatc
             pass
     service._vector_backfill_task = None
     service._backfill_attempts.clear()
-    service._developer_log_last_unavailable = 0.0
+    backfill._developer_log_last_unavailable = 0.0
 
     updates: list[tuple[int, int, int]] = []
     entries: dict[tuple[int, int], FAQEntry] = {}
@@ -121,13 +122,13 @@ async def test_add_entry_backfills_when_vectors_initially_unavailable(monkeypatc
 
     stub = VectorStub()
 
-    monkeypatch.setattr(service, "_resolve_plan", fake_resolve_plan)
-    monkeypatch.setattr(service.storage, "count_entries", fake_count)
-    monkeypatch.setattr(service.storage, "insert_entry", fake_insert)
-    monkeypatch.setattr(service.storage, "fetch_entry", fake_fetch_entry)
-    monkeypatch.setattr(service.storage, "update_vector_id", fake_update_vector_id)
-    monkeypatch.setattr(service.vector_store, "is_available", stub.is_available)
-    monkeypatch.setattr(service.vector_store, "add_entry", stub.add_entry)
+    monkeypatch.setattr(operations, "_resolve_plan", fake_resolve_plan)
+    monkeypatch.setattr(operations.storage, "count_entries", fake_count)
+    monkeypatch.setattr(operations.storage, "insert_entry", fake_insert)
+    monkeypatch.setattr(operations.storage, "fetch_entry", fake_fetch_entry)
+    monkeypatch.setattr(operations.storage, "update_vector_id", fake_update_vector_id)
+    monkeypatch.setattr(operations.vector_store, "is_available", stub.is_available)
+    monkeypatch.setattr(operations.vector_store, "add_entry", stub.add_entry)
     monkeypatch.setattr(service, "_VECTOR_BACKFILL_RETRY_DELAY", 0.0)
 
     entry = await service.add_faq_entry(77, "a", "a")
@@ -161,9 +162,9 @@ async def test_find_best_faq_answer(monkeypatch):
     def fake_query_chunks(chunks, *, guild_id, threshold, k):  # noqa: ARG001
         return [[{"entry_id": 1, "similarity": 0.85}] for _ in chunks]
 
-    monkeypatch.setattr(service.vector_store, "is_available", lambda: True)
-    monkeypatch.setattr(service.vector_store, "query_chunks", fake_query_chunks)
-    monkeypatch.setattr(service.storage, "fetch_entry", fake_fetch_entry)
+    monkeypatch.setattr(search.vector_store, "is_available", lambda: True)
+    monkeypatch.setattr(search.vector_store, "query_chunks", fake_query_chunks)
+    monkeypatch.setattr(search.storage, "fetch_entry", fake_fetch_entry)
 
     result = await service.find_best_faq_answer(99, "hello how do I reset things", threshold=0.7)
     assert result is not None
@@ -174,7 +175,7 @@ async def test_find_best_faq_answer(monkeypatch):
 
 @pytest.mark.anyio("asyncio")
 async def test_find_best_faq_answer_fallback(monkeypatch):
-    monkeypatch.setattr(service.vector_store, "is_available", lambda: False)
+    monkeypatch.setattr(search.vector_store, "is_available", lambda: False)
 
     async def fake_fetch_entries(guild_id: int) -> list[FAQEntry]:
         return [
@@ -186,7 +187,7 @@ async def test_find_best_faq_answer_fallback(monkeypatch):
             )
         ]
 
-    monkeypatch.setattr(service.storage, "fetch_entries", fake_fetch_entries)
+    monkeypatch.setattr(search.storage, "fetch_entries", fake_fetch_entries)
 
     result = await service.find_best_faq_answer(
         123,
