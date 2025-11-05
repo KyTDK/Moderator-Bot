@@ -80,3 +80,31 @@ async def test_find_best_faq_answer(monkeypatch):
     assert result is not None
     assert result.entry.entry_id == 1
     assert result.similarity == pytest.approx(0.85)
+    assert result.used_fallback is False
+
+
+@pytest.mark.anyio("asyncio")
+async def test_find_best_faq_answer_fallback(monkeypatch):
+    monkeypatch.setattr(service.vector_store, "is_available", lambda: False)
+
+    async def fake_fetch_entries(guild_id: int) -> list[FAQEntry]:
+        return [
+            FAQEntry(
+                guild_id=guild_id,
+                entry_id=5,
+                question="How do I link my account?",
+                answer="Use /link-account.",
+            )
+        ]
+
+    monkeypatch.setattr(service.storage, "fetch_entries", fake_fetch_entries)
+
+    result = await service.find_best_faq_answer(
+        123,
+        "hey how do I link my account please",
+        threshold=0.65,
+    )
+    assert result is not None
+    assert result.entry.entry_id == 5
+    assert result.similarity >= 0.65
+    assert result.used_fallback is True

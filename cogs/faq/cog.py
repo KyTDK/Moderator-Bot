@@ -27,6 +27,7 @@ from modules.i18n.strings import locale_namespace
 from modules.utils import mod_logging, mysql
 from modules.utils.interaction_responses import send_ephemeral_response
 from modules.utils.localization import LocalizedError
+from modules.utils.log_channel import DeveloperLogField, log_to_developer_channel
 
 LOCALE = locale_namespace("cogs", "faq")
 META = LOCALE.child("meta")
@@ -35,6 +36,8 @@ REMOVE_LOCALE = META.child("remove")
 LIST_LOCALE = META.child("list")
 ENABLE_LOCALE = META.child("enable")
 RESPONSE_LOCALE = LOCALE.child("response")
+
+log = logging.getLogger(__name__)
 
 
 def _parse_bool_setting(value: Any, *, default: bool = False) -> bool:
@@ -287,15 +290,61 @@ class FAQCog(commands.Cog):
 
         threshold = None
         if isinstance(faq_settings, dict):
-            threshold = faq_settings.get(FAQ_THRESHOLD_SETTING)
+        threshold = faq_settings.get(FAQ_THRESHOLD_SETTING)
 
-        result = await find_best_faq_answer(
-            guild_id,
-            message.content,
-            threshold=threshold,
-        )
+        try:
+            result = await find_best_faq_answer(
+                guild_id,
+                message.content,
+                threshold=threshold,
+            )
+        except Exception as exc:  # pragma: no cover - defensive path
+            log.exception(
+                "FAQ auto-response failed for guild_id=%s channel_id=%s message_id=%s",
+                guild_id,
+                getattr(message.channel, \"id\", \"unknown\"),
+                message.id,
+            )
+            threshold_label = str(threshold) if threshold is not None else \"<default>\"
+            content_preview = _trim_field_value(message.content or \"\", limit=512) or \"(empty)\"
+            await log_to_developer_channel(
+                self.bot,
+                summary=\"FAQ responder error\",
+                severity=\"error\",
+                description=f\"{exc.__class__.__name__}: {exc}\",
+                fields=[
+                    DeveloperLogField(\"Guild\", f\"{guild_id}\"),
+                    DeveloperLogField(\"Channel\", f\"{getattr(message.channel, 'id', 'unknown')}\"),
+                    DeveloperLogField(\"Message\", f\"{message.id}\"),
+                    DeveloperLogField(\"Author\", f\"{message.author} ({message.author.id})\"),
+                    DeveloperLogField(\"Threshold\", threshold_label),
+                    DeveloperLogField(\"Content\", content_preview, inline=False),
+                ],
+            )
+            return
+
         if result is None:
             return
+
+        if result.used_fallback:
+            threshold_label = str(threshold) if threshold is not None else \"<default>\"
+            content_preview = _trim_field_value(message.content or \"\", limit=256) or \"(empty)\"
+            await log_to_developer_channel(
+                self.bot,
+                summary=\"FAQ fallback matcher engaged\",
+                severity=\"warning\",
+                description=\"Vector store unavailable; served FAQ response via string similarity fallback.\",
+                fields=[
+                    DeveloperLogField(\"Guild\", f\"{guild_id}\"),
+                    DeveloperLogField(\"Channel\", f\"{getattr(message.channel, 'id', 'unknown')}\"),
+                    DeveloperLogField(\"Message\", f\"{message.id}\"),
+                    DeveloperLogField(\"Author\", f\"{message.author} ({message.author.id})\"),
+                    DeveloperLogField(\"Threshold\", threshold_label),
+                    DeveloperLogField(\"Similarity\", f\"{result.similarity:.3f}\"),
+                    DeveloperLogField(\"Matched FAQ\", f\"#{result.entry.entry_id}: {_trim_field_value(result.entry.question, limit=128)}\", inline=False),
+                    DeveloperLogField(\"Content\", content_preview, inline=False),
+                ],
+            )
 
         embed = self._build_response_embed(guild_id, message.author, result)
         try:

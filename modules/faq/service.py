@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from difflib import SequenceMatcher
 from typing import Any, Optional
 
 from modules.config.premium_plans import (
@@ -151,9 +152,6 @@ async def find_best_faq_answer(
     *,
     threshold: float | None = None,
 ) -> Optional[FAQSearchResult]:
-    if not vector_store.is_available():
-        return None
-
     normalized = _normalise_text(message_content)
     if not normalized:
         return None
@@ -170,6 +168,13 @@ async def find_best_faq_answer(
     if threshold is None:
         threshold_setting = await mysql.get_settings(guild_id, FAQ_THRESHOLD_SETTING)
         effective_threshold = _coerce_threshold(threshold_setting)
+
+    if not vector_store.is_available():
+        return await _fallback_find_best_answer(
+            guild_id,
+            normalized,
+            effective_threshold,
+        )
 
     results = vector_store.query_chunks(
         chunks,
@@ -207,4 +212,55 @@ async def find_best_faq_answer(
     if entry is None:
         return None
 
-    return FAQSearchResult(entry=entry, similarity=best_similarity, source_chunk=best_chunk)
+    return FAQSearchResult(
+        entry=entry,
+        similarity=best_similarity,
+        source_chunk=best_chunk,
+        used_fallback=False,
+    )
+
+
+async def _fallback_find_best_answer(
+    guild_id: int,
+    normalized_message: str,
+    effective_threshold: float,
+) -> Optional[FAQSearchResult]:
+    entries = await storage.fetch_entries(guild_id)
+    if not entries:
+        return None
+
+    lowered_message = normalized_message.lower()
+    fallback_threshold = max(
+        MIN_FAQ_SIMILARITY_THRESHOLD,
+        min(effective_threshold, 0.95) - 0.05,
+    )
+
+    best_entry: FAQEntry | None = None
+    best_score = 0.0
+
+    for entry in entries:
+        normalized_question = _normalise_text(entry.question)
+        if not normalized_question:
+            continue
+
+        lowered_question = normalized_question.lower()
+        if lowered_question in lowered_message or lowered_message in lowered_question:
+            score = 1.0
+        else:
+            score = SequenceMatcher(None, lowered_question, lowered_message).ratio()
+
+        if score < fallback_threshold:
+            continue
+        if best_entry is None or score > best_score:
+            best_entry = entry
+            best_score = score
+
+    if best_entry is None:
+        return None
+
+    return FAQSearchResult(
+        entry=best_entry,
+        similarity=best_score,
+        source_chunk=normalized_message,
+        used_fallback=True,
+    )

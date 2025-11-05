@@ -22,3 +22,4 @@ class FAQSearchResult:
     entry: FAQEntry
     similarity: float
     source_chunk: Optional[str] = None
+    used_fallback: bool = False
