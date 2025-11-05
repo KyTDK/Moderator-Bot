@@ -36,6 +36,7 @@ class WorkerQueue:
         developer_log_bot: Optional[discord.Client] = None,
         developer_log_context: Optional[str] = None,
         developer_log_cooldown: float = 30.0,
+        slow_task_logging: bool = True,
     ):
         self.queue = asyncio.Queue()
         self.max_workers = max_workers
@@ -77,6 +78,7 @@ class WorkerQueue:
         self._slow_log_cooldown: float = 30.0
         self._last_wait_log: float = 0.0
         self._last_runtime_log: float = 0.0
+        self._slow_task_logging: bool = slow_task_logging
         if singular_runtime_threshold is None:
             singular_runtime_threshold = float(
                 getattr(singular_task_reporter, "threshold", 30.0)
@@ -382,6 +384,8 @@ class WorkerQueue:
         self._maybe_report_singular_task(detail)
 
     def _maybe_log_wait(self, wait: float, backlog: int, name: str) -> None:
+        if not self._slow_task_logging:
+            return
         now = time.monotonic()
         if now - self._last_wait_log < self._slow_log_cooldown:
             return
@@ -393,15 +397,7 @@ class WorkerQueue:
         self._notifier.warning(message, event_key="slow_wait")
 
     def _maybe_log_runtime(self, runtime: float, name: str) -> None:
-        now = time.monotonic()
-        if now - self._last_runtime_log < self._slow_log_cooldown:
-            return
-        self._last_runtime_log = now
-        message = (
-            f"[WorkerQueue:{self._name}] Task {name!r} ran for {runtime:.2f}s "
-            f"(current_backlog={self.queue.qsize()}, workers={self._active_workers()}/{self.max_workers})"
-        )
-        self._notifier.warning(message, event_key="slow_runtime")
+        return
 
     def _handle_task_complete(self, detail: TaskRuntimeDetail, runtime: float, name: str) -> None:
         self._record_runtime(detail)
