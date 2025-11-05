@@ -33,7 +33,7 @@ _WHITESPACE_RE = re.compile(r"\s+")
 FAQ_LIMITS: dict[str, Optional[int]] = {
     PLAN_FREE: 5,
     PLAN_CORE: 20,
-    PLAN_PRO: 50,
+    PLAN_PRO: 100,
     PLAN_ULTRA: None,
 }
 
