@@ -59,6 +59,7 @@ STRIKE_TEXTS_FALLBACK: dict[str, str] = {
     "embed_title_public": "{name} received a strike",
     "actions_heading": "**Actions Taken:**",
     "action_none": "**Action Taken:** No action applied",
+    "action_skipped": "**Action Taken:** Punishments were skipped.",
     "action_item": "- {action}",
     "action_timeout": "Timeout (ends <t:{timestamp}:R>)",
     "action_ban": "Ban",
@@ -392,6 +393,7 @@ async def strike(
     reason: str = "No reason provided",
     interaction: Optional[Interaction] = None,
     expiry: Optional[str] = None,
+    skip_punishments: bool = False,
     log_to_channel: bool = True,
 ) -> discord.Embed:
     if interaction:
@@ -465,76 +467,47 @@ async def strike(
     strikes_for_ban = get_ban_threshold(strike_settings)
     strikes_till_ban = strikes_for_ban - strike_count if strikes_for_ban is not None else None
 
-    action_desc_parts: list[str] = []
-    for act in actions:
-        base, _, param = act.partition(":")
-        base = base.lower()
-        if base == "timeout":
-            dur = parse_duration(param)
-            if dur is None:
-                dur = timedelta(days=1)
-            until = now + dur
-            action_desc_parts.append(
-                strike_texts["action_timeout"].format(
-                    timestamp=int(until.timestamp())
-                )
-            )
-        elif base == "ban":
-            action_desc_parts.append(strike_texts["action_ban"])
-        elif base == "kick":
-            action_desc_parts.append(strike_texts["action_kick"])
-        elif base == "delete":
-            action_desc_parts.append(strike_texts["action_delete"])
-        elif base == "give_role":
-            role = user.guild.get_role(int(param)) if param and param.isdigit() else None
-            name = role.name if role else param
-            action_desc_parts.append(
-                strike_texts["action_give_role"].format(role=name)
-            )
-        elif base in {"take_role", "remove_role"}:
-            role = user.guild.get_role(int(param)) if param and param.isdigit() else None
-            name = role.name if role else param
-            action_desc_parts.append(
-                strike_texts["action_remove_role"].format(role=name)
-            )
-        elif base == "warn":
-            action_desc_parts.append(
-                strike_texts["action_warn"].format(message=param)
-            )
-        elif base == "broadcast":
-            channel_id_str, sep, message_text = param.partition("|")
-            channel_id = int(channel_id_str) if channel_id_str.isdigit() else None
-            channel_obj = None
-            if channel_id:
-                channel_obj = user.guild.get_channel(channel_id)
-            channel_label = (
-                channel_obj.mention
-                if channel_obj and hasattr(channel_obj, "mention")
-                else (f"<#{channel_id}>" if channel_id else channel_id_str)
-            )
-            action_desc_parts.append(
-                strike_texts["action_broadcast"].format(
-                    channel=channel_label,
-                    message=message_text if sep else param,
-                )
-            )
-        elif base == "strike":
-            action_desc_parts.append(strike_texts["action_strike"])
-        else:
-            print(f"[warn] Unrecognized action: {base}")
+    configured_actions = actions
+    action_description = "\n" + strike_texts["action_none"]
 
-    if action_desc_parts:
-        action_description = (
-            "\n"
-            + strike_texts["actions_heading"]
-            + "\n"
-            + "\n".join(
-                strike_texts["action_item"].format(action=desc)
-                for desc in action_desc_parts
-            )
+    if skip_punishments and configured_actions:
+        action_description = "\n" + strike_texts.get(
+            "action_skipped",
+            STRIKE_TEXTS_FALLBACK["action_skipped"],
         )
-    else:
-        action_description = "\n" + strike_texts["action_none"]
+
+    if configured_actions and not skip_punishments:
+        try:
+            action_result_text = await perform_disciplinary_action(
+                user=user,
+                bot=bot,
+                action_string=configured_actions,
+                reason=reason,
+            )
+        except Exception as exc:  # pragma: no cover - defensive logging
+            print(
+                f"[Strike] Failed to apply disciplinary actions for guild {guild_id} user {user.id}: {exc}"
+            )
+            action_result_text = None
+
+        if action_result_text:
+            action_lines = [
+                line.strip()
+                for line in action_result_text.splitlines()
+                if line.strip()
+            ]
+            if action_lines:
+                action_description = (
+                    "\n"
+                    + strike_texts["actions_heading"]
+                    + "\n"
+                    + "\n".join(
+                        strike_texts["action_item"].format(action=line)
+                        for line in action_lines
+                    )
+                )
+        else:
+            action_description = "\n" + strike_texts["action_none"]
 
     strike_info = "\n" + strike_texts["strike_count"].format(count=strike_count)
     if strikes_till_ban is not None and strikes_till_ban > 0:
@@ -575,14 +548,6 @@ async def strike(
             if interaction:
                 await interaction.channel.send(user.mention, embed=embed)
             return embed
-
-    if actions:
-        await perform_disciplinary_action(
-            user=user,
-            bot=bot,
-            action_string=actions,
-            reason=reason,
-        )
 
     embed.title = strike_texts["embed_title_public"].format(name=user.display_name)
     strikes_channel_id = await mysql.get_settings(user.guild.id, "strike-channel")

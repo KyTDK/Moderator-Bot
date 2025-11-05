@@ -35,6 +35,8 @@ class AggregatedModerationCog(commands.Cog):
             scale_down_grace=autoscale.scale_down_grace,
             name="free",
             singular_task_reporter=self._singular_task_reporter,
+            developer_log_bot=bot,
+            developer_log_context="aggregated_moderation.free_queue",
         )
         self.accelerated_queue = WorkerQueue(
             max_workers=self.config.accelerated.max_workers,
@@ -45,6 +47,8 @@ class AggregatedModerationCog(commands.Cog):
             scale_down_grace=autoscale.scale_down_grace,
             name="accelerated",
             singular_task_reporter=self._singular_task_reporter,
+            developer_log_bot=bot,
+            developer_log_context="aggregated_moderation.accelerated_queue",
         )
 
         self.queue_monitor = FreeQueueMonitor(

@@ -210,15 +210,12 @@ class ScamDetectionCog(commands.Cog):
         self.bot = bot
         # Start background tasks after cog is fully loaded to avoid blocking startup
         self._singular_task_reporter = SingularTaskReporter(bot)
-        self.free_queue = WorkerQueue(
-            max_workers=1,
-            name="scam_detection_free",
-            singular_task_reporter=self._singular_task_reporter,
-        )
         self.accelerated_queue = WorkerQueue(
             max_workers=3,
             name="scam_detection_accelerated",
             singular_task_reporter=self._singular_task_reporter,
+            developer_log_bot=bot,
+            developer_log_context="scam_detection.accelerated_queue",
         )
 
     scam_group = app_commands.Group(
@@ -430,13 +427,11 @@ class ScamDetectionCog(commands.Cog):
         await interaction.response.send_message(message, ephemeral=True)
 
     async def add_to_queue(self, coro, guild_id: int):
-        """
-        Add a task to the appropriate queue.
-        accelerated=True means higher priority
-        """
+        """Enqueue scam detection work for premium-enabled guilds only."""
         accelerated = await get_settings(guild_id, "scam-accelerated")
-        queue = self.accelerated_queue if accelerated else self.free_queue
-        await queue.add_task(coro)
+        if not accelerated:
+            return
+        await self.accelerated_queue.add_task(coro)
 
     async def handle_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
@@ -515,14 +510,12 @@ class ScamDetectionCog(commands.Cog):
         await self.bot.wait_until_ready()
 
     async def cog_load(self):
-        await self.free_queue.start()
         await self.accelerated_queue.start()
         # Start the scheduled task only after the cog is loaded
         self.scam_schedule.start()
 
     async def cog_unload(self):
         self.scam_schedule.cancel()
-        await self.free_queue.stop()
         await self.accelerated_queue.stop()
 
 async def setup(bot: commands.Bot):

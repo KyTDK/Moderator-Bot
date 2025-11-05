@@ -47,6 +47,7 @@ class StrikesCog(commands.Cog):
         user=locale_string("cogs.strikes.meta.strike.params.user"),
         reason=locale_string("cogs.strikes.meta.strike.params.reason"),
         expiry=locale_string("cogs.strikes.meta.strike.params.expiry"),
+        skip_punishments=locale_string("cogs.strikes.meta.strike.params.skip_punishments"),
     )
     @app_commands.default_permissions(moderate_members=True)
     @app_commands.guild_only()
@@ -55,11 +56,19 @@ class StrikesCog(commands.Cog):
         interaction: Interaction,
         user: Member,
         reason: str,
-        expiry: Optional[str] = None
+        expiry: Optional[str] = None,
+        skip_punishments: bool = False,
     ):
         """Strike a specific user."""
         try:
-            embed = await strike.strike(user=user, bot=self.bot, reason=reason, interaction=interaction, expiry=TimeString(expiry))
+            embed = await strike.strike(
+                user=user,
+                bot=self.bot,
+                reason=reason,
+                interaction=interaction,
+                expiry=TimeString(expiry),
+                skip_punishments=skip_punishments,
+            )
         except ValueError as ve:
             await interaction.response.send_message(str(ve), ephemeral=True)
             return

@@ -1,6 +1,13 @@
 ﻿{
   "cogs": {
     "strikes": {
+      "meta": {
+        "strike": {
+          "params": {
+            "skip_punishments": "Skip configured punishments for this strike."
+          }
+        }
+      },
       "strike": {
         "error": "An error occurred, please try again. If the issue persists, please join the support server (link in `/help`)."
       },

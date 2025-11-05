@@ -15,11 +15,15 @@ class EventDispatcherCog(commands.Cog):
             max_workers=1,
             name="event_dispatcher_free",
             singular_task_reporter=self._singular_task_reporter,
+            developer_log_bot=bot,
+            developer_log_context="event_dispatcher.free_queue",
         )
         self.accelerated_queue = WorkerQueue(
             max_workers=5,
             name="event_dispatcher_accelerated",
             singular_task_reporter=self._singular_task_reporter,
+            developer_log_bot=bot,
+            developer_log_context="event_dispatcher.accelerated_queue",
         )
 
     async def add_to_queue(self, coro, guild_id: int):

@@ -8,7 +8,8 @@
           "params": {
             "user": "The member to strike.",
             "reason": "The reason for the strike.",
-            "expiry": "Optional expiry duration (e.g., 30d, 2w)."
+            "expiry": "Optional expiry duration (e.g., 30d, 2w).",
+            "skip_punishments": "Skip configured punishments for this strike."
           }
         },
         "get": {
