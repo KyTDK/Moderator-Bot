@@ -100,6 +100,30 @@ class NSFWScanner:
             return True
         return False
 
+    @staticmethod
+    def _normalize_source_url(url: str | None) -> str | None:
+        """Strip Discord-specific markup that can wrap media URLs."""
+        if not url:
+            return url
+        cleaned = url.strip()
+        if not cleaned:
+            return None
+
+        while True:
+            updated = cleaned
+            if updated.startswith("||"):
+                updated = updated[2:].lstrip()
+            if updated.endswith("||"):
+                updated = updated[:-2].rstrip()
+            if updated.startswith("<") and updated.endswith(">") and len(updated) >= 2:
+                updated = updated[1:-1].strip()
+            if updated == cleaned:
+                break
+            cleaned = updated
+            if not cleaned:
+                return None
+        return cleaned
+
     async def _send_failure_log(
         self,
         *,
@@ -307,6 +331,16 @@ class NSFWScanner:
         propagate_download_exception: bool = True,
         overall_started_at: float | None = None,
     ) -> bool:
+        normalized_url = self._normalize_source_url(source_url)
+        if not normalized_url:
+            log.debug(
+                "Skipping %s %s due to empty URL after normalization",
+                download_context,
+                source_url,
+            )
+            return False
+        source_url = normalized_url
+
         download_kwargs = download_kwargs or {}
         skip_context = skip_context or download_context
         scan_failed = False
