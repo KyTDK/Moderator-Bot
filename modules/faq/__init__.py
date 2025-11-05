@@ -12,7 +12,7 @@ from .service import (
     find_best_faq_answer,
     configure_developer_logging,
 )
-from .settings_keys import FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING
+from .settings_keys import FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING, FAQ_DIRECT_REPLY_SETTING
 from .stream import FAQStreamProcessor
 
 __all__ = [
@@ -27,6 +27,7 @@ __all__ = [
     "configure_developer_logging",
     "FAQ_ENABLED_SETTING",
     "FAQ_THRESHOLD_SETTING",
+    "FAQ_DIRECT_REPLY_SETTING",
     "DEFAULT_FAQ_SIMILARITY_THRESHOLD",
     "FAQStreamConfig",
     "FAQStreamProcessor",

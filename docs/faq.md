@@ -1,6 +1,6 @@
 # FAQ Integration Guide
 
-This document describes the public interface for managing FAQ entries from external services (for example, the dashboard). The bot listens for FAQ commands on Redis and exposes two guild-level settings that gate behaviour.
+This document describes the public interface for managing FAQ entries from external services (for example, the dashboard). The bot listens for FAQ commands on Redis and exposes a handful of guild-level settings that gate behaviour.
 
 ---
 
@@ -10,6 +10,7 @@ This document describes the public interface for managing FAQ entries from exter
 | --- | --- | --- | --- |
 | `faq-enabled` | boolean | `false` | Enables automatic FAQ responses for the guild. When `false`, messages are ignored. |
 | `faq-threshold` | float | `0.72` | Minimum similarity score (0.10–1.00) required before a stored FAQ answer is considered a match. Values outside the range are rejected. |
+| `faq-direct-reply` | boolean | `false` | (Accelerated only) Reply directly to matching messages with the stored FAQ answer instead of sending an embed. |
 
 Settings are stored through the standard guild settings API (`modules/utils/mysql`). Update them the same way you manage other feature toggles.
 

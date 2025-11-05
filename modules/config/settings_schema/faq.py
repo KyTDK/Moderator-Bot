@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from modules.config.premium_plans import PLAN_CORE
 from modules.faq.constants import (
     DEFAULT_FAQ_SIMILARITY_THRESHOLD,
     MAX_FAQ_SIMILARITY_THRESHOLD,
@@ -53,6 +54,15 @@ def build_faq_settings() -> dict[str, Setting]:
             default=DEFAULT_FAQ_SIMILARITY_THRESHOLD,
             validator=_validate_threshold,
             description_key="modules.config.settings_schema.faq-threshold.description",
+        ),
+        "faq-direct-reply": Setting(
+            name="faq-direct-reply",
+            description="Reply directly to messages with FAQ answers.",
+            setting_type=bool,
+            default=False,
+            choices=["true", "false"],
+            required_plans=PLAN_CORE,
+            description_key="modules.config.settings_schema.faq-direct-reply.description",
         ),
     }
 

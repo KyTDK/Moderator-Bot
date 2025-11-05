@@ -23,7 +23,11 @@ from modules.faq.service import (
     list_faq_entries,
     configure_developer_logging,
 )
-from modules.faq.settings_keys import FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING
+from modules.faq.settings_keys import (
+    FAQ_DIRECT_REPLY_SETTING,
+    FAQ_ENABLED_SETTING,
+    FAQ_THRESHOLD_SETTING,
+)
 from modules.faq.stream import FAQStreamProcessor
 from modules.i18n.strings import locale_namespace
 from modules.utils import mod_logging, mysql
@@ -279,7 +283,7 @@ class FAQCog(commands.Cog):
         guild_id = message.guild.id
         faq_settings = await mysql.get_settings(
             guild_id,
-            [FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING],
+            [FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING, FAQ_DIRECT_REPLY_SETTING],
         )
 
         enabled_value = (
@@ -292,8 +296,21 @@ class FAQCog(commands.Cog):
             return
 
         threshold = None
+        direct_reply = False
         if isinstance(faq_settings, dict):
             threshold = faq_settings.get(FAQ_THRESHOLD_SETTING)
+            direct_reply = _parse_bool_setting(
+                faq_settings.get(FAQ_DIRECT_REPLY_SETTING),
+                default=False,
+            )
+
+        if direct_reply:
+            try:
+                is_accelerated = await mysql.is_accelerated(guild_id=guild_id)
+            except Exception:
+                is_accelerated = False
+            if not is_accelerated:
+                direct_reply = False
 
         try:
             result = await find_best_faq_answer(
@@ -365,8 +382,14 @@ class FAQCog(commands.Cog):
                     DeveloperLogField("Content", content_preview, inline=False),
                     DeveloperLogField("Vector store", vector_status_field, inline=False),
                 ],
-            )
+        )
 
+        if direct_reply:
+            try:
+                await message.reply(result.entry.answer, mention_author=False)
+            except (discord.Forbidden, discord.HTTPException):
+                return
+            return
         embed = self._build_response_embed(guild_id, message.author, result)
         try:
             await mod_logging.log_to_channel(embed, message.channel.id, self.bot)
