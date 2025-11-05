@@ -64,6 +64,17 @@ After processing, the bot appends a single entry to `FAQ_RESPONSE_STREAM` contai
 
 Consumers should read from the response stream promptly; the processor acknowledges and deletes command entries once handled.
 
+### Error Handling
+
+Treat every `status == "error"` response as final; the command has already been acknowledged and removed from the request stream. Surface the error to the caller and only retry after correcting the underlying issue.
+
+Known error shapes:
+
+- Limit reached – adding an entry after the plan allotment is exhausted raises a `FAQLimitError`, surfaced as `error: "FAQ limit reached (<limit> entries for plan <plan>)"`. Inform the user that they must delete an existing FAQ or upgrade their plan before retrying.
+- Entry missing – deleting a non-existent entry raises `FAQEntryNotFoundError`, surfaced as `error: "FAQ entry <id> not found"`. Drop the entry from your local state so subsequent deletes do not repeat the error.
+- Validation failures – missing required fields (e.g., `guild_id`, `action`, `entry_id`, `question`, `answer`) return short error strings describing the missing field. Fix the payload and requeue if needed.
+- Unexpected failures – any uncaught exception is stringified into `error`. Log these for follow-up; retries may succeed once the underlying service issue is resolved.
+
 ---
 
 ## Operational Notes
