@@ -290,7 +290,7 @@ class FAQCog(commands.Cog):
 
         threshold = None
         if isinstance(faq_settings, dict):
-        threshold = faq_settings.get(FAQ_THRESHOLD_SETTING)
+            threshold = faq_settings.get(FAQ_THRESHOLD_SETTING)
 
         try:
             result = await find_best_faq_answer(
@@ -302,23 +302,23 @@ class FAQCog(commands.Cog):
             log.exception(
                 "FAQ auto-response failed for guild_id=%s channel_id=%s message_id=%s",
                 guild_id,
-                getattr(message.channel, \"id\", \"unknown\"),
+                getattr(message.channel, "id", "unknown"),
                 message.id,
             )
-            threshold_label = str(threshold) if threshold is not None else \"<default>\"
-            content_preview = _trim_field_value(message.content or \"\", limit=512) or \"(empty)\"
+            threshold_label = str(threshold) if threshold is not None else "<default>"
+            content_preview = _trim_field_value(message.content or "", limit=512) or "(empty)"
             await log_to_developer_channel(
                 self.bot,
-                summary=\"FAQ responder error\",
-                severity=\"error\",
-                description=f\"{exc.__class__.__name__}: {exc}\",
+                summary="FAQ responder error",
+                severity="error",
+                description=f"{exc.__class__.__name__}: {exc}",
                 fields=[
-                    DeveloperLogField(\"Guild\", f\"{guild_id}\"),
-                    DeveloperLogField(\"Channel\", f\"{getattr(message.channel, 'id', 'unknown')}\"),
-                    DeveloperLogField(\"Message\", f\"{message.id}\"),
-                    DeveloperLogField(\"Author\", f\"{message.author} ({message.author.id})\"),
-                    DeveloperLogField(\"Threshold\", threshold_label),
-                    DeveloperLogField(\"Content\", content_preview, inline=False),
+                    DeveloperLogField("Guild", f"{guild_id}"),
+                    DeveloperLogField("Channel", f"{getattr(message.channel, 'id', 'unknown')}"),
+                    DeveloperLogField("Message", f"{message.id}"),
+                    DeveloperLogField("Author", f"{message.author} ({message.author.id})"),
+                    DeveloperLogField("Threshold", threshold_label),
+                    DeveloperLogField("Content", content_preview, inline=False),
                 ],
             )
             return
@@ -327,26 +327,28 @@ class FAQCog(commands.Cog):
             return
 
         if result.used_fallback:
-            threshold_label = str(threshold) if threshold is not None else \"<default>\"
-            content_preview = _trim_field_value(message.content or \"\", limit=256) or \"(empty)\"
+            threshold_label = str(threshold) if threshold is not None else "<default>"
+            content_preview = _trim_field_value(message.content or "", limit=256) or "(empty)"
             await log_to_developer_channel(
                 self.bot,
-                summary=\"FAQ fallback matcher engaged\",
-                severity=\"warning\",
-                description=\"Vector store unavailable; served FAQ response via string similarity fallback.\",
+                summary="FAQ fallback matcher engaged",
+                severity="warning",
+                description="Vector store unavailable; served FAQ response via string similarity fallback.",
                 fields=[
-                    DeveloperLogField(\"Guild\", f\"{guild_id}\"),
-                    DeveloperLogField(\"Channel\", f\"{getattr(message.channel, 'id', 'unknown')}\"),
-                    DeveloperLogField(\"Message\", f\"{message.id}\"),
-                    DeveloperLogField(\"Author\", f\"{message.author} ({message.author.id})\"),
-                    DeveloperLogField(\"Threshold\", threshold_label),
-                    DeveloperLogField(\"Similarity\", f\"{result.similarity:.3f}\"),
-                    DeveloperLogField(\"Matched FAQ\", f\"#{result.entry.entry_id}: {_trim_field_value(result.entry.question, limit=128)}\", inline=False),
-                    DeveloperLogField(\"Content\", content_preview, inline=False),
+                    DeveloperLogField("Guild", f"{guild_id}"),
+                    DeveloperLogField("Channel", f"{getattr(message.channel, 'id', 'unknown')}"),
+                    DeveloperLogField("Message", f"{message.id}"),
+                    DeveloperLogField("Author", f"{message.author} ({message.author.id})"),
+                    DeveloperLogField("Threshold", threshold_label),
+                    DeveloperLogField("Similarity", f"{result.similarity:.3f}"),
+                    DeveloperLogField(
+                        "Matched FAQ",
+                        f"#{result.entry.entry_id}: {_trim_field_value(result.entry.question, limit=128)}",
+                        inline=False,
+                    ),
+                    DeveloperLogField("Content", content_preview, inline=False),
                 ],
             )
-
-        embed = self._build_response_embed(guild_id, message.author, result)
         try:
             await mod_logging.log_to_channel(embed, message.channel.id, self.bot)
         except discord.Forbidden:
