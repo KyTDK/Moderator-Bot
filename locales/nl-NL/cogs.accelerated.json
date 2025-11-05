@@ -7,7 +7,7 @@
           "description": "Controleer of je momenteel een Versnelde abonnement hebt."
         },
         "subscribe": {
-          "description": "Genereer je unieke PayPal-abonnementslink."
+          "description": "Genereer je unieke abonnementslink."
         },
         "perks": {
           "description": "Toon de voordelen van een Versnelde abonnement."

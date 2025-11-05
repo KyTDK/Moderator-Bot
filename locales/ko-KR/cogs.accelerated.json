@@ -7,7 +7,7 @@
           "description": "현재 가속화 구독이 있는지 확인하세요."
         },
         "subscribe": {
-          "description": "고유한 PayPal 구독 링크를 생성하세요."
+          "description": "고유한 구독 링크를 생성하세요."
         },
         "perks": {
           "description": "가속화 구독의 혜택을 보여주세요."

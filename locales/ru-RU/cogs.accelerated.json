@@ -7,7 +7,7 @@
           "description": "Проверьте, есть ли у вас подписка Accelerated."
         },
         "subscribe": {
-          "description": "Создайте свою уникальную ссылку для подписки PayPal."
+          "description": "Создайте свою уникальную ссылку для подписки."
         },
         "perks": {
           "description": "Покажите преимущества подписки Accelerated."

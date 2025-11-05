@@ -7,7 +7,7 @@
           "description": "Kiểm tra nếu bạn hiện tại có một đăng ký Tăng tốc."
         },
         "subscribe": {
-          "description": "Tạo liên kết đăng ký PayPal độc nhất của bạn."
+          "description": "Tạo liên kết đăng ký độc nhất của bạn."
         },
         "perks": {
           "description": "Hiển thị các lợi ích của đăng ký Tăng tốc."

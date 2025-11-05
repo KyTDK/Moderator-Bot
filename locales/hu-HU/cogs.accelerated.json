@@ -7,7 +7,7 @@
           "description": "Ellenőrizd, hogy jelenleg van-e Gyorsított előfizetésed."
         },
         "subscribe": {
-          "description": "Generáld az egyedi PayPal előfizetési linked."
+          "description": "Generáld az egyedi előfizetési linked."
         },
         "perks": {
           "description": "Mutasd be a Gyorsított előfizetés előnyeit."

@@ -7,7 +7,7 @@
           "description": "Vérifiez si vous avez actuellement un abonnement Accéléré."
         },
         "subscribe": {
-          "description": "Générez votre lien d'abonnement PayPal unique."
+          "description": "Générez votre lien d'abonnement unique."
         },
         "perks": {
           "description": "Montrez les avantages de l'abonnement Accéléré."

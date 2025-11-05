@@ -7,7 +7,7 @@
           "description": "Verifique se você atualmente possui uma assinatura Accelerated."
         },
         "subscribe": {
-          "description": "Gere seu link único de assinatura via PayPal."
+          "description": "Gere seu link único de assinatura via."
         },
         "perks": {
           "description": "Mostre os benefícios da assinatura Accelerated."

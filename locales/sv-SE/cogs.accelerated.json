@@ -7,7 +7,7 @@
           "description": "Kontrollera om du för närvarande har en Accelerated-prenumeration."
         },
         "subscribe": {
-          "description": "Generera din unika PayPal-prenumerationslänk."
+          "description": "Generera din unika prenumerationslänk."
         },
         "perks": {
           "description": "Visa fördelarna med Accelerated-prenumerationen."

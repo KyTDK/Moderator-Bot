@@ -113,7 +113,7 @@ class AcceleratedCog(commands.Cog):
         description=locale_string("cogs.accelerated.meta.subscribe.description"),
     )
     async def subscribe(self, interaction: Interaction):
-        """Generate your unique PayPal subscription link."""
+        """Generate your unique subscription link."""
         user_id = interaction.user.id
         guild_id = interaction.guild.id
         url = f"https://modbot.neomechanical.com/subscribe?gid={guild_id}"

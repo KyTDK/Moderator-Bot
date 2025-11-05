@@ -7,7 +7,7 @@
           "description": "檢查您當前是否擁有加速訂閱。"
         },
         "subscribe": {
-          "description": "生成您的獨特 PayPal 訂閱鏈接。"
+          "description": "生成您的獨特 訂閱鏈接。"
         },
         "perks": {
           "description": "顯示加速訂閱的好處。"

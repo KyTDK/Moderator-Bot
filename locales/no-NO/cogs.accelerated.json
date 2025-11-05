@@ -7,7 +7,7 @@
           "description": "Sjekk om du for øyeblikket har et Accelerated-abonnement."
         },
         "subscribe": {
-          "description": "Generer din unike PayPal-abonnementskobling."
+          "description": "Generer din unike abonnementskobling."
         },
         "perks": {
           "description": "Vis fordelene med ett Accelerated-abonnement."

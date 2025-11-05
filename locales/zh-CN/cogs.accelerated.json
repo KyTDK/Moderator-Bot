@@ -7,7 +7,7 @@
           "description": "检查您当前是否拥有加速订阅。"
         },
         "subscribe": {
-          "description": "生成您唯一的 PayPal 订阅链接。"
+          "description": "生成您唯一的 订阅链接。"
         },
         "perks": {
           "description": "展示加速订阅的好处。"

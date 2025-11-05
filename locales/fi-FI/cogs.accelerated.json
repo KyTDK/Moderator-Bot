@@ -7,7 +7,7 @@
           "description": "Tarkista, onko sinulla parhaillaan kiihdytetty tilaus."
         },
         "subscribe": {
-          "description": "Luo oma PayPal-tilauslinkkisi."
+          "description": "Luo oma tilauslinkkisi."
         },
         "perks": {
           "description": "Näytä kiihdytetyn tilauksen edut."

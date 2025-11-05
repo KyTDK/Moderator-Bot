@@ -7,7 +7,7 @@
           "description": "Verifică dacă în prezent ai un abonament Accelerated."
         },
         "subscribe": {
-          "description": "Generează-ți linkul unic de abonament PayPal."
+          "description": "Generează-ți linkul unic de abonament."
         },
         "perks": {
           "description": "Afișează beneficiile abonamentului Accelerated."

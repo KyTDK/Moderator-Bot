@@ -7,7 +7,7 @@
           "description": "Comprueba si actualmente tienes una suscripción Accelerated."
         },
         "subscribe": {
-          "description": "Genera tu enlace único de suscripción de PayPal."
+          "description": "Genera tu enlace único de suscripción."
         },
         "perks": {
           "description": "Muestra los beneficios de la suscripción Accelerated."

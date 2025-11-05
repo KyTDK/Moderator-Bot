@@ -7,7 +7,7 @@
           "description": "Kontroller om du i øjeblikket har et Accelerated abonnement."
         },
         "subscribe": {
-          "description": "Generér dit unikke PayPal-abonnementslink."
+          "description": "Generér dit unikke abonnementslink."
         },
         "perks": {
           "description": "Vis fordelene ved et Accelerated abonnement."

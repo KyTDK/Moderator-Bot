@@ -7,7 +7,7 @@
           "description": "Controlla se hai attualmente un abbonamento Accelerato."
         },
         "subscribe": {
-          "description": "Genera il tuo link di abbonamento unico PayPal."
+          "description": "Genera il tuo link di abbonamento unico."
         },
         "perks": {
           "description": "Mostra i vantaggi dell'abbonamento Accelerato."

@@ -7,7 +7,7 @@
           "description": "Şu anda bir Hızlandırılmış aboneliğiniz olup olmadığını kontrol edin."
         },
         "subscribe": {
-          "description": "Benzersiz PayPal abonelik bağlantınızı oluşturun."
+          "description": "Benzersiz abonelik bağlantınızı oluşturun."
         },
         "perks": {
           "description": "Hızlandırılmış aboneliğin avantajlarını gösterin."

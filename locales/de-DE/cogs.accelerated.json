@@ -7,7 +7,7 @@
           "description": "Überprüfen Sie, ob Sie derzeit ein Accelerated Abonnement haben."
         },
         "subscribe": {
-          "description": "Erstellen Sie Ihren einzigartigen PayPal-Abonnementlink."
+          "description": "Erstellen Sie Ihren einzigartigen Abonnementlink."
         },
         "perks": {
           "description": "Zeigen Sie die Vorteile des Accelerated Abonnements."
