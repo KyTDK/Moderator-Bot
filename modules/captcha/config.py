@@ -6,26 +6,24 @@ import os
 import socket
 import uuid
 
+from modules.utils.redis_stream import RedisStreamConfig
+
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 _logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
-class CaptchaStreamConfig:
+class CaptchaStreamConfig(RedisStreamConfig):
     """Configuration for the Redis stream listener that processes captcha callbacks."""
 
-    enabled: bool
-    redis_url: str | None
-    stream: str
-    group: str
-    consumer_name: str
-    block_ms: int
-    batch_size: int
-    max_requeue_attempts: int
-    start_id: str
-    shared_secret: bytes | None
-    pending_auto_claim_ms: int
-    max_concurrency: int = 5
+    batch_size: int = 10
+    max_requeue_attempts: int = 0
+    shared_secret: bytes | None = None
+    pending_auto_claim_ms: int = 0
+
+    def __post_init__(self) -> None:
+        # Keep ``fetch_count`` aligned with the legacy ``batch_size`` field.
+        self.fetch_count = max(1, int(self.batch_size))
 
     @classmethod
     def from_env(cls) -> "CaptchaStreamConfig":
@@ -81,11 +79,12 @@ class CaptchaStreamConfig:
             consumer_name=consumer_name,
             block_ms=block_ms,
             batch_size=batch_size,
-            max_requeue_attempts=max_requeue_attempts,
+            fetch_count=batch_size,
             start_id=start_id,
+            max_concurrency=max_concurrency,
+            max_requeue_attempts=max_requeue_attempts,
             shared_secret=shared_secret,
             pending_auto_claim_ms=pending_auto_claim_ms,
-            max_concurrency=max_concurrency,
         )
 
 

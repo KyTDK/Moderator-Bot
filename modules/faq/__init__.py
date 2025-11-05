@@ -1,5 +1,6 @@
 """FAQ feature package providing storage, vector search, and service helpers."""
 
+from .config import FAQStreamConfig
 from .constants import DEFAULT_FAQ_SIMILARITY_THRESHOLD
 from .models import FAQEntry, FAQSearchResult
 from .service import (
@@ -11,6 +12,7 @@ from .service import (
     find_best_faq_answer,
 )
 from .settings_keys import FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING
+from .stream import FAQStreamProcessor
 
 __all__ = [
     "FAQEntry",
@@ -24,4 +26,6 @@ __all__ = [
     "FAQ_ENABLED_SETTING",
     "FAQ_THRESHOLD_SETTING",
     "DEFAULT_FAQ_SIMILARITY_THRESHOLD",
+    "FAQStreamConfig",
+    "FAQStreamProcessor",
 ]

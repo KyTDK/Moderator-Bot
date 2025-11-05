@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 import discord
 from discord import Color, Embed, Interaction, app_commands
 from discord.ext import commands
 
 from modules.config.premium_plans import PLAN_DISPLAY_NAMES
 from modules.core.moderator_bot import ModeratorBot
+from modules.faq.config import FAQStreamConfig
 from modules.faq.models import FAQEntry, FAQSearchResult
 from modules.faq.service import (
     FAQEntryNotFoundError,
@@ -17,6 +20,7 @@ from modules.faq.service import (
     list_faq_entries,
 )
 from modules.faq.settings_keys import FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING
+from modules.faq.stream import FAQStreamProcessor
 from modules.i18n.strings import locale_namespace
 from modules.utils import mod_logging, mysql
 from modules.utils.interaction_responses import send_ephemeral_response
@@ -41,6 +45,9 @@ class FAQCog(commands.Cog):
 
     def __init__(self, bot: ModeratorBot) -> None:
         self.bot = bot
+        self._stream_config = FAQStreamConfig.from_env()
+        self._stream_processor = FAQStreamProcessor(bot, self._stream_config)
+        self._stream_start_task: asyncio.Task[None] | None = None
 
     faq_group = app_commands.Group(
         name="faq",
@@ -261,6 +268,46 @@ class FAQCog(commands.Cog):
             inline=False,
         )
         return embed
+
+    async def cog_load(self) -> None:
+        if self._stream_start_task is None or self._stream_start_task.done():
+            task = asyncio.create_task(self._ensure_stream_started(), name="faq-stream-start")
+            self._stream_start_task = task
+            task.add_done_callback(
+                lambda t, owner=self: setattr(owner, "_stream_start_task", None)
+                if owner._stream_start_task is t
+                else None
+            )
+
+    async def cog_unload(self) -> None:
+        if self._stream_start_task is not None:
+            self._stream_start_task.cancel()
+            try:
+                await self._stream_start_task
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self._stream_start_task = None
+
+        await self._stream_processor.stop()
+
+    async def _ensure_stream_started(self) -> None:
+        if not self._stream_config.enabled:
+            return
+
+        await self.bot.wait_until_ready()
+        wait_mysql = getattr(self.bot, "_wait_for_mysql_ready", None)
+        if callable(wait_mysql):
+            try:
+                await wait_mysql()
+            except Exception:
+                logging.getLogger(__name__).exception("Failed waiting for MySQL readiness before starting FAQ stream")
+                return
+
+        try:
+            await self._stream_processor.start()
+        except Exception:
+            logging.getLogger(__name__).exception("Failed to start FAQ Redis stream processor")
 
 
 async def setup(bot: commands.Bot) -> None:

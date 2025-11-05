@@ -174,6 +174,49 @@ The test module isolates dependencies by monkeypatching storage/vector functions
   - `PATCH /guilds/{guild_id}/faq/settings` → toggle `faq-enabled`, set `faq-threshold`
 - Surface service exceptions (e.g. `FAQLimitError`, validation messages) directly to the dashboard for clear UX.
 
+### Redis Command Stream
+
+If building an HTTP API feels heavy, you can push FAQ commands into a Redis stream that the bot now consumes. Configuration is handled via environment variables:
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `FAQ_STREAM_ENABLED` | Enables the consumer (`true`/`false`). Defaults to on when a Redis URL is available. | — |
+| `FAQ_REDIS_URL` | Redis connection string (falls back to `REDIS_URL`). | — |
+| `FAQ_COMMAND_STREAM` | Stream name for inbound commands. | `faq:commands` |
+| `FAQ_RESPONSE_STREAM` | Stream used for responses. | `faq:responses` |
+| `FAQ_STREAM_GROUP` | Consumer group identifier. | `modbot-faq` |
+| `FAQ_STREAM_CONSUMER` | Optional explicit consumer name; auto-generated when omitted. | hostname/PID/uuid |
+| `FAQ_STREAM_BLOCK_MS` | Poll timeout in milliseconds. | `10000` |
+| `FAQ_STREAM_FETCH_COUNT` | Max messages fetched per poll. | `20` |
+| `FAQ_STREAM_RESPONSE_MAXLEN` | Approximate max length of the response stream. | `1000` |
+
+Publish command messages with the following field layout (string values recommended):
+
+```
+action      # add | delete | list
+request_id  # client-generated identifier echoed back in responses
+guild_id    # Discord guild id
+question    # required for add
+answer      # required for add
+entry_id    # required for delete
+```
+
+Responses are appended to `FAQ_RESPONSE_STREAM` and include:
+
+```
+{
+  "request_id": "...",
+  "status": "ok" | "error",
+  "action": "add" | "delete" | "list",
+  "guild_id": "...",
+  "entry_id": "...",          # present for add/delete
+  "entries": "[...]",          # JSON array when action == list
+  "error": "description"       # only when status == error
+}
+```
+
+The bot acknowledges and deletes each command after processing, so make sure your publisher monitors the response stream (and/or sets reasonable retention limits) to pick up results promptly.
+
 ---
 
 ## Operational Considerations
