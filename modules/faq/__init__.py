@@ -10,6 +10,7 @@ from .service import (
     delete_faq_entry,
     list_faq_entries,
     find_best_faq_answer,
+    configure_developer_logging,
 )
 from .settings_keys import FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING
 from .stream import FAQStreamProcessor
@@ -23,6 +24,7 @@ __all__ = [
     "delete_faq_entry",
     "list_faq_entries",
     "find_best_faq_answer",
+    "configure_developer_logging",
     "FAQ_ENABLED_SETTING",
     "FAQ_THRESHOLD_SETTING",
     "DEFAULT_FAQ_SIMILARITY_THRESHOLD",

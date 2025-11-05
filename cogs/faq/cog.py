@@ -21,6 +21,7 @@ from modules.faq.service import (
     delete_faq_entry,
     find_best_faq_answer,
     list_faq_entries,
+    configure_developer_logging,
 )
 from modules.faq.settings_keys import FAQ_ENABLED_SETTING, FAQ_THRESHOLD_SETTING
 from modules.faq.stream import FAQStreamProcessor
@@ -67,6 +68,7 @@ class FAQCog(commands.Cog):
 
     def __init__(self, bot: ModeratorBot) -> None:
         self.bot = bot
+        configure_developer_logging(bot=bot, context="faq.service")
         self._stream_config = FAQStreamConfig.from_env()
         self._stream_processor = FAQStreamProcessor(bot, self._stream_config)
         self._stream_start_task: asyncio.Task[None] | None = None
