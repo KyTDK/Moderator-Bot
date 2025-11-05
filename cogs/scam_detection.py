@@ -180,18 +180,17 @@ async def is_scam_message(message: str, guild_id: int) -> tuple[bool, str | None
         return True, matched_pattern, None
 
 
-    normalized_urls = extract_urls(message, 
+    normalized_urls = extract_urls(message,
                                    normalize=True)
 
-    check_links = bool(await get_settings(guild_id, CHECK_LINKS_SETTING))
+    try:
+        accelerated = await is_accelerated(guild_id=guild_id)
+    except Exception:  # pragma: no cover - defensive
+        accelerated = False
 
-    if check_links:
-        try:
-            accelerated = await is_accelerated(guild_id=guild_id)
-        except Exception:  # pragma: no cover - defensive
-            accelerated = False
-        if not accelerated:
-            check_links = False
+    check_links = False
+    if accelerated:
+        check_links = bool(await get_settings(guild_id, CHECK_LINKS_SETTING))
 
     if check_links:
         for url in normalized_urls:
