@@ -8,6 +8,7 @@ from typing import AsyncIterator
 from urllib.parse import urlparse, urlunparse
 
 import aiohttp
+from yarl import URL
 
 from ..constants import DEFAULT_DOWNLOAD_CAP_BYTES, TMP_DIR
 
@@ -26,11 +27,21 @@ def is_tenor_host(host: str) -> bool:
     return host == "tenor.com" or host.endswith(".tenor.com")
 
 
+def _prepare_request_url(url: str) -> URL | str:
+    """Preserve percent-encoded segments when handing URLs to aiohttp."""
+    if "%" not in url:
+        return url
+    try:
+        return URL(url, encoded=True)
+    except ValueError:
+        return url
+
+
 async def _probe_head(session, url: str) -> tuple[bool, int | None, float | None]:
     started = time.perf_counter()
     try:
         async with session.head(
-            url,
+            _prepare_request_url(url),
             allow_redirects=True,
             timeout=aiohttp.ClientTimeout(total=5),
         ) as resp:
@@ -188,7 +199,7 @@ async def temp_download(
 
     try:
         download_started = time.perf_counter()
-        async with session.get(resolved_url) as resp:
+        async with session.get(_prepare_request_url(resolved_url)) as resp:
             resp.raise_for_status()
             response_length = resp.content_length or head_length
             chunk_size, buffer_limit = _resolve_stream_config(response_length)

@@ -138,12 +138,14 @@ assert spec.loader is not None
 spec.loader.exec_module(downloads)
 
 temp_download = downloads.temp_download
+_prepare_request_url = downloads._prepare_request_url
 _resolve_stream_config = downloads._resolve_stream_config
 DEFAULT_BUFFER_SIZE = downloads.DEFAULT_BUFFER_SIZE
 DEFAULT_CHUNK_SIZE = downloads.DEFAULT_CHUNK_SIZE
 MAX_BUFFER_SIZE = downloads.MAX_BUFFER_SIZE
 MAX_CHUNK_SIZE = downloads.MAX_CHUNK_SIZE
 MIN_CHUNK_SIZE = downloads.MIN_CHUNK_SIZE
+URL = downloads.URL
 
 
 @pytest.fixture
@@ -197,3 +199,16 @@ def test_resolve_stream_config_defaults_and_bounds():
     assert MIN_CHUNK_SIZE <= large_chunk <= MAX_CHUNK_SIZE
     assert MIN_CHUNK_SIZE <= small_chunk <= MAX_CHUNK_SIZE
     assert large_chunk <= large_buffer <= MAX_BUFFER_SIZE
+
+
+def test_prepare_request_url_preserves_percent_encoding():
+    encoded_url = (
+        "https://distrokid.imgix.net/http%3A%2F%2Fgather.fandalism.com%2Fmock.jpg"
+        "?mark=http%3A%2F%2Fgather.fandalism.com%2Foverlay.png"
+    )
+    prepared = _prepare_request_url(encoded_url)
+    assert isinstance(prepared, URL)
+    assert str(prepared) == encoded_url
+
+    plain_url = "https://example.com/path"
+    assert _prepare_request_url(plain_url) == plain_url
