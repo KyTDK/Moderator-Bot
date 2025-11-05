@@ -36,6 +36,7 @@
           "embed_title_public": "{name} received a strike",
           "actions_heading": "**Actions Taken:**",
           "action_none": "**Action Taken:** No action applied",
+          "action_skipped": "**Action Taken:** Punishments were skipped.",
           "action_item": "- {action}",
           "action_timeout": "Timeout (ends <t:{timestamp}:R>)",
           "action_ban": "Ban",
