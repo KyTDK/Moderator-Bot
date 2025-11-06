@@ -21,6 +21,7 @@ from .guilds import (
     get_all_guild_locales,
     get_guild_locale,
     get_banned_guild_ids,
+    get_banned_guild_reason,
     is_guild_banned,
     remove_guild,
 )
@@ -71,6 +72,7 @@ __all__ = [
     "get_all_guild_locales",
     "get_guild_locale",
     "get_banned_guild_ids",
+    "get_banned_guild_reason",
     "is_guild_banned",
     "add_guild",
     "remove_guild",

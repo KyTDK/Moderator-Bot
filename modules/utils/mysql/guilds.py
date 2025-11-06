@@ -114,3 +114,19 @@ async def is_guild_banned(guild_id: int) -> bool:
     )
 
     return bool(row)
+
+
+async def get_banned_guild_reason(guild_id: int) -> Optional[str]:
+    """Return the stored ban reason for *guild_id*, if present."""
+
+    row, _ = await execute_query(
+        "SELECT reason FROM banned_guilds WHERE guild_id = %s LIMIT 1",
+        (guild_id,),
+        fetch_one=True,
+    )
+
+    if not row:
+        return None
+
+    reason = row[0]
+    return str(reason) if reason is not None else None

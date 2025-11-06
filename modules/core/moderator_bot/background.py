@@ -33,6 +33,67 @@ class BackgroundTaskMixin(GuildLocaleMixin):
         """Leave *guild* and remove its database record if it is banned."""
         _logger.warning("Leaving banned guild %s (%s)", guild.id, guild.name)
 
+        owner_user: discord.abc.User | None = None
+        owner_id: int | None = None
+        try:
+            owner_id = await self._resolve_guild_owner_id(guild)
+        except Exception:
+            _logger.exception("Failed to resolve owner for banned guild %s", guild.id)
+
+        if owner_id is not None:
+            owner_user = guild.get_member(owner_id) or self.get_user(owner_id)
+            if owner_user is None:
+                try:
+                    owner_user = await self.fetch_user(owner_id)
+                except discord.HTTPException:
+                    _logger.warning(
+                        "HTTP error while fetching owner %s for banned guild %s",
+                        owner_id,
+                        guild.id,
+                    )
+                except Exception:
+                    _logger.exception(
+                        "Unexpected error fetching owner %s for banned guild %s",
+                        owner_id,
+                        guild.id,
+                    )
+
+        reason: str | None = None
+        try:
+            reason = await mysql.get_banned_guild_reason(guild.id)
+        except Exception:
+            _logger.exception("Failed to retrieve ban reason for guild %s", guild.id)
+
+        if owner_user is not None:
+            message_lines = [
+                f"Hello, Moderator Bot has left **{guild.name}** ({guild.id}) because this guild is banned from using the bot.",
+            ]
+            if reason:
+                message_lines.append(f"Reason: {reason}")
+            message_lines.append(
+                "If you believe this is incorrect, please contact support."
+            )
+            try:
+                await owner_user.send("\n".join(message_lines))
+            except discord.Forbidden:
+                _logger.warning(
+                    "Could not DM owner %s for banned guild %s; DMs closed",
+                    owner_id,
+                    guild.id,
+                )
+            except discord.HTTPException:
+                _logger.exception(
+                    "HTTP error while DMing owner %s for banned guild %s",
+                    owner_id,
+                    guild.id,
+                )
+            except Exception:
+                _logger.exception(
+                    "Unexpected error while DMing owner %s for banned guild %s",
+                    owner_id,
+                    guild.id,
+                )
+
         try:
             await mysql.remove_guild(guild.id)
         except Exception:
