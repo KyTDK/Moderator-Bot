@@ -1,14 +1,17 @@
-import tracemalloc
-import psutil
-import discord
-from discord import app_commands
-from discord.ext import commands
-from dotenv import load_dotenv
 import os
 import platform
 import time
+from typing import Optional
+
+import discord
+import psutil
+import tracemalloc
 from modules.core.moderator_bot import ModeratorBot
 from modules.i18n.strings import locale_string
+from discord import app_commands
+from discord.ext import commands
+from dotenv import load_dotenv
+from modules.utils import mysql
 
 load_dotenv()
 GUILD_ID = int(os.getenv('GUILD_ID', 0))
@@ -229,6 +232,110 @@ class DebugCog(commands.Cog):
             embed.add_field(name=debug_texts["worker_name"], value=debug_texts["worker_error"].format(error=e), inline=False)
 
         await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @app_commands.command(
+        name="ban_guild",
+        description="Restrict a guild from using Moderator Bot.",
+    )
+    @app_commands.guilds(discord.Object(id=GUILD_ID))
+    @app_commands.describe(
+        guild_id="The guild ID to ban.",
+        reason="Optional reason stored for auditing and owner notification.",
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    async def ban_guild(
+        self,
+        interaction: discord.Interaction,
+        guild_id: str,
+        reason: Optional[str] = None,
+    ) -> None:
+        await interaction.response.defer(ephemeral=True)
+        if interaction.user.id not in ALLOWED_USER_IDS:
+            await interaction.followup.send("You do not have permission to run this command.", ephemeral=True)
+            return
+
+        try:
+            target_id = int(guild_id)
+            if target_id <= 0:
+                raise ValueError
+        except ValueError:
+            await interaction.followup.send("Please provide a valid numeric guild ID.", ephemeral=True)
+            return
+
+        await mysql.ban_guild(target_id, reason)
+
+        active_guild = self.bot.get_guild(target_id)
+        if active_guild is not None:
+            try:
+                await self.bot._handle_banned_guild(active_guild)
+            except Exception as exc:  # pragma: no cover - defensive
+                await interaction.followup.send(
+                    f"Guild {target_id} banned, but an error occurred while enforcing the ban: {exc}",
+                    ephemeral=True,
+                )
+                return
+
+        await interaction.followup.send(
+            f"Guild `{target_id}` has been banned."
+            + (f" Reason stored: {reason}" if reason else ""),
+            ephemeral=True,
+        )
+
+    @app_commands.command(
+        name="unban_guild",
+        description="Remove a guild from the ban list.",
+    )
+    @app_commands.guilds(discord.Object(id=GUILD_ID))
+    @app_commands.describe(
+        guild_id="The guild ID to unban.",
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    async def unban_guild(
+        self,
+        interaction: discord.Interaction,
+        guild_id: str,
+    ) -> None:
+        await interaction.response.defer(ephemeral=True)
+        if interaction.user.id not in ALLOWED_USER_IDS:
+            await interaction.followup.send("You do not have permission to run this command.", ephemeral=True)
+            return
+
+        try:
+            target_id = int(guild_id)
+            if target_id <= 0:
+                raise ValueError
+        except ValueError:
+            await interaction.followup.send("Please provide a valid numeric guild ID.", ephemeral=True)
+            return
+
+        removed = await mysql.unban_guild(target_id)
+        if removed:
+            await interaction.followup.send(f"Guild `{target_id}` has been unbanned.", ephemeral=True)
+        else:
+            await interaction.followup.send(f"Guild `{target_id}` was not banned.", ephemeral=True)
+
+    @app_commands.command(
+        name="refresh_banned_guilds",
+        description="Re-run guild synchronisation to enforce banned guilds.",
+    )
+    @app_commands.guilds(discord.Object(id=GUILD_ID))
+    @app_commands.checks.has_permissions(administrator=True)
+    async def refresh_banned_guilds(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+        if interaction.user.id not in ALLOWED_USER_IDS:
+            await interaction.followup.send("You do not have permission to run this command.", ephemeral=True)
+            return
+
+        try:
+            await self.bot._sync_guilds_with_database()
+        except Exception as exc:  # pragma: no cover - defensive
+            await interaction.followup.send(
+                f"Failed to refresh guild sync: {exc}",
+                ephemeral=True,
+            )
+            return
+
+        await interaction.followup.send("Guild synchronisation complete.", ephemeral=True)
 
     @app_commands.command(
         name="locale",

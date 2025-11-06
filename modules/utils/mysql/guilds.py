@@ -130,3 +130,26 @@ async def get_banned_guild_reason(guild_id: int) -> Optional[str]:
 
     reason = row[0]
     return str(reason) if reason is not None else None
+
+
+async def ban_guild(guild_id: int, reason: Optional[str]) -> None:
+    """Add or update a banned guild entry."""
+
+    await execute_query(
+        """
+        INSERT INTO banned_guilds (guild_id, reason)
+        VALUES (%s, %s)
+        ON DUPLICATE KEY UPDATE reason = VALUES(reason), added_at = CURRENT_TIMESTAMP
+        """,
+        (guild_id, reason),
+    )
+
+
+async def unban_guild(guild_id: int) -> bool:
+    """Remove a guild from the banned list. Returns True if a row was deleted."""
+
+    _, affected = await execute_query(
+        "DELETE FROM banned_guilds WHERE guild_id = %s",
+        (guild_id,),
+    )
+    return affected > 0
