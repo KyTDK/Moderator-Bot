@@ -176,6 +176,15 @@ else:
                 )
                 await cur.execute(
                     """
+                    CREATE TABLE IF NOT EXISTS banned_guilds (
+                        guild_id BIGINT PRIMARY KEY,
+                        reason VARCHAR(255) NULL,
+                        added_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                    """
+                )
+                await cur.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS faq_entries (
                         guild_id BIGINT NOT NULL,
                         entry_id INT NOT NULL,

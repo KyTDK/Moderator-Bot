@@ -12,6 +12,8 @@ from modules.core.moderator_bot.guild_locale import GuildLocaleMixin
 from modules.post_stats.topgg_poster import start_topgg_poster
 from modules.utils import mysql
 
+_logger = logging.getLogger(__name__)
+
 
 class BackgroundTaskMixin(GuildLocaleMixin):
     """Mixin providing lifecycle helpers relying on background tasks."""
@@ -26,6 +28,38 @@ class BackgroundTaskMixin(GuildLocaleMixin):
         if task is None or task.done():
             task = factory()
             setattr(self, attr, task)
+
+    async def _handle_banned_guild(self, guild: discord.Guild) -> None:
+        """Leave *guild* and remove its database record if it is banned."""
+        _logger.warning("Leaving banned guild %s (%s)", guild.id, guild.name)
+
+        try:
+            await mysql.remove_guild(guild.id)
+        except Exception:
+            _logger.exception("Failed to remove banned guild %s from database", guild.id)
+
+        try:
+            await guild.leave()
+        except discord.Forbidden:
+            _logger.warning(
+                "Insufficient permissions to leave banned guild %s (%s)",
+                guild.id,
+                guild.name,
+            )
+        except discord.HTTPException:
+            _logger.exception(
+                "HTTP error while leaving banned guild %s (%s)",
+                guild.id,
+                guild.name,
+            )
+        except Exception:
+            _logger.exception(
+                "Unexpected error while leaving banned guild %s (%s)",
+                guild.id,
+                guild.name,
+            )
+        else:
+            _logger.info("Successfully left banned guild %s", guild.id)
 
     async def _wait_for_client_ready(self) -> None:
         """Block until discord.Client has been logged in and is ready-aware."""
@@ -105,6 +139,9 @@ class BackgroundTaskMixin(GuildLocaleMixin):
 
     async def _sync_single_guild_with_database(self, guild: discord.Guild) -> bool:
         try:
+            if await mysql.is_guild_banned(guild.id):
+                await self._handle_banned_guild(guild)
+                return False
             preferred = getattr(guild, "preferred_locale", None)
             from modules.i18n.locale_utils import normalise_locale  # local import to avoid cycle
 
@@ -140,6 +177,17 @@ class BackgroundTaskMixin(GuildLocaleMixin):
         guilds = list(self.guilds)
         if not guilds:
             print("[STARTUP] No guilds to synchronise")
+            return
+
+        banned_ids = await mysql.get_banned_guild_ids()
+        if banned_ids:
+            for guild in list(guilds):
+                if guild.id in banned_ids:
+                    await self._handle_banned_guild(guild)
+                    guilds.remove(guild)
+
+        if not guilds:
+            print("[STARTUP] All connected guilds are banned; no sync needed")
             return
 
         semaphore = asyncio.Semaphore(10)

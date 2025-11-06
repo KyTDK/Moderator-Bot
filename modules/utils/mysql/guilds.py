@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 
 from .connection import execute_query
 
@@ -81,3 +81,36 @@ async def remove_guild(guild_id: int):
         "DELETE FROM guilds WHERE guild_id = %s",
         (guild_id,),
     )
+
+
+async def get_banned_guild_ids() -> Set[int]:
+    """Return the IDs of guilds that are not allowed to use the bot."""
+
+    rows, _ = await execute_query(
+        "SELECT guild_id FROM banned_guilds",
+        fetch_all=True,
+    )
+
+    if not rows:
+        return set()
+
+    banned_ids: Set[int] = set()
+    for (guild_id,) in rows:
+        try:
+            banned_ids.add(int(guild_id))
+        except (TypeError, ValueError):
+            continue
+
+    return banned_ids
+
+
+async def is_guild_banned(guild_id: int) -> bool:
+    """Return True if *guild_id* is marked as banned."""
+
+    row, _ = await execute_query(
+        "SELECT 1 FROM banned_guilds WHERE guild_id = %s LIMIT 1",
+        (guild_id,),
+        fetch_one=True,
+    )
+
+    return bool(row)

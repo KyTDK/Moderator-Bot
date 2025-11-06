@@ -152,6 +152,10 @@ class ModeratorBot(
         await self._wait_for_mysql_ready()
         await self.ensure_i18n_ready()
 
+        if await mysql.is_guild_banned(guild.id):
+            await self._handle_banned_guild(guild)
+            return
+
         preferred = getattr(guild, "preferred_locale", None)
         normalized_locale = normalise_locale(preferred)
         owner_id = await self._resolve_guild_owner_id(guild)
