@@ -212,3 +212,332 @@ def test_prepare_request_url_preserves_percent_encoding():
 
     plain_url = "https://example.com/path"
     assert _prepare_request_url(plain_url) == plain_url
+
+
+async def _start_test_site(*routes):
+    app = web.Application()
+    for method, path, handler in routes:
+        app.router.add_route(method, path, handler)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "127.0.0.1", 0)
+    await site.start()
+    port = site._server.sockets[0].getsockname()[1]
+    base_url = f"http://127.0.0.1:{port}"
+    return runner, site, base_url
+
+
+@pytest.mark.anyio
+async def test_temp_download_falls_back_for_discord_static_emoji():
+    gif_path = "/emojis/1425034030985908264.gif"
+    webp_path = "/emojis/1425034030985908264.webp"
+    png_path = "/emojis/1425034030985908264.png"
+    payload = b"\x89PNG\r\n\x1a\n" + (b"\x00" * 1024)
+    downloads._DISCORD_EMOJI_HOSTS.add("127.0.0.1")
+
+    async def gif_handler(request):
+        return web.json_response({"message": "Invalid resource"}, status=415)
+
+    async def webp_handler(request):
+        return web.json_response({"message": "not found"}, status=404)
+
+    async def png_handler(request):
+        return web.Response(body=payload, content_type="image/png")
+
+    runner, site, base_url = await _start_test_site(
+        ("GET", gif_path, gif_handler),
+        ("HEAD", gif_path, gif_handler),
+        ("GET", webp_path, webp_handler),
+        ("HEAD", webp_path, webp_handler),
+        ("GET", png_path, png_handler),
+        ("HEAD", png_path, png_handler),
+    )
+
+    try:
+        gif_url = f"{base_url}{gif_path}"
+
+        async with aiohttp.ClientSession() as session:
+            async with temp_download(session, gif_url) as result:
+                assert result.path.endswith(".png")
+                assert result.telemetry.resolved_url.endswith(".png")
+                with open(result.path, "rb") as handle:
+                    assert handle.read() == payload
+    finally:
+        downloads._DISCORD_EMOJI_HOSTS.discard("127.0.0.1")
+        await runner.cleanup()
+
+
+@pytest.mark.anyio
+async def test_temp_download_prefers_tenor_video_variant(monkeypatch):
+    downloads._DISCORD_EMOJI_HOSTS.add("127.0.0.1")
+    original_is_tenor = downloads.is_tenor_host
+    monkeypatch.setattr(
+        downloads,
+        "is_tenor_host",
+        lambda host: host.split(":")[0] == "127.0.0.1" or original_is_tenor(host),
+    )
+
+    gif_path = "/media/animated.gif"
+    mp4_path = "/media/animated.mp4"
+    payload = b"mp4data" * 1024
+
+    async def gif_handler(request):
+        return web.Response(body=b"gifdata", content_type="image/gif")
+
+    async def mp4_handler(request):
+        return web.Response(body=payload, content_type="video/mp4")
+
+    runner, _, base_url = await _start_test_site(
+        ("HEAD", gif_path, gif_handler),
+        ("GET", gif_path, gif_handler),
+        ("HEAD", mp4_path, mp4_handler),
+        ("GET", mp4_path, mp4_handler),
+    )
+
+    try:
+        url = f"{base_url}{gif_path}"
+        async with aiohttp.ClientSession() as session:
+            async with temp_download(session, url) as result:
+                assert result.path.endswith(".mp4")
+                assert result.telemetry.resolved_url.endswith(".mp4")
+                with open(result.path, "rb") as handle:
+                    assert handle.read() == payload
+    finally:
+        downloads._DISCORD_EMOJI_HOSTS.discard("127.0.0.1")
+        await runner.cleanup()
+
+
+@pytest.mark.anyio
+async def test_temp_download_falls_back_when_tenor_video_unavailable(monkeypatch):
+    downloads._DISCORD_EMOJI_HOSTS.add("127.0.0.1")
+    original_is_tenor = downloads.is_tenor_host
+    monkeypatch.setattr(
+        downloads,
+        "is_tenor_host",
+        lambda host: host.split(":")[0] == "127.0.0.1" or original_is_tenor(host),
+    )
+
+    gif_path = "/media/static.gif"
+    mp4_path = "/media/static.mp4"
+    payload = b"gif-bytes"
+
+    async def gif_handler(request):
+        return web.Response(body=payload, content_type="image/gif")
+
+    async def mp4_handler(request):
+        return web.Response(status=404)
+
+    runner, _, base_url = await _start_test_site(
+        ("HEAD", gif_path, gif_handler),
+        ("GET", gif_path, gif_handler),
+        ("HEAD", mp4_path, mp4_handler),
+        ("GET", mp4_path, mp4_handler),
+    )
+
+    try:
+        url = f"{base_url}{gif_path}"
+        async with aiohttp.ClientSession() as session:
+            async with temp_download(session, url) as result:
+                assert result.path.endswith(".gif")
+                assert result.telemetry.resolved_url.endswith(".gif")
+                with open(result.path, "rb") as handle:
+                    assert handle.read() == payload
+    finally:
+        downloads._DISCORD_EMOJI_HOSTS.discard("127.0.0.1")
+        await runner.cleanup()
+
+
+@pytest.mark.anyio
+async def test_temp_download_respects_custom_extension():
+    path = "/file.bin"
+    payload = b"hello world"
+
+    async def handler(request):
+        return web.Response(body=payload, content_type="application/octet-stream")
+
+    runner, _, base_url = await _start_test_site(
+        ("HEAD", path, handler),
+        ("GET", path, handler),
+    )
+
+    try:
+        url = f"{base_url}{path}"
+        async with aiohttp.ClientSession() as session:
+            async with temp_download(session, url, ext="dat") as result:
+                assert result.path.endswith(".dat")
+                with open(result.path, "rb") as handle:
+                    assert handle.read() == payload
+    finally:
+        await runner.cleanup()
+
+
+@pytest.mark.anyio
+async def test_temp_download_ignores_head_failure(monkeypatch):
+    path = "/payload"
+    payload = b"data"
+
+    async def get_handler(request):
+        return web.Response(body=payload, content_type="application/octet-stream")
+
+    runner, _, base_url = await _start_test_site(
+        ("GET", path, get_handler),
+    )
+
+    async def fake_probe(session, url):
+        return False, None, None
+
+    monkeypatch.setattr(downloads, "_probe_head", fake_probe)
+
+    try:
+        url = f"{base_url}{path}"
+        async with aiohttp.ClientSession() as session:
+            async with temp_download(session, url) as result:
+                assert result.telemetry.content_length is None
+                with open(result.path, "rb") as handle:
+                    assert handle.read() == payload
+    finally:
+        await runner.cleanup()
+
+
+@pytest.mark.anyio
+async def test_temp_download_cap_enforced():
+    path = "/large"
+    payload = b"A" * 8192
+
+    async def handler(request):
+        return web.Response(body=payload, content_type="application/octet-stream")
+
+    runner, _, base_url = await _start_test_site(
+        ("HEAD", path, handler),
+        ("GET", path, handler),
+    )
+
+    try:
+        url = f"{base_url}{path}"
+        async with aiohttp.ClientSession() as session:
+            with pytest.raises(ValueError) as excinfo:
+                async with temp_download(session, url, download_cap_bytes=1024):
+                    pass
+            assert "Download exceeds cap" in str(excinfo.value)
+    finally:
+        await runner.cleanup()
+
+
+@pytest.mark.anyio
+async def test_temp_download_falls_back_after_cap_skip(monkeypatch):
+    downloads._DISCORD_EMOJI_HOSTS.add("127.0.0.1")
+    original_is_tenor = downloads.is_tenor_host
+    monkeypatch.setattr(
+        downloads,
+        "is_tenor_host",
+        lambda host: host == "127.0.0.1" or original_is_tenor(host),
+    )
+
+    gif_path = "/media/emoji.gif"
+    mp4_path = "/media/emoji.mp4"
+    gif_payload = b"gif"
+    mp4_payload = b"mp4"
+
+    async def gif_handler(request):
+        return web.Response(body=gif_payload, content_type="image/gif")
+
+    async def mp4_handler(request):
+        response = web.Response(body=mp4_payload, content_type="video/mp4")
+        response.headers["Content-Length"] = str(10_000)
+        return response
+
+    async def mp4_head(request):
+        response = web.Response(status=200)
+        response.headers["Content-Length"] = str(10_000)
+        return response
+
+    runner, _, base_url = await _start_test_site(
+        ("HEAD", gif_path, gif_handler),
+        ("GET", gif_path, gif_handler),
+        ("HEAD", mp4_path, mp4_head),
+        ("GET", mp4_path, mp4_handler),
+    )
+
+    try:
+        url = f"{base_url}{gif_path}"
+        async with aiohttp.ClientSession() as session:
+            async with temp_download(session, url, download_cap_bytes=2048) as result:
+                assert result.path.endswith(".gif")
+                assert result.telemetry.resolved_url.endswith(".gif")
+                with open(result.path, "rb") as handle:
+                    assert handle.read() == gif_payload
+    finally:
+        downloads._DISCORD_EMOJI_HOSTS.discard("127.0.0.1")
+        await runner.cleanup()
+
+
+@pytest.mark.anyio
+async def test_temp_download_stream_probe_limit():
+    path = "/stream"
+    chunk = b"x" * 65536
+    total_chunks = (downloads.PROBE_LIMIT_BYTES // len(chunk)) + 2
+
+    async def head_handler(request):
+        return web.Response(status=200)
+
+    async def stream_handler(request):
+        resp = web.StreamResponse(status=200)
+        resp.content_type = "application/octet-stream"
+        await resp.prepare(request)
+        for _ in range(total_chunks):
+            await resp.write(chunk)
+        await resp.write_eof()
+        return resp
+
+    runner, _, base_url = await _start_test_site(
+        ("HEAD", path, head_handler),
+        ("GET", path, stream_handler),
+    )
+
+    try:
+        url = f"{base_url}{path}"
+        async with aiohttp.ClientSession() as session:
+            with pytest.raises(ValueError) as excinfo:
+                async with temp_download(session, url):
+                    pass
+            assert "probe window" in str(excinfo.value)
+    finally:
+        await runner.cleanup()
+
+
+@pytest.mark.anyio
+async def test_temp_download_raises_when_all_candidates_fail():
+    downloads._DISCORD_EMOJI_HOSTS.add("127.0.0.1")
+    gif_path = "/emojis/fail.gif"
+    png_path = "/emojis/fail.png"
+
+    async def fail_415(request):
+        return web.Response(status=415)
+
+    async def fail_404(request):
+        return web.Response(status=404)
+
+    runner, _, base_url = await _start_test_site(
+        ("HEAD", gif_path, fail_415),
+        ("GET", gif_path, fail_415),
+        ("HEAD", png_path, fail_404),
+        ("GET", png_path, fail_404),
+    )
+
+    try:
+        url = f"{base_url}{gif_path}"
+        async with aiohttp.ClientSession() as session:
+            with pytest.raises(aiohttp.ClientResponseError) as excinfo:
+                async with temp_download(session, url):
+                    pass
+            assert excinfo.value.status in {404, 415}
+    finally:
+        downloads._DISCORD_EMOJI_HOSTS.discard("127.0.0.1")
+        await runner.cleanup()
+
+
+@pytest.mark.anyio
+async def test_temp_download_requires_session():
+    with pytest.raises(RuntimeError):
+        async with temp_download(None, "http://example.com"):
+            pass

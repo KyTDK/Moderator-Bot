@@ -11,6 +11,7 @@ import aiohttp
 from yarl import URL
 
 from ..constants import DEFAULT_DOWNLOAD_CAP_BYTES, TMP_DIR
+from ..utils.file_ops import safe_delete
 
 DEFAULT_CHUNK_SIZE = 1 << 17  # 128 KiB
 MIN_CHUNK_SIZE = 1 << 15  # 32 KiB
@@ -20,6 +21,12 @@ MAX_BUFFER_SIZE = 1 << 22  # 4 MiB
 TARGET_CHUNK_SPLIT = 12
 PROBE_LIMIT_BYTES = 512 * 1024  # 512 KiB
 TENOR_VIDEO_EXTS = (".mp4", ".webm")
+_DISCORD_EMOJI_HOSTS = {
+    "cdn.discordapp.com",
+    "cdn.discordapp.net",
+    "media.discordapp.com",
+    "media.discordapp.net",
+}
 
 
 def is_tenor_host(host: str) -> bool:
@@ -75,6 +82,66 @@ async def resolve_media_url(session, url: str, *, prefer_video: bool = True) -> 
         if ok:
             return alt_url
     return url
+
+
+def _expand_discord_emoji_variants(url: str) -> list[str]:
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    if host not in _DISCORD_EMOJI_HOSTS:
+        return [url]
+    if not parsed.path.startswith("/emojis/"):
+        return [url]
+    base, ext = os.path.splitext(parsed.path)
+    if ext.lower() != ".gif":
+        return [url]
+    variants = [url]
+    for alt_ext in (".webp", ".png"):
+        alt_path = f"{base}{alt_ext}"
+        variants.append(urlunparse(parsed._replace(path=alt_path)))
+    return variants
+
+
+def _build_download_candidates(original_url: str, resolved_url: str) -> list[str]:
+    seen: set[str] = set()
+    candidates: list[str] = []
+
+    def _add(url: str) -> None:
+        for variant in _expand_discord_emoji_variants(url):
+            if variant in seen:
+                continue
+            seen.add(variant)
+            candidates.append(variant)
+
+    _add(resolved_url)
+    if resolved_url != original_url:
+        _add(original_url)
+    return candidates
+
+
+def _resolve_effective_ext(provided_ext: str | None, candidate_url: str) -> str:
+    if provided_ext:
+        return provided_ext if provided_ext.startswith(".") else f".{provided_ext}"
+    candidate_ext = os.path.splitext(urlparse(candidate_url).path)[1]
+    return candidate_ext or ".bin"
+
+
+def _cap_error(
+    *,
+    unlimited: bool,
+    head_ok: bool,
+    head_length: int | None,
+    download_cap_bytes: int | None,
+) -> ValueError | None:
+    if (
+        unlimited
+        or not head_ok
+        or not head_length
+        or download_cap_bytes is None
+    ):
+        return None
+    if head_length > download_cap_bytes:
+        return ValueError(f"Download exceeds cap ({head_length} bytes)")
+    return None
 
 
 class TempDownloadTelemetry:
@@ -176,75 +243,94 @@ async def temp_download(
     resolved_url = await resolve_media_url(session, url, prefer_video=prefer_video)
     telemetry.resolve_latency_ms = (time.perf_counter() - resolve_started) * 1000
     unlimited = download_cap_bytes is None
-    if ext and not ext.startswith('.'):
-        ext = '.' + ext
-    resolved_path_ext = os.path.splitext(urlparse(resolved_url).path)[1]
-    ext = ext or resolved_path_ext or '.bin'
-    head_ok, head_length, head_duration = await _probe_head(session, resolved_url)
-    telemetry.record_head_duration(head_duration)
-    if not unlimited and head_ok and head_length and head_length > download_cap_bytes:
-        if resolved_url != url:
-            resolved_url = url
-            head_ok, head_length, head_duration = await _probe_head(session, resolved_url)
-            telemetry.record_head_duration(head_duration)
-            if head_ok and head_length and head_length > download_cap_bytes:
-                raise ValueError(f"Download exceeds cap ({head_length} bytes)")
-        else:
-            raise ValueError(f"Download exceeds cap ({head_length} bytes)")
 
-    path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{ext}")
+    download_path: str | None = None
+    last_exc: Exception | None = None
 
-    telemetry.content_length = head_length
-    telemetry.resolved_url = resolved_url
+    candidates = _build_download_candidates(url, resolved_url)
 
-    try:
-        download_started = time.perf_counter()
-        async with session.get(_prepare_request_url(resolved_url)) as resp:
-            resp.raise_for_status()
-            response_length = resp.content_length or head_length
-            chunk_size, buffer_limit = _resolve_stream_config(response_length)
-            total_downloaded = 0
-            with open(path, "wb") as file_obj:
-                buffer = bytearray()
-                async for chunk in resp.content.iter_chunked(chunk_size):
-                    if not chunk:
-                        continue
-                    buffer.extend(chunk)
-                    total_downloaded += len(chunk)
-                    if (
-                        not unlimited
-                        and response_length is None
-                        and total_downloaded > PROBE_LIMIT_BYTES
-                    ):
-                        raise ValueError("Download exceeded probe window")
-                    if not unlimited and total_downloaded > download_cap_bytes:
-                        raise ValueError("Download exceeded cap")
-                    if len(buffer) >= buffer_limit:
+    for candidate_url in candidates:
+        effective_ext = _resolve_effective_ext(ext, candidate_url)
+
+        head_ok, head_length, head_duration = await _probe_head(session, candidate_url)
+        telemetry.record_head_duration(head_duration)
+        telemetry.content_length = head_length
+        telemetry.resolved_url = candidate_url
+
+        cap_exc = _cap_error(
+            unlimited=unlimited,
+            head_ok=head_ok,
+            head_length=head_length,
+            download_cap_bytes=download_cap_bytes,
+        )
+        if cap_exc is not None:
+            last_exc = cap_exc
+            continue
+
+        candidate_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{effective_ext}")
+
+        try:
+            download_started = time.perf_counter()
+            async with session.get(_prepare_request_url(candidate_url)) as resp:
+                resp.raise_for_status()
+                response_length = resp.content_length or head_length
+                chunk_size, buffer_limit = _resolve_stream_config(response_length)
+                total_downloaded = 0
+                with open(candidate_path, "wb") as file_obj:
+                    buffer = bytearray()
+                    async for chunk in resp.content.iter_chunked(chunk_size):
+                        if not chunk:
+                            continue
+                        buffer.extend(chunk)
+                        total_downloaded += len(chunk)
+                        if (
+                            not unlimited
+                            and response_length is None
+                            and total_downloaded > PROBE_LIMIT_BYTES
+                        ):
+                            raise ValueError("Download exceeded probe window")
+                        if (
+                            not unlimited
+                            and download_cap_bytes is not None
+                            and total_downloaded > download_cap_bytes
+                        ):
+                            raise ValueError("Download exceeded cap")
+                        if len(buffer) >= buffer_limit:
+                            write_started = time.perf_counter()
+                            file_obj.write(buffer)
+                            telemetry.record_disk_write(
+                                (time.perf_counter() - write_started) * 1000
+                            )
+                            buffer.clear()
+                    if buffer:
                         write_started = time.perf_counter()
                         file_obj.write(buffer)
                         telemetry.record_disk_write(
                             (time.perf_counter() - write_started) * 1000
                         )
-                        buffer = bytearray()
-                if buffer:
-                    write_started = time.perf_counter()
-                    file_obj.write(buffer)
-                    telemetry.record_disk_write(
-                        (time.perf_counter() - write_started) * 1000
-                    )
-            telemetry.download_latency_ms = (time.perf_counter() - download_started) * 1000
-            telemetry.bytes_downloaded = total_downloaded
-    except Exception:
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
-        raise
+                telemetry.download_latency_ms = (
+                    (time.perf_counter() - download_started) * 1000
+                )
+                telemetry.bytes_downloaded = total_downloaded
+            download_path = candidate_path
+            break
+        except aiohttp.ClientResponseError as exc:
+            last_exc = exc
+            safe_delete(candidate_path)
+            if exc.status in {404, 415}:
+                continue
+            raise
+        except Exception as exc:
+            last_exc = exc
+            safe_delete(candidate_path)
+            raise
+
+    if download_path is None:
+        if last_exc is not None:
+            raise last_exc
+        raise RuntimeError("Failed to download media: no candidates succeeded")
 
     try:
-        yield TempDownloadResult(path=path, telemetry=telemetry)
+        yield TempDownloadResult(path=download_path, telemetry=telemetry)
     finally:
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
+        safe_delete(download_path)
