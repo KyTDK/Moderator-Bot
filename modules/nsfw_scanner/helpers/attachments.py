@@ -488,6 +488,8 @@ async def check_attachment(
             pipeline_metrics
         )
         scan_result["pipeline_metrics"] = pipeline_metrics
+        if pipeline_accelerated is not None:
+            pipeline_metrics.setdefault("accelerated", bool(pipeline_accelerated))
         if pre_download_bytes is not None and pipeline_metrics.get("bytes_downloaded") is None:
             pipeline_metrics["bytes_downloaded"] = pre_download_bytes
         elif pipeline_metrics.get("bytes_downloaded") is None and file_size is not None:

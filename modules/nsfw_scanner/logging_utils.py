@@ -9,6 +9,7 @@ from modules.utils.log_channel import DeveloperLogField, log_to_developer_channe
 
 from .constants import LOG_CHANNEL_ID
 from .helpers.metrics import ScanTelemetry, collect_scan_telemetry
+from .helpers.slow_scan_metrics import gather_slow_scan_diagnostics
 
 log = logging.getLogger(__name__)
 
@@ -117,6 +118,52 @@ async def log_slow_scan_if_needed(
                 inline=True,
             )
         )
+
+    diagnostics = None
+    accelerated_hint = getattr(telemetry, "accelerated", None)
+    try:
+        diagnostics = await gather_slow_scan_diagnostics(
+            bot,
+            telemetry=telemetry,
+            total_ms=total_ms,
+            accelerated_hint=accelerated_hint,
+        )
+    except Exception:  # pragma: no cover - defensive diagnostic capture
+        log.debug("Failed to gather slow scan diagnostics", exc_info=True)
+
+    if diagnostics is not None:
+        if diagnostics.path_line:
+            fields.append(
+                DeveloperLogField(
+                    name="Pipeline Path",
+                    value=diagnostics.path_line[:1024],
+                    inline=False,
+                )
+            )
+        if diagnostics.queue_health_lines:
+            fields.append(
+                DeveloperLogField(
+                    name="Queue Health",
+                    value="\n".join(diagnostics.queue_health_lines)[:1024],
+                    inline=False,
+                )
+            )
+        if diagnostics.queue_rate_lines:
+            fields.append(
+                DeveloperLogField(
+                    name="Queue Rates",
+                    value="\n".join(diagnostics.queue_rate_lines)[:1024],
+                    inline=False,
+                )
+            )
+        if diagnostics.processing_rate_lines:
+            fields.append(
+                DeveloperLogField(
+                    name="Processing Rates",
+                    value="\n".join(diagnostics.processing_rate_lines)[:1024],
+                    inline=False,
+                )
+            )
 
     failure_detail_lines: list[str] = []
 

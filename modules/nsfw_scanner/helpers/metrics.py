@@ -32,6 +32,25 @@ def _coerce_int(value: Any) -> int | None:
     return number
 
 
+def _coerce_bool(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        if value == 1:
+            return True
+        if value == 0:
+            return False
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "y", "on"}:
+            return True
+        if normalized in {"false", "0", "no", "n", "off"}:
+            return False
+    return None
+
+
 def _add_latency_step(
     target: dict[str, dict[str, Any]],
     key: str,
@@ -237,6 +256,7 @@ class ScanTelemetry:
     average_latency_per_frame_ms: Optional[float] = None
     bytes_downloaded: Optional[int] = None
     early_exit: Any = None
+    accelerated: Optional[bool] = None
 
 
 def normalize_latency_breakdown(entries: Any) -> dict[str, dict[str, Any]]:
@@ -462,10 +482,12 @@ def collect_scan_telemetry(
         breakdown_source = pipeline_metrics.get("latency_breakdown_ms")
         bytes_downloaded = _coerce_int(pipeline_metrics.get("bytes_downloaded"))
         early_exit = pipeline_metrics.get("early_exit")
+        accelerated_flag = _coerce_bool(pipeline_metrics.get("accelerated"))
     else:
         breakdown_source = None
         bytes_downloaded = None
         early_exit = None
+        accelerated_flag = None
 
     frame_lines = format_frame_metrics_lines(frame_metrics)
     breakdown_lines = format_latency_breakdown_lines(breakdown_source)
@@ -496,4 +518,5 @@ def collect_scan_telemetry(
         average_latency_per_frame_ms=average_latency_per_frame,
         bytes_downloaded=bytes_downloaded,
         early_exit=early_exit,
+        accelerated=accelerated_flag,
     )
