@@ -141,6 +141,7 @@ class DebugCog(commands.Cog):
         # Worker queue backlogs and autoscale info
         try:
             queue_lines: list[str] = []
+            rate_lines: list[str] = []
             def fmt_line(cog_name: str, queue_name: str, q) -> str:
                 m = getattr(q, "metrics", None)
                 data = m() if callable(m) else None
@@ -194,12 +195,19 @@ class DebugCog(commands.Cog):
                 run_last = _float(data.get("last_runtime"))
                 run_long = _float(data.get("longest_runtime"))
                 running_flag = bool(data.get("running"))
+                arrival_rate = _float(data.get("arrival_rate_per_min"))
+                completion_rate = _float(data.get("completion_rate_per_min"))
+                adaptive_mode = bool(data.get("adaptive_mode"))
+                adaptive_target = _int(data.get("adaptive_target_workers"), max_workers)
+                adaptive_baseline = _int(data.get("adaptive_baseline_workers"), baseline)
+                rate_window = _float(data.get("rate_tracking_window"), 0.0)
+
                 parts = [
                     f"[{cog_name}:{queue_name}]",
                     f"backlog={backlog}",
                     f"busy={busy}/{max_workers}",
                     f"base={baseline}",
-                    f"burst={burst}",
+                    f"target={adaptive_target}" if adaptive_mode else f"burst={burst}",
                     f"hi={hi}",
                     f"lo={lo}",
                     f"pend={pending}",
@@ -211,7 +219,23 @@ class DebugCog(commands.Cog):
                 ]
                 if limit is not None:
                     parts.insert(7, f"limit={limit}")
-                return " ".join(parts)
+                summary_line = " ".join(parts)
+
+                if rate_window > 0:
+                    window_minutes = rate_window / 60.0
+                    window_part = f"{window_minutes:.1f}m" if rate_window >= 60 else f"{rate_window:.0f}s"
+                else:
+                    window_part = "n/a"
+                worker_descriptor = (
+                    f"target={adaptive_target} baseline={adaptive_baseline}"
+                    if adaptive_mode
+                    else f"max={max_workers} baseline={baseline}"
+                )
+                rate_line = (
+                    f"{queue_name}@{cog_name}: req={arrival_rate:.2f}/min "
+                    f"proc={completion_rate:.2f}/min {worker_descriptor} window={window_part}"
+                )
+                return summary_line, rate_line
 
             for cog_name in ("AggregatedModerationCog", "EventDispatcherCog", "ScamDetectionCog"):
                 cog = self.bot.get_cog(cog_name)
@@ -220,12 +244,20 @@ class DebugCog(commands.Cog):
                 for qname in ("free_queue", "accelerated_queue"):
                     q = getattr(cog, qname, None)
                     if q is not None:
-                        queue_lines.append(fmt_line(cog_name, qname.replace("_queue", ""), q))
+                        summary, rate_line = fmt_line(cog_name, qname.replace("_queue", ""), q)
+                        queue_lines.append(summary)
+                        rate_lines.append(rate_line)
 
             if queue_lines:
                 embed.add_field(
                     name=debug_texts["worker_name"],
                     value=f"```\n" + "\n".join(queue_lines) + "\n```",
+                    inline=False,
+                )
+            if rate_lines:
+                embed.add_field(
+                    name=self.bot.translate("cogs.debug.worker_rates", guild_id=guild_id),
+                    value=f"```\n" + "\n".join(rate_lines) + "\n```",
                     inline=False,
                 )
         except Exception as e:

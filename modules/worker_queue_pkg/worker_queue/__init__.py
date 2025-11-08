@@ -1,5 +1,5 @@
 from __future__ import annotations
 
-from .worker_queue.main import WorkerQueue
+from .main import WorkerQueue
 
 __all__ = ["WorkerQueue"]

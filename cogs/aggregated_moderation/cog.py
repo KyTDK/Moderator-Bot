@@ -12,6 +12,7 @@ from modules.utils import mysql
 from modules.worker_queue import WorkerQueue
 from modules.worker_queue_alerts import SingularTaskReporter
 
+from .adaptive_controller import AdaptiveQueueController
 from .config import AggregatedModerationConfig, load_config
 from .handlers import ModerationHandlers
 from .queue_monitor import FreeQueueMonitor
@@ -25,30 +26,37 @@ class AggregatedModerationCog(commands.Cog):
         self.scanner = NSFWScanner(bot)
         self._singular_task_reporter = SingularTaskReporter(bot)
 
-        autoscale = self.config.autoscale
+        free_policy = self.config.free_policy
+        accel_policy = self.config.accelerated_policy
+        controller_cfg = self.config.controller
+
         self.free_queue = WorkerQueue(
-            max_workers=self.config.free.max_workers,
-            autoscale_max=self.config.free.autoscale_max,
-            backlog_high_watermark=autoscale.free_backlog_high,
-            backlog_low_watermark=autoscale.backlog_low,
-            autoscale_check_interval=autoscale.check_interval,
-            scale_down_grace=autoscale.scale_down_grace,
+            max_workers=free_policy.min_workers,
+            autoscale_max=free_policy.min_workers,
+            backlog_high_watermark=free_policy.backlog_soft_limit,
+            backlog_low_watermark=max(1, free_policy.backlog_low),
+            autoscale_check_interval=controller_cfg.tick_interval,
+            scale_down_grace=max(5.0, controller_cfg.scale_down_cooldown),
             name="free",
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
             developer_log_context="aggregated_moderation.free_queue",
+            adaptive_mode=True,
+            rate_tracking_window=controller_cfg.rate_window,
         )
         self.accelerated_queue = WorkerQueue(
-            max_workers=self.config.accelerated.max_workers,
-            autoscale_max=self.config.accelerated.autoscale_max,
-            backlog_high_watermark=autoscale.accelerated_backlog_high,
-            backlog_low_watermark=autoscale.backlog_low,
-            autoscale_check_interval=autoscale.check_interval,
-            scale_down_grace=autoscale.scale_down_grace,
+            max_workers=accel_policy.min_workers,
+            autoscale_max=accel_policy.min_workers,
+            backlog_high_watermark=accel_policy.backlog_soft_limit,
+            backlog_low_watermark=max(0, accel_policy.backlog_low),
+            autoscale_check_interval=controller_cfg.tick_interval,
+            scale_down_grace=max(5.0, controller_cfg.scale_down_cooldown),
             name="accelerated",
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
             developer_log_context="aggregated_moderation.accelerated_queue",
+            adaptive_mode=True,
+            rate_tracking_window=controller_cfg.rate_window,
         )
 
         self.queue_monitor = FreeQueueMonitor(
@@ -61,6 +69,13 @@ class AggregatedModerationCog(commands.Cog):
             bot=bot,
             scanner=self.scanner,
             enqueue_task=self.add_to_queue,
+        )
+        self._adaptive_controller = AdaptiveQueueController(
+            free_queue=self.free_queue,
+            accelerated_queue=self.accelerated_queue,
+            free_policy=free_policy,
+            accelerated_policy=accel_policy,
+            config=controller_cfg,
         )
 
     def _is_new_guild(self, guild_id: int) -> bool:
@@ -110,9 +125,11 @@ class AggregatedModerationCog(commands.Cog):
         await self.scanner.start()
         await self.free_queue.start()
         await self.accelerated_queue.start()
+        await self._adaptive_controller.start()
         await self.queue_monitor.start()
 
     async def cog_unload(self):
+        await self._adaptive_controller.stop()
         await self.scanner.stop()
         await self.free_queue.stop()
         await self.accelerated_queue.stop()

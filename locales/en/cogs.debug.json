@@ -25,6 +25,7 @@
         "worker_error": "(error collecting metrics: {error})",
         "footer": "Host: {host} | Python {python_version}"
       },
+      "worker_rates": "Queue Throughput",
       "locale": {
         "current": "Current locale: {locale}"
       }

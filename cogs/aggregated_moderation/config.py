@@ -2,26 +2,29 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Final
-
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 @dataclass(frozen=True, slots=True)
-class QueueConfig:
+class AdaptiveQueuePolicy:
+    name: str
+    min_workers: int
     max_workers: int
-    autoscale_max: int
+    backlog_target: int
+    backlog_low: int
+    backlog_soft_limit: int
+    catchup_batch: int
+    provision_bias: float
+    recovery_bias: float
+    wait_threshold: float
+    min_runtime: float
+    maintain_backlog: bool
 
 
 @dataclass(frozen=True, slots=True)
-class AutoscaleConfig:
-    free_backlog_high: int
-    accelerated_backlog_high: int
-    backlog_low: int
-    check_interval: float
-    scale_down_grace: float
+class AdaptiveControllerConfig:
+    tick_interval: float = 2.0
+    rate_window: float = 180.0
+    scale_down_cooldown: float = 20.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,118 +36,83 @@ class MonitorConfig:
 
 @dataclass(frozen=True, slots=True)
 class AggregatedModerationConfig:
-    free: QueueConfig
-    accelerated: QueueConfig
-    autoscale: AutoscaleConfig
+    free_policy: AdaptiveQueuePolicy
+    accelerated_policy: AdaptiveQueuePolicy
+    controller: AdaptiveControllerConfig
     monitor: MonitorConfig
 
 
-# Environment variable names used to configure the aggregated moderation workers.
-# Baseline worker pool size for the free queue.
-ENV_FREE_MAX_WORKERS: Final[str] = "FREE_MAX_WORKERS"
-# Baseline worker pool size for the accelerated queue.
-ENV_ACCELERATED_MAX_WORKERS: Final[str] = "ACCELERATED_MAX_WORKERS"
-# Upper autoscale limit for the free queue.
-ENV_FREE_MAX_WORKERS_BURST: Final[str] = "FREE_MAX_WORKERS_BURST"
-# Upper autoscale limit for the accelerated queue.
-ENV_ACCELERATED_MAX_WORKERS_BURST: Final[str] = "ACCELERATED_MAX_WORKERS_BURST"
-# Backlog that triggers autoscale for the free queue.
-ENV_FREE_WORKER_BACKLOG_HIGH: Final[str] = "FREE_WORKER_BACKLOG_HIGH"
-# Backlog that triggers autoscale for the accelerated queue.
-ENV_ACCELERATED_WORKER_BACKLOG_HIGH: Final[str] = "ACCELERATED_WORKER_BACKLOG_HIGH"
-# Legacy shared backlog threshold (used as a fallback).
-ENV_WORKER_BACKLOG_HIGH: Final[str] = "WORKER_BACKLOG_HIGH"
-# Backlog level where autoscale can scale down.
-ENV_WORKER_BACKLOG_LOW: Final[str] = "WORKER_BACKLOG_LOW"
-# Polling cadence for autoscale decisions.
-ENV_AUTOSCALE_CHECK_INTERVAL: Final[str] = "WORKER_AUTOSCALE_CHECK_INTERVAL"
-# Cooldown before reducing workers after a burst.
-ENV_AUTOSCALE_SCALE_DOWN_GRACE: Final[str] = "WORKER_AUTOSCALE_SCALE_DOWN_GRACE"
-
-
-# Default values for the above environment variables to keep configuration self-contained.
-ENV_DEFAULTS: Final = {
-    ENV_FREE_MAX_WORKERS: "2",
-    ENV_ACCELERATED_MAX_WORKERS: "5",
-    ENV_FREE_MAX_WORKERS_BURST: "5",
-    ENV_ACCELERATED_MAX_WORKERS_BURST: "10",
-    ENV_FREE_WORKER_BACKLOG_HIGH: "100",
-    ENV_ACCELERATED_WORKER_BACKLOG_HIGH: "30",
-    ENV_WORKER_BACKLOG_HIGH: "30",
-    ENV_WORKER_BACKLOG_LOW: "5",
-    ENV_AUTOSCALE_CHECK_INTERVAL: "2",
-    ENV_AUTOSCALE_SCALE_DOWN_GRACE: "15",
-}
-
-
-def _int_env(name: str, default: str | None) -> int:
-    """Fetch an integer from the environment, falling back to the provided default."""
-    raw = os.getenv(name, default or "")
-    try:
-        return int(raw)
-    except (TypeError, ValueError):
-        if default is None:
-            raise
-        return int(default)
-
-
-def _float_env(name: str, default: str) -> float:
-    """Fetch a float from the environment, falling back to the provided default."""
-    raw = os.getenv(name, default)
-    try:
-        return float(raw)
-    except (TypeError, ValueError):
-        return float(default)
+def _clamp_int(value: int, *, minimum: int, maximum: int) -> int:
+    return max(minimum, min(maximum, value))
 
 
 def load_config() -> AggregatedModerationConfig:
-    free_max = _int_env(ENV_FREE_MAX_WORKERS, ENV_DEFAULTS[ENV_FREE_MAX_WORKERS])
-    accel_max = _int_env(ENV_ACCELERATED_MAX_WORKERS, ENV_DEFAULTS[ENV_ACCELERATED_MAX_WORKERS])
+    cpu_count = max(1, os.cpu_count() or 4)
 
-    # Allow bursts to fall back to the steady-state worker count when no override is supplied.
-    free_burst_default = ENV_DEFAULTS[ENV_FREE_MAX_WORKERS_BURST] or str(free_max)
-    accel_burst_default = ENV_DEFAULTS[ENV_ACCELERATED_MAX_WORKERS_BURST] or str(accel_max)
-    free_burst = _int_env(ENV_FREE_MAX_WORKERS_BURST, free_burst_default)
-    accel_burst = _int_env(ENV_ACCELERATED_MAX_WORKERS_BURST, accel_burst_default)
+    free_min_workers = 1
+    free_max_workers = max(6, cpu_count * 2)
+    free_backlog_target = max(18, cpu_count * 2)
+    free_backlog_low = max(6, int(free_backlog_target * 0.35))
+    free_backlog_soft = max(50, int(free_backlog_target * 2.5))
+    free_catchup = max(8, int(free_backlog_target * 0.75))
 
-    shared_backlog_high = os.getenv(ENV_WORKER_BACKLOG_HIGH)
-    # Prefer queue-specific backlog thresholds, but honour the shared knob when set.
-    free_backlog_high_default = shared_backlog_high or ENV_DEFAULTS[ENV_FREE_WORKER_BACKLOG_HIGH]
-    accel_backlog_high_default = shared_backlog_high or ENV_DEFAULTS[ENV_ACCELERATED_WORKER_BACKLOG_HIGH]
-    free_backlog_high = _int_env(ENV_FREE_WORKER_BACKLOG_HIGH, free_backlog_high_default)
-    accel_backlog_high = _int_env(
-        ENV_ACCELERATED_WORKER_BACKLOG_HIGH,
-        accel_backlog_high_default,
+    accelerated_min_workers = 2
+    accelerated_max_workers = max(5, cpu_count * 3)
+    accelerated_backlog_target = 0
+    accelerated_backlog_low = 0
+    accelerated_backlog_soft = max(3, accelerated_min_workers * 2)
+    accelerated_catchup = max(3, accelerated_min_workers * 2)
+
+    free_policy = AdaptiveQueuePolicy(
+        name="free",
+        min_workers=free_min_workers,
+        max_workers=free_max_workers,
+        backlog_target=free_backlog_target,
+        backlog_low=_clamp_int(free_backlog_low, minimum=1, maximum=free_backlog_target),
+        backlog_soft_limit=free_backlog_soft,
+        catchup_batch=free_catchup,
+        provision_bias=0.82,
+        recovery_bias=1.08,
+        wait_threshold=18.0,
+        min_runtime=0.35,
+        maintain_backlog=True,
     )
 
-    backlog_low = _int_env(ENV_WORKER_BACKLOG_LOW, ENV_DEFAULTS[ENV_WORKER_BACKLOG_LOW])
-    check_interval = _float_env(
-        ENV_AUTOSCALE_CHECK_INTERVAL,
-        ENV_DEFAULTS[ENV_AUTOSCALE_CHECK_INTERVAL],
+    accelerated_policy = AdaptiveQueuePolicy(
+        name="accelerated",
+        min_workers=accelerated_min_workers,
+        max_workers=accelerated_max_workers,
+        backlog_target=accelerated_backlog_target,
+        backlog_low=accelerated_backlog_low,
+        backlog_soft_limit=accelerated_backlog_soft,
+        catchup_batch=accelerated_catchup,
+        provision_bias=1.15,
+        recovery_bias=1.35,
+        wait_threshold=4.5,
+        min_runtime=0.2,
+        maintain_backlog=False,
     )
-    scale_down_grace = _float_env(
-        ENV_AUTOSCALE_SCALE_DOWN_GRACE,
-        ENV_DEFAULTS[ENV_AUTOSCALE_SCALE_DOWN_GRACE],
+
+    controller = AdaptiveControllerConfig(
+        tick_interval=2.0,
+        rate_window=180.0,
+        scale_down_cooldown=25.0,
     )
+
+    monitor = MonitorConfig()
 
     return AggregatedModerationConfig(
-        free=QueueConfig(max_workers=free_max, autoscale_max=free_burst),
-        accelerated=QueueConfig(max_workers=accel_max, autoscale_max=accel_burst),
-        autoscale=AutoscaleConfig(
-            free_backlog_high=free_backlog_high,
-            accelerated_backlog_high=accel_backlog_high,
-            backlog_low=backlog_low,
-            check_interval=check_interval,
-            scale_down_grace=scale_down_grace,
-        ),
-        monitor=MonitorConfig(),
+        free_policy=free_policy,
+        accelerated_policy=accelerated_policy,
+        controller=controller,
+        monitor=monitor,
     )
 
 
 __all__ = [
+    "AdaptiveControllerConfig",
+    "AdaptiveQueuePolicy",
     "AggregatedModerationConfig",
-    "AutoscaleConfig",
     "MonitorConfig",
-    "QueueConfig",
     "load_config",
 ]
