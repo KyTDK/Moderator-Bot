@@ -66,10 +66,7 @@ async def _fetch_custom_block_rows() -> list[dict[str, Any]]:
     return await asyncio.to_thread(_list_raw)
 
 
-def _normalise_custom_block_entry(
-    entry: Mapping[str, Any],
-    guild_id: int,
-) -> dict[str, Any] | None:
+def _parse_custom_block_meta(entry: Mapping[str, Any]) -> dict[str, Any]:
     meta_raw = entry.get("meta")
     if isinstance(meta_raw, str):
         try:
@@ -80,6 +77,21 @@ def _normalise_custom_block_entry(
         meta = dict(meta_raw)
     else:
         meta = {}
+    return meta
+
+
+def _extract_vector_id(entry: Mapping[str, Any]) -> int | None:
+    vector_id_value = entry.get("id")
+    if vector_id_value is None:
+        vector_id_value = entry.get("vector_id")
+    return _coerce_int(vector_id_value)
+
+
+def _normalise_custom_block_entry(
+    entry: Mapping[str, Any],
+    guild_id: int,
+) -> dict[str, Any] | None:
+    meta = _parse_custom_block_meta(entry)
 
     try:
         meta_guild_id = int(meta.get("guild_id", -1))
@@ -88,11 +100,7 @@ def _normalise_custom_block_entry(
     if meta_guild_id != int(guild_id):
         return None
 
-    vector_id_value = entry.get("id", meta.get("vector_id"))
-    try:
-        vector_id = int(vector_id_value) if vector_id_value is not None else None
-    except (TypeError, ValueError):
-        vector_id = vector_id_value
+    vector_id = _extract_vector_id(entry)
 
     return {
         "vector_id": vector_id,
@@ -247,17 +255,51 @@ async def delete_custom_block(guild_id: int, vector_id: int) -> dict[str, Any]:
     if not clip_vectors.is_available():
         raise CustomBlockError("Milvus vector store is unavailable.")
 
-    expr = (
-        f"id in [{normalized_vector_id}] and "
-        f"category == {json.dumps(CUSTOM_BLOCK_CATEGORY)}"
-    )
-    raw = clip_vectors.list_entries(expr=expr)
-    normalized = (
-        _normalise_custom_block_entry(entry, guild_id)
-        for entry in raw
-    )
-    match = next((entry for entry in normalized if entry is not None), None)
-    if match is None:
+    rows = await _fetch_custom_block_rows()
+    target_entry: dict[str, Any] | None = None
+    ownership_conflict: list[dict[str, Any]] = []
+    for entry in rows:
+        entry_vector_id = _extract_vector_id(entry)
+        if entry_vector_id != normalized_vector_id:
+            continue
+
+        meta = _parse_custom_block_meta(entry)
+        entry_guild_id = _coerce_int(meta.get("guild_id"))
+        if entry_guild_id == int(guild_id):
+            target_entry = (
+                _normalise_custom_block_entry(entry, guild_id)
+                or {
+                    "vector_id": normalized_vector_id,
+                    "label": meta.get("label"),
+                    "uploaded_by": meta.get("uploaded_by"),
+                    "uploaded_at": meta.get("uploaded_at"),
+                    "source": meta.get("source"),
+                    "category": entry.get("category"),
+                    "metadata": meta,
+                }
+            )
+            break
+
+        ownership_conflict.append(
+            {
+                "vector_id": entry_vector_id,
+                "guild_id": entry_guild_id,
+                "custom_block": meta.get("custom_block"),
+            }
+        )
+
+    if target_entry is None:
+        if ownership_conflict:
+            log.warning(
+                "Custom image block delete request rejected due to guild mismatch",
+                extra={
+                    "guild_id": guild_id,
+                    "vector_id": normalized_vector_id,
+                    "conflicts": ownership_conflict,
+                },
+            )
+            raise CustomBlockError("Vector does not exist for this guild.")
+
         log.info(
             "Custom image block already absent",
             extra={
@@ -278,15 +320,31 @@ async def delete_custom_block(guild_id: int, vector_id: int) -> dict[str, Any]:
     if stats is None:
         raise CustomBlockError("Milvus collection is not ready; delete aborted.")
 
+    remaining = clip_vectors.list_entries(
+        expr=f"id in [{normalized_vector_id}]"
+    )
+    if remaining:
+        log.warning(
+            "Custom image block still present after delete attempt",
+            extra={
+                "guild_id": guild_id,
+                "vector_id": normalized_vector_id,
+                "remaining": remaining,
+            },
+        )
+        raise CustomBlockError(
+            "Failed to delete custom block vector; please retry later or contact support."
+        )
+
     log.info(
         "Deleted custom image block",
         extra={
             "guild_id": guild_id,
             "vector_id": normalized_vector_id,
-            "label": match.get("label"),
+            "label": target_entry.get("label"),
         },
     )
-    return match
+    return target_entry
 
 
 __all__ = [
