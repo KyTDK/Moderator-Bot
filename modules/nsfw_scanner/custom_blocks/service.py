@@ -258,7 +258,21 @@ async def delete_custom_block(guild_id: int, vector_id: int) -> dict[str, Any]:
     )
     match = next((entry for entry in normalized if entry is not None), None)
     if match is None:
-        raise CustomBlockError("Vector does not exist for this guild.")
+        log.info(
+            "Custom image block already absent",
+            extra={
+                "guild_id": guild_id,
+                "vector_id": normalized_vector_id,
+            },
+        )
+        return {
+            "vector_id": normalized_vector_id,
+            "label": None,
+            "uploaded_by": None,
+            "uploaded_at": None,
+            "source": None,
+            "not_found": True,
+        }
 
     stats = await clip_vectors.delete_vectors([normalized_vector_id])
     if stats is None:

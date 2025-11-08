@@ -119,7 +119,7 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
             if vector_id is None:
                 raise CustomBlockError("vector_id is required for delete.")
             deleted = await delete_custom_block(guild_id, vector_id)
-            return {
+            response = {
                 "request_id": request_id,
                 "status": "ok",
                 "action": "delete",
@@ -127,6 +127,9 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
                 "vector_id": str(vector_id),
                 "label": str(deleted.get("label") or ""),
             }
+            if deleted.get("not_found"):
+                response["not_found"] = "true"
+            return response
 
         if action == "list":
             entries = await list_custom_blocks(guild_id)
