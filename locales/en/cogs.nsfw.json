@@ -126,6 +126,18 @@
         },
         "view_text_strike_filter": {
           "description": "View the current NSFW text strike-only filtering state."
+        },
+        "custom_block_list": {
+          "description": "View custom image blocks configured for this server.",
+          "params": {
+            "page": "Page number to display."
+          }
+        },
+        "custom_block_delete": {
+          "description": "Remove a custom image block by vector id.",
+          "params": {
+            "vector_id": "Vector id to remove"
+          }
         }
       },
       "actions": {
@@ -177,6 +189,21 @@
         "status": "NSFW text strike-only filtering is currently **{state}**.",
         "enabled_label": "enabled",
         "disabled_label": "disabled"
+      },
+      "custom_blocks": {
+        "empty": "No custom image blocks are stored for this server.",
+        "heading": "**Custom image blocks (page {page}/{pages}, total {count}):**",
+        "row": "- `{vector_id}` • {label} • {added}{uploader_suffix}",
+        "label_missing": "Untitled",
+        "added_unknown": "time unknown",
+        "uploader_suffix": " (uploaded by {uploader})",
+        "uploader_unknown": "User ID {user_id}",
+        "page_out_of_range": "Page {page} is out of range; showing page {correct_page} instead.",
+        "invalid_id": "Vector id must be a positive integer.",
+        "removed": "Custom block `{vector_id}` ({label}) has been removed.",
+        "not_found": "Vector `{vector_id}` is not stored for this server.",
+        "error": "Could not delete vector `{vector_id}`: {reason}",
+        "error_generic": "Something went wrong while deleting custom block `{vector_id}`. Please try again."
       }
     }
   }

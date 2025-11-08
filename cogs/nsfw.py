@@ -1,6 +1,11 @@
+import logging
+import math
+from datetime import datetime, timezone
+
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
+from discord.utils import escape_markdown, format_dt
 
 from modules.i18n.strings import locale_namespace
 from modules.utils import mysql
@@ -13,6 +18,11 @@ from modules.utils.action_command_helpers import (
     process_add_action,
     process_remove_action,
     process_view_actions,
+)
+from modules.nsfw_scanner.custom_blocks import (
+    CustomBlockError,
+    delete_custom_block as remove_custom_image_block,
+    list_custom_blocks as fetch_custom_image_blocks,
 )
 from modules.nsfw_scanner.settings_keys import (
     NSFW_ACTION_SETTING,
@@ -32,6 +42,24 @@ TEXT_CATEGORY_SETTING = NSFW_TEXT_CATEGORY_SETTING
 text_category_manager = ListManager(TEXT_CATEGORY_SETTING)
 TEXT_THRESHOLD_SETTING = NSFW_TEXT_THRESHOLD_SETTING
 text_action_manager = ActionListManager(NSFW_TEXT_ACTION_SETTING)
+
+log = logging.getLogger(__name__)
+
+CUSTOM_BLOCK_TEXTS_FALLBACK: dict[str, str] = {
+    "empty": "No custom image blocks are stored for this server.",
+    "heading": "**Custom image blocks (page {page}/{pages}, total {count}):**",
+    "row": "- `{vector_id}` • {label} • {added}{uploader_suffix}",
+    "label_missing": "Untitled",
+    "added_unknown": "time unknown",
+    "uploader_suffix": " (uploaded by {uploader})",
+    "uploader_unknown": "User ID {user_id}",
+    "page_out_of_range": "Page {page} is out of range; showing page {correct_page} instead.",
+    "invalid_id": "Vector id must be a positive integer.",
+    "removed": "Custom block `{vector_id}` ({label}) has been removed.",
+    "not_found": "Vector `{vector_id}` is not stored for this server.",
+    "error": "Could not delete vector `{vector_id}`: {reason}",
+    "error_generic": "Something went wrong while deleting custom block `{vector_id}`. Please try again.",
+}
 
 
 def _parse_bool_setting(value, default: bool = False) -> bool:
@@ -561,6 +589,178 @@ class NSFWCog(commands.Cog):
             texts["status"].format(
                 state=texts["enabled_label" if enabled else "disabled_label"]
             ),
+            ephemeral=True,
+        )
+
+    @nsfw_group.command(
+        name="custom_blocks",
+        description=NSFW_META.string(
+            "custom_block_list",
+            "description",
+            default="View custom image blocks configured for this server.",
+        ),
+    )
+    @app_commands.describe(
+        page=NSFW_META.child("custom_block_list", "params").string(
+            "page",
+            default="Page number to display.",
+        )
+    )
+    async def list_custom_blocks(
+        self,
+        interaction: Interaction,
+        page: app_commands.Range[int, 1, 50] = 1,
+    ) -> None:
+        if not await require_accelerated(interaction):
+            return
+
+        guild = interaction.guild
+        if guild is None:
+            await interaction.response.send_message("Guild information is unavailable.", ephemeral=True)
+            return
+
+        guild_id = guild.id
+        translated = self.bot.translate("cogs.nsfw.custom_blocks", guild_id=guild_id)
+        texts = {**CUSTOM_BLOCK_TEXTS_FALLBACK}
+        if isinstance(translated, dict):
+            texts.update(translated)
+
+        entries = await fetch_custom_image_blocks(guild_id)
+        if not entries:
+            await interaction.response.send_message(texts["empty"], ephemeral=True)
+            return
+
+        page_size = 10
+        total = len(entries)
+        total_pages = max(1, math.ceil(total / page_size))
+        current_page = min(max(page, 1), total_pages)
+        start_index = (current_page - 1) * page_size
+        page_entries = entries[start_index : start_index + page_size]
+
+        lines: list[str] = []
+        for item in page_entries:
+            vector_id = item.get("vector_id")
+            label_raw = item.get("label") or ""
+            label = escape_markdown(str(label_raw).strip()) or texts["label_missing"]
+
+            uploaded_at = item.get("uploaded_at")
+            added_text = texts["added_unknown"]
+            if isinstance(uploaded_at, (int, float)):
+                try:
+                    dt = datetime.fromtimestamp(float(uploaded_at), tz=timezone.utc)
+                except (OverflowError, OSError, ValueError):
+                    dt = None
+                if dt is not None:
+                    added_text = format_dt(dt, style="R")
+
+            uploader_suffix = ""
+            uploader_id = item.get("uploaded_by")
+            if uploader_id:
+                try:
+                    uploader_int = int(str(uploader_id))
+                except (TypeError, ValueError):
+                    uploader_int = None
+                if uploader_int is not None:
+                    member = guild.get_member(uploader_int)
+                    if member is not None:
+                        display_name = escape_markdown(member.display_name)
+                    else:
+                        display_name = texts["uploader_unknown"].format(user_id=uploader_int)
+                    uploader_suffix = texts["uploader_suffix"].format(uploader=display_name)
+
+            lines.append(
+                texts["row"].format(
+                    vector_id=vector_id,
+                    label=label,
+                    added=added_text,
+                    uploader_suffix=uploader_suffix,
+                )
+            )
+
+        heading = texts["heading"].format(
+            page=current_page,
+            pages=total_pages,
+            count=total,
+        )
+        message = f"{heading}\n" + "\n".join(lines)
+        if page != current_page:
+            message += "\n\n" + texts["page_out_of_range"].format(
+                page=page,
+                correct_page=current_page,
+            )
+
+        await interaction.response.send_message(message, ephemeral=True)
+
+    @nsfw_group.command(
+        name="custom_block_delete",
+        description=NSFW_META.string(
+            "custom_block_delete",
+            "description",
+            default="Remove a custom image block by vector id.",
+        ),
+    )
+    @app_commands.describe(
+        vector_id=NSFW_META.child("custom_block_delete", "params").string(
+            "vector_id",
+            default="Vector id to delete.",
+        )
+    )
+    async def delete_custom_block(self, interaction: Interaction, vector_id: str) -> None:
+        if not await require_accelerated(interaction):
+            return
+
+        guild = interaction.guild
+        if guild is None:
+            await interaction.response.send_message("Guild information is unavailable.", ephemeral=True)
+            return
+
+        translated = self.bot.translate("cogs.nsfw.custom_blocks", guild_id=guild.id)
+        texts = {**CUSTOM_BLOCK_TEXTS_FALLBACK}
+        if isinstance(translated, dict):
+            texts.update(translated)
+
+        try:
+            normalized_id = int(str(vector_id))
+        except (TypeError, ValueError):
+            await interaction.response.send_message(texts["invalid_id"], ephemeral=True)
+            return
+
+        if normalized_id <= 0:
+            await interaction.response.send_message(texts["invalid_id"], ephemeral=True)
+            return
+
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            result = await remove_custom_image_block(guild.id, normalized_id)
+        except CustomBlockError as exc:
+            await interaction.followup.send(
+                texts["error"].format(vector_id=normalized_id, reason=str(exc)),
+                ephemeral=True,
+            )
+            return
+        except Exception:
+            log.exception(
+                "Failed to delete custom block %s for guild %s",
+                normalized_id,
+                guild.id,
+            )
+            await interaction.followup.send(
+                texts["error_generic"].format(vector_id=normalized_id),
+                ephemeral=True,
+            )
+            return
+
+        if result.get("not_found"):
+            await interaction.followup.send(
+                texts["not_found"].format(vector_id=normalized_id),
+                ephemeral=True,
+            )
+            return
+
+        label = result.get("label") or texts["label_missing"]
+        await interaction.followup.send(
+            texts["removed"].format(vector_id=normalized_id, label=label),
             ephemeral=True,
         )
 
