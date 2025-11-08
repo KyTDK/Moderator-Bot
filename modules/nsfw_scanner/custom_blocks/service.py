@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import time
 from typing import Any, Mapping
@@ -125,8 +126,88 @@ async def add_custom_block_from_bytes(
     return numeric_vector_id
 
 
+async def list_custom_blocks(guild_id: int) -> list[dict[str, Any]]:
+    """Return metadata for all custom block vectors belonging to *guild_id*."""
+
+    if not clip_vectors.is_available():
+        return []
+
+    def _list_raw() -> list[dict[str, Any]]:
+        return clip_vectors.list_entries(category=CUSTOM_BLOCK_CATEGORY)
+
+    raw_entries = await asyncio.to_thread(_list_raw)
+    results: list[dict[str, Any]] = []
+    for entry in raw_entries:
+        meta_raw = entry.get("meta")
+        if isinstance(meta_raw, str):
+            try:
+                meta = json.loads(meta_raw)
+            except json.JSONDecodeError:
+                meta = {}
+        elif isinstance(meta_raw, Mapping):
+            meta = dict(meta_raw)
+        else:
+            meta = {}
+
+        if int(meta.get("guild_id", -1)) != int(guild_id):
+            continue
+
+        vector_id = entry.get("id") or meta.get("vector_id")
+        try:
+            vector_id = int(vector_id)
+        except (TypeError, ValueError):
+            pass
+
+        results.append(
+            {
+                "vector_id": vector_id,
+                "label": meta.get("label"),
+                "uploaded_by": meta.get("uploaded_by"),
+                "uploaded_at": meta.get("uploaded_at"),
+                "source": meta.get("source"),
+                "category": entry.get("category"),
+                "metadata": meta,
+            }
+        )
+
+    results.sort(key=lambda item: item.get("uploaded_at") or 0, reverse=True)
+    return results
+
+
+async def delete_custom_block(guild_id: int, vector_id: int) -> dict[str, Any]:
+    """Delete a custom block vector if it belongs to *guild_id*."""
+
+    normalized_vector_id = _coerce_int(vector_id)
+    if normalized_vector_id is None:
+        raise CustomBlockError("vector_id is required for delete.")
+
+    entries = await list_custom_blocks(guild_id)
+    match = next(
+        (entry for entry in entries if _coerce_int(entry.get("vector_id")) == normalized_vector_id),
+        None,
+    )
+    if match is None:
+        raise CustomBlockError("Vector does not exist for this guild.")
+
+    stats = await clip_vectors.delete_vectors([normalized_vector_id])
+    if stats is None:
+        raise CustomBlockError("Milvus collection is not ready; delete aborted.")
+
+    log.info(
+        "Deleted custom image block",
+        extra={
+            "guild_id": guild_id,
+            "vector_id": normalized_vector_id,
+            "label": match.get("label"),
+        },
+    )
+    return match
+
+
 __all__ = [
     "CUSTOM_BLOCK_CATEGORY",
     "CustomBlockError",
     "add_custom_block_from_bytes",
+    "list_custom_blocks",
+    "delete_custom_block",
 ]

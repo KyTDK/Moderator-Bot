@@ -574,3 +574,51 @@ class MilvusVectorSpace:
             filter_expr=filter_expr,
         )
         return result[0] if result else []
+
+    def list_entries(
+        self,
+        *,
+        category: Optional[str] = None,
+        expr: Optional[str] = None,
+        limit: Optional[int] = None,
+        output_fields: Optional[Sequence[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        coll = self._get_collection()
+        if coll is None:
+            if not self._vector_search_warned:
+                self._log.warning(
+                    "[%s] Vector listing skipped; Milvus collection is not ready",
+                    self.collection_name,
+                )
+                self._vector_search_warned = True
+            return []
+
+        query_expr = expr
+        if category:
+            category_expr = f"category == {json.dumps(category)}"
+            if query_expr:
+                query_expr = f"({query_expr}) and ({category_expr})"
+            else:
+                query_expr = category_expr
+        if not query_expr:
+            query_expr = "id >= 0"
+
+        fields = list(output_fields or ["id", "category", "meta"])
+        query_kwargs: dict[str, Any] = {
+            "expr": query_expr,
+            "output_fields": fields,
+        }
+        if limit is not None:
+            query_kwargs["limit"] = int(limit)
+
+        try:
+            return coll.query(**query_kwargs)  # type: ignore[arg-type]
+        except Exception as exc:  # pragma: no cover - defensive logging
+            self._log.warning(
+                "[%s] Failed to list vectors (expr=%s): %s",
+                self.collection_name,
+                query_expr,
+                exc,
+                exc_info=True,
+            )
+            return []

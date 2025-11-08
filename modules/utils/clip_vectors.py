@@ -196,6 +196,21 @@ def query_similar_batch(
     )
 
 
+def list_entries(
+    *,
+    category: str | None = None,
+    expr: str | None = None,
+    limit: int | None = None,
+    output_fields: Sequence[str] | None = None,
+) -> List[dict[str, Any]]:
+    return _IMAGE_VECTOR_SPACE.list_entries(
+        category=category,
+        expr=expr,
+        limit=limit,
+        output_fields=output_fields,
+    )
+
+
 __all__ = [
     "COLLECTION_NAME",
     "register_failure_callback",
@@ -209,4 +224,5 @@ __all__ = [
     "query_similar",
     "query_similar_batch",
     "VectorDeleteStats",
+    "list_entries",
 ]

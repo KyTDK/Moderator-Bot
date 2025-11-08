@@ -5,6 +5,8 @@ from .service import (
     CUSTOM_BLOCK_CATEGORY,
     CustomBlockError,
     add_custom_block_from_bytes,
+    delete_custom_block,
+    list_custom_blocks,
 )
 from .stream import CustomBlockStreamProcessor
 
@@ -14,4 +16,6 @@ __all__ = [
     "CustomBlockError",
     "add_custom_block_from_bytes",
     "CUSTOM_BLOCK_CATEGORY",
+    "list_custom_blocks",
+    "delete_custom_block",
 ]

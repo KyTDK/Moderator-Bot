@@ -17,6 +17,8 @@ from modules.nsfw_scanner.custom_blocks.config import CustomBlockStreamConfig
 from modules.nsfw_scanner.custom_blocks.service import (
     CustomBlockError,
     add_custom_block_from_bytes,
+    delete_custom_block,
+    list_custom_blocks,
 )
 from modules.utils.redis_stream import (
     RedisStreamConsumer,
@@ -81,35 +83,72 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
 
         if guild_id is None:
             raise CustomBlockError("guild_id is required.")
-        if action and action != "add":
-            raise CustomBlockError(f"Unsupported custom block action '{action}'.")
+        if not action:
+            action = "add"
 
-        image_bytes, source = await self._resolve_image_bytes(payload)
-        uploader_id = _coerce_int(payload.get("uploaded_by"))
-        label = payload.get("label")
-        extra_metadata = self._parse_metadata(payload.get("metadata_json"))
+        if action == "add":
+            image_bytes, source = await self._resolve_image_bytes(payload)
+            uploader_id = _coerce_int(payload.get("uploaded_by"))
+            label = payload.get("label")
+            extra_metadata = self._parse_metadata(payload.get("metadata_json"))
 
-        if source and "source" not in extra_metadata:
-            extra_metadata["source"] = source
-        elif not source:
-            extra_metadata.setdefault("source", "dashboard-upload")
+            if source and "source" not in extra_metadata:
+                extra_metadata["source"] = source
+            elif not source:
+                extra_metadata.setdefault("source", "dashboard-upload")
 
-        vector_id = await add_custom_block_from_bytes(
-            guild_id,
-            image_bytes,
-            uploaded_by=uploader_id,
-            label=label,
-            source=source,
-            extra_metadata=extra_metadata,
-        )
+            vector_id = await add_custom_block_from_bytes(
+                guild_id,
+                image_bytes,
+                uploaded_by=uploader_id,
+                label=label,
+                source=source,
+                extra_metadata=extra_metadata,
+            )
 
-        return {
-            "request_id": request_id,
-            "status": "ok",
-            "action": "add",
-            "guild_id": str(guild_id),
-            "vector_id": str(vector_id),
-        }
+            return {
+                "request_id": request_id,
+                "status": "ok",
+                "action": "add",
+                "guild_id": str(guild_id),
+                "vector_id": str(vector_id),
+            }
+
+        if action == "delete":
+            vector_id = _coerce_int(payload.get("vector_id"))
+            if vector_id is None:
+                raise CustomBlockError("vector_id is required for delete.")
+            deleted = await delete_custom_block(guild_id, vector_id)
+            return {
+                "request_id": request_id,
+                "status": "ok",
+                "action": "delete",
+                "guild_id": str(guild_id),
+                "vector_id": str(vector_id),
+                "label": str(deleted.get("label") or ""),
+            }
+
+        if action == "list":
+            entries = await list_custom_blocks(guild_id)
+            payload_entries = [
+                {
+                    "vector_id": entry.get("vector_id"),
+                    "label": entry.get("label"),
+                    "uploaded_by": entry.get("uploaded_by"),
+                    "uploaded_at": entry.get("uploaded_at"),
+                    "source": entry.get("source"),
+                }
+                for entry in entries
+            ]
+            return {
+                "request_id": request_id,
+                "status": "ok",
+                "action": "list",
+                "guild_id": str(guild_id),
+                "entries": json.dumps(payload_entries),
+            }
+
+        raise CustomBlockError(f"Unsupported custom block action '{action}'.")
 
     async def _resolve_image_bytes(
         self,
