@@ -8,13 +8,28 @@ from typing import Any, Mapping
 
 from PIL import Image
 
+from modules.config.premium_plans import (
+    PLAN_CORE,
+    PLAN_DISPLAY_NAMES,
+    PLAN_FREE,
+    PLAN_PRO,
+    PLAN_ULTRA,
+)
 from modules.nsfw_scanner.helpers.image_io import _open_image_from_bytes
-from modules.utils import clip_vectors, mysql
+from modules.utils import clip_vectors
+from modules.utils.mysql.premium import resolve_guild_plan
 
 log = logging.getLogger(__name__)
 
 CUSTOM_BLOCK_CATEGORY = "guild_custom_block"
 _MAX_LABEL_LENGTH = 256
+_CUSTOM_BLOCK_LIMITS: dict[str, int | None] = {
+    PLAN_FREE: 0,
+    PLAN_CORE: 250,
+    PLAN_PRO: 1000,
+    PLAN_ULTRA: None,
+}
+_DEFAULT_CUSTOM_BLOCK_LIMIT = 1000
 
 
 class CustomBlockError(Exception):
@@ -41,6 +56,85 @@ def _normalise_label(label: str | None) -> str | None:
     return cleaned
 
 
+async def _fetch_custom_block_rows() -> list[dict[str, Any]]:
+    if not clip_vectors.is_available():
+        return []
+
+    def _list_raw() -> list[dict[str, Any]]:
+        return clip_vectors.list_entries(category=CUSTOM_BLOCK_CATEGORY)
+
+    return await asyncio.to_thread(_list_raw)
+
+
+def _normalise_custom_block_entry(
+    entry: Mapping[str, Any],
+    guild_id: int,
+) -> dict[str, Any] | None:
+    meta_raw = entry.get("meta")
+    if isinstance(meta_raw, str):
+        try:
+            meta = json.loads(meta_raw)
+        except json.JSONDecodeError:
+            meta = {}
+    elif isinstance(meta_raw, Mapping):
+        meta = dict(meta_raw)
+    else:
+        meta = {}
+
+    try:
+        meta_guild_id = int(meta.get("guild_id", -1))
+    except (TypeError, ValueError):
+        return None
+    if meta_guild_id != int(guild_id):
+        return None
+
+    vector_id_value = entry.get("id", meta.get("vector_id"))
+    try:
+        vector_id = int(vector_id_value) if vector_id_value is not None else None
+    except (TypeError, ValueError):
+        vector_id = vector_id_value
+
+    return {
+        "vector_id": vector_id,
+        "label": meta.get("label"),
+        "uploaded_by": meta.get("uploaded_by"),
+        "uploaded_at": meta.get("uploaded_at"),
+        "source": meta.get("source"),
+        "category": entry.get("category"),
+        "metadata": meta,
+    }
+
+
+async def get_custom_block_count(guild_id: int, *, stop_after: int | None = None) -> int:
+    rows = await _fetch_custom_block_rows()
+    count = 0
+    for entry in rows:
+        if _normalise_custom_block_entry(entry, guild_id) is None:
+            continue
+        count += 1
+        if stop_after is not None and count >= stop_after:
+            return count
+    return count
+
+
+async def _enforce_custom_block_limit(guild_id: int, plan: str) -> None:
+    limit = _CUSTOM_BLOCK_LIMITS.get(plan, _DEFAULT_CUSTOM_BLOCK_LIMIT)
+    if limit is None:
+        return
+    plan_label = PLAN_DISPLAY_NAMES.get(plan, plan.title())
+    if limit <= 0:
+        raise CustomBlockError(
+            f"The {plan_label} plan does not include custom image blocks."
+        )
+
+    current = await get_custom_block_count(guild_id, stop_after=limit)
+    if current >= limit:
+        raise CustomBlockError(
+            f"The {plan_label} plan can store up to {limit} custom blocked images. "
+            "Remove one before uploading another."
+        )
+
+
 async def add_custom_block_from_bytes(
     guild_id: int,
     data: bytes,
@@ -58,12 +152,14 @@ async def add_custom_block_from_bytes(
         raise CustomBlockError("Milvus vector store is unavailable.")
 
     try:
-        accelerated = await mysql.is_accelerated(guild_id=guild_id)
+        plan = await resolve_guild_plan(guild_id)
     except Exception as exc:  # pragma: no cover - defensive logging
         raise CustomBlockError("Failed to verify subscription status.") from exc
 
-    if not accelerated:
+    if plan == PLAN_FREE:
         raise CustomBlockError("Accelerated plan required for custom image blocks.")
+
+    await _enforce_custom_block_limit(guild_id, plan)
 
     try:
         image = await _open_image_from_bytes(data)
@@ -129,46 +225,13 @@ async def add_custom_block_from_bytes(
 async def list_custom_blocks(guild_id: int) -> list[dict[str, Any]]:
     """Return metadata for all custom block vectors belonging to *guild_id*."""
 
-    if not clip_vectors.is_available():
-        return []
-
-    def _list_raw() -> list[dict[str, Any]]:
-        return clip_vectors.list_entries(category=CUSTOM_BLOCK_CATEGORY)
-
-    raw_entries = await asyncio.to_thread(_list_raw)
+    raw_entries = await _fetch_custom_block_rows()
     results: list[dict[str, Any]] = []
     for entry in raw_entries:
-        meta_raw = entry.get("meta")
-        if isinstance(meta_raw, str):
-            try:
-                meta = json.loads(meta_raw)
-            except json.JSONDecodeError:
-                meta = {}
-        elif isinstance(meta_raw, Mapping):
-            meta = dict(meta_raw)
-        else:
-            meta = {}
-
-        if int(meta.get("guild_id", -1)) != int(guild_id):
+        normalized = _normalise_custom_block_entry(entry, guild_id)
+        if normalized is None:
             continue
-
-        vector_id = entry.get("id") or meta.get("vector_id")
-        try:
-            vector_id = int(vector_id)
-        except (TypeError, ValueError):
-            pass
-
-        results.append(
-            {
-                "vector_id": vector_id,
-                "label": meta.get("label"),
-                "uploaded_by": meta.get("uploaded_by"),
-                "uploaded_at": meta.get("uploaded_at"),
-                "source": meta.get("source"),
-                "category": entry.get("category"),
-                "metadata": meta,
-            }
-        )
+        results.append(normalized)
 
     results.sort(key=lambda item: item.get("uploaded_at") or 0, reverse=True)
     return results
@@ -210,4 +273,5 @@ __all__ = [
     "add_custom_block_from_bytes",
     "list_custom_blocks",
     "delete_custom_block",
+    "get_custom_block_count",
 ]
