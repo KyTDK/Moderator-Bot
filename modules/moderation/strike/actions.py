@@ -14,7 +14,7 @@ from modules.moderation.action_specs import (
     get_action_spec,
 )
 from modules.utils import mysql
-from modules.utils.discord_utils import resolve_role_references
+from modules.utils.discord_utils import resolve_role_references, safe_get_channel
 from modules.utils.mysql import execute_query
 from modules.utils.time import parse_duration
 from modules.verification.actions import RoleAction, apply_role_actions
@@ -41,12 +41,81 @@ async def perform_disciplinary_action(
     actions = list(raw_actions)
     messages = message if isinstance(message, list) else ([message] if message else [])
 
+    channel_cache: dict[int, object] = {}
+    message_cache: dict[tuple[int, int], Message] = {}
+
     disciplinary_texts = get_translated_mapping(
         bot,
         "modules.moderation.strike.disciplinary",
         DISCIPLINARY_TEXTS_FALLBACK,
         guild_id=user.guild.id,
     )
+
+    def _extract_channel_id(msg) -> int | None:
+        if msg is None:
+            return None
+        channel = getattr(msg, "channel", None)
+        channel_id = getattr(channel, "id", None)
+        if channel_id is not None:
+            return channel_id
+        return getattr(msg, "channel_id", None)
+
+    def _extract_message_id(msg) -> int | None:
+        if msg is None:
+            return None
+        message_id = getattr(msg, "id", None)
+        if message_id is not None:
+            return message_id
+        return getattr(msg, "message_id", None)
+
+    def _extract_guild_id(msg) -> int | None:
+        if msg is None:
+            return None
+        guild = getattr(msg, "guild", None)
+        guild_id = getattr(guild, "id", None)
+        if guild_id is not None:
+            return guild_id
+        return getattr(msg, "guild_id", None)
+
+    async def _resolve_channel_for_message(msg):
+        channel_id = _extract_channel_id(msg)
+        if channel_id is None:
+            return None
+        if channel_id in channel_cache:
+            return channel_cache[channel_id]
+        channel = bot.get_channel(channel_id)
+        if channel is not None:
+            channel_cache[channel_id] = channel
+            return channel
+        channel = await safe_get_channel(bot, channel_id)
+        if channel is not None:
+            channel_cache[channel_id] = channel
+        return channel
+
+    async def _resolve_message_for_deletion(msg):
+        if msg is None:
+            return None
+        if hasattr(msg, "delete") and getattr(msg, "channel", None) is not None:
+            return msg
+        channel_id = _extract_channel_id(msg)
+        message_id = _extract_message_id(msg)
+        if channel_id is None or message_id is None:
+            return None
+        key = (channel_id, message_id)
+        if key in message_cache:
+            return message_cache[key]
+        channel = await _resolve_channel_for_message(msg)
+        if channel is None or not hasattr(channel, "fetch_message"):
+            return None
+        try:
+            fetched = await channel.fetch_message(message_id)
+        except (discord.NotFound, discord.Forbidden):
+            return None
+        except discord.HTTPException as exc:
+            print(f"[Delete] fetch_message({message_id}) failed in channel {channel_id}: {exc}")
+            return None
+        message_cache[key] = fetched
+        return fetched
 
     def _format_action_failure(action_label, error=None):
         message_text = disciplinary_texts["action_failed"].format(action=action_label)
@@ -104,52 +173,96 @@ async def perform_disciplinary_action(
 
             if canonical_action == "delete":
                 if messages:
-                    first = messages[0]
-                    if all(msg.channel.id == first.channel.id for msg in messages):
-                        ids_to_delete = {m.id for m in messages}
-                        try:
-                            deleted = await first.channel.purge(
-                                check=lambda m: m.id in ids_to_delete,
-                                bulk=True,
+                    resolved_messages: list[Message] = []
+                    for msg in messages:
+                        resolved = await _resolve_message_for_deletion(msg)
+                        if resolved is not None:
+                            resolved_messages.append(resolved)
+                    total_requested = len(messages)
+                    missing_count = total_requested - len(resolved_messages)
+
+                    if resolved_messages:
+                        first_resolved = resolved_messages[0]
+                        first_channel = getattr(first_resolved, "channel", None)
+                        same_channel = (
+                            first_channel is not None
+                            and all(
+                                getattr(m.channel, "id", None) == getattr(first_channel, "id", None)
+                                for m in resolved_messages
                             )
+                        )
+                        if (
+                            same_channel
+                            and len(resolved_messages) > 1
+                            and hasattr(first_channel, "purge")
+                        ):
+                            ids_to_delete = {m.id for m in resolved_messages}
+                            try:
+                                deleted = await first_channel.purge(
+                                    check=lambda m: m.id in ids_to_delete,
+                                    bulk=True,
+                                )
+                                results.append(
+                                    disciplinary_texts["bulk_delete"].format(
+                                        deleted=len(deleted),
+                                        total=total_requested,
+                                    )
+                                )
+                                if missing_count:
+                                    results.append(
+                                        _format_action_failure(
+                                            action,
+                                            f"{missing_count} message(s) unavailable for deletion",
+                                        )
+                                    )
+                                continue
+                            except (discord.Forbidden, discord.HTTPException) as exc:
+                                guild_text = getattr(first_resolved.guild, "id", None) or _extract_guild_id(first_resolved) or "unknown"
+                                channel_text = getattr(first_channel, "id", None) or _extract_channel_id(first_resolved) or "unknown"
+                                print(
+                                    f"[Bulk Delete] Failed for guild {guild_text}, channel {channel_text}: {exc}"
+                                )
+                                results.append(_format_action_failure(action, exc))
+                            except Exception as exc:  # pragma: no cover - defensive logging
+                                guild_text = getattr(first_resolved.guild, "id", None) or _extract_guild_id(first_resolved) or "unknown"
+                                channel_text = getattr(first_channel, "id", None) or _extract_channel_id(first_resolved) or "unknown"
+                                print(
+                                    f"[Bulk Delete] Unexpected failure for guild {guild_text}, channel {channel_text}: {exc}"
+                                )
+                                results.append(_format_action_failure(action, exc))
+
+                        success = 0
+                        failure_exc = None
+                        for resolved_msg in resolved_messages:
+                            try:
+                                await resolved_msg.delete()
+                                success += 1
+                            except Exception as exc:  # pragma: no cover - network failure
+                                guild_text = getattr(resolved_msg.guild, "id", None) or _extract_guild_id(resolved_msg) or "unknown"
+                                channel_text = getattr(resolved_msg.channel, "id", None) or _extract_channel_id(resolved_msg) or "unknown"
+                                message_id = getattr(resolved_msg, "id", None) or "unknown"
+                                print(
+                                    f"[Delete] Failed for {message_id} (guild {guild_text}, channel {channel_text}): {exc}"
+                                )
+                                if failure_exc is None:
+                                    failure_exc = exc
+                        if failure_exc is not None:
+                            results.append(_format_action_failure(action, failure_exc))
+                        results.append(
+                            disciplinary_texts["delete_summary"].format(
+                                deleted=success,
+                                total=total_requested,
+                            )
+                        )
+                        if missing_count:
                             results.append(
-                                disciplinary_texts["bulk_delete"].format(
-                                    deleted=len(deleted), total=len(messages)
+                                _format_action_failure(
+                                    action,
+                                    f"{missing_count} message(s) unavailable for deletion",
                                 )
                             )
-                            continue
-                        except (discord.Forbidden, discord.HTTPException) as exc:
-                            guild_text = getattr(first.guild, "id", None) or "unknown"
-                            channel_text = getattr(first.channel, "id", None) or "unknown"
-                            print(f"[Bulk Delete] Failed for guild {guild_text}, channel {channel_text}: {exc}")
-                            results.append(_format_action_failure(action, exc))
-                        except Exception as exc:  # pragma: no cover - defensive logging
-                            guild_text = getattr(first.guild, "id", None) or "unknown"
-                            channel_text = getattr(first.channel, "id", None) or "unknown"
-                            print(f"[Bulk Delete] Unexpected failure for guild {guild_text}, channel {channel_text}: {exc}")
-                            results.append(_format_action_failure(action, exc))
-
-                    success = 0
-                    failure_exc = None
-                    for msg in messages:
-                        try:
-                            await msg.delete()
-                            success += 1
-                        except Exception as exc:  # pragma: no cover - network failure
-                            guild_text = getattr(msg.guild, "id", None) or "unknown"
-                            channel_text = getattr(msg.channel, "id", None) or "unknown"
-                            print(
-                                f"[Delete] Failed for {msg.id} (guild {guild_text}, channel {channel_text}): {exc}"
-                            )
-                            if failure_exc is None:
-                                failure_exc = exc
-                    if failure_exc is not None:
-                        results.append(_format_action_failure(action, failure_exc))
-                    results.append(
-                        disciplinary_texts["delete_summary"].format(
-                            deleted=success, total=len(messages)
-                        )
-                    )
+                    else:
+                        results.append(disciplinary_texts["delete_missing"])
                 else:
                     results.append(disciplinary_texts["delete_missing"])
                 continue
@@ -313,8 +426,16 @@ async def perform_disciplinary_action(
                     await user.send(embed=embed)
                     results.append(disciplinary_texts["warn_dm"])
                 except discord.Forbidden:
-                    if msg and msg.channel.permissions_for(msg.guild.me).send_messages:
-                        await msg.channel.send(content=user.mention, embed=embed)
+                    channel = await _resolve_channel_for_message(msg) if msg else None
+                    me_member = getattr(user.guild, "me", None)
+                    can_send = (
+                        channel is not None
+                        and me_member is not None
+                        and hasattr(channel, "permissions_for")
+                        and channel.permissions_for(me_member).send_messages
+                    )
+                    if can_send:
+                        await channel.send(content=user.mention, embed=embed)
                         results.append(disciplinary_texts["warn_channel"])
                     else:
                         results.append(disciplinary_texts["warn_failed"])
