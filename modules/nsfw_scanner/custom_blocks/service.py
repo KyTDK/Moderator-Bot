@@ -244,11 +244,19 @@ async def delete_custom_block(guild_id: int, vector_id: int) -> dict[str, Any]:
     if normalized_vector_id is None:
         raise CustomBlockError("vector_id is required for delete.")
 
-    entries = await list_custom_blocks(guild_id)
-    match = next(
-        (entry for entry in entries if _coerce_int(entry.get("vector_id")) == normalized_vector_id),
-        None,
+    if not clip_vectors.is_available():
+        raise CustomBlockError("Milvus vector store is unavailable.")
+
+    expr = (
+        f"id in [{normalized_vector_id}] and "
+        f"category == {json.dumps(CUSTOM_BLOCK_CATEGORY)}"
     )
+    raw = clip_vectors.list_entries(expr=expr)
+    normalized = (
+        _normalise_custom_block_entry(entry, guild_id)
+        for entry in raw
+    )
+    match = next((entry for entry in normalized if entry is not None), None)
     if match is None:
         raise CustomBlockError("Vector does not exist for this guild.")
 
