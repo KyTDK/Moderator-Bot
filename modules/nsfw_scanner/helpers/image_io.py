@@ -63,8 +63,17 @@ def _prepare_loaded_image(image: Image.Image) -> Image.Image:
                 converted.info["original_format"] = original_format
             image.close()
             image = converted
-        elif original_format:
-            image.info["original_format"] = original_format
+        else:
+            detached = image.copy()
+            try:
+                detached.load()
+            except Exception:
+                detached.close()
+                raise
+            if original_format:
+                detached.info["original_format"] = original_format
+            image.close()
+            image = detached
         return image
     except Exception:
         image.close()
