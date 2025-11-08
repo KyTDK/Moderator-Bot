@@ -164,6 +164,10 @@ class QueueInstrumentation:
             self._notifier.warning(
                 f"[WorkerQueue:{self._queue_name}] Unable to schedule singular task alert; no running event loop.",
                 event_key="singular_schedule_failure",
+                details={
+                    "Runtime": f"{detail.runtime:.2f}s",
+                    "Reporter": getattr(self._singular_task_reporter, "__name__", repr(self._singular_task_reporter)),
+                },
             )
             return
 
@@ -180,4 +184,8 @@ class QueueInstrumentation:
             self._notifier.error(
                 f"[WorkerQueue:{self._queue_name}] Singular task reporter failed: {exc!r}",
                 event_key="singular_reporter_failure",
+                details={
+                    "Reporter": getattr(self._singular_task_reporter, "__name__", repr(self._singular_task_reporter)),
+                    "Exception": repr(exc),
+                },
             )

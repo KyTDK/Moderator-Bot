@@ -11,16 +11,34 @@ from modules.worker_queue_pkg.types import TaskMetadata, TaskRuntimeDetail
 
 class FakeNotifier:
     def __init__(self) -> None:
-        self.records: list[tuple[str, str, Optional[str]]] = []
+        self.records: list[tuple[str, str, Optional[str], Optional[dict[str, object]]]] = []
 
-    def info(self, message: str, *, event_key: str | None = None) -> None:
-        self.records.append(("info", message, event_key))
+    def info(
+        self,
+        message: str,
+        *,
+        event_key: str | None = None,
+        details: Optional[dict[str, object]] = None,
+    ) -> None:
+        self.records.append(("info", message, event_key, details))
 
-    def warning(self, message: str, *, event_key: str | None = None) -> None:
-        self.records.append(("warning", message, event_key))
+    def warning(
+        self,
+        message: str,
+        *,
+        event_key: str | None = None,
+        details: Optional[dict[str, object]] = None,
+    ) -> None:
+        self.records.append(("warning", message, event_key, details))
 
-    def error(self, message: str, *, event_key: str | None = None) -> None:
-        self.records.append(("error", message, event_key))
+    def error(
+        self,
+        message: str,
+        *,
+        event_key: str | None = None,
+        details: Optional[dict[str, object]] = None,
+    ) -> None:
+        self.records.append(("error", message, event_key, details))
 
 
 def _runtime_detail(*, runtime: float, max_workers: int = 1, autoscale_max: int = 1) -> TaskRuntimeDetail:
@@ -118,7 +136,19 @@ def test_queue_event_logger_emits_expected_messages() -> None:
     logger.scaled_down(old=3, new=1, reason="cleanup")
     logger.adaptive_plan_updated(changes=["target 1->2"], target=2, baseline=1, backlog_high=10)
 
-    assert notifier.records[0] == ("info", "[WorkerQueue:unit] scaled up 1->3 (reason=test)", "scale_up:3")
-    assert notifier.records[1] == ("info", "[WorkerQueue:unit] scaled down 3->1 (reason=cleanup)", "scale_down:1")
-    assert notifier.records[2][2] == "adaptive_plan:2:1:10"
-    assert "adaptive plan updated: target 1->2" in notifier.records[2][1]
+    severity, message, event_key, details = notifier.records[0]
+    assert severity == "info"
+    assert message == "[WorkerQueue:unit] scaled up 1->3 (reason=test)"
+    assert event_key == "scale_up:3"
+    assert details is None
+
+    severity, message, event_key, details = notifier.records[1]
+    assert severity == "info"
+    assert message == "[WorkerQueue:unit] scaled down 3->1 (reason=cleanup)"
+    assert event_key == "scale_down:1"
+    assert details is None
+
+    severity, message, event_key, details = notifier.records[2]
+    assert severity == "info"
+    assert event_key == "adaptive_plan:2:1:10"
+    assert "adaptive plan updated: target 1->2" in message
