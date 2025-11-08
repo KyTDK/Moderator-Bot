@@ -20,6 +20,10 @@ from modules.nsfw_scanner.custom_blocks.service import (
     delete_custom_block,
     list_custom_blocks,
 )
+from modules.utils.log_channel import (
+    DeveloperLogField,
+    log_to_developer_channel,
+)
 from modules.utils.redis_stream import (
     RedisStreamConsumer,
     RedisStreamMessage,
@@ -53,6 +57,12 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
                 message.message_id,
                 payload,
             )
+            if (payload.get("action") or "add").strip().lower() == "delete":
+                await self._report_delete_failure(
+                    payload=payload,
+                    error=exc,
+                    message_id=message.message_id,
+                )
             response = self._format_error_response(payload, exc)
 
         if response is not None and self.redis is not None:
@@ -244,6 +254,82 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
         if guild_id is not None:
             response["guild_id"] = str(guild_id)
         return response
+
+    async def _report_delete_failure(
+        self,
+        *,
+        payload: Mapping[str, Any],
+        error: Exception,
+        message_id: str,
+    ) -> None:
+        if self._bot is None:
+            return
+
+        try:
+            guild_id = payload.get("guild_id")
+            vector_id = payload.get("vector_id")
+            request_id = payload.get("request_id") or ""
+            error_message = str(error) or error.__class__.__name__
+            payload_snapshot = json.dumps(
+                {k: str(v) for k, v in payload.items()},
+                ensure_ascii=False,
+            )
+            if len(payload_snapshot) > 1024:
+                payload_snapshot = payload_snapshot[:1011] + "...\""
+
+            fields = [
+                DeveloperLogField(
+                    name="Guild ID",
+                    value=str(guild_id) if guild_id is not None else "unknown",
+                    inline=True,
+                ),
+            ]
+            if vector_id is not None:
+                fields.append(
+                    DeveloperLogField(
+                        name="Vector ID",
+                        value=str(vector_id),
+                        inline=True,
+                    )
+                )
+            if request_id:
+                fields.append(
+                    DeveloperLogField(
+                        name="Request ID",
+                        value=str(request_id),
+                        inline=True,
+                    )
+                )
+            fields.extend(
+                [
+                    DeveloperLogField(
+                        name="Redis Message ID",
+                        value=str(message_id),
+                        inline=False,
+                    ),
+                    DeveloperLogField(
+                        name="Error",
+                        value=f"```{error_message}```",
+                        inline=False,
+                    ),
+                    DeveloperLogField(
+                        name="Payload",
+                        value=f"```json\n{payload_snapshot}\n```",
+                        inline=False,
+                    ),
+                ]
+            )
+
+            await log_to_developer_channel(
+                self._bot,
+                summary="Custom block delete failed",
+                severity="error",
+                description="Milvus delete request raised an exception.",
+                fields=fields,
+                context="custom_blocks.delete",
+            )
+        except Exception:  # pragma: no cover - defensive fallback
+            _logger.exception("Failed to report custom block delete failure to developer log channel")
 
 
 def _coerce_int(value: Any) -> int | None:
