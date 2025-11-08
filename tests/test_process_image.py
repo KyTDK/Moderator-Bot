@@ -578,8 +578,14 @@ async def test_process_image_logs_truncated_recovery_metadata(monkeypatch, tmp_p
     assert "**Fallback Result**: `Success`" in details
     assert "**Guild ID**: `777`" in details
     assert "<https://example.com/truncated.jpg>" in details
+    assert "**Source Host**: example.com" in details
     assert "**Extension**: `.jpg`" in details
     assert "**Source Bytes**:" in details
+    assert "**Image Load Attempts**: 2" in details
+    assert (
+        "**Fallback Cause**: Pillow reported truncated data; the file ended before decoding completed."
+        in details
+    )
     assert "**Error**: `OSError: image file is truncated`" in details
 
 

@@ -1,11 +1,14 @@
 import logging
 import os
+import re
 from typing import Any, Mapping
 
 from modules.nsfw_scanner.constants import LOG_CHANNEL_ID
 from modules.utils.log_channel import log_developer_issue
 
 log = logging.getLogger(__name__)
+
+_TRUNCATED_BYTES_PATTERN = re.compile(r"(\d+)\s+bytes?\s+not\s+processed", re.IGNORECASE)
 
 
 def _get_file_size(path: str) -> int | None:
@@ -22,7 +25,7 @@ def _format_metadata_value(key: str, value: Any) -> str | None:
     if isinstance(value, bool):
         return "Yes" if value else "No"
 
-    if key in {"source_bytes", "payload_bytes"}:
+    if key in {"source_bytes", "payload_bytes", "fallback_unprocessed_bytes"}:
         try:
             return f"{int(value):,}"
         except (TypeError, ValueError):
@@ -76,6 +79,35 @@ def _format_metadata_value(key: str, value: Any) -> str | None:
     return single_spaced
 
 
+def _extract_truncated_error_details(exc: Exception) -> dict[str, Any]:
+    """Derive structured metadata for truncated image recovery logs."""
+    message = str(exc)
+    lower = message.lower()
+    metadata: dict[str, Any] = {}
+
+    match = _TRUNCATED_BYTES_PATTERN.search(message)
+    if match:
+        try:
+            metadata["fallback_unprocessed_bytes"] = int(match.group(1))
+        except (TypeError, ValueError):
+            pass
+
+    if "unrecognized data stream contents when reading image file" in lower:
+        metadata["fallback_cause"] = (
+            "Decoder saw unexpected data while reading the image stream."
+        )
+    elif "truncated file read" in lower:
+        metadata["fallback_cause"] = "Decoder stopped early because the file stream ended."
+    elif "image file is truncated" in lower:
+        metadata["fallback_cause"] = (
+            "Pillow reported truncated data; the file ended before decoding completed."
+        )
+    elif message:
+        metadata["fallback_cause"] = message
+
+    return metadata
+
+
 def _format_image_log_details(
     *,
     display_name: str,
@@ -97,6 +129,7 @@ def _format_image_log_details(
     field_order = (
         ("guild_id", "Guild ID"),
         ("source_url", "Source URL"),
+        ("source_host", "Source Host"),
         ("source_bytes", "Source Bytes"),
         ("extension", "Extension"),
         ("original_format", "Original Format"),
@@ -105,9 +138,12 @@ def _format_image_log_details(
         ("conversion_requested", "Conversion Requested"),
         ("conversion_required", "Conversion Required"),
         ("passthrough", "Passthrough"),
+        ("load_attempts", "Image Load Attempts"),
         ("fallback_attempted", "Fallback Attempted"),
         ("fallback_mode", "Fallback Mode"),
         ("fallback_result", "Fallback Result"),
+        ("fallback_cause", "Fallback Cause"),
+        ("fallback_unprocessed_bytes", "Fallback Unprocessed Bytes"),
         ("fallback_error", "Fallback Error"),
         ("load_duration_ms", "Load Duration (ms)"),
     )
@@ -202,6 +238,7 @@ __all__ = [
     "_get_file_size",
     "_format_metadata_value",
     "_format_image_log_details",
+    "_extract_truncated_error_details",
     "_notify_image_open_failure",
     "_notify_truncated_image_recovery",
 ]
