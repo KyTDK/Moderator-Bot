@@ -9,3 +9,4 @@ clip_vectors.sqlite-wal
 vector.index
 .phishtank_cache.json.~4466
 old_code/
+docs/milvus.md

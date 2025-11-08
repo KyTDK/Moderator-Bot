@@ -21,6 +21,15 @@ from .vector_tasks import schedule_vector_delete
 log = logging.getLogger(__name__)
 
 
+def _coerce_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 async def _run_image_pipeline(
     scanner,
     *,
@@ -113,6 +122,30 @@ async def _run_image_pipeline(
             similarity = float(item.get("similarity", 0) or 0)
             if similarity < CLIP_THRESHOLD:
                 continue
+
+            if item.get("custom_block"):
+                vector_guild_id = _coerce_int(item.get("guild_id"))
+                if context.guild_id is None or vector_guild_id != context.guild_id:
+                    continue
+                effective_category = item.get("category") or "custom_block"
+                effective_max_similarity = max(max_similarity, similarity)
+                result = {
+                    "is_nsfw": True,
+                    "category": effective_category,
+                    "reason": "custom_block_match",
+                    "max_similarity": effective_max_similarity,
+                    "max_category": effective_category,
+                    "high_accuracy": context.high_accuracy,
+                    "clip_threshold": CLIP_THRESHOLD,
+                    "similarity": similarity,
+                    "custom_block": True,
+                }
+                if item.get("label"):
+                    result["custom_block_label"] = item.get("label")
+                vector_id = item.get("vector_id")
+                if vector_id is not None:
+                    result["vector_id"] = vector_id
+                return _finalize(result)
 
             category = item.get("category")
             if not category:
