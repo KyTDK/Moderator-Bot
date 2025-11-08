@@ -26,7 +26,7 @@ from cogs.voice_moderation.transcriber import (
 # Reduce noisy warnings from decoder flushes at the end of cycles
 logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
 
-HARVEST_WINDOW_SECONDS: float = 1.5
+HARVEST_WINDOW_SECONDS: float = 6.0
 _MIN_SPOKEN_DURATION_S = 0.35
 _MIN_RMS_THRESHOLD = 900.0
 
