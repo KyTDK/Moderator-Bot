@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Optional
 
 from .backend.rollups import summarise_rollups
 from .backend.totals import fetch_metric_totals
@@ -12,8 +12,8 @@ class LatencyBreakdown(Dict[str, Any]):
     pass
 
 
-def _safe_divide(numerator: float, denominator: float) -> Optional[float]:
-    if denominator <= 0:
+def _safe_divide(numerator: Optional[float], denominator: Optional[float]) -> Optional[float]:
+    if numerator is None or denominator is None or denominator <= 0:
         return None
     return numerator / denominator
 
@@ -30,16 +30,16 @@ async def compute_latency_breakdown() -> LatencyBreakdown:
         per_frame_ms=totals.get("average_latency_per_frame_ms"),
     )
 
-    by_type = {
-        bucket["content_type"]: _extract_latency_stats(
-            label=bucket["content_type"],
+    by_type = {}
+    for bucket in summary:
+        content_type = bucket.get("content_type") or "unknown"
+        by_type[content_type] = _extract_latency_stats(
+            label=content_type,
             scans=bucket.get("scans"),
             total_duration_ms=bucket.get("total_duration_ms"),
             total_frames=bucket.get("total_frames_scanned"),
             per_frame_ms=bucket.get("average_latency_per_frame_ms"),
         )
-        for bucket in summary
-    }
 
     video = by_type.get("video", {})
     image = by_type.get("image", {})
@@ -63,7 +63,7 @@ def _extract_latency_stats(
     scans_count = _coerce_int(scans)
     total_duration = _coerce_float(total_duration_ms)
     frames = _coerce_float(total_frames)
-    avg_latency = _safe_divide(total_duration, scans_count) if total_duration is not None else None
+    avg_latency = _safe_divide(total_duration, scans_count)
     avg_latency_per_frame = _coerce_float(per_frame_ms) or _safe_divide(total_duration, frames)
 
     return {

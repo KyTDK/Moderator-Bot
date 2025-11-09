@@ -1,7 +1,12 @@
 import asyncio
-from unittest import mock
+import sys
+from pathlib import Path
 
 import pytest
+
+project_root = Path(__file__).resolve().parents[1]
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
 
 from modules.metrics.stats import compute_latency_breakdown
 
@@ -39,3 +44,19 @@ def test_compute_latency_breakdown_uses_totals_and_summary(monkeypatch):
     assert breakdown["overall"]["average_latency_ms"] == pytest.approx(100.0)
     assert breakdown["video"]["scans"] == 6
     assert breakdown["image"]["average_latency_ms"] == pytest.approx(25.0)
+
+
+def test_compute_latency_breakdown_handles_missing_frames(monkeypatch):
+    async def fake_totals():
+        return {"scans_count": 0}
+
+    async def fake_summary():
+        return [
+            {"content_type": "video", "scans": 0, "total_duration_ms": None},
+        ]
+
+    monkeypatch.setattr("modules.metrics.stats.fetch_metric_totals", fake_totals)
+    monkeypatch.setattr("modules.metrics.stats.summarise_rollups", fake_summary)
+
+    breakdown = asyncio.run(compute_latency_breakdown())
+    assert breakdown["video"]["average_latency_per_frame_ms"] is None
