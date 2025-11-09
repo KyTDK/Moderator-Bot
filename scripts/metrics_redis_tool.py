@@ -59,26 +59,14 @@ redis = _import_redis()
 RESET_SUFFIXES: tuple[str, ...] = (
     "_total_duration_ms",
     "_total_duration_sq_ms",
-    "_total_bytes",
-    "_total_bytes_sq",
-    "_total_frames_scanned",
-    "_total_frames_target",
     "duration_total_ms",
     "duration_total_sq_ms",
-    "bytes_total",
-    "bytes_total_sq",
-    "frames_total_scanned",
-    "frames_total_target",
 )
 
 # Exact field names to reset (covers non-suffixed variants in totals hashes).
 RESET_EXACT: set[str] = {
     "total_duration_ms",
     "total_duration_sq_ms",
-    "total_bytes",
-    "total_bytes_sq",
-    "total_frames_scanned",
-    "total_frames_target",
 }
 
 # Map suffix → (units, category label)
