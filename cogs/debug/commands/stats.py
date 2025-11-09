@@ -1,0 +1,247 @@
+from __future__ import annotations
+
+import os
+import platform
+import time
+from typing import Iterable, List, Tuple
+
+import discord
+import tracemalloc
+
+tracemalloc.start()
+
+__all__ = ["build_stats_embed", "collect_top_allocations"]
+
+
+def collect_top_allocations(show_all: bool, limit: int = 10) -> list[str]:
+    snapshot = tracemalloc.take_snapshot()
+    top_stats = snapshot.statistics("lineno")
+    project_root = os.getcwd()
+    allocations: list[str] = []
+    for stat in top_stats:
+        frame = stat.traceback[0]
+        filename = frame.filename
+        if not show_all and not filename.startswith(project_root):
+            continue
+        if filename.startswith(project_root):
+            filename = os.path.relpath(filename, project_root)
+        avg_size = stat.size // stat.count if stat.count else 0
+        allocations.append(
+            f"{len(allocations)+1}. {filename}:{frame.lineno} "
+            f"- size={stat.size / 1024:.1f} KiB, count={stat.count}, avg={avg_size} B"
+        )
+        if len(allocations) >= limit:
+            break
+    return allocations
+
+
+def _chunk_lines(lines: Iterable[str], max_len: int = 900) -> list[str]:
+    chunks: list[str] = []
+    current = ""
+    for line in lines:
+        if len(current) + len(line) + 1 > max_len:
+            if current:
+                chunks.append(current)
+            current = line
+        else:
+            current = f"{current}\n{line}" if current else line
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def build_stats_embed(cog, interaction: discord.Interaction, show_all: bool) -> discord.Embed:
+    guild_id = interaction.guild.id if interaction.guild else None
+    debug_texts = cog.bot.translate("cogs.debug.embed", guild_id=guild_id)
+
+    current, peak = tracemalloc.get_traced_memory()
+    current_mb = current / 1024 / 1024
+    peak_mb = peak / 1024 / 1024
+
+    rss = cog.process.memory_info().rss / 1024 / 1024
+    vms = cog.process.memory_info().vms / 1024 / 1024
+
+    cpu_percent = cog.process.cpu_percent(interval=0.5)
+    uptime = time.time() - cog.start_time
+    uptime_str = time.strftime("%H:%M:%S", time.gmtime(uptime))
+
+    threads = cog.process.num_threads()
+    handles = cog.process.num_handles() if hasattr(cog.process, "num_handles") else "N/A"
+
+    top_allocations = collect_top_allocations(show_all)
+    if not top_allocations:
+        top_allocations.append(cog.bot.translate("cogs.debug.no_allocations", guild_id=guild_id))
+
+    embed = discord.Embed(
+        title=debug_texts["title"],
+        color=discord.Color.blurple(),
+    )
+    embed.add_field(
+        name=debug_texts["memory_name"],
+        value=debug_texts["memory_value"].format(
+            rss=rss,
+            vms=vms,
+            current_mb=current_mb,
+            peak_mb=peak_mb,
+        ),
+        inline=False,
+    )
+    embed.add_field(
+        name=debug_texts["cpu_name"],
+        value=debug_texts["cpu_value"].format(cpu_percent=cpu_percent, threads=threads, handles=handles),
+        inline=False,
+    )
+    embed.add_field(
+        name=debug_texts["bot_name"],
+        value=debug_texts["bot_value"].format(
+            guilds=len(cog.bot.guilds),
+            users=len(cog.bot.users),
+            uptime=uptime_str,
+        ),
+        inline=False,
+    )
+
+    for index, chunk in enumerate(_chunk_lines(top_allocations), start=1):
+        embed.add_field(
+            name=debug_texts["allocations_name"].format(index=index),
+            value=f"```{chunk}```",
+            inline=False,
+        )
+
+    embed.set_footer(text=debug_texts["footer"].format(host=platform.node(), python_version=platform.python_version()))
+    try:
+        queue_lines, rate_lines = _collect_worker_summaries(cog)
+    except Exception as exc:  # noqa: BLE001
+        embed.add_field(
+            name=debug_texts["worker_name"],
+            value=debug_texts["worker_error"].format(error=exc),
+            inline=False,
+        )
+    else:
+        if queue_lines:
+            embed.add_field(
+                name=debug_texts["worker_name"],
+                value=f"```\n" + "\n".join(queue_lines) + "\n```",
+                inline=False,
+            )
+        if rate_lines:
+            embed.add_field(
+                name=cog.bot.translate("cogs.debug.worker_rates", guild_id=guild_id),
+                value=f"```\n" + "\n".join(rate_lines) + "\n```",
+                inline=False,
+            )
+
+    return embed
+
+
+def _collect_worker_summaries(cog) -> Tuple[List[str], List[str]]:
+    queue_lines: list[str] = []
+    rate_lines: list[str] = []
+
+    def fmt_line(cog_name: str, queue_name: str, queue_obj) -> Tuple[str, str]:
+        metrics_callable = getattr(queue_obj, "metrics", None)
+        data = metrics_callable() if callable(metrics_callable) else None
+        if not data:
+            backlog = getattr(getattr(queue_obj, "queue", None), "qsize", lambda: "?")()
+            workers = len(getattr(queue_obj, "workers", []))
+            max_workers = getattr(queue_obj, "max_workers", "?")
+            summary = f"[{cog_name}:{queue_name}] backlog={backlog} workers={workers}/{max_workers}"
+            return summary, summary
+
+        def _int(value, default=0):
+            try:
+                if value is None:
+                    return default
+                return int(value)
+            except (TypeError, ValueError):
+                return default
+
+        def _float(value, default=0.0):
+            try:
+                if value is None:
+                    return default
+                return float(value)
+            except (TypeError, ValueError):
+                return default
+
+        backlog = _int(data.get("backlog"))
+        max_workers = max(1, _int(data.get("max_workers"), 1))
+        busy = _int(data.get("busy_workers"), _int(data.get("active_workers")))
+        baseline = max(1, _int(data.get("baseline_workers"), 1))
+        burst = _int(data.get("autoscale_max"), max_workers)
+        hi_value = data.get("backlog_high")
+        lo_value = data.get("backlog_low")
+        hi = str(_int(hi_value)) if hi_value is not None else "-"
+        lo = str(_int(lo_value)) if lo_value is not None else "-"
+        pending = _int(data.get("pending_stops"))
+        tasks_completed = _int(data.get("tasks_completed"))
+        dropped = _int(data.get("dropped_tasks_total"))
+        limit = None
+        hard_limit_value = data.get("backlog_hard_limit")
+        if hard_limit_value is not None:
+            hard_limit = _int(hard_limit_value)
+            shed_to_value = data.get("backlog_shed_to")
+            limit = f"{hard_limit}->{_int(shed_to_value)}" if shed_to_value is not None else str(hard_limit)
+        wait_avg = _float(data.get("avg_wait_time"))
+        wait_last = _float(data.get("last_wait_time"))
+        wait_long = _float(data.get("longest_wait"))
+        run_avg = _float(data.get("avg_runtime"))
+        run_last = _float(data.get("last_runtime"))
+        run_long = _float(data.get("longest_runtime"))
+        running_flag = bool(data.get("running"))
+        arrival_rate = _float(data.get("arrival_rate_per_min"))
+        completion_rate = _float(data.get("completion_rate_per_min"))
+        adaptive_mode = bool(data.get("adaptive_mode"))
+        adaptive_target = _int(data.get("adaptive_target_workers"), max_workers)
+        adaptive_baseline = _int(data.get("adaptive_baseline_workers"), baseline)
+        rate_window = _float(data.get("rate_tracking_window"), 0.0)
+
+        parts = [
+            f"[{cog_name}:{queue_name}]",
+            f"backlog={backlog}",
+            f"busy={busy}/{max_workers}",
+            f"base={baseline}",
+            f"target={adaptive_target}" if adaptive_mode else f"burst={burst}",
+            f"hi={hi}",
+            f"lo={lo}",
+            f"pend={pending}",
+            f"tasks={tasks_completed}",
+            f"drop={dropped}",
+            f"wait={wait_avg:.2f}|{wait_last:.2f}|{wait_long:.2f}",
+            f"run={run_avg:.2f}|{run_last:.2f}|{run_long:.2f}",
+            f"running={running_flag}",
+        ]
+        if limit is not None:
+            parts.insert(7, f"limit={limit}")
+        summary_line = " ".join(parts)
+
+        if rate_window > 0:
+            window_minutes = rate_window / 60.0
+            window_part = f"{window_minutes:.1f}m" if rate_window >= 60 else f"{rate_window:.0f}s"
+        else:
+            window_part = "n/a"
+        worker_descriptor = (
+            f"target={adaptive_target} baseline={adaptive_baseline}"
+            if adaptive_mode
+            else f"max={max_workers} baseline={baseline}"
+        )
+        rate_line = (
+            f"{queue_name}@{cog_name}: req={arrival_rate:.2f}/min "
+            f"proc={completion_rate:.2f}/min {worker_descriptor} window={window_part}"
+        )
+        return summary_line, rate_line
+
+    for cog_name in ("AggregatedModerationCog", "EventDispatcherCog", "ScamDetectionCog"):
+        cog_instance = getattr(cog.bot, "get_cog", lambda name: None)(cog_name)
+        if not cog_instance:
+            continue
+        for queue_attr in ("free_queue", "accelerated_queue"):
+            queue_obj = getattr(cog_instance, queue_attr, None)
+            if queue_obj is None:
+                continue
+            queue_name = queue_attr.replace("_queue", "")
+            summary, rate_line = fmt_line(cog_name, queue_name, queue_obj)
+            queue_lines.append(summary)
+            rate_lines.append(rate_line)
+
+    return queue_lines, rate_lines
