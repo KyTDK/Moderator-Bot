@@ -50,11 +50,11 @@ def load_config() -> AggregatedModerationConfig:
     cpu_count = max(1, os.cpu_count() or 4)
 
     free_min_workers = 1
-    free_max_workers = max(6, cpu_count * 2)
-    free_backlog_target = max(18, cpu_count * 2)
-    free_backlog_low = max(6, int(free_backlog_target * 0.35))
-    free_backlog_soft = max(50, int(free_backlog_target * 2.5))
-    free_catchup = max(8, int(free_backlog_target * 0.75))
+    free_max_workers = max(2, min(4, cpu_count))
+    free_backlog_target = max(30, cpu_count * 3)
+    free_backlog_low = max(10, int(free_backlog_target * 0.4))
+    free_backlog_soft = max(60, int(free_backlog_target * 1.5))
+    free_catchup = max(12, int(free_backlog_target * 0.9))
 
     accelerated_min_workers = 2
     accelerated_max_workers = max(5, cpu_count * 3)
@@ -71,10 +71,10 @@ def load_config() -> AggregatedModerationConfig:
         backlog_low=_clamp_int(free_backlog_low, minimum=1, maximum=free_backlog_target),
         backlog_soft_limit=free_backlog_soft,
         catchup_batch=free_catchup,
-        provision_bias=0.82,
-        recovery_bias=1.08,
-        wait_threshold=18.0,
-        min_runtime=0.35,
+        provision_bias=0.65,
+        recovery_bias=1.05,
+        wait_threshold=25.0,
+        min_runtime=0.45,
         maintain_backlog=True,
     )
 
