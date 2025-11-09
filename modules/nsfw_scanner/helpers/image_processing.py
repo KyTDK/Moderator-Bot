@@ -3,7 +3,6 @@ import mimetypes
 import os
 import time
 import traceback
-from urllib.parse import urlparse
 from typing import Any, List, Optional
 
 from PIL import Image
@@ -21,9 +20,7 @@ from .image_io import (
 )
 from .image_logging import (
     _get_file_size,
-    _extract_truncated_error_details,
     _notify_image_open_failure,
-    _notify_truncated_image_recovery,
 )
 from .image_pipeline import _run_image_pipeline
 from .metrics import LatencyTracker
@@ -59,13 +56,11 @@ async def process_image(
     recovery_error: Exception | None = None
     try:
         load_started = time.perf_counter()
-        truncated_error: Exception | None = None
         try:
             image = await _open_image_from_path(original_filename)
         except Exception as exc:
             if not _is_truncated_image_error(exc):
                 raise
-            truncated_error = exc
             fallback_attempted = True
             try:
                 image = await _open_image_from_path(
@@ -92,43 +87,6 @@ async def process_image(
         needs_conversion = convert_to_png and not passthrough
         source_bytes = _get_file_size(original_filename)
 
-        if truncated_error is not None:
-            source_host: str | None = None
-            if source_url:
-                try:
-                    parsed_url = urlparse(source_url)
-                except Exception:
-                    parsed_url = None
-                else:
-                    host = (parsed_url.netloc or "").strip()
-                    if host:
-                        source_host = host.lower()
-
-            log_metadata = {
-                "guild_id": guild_id,
-                "source_url": source_url,
-                "source_host": source_host,
-                "source_bytes": source_bytes,
-                "extension": ext or None,
-                "original_format": original_format or None,
-                "image_mode": getattr(image, "mode", None),
-                "image_size": list(image.size) if image else None,
-                "conversion_requested": convert_to_png,
-                "conversion_required": needs_conversion,
-                "passthrough": not needs_conversion,
-                "load_attempts": 2,
-                "fallback_attempted": True,
-                "fallback_mode": "LOAD_TRUNCATED_IMAGES",
-                "fallback_result": "Success",
-                "load_duration_ms": load_duration,
-            }
-            log_metadata.update(_extract_truncated_error_details(truncated_error))
-            await _notify_truncated_image_recovery(
-                scanner,
-                filename=original_filename,
-                exc=truncated_error,
-                metadata=log_metadata,
-            )
         image_path: str | None = None if needs_conversion else original_filename
         image_bytes: bytes | None = None
         image_mime: str | None = None

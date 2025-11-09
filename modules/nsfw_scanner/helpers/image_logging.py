@@ -197,41 +197,6 @@ async def _notify_image_open_failure(
     )
 
 
-async def _notify_truncated_image_recovery(
-    scanner,
-    *,
-    filename: str,
-    exc: Exception,
-    metadata: Mapping[str, Any] | None = None,
-) -> None:
-    if not LOG_CHANNEL_ID:
-        return
-
-    bot = getattr(scanner, "bot", None)
-    if bot is None:
-        return
-
-    try:
-        display_name = os.path.basename(filename) or filename
-    except Exception:
-        display_name = filename
-
-    details = _format_image_log_details(
-        display_name=display_name,
-        filename=filename,
-        metadata=metadata,
-        error_summary=f"{type(exc).__name__}: {exc}",
-    )
-    await log_developer_issue(
-        bot,
-        summary="Recovered truncated image during NSFW scan.",
-        details=details,
-        severity="warning",
-        context="nsfw_scanner.image_open",
-        logger=log,
-    )
-
-
 __all__ = [
     "log",
     "log_developer_issue",
@@ -240,5 +205,4 @@ __all__ = [
     "_format_image_log_details",
     "_extract_truncated_error_details",
     "_notify_image_open_failure",
-    "_notify_truncated_image_recovery",
 ]

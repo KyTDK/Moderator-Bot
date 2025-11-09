@@ -21,7 +21,6 @@ from .image_logging import (
     _format_metadata_value,
     _get_file_size,
     _notify_image_open_failure,
-    _notify_truncated_image_recovery,
     log as logging_log,
     log_developer_issue,
 )
@@ -52,7 +51,6 @@ __all__ = [
     "_format_metadata_value",
     "_format_image_log_details",
     "_notify_image_open_failure",
-    "_notify_truncated_image_recovery",
     "mysql",
 ]
 

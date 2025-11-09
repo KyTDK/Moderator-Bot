@@ -570,23 +570,7 @@ async def test_process_image_logs_truncated_recovery_metadata(monkeypatch, tmp_p
 
     assert result is not None
     assert open_attempts == [False, True]
-    assert log_calls, "Expected truncated recovery log entry"
-    entry = log_calls[0]
-    assert entry["summary"] == "Recovered truncated image during NSFW scan."
-    details = entry["details"] or ""
-    assert "**Fallback Mode**: `LOAD_TRUNCATED_IMAGES`" in details
-    assert "**Fallback Result**: `Success`" in details
-    assert "**Guild ID**: `777`" in details
-    assert "<https://example.com/truncated.jpg>" in details
-    assert "**Source Host**: example.com" in details
-    assert "**Extension**: `.jpg`" in details
-    assert "**Source Bytes**:" in details
-    assert "**Image Load Attempts**: 2" in details
-    assert (
-        "**Fallback Cause**: Pillow reported truncated data; the file ended before decoding completed."
-        in details
-    )
-    assert "**Error**: `OSError: image file is truncated`" in details
+    assert not log_calls, "Unexpected truncated recovery log entry"
 
 
 def test_is_truncated_image_error_handles_decoder_stream():
