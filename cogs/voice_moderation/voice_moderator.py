@@ -120,6 +120,15 @@ class VoiceModeratorCog(commands.Cog):
             return
 
         state = self._get_state(guild.id)
+        channels_changed = state.channel_ids != voice_settings.channel_ids
+
+        if channels_changed:
+            if state.busy_task and not state.busy_task.done():
+                await self._teardown_state(guild)
+                state = self._get_state(guild.id)
+            else:
+                state.reset_cycle()
+
         state.channel_ids = voice_settings.channel_ids
 
         if state.busy_task and not state.busy_task.done():
