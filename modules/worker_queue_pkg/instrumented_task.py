@@ -45,6 +45,13 @@ class InstrumentedTask:
     def __await__(self):
         return self._run().__await__()
 
+    def __repr__(self) -> str:
+        return f"<InstrumentedTask name={self._name!r} coro={self._coro!r}>"
+
+    @property
+    def metadata(self) -> TaskMetadata:
+        return self._metadata
+
     async def _run(self):
         started_at = self._loop.time()
         started_wall = time.time()

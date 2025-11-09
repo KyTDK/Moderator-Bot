@@ -18,6 +18,83 @@ class LifecycleMixin:
     def _active_workers(self) -> int:
         return sum(1 for w in self.workers if not w.done())
 
+    def _build_failure_details(self, task: InstrumentedTask, exc: BaseException) -> dict[str, object]:
+        details: dict[str, object] = {
+            "Exception": repr(exc),
+            "Exception Type": f"{type(exc).__module__}.{type(exc).__qualname__}",
+            "Task": repr(task),
+        }
+
+        metadata = getattr(task, "metadata", None)
+        if metadata:
+            if getattr(metadata, "display_name", None):
+                details["Task Display"] = metadata.display_name
+            if getattr(metadata, "module", None):
+                details["Task Module"] = metadata.module
+            if getattr(metadata, "qualname", None):
+                details["Task Qualname"] = metadata.qualname
+            elif getattr(metadata, "function", None):
+                details["Task Function"] = metadata.function
+            location = getattr(metadata, "filename", None)
+            if location:
+                lineno = getattr(metadata, "first_lineno", None)
+                if lineno:
+                    location = f"{location}:{lineno}"
+                details["Task Location"] = location
+
+        try:
+            backlog = self.queue.qsize()
+        except Exception:
+            backlog = None
+        if backlog is not None:
+            details["Queue Backlog"] = backlog
+
+        details.update(self._extract_http_exception_details(exc))
+        return details
+
+    @staticmethod
+    def _extract_http_exception_details(exc: BaseException) -> dict[str, object]:
+        http_details: dict[str, object] = {}
+
+        status = getattr(exc, "status", None)
+        if status is None:
+            response = getattr(exc, "response", None)
+            status = getattr(response, "status", None) if response is not None else None
+        if status is not None:
+            http_details["HTTP Status"] = status
+
+        discord_code = getattr(exc, "code", None)
+        if discord_code is not None:
+            http_details["Discord Error Code"] = discord_code
+
+        text = getattr(exc, "text", None)
+        if text:
+            truncated = text if len(text) <= 500 else f"{text[:500]}…"
+            http_details["HTTP Text"] = truncated
+
+        response = getattr(exc, "response", None)
+        if response is not None:
+            method = getattr(response, "method", None)
+            if method:
+                http_details["HTTP Method"] = method
+
+            url = getattr(response, "url", None)
+            if url:
+                http_details["HTTP URL"] = str(url)
+
+            headers = getattr(response, "headers", None)
+            if headers:
+                interesting_headers = {}
+                for key in ("X-RateLimit-Remaining", "X-RateLimit-Reset", "X-RateLimit-Bucket", "Retry-After"):
+                    value = headers.get(key)
+                    if value is not None:
+                        interesting_headers[key] = value
+                if interesting_headers:
+                    header_repr = ", ".join(f"{k}={v}" for k, v in interesting_headers.items())
+                    http_details["HTTP Headers"] = header_repr
+
+        return http_details
+
     async def start(self):
         async with self._lock:
             if self.running:
@@ -169,10 +246,7 @@ class LifecycleMixin:
                     self._notifier.error(
                         f"[WorkerQueue:{self._name}] Task failed: {exc!r}",
                         event_key="task_failure",
-                        details={
-                            "Exception": repr(exc),
-                            "Task": repr(task),
-                        },
+                        details=self._build_failure_details(task, exc),
                     )
                     print(f"[WorkerQueue:{self._name}] Task failed: {exc!r}")
                     traceback.print_exception(type(exc), exc, exc.__traceback__)
