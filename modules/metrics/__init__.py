@@ -5,6 +5,7 @@ from .tracker import (
     get_media_metrics_totals,
     log_media_scan,
 )
+from .stats import compute_latency_breakdown
 
 __all__ = [
     "log_media_scan",

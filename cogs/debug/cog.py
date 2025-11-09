@@ -16,6 +16,7 @@ from .commands.guilds import refresh_guilds as handle_refresh_guilds
 from .commands.guilds import unban_guild as handle_unban_guild
 from .commands.locale_cmd import send_current_locale
 from .commands.metrics import reset_latency
+from .commands.metrics_view import format_latency_breakdown
 from .commands.stats import build_stats_embed
 from .config import DEV_GUILD_ID
 from .guards import require_dev_access
@@ -73,6 +74,19 @@ class DebugCog(commands.Cog):
         if not await require_dev_access(self.bot, interaction):
             return
         await reset_latency(self, interaction, pattern=pattern, dry_run=dry_run)
+
+    @app_commands.command(
+        name="view_averages",
+        description="View latency averages across media types.",
+    )
+    @guild_scope_decorator()
+    @app_commands.checks.has_permissions(administrator=True)
+    async def view_averages(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+        if not await require_dev_access(self.bot, interaction):
+            return
+        report = await format_latency_breakdown()
+        await interaction.followup.send(report or "No metrics available.", ephemeral=True)
 
     @app_commands.command(
         name="ban_guild",
