@@ -53,8 +53,8 @@ def load_config() -> AggregatedModerationConfig:
     free_max_workers = max(2, min(4, cpu_count))
     free_backlog_target = max(30, cpu_count * 3)
     free_backlog_low = max(10, int(free_backlog_target * 0.4))
-    free_backlog_soft = max(60, int(free_backlog_target * 1.5))
-    free_catchup = max(12, int(free_backlog_target * 0.9))
+    free_backlog_soft = max(200, int(free_backlog_target * 2.5))
+    free_catchup = max(24, int(free_backlog_target * 1.5))
 
     accelerated_min_workers = 2
     accelerated_max_workers = max(5, cpu_count * 3)
