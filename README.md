@@ -2,6 +2,8 @@
 
 Free AI-powered moderation for Discord. Detects nudity, gore, scams, and other violations in messages, media, and avatars. Fully configurable via slash commands.
 
+Learn more at https://modbot.neomechanical.com.
+
 ---
 
 ## 📌 Features Overview
@@ -29,6 +31,15 @@ Free AI-powered moderation for Discord. Detects nudity, gore, scams, and other v
 * **Banned Words**
   Blocks slurs or custom words. Supports layered punishment and integrates with strikes.
 
+* **FAQ Auto Replies**
+  Instantly answer recurring questions with saved responses, with optional direct replies for Accelerated servers.
+
+* **Banned URL Enforcement**
+  Catch blocked domains or exact links and trigger custom actions the moment they appear.
+
+* **Web Dashboard**
+  Manage settings, FAQ entries, and Accelerated subscriptions from https://modbot.neomechanical.com.
+
 * **Logging**
   Tracks joins, leaves, bans, deletions, edits, timeouts, and invite usage.
 
@@ -52,10 +63,21 @@ Require new members to complete a captcha before they can see or interact with t
 * `/settings set name=pre-captcha-roles role=@Visitor` – Assign temporary roles while members are awaiting verification.
 * `/settings set name=captcha-success-actions value="give_role:Member"` – Run success actions (e.g., grant roles, clear timeouts) after completion.
 * `/settings set name=captcha-failure-actions value="timeout:1d"` – Apply disciplinary actions when the captcha is failed.
+* `/settings set name=captcha-delivery-method value=embed` – Deliver captcha prompts via DM or a persistent embed in your server.
+* `/settings set name=captcha-embed-channel-id channel=#verify-here` – Choose the channel that hosts the verification embed.
+* `/settings set name=vpn-detection-enabled value=true` – Screen newcomers for VPNs and proxies before allowing access.
+* `/settings set name=vpn-pre-actions value="remove_role:Visitor"` – Adjust roles before VPN screening; pair with `vpn-post-actions` to grant roles after a clean result.
+* `/settings set name=vpn-detection-actions value="kick"` – Decide what happens when VPN screening fails (e.g., kick, timeout).
 
 ### 📜 Logging:
 
 * `/channels set type=Captcha channel=#mod-logs` – Choose where captcha pass/fail embeds are posted.
+* `/settings set name=captcha-log-channel channel=#captcha-logs` – Send detailed verification events to a dedicated channel.
+
+### 🛡️ Verification Extras:
+
+* `/verification sync` – Refresh the verification embed after changing its design or settings.
+* `/verification request member=@User` – Manually trigger the captcha & VPN flow for a specific member.
 
 ---
 
@@ -172,10 +194,49 @@ Blocks slurs and custom word lists.
 * `/bannedwords clear` – Clear all custom banned words
 * `/bannedwords add_action` – Set action when banned words are triggered
 * `/bannedwords remove_action` – Remove a word action
+* `/settings set name=exclude-bannedwords-channels value="#memes"` – Exclude light-hearted channels from filtering.
+* `/settings set name=use-default-banned-words value=true` – Pair your custom list with the built-in profanity filter.
 
 ### 📜 Inspection:
 
 * `/bannedwords view_actions` – View all punishment actions
+
+---
+
+## ❓ FAQ Auto Replies
+
+Answer repeat questions automatically. Moderator Bot listens for incoming messages, finds the best match, and responds with your saved answer.
+
+### 🔧 Configuration:
+
+* `/faq enable enabled:true` – Turn automatic FAQ replies on (or set `false` to pause them).
+* `/settings set name=faq-threshold value=0.72` – Adjust how closely a message must match before the bot replies.
+* `/settings set name=faq-direct-reply value=true` – (Accelerated) Respond directly in the channel instead of posting an embed.
+
+### ✏️ Commands:
+
+* `/faq add question:"How do I appeal?" answer:"Appeal instructions..."` – Save a new entry.
+* `/faq remove entry_id:123` – Delete a stored answer.
+* `/faq list` – Review your current FAQ catalogue.
+
+---
+
+## 🔗 Banned URL Enforcement
+
+Block specific domains or exact links and apply custom punishments when they appear.
+
+### 🔧 Configuration:
+
+* `/bannedurls add url:badsite.com` – Add a domain or full URL to the blocked list.
+* `/bannedurls remove url:badsite.com` – Unblock a link.
+* `/bannedurls list` – Export the current list as a file.
+* `/bannedurls clear` – Wipe all blocked URLs.
+* `/bannedurls add_action action:timeout duration:1d` – Decide what happens when a banned link is posted.
+* `/settings set name=exclude-url-channels value="#partnerships"` – Allow specific channels to bypass URL blocking.
+
+### 📜 Inspection:
+
+* `/bannedurls view_actions` – Review the enforcement actions currently configured.
 
 ---
 
@@ -196,25 +257,80 @@ Tracks and logs key server events:
 
 ---
 
+## 🖥️ Web Dashboard & Self-Service
+
+Access https://modbot.neomechanical.com to review moderation stats, tune settings, and manage your Accelerated subscription.
+
+### 🔧 Quick Actions:
+
+* `/dashboard` – Receive a private link to your server’s dashboard.
+* `/accelerated status` – Check your current Accelerated tier and renewal date.
+* `/accelerated subscribe` – Generate an upgrade link for your guild.
+* `/accelerated cancel` – Get instructions for cancelling your subscription.
+
+---
+
 ## ⚙️ Settings Snapshot
 
-| Name                    | Type               | Description                         |
-| ----------------------- | ------------------ | ----------------------------------- |
-| `strike-expiry`         | TimeString         | Duration before strikes expire      |
-| `cycle-strike-actions`  | bool               | Loop fallback strike actions        |
-| `dm-on-strike`          | bool               | DM users when they receive a strike |
-| `check-pfp`             | bool               | Scan avatars for NSFW               |
-| `nsfw-pfp-action`       | list\[str]         | Action on NSFW avatars              |
-| `nsfw-pfp-message`      | str                | Message on NSFW avatar detection    |
-| `unmute-on-safe-pfp`    | bool               | Auto-unmute on safe avatar change   |
-| `check-tenor-gifs`      | bool               | Scan Tenor GIFs for NSFW            |
-| `nsfw-high-accuracy`    | bool (Accelerated) | High-accuracy NSFW scans            |
-| `banned-words-action`   | list\[str]         | Action on banned words              |
-| `exclude-channels`      | list\[TextChannel] | Channels excluded from checks       |
-| `scam-detection-action` | list\[str]         | Actions for scam messages           |
-| `check-links`           | bool               | Enable URL safety checks            |
-| `exclude-scam-channels` | list\[TextChannel] | Skip scam checks in these channels  |
-| `aimod-check-interval`  | TimeString         | How often to run AI moderation      |
-| `no-forward-from-role`  | list\[Role]        | Roles that can't forward messages   |
+| Name                               | Type                  | Description                                         |
+| ---------------------------------- | --------------------- | --------------------------------------------------- |
+| `strike-channel`                   | TextChannel           | Channel where strike embeds are posted              |
+| `strike-expiry`                    | TimeString            | Duration before strikes expire                      |
+| `cycle-strike-actions`             | bool                  | Loop fallback strike actions                        |
+| `strike-actions`                   | dict\[str, list\[str]] | Custom actions for each strike level                |
+| `dm-on-strike`                     | bool                  | DM users when they receive a strike                 |
+| `use-default-banned-words`         | bool                  | Enable the built-in profanity list                  |
+| `banned-words-action`              | list\[str]            | Action on banned words                              |
+| `exclude-bannedwords-channels`     | list\[TextChannel]    | Channels excluded from banned words scanning        |
+| `check-pfp`                        | bool                  | Scan avatars for NSFW                               |
+| `nsfw-pfp-action`                  | list\[str]            | Action on NSFW avatars                              |
+| `nsfw-pfp-message`                 | str                   | Message on NSFW avatar detection                    |
+| `unmute-on-safe-pfp`               | bool                  | Auto-unmute on safe avatar change                   |
+| `check-tenor-gifs`                 | bool                  | Scan Tenor GIFs for NSFW                            |
+| `nsfw-high-accuracy`               | bool (Accelerated)    | High-accuracy NSFW scans                            |
+| `exclude-channels`                 | list\[TextChannel]    | Channels excluded from checks                       |
+| `monitor-channel`                  | TextChannel           | All-purpose moderation log channel                  |
+| `monitor-events`                   | dict\[str, bool]      | Toggle individual logging events                    |
+| `scam-detection-action`            | list\[str]            | Actions for scam messages                           |
+| `delete-scam-messages`             | bool                  | Auto-delete detected scam content                   |
+| `check-links`                      | bool                  | Enable URL safety checks                            |
+| `exclude-scam-channels`            | list\[TextChannel]    | Skip scam checks in these channels                  |
+| `banned-urls`                      | list\[str]            | Custom list of blocked links                        |
+| `url-detection-action`             | list\[str]            | Actions when banned URLs appear                     |
+| `exclude-url-channels`             | list\[TextChannel]    | Channels that bypass URL blocking                   |
+| `aimod-channel`                    | TextChannel           | Where AI violation logs are posted                  |
+| `aimod-debug`                      | bool                  | Always share detailed AI moderation context         |
+| `aimod-check-interval`             | TimeString            | How often to run AI moderation                      |
+| `aimod-mode`                       | str                   | Choose `report`, `interval`, or `adaptive` scanning |
+| `aimod-adaptive-events`            | dict\[str, list\[str]] | Events that shift AI moderation modes               |
+| `aimod-detection-action`           | list\[str]            | Action when AI moderation flags content             |
+| `aimod-high-accuracy`              | bool (Accelerated)    | Use gpt-5-mini for tighter moderation               |
+| `autonomous-mod`                   | bool (Accelerated)    | Let AI enforce rules automatically                  |
+| `no-forward-from-role`             | list\[Role]           | Roles that can't forward messages                   |
+| `faq-enabled`                      | bool                  | Toggle automatic FAQ replies                        |
+| `faq-threshold`                    | float                 | Match score required before replying                |
+| `faq-direct-reply`                 | bool (Accelerated)    | Reply directly instead of using embeds              |
+| `captcha-log-channel`              | TextChannel           | Verification log channel                            |
+| `captcha-delivery-method`          | str                   | Choose DM or embed delivery for captcha             |
+| `captcha-embed-channel-id`         | TextChannel           | Channel hosting the captcha embed                   |
+| `pre-captcha-roles`                | list\[Role]           | Roles assigned before verification                  |
+| `captcha-success-actions`          | list\[str]            | Actions after passing verification                  |
+| `captcha-failure-actions`          | list\[str]            | Actions after failing verification                  |
+| `vpn-detection-enabled`            | bool                  | Screen newcomers for VPN usage                      |
+| `vpn-detection-actions`            | list\[str]            | Actions when VPN screening fails                    |
+| `vpn-pre-actions`                  | list\[str]            | Role adjustments before VPN screening               |
+| `vpn-post-actions`                 | list\[str]            | Role adjustments after VPN screening succeeds       |
+| `vcmod-enabled`                    | bool (Accelerated)    | Enable voice moderation                             |
+| `vcmod-channels`                   | list\[VoiceChannel]   | Voice channels monitored by the bot                 |
+| `vcmod-listen-duration`            | TimeString            | Active listening window per channel                 |
+| `vcmod-idle-duration`              | TimeString            | Pause between transcripts in saver mode             |
+| `vcmod-saver-mode`                 | bool                  | Lightweight cycling without constant recording      |
+| `vcmod-rules`                      | str                   | Custom rules for voice chat moderation              |
+| `vcmod-detection-action`           | list\[str]            | Response when voice moderation flags audio          |
+| `vcmod-high-accuracy`              | bool (Accelerated)    | Higher-accuracy voice analysis                      |
+| `vcmod-high-quality-transcription` | bool (Accelerated)    | Premium transcription quality                       |
+| `vcmod-transcript-channel`         | TextChannel           | Where transcripts are posted                        |
+| `vcmod-transcript-only`            | bool                  | Transcribe voice chat without enforcing rules       |
+| `vcmod-join-announcement`          | bool                  | Play TTS when the bot joins a voice channel         |
 
 ---
