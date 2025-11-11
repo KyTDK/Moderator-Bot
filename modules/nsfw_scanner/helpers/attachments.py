@@ -149,6 +149,7 @@ FIELD_FALLBACKS = {
     "latency_ms": "Scan Latency",
     "average_latency_per_frame_ms": "Avg Latency / Frame",
     "latency_breakdown": "Latency Breakdown",
+    "payload_details": "Payload Details",
 }
 
 REASON_FALLBACKS = {
@@ -623,6 +624,90 @@ async def check_attachment(
                         translator, "latency_breakdown", guild_id
                     ),
                     value="\n".join(telemetry.breakdown_lines)[:1024],
+                    inline=False,
+                )
+            payload_lines: list[str] = []
+            pipeline_metrics = telemetry.pipeline_metrics if isinstance(
+                getattr(telemetry, "pipeline_metrics", None), dict
+            ) else None
+            payload_info = None
+            if pipeline_metrics:
+                moderator_metadata = pipeline_metrics.get("moderator_metadata")
+                if isinstance(moderator_metadata, dict):
+                    payload_info = moderator_metadata.get("payload_info")
+            if isinstance(payload_info, dict) and payload_info:
+                def _format_int(value: Any) -> int | None:
+                    try:
+                        return int(value)
+                    except (TypeError, ValueError):
+                        return None
+
+                def _format_int_with_commas(value: Any) -> str | None:
+                    coerced = _format_int(value)
+                    return f"{coerced:,}" if coerced is not None else None
+
+                resized_flag = payload_info.get("payload_resized")
+                if isinstance(resized_flag, bool):
+                    payload_lines.append(
+                        f"Resized: {_localize_boolean(translator, resized_flag, guild_id)}"
+                    )
+                elif resized_flag is not None:
+                    payload_lines.append(f"Resized: {resized_flag}")
+
+                original_size = payload_info.get("image_size")
+                payload_width = _format_int(payload_info.get("payload_width"))
+                payload_height = _format_int(payload_info.get("payload_height"))
+                if payload_width is not None and payload_height is not None:
+                    if isinstance(original_size, (list, tuple)) and len(original_size) == 2:
+                        orig_width = _format_int(original_size[0])
+                        orig_height = _format_int(original_size[1])
+                        if orig_width is not None and orig_height is not None:
+                            payload_lines.append(
+                                f"Dimensions: {orig_width}x{orig_height} -> {payload_width}x{payload_height}"
+                            )
+                        else:
+                            payload_lines.append(f"Dimensions: {payload_width}x{payload_height}")
+                    else:
+                        payload_lines.append(f"Dimensions: {payload_width}x{payload_height}")
+                elif isinstance(original_size, (list, tuple)) and len(original_size) == 2:
+                    orig_width = _format_int(original_size[0])
+                    orig_height = _format_int(original_size[1])
+                    if orig_width is not None and orig_height is not None:
+                        payload_lines.append(f"Dimensions: {orig_width}x{orig_height}")
+
+                source_bytes_fmt = _format_int_with_commas(payload_info.get("source_bytes"))
+                payload_bytes_fmt = _format_int_with_commas(payload_info.get("payload_bytes"))
+                if payload_bytes_fmt and source_bytes_fmt and source_bytes_fmt != payload_bytes_fmt:
+                    payload_lines.append(f"Bytes: {source_bytes_fmt} -> {payload_bytes_fmt}")
+                elif payload_bytes_fmt:
+                    payload_lines.append(f"Bytes: {payload_bytes_fmt}")
+                elif source_bytes_fmt:
+                    payload_lines.append(f"Bytes: {source_bytes_fmt}")
+
+                if "payload_edge_limit" in payload_info:
+                    edge_limit_value = payload_info.get("payload_edge_limit")
+                    edge_limit_int = _format_int(edge_limit_value)
+                    if edge_limit_int is not None:
+                        payload_lines.append(f"Edge Limit: {edge_limit_int:,} px")
+                    else:
+                        payload_lines.append("Edge Limit: disabled")
+
+                target_bytes_fmt = _format_int_with_commas(payload_info.get("payload_target_bytes"))
+                if target_bytes_fmt:
+                    payload_lines.append(f"Target Bytes: {target_bytes_fmt}")
+
+                strategy = payload_info.get("payload_strategy")
+                if strategy:
+                    payload_lines.append(f"Strategy: {strategy}")
+
+                quality = payload_info.get("payload_quality")
+                if quality is not None:
+                    payload_lines.append(f"Quality: {quality}")
+
+            if payload_lines:
+                embed.add_field(
+                    name=_localize_field_name(translator, "payload_details", guild_id),
+                    value="\n".join(payload_lines)[:1024],
                     inline=False,
                 )
             if scan_result:

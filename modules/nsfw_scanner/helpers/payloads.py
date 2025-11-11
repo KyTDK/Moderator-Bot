@@ -25,13 +25,23 @@ __all__ = [
 
 _RESAMPLING_FILTER = getattr(getattr(Image, "Resampling", Image), "LANCZOS", Image.BICUBIC)
 
-MAX_IMAGE_EDGE = int(os.getenv("MODBOT_MODERATION_MAX_IMAGE_EDGE", "4096"))
-INLINE_PASSTHROUGH_BYTES = int(os.getenv("MODBOT_MODERATION_INLINE_THRESHOLD", "524288"))
-JPEG_TARGET_BYTES = int(os.getenv("MODBOT_MODERATION_TARGET_BYTES", "1800000"))
+MAX_IMAGE_EDGE = int(os.getenv("MODBOT_MODERATION_MAX_IMAGE_EDGE", "0"))
+INLINE_PASSTHROUGH_BYTES = int(os.getenv("MODBOT_MODERATION_INLINE_THRESHOLD", "3145728"))
+JPEG_TARGET_BYTES = int(os.getenv("MODBOT_MODERATION_TARGET_BYTES", "3000000"))
 JPEG_INITIAL_QUALITY = int(os.getenv("MODBOT_MODERATION_JPEG_QUALITY", "82"))
 JPEG_MIN_QUALITY = int(os.getenv("MODBOT_MODERATION_MIN_JPEG_QUALITY", "58"))
 VIDEO_FRAME_MAX_EDGE = int(os.getenv("MODBOT_MODERATION_VIDEO_MAX_EDGE", "768"))
 VIDEO_FRAME_TARGET_BYTES = int(os.getenv("MODBOT_MODERATION_VIDEO_TARGET_BYTES", "350000"))
+
+
+def _coerce_positive_int(value: int | str | None) -> int | None:
+    if value is None:
+        return None
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number > 0 else None
 
 
 @dataclass(slots=True)
@@ -44,6 +54,8 @@ class PreparedImagePayload:
     strategy: str
     quality: int | None
     original_mime: str | None
+    target_bytes: int | None
+    edge_limit: int | None
 
 
 def flatten_alpha(image: Image.Image) -> Image.Image:
@@ -76,11 +88,14 @@ def prepare_image_payload_sync(
     if format_preference not in {"jpeg", "png"}:
         format_preference = "jpeg"
 
-    edge_limit = int(max_image_edge) if max_image_edge else MAX_IMAGE_EDGE
-    if edge_limit <= 0:
-        edge_limit = MAX_IMAGE_EDGE
-    target_bytes = int(jpeg_target_bytes) if jpeg_target_bytes else JPEG_TARGET_BYTES
-    if target_bytes <= 0:
+    edge_limit_override = _coerce_positive_int(max_image_edge)
+    default_edge_limit = _coerce_positive_int(MAX_IMAGE_EDGE)
+    edge_limit = edge_limit_override if edge_limit_override is not None else default_edge_limit
+
+    target_bytes_override = _coerce_positive_int(jpeg_target_bytes)
+    default_target_bytes = _coerce_positive_int(JPEG_TARGET_BYTES)
+    target_bytes = target_bytes_override if target_bytes_override is not None else default_target_bytes
+    if target_bytes is None or target_bytes <= 0:
         target_bytes = JPEG_TARGET_BYTES
 
     if image is not None:
@@ -135,7 +150,7 @@ def prepare_image_payload_sync(
         format_preference == "jpeg"
         and original_size is not None
         and original_size <= INLINE_PASSTHROUGH_BYTES
-        and max(width, height) <= edge_limit
+        and (edge_limit is None or max(width, height) <= edge_limit)
         and original_mime in {"image/jpeg", "image/jpg"}
         and image_bytes is not None
     )
@@ -153,6 +168,8 @@ def prepare_image_payload_sync(
             strategy="passthrough",
             quality=None,
             original_mime=image_mime,
+            target_bytes=target_bytes,
+            edge_limit=edge_limit,
         )
         if close_working and working is not None:
             working.close()
@@ -160,7 +177,7 @@ def prepare_image_payload_sync(
 
     resized = False
     max_edge = max(width, height)
-    if max_edge > edge_limit and working.size[0] > 0 and working.size[1] > 0:
+    if edge_limit is not None and max_edge > edge_limit and working.size[0] > 0 and working.size[1] > 0:
         scale = edge_limit / float(max_edge)
         new_size = (
             max(1, int(round(working.size[0] * scale))),
@@ -195,6 +212,8 @@ def prepare_image_payload_sync(
                 strategy="converted_png",
                 quality=None,
                 original_mime=image_mime,
+                target_bytes=target_bytes,
+                edge_limit=edge_limit,
             )
             return payload
 
@@ -248,6 +267,8 @@ def prepare_image_payload_sync(
             strategy="compressed_jpeg",
             quality=chosen_quality,
             original_mime=image_mime,
+            target_bytes=target_bytes,
+            edge_limit=edge_limit,
         )
         return payload
     finally:

@@ -139,6 +139,11 @@ async def moderator_api(
 
         source_url = payload_metadata.get("source_url") if isinstance(payload_metadata, dict) else None
         quality_label = "passthrough" if prepared.strategy == "passthrough" else None
+        if prepared.edge_limit is None:
+            latency_tracker.set_payload_detail("payload_edge_limit", "disabled")
+        else:
+            latency_tracker.set_payload_detail("payload_edge_limit", prepared.edge_limit)
+        latency_tracker.set_payload_detail("payload_target_bytes", prepared.target_bytes)
         image_state = ImageModerationState.from_prepared_payload(
             prepared,
             latency_tracker=latency_tracker,

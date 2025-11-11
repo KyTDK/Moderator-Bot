@@ -36,6 +36,8 @@ def test_image_moderation_state_allows_remote_for_passthrough_payload():
         strategy="passthrough",
         quality=None,
         original_mime="image/jpeg",
+        target_bytes=3000000,
+        edge_limit=None,
     )
 
     state = ImageModerationState.from_prepared_payload(
@@ -76,6 +78,8 @@ def test_image_moderation_state_uses_inline_payload_for_converted_images(strateg
         strategy=strategy,
         quality=quality,
         original_mime="image/jpeg",
+        target_bytes=3000000,
+        edge_limit=4096,
     )
 
     state = ImageModerationState.from_prepared_payload(
