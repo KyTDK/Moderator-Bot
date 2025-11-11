@@ -18,6 +18,11 @@ from .commands.locale_cmd import send_current_locale
 from .commands.metrics import reset_latency
 from .commands.metrics_view import format_latency_breakdown
 from .commands.stats import build_stats_embed
+from .commands.vectors import (
+    VECTOR_STORE_CHOICES,
+    report_vector_status,
+    reset_vectors as handle_reset_vectors,
+)
 from .config import DEV_GUILD_ID
 from .guards import require_dev_access
 
@@ -133,6 +138,40 @@ class DebugCog(commands.Cog):
         if not await require_dev_access(self.bot, interaction, denial_key=None):
             return
         await handle_refresh_guilds(self, interaction)
+
+    vector_store_choices = [
+        app_commands.Choice(name=config.label, value=config.key) for config in VECTOR_STORE_CHOICES
+    ]
+
+    @app_commands.command(
+        name="reset_vectors",
+        description="Delete every vector from an NSFW Milvus collection.",
+    )
+    @guild_scope_decorator()
+    @app_commands.describe(store="Select the vector collection to reset.")
+    @app_commands.choices(store=vector_store_choices)
+    @app_commands.checks.has_permissions(administrator=True)
+    async def reset_vector_store(
+        self,
+        interaction: discord.Interaction,
+        store: app_commands.Choice[str],
+    ) -> None:
+        await interaction.response.defer(ephemeral=True)
+        if not await require_dev_access(self.bot, interaction, denial_key=None):
+            return
+        await handle_reset_vectors(interaction, store.value)
+
+    @app_commands.command(
+        name="vector_status",
+        description="View Milvus connection and collection details for NSFW vectors.",
+    )
+    @guild_scope_decorator()
+    @app_commands.checks.has_permissions(administrator=True)
+    async def vector_status(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+        if not await require_dev_access(self.bot, interaction, denial_key=None):
+            return
+        await report_vector_status(interaction)
 
     @app_commands.command(
         name="locale",

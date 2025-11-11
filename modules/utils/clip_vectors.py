@@ -168,6 +168,14 @@ async def delete_vectors(ids: Iterable[int]) -> VectorDeleteStats | None:
     return await _IMAGE_VECTOR_SPACE.delete_vectors(ids)
 
 
+async def reset_collection() -> VectorDeleteStats | None:
+    return await _IMAGE_VECTOR_SPACE.reset_collection()
+
+
+def get_debug_info() -> dict[str, Any]:
+    return _IMAGE_VECTOR_SPACE.get_debug_info()
+
+
 def query_similar(
     image: Image.Image,
     threshold: float = 0.80,
@@ -221,8 +229,10 @@ __all__ = [
     "embed_batch",
     "add_vector",
     "delete_vectors",
+    "reset_collection",
     "query_similar",
     "query_similar_batch",
     "VectorDeleteStats",
     "list_entries",
+    "get_debug_info",
 ]

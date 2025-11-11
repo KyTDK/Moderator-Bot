@@ -51,6 +51,8 @@ class VectorDeleteStats:
     total_ms: float
     delete_ms: float
     flush_ms: Optional[float]
+    deleted_count: Optional[int] = None
+    remaining_count: Optional[int] = None
 
 
 def _suggest_ivf_params(n_vectors: int) -> tuple[int, int]:
@@ -303,13 +305,14 @@ class MilvusVectorSpace:
             return None
 
         self._ensure_collection_initializer_started()
-        ready = self._collection_ready.wait(timeout or self._ready_timeout)
+        wait_timeout = self._ready_timeout if timeout is None else timeout
+        ready = self._collection_ready.wait(wait_timeout)
         if not ready:
             if not self._collection_not_ready_warned:
                 self._log.warning(
                     "Milvus collection '%s' is still loading after %.1fs; vector ops deferred",
                     self.collection_name,
-                    0.0 if timeout is None else timeout,
+                    wait_timeout,
                 )
                 self._collection_not_ready_warned = True
             return None
@@ -361,12 +364,43 @@ class MilvusVectorSpace:
             "last_error": None,
             "host": self.host,
             "port": self.port,
+            "collection": self.collection_name,
+            "dimension": self.dim,
+            "metric_type": self.metric_type,
+            "entity_count": None,
+            "has_index": None,
+            "indexes": None,
         }
         with self._collection_state_lock:
             info["fallback_active"] = self._fallback_active
             info["collection_ready"] = self._collection is not None
             if self._collection_error is not None:
                 info["last_error"] = f"{self._collection_error.__class__.__name__}: {self._collection_error}"
+
+        coll = self._get_collection(timeout=0.0)
+        if coll is not None:
+            try:
+                info["entity_count"] = int(coll.num_entities)  # type: ignore[arg-type]
+            except Exception:  # pragma: no cover - defensive fallback
+                info["entity_count"] = None
+            try:
+                info["has_index"] = bool(coll.has_index())
+            except Exception:  # pragma: no cover - defensive fallback
+                info["has_index"] = None
+            try:
+                indexes = getattr(coll, "indexes", None)
+                if indexes:
+                    details = []
+                    for index in indexes:
+                        details.append(
+                            {
+                                "type": getattr(index, "index_type", None),
+                                "params": getattr(index, "params", None),
+                            }
+                        )
+                    info["indexes"] = details
+            except Exception:  # pragma: no cover - defensive fallback
+                info["indexes"] = None
         return info
 
     # ------------------------------------------------------------------
@@ -426,10 +460,19 @@ class MilvusVectorSpace:
             start = time.perf_counter()
             delete_duration = 0.0
             flush_duration: Optional[float] = None
+            delete_count: Optional[int] = None
+            remaining_count: Optional[int] = None
             with self._write_lock:
                 delete_started = time.perf_counter()
-                coll.delete(expr)
+                result = coll.delete(expr)
                 delete_duration = (time.perf_counter() - delete_started) * 1000
+                if result is not None:
+                    delete_count = getattr(result, "delete_count", None)
+                    if delete_count is not None:
+                        try:
+                            delete_count = int(delete_count)
+                        except (TypeError, ValueError):  # pragma: no cover - defensive cast
+                            delete_count = None
                 flush_started = time.perf_counter()
                 try:
                     coll.flush()
@@ -437,6 +480,10 @@ class MilvusVectorSpace:
                     self._log.warning("[%s] Milvus flush after delete failed: %s", self.collection_name, exc)
                 else:
                     flush_duration = (time.perf_counter() - flush_started) * 1000
+                try:
+                    remaining_count = int(coll.num_entities)  # type: ignore[arg-type]
+                except Exception:  # pragma: no cover - defensive fallback
+                    remaining_count = None
 
             total_duration = (time.perf_counter() - start) * 1000
             if delete_duration > 1000:
@@ -457,9 +504,80 @@ class MilvusVectorSpace:
                 total_ms=total_duration,
                 delete_ms=delete_duration,
                 flush_ms=flush_duration,
+                deleted_count=delete_count,
+                remaining_count=remaining_count,
             )
 
         return await asyncio.to_thread(_delete_and_flush)
+
+    async def reset_collection(self) -> Optional[VectorDeleteStats]:
+        """Delete every vector in the backing collection."""
+
+        coll = self._get_collection()
+        if coll is None:
+            if not self._vector_delete_warned:
+                self._log.warning(
+                    "[%s] Unable to reset collection; Milvus collection is not ready",
+                    self.collection_name,
+                )
+                self._vector_delete_warned = True
+            return None
+
+        def _reset_and_flush() -> VectorDeleteStats:
+            start = time.perf_counter()
+            delete_duration = 0.0
+            flush_duration: Optional[float] = None
+            deleted_count: Optional[int] = None
+            remaining_count: Optional[int] = None
+            with self._write_lock:
+                delete_started = time.perf_counter()
+                result = coll.delete("id >= 0")
+                delete_duration = (time.perf_counter() - delete_started) * 1000
+                if result is not None:
+                    deleted_count = getattr(result, "delete_count", None)
+                    if deleted_count is not None:
+                        try:
+                            deleted_count = int(deleted_count)
+                        except (TypeError, ValueError):  # pragma: no cover - defensive cast
+                            deleted_count = None
+                flush_started = time.perf_counter()
+                try:
+                    coll.flush()
+                except MilvusException as exc:  # pragma: no cover - defensive logging
+                    self._log.warning(
+                        "[%s] Milvus flush after resetting collection failed: %s",
+                        self.collection_name,
+                        exc,
+                    )
+                else:
+                    flush_duration = (time.perf_counter() - flush_started) * 1000
+                try:
+                    remaining_count = int(coll.num_entities)  # type: ignore[arg-type]
+                except Exception:  # pragma: no cover - defensive fallback
+                    remaining_count = None
+
+            total_duration = (time.perf_counter() - start) * 1000
+            if delete_duration > 1000:
+                self._log.warning(
+                    "[%s] Milvus reset delete took %.1f ms",
+                    self.collection_name,
+                    delete_duration,
+                )
+            if flush_duration and flush_duration > 1000:
+                self._log.warning(
+                    "[%s] Milvus reset flush took %.1f ms",
+                    self.collection_name,
+                    flush_duration,
+                )
+            return VectorDeleteStats(
+                total_ms=total_duration,
+                delete_ms=delete_duration,
+                flush_ms=flush_duration,
+                deleted_count=deleted_count,
+                remaining_count=remaining_count,
+            )
+
+        return await asyncio.to_thread(_reset_and_flush)
 
     def query_similar_batch(
         self,

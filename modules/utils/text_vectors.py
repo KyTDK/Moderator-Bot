@@ -95,6 +95,14 @@ async def delete_vectors(ids: Iterable[int]) -> VectorDeleteStats | None:
     return await _TEXT_VECTOR_SPACE.delete_vectors(ids)
 
 
+async def reset_collection() -> VectorDeleteStats | None:
+    return await _TEXT_VECTOR_SPACE.reset_collection()
+
+
+def get_debug_info() -> dict[str, Any]:
+    return _TEXT_VECTOR_SPACE.get_debug_info()
+
+
 def query_similar(
     text: str,
     threshold: float = 0.70,
@@ -132,7 +140,9 @@ __all__ = [
     "embed_text_batch",
     "add_vector",
     "delete_vectors",
+    "reset_collection",
     "query_similar",
     "query_similar_batch",
     "VectorDeleteStats",
+    "get_debug_info",
 ]

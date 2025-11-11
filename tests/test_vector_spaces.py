@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import os
 import sys
@@ -68,10 +69,49 @@ def test_get_debug_info_reports_state(monkeypatch, milvus_space):
 
     info = milvus_space.get_debug_info()
 
-    assert calls == 1
+    assert calls >= 1
     assert info["init_started"] is True
     assert info["fallback_active"] is True
     assert info["collection_ready"] is False
     assert info["last_error"] == "RuntimeError: boom"
     assert info["host"] == "test-host"
     assert info["port"] == "19530"
+    assert info["collection"] == "test_collection"
+    assert info["dimension"] == 4
+    assert info["metric_type"] == "IP"
+
+
+def test_reset_collection_deletes_all_vectors(monkeypatch, milvus_space):
+    class DummyMutationResult:
+        def __init__(self, delete_count: int) -> None:
+            self.delete_count = delete_count
+
+    class DummyCollection:
+        def __init__(self) -> None:
+            self.delete_calls: list[str] = []
+            self.flush_calls = 0
+            self._entities = 5
+
+        def delete(self, expr: str) -> DummyMutationResult:
+            self.delete_calls.append(expr)
+            removed = self._entities
+            self._entities = 0
+            return DummyMutationResult(removed)
+
+        def flush(self) -> None:
+            self.flush_calls += 1
+
+        @property
+        def num_entities(self) -> int:
+            return self._entities
+
+    dummy = DummyCollection()
+    monkeypatch.setattr(milvus_space, "_get_collection", lambda timeout=None: dummy)
+
+    stats = asyncio.run(milvus_space.reset_collection())
+
+    assert dummy.delete_calls == ["id >= 0"]
+    assert dummy.flush_calls == 1
+    assert stats is not None
+    assert stats.deleted_count == 5
+    assert stats.remaining_count == 0
