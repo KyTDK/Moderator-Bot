@@ -27,7 +27,7 @@ PREVIEW_MAX_DIMENSION = 112
 TARGET_MAX_DIMENSION = 224
 DEDUP_SIGNATURE_DIM = 16
 
-_FFMPEG_SCALE_EDGE = int(os.getenv("MODBOT_FFMPEG_MAX_EDGE", "640"))
+_FFMPEG_SCALE_EDGE = int(os.getenv("MODBOT_FFMPEG_MAX_EDGE", "4096"))
 _FFMPEG_TIMEOUT_SECONDS = float(os.getenv("MODBOT_FFMPEG_TIMEOUT", "45"))
 
 _SUPPRESS_OPENCV_STDERR = os.environ.get("MODBOT_SUPPRESS_OPENCV_STDERR", "1").lower()
@@ -237,10 +237,11 @@ def _iter_video_frames_ffmpeg(
 
     select_terms = [f"eq(n\\,{idx})" for idx in idxs_list]
     select_expr = "+".join(select_terms)
-    filters = [
-        f"select={select_expr}",
-        f"scale='min({_FFMPEG_SCALE_EDGE},iw)':'min({_FFMPEG_SCALE_EDGE},ih)':force_original_aspect_ratio=decrease",
-    ]
+    filters = [f"select={select_expr}"]
+    if _FFMPEG_SCALE_EDGE > 0:
+        filters.append(
+            f"scale='min({_FFMPEG_SCALE_EDGE},iw)':'min({_FFMPEG_SCALE_EDGE},ih)':force_original_aspect_ratio=decrease"
+        )
     filter_arg = ",".join(filters)
 
     cmd = [
@@ -334,7 +335,7 @@ def _resize_for_model(frame_rgb: np.ndarray) -> np.ndarray:
         return frame_rgb
     longest_edge = max(height, width)
     if longest_edge <= TARGET_MAX_DIMENSION:
-        return frame_rgb.copy()
+        return frame_rgb
     scale = TARGET_MAX_DIMENSION / float(longest_edge)
     new_width = max(1, int(round(width * scale)))
     new_height = max(1, int(round(height * scale)))
@@ -446,14 +447,14 @@ def _select_motion_keyframes(total_frames: int, cap: int, scores: list[float]) -
 def _encode_rgb_frame(frame_rgb: np.ndarray, frame_idx: int, total_frames: Optional[int]) -> Optional[ExtractedFrame]:
     if frame_rgb is None:
         return None
-    resized = _resize_for_model(frame_rgb)
-    signature = _compute_signature_from_rgb(resized)
+    resized_for_signature = _resize_for_model(frame_rgb)
+    signature = _compute_signature_from_rgb(resized_for_signature)
     if signature is None:
         return None
     try:
-        bgr_frame = cv2.cvtColor(resized, cv2.COLOR_RGB2BGR)
+        bgr_frame = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
     except Exception:
-        bgr_frame = resized
+        bgr_frame = frame_rgb
     success, buffer = cv2.imencode(
         ".jpg",
         bgr_frame,
