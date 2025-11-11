@@ -46,6 +46,7 @@
               "latency_ms": "Latency (ms)",
               "average_latency_per_frame_ms": "Average Latency per Frame (ms)",
               "latency_breakdown": "Latency Breakdown",
+              "payload_details": "Payload Details",
               "cache_status": "Cache Status"
             },
             "reasons": {
