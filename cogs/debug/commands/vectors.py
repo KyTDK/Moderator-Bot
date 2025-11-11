@@ -87,6 +87,8 @@ async def reset_vectors(interaction, store_key: str) -> None:
         f"- Flush duration: {_format_ms(stats.flush_ms)}",
         f"- Total duration: {_format_ms(stats.total_ms)}",
     ]
+    if stats.compact_ms is not None:
+        summary.append(f"- Compaction duration: {_format_ms(stats.compact_ms)}")
     if not details.get("collection_ready"):
         summary.append("- Warning: collection is not marked ready after reset.")
     if details.get("fallback_active"):

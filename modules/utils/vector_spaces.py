@@ -53,6 +53,7 @@ class VectorDeleteStats:
     flush_ms: Optional[float]
     deleted_count: Optional[int] = None
     remaining_count: Optional[int] = None
+    compact_ms: Optional[float] = None
 
 
 def _suggest_ivf_params(n_vectors: int) -> tuple[int, int]:
@@ -510,7 +511,12 @@ class MilvusVectorSpace:
 
         return await asyncio.to_thread(_delete_and_flush)
 
-    async def reset_collection(self) -> Optional[VectorDeleteStats]:
+    async def reset_collection(
+        self,
+        *,
+        compact: bool = True,
+        compact_timeout: float = 60.0,
+    ) -> Optional[VectorDeleteStats]:
         """Delete every vector in the backing collection."""
 
         coll = self._get_collection()
@@ -577,7 +583,86 @@ class MilvusVectorSpace:
                 remaining_count=remaining_count,
             )
 
-        return await asyncio.to_thread(_reset_and_flush)
+        stats = await asyncio.to_thread(_reset_and_flush)
+        if not compact or stats is None:
+            return stats
+
+        def _run_compaction() -> Optional[float]:
+            start = time.perf_counter()
+            compact_fn = getattr(utility, "compact", None)
+            if compact_fn is None:
+                self._log.debug(
+                    "[%s] Skipping compaction; pymilvus utility.compact is unavailable",
+                    self.collection_name,
+                )
+                return None
+            try:
+                compaction_id = compact_fn(self.collection_name)
+            except Exception as exc:  # pragma: no cover - defensive logging
+                self._log.warning(
+                    "[%s] Milvus compaction request failed: %s",
+                    self.collection_name,
+                    exc,
+                )
+                return None
+
+            wait_fn = getattr(utility, "wait_for_compaction_completed", None)
+            get_state_fn = getattr(utility, "get_compaction_state", None)
+            if wait_fn is not None:
+                try:
+                    wait_fn(compaction_id, timeout=compact_timeout)
+                except Exception as exc:  # pragma: no cover - defensive logging
+                    self._log.warning(
+                        "[%s] Waiting for compaction to finish failed: %s",
+                        self.collection_name,
+                        exc,
+                    )
+                    return None
+                return (time.perf_counter() - start) * 1000
+
+            if get_state_fn is not None:
+                deadline = time.monotonic() + compact_timeout
+                try:
+                    while time.monotonic() < deadline:
+                        state = get_state_fn(compaction_id)
+                        if isinstance(state, dict):
+                            status = state.get("state") or state.get("status")
+                        else:
+                            status = getattr(state, "state", None)
+                        if status and str(status).lower() in {"completed", "success", "succeed", "finished"}:
+                            return (time.perf_counter() - start) * 1000
+                        time.sleep(0.5)
+                except Exception as exc:  # pragma: no cover - defensive logging
+                    self._log.warning(
+                        "[%s] Polling compaction state failed: %s",
+                        self.collection_name,
+                        exc,
+                    )
+                    return None
+                self._log.warning(
+                    "[%s] Compaction did not finish within %.1fs",
+                    self.collection_name,
+                    compact_timeout,
+                )
+                return None
+
+            self._log.debug(
+                "[%s] Compaction APIs unavailable; skipping wait for completion",
+                self.collection_name,
+            )
+            return (time.perf_counter() - start) * 1000
+
+        compact_duration = await asyncio.to_thread(_run_compaction)
+        if compact_duration is not None:
+            stats.compact_ms = compact_duration
+            refreshed = self._get_collection(timeout=0.0)
+            if refreshed is not None:
+                try:
+                    stats.remaining_count = int(refreshed.num_entities)  # type: ignore[arg-type]
+                except Exception:  # pragma: no cover - defensive fallback
+                    pass
+
+        return stats
 
     def query_similar_batch(
         self,

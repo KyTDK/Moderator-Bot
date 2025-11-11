@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 os.environ.setdefault("FERNET_SECRET_KEY", base64.urlsafe_b64encode(b"0" * 32).decode())
 
 from modules.utils.vector_spaces import MilvusVectorSpace
+from modules.utils import vector_spaces as vector_spaces_module
 
 
 def _embed_batch(items):
@@ -108,6 +109,19 @@ def test_reset_collection_deletes_all_vectors(monkeypatch, milvus_space):
     dummy = DummyCollection()
     monkeypatch.setattr(milvus_space, "_get_collection", lambda timeout=None: dummy)
 
+    calls: dict[str, int] = {}
+
+    class UtilityStub:
+        def compact(self, name: str):
+            calls["compact"] = calls.get("compact", 0) + 1
+            assert name == "test_collection"
+            return 123
+
+        def wait_for_compaction_completed(self, _compaction_id, timeout=None):
+            calls["wait"] = calls.get("wait", 0) + 1
+
+    monkeypatch.setattr(vector_spaces_module, "utility", UtilityStub(), raising=False)
+
     stats = asyncio.run(milvus_space.reset_collection())
 
     assert dummy.delete_calls == ["id >= 0"]
@@ -115,3 +129,5 @@ def test_reset_collection_deletes_all_vectors(monkeypatch, milvus_space):
     assert stats is not None
     assert stats.deleted_count == 5
     assert stats.remaining_count == 0
+    assert stats.compact_ms is not None
+    assert calls.get("compact") == 1
