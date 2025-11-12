@@ -27,7 +27,9 @@ PREVIEW_MAX_DIMENSION = 112
 TARGET_MAX_DIMENSION = 224
 DEDUP_SIGNATURE_DIM = 16
 
-_FFMPEG_SCALE_EDGE = int(os.getenv("MODBOT_FFMPEG_MAX_EDGE", "4096"))
+_FFMPEG_SCALE_EDGE = int(os.getenv("MODBOT_FFMPEG_MAX_EDGE", "1536"))
+_FRAME_MAX_INLINE_BYTES = int(os.getenv("MODBOT_FRAME_MAX_INLINE_BYTES", "7000000"))
+_FRAME_MIN_EDGE = int(os.getenv("MODBOT_FRAME_MIN_EDGE", "512"))
 _FFMPEG_TIMEOUT_SECONDS = float(os.getenv("MODBOT_FFMPEG_TIMEOUT", "45"))
 
 _SUPPRESS_OPENCV_STDERR = os.environ.get("MODBOT_SUPPRESS_OPENCV_STDERR", "1").lower()
@@ -447,22 +449,61 @@ def _select_motion_keyframes(total_frames: int, cap: int, scores: list[float]) -
 def _encode_rgb_frame(frame_rgb: np.ndarray, frame_idx: int, total_frames: Optional[int]) -> Optional[ExtractedFrame]:
     if frame_rgb is None:
         return None
-    resized_for_signature = _resize_for_model(frame_rgb)
+    working = frame_rgb
+    max_bytes = _FRAME_MAX_INLINE_BYTES if _FRAME_MAX_INLINE_BYTES > 0 else None
+    min_edge = max(1, _FRAME_MIN_EDGE)
+    qualities = [90, 88, 86, 82, 78, 74]
+    chosen_quality = qualities[0]
+    data: bytes | None = None
+
+    while True:
+        encoded = False
+        for quality in qualities:
+            chosen_quality = quality
+            try:
+                bgr_frame = cv2.cvtColor(working, cv2.COLOR_RGB2BGR)
+            except Exception:
+                bgr_frame = working
+            success, buffer = cv2.imencode(
+                ".jpg",
+                bgr_frame,
+                [cv2.IMWRITE_JPEG_QUALITY, quality],
+            )
+            if not success:
+                continue
+            payload = buffer.tobytes()
+            encoded = True
+            data = payload
+            if max_bytes is None or len(payload) <= max_bytes or quality == qualities[-1]:
+                break
+        if not encoded or data is None:
+            return None
+        if max_bytes is None or len(data) <= max_bytes:
+            break
+        height, width = working.shape[:2]
+        longest = max(height, width)
+        if longest <= min_edge:
+            break
+        scale_ratio = max_bytes / float(len(data))
+        scale_ratio = max(min(scale_ratio ** 0.5, 0.95), 0.5)
+        new_width = max(1, int(round(width * scale_ratio)))
+        new_height = max(1, int(round(height * scale_ratio)))
+        if new_width < min_edge and new_height < min_edge:
+            break
+        try:
+            working = cv2.resize(
+                working,
+                (new_width, new_height),
+                interpolation=cv2.INTER_AREA,
+            )
+        except Exception:
+            break
+
+    resized_for_signature = _resize_for_model(working)
     signature = _compute_signature_from_rgb(resized_for_signature)
     if signature is None:
         return None
-    try:
-        bgr_frame = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
-    except Exception:
-        bgr_frame = frame_rgb
-    success, buffer = cv2.imencode(
-        ".jpg",
-        bgr_frame,
-        [cv2.IMWRITE_JPEG_QUALITY, 82],
-    )
-    if not success:
-        return None
-    data = buffer.tobytes()
+
     return ExtractedFrame(
         name=f"{uuid.uuid4().hex[:8]}_{frame_idx}.jpg",
         data=data,

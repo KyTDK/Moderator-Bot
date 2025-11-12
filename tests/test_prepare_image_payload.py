@@ -1,6 +1,7 @@
 import base64
 import os
 import sys
+from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
@@ -16,17 +17,25 @@ os.environ.setdefault(
 )
 
 from modules.nsfw_scanner.helpers.payloads import prepare_image_payload_sync
+from modules.nsfw_scanner.helpers.payloads import INLINE_MAX_IMAGE_EDGE
+
+
+def _encode_jpeg_bytes(image: Image.Image) -> bytes:
+    buffer = BytesIO()
+    image.save(buffer, format="JPEG", quality=95)
+    return buffer.getvalue()
 
 
 def test_prepare_image_payload_preserves_dimensions_when_limit_disabled():
     image = Image.new("RGB", (5000, 3000), color=(255, 255, 255))
+    payload_bytes = _encode_jpeg_bytes(image)
 
     prepared = prepare_image_payload_sync(
-        image=image,
-        image_bytes=None,
+        image=None,
+        image_bytes=payload_bytes,
         image_path=None,
         image_mime="image/jpeg",
-        original_size=5_000_000,
+        original_size=len(payload_bytes),
         max_image_edge=0,
         jpeg_target_bytes=None,
         target_format="jpeg",
@@ -35,7 +44,8 @@ def test_prepare_image_payload_preserves_dimensions_when_limit_disabled():
     assert prepared.width == 5000
     assert prepared.height == 3000
     assert prepared.resized is False
-    assert prepared.edge_limit is None
+    expected_edge_limit = INLINE_MAX_IMAGE_EDGE if INLINE_MAX_IMAGE_EDGE > 0 else None
+    assert prepared.edge_limit == expected_edge_limit
 
 
 def test_prepare_image_payload_resizes_when_limit_specified():

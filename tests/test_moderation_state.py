@@ -18,6 +18,7 @@ os.environ.setdefault(
 from modules.nsfw_scanner.helpers.latency import ModeratorLatencyTracker
 from modules.nsfw_scanner.helpers.moderation_state import ImageModerationState
 from modules.nsfw_scanner.helpers.payloads import PreparedImagePayload
+from modules.nsfw_scanner.helpers.payloads import INLINE_MAX_IMAGE_EDGE, INLINE_MAX_IMAGE_BYTES, JPEG_TARGET_BYTES
 
 
 def _make_tracker():
@@ -36,8 +37,8 @@ def test_image_moderation_state_allows_remote_for_passthrough_payload():
         strategy="passthrough",
         quality=None,
         original_mime="image/jpeg",
-        target_bytes=3000000,
-        edge_limit=None,
+        target_bytes=INLINE_MAX_IMAGE_BYTES or JPEG_TARGET_BYTES,
+        edge_limit=INLINE_MAX_IMAGE_EDGE if INLINE_MAX_IMAGE_EDGE > 0 else None,
     )
 
     state = ImageModerationState.from_prepared_payload(
@@ -78,8 +79,8 @@ def test_image_moderation_state_uses_inline_payload_for_converted_images(strateg
         strategy=strategy,
         quality=quality,
         original_mime="image/jpeg",
-        target_bytes=3000000,
-        edge_limit=4096,
+        target_bytes=INLINE_MAX_IMAGE_BYTES or JPEG_TARGET_BYTES,
+        edge_limit=INLINE_MAX_IMAGE_EDGE if INLINE_MAX_IMAGE_EDGE > 0 else None,
     )
 
     state = ImageModerationState.from_prepared_payload(

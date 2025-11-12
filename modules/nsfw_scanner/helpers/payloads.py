@@ -26,8 +26,10 @@ __all__ = [
 _RESAMPLING_FILTER = getattr(getattr(Image, "Resampling", Image), "LANCZOS", Image.BICUBIC)
 
 MAX_IMAGE_EDGE = int(os.getenv("MODBOT_MODERATION_MAX_IMAGE_EDGE", "0"))
-INLINE_PASSTHROUGH_BYTES = int(os.getenv("MODBOT_MODERATION_INLINE_THRESHOLD", "3145728"))
-JPEG_TARGET_BYTES = int(os.getenv("MODBOT_MODERATION_TARGET_BYTES", "3000000"))
+INLINE_PASSTHROUGH_BYTES = int(os.getenv("MODBOT_MODERATION_INLINE_THRESHOLD", "8388608"))
+INLINE_MAX_IMAGE_EDGE = int(os.getenv("MODBOT_MODERATION_INLINE_MAX_EDGE", "2048"))
+INLINE_MAX_IMAGE_BYTES = int(os.getenv("MODBOT_MODERATION_INLINE_MAX_BYTES", "7000000"))
+JPEG_TARGET_BYTES = int(os.getenv("MODBOT_MODERATION_TARGET_BYTES", "1500000"))
 JPEG_INITIAL_QUALITY = int(os.getenv("MODBOT_MODERATION_JPEG_QUALITY", "82"))
 JPEG_MIN_QUALITY = int(os.getenv("MODBOT_MODERATION_MIN_JPEG_QUALITY", "58"))
 VIDEO_FRAME_MAX_EDGE = int(os.getenv("MODBOT_MODERATION_VIDEO_MAX_EDGE", "768"))
@@ -90,11 +92,19 @@ def prepare_image_payload_sync(
 
     edge_limit_override = _coerce_positive_int(max_image_edge)
     default_edge_limit = _coerce_positive_int(MAX_IMAGE_EDGE)
-    edge_limit = edge_limit_override if edge_limit_override is not None else default_edge_limit
+    passthrough_edge_limit = edge_limit_override if edge_limit_override is not None else default_edge_limit
+    edge_limit = passthrough_edge_limit
+    inline_edge_cap = _coerce_positive_int(INLINE_MAX_IMAGE_EDGE)
+    if edge_limit is None:
+        edge_limit = inline_edge_cap
 
     target_bytes_override = _coerce_positive_int(jpeg_target_bytes)
     default_target_bytes = _coerce_positive_int(JPEG_TARGET_BYTES)
     target_bytes = target_bytes_override if target_bytes_override is not None else default_target_bytes
+    inline_bytes_cap = _coerce_positive_int(INLINE_MAX_IMAGE_BYTES)
+    if inline_bytes_cap is not None:
+        if target_bytes is None or target_bytes <= 0 or target_bytes > inline_bytes_cap:
+            target_bytes = inline_bytes_cap
     if target_bytes is None or target_bytes <= 0:
         target_bytes = JPEG_TARGET_BYTES
 
@@ -150,7 +160,7 @@ def prepare_image_payload_sync(
         format_preference == "jpeg"
         and original_size is not None
         and original_size <= INLINE_PASSTHROUGH_BYTES
-        and (edge_limit is None or max(width, height) <= edge_limit)
+        and (passthrough_edge_limit is None or max(width, height) <= passthrough_edge_limit)
         and original_mime in {"image/jpeg", "image/jpg"}
         and image_bytes is not None
     )
@@ -177,7 +187,7 @@ def prepare_image_payload_sync(
 
     resized = False
     max_edge = max(width, height)
-    if edge_limit is not None and max_edge > edge_limit and working.size[0] > 0 and working.size[1] > 0:
+    if edge_limit is not None and edge_limit > 0 and max_edge > edge_limit and working.size[0] > 0 and working.size[1] > 0:
         scale = edge_limit / float(max_edge)
         new_size = (
             max(1, int(round(working.size[0] * scale))),
@@ -203,19 +213,21 @@ def prepare_image_payload_sync(
             data = buffer.getvalue()
             if not data:
                 raise RuntimeError("Failed to encode moderation payload as PNG")
-            payload = PreparedImagePayload(
-                data=data,
-                mime="image/png",
-                width=width,
-                height=height,
-                resized=resized,
-                strategy="converted_png",
-                quality=None,
-                original_mime=image_mime,
-                target_bytes=target_bytes,
-                edge_limit=edge_limit,
-            )
-            return payload
+            if inline_bytes_cap is None or len(data) <= inline_bytes_cap:
+                payload = PreparedImagePayload(
+                    data=data,
+                    mime="image/png",
+                    width=width,
+                    height=height,
+                    resized=resized,
+                    strategy="converted_png",
+                    quality=None,
+                    original_mime=image_mime,
+                    target_bytes=target_bytes,
+                    edge_limit=edge_limit,
+                )
+                return payload
+            format_preference = "jpeg"
 
         working = flatten_alpha(working)
         prepared = working
