@@ -87,9 +87,10 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
                 self._session = None
 
     async def _handle_payload(self, payload: Mapping[str, Any]) -> dict[str, str] | None:
-        action = (payload.get("action") or "add").strip().lower()
-        request_id = str(payload.get("request_id") or "")
-        guild_id = _coerce_int(payload.get("guild_id"))
+        action_raw = _get_payload_value(payload, "action")
+        action = (action_raw or "add").strip().lower()
+        request_id = str(_get_payload_value(payload, "request_id", "requestId") or "")
+        guild_id = _coerce_int(_get_payload_value(payload, "guild_id", "guildId"))
 
         if guild_id is None:
             raise CustomBlockError("guild_id is required.")
@@ -98,9 +99,11 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
 
         if action == "add":
             image_bytes, source = await self._resolve_image_bytes(payload)
-            uploader_id = _coerce_int(payload.get("uploaded_by"))
-            label = payload.get("label")
-            extra_metadata = self._parse_metadata(payload.get("metadata_json"))
+            uploader_id = _coerce_int(_get_payload_value(payload, "uploaded_by", "uploadedBy"))
+            label = _get_payload_value(payload, "label")
+            extra_metadata = self._parse_metadata(_get_payload_value(payload, "metadata_json", "metadataJson"))
+
+            source = source or _get_payload_value(payload, "image_url", "imageUrl", "source_url", "sourceUrl")
 
             if source and "source" not in extra_metadata:
                 extra_metadata["source"] = source
@@ -125,7 +128,7 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
             }
 
         if action == "delete":
-            vector_id = _coerce_int(payload.get("vector_id"))
+            vector_id = _coerce_int(_get_payload_value(payload, "vector_id", "vectorId"))
             if vector_id is None:
                 raise CustomBlockError("vector_id is required for delete.")
             deleted = await delete_custom_block(guild_id, vector_id)
@@ -167,7 +170,7 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
         self,
         payload: Mapping[str, Any],
     ) -> tuple[bytes, str | None]:
-        base64_data = payload.get("image_base64")
+        base64_data = _get_payload_value(payload, "image_base64", "imageBase64")
         if base64_data:
             try:
                 data = base64.b64decode(base64_data, validate=True)
@@ -175,9 +178,12 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
                 raise CustomBlockError("image_base64 is not valid base64 data.") from exc
             if len(data) > self._max_image_bytes:
                 raise CustomBlockError("Uploaded image exceeds the size limit.")
-            return data, payload.get("image_url") or payload.get("source_url")
+            source_hint = _get_payload_value(payload, "image_url", "imageUrl", "source_url", "sourceUrl")
+            return data, source_hint
 
-        image_url = (payload.get("image_url") or payload.get("source_url") or "").strip()
+        image_url = (
+            _get_payload_value(payload, "image_url", "imageUrl", "source_url", "sourceUrl") or ""
+        ).strip()
         if not image_url:
             raise CustomBlockError("image_url or image_base64 must be supplied.")
 
@@ -236,9 +242,9 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
         return metadata
 
     def _format_error_response(self, payload: Mapping[str, Any], exc: Exception) -> dict[str, str]:
-        request_id = str(payload.get("request_id") or "")
-        guild_id = payload.get("guild_id")
-        action = payload.get("action") or "add"
+        request_id = str(_get_payload_value(payload, "request_id", "requestId") or "")
+        guild_id = _get_payload_value(payload, "guild_id", "guildId")
+        action = _get_payload_value(payload, "action") or "add"
 
         if isinstance(exc, CustomBlockError):
             message = str(exc) or "Custom block request failed."
@@ -266,9 +272,9 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
             return
 
         try:
-            guild_id = payload.get("guild_id")
-            vector_id = payload.get("vector_id")
-            request_id = payload.get("request_id") or ""
+            guild_id = _get_payload_value(payload, "guild_id", "guildId")
+            vector_id = _get_payload_value(payload, "vector_id", "vectorId")
+            request_id = _get_payload_value(payload, "request_id", "requestId") or ""
             error_message = str(error) or error.__class__.__name__
             payload_snapshot = json.dumps(
                 {k: str(v) for k, v in payload.items()},
@@ -339,6 +345,13 @@ def _coerce_int(value: Any) -> int | None:
         return int(value)
     except (TypeError, ValueError):
         return None
+
+
+def _get_payload_value(payload: Mapping[str, Any], *keys: str) -> Any:
+    for key in keys:
+        if key in payload:
+            return payload[key]
+    return None
 
 
 __all__ = ["CustomBlockStreamProcessor"]
