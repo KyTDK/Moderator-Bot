@@ -247,8 +247,9 @@ def test_handle_message_edit_triggers_text_scan(monkeypatch):
 
     scanner = SimpleNamespace(is_nsfw=fake_is_nsfw)
 
-    async def fake_enqueue(coro, guild_id):
+    async def fake_enqueue(coro, guild_id, **kwargs):
         nsfw_calls["enqueued_guild"] = guild_id
+        nsfw_calls["task_kind"] = kwargs.get("task_kind")
         await coro
 
     dummy_bot = SimpleNamespace(translate=lambda *args, **kwargs: {"title": "", "description": ""})

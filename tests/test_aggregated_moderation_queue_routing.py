@@ -14,10 +14,17 @@ _apnggif = types.ModuleType("apnggif")
 setattr(_apnggif, "apnggif", lambda *_, **__: None)
 sys.modules.setdefault("apnggif", _apnggif)
 
-os.environ.setdefault(
-    "FERNET_SECRET_KEY",
-    "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
-)
+actions_stub = types.ModuleType("modules.nsfw_scanner.actions")
+
+async def _noop_handle_nsfw_content(*_, **__):
+    return None
+
+actions_stub.handle_nsfw_content = _noop_handle_nsfw_content
+sys.modules.setdefault("modules.nsfw_scanner.actions", actions_stub)
+
+os.environ[
+    "FERNET_SECRET_KEY"
+] = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
 
 
 class _FakeQueue:
