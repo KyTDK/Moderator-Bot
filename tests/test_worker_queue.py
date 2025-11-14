@@ -10,6 +10,7 @@ if str(project_root) not in sys.path:
     sys.path.append(str(project_root))
 
 from modules.worker_queue import WorkerQueue
+from modules.worker_queue_pkg.notifier import QueueEventNotifier
 
 ExceptionGroupType = getattr(builtins, "ExceptionGroup", None)
 
@@ -132,3 +133,17 @@ def test_worker_queue_metrics_track_busy_workers():
         await asyncio.wait_for(queue.stop(), timeout=1)
 
     asyncio.run(runner())
+
+
+def test_queue_notifier_includes_details_in_stdout(capsys):
+    notifier = QueueEventNotifier(queue_name="demo", echo_stdout=True)
+    notifier.warning(
+        "[WorkerQueue:demo] Task failed: TimeoutError()",
+        details={
+            "Task Display": "ModerationHandlers.handle_message.<locals>.scan_task",
+            "Queue Backlog": 7,
+        },
+    )
+    captured = capsys.readouterr().out
+    assert "Task Display: ModerationHandlers.handle_message.<locals>.scan_task" in captured
+    assert "Queue Backlog: 7" in captured

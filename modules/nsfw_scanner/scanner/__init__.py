@@ -93,6 +93,8 @@ class NSFWScanner:
 
     @staticmethod
     def _should_suppress_download_failure(exc: Exception) -> bool:
+        if isinstance(exc, TimeoutError):
+            return True
         if isinstance(exc, aiohttp.ClientResponseError):
             status = getattr(exc, "status", None)
             return status in {404, 410, 451}

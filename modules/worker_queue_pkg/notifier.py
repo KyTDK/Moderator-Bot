@@ -14,6 +14,9 @@ __all__ = ["QueueEventNotifier"]
 class QueueEventNotifier:
     """Dispatch worker queue events to logs and the developer channel."""
 
+    _STDOUT_DETAIL_CHAR_LIMIT = 600
+    _STDOUT_DETAIL_EXTRA_LINES = 5
+
     def __init__(
         self,
         *,
@@ -36,10 +39,13 @@ class QueueEventNotifier:
         event_key: str | None = None,
         details: Optional[Mapping[str, object]] = None,
     ) -> None:
-        self._logger.info(message)
-        if self._echo_stdout:
-            print(message)
-        self._maybe_dispatch("info", message, event_key=event_key, details=details)
+        self._log(
+            "info",
+            message,
+            event_key=event_key,
+            details=details,
+            echo_stdout=self._echo_stdout,
+        )
 
     def warning(
         self,
@@ -48,10 +54,13 @@ class QueueEventNotifier:
         event_key: str | None = None,
         details: Optional[Mapping[str, object]] = None,
     ) -> None:
-        self._logger.warning(message)
-        if self._echo_stdout:
-            print(message)
-        self._maybe_dispatch("warning", message, event_key=event_key, details=details)
+        self._log(
+            "warning",
+            message,
+            event_key=event_key,
+            details=details,
+            echo_stdout=self._echo_stdout,
+        )
 
     def error(
         self,
@@ -60,10 +69,13 @@ class QueueEventNotifier:
         event_key: str | None = None,
         details: Optional[Mapping[str, object]] = None,
     ) -> None:
-        self._logger.error(message)
-        if self._echo_stdout:
-            print(message)
-        self._maybe_dispatch("error", message, event_key=event_key, details=details)
+        self._log(
+            "error",
+            message,
+            event_key=event_key,
+            details=details,
+            echo_stdout=self._echo_stdout,
+        )
 
     def debug(
         self,
@@ -72,8 +84,13 @@ class QueueEventNotifier:
         event_key: str | None = None,
         details: Optional[Mapping[str, object]] = None,
     ) -> None:
-        self._logger.debug(message)
-        self._maybe_dispatch("debug", message, event_key=event_key, details=details)
+        self._log(
+            "debug",
+            message,
+            event_key=event_key,
+            details=details,
+            echo_stdout=False,
+        )
 
     def _maybe_dispatch(
         self,
@@ -134,3 +151,47 @@ class QueueEventNotifier:
             return
 
         loop.create_task(_send())
+
+    def _log(
+        self,
+        severity: str,
+        message: str,
+        *,
+        event_key: str | None,
+        details: Optional[Mapping[str, object]],
+        echo_stdout: bool,
+    ) -> None:
+        log_method = getattr(self._logger, severity, None)
+        if log_method is None:
+            log_method = self._logger.info
+        log_method(message)
+        if echo_stdout:
+            self._emit_stdout(message, details)
+        self._maybe_dispatch(severity, message, event_key=event_key, details=details)
+
+    def _emit_stdout(self, message: str, details: Optional[Mapping[str, object]]) -> None:
+        print(message)
+        if not details:
+            return
+        for key, value in details.items():
+            formatted = self._format_detail_value(value)
+            if not formatted:
+                continue
+            lines = formatted.splitlines() or [formatted]
+            first_line = lines[0]
+            print(f"    - {key}: {first_line}")
+            extra_lines = lines[1 : 1 + self._STDOUT_DETAIL_EXTRA_LINES]
+            for line in extra_lines:
+                print(f"      {line}")
+            if len(lines) > 1 + len(extra_lines):
+                print("      …")
+
+    def _format_detail_value(self, value: object | None) -> str:
+        if value is None:
+            return ""
+        text = str(value)
+        if not text:
+            return ""
+        if len(text) > self._STDOUT_DETAIL_CHAR_LIMIT:
+            text = text[: self._STDOUT_DETAIL_CHAR_LIMIT - 1] + "…"
+        return text
