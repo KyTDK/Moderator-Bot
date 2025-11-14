@@ -15,6 +15,7 @@ from modules.worker_queue_alerts import SingularTaskReporter
 from .adaptive_controller import AdaptiveQueueController
 from .config import AggregatedModerationConfig, load_config
 from .handlers import ModerationHandlers
+from .performance_monitor import AcceleratedPerformanceMonitor
 from .queue_monitor import FreeQueueMonitor
 
 
@@ -60,6 +61,12 @@ class AggregatedModerationCog(commands.Cog):
         )
 
         self.queue_monitor = FreeQueueMonitor(
+            bot=bot,
+            free_queue=self.free_queue,
+            accelerated_queue=self.accelerated_queue,
+            config=self.config,
+        )
+        self.performance_monitor = AcceleratedPerformanceMonitor(
             bot=bot,
             free_queue=self.free_queue,
             accelerated_queue=self.accelerated_queue,
@@ -127,6 +134,7 @@ class AggregatedModerationCog(commands.Cog):
         await self.accelerated_queue.start()
         await self._adaptive_controller.start()
         await self.queue_monitor.start()
+        await self.performance_monitor.start()
 
     async def cog_unload(self):
         await self._adaptive_controller.stop()
@@ -134,6 +142,7 @@ class AggregatedModerationCog(commands.Cog):
         await self.free_queue.stop()
         await self.accelerated_queue.stop()
         await self.queue_monitor.stop()
+        await self.performance_monitor.stop()
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AggregatedModerationCog(bot))

@@ -35,11 +35,23 @@ class MonitorConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class PerformanceMonitorConfig:
+    check_interval: float = 30.0
+    ratio_threshold: float = 0.9
+    wait_ratio_threshold: float = 0.85
+    min_runtime_seconds: float = 0.2
+    min_completed_tasks: int = 50
+    required_hits: int = 3
+    cooldown: float = 900.0
+
+
+@dataclass(frozen=True, slots=True)
 class AggregatedModerationConfig:
     free_policy: AdaptiveQueuePolicy
     accelerated_policy: AdaptiveQueuePolicy
     controller: AdaptiveControllerConfig
     monitor: MonitorConfig
+    performance_monitor: PerformanceMonitorConfig
 
 
 def _clamp_int(value: int, *, minimum: int, maximum: int) -> int:
@@ -100,12 +112,14 @@ def load_config() -> AggregatedModerationConfig:
     )
 
     monitor = MonitorConfig()
+    perf_monitor = PerformanceMonitorConfig()
 
     return AggregatedModerationConfig(
         free_policy=free_policy,
         accelerated_policy=accelerated_policy,
         controller=controller,
         monitor=monitor,
+        performance_monitor=perf_monitor,
     )
 
 
@@ -114,5 +128,6 @@ __all__ = [
     "AdaptiveQueuePolicy",
     "AggregatedModerationConfig",
     "MonitorConfig",
+    "PerformanceMonitorConfig",
     "load_config",
 ]
