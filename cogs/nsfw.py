@@ -79,63 +79,39 @@ NSFW_LOCALE = locale_namespace("cogs", "nsfw")
 NSFW_META = NSFW_LOCALE.child("meta")
 NSFW_CATEGORY_LABELS = NSFW_META.child("categories")
 
-IMAGE_CATEGORY_CHOICES = [
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("violence_graphic"),
-        value="violence_graphic",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("violence"),
-        value="violence",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("sexual"),
-        value="sexual",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("self_harm_instructions"),
-        value="self_harm_instructions",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("self_harm_intent"),
-        value="self_harm_intent",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("self_harm"),
-        value="self_harm",
-    ),
+def _category_choice(key: str) -> app_commands.Choice[str]:
+    return app_commands.Choice(
+        name=NSFW_CATEGORY_LABELS.string(key),
+        value=key,
+    )
+
+
+IMAGE_CATEGORY_KEYS = [
+    "violence_graphic",
+    "sexual",
+    "self_harm_instructions",
+    "self_harm_intent",
+    "self_harm",
 ]
 
-TEXT_CATEGORY_CHOICES = IMAGE_CATEGORY_CHOICES + [
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("sexual_minors"),
-        value="sexual_minors",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("harassment"),
-        value="harassment",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("harassment_threatening"),
-        value="harassment_threatening",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("hate"),
-        value="hate",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("hate_threatening"),
-        value="hate_threatening",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("illicit"),
-        value="illicit",
-    ),
-    app_commands.Choice(
-        name=NSFW_CATEGORY_LABELS.string("illicit_violent"),
-        value="illicit_violent",
-    ),
+TEXT_CATEGORY_KEYS = [
+    "violence_graphic",
+    "violence",
+    "sexual",
+    "self_harm_instructions",
+    "self_harm_intent",
+    "self_harm",
+    "sexual_minors",
+    "harassment",
+    "harassment_threatening",
+    "hate",
+    "hate_threatening",
+    "illicit",
+    "illicit_violent",
 ]
+
+IMAGE_CATEGORY_CHOICES = [_category_choice(key) for key in IMAGE_CATEGORY_KEYS]
+TEXT_CATEGORY_CHOICES = [_category_choice(key) for key in TEXT_CATEGORY_KEYS]
 
 class NSFWCog(commands.Cog):
     def __init__(self, bot: ModeratorBot):
