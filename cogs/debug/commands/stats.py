@@ -235,7 +235,7 @@ def _collect_worker_summaries(cog) -> Tuple[List[str], List[str]]:
         cog_instance = getattr(cog.bot, "get_cog", lambda name: None)(cog_name)
         if not cog_instance:
             continue
-        for queue_attr in ("free_queue", "accelerated_queue"):
+        for queue_attr in ("free_queue", "accelerated_queue", "video_queue"):
             queue_obj = getattr(cog_instance, queue_attr, None)
             if queue_obj is None:
                 continue
