@@ -1,3 +1,6 @@
 """Package marker for bot cogs."""
 
-__all__ = []
+
+async def setup(_bot):
+    """No-op setup to satisfy extension loader."""
+    return
