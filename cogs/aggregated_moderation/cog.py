@@ -30,6 +30,7 @@ class AggregatedModerationCog(commands.Cog):
         free_policy = self.config.free_policy
         accel_policy = self.config.accelerated_policy
         controller_cfg = self.config.controller
+        video_policy = self.config.video_policy
 
         self.free_queue = WorkerQueue(
             max_workers=free_policy.min_workers,
@@ -56,6 +57,20 @@ class AggregatedModerationCog(commands.Cog):
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
             developer_log_context="aggregated_moderation.accelerated_queue",
+            adaptive_mode=True,
+            rate_tracking_window=controller_cfg.rate_window,
+        )
+        self.video_queue = WorkerQueue(
+            max_workers=video_policy.min_workers,
+            autoscale_max=video_policy.max_workers,
+            backlog_high_watermark=video_policy.backlog_soft_limit,
+            backlog_low_watermark=max(0, video_policy.backlog_low),
+            autoscale_check_interval=controller_cfg.tick_interval,
+            scale_down_grace=max(5.0, controller_cfg.scale_down_cooldown),
+            name="accelerated_video",
+            singular_task_reporter=self._singular_task_reporter,
+            developer_log_bot=bot,
+            developer_log_context="aggregated_moderation.accelerated_video_queue",
             adaptive_mode=True,
             rate_tracking_window=controller_cfg.rate_window,
         )
@@ -98,12 +113,15 @@ class AggregatedModerationCog(commands.Cog):
         except Exception:
             return False
 
-    async def add_to_queue(self, coro, guild_id: int):
+    async def add_to_queue(self, coro, guild_id: int, *, task_kind: str | None = None):
         accelerated = await mysql.is_accelerated(guild_id=guild_id)
         if not accelerated and self._is_new_guild(guild_id):
             accelerated = True
 
-        queue = self.accelerated_queue if accelerated else self.free_queue
+        if task_kind == "video" and accelerated:
+            queue = self.video_queue
+        else:
+            queue = self.accelerated_queue if accelerated else self.free_queue
         await queue.add_task(coro)
 
     async def handle_message(self, message: discord.Message):
@@ -132,6 +150,7 @@ class AggregatedModerationCog(commands.Cog):
         await self.scanner.start()
         await self.free_queue.start()
         await self.accelerated_queue.start()
+        await self.video_queue.start()
         await self._adaptive_controller.start()
         await self.queue_monitor.start()
         await self.performance_monitor.start()
@@ -141,6 +160,7 @@ class AggregatedModerationCog(commands.Cog):
         await self.scanner.stop()
         await self.free_queue.stop()
         await self.accelerated_queue.stop()
+        await self.video_queue.stop()
         await self.queue_monitor.stop()
         await self.performance_monitor.stop()
 

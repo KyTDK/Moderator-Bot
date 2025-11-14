@@ -49,6 +49,7 @@ class PerformanceMonitorConfig:
 class AggregatedModerationConfig:
     free_policy: AdaptiveQueuePolicy
     accelerated_policy: AdaptiveQueuePolicy
+    video_policy: AdaptiveQueuePolicy
     controller: AdaptiveControllerConfig
     monitor: MonitorConfig
     performance_monitor: PerformanceMonitorConfig
@@ -105,6 +106,24 @@ def load_config() -> AggregatedModerationConfig:
         maintain_backlog=False,
     )
 
+    video_min_workers = 1
+    video_max_workers = max(3, cpu_count * 2)
+    video_backlog_soft = max(6, video_min_workers * 3)
+    video_policy = AdaptiveQueuePolicy(
+        name="video",
+        min_workers=video_min_workers,
+        max_workers=video_max_workers,
+        backlog_target=0,
+        backlog_low=0,
+        backlog_soft_limit=video_backlog_soft,
+        catchup_batch=max(2, video_min_workers),
+        provision_bias=1.3,
+        recovery_bias=1.6,
+        wait_threshold=6.0,
+        min_runtime=0.5,
+        maintain_backlog=False,
+    )
+
     controller = AdaptiveControllerConfig(
         tick_interval=2.0,
         rate_window=180.0,
@@ -117,6 +136,7 @@ def load_config() -> AggregatedModerationConfig:
     return AggregatedModerationConfig(
         free_policy=free_policy,
         accelerated_policy=accelerated_policy,
+        video_policy=video_policy,
         controller=controller,
         monitor=monitor,
         performance_monitor=perf_monitor,

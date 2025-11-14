@@ -20,6 +20,17 @@ class ModerationHandlers:
         self._bot = bot
         self._scanner = scanner
         self._enqueue = enqueue_task
+        self._video_extensions = {
+            ".mp4",
+            ".mov",
+            ".avi",
+            ".mkv",
+            ".webm",
+            ".mpeg",
+            ".mpg",
+            ".m4v",
+            ".gifv",
+        }
 
     async def _nsfw_enabled(self, guild_id: int) -> bool:
         return bool(await mysql.get_settings(guild_id, "nsfw-enabled"))
@@ -72,6 +83,8 @@ class ModerationHandlers:
         if message.channel.id in normalized_excluded:
             return
 
+        has_video = self._message_has_video_attachment(message)
+
         async def scan_task():
             scan_outcome = await self._scanner.is_nsfw(
                 message=message,
@@ -112,7 +125,8 @@ class ModerationHandlers:
                 print("[NSFW] Could not notify user about message removal.")
 
         queue_started_at = time.perf_counter()
-        await self._enqueue(scan_task(), guild_id=guild_id)
+        task_kind = "video" if has_video else None
+        await self._enqueue(scan_task(), guild_id=guild_id, task_kind=task_kind)
 
     async def handle_message_edit(self, cached_before: CachedMessage, after: discord.Message) -> None:
         if after.author.bot or after.guild is None:
@@ -339,6 +353,23 @@ class ModerationHandlers:
 
         queue_started_at = time.perf_counter()
         await self._enqueue(scan_task(), guild_id=guild.id)
+
+    def _attachment_is_video(self, attachment: discord.Attachment) -> bool:
+        content_type = (getattr(attachment, "content_type", None) or "").lower()
+        if content_type.startswith("video/"):
+            return True
+        filename = (getattr(attachment, "filename", None) or "").lower()
+        return any(filename.endswith(ext) for ext in self._video_extensions)
+
+    def _message_has_video_attachment(self, message: discord.Message) -> bool:
+        attachments = getattr(message, "attachments", None) or []
+        for attachment in attachments:
+            try:
+                if self._attachment_is_video(attachment):
+                    return True
+            except Exception:
+                continue
+        return False
 
 
 __all__ = ["ModerationHandlers"]
