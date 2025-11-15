@@ -18,6 +18,19 @@ def test_compute_latency_breakdown_uses_totals_and_summary(monkeypatch):
             "total_duration_ms": 1000,
             "average_latency_per_frame_ms": 0.5,
             "total_frames_scanned": 2000,
+            "acceleration": {
+                "accelerated": {
+                    "scans_count": 6,
+                    "total_duration_ms": 600,
+                    "total_frames_scanned": 1500,
+                },
+                "non_accelerated": {
+                    "scans_count": 4,
+                    "total_duration_ms": 400,
+                    "average_latency_per_frame_ms": 0.4,
+                    "total_frames_scanned": 500,
+                },
+            },
         }
 
     async def fake_summary():
@@ -28,12 +41,31 @@ def test_compute_latency_breakdown_uses_totals_and_summary(monkeypatch):
                 "total_duration_ms": 900,
                 "average_latency_per_frame_ms": 0.7,
                 "total_frames_scanned": 1500,
+                "acceleration": {
+                    "accelerated": {
+                        "scans": 4,
+                        "duration_total_ms": 600,
+                        "frames_total_scanned": 1200,
+                    },
+                    "non_accelerated": {
+                        "scans": 2,
+                        "duration_total_ms": 300,
+                        "frames_total_scanned": 300,
+                    },
+                },
             },
             {
                 "content_type": "image",
                 "scans": 4,
                 "total_duration_ms": 100,
                 "total_frames_scanned": 0,
+                "acceleration": {
+                    "non_accelerated": {
+                        "scans": 4,
+                        "duration_total_ms": 100,
+                        "frames_total_scanned": 0,
+                    }
+                },
             },
         ]
 
@@ -44,6 +76,14 @@ def test_compute_latency_breakdown_uses_totals_and_summary(monkeypatch):
     assert breakdown["overall"]["average_latency_ms"] == pytest.approx(100.0)
     assert breakdown["video"]["scans"] == 6
     assert breakdown["image"]["average_latency_ms"] == pytest.approx(25.0)
+    overall_accel = breakdown["overall"]["acceleration"]
+    assert overall_accel["accelerated"]["average_latency_ms"] == pytest.approx(100.0)
+    assert overall_accel["non_accelerated"]["average_latency_ms"] == pytest.approx(100.0)
+    video_accel = breakdown["video"]["acceleration"]
+    assert video_accel["accelerated"]["average_latency_ms"] == pytest.approx(150.0)
+    assert video_accel["non_accelerated"]["average_latency_per_frame_ms"] == pytest.approx(1.0)
+    image_accel = breakdown["image"]["acceleration"]
+    assert image_accel["non_accelerated"]["scans"] == 4
 
 
 def test_compute_latency_breakdown_handles_missing_frames(monkeypatch):

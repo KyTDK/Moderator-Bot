@@ -23,6 +23,8 @@
         "allocations_name": "Top Memory Allocations {index}",
         "worker_name": "Worker Queues",
         "worker_error": "(error collecting metrics: {error})",
+        "latency_name": "Latency Breakdown (ms)",
+        "latency_error": "Unable to fetch latency metrics ({error})",
         "footer": "Host: {host} | Python {python_version}"
       },
       "worker_rates": "Queue Throughput",

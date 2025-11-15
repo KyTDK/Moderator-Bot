@@ -56,7 +56,7 @@ class DebugCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         if not await require_dev_access(self.bot, interaction):
             return
-        embed = build_stats_embed(self, interaction, show_all)
+        embed = await build_stats_embed(self, interaction, show_all)
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     @app_commands.command(

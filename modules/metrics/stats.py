@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Mapping, Optional
 
 from .backend.rollups import summarise_rollups
 from .backend.totals import fetch_metric_totals
@@ -29,6 +29,7 @@ async def compute_latency_breakdown() -> LatencyBreakdown:
         total_frames=totals.get("total_frames_scanned"),
         per_frame_ms=totals.get("average_latency_per_frame_ms"),
     )
+    overall["acceleration"] = _extract_acceleration_breakdown(totals.get("acceleration"))
 
     by_type = {}
     for bucket in summary:
@@ -40,6 +41,7 @@ async def compute_latency_breakdown() -> LatencyBreakdown:
             total_frames=bucket.get("total_frames_scanned"),
             per_frame_ms=bucket.get("average_latency_per_frame_ms"),
         )
+        by_type[content_type]["acceleration"] = _extract_acceleration_breakdown(bucket.get("acceleration"))
 
     video = by_type.get("video", {})
     image = by_type.get("image", {})
@@ -76,6 +78,23 @@ def _extract_latency_stats(
     }
 
 
+def _extract_acceleration_breakdown(source: Any) -> Dict[str, Dict[str, Optional[float]]]:
+    breakdown: dict[str, dict[str, Optional[float]]] = {}
+    if not isinstance(source, dict):
+        return breakdown
+    for name, payload in source.items():
+        if not isinstance(payload, dict):
+            continue
+        breakdown[name] = _extract_latency_stats(
+            label=name,
+            scans=_coerce_int(_first_present(payload, "scans_count", "scans")),
+            total_duration_ms=_coerce_float(_first_present(payload, "total_duration_ms", "duration_total_ms")),
+            total_frames=_coerce_float(_first_present(payload, "total_frames_scanned", "frames_total_scanned")),
+            per_frame_ms=_coerce_float(payload.get("average_latency_per_frame_ms")),
+        )
+    return breakdown
+
+
 def _coerce_int(value: Any) -> Optional[int]:
     try:
         if value is None:
@@ -92,3 +111,11 @@ def _coerce_float(value: Any) -> Optional[float]:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _first_present(mapping: Mapping[str, Any], *keys: str) -> Any:
+    for key in keys:
+        value = mapping.get(key)
+        if value is not None:
+            return value
+    return None

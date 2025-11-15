@@ -3,10 +3,12 @@ from __future__ import annotations
 import os
 import platform
 import time
-from typing import Iterable, List, Tuple
+from typing import Any, Iterable, List, Tuple
 
 import discord
 import tracemalloc
+
+from modules.metrics import compute_latency_breakdown
 
 tracemalloc.start()
 
@@ -50,7 +52,7 @@ def _chunk_lines(lines: Iterable[str], max_len: int = 900) -> list[str]:
     return chunks
 
 
-def build_stats_embed(cog, interaction: discord.Interaction, show_all: bool) -> discord.Embed:
+async def build_stats_embed(cog, interaction: discord.Interaction, show_all: bool) -> discord.Embed:
     guild_id = interaction.guild.id if interaction.guild else None
     debug_texts = cog.bot.translate("cogs.debug.embed", guild_id=guild_id)
 
@@ -108,6 +110,23 @@ def build_stats_embed(cog, interaction: discord.Interaction, show_all: bool) -> 
             inline=False,
         )
 
+    try:
+        latency_table = await _build_latency_table()
+    except Exception as exc:  # noqa: BLE001
+        latency_error = debug_texts.get("latency_error", "Unable to fetch latency metrics ({error})")
+        embed.add_field(
+            name=debug_texts.get("latency_name", "Latency (ms)"),
+            value=latency_error.format(error=exc),
+            inline=False,
+        )
+    else:
+        if latency_table:
+            embed.add_field(
+                name=debug_texts.get("latency_name", "Latency (ms)"),
+                value=f"```\n{latency_table}\n```",
+                inline=False,
+            )
+
     embed.set_footer(text=debug_texts["footer"].format(host=platform.node(), python_version=platform.python_version()))
     try:
         queue_lines, rate_lines = _collect_worker_summaries(cog)
@@ -132,6 +151,75 @@ def build_stats_embed(cog, interaction: discord.Interaction, show_all: bool) -> 
             )
 
     return embed
+
+
+async def _build_latency_table() -> str:
+    breakdown = await compute_latency_breakdown()
+    rows: list[tuple[str, str, str, str]] = []
+
+    overall_row = _build_latency_row("Overall", breakdown.get("overall"))
+    if overall_row:
+        rows.append(overall_row)
+
+    by_type = breakdown.get("by_type", {})
+    ordered_types = sorted(
+        by_type.items(),
+        key=lambda item: (item[1].get("scans") or 0),
+        reverse=True,
+    )
+    for content_type, payload in ordered_types:
+        label = content_type.replace("_", " ").title()
+        row = _build_latency_row(label, payload)
+        if row:
+            rows.append(row)
+
+    if not rows:
+        return ""
+    return _render_latency_table(rows)
+
+
+def _build_latency_row(label: str, payload: Any) -> tuple[str, str, str, str] | None:
+    if not isinstance(payload, dict):
+        return None
+    overall = payload.get("average_latency_ms")
+    acceleration = payload.get("acceleration") or {}
+    free_latency = (acceleration.get("non_accelerated") or {}).get("average_latency_ms")
+    accelerated_latency = (acceleration.get("accelerated") or {}).get("average_latency_ms")
+
+    return (
+        label,
+        _format_latency_value(overall),
+        _format_latency_value(free_latency),
+        _format_latency_value(accelerated_latency),
+    )
+
+
+def _render_latency_table(rows: list[tuple[str, str, str, str]]) -> str:
+    headers = ("Type", "Overall", "Free", "Accel")
+    full_rows = [headers, *rows]
+    col_count = len(headers)
+    widths = [
+        max(len(row[idx]) for row in full_rows)
+        for idx in range(col_count)
+    ]
+    lines: list[str] = []
+    for row in full_rows:
+        parts = [
+            row[idx].ljust(widths[idx])
+            for idx in range(col_count)
+        ]
+        lines.append(" ".join(parts).rstrip())
+    return "\n".join(lines)
+
+
+def _format_latency_value(value: Any) -> str:
+    if value is None:
+        return "n/a"
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return "n/a"
+    return f"{numeric:,.1f}"
 
 
 def _collect_worker_summaries(cog) -> Tuple[List[str], List[str]]:
