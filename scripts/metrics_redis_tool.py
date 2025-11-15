@@ -20,7 +20,7 @@ from __future__ import annotations
 import math
 import sys
 import types
-from typing import Iterable, NamedTuple, Optional, Tuple
+from typing import Iterable, Iterator, NamedTuple, Optional, Tuple, TypeVar
 
 
 def _import_redis() -> types.ModuleType:
@@ -54,6 +54,25 @@ def _import_redis() -> types.ModuleType:
 
 
 redis = _import_redis()
+
+# Larger batch sizes dramatically reduce the number of round-trips needed for SCAN/HGETALL.
+SCAN_CHUNK_SIZE = 2048
+HGETALL_PIPELINE_BATCH_SIZE = 128
+
+T = TypeVar("T")
+
+
+def batched(iterable: Iterable[T], batch_size: int) -> Iterator[list[T]]:
+    if batch_size <= 0:
+        raise ValueError("batch_size must be positive")
+    bucket: list[T] = []
+    for item in iterable:
+        bucket.append(item)
+        if len(bucket) >= batch_size:
+            yield bucket
+            bucket = []
+    if bucket:
+        yield bucket
 
 # Fields ending with these suffixes are zeroed so that derived averages restart.
 RESET_SUFFIXES: tuple[str, ...] = (
@@ -190,10 +209,11 @@ def needs_reset(field: str) -> bool:
     return any(field.endswith(suffix) for suffix in RESET_SUFFIXES)
 
 
-def iter_rollup_keys(client: "redis.Redis", pattern: str) -> Iterable[str]:
+def iter_rollup_keys(client: "redis.Redis", pattern: str, *, chunk_size: int = SCAN_CHUNK_SIZE) -> Iterable[str]:
     cursor = 0
+    chunk_size = max(1, chunk_size)
     while True:
-        cursor, batch = client.scan(cursor=cursor, match=pattern)
+        cursor, batch = client.scan(cursor=cursor, match=pattern, count=chunk_size)
         for key in batch:
             yield key if isinstance(key, str) else key.decode()
         if cursor == 0:
@@ -334,15 +354,20 @@ def action_reset(client: "redis.Redis", prefix: str, pattern: Optional[str], dry
     updated_hashes = 0
     updated_fields = 0
 
-    def reset_hash(key: str, store_baseline: bool = False) -> None:
+    def plan_hash_reset(
+        key: str,
+        data: dict[str, str],
+        *,
+        store_baseline: bool,
+    ) -> Optional[tuple[dict[str, str], dict[str, str]]]:
         nonlocal updated_hashes, updated_fields
-        data = client.hgetall(key)
         if not data:
-            return
+            return None
+
         updates = {field: "0" for field in data if needs_reset(field)}
         baseline_counts = extract_count_fields(data) if store_baseline else {}
         if not updates and not baseline_counts:
-            return
+            return None
 
         if updates:
             updated_hashes += 1
@@ -353,22 +378,57 @@ def action_reset(client: "redis.Redis", prefix: str, pattern: Optional[str], dry
                 print(f"[dry-run] {key}: resetting {', '.join(sorted(updates))}")
             if baseline_counts:
                 print(f"[dry-run] {key}: would store count baselines {', '.join(sorted(baseline_counts))}")
-        else:
-            if baseline_counts:
-                baseline_key = f"{key}:baseline"
-                client.hset(baseline_key, mapping=baseline_counts)
-            if updates:
-                client.hset(key, mapping=updates)
-            if updates and baseline_counts:
-                print(f"{key}: reset {len(updates)} fields; stored baselines for {len(baseline_counts)} count field(s)")
-            elif updates:
-                print(f"{key}: reset {len(updates)} fields")
-            elif baseline_counts:
-                print(f"{key}: stored baselines for {len(baseline_counts)} count field(s)")
+            return None
 
-    reset_hash(totals_key, store_baseline=True)
-    for key in iter_rollup_keys(client, rollup_pattern):
-        reset_hash(key, store_baseline=True)
+        if updates and baseline_counts:
+            print(f"{key}: reset {len(updates)} fields; stored baselines for {len(baseline_counts)} count field(s)")
+        elif updates:
+            print(f"{key}: reset {len(updates)} fields")
+        elif baseline_counts:
+            print(f"{key}: stored baselines for {len(baseline_counts)} count field(s)")
+
+        return updates, baseline_counts
+
+    def fetch_hashes(keys: list[str]) -> list[dict[str, str]]:
+        pipe = client.pipeline(transaction=False)
+        for key in keys:
+            pipe.hgetall(key)
+        return pipe.execute()
+
+    def iter_keys() -> Iterable[str]:
+        yield totals_key
+        yield from iter_rollup_keys(client, rollup_pattern, chunk_size=SCAN_CHUNK_SIZE)
+
+    for key_batch in batched(iter_keys(), HGETALL_PIPELINE_BATCH_SIZE):
+        hash_payloads = fetch_hashes(key_batch)
+
+        if dry_run:
+            for key, payload in zip(key_batch, hash_payloads):
+                plan_hash_reset(key, payload, store_baseline=True)
+            continue
+
+        batch_baseline_ops: list[tuple[str, dict[str, str]]] = []
+        batch_update_ops: list[tuple[str, dict[str, str]]] = []
+
+        for key, payload in zip(key_batch, hash_payloads):
+            plan = plan_hash_reset(key, payload, store_baseline=True)
+            if plan is None:
+                continue
+            updates, baselines = plan
+            if baselines:
+                batch_baseline_ops.append((f"{key}:baseline", baselines))
+            if updates:
+                batch_update_ops.append((key, updates))
+
+        if not batch_baseline_ops and not batch_update_ops:
+            continue
+
+        pipe = client.pipeline(transaction=False)
+        for baseline_key, mapping in batch_baseline_ops:
+            pipe.hset(baseline_key, mapping=mapping)
+        for update_key, mapping in batch_update_ops:
+            pipe.hset(update_key, mapping=mapping)
+        pipe.execute()
 
     if updated_hashes == 0:
         print("\nNo hashes required updates (nothing matched the reset criteria).")
