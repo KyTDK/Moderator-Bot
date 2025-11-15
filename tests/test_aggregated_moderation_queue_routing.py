@@ -91,3 +91,27 @@ async def test_non_accelerated_video_tasks_use_free_queue(monkeypatch, fake_queu
     assert fake_queues["free"].added == [token]
     assert fake_queues["accelerated_video"].added == []
     assert fake_queues["accelerated"].added == []
+
+
+@pytest.mark.anyio
+async def test_text_tasks_routed_to_accelerated_text_queue(monkeypatch, fake_queues):
+    cog = await _build_cog(monkeypatch, fake_queues, accelerated=True)
+    token = object()
+
+    await cog.add_to_queue(token, guild_id=5, task_kind="text")
+
+    assert fake_queues["accelerated_text"].added == [token]
+    assert fake_queues["accelerated"].added == []
+    assert fake_queues["free"].added == []
+
+
+@pytest.mark.anyio
+async def test_non_accelerated_text_tasks_use_free_queue(monkeypatch, fake_queues):
+    cog = await _build_cog(monkeypatch, fake_queues, accelerated=False)
+    token = object()
+
+    await cog.add_to_queue(token, guild_id=7, task_kind="text")
+
+    assert fake_queues["free"].added == [token]
+    assert fake_queues["accelerated_text"].added == []
+    assert fake_queues["accelerated"].added == []

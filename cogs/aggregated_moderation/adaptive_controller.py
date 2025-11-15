@@ -35,8 +35,10 @@ class AdaptiveQueueController:
         *,
         free_queue: WorkerQueue,
         accelerated_queue: WorkerQueue,
+        accelerated_text_queue: WorkerQueue | None = None,
         free_policy: AdaptiveQueuePolicy,
         accelerated_policy: AdaptiveQueuePolicy,
+        accelerated_text_policy: AdaptiveQueuePolicy | None = None,
         config: AdaptiveControllerConfig,
     ) -> None:
         self._config = config
@@ -44,6 +46,11 @@ class AdaptiveQueueController:
             "free": _QueueState(queue=free_queue, policy=free_policy),
             "accelerated": _QueueState(queue=accelerated_queue, policy=accelerated_policy),
         }
+        if accelerated_text_queue is not None and accelerated_text_policy is not None:
+            self._states["accelerated_text"] = _QueueState(
+                queue=accelerated_text_queue,
+                policy=accelerated_text_policy,
+            )
         self._task: Optional[asyncio.Task] = None
 
     async def start(self) -> None:

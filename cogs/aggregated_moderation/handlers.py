@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import time
 
 import discord
@@ -85,13 +86,27 @@ class ModerationHandlers:
 
         has_video = self._message_has_video_attachment(message)
 
+        if text_scanning_allowed:
+            text_outcome = await self._enqueue_text_scan(
+                message=message,
+                guild_id=guild_id,
+                scan_text=text_scanning_allowed,
+            )
+            if text_outcome.get("flagged") and text_outcome.get("text_flagged"):
+                return
+            if not nsfw_enabled:
+                return
+
+        if not nsfw_enabled:
+            return
+
         async def scan_task():
             scan_outcome = await self._scanner.is_nsfw(
                 message=message,
                 guild_id=guild_id,
                 nsfw_callback=handle_nsfw_content,
                 overall_started_at=queue_started_at,
-                scan_text=text_scanning_allowed,
+                scan_text=False,
                 scan_media=nsfw_enabled,
                 return_details=True,
             )
@@ -370,6 +385,54 @@ class ModerationHandlers:
             except Exception:
                 continue
         return False
+
+    async def _enqueue_text_scan(
+        self,
+        *,
+        message: discord.Message,
+        guild_id: int,
+        scan_text: bool,
+    ) -> dict:
+        loop = asyncio.get_running_loop()
+        result_future: asyncio.Future[dict] = loop.create_future()
+
+        queue_started_at = time.perf_counter()
+
+        async def text_scan_task():
+            try:
+                outcome = await self._scanner.is_nsfw(
+                    message=message,
+                    guild_id=guild_id,
+                    nsfw_callback=handle_nsfw_content,
+                    overall_started_at=queue_started_at,
+                    scan_text=scan_text,
+                    scan_media=False,
+                    return_details=True,
+                )
+            except Exception as exc:  # noqa: BLE001
+                if not result_future.done():
+                    result_future.set_exception(exc)
+                raise
+            normalized = self._normalize_scan_outcome(outcome)
+            if not result_future.done():
+                result_future.set_result(normalized)
+
+        await self._enqueue(text_scan_task(), guild_id=guild_id, task_kind="text")
+        return await result_future
+
+    @staticmethod
+    def _normalize_scan_outcome(outcome):
+        if isinstance(outcome, dict):
+            outcome.setdefault("text_flagged", bool(outcome.get("text_flagged")))
+            outcome.setdefault("media_flagged", bool(outcome.get("media_flagged")))
+            outcome.setdefault("flagged", bool(outcome.get("text_flagged") or outcome.get("media_flagged")))
+            return outcome
+        flagged = bool(outcome)
+        return {
+            "flagged": flagged,
+            "text_flagged": flagged,
+            "media_flagged": False,
+        }
 
 
 __all__ = ["ModerationHandlers"]

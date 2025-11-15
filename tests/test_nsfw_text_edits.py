@@ -288,6 +288,7 @@ def test_handle_message_edit_triggers_text_scan(monkeypatch):
         assert nsfw_calls.get("nsfw_callback") is handlers_module.handle_nsfw_content
         assert nsfw_calls.get("message") is after_message
         assert nsfw_calls.get("guild_id") == guild.id
+        assert nsfw_calls.get("task_kind") == "text"
 
     asyncio.run(run_test())
 

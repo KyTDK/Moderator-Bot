@@ -29,6 +29,7 @@ class AggregatedModerationCog(commands.Cog):
 
         free_policy = self.config.free_policy
         accel_policy = self.config.accelerated_policy
+        accel_text_policy = self.config.accelerated_text_policy
         controller_cfg = self.config.controller
         video_policy = self.config.video_policy
 
@@ -57,6 +58,20 @@ class AggregatedModerationCog(commands.Cog):
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
             developer_log_context="aggregated_moderation.accelerated_queue",
+            adaptive_mode=True,
+            rate_tracking_window=controller_cfg.rate_window,
+        )
+        self.accelerated_text_queue = WorkerQueue(
+            max_workers=accel_text_policy.min_workers,
+            autoscale_max=accel_text_policy.min_workers,
+            backlog_high_watermark=accel_text_policy.backlog_soft_limit,
+            backlog_low_watermark=max(0, accel_text_policy.backlog_low),
+            autoscale_check_interval=controller_cfg.tick_interval,
+            scale_down_grace=max(5.0, controller_cfg.scale_down_cooldown),
+            name="accelerated_text",
+            singular_task_reporter=self._singular_task_reporter,
+            developer_log_bot=bot,
+            developer_log_context="aggregated_moderation.accelerated_text_queue",
             adaptive_mode=True,
             rate_tracking_window=controller_cfg.rate_window,
         )
@@ -95,8 +110,10 @@ class AggregatedModerationCog(commands.Cog):
         self._adaptive_controller = AdaptiveQueueController(
             free_queue=self.free_queue,
             accelerated_queue=self.accelerated_queue,
+            accelerated_text_queue=self.accelerated_text_queue,
             free_policy=free_policy,
             accelerated_policy=accel_policy,
+            accelerated_text_policy=accel_text_policy,
             config=controller_cfg,
         )
 
@@ -120,6 +137,8 @@ class AggregatedModerationCog(commands.Cog):
 
         if task_kind == "video" and accelerated:
             queue = self.video_queue
+        elif task_kind == "text" and accelerated:
+            queue = self.accelerated_text_queue
         else:
             queue = self.accelerated_queue if accelerated else self.free_queue
         await queue.add_task(coro)
@@ -150,6 +169,7 @@ class AggregatedModerationCog(commands.Cog):
         await self.scanner.start()
         await self.free_queue.start()
         await self.accelerated_queue.start()
+        await self.accelerated_text_queue.start()
         await self.video_queue.start()
         await self._adaptive_controller.start()
         await self.queue_monitor.start()
@@ -160,6 +180,7 @@ class AggregatedModerationCog(commands.Cog):
         await self.scanner.stop()
         await self.free_queue.stop()
         await self.accelerated_queue.stop()
+        await self.accelerated_text_queue.stop()
         await self.video_queue.stop()
         await self.queue_monitor.stop()
         await self.performance_monitor.stop()

@@ -49,6 +49,7 @@ class PerformanceMonitorConfig:
 class AggregatedModerationConfig:
     free_policy: AdaptiveQueuePolicy
     accelerated_policy: AdaptiveQueuePolicy
+    accelerated_text_policy: AdaptiveQueuePolicy
     video_policy: AdaptiveQueuePolicy
     controller: AdaptiveControllerConfig
     monitor: MonitorConfig
@@ -57,6 +58,37 @@ class AggregatedModerationConfig:
 
 def _clamp_int(value: int, *, minimum: int, maximum: int) -> int:
     return max(minimum, min(maximum, value))
+
+
+def _build_policy(
+    *,
+    name: str,
+    min_workers: int,
+    max_workers: int,
+    backlog_target: int = 0,
+    backlog_low: int = 0,
+    backlog_soft_limit: int,
+    catchup_batch: int,
+    provision_bias: float,
+    recovery_bias: float,
+    wait_threshold: float,
+    min_runtime: float,
+    maintain_backlog: bool = False,
+) -> AdaptiveQueuePolicy:
+    return AdaptiveQueuePolicy(
+        name=name,
+        min_workers=min_workers,
+        max_workers=max_workers,
+        backlog_target=backlog_target,
+        backlog_low=backlog_low,
+        backlog_soft_limit=backlog_soft_limit,
+        catchup_batch=catchup_batch,
+        provision_bias=provision_bias,
+        recovery_bias=recovery_bias,
+        wait_threshold=wait_threshold,
+        min_runtime=min_runtime,
+        maintain_backlog=maintain_backlog,
+    )
 
 
 def load_config() -> AggregatedModerationConfig:
@@ -76,7 +108,7 @@ def load_config() -> AggregatedModerationConfig:
     accelerated_backlog_soft = max(3, accelerated_min_workers * 2)
     accelerated_catchup = max(3, accelerated_min_workers * 2)
 
-    free_policy = AdaptiveQueuePolicy(
+    free_policy = _build_policy(
         name="free",
         min_workers=free_min_workers,
         max_workers=free_max_workers,
@@ -91,7 +123,7 @@ def load_config() -> AggregatedModerationConfig:
         maintain_backlog=True,
     )
 
-    accelerated_policy = AdaptiveQueuePolicy(
+    accelerated_policy = _build_policy(
         name="accelerated",
         min_workers=accelerated_min_workers,
         max_workers=accelerated_max_workers,
@@ -103,25 +135,37 @@ def load_config() -> AggregatedModerationConfig:
         recovery_bias=1.35,
         wait_threshold=4.5,
         min_runtime=0.2,
-        maintain_backlog=False,
+    )
+
+    accelerated_text_min_workers = 2
+    accelerated_text_max_workers = max(5, cpu_count * 2)
+    accelerated_text_soft = max(6, accelerated_text_min_workers * 3)
+
+    accelerated_text_policy = _build_policy(
+        name="accelerated_text",
+        min_workers=accelerated_text_min_workers,
+        max_workers=accelerated_text_max_workers,
+        backlog_soft_limit=accelerated_text_soft,
+        catchup_batch=max(3, accelerated_text_min_workers * 2),
+        provision_bias=1.1,
+        recovery_bias=1.3,
+        wait_threshold=3.0,
+        min_runtime=0.15,
     )
 
     video_min_workers = 1
     video_max_workers = max(3, cpu_count * 2)
     video_backlog_soft = max(6, video_min_workers * 3)
-    video_policy = AdaptiveQueuePolicy(
+    video_policy = _build_policy(
         name="video",
         min_workers=video_min_workers,
         max_workers=video_max_workers,
-        backlog_target=0,
-        backlog_low=0,
         backlog_soft_limit=video_backlog_soft,
         catchup_batch=max(2, video_min_workers),
         provision_bias=1.3,
         recovery_bias=1.6,
         wait_threshold=6.0,
         min_runtime=0.5,
-        maintain_backlog=False,
     )
 
     controller = AdaptiveControllerConfig(
@@ -136,6 +180,7 @@ def load_config() -> AggregatedModerationConfig:
     return AggregatedModerationConfig(
         free_policy=free_policy,
         accelerated_policy=accelerated_policy,
+        accelerated_text_policy=accelerated_text_policy,
         video_policy=video_policy,
         controller=controller,
         monitor=monitor,

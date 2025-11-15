@@ -8,7 +8,7 @@ project_root = Path(__file__).resolve().parents[1]
 if str(project_root) not in sys.path:
     sys.path.append(str(project_root))
 
-from modules.metrics.stats import compute_latency_breakdown
+from modules.metrics.stats import LatencyStats, compute_latency_breakdown
 
 
 def test_compute_latency_breakdown_uses_totals_and_summary(monkeypatch):
@@ -38,14 +38,14 @@ def test_compute_latency_breakdown_uses_totals_and_summary(monkeypatch):
             {
                 "content_type": "video",
                 "scans": 6,
-                "total_duration_ms": 900,
+                "duration_total_ms": 900,
                 "average_latency_per_frame_ms": 0.7,
-                "total_frames_scanned": 1500,
+                "frames_total_scanned": 1500,
                 "acceleration": {
                     "accelerated": {
-                        "scans": 4,
-                        "duration_total_ms": 600,
-                        "frames_total_scanned": 1200,
+                        "scans_count": 4,
+                        "total_duration_ms": 600,
+                        "total_frames_scanned": 1200,
                     },
                     "non_accelerated": {
                         "scans": 2,
@@ -57,8 +57,8 @@ def test_compute_latency_breakdown_uses_totals_and_summary(monkeypatch):
             {
                 "content_type": "image",
                 "scans": 4,
-                "total_duration_ms": 100,
-                "total_frames_scanned": 0,
+                "duration_total_ms": 100,
+                "frames_total_scanned": 0,
                 "acceleration": {
                     "non_accelerated": {
                         "scans": 4,
@@ -152,8 +152,8 @@ def test_compute_latency_breakdown_limits_extra_types(monkeypatch):
                 {
                     "content_type": f"type_{idx}",
                     "scans": idx + 1,
-                    "total_duration_ms": (idx + 1) * 100,
-                    "total_frames_scanned": (idx + 1) * 50,
+                    "duration_total_ms": (idx + 1) * 100,
+                    "frames_total_scanned": (idx + 1) * 50,
                 }
             )
         return buckets
@@ -162,5 +162,72 @@ def test_compute_latency_breakdown_limits_extra_types(monkeypatch):
     monkeypatch.setattr("modules.metrics.stats.summarise_rollups", fake_summary)
 
     breakdown = asyncio.run(compute_latency_breakdown())
-    assert "overall" in breakdown
+    assert breakdown["overall"]["average_latency_ms"] == pytest.approx(20.0)
     assert len(breakdown["by_type"]) == 10
+
+
+def test_compute_latency_breakdown_handles_aliases_and_missing_keys(monkeypatch):
+    async def fake_totals():
+        return {
+            "scans": 4,
+            "duration_total_ms": 800,
+            "frames_total_scanned": 200,
+            "acceleration": {
+                "accelerated": {
+                    "scans_count": 1,
+                    "total_duration_ms": 200,
+                    "total_frames_scanned": 50,
+                },
+                "non_accelerated": {
+                    "scans": 3,
+                    "duration_total_ms": 600,
+                    "frames_total_scanned": 150,
+                },
+            },
+        }
+
+    async def fake_summary():
+        return [
+            {
+                "content_type": "unknown",
+                "scans_count": 4,
+                "total_duration_ms": 800,
+                "total_frames_scanned": 200,
+                # Intentionally omit average_latency_per_frame_ms to force derived calc.
+            }
+        ]
+
+    monkeypatch.setattr("modules.metrics.stats.fetch_metric_totals", fake_totals)
+    monkeypatch.setattr("modules.metrics.stats.summarise_rollups", fake_summary)
+
+    breakdown = asyncio.run(compute_latency_breakdown())
+    overall = breakdown["overall"]
+    assert overall["average_latency_ms"] == pytest.approx(200.0)
+    assert overall["average_latency_per_frame_ms"] == pytest.approx(4.0)
+    accel = overall["acceleration"]
+    assert accel["accelerated"]["average_latency_ms"] == pytest.approx(200.0)
+    assert accel["non_accelerated"]["average_latency_ms"] == pytest.approx(200.0)
+
+
+def test_latency_stats_handles_mixed_inputs():
+    stats = LatencyStats.from_payload(
+        label="mixed",
+        payload={
+            "scans": "5",
+            "duration_total_ms": "1000",
+            "frames_total_scanned": "500",
+        },
+    )
+    assert stats.average_latency_ms == pytest.approx(200.0)
+    assert stats.average_latency_per_frame_ms == pytest.approx(2.0)
+
+    stats_zero = LatencyStats.from_payload(
+        label="zeros",
+        payload={
+            "scans": 0,
+            "total_duration_ms": -50,
+            "total_frames_scanned": None,
+        },
+    )
+    assert stats_zero.average_latency_ms is None
+    assert stats_zero.average_latency_per_frame_ms is None
