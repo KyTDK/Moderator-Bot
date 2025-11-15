@@ -216,10 +216,12 @@ def test_latency_stats_handles_mixed_inputs():
             "scans": "5",
             "duration_total_ms": "1000",
             "frames_total_scanned": "500",
+            "frame_coverage_rate": "0.95",
         },
     )
     assert stats.average_latency_ms == pytest.approx(200.0)
     assert stats.average_latency_per_frame_ms == pytest.approx(2.0)
+    assert stats.frame_coverage_rate == pytest.approx(0.95)
 
     stats_zero = LatencyStats.from_payload(
         label="zeros",

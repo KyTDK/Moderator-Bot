@@ -45,6 +45,7 @@ class LatencyStats:
     average_latency_ms: Optional[float] = None
     frames_scanned: Optional[float] = None
     average_latency_per_frame_ms: Optional[float] = None
+    frame_coverage_rate: Optional[float] = None
 
     @classmethod
     def from_payload(cls, *, label: str, payload: Mapping[str, Any] | None) -> "LatencyStats":
@@ -52,6 +53,7 @@ class LatencyStats:
         total_duration = _extract_float(payload, "total_duration_ms", "duration_total_ms")
         frames = _extract_float(payload, "total_frames_scanned", "frames_total_scanned")
         per_frame = _extract_float(payload, "average_latency_per_frame_ms")
+        coverage = _extract_float(payload, "frame_coverage_rate")
         average_latency = _safe_divide(total_duration, scans)
         if per_frame is None:
             per_frame = _safe_divide(total_duration, frames)
@@ -62,6 +64,7 @@ class LatencyStats:
             average_latency_ms=average_latency,
             frames_scanned=frames,
             average_latency_per_frame_ms=per_frame,
+            frame_coverage_rate=coverage,
         )
 
     def as_dict(self) -> dict[str, Optional[float]]:
@@ -72,6 +75,7 @@ class LatencyStats:
             "average_latency_ms": self.average_latency_ms,
             "frames_scanned": self.frames_scanned,
             "average_latency_per_frame_ms": self.average_latency_per_frame_ms,
+            "frame_coverage_rate": self.frame_coverage_rate,
         }
 
 
