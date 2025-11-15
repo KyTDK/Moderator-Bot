@@ -61,12 +61,18 @@ RESET_SUFFIXES: tuple[str, ...] = (
     "_total_duration_sq_ms",
     "duration_total_ms",
     "duration_total_sq_ms",
+    "_total_frames_scanned",
+    "_total_frames_target",
+    "_total_frames_media",
 )
 
 # Exact field names to reset (covers non-suffixed variants in totals hashes).
 RESET_EXACT: set[str] = {
     "total_duration_ms",
     "total_duration_sq_ms",
+    "total_frames_scanned",
+    "total_frames_target",
+    "total_frames_media",
 }
 
 # Map suffix → (units, category label)
@@ -91,6 +97,9 @@ SUFFIX_META = {
     "frames_total_target": ("frames", "frames"),
     "total_frames_scanned": ("frames", "frames"),
     "total_frames_target": ("frames", "frames"),
+    "_total_frames_media": ("frames", "frames"),
+    "frames_total_media": ("frames", "frames"),
+    "total_frames_media": ("frames", "frames"),
 }
 
 # Preferred count-field endings to try, in order, for a given base name.

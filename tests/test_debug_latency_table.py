@@ -41,8 +41,7 @@ spec.loader.exec_module(debug_stats)
 _build_latency_row = debug_stats._build_latency_row
 _build_latency_table = debug_stats._build_latency_table
 _format_latency_value = debug_stats._format_latency_value
-
-from cogs.debug.commands.stats import _build_latency_row, _build_latency_table, _format_latency_value
+_format_coverage_value = debug_stats._format_coverage_value
 
 
 def test_format_latency_value_handles_numbers_and_invalid_values():
@@ -52,16 +51,29 @@ def test_format_latency_value_handles_numbers_and_invalid_values():
     assert _format_latency_value("not-a-number") == "n/a"
 
 
+def test_format_coverage_value_handles_percentages():
+    assert _format_coverage_value(0.876) == "87.6%"
+    assert _format_coverage_value("0.125") == "12.5%"
+    assert _format_coverage_value(None) == "n/a"
+    assert _format_coverage_value("nan") == "n/a"
+
+
 def test_build_latency_row_formats_missing_values():
     payload = {
         "average_latency_ms": 150.0,
         "acceleration": {
-            "non_accelerated": {"average_latency_ms": 200.0},
-            "accelerated": {"average_latency_ms": None},
+            "non_accelerated": {
+                "average_latency_ms": 200.0,
+                "frame_coverage_rate": 0.95,
+            },
+            "accelerated": {
+                "average_latency_ms": None,
+                "frame_coverage_rate": 0.5,
+            },
         },
     }
     row = _build_latency_row("Video", payload)
-    assert row == ("Video", "150.0", "200.0", "n/a")
+    assert row == ("Video", "150.0", "200.0", "95.0%", "n/a", "50.0%")
 
     assert _build_latency_row("Image", None) is None
 
@@ -71,8 +83,14 @@ def test_build_latency_table_renders_sorted_rows(monkeypatch):
         "overall": {
             "average_latency_ms": 80.5,
             "acceleration": {
-                "non_accelerated": {"average_latency_ms": 69.4},
-                "accelerated": {"average_latency_ms": 111.0},
+                "non_accelerated": {
+                    "average_latency_ms": 69.4,
+                    "frame_coverage_rate": 0.88,
+                },
+                "accelerated": {
+                    "average_latency_ms": 111.0,
+                    "frame_coverage_rate": 0.76,
+                },
             },
         },
         "by_type": {
@@ -81,8 +99,14 @@ def test_build_latency_table_renders_sorted_rows(monkeypatch):
                 "scans": 50,
                 "average_latency_ms": 100.0,
                 "acceleration": {
-                    "non_accelerated": {"average_latency_ms": 95.0},
-                    "accelerated": {"average_latency_ms": 120.0},
+                    "non_accelerated": {
+                        "average_latency_ms": 95.0,
+                        "frame_coverage_rate": 0.95,
+                    },
+                    "accelerated": {
+                        "average_latency_ms": 120.0,
+                        "frame_coverage_rate": 0.85,
+                    },
                 },
             },
             "image": {
@@ -90,8 +114,14 @@ def test_build_latency_table_renders_sorted_rows(monkeypatch):
                 "scans": 10,
                 "average_latency_ms": 40.0,
                 "acceleration": {
-                    "non_accelerated": {"average_latency_ms": 30.0},
-                    "accelerated": {"average_latency_ms": 60.0},
+                    "non_accelerated": {
+                        "average_latency_ms": 30.0,
+                        "frame_coverage_rate": 0.6,
+                    },
+                    "accelerated": {
+                        "average_latency_ms": 60.0,
+                        "frame_coverage_rate": 0.7,
+                    },
                 },
             },
         },
@@ -100,13 +130,15 @@ def test_build_latency_table_renders_sorted_rows(monkeypatch):
     async def fake_breakdown():
         return breakdown
 
-    monkeypatch.setattr("cogs.debug.commands.stats.compute_latency_breakdown", fake_breakdown)
+    monkeypatch.setattr(debug_stats, "compute_latency_breakdown", fake_breakdown)
 
     table = asyncio.run(_build_latency_table())
 
     lines = table.splitlines()
     assert lines[0].startswith("Type")
+    assert "Free Cov" in lines[0]
     assert "Overall" in lines[1]
     assert lines[2].startswith("Video")
     assert lines[3].startswith("Image")
     assert "120.0" in table  # Accelerated latency value shows up in table.
+    assert "95.0%" in table

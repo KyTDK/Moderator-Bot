@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 import platform
 import time
@@ -115,14 +116,14 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
     except Exception as exc:  # noqa: BLE001
         latency_error = debug_texts.get("latency_error", "Unable to fetch latency metrics ({error})")
         embed.add_field(
-            name=debug_texts.get("latency_name", "Latency (ms)"),
+            name=debug_texts.get("latency_name", "Latency / Coverage"),
             value=latency_error.format(error=exc),
             inline=False,
         )
     else:
         if latency_table:
             embed.add_field(
-                name=debug_texts.get("latency_name", "Latency (ms)"),
+                name=debug_texts.get("latency_name", "Latency / Coverage"),
                 value=f"```\n{latency_table}\n```",
                 inline=False,
             )
@@ -155,7 +156,7 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
 
 async def _build_latency_table() -> str:
     breakdown = await compute_latency_breakdown()
-    rows: list[tuple[str, str, str, str]] = []
+    rows: list[tuple[str, str, str, str, str, str]] = []
 
     overall_row = _build_latency_row("Overall", breakdown.get("overall"))
     if overall_row:
@@ -178,24 +179,32 @@ async def _build_latency_table() -> str:
     return _render_latency_table(rows)
 
 
-def _build_latency_row(label: str, payload: Any) -> tuple[str, str, str, str] | None:
+def _build_latency_row(label: str, payload: Any) -> tuple[str, str, str, str, str, str] | None:
     if not isinstance(payload, dict):
         return None
     overall = payload.get("average_latency_ms")
     acceleration = payload.get("acceleration") or {}
-    free_latency = (acceleration.get("non_accelerated") or {}).get("average_latency_ms")
-    accelerated_latency = (acceleration.get("accelerated") or {}).get("average_latency_ms")
+    free_bucket = acceleration.get("non_accelerated") or {}
+    accel_bucket = acceleration.get("accelerated") or {}
+
+    free_latency = free_bucket.get("average_latency_ms")
+    accelerated_latency = accel_bucket.get("average_latency_ms")
+
+    free_coverage = free_bucket.get("frame_coverage_rate")
+    accel_coverage = accel_bucket.get("frame_coverage_rate")
 
     return (
         label,
         _format_latency_value(overall),
         _format_latency_value(free_latency),
+        _format_coverage_value(free_coverage),
         _format_latency_value(accelerated_latency),
+        _format_coverage_value(accel_coverage),
     )
 
 
-def _render_latency_table(rows: list[tuple[str, str, str, str]]) -> str:
-    headers = ("Type", "Overall", "Free", "Accel")
+def _render_latency_table(rows: list[tuple[str, ...]]) -> str:
+    headers = ("Type", "Overall", "Free", "Free Cov", "Accel", "Accel Cov")
     full_rows = [headers, *rows]
     col_count = len(headers)
     widths = [
@@ -219,7 +228,21 @@ def _format_latency_value(value: Any) -> str:
         numeric = float(value)
     except (TypeError, ValueError):
         return "n/a"
+    if not math.isfinite(numeric):
+        return "n/a"
     return f"{numeric:,.1f}"
+
+
+def _format_coverage_value(value: Any) -> str:
+    if value is None:
+        return "n/a"
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return "n/a"
+    if not math.isfinite(numeric):
+        return "n/a"
+    return f"{numeric * 100:.1f}%"
 
 
 def _collect_worker_summaries(cog) -> Tuple[List[str], List[str]]:
