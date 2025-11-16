@@ -10,8 +10,11 @@ from tempfile import NamedTemporaryFile
 from typing import Any, Iterable
 from urllib.parse import urlparse
 
-from apnggif import apnggif
 from discord.errors import NotFound
+try:
+    from apnggif import apnggif as _apnggif  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    _apnggif = None  # type: ignore
 
 from cogs.hydration import wait_for_hydration
 
@@ -96,8 +99,13 @@ class MediaScanner:
 
             async def _sticker_postprocess(temp_path: str) -> tuple[str, list[str]]:
                 if extension == "apng":
+                    if _apnggif is None:
+                        log.warning(
+                            "APNG sticker received but 'apnggif' is not installed; using original APNG payload"
+                        )
+                        return temp_path, []
                     gif_location = os.path.join(TMP_DIR, f"{uuid.uuid4().hex[:12]}.gif")
-                    await asyncio.to_thread(apnggif, temp_path, gif_location)
+                    await asyncio.to_thread(_apnggif, temp_path, gif_location)
                     if not os.path.exists(gif_location):
                         log.warning(
                             "APNG conversion produced no output for %s; using original sticker payload",
