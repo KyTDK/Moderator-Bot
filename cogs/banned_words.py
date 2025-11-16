@@ -4,8 +4,77 @@ from modules.moderation import strike
 from modules.utils.action_manager import ActionListManager
 import re
 import discord
-from better_profanity import profanity
-from cleantext import clean
+
+try:
+    from better_profanity import profanity
+except ModuleNotFoundError:  # pragma: no cover - optional dependency guard
+    class _FallbackProfanity:
+        """Minimal profanity helper when better_profanity is missing."""
+
+        DEFAULT_WORDS = {
+            "fuck",
+            "shit",
+            "bitch",
+            "asshole",
+            "bastard",
+            "slut",
+            "whore",
+            "dick",
+            "cunt",
+            "cock",
+            "pussy",
+            "nigger",
+            "nigga",
+            "faggot",
+            "twat",
+            "bollocks",
+            "damn",
+            "crap",
+            "wanker",
+            "motherfucker",
+        }
+
+        def __init__(self):
+            self._words: set[str] = set()
+            self._pattern = None
+
+        def _coerce_words(self, words):
+            if words is None:
+                return []
+            if isinstance(words, str):
+                return [words]
+            return [w for w in words if isinstance(w, str)]
+
+        def _rebuild_pattern(self) -> None:
+            if not self._words:
+                self._pattern = None
+                return
+            escaped = [re.escape(w) for w in self._words]
+            escaped.sort(key=len, reverse=True)
+            joined = "|".join(escaped)
+            self._pattern = re.compile(
+                rf"(?:\b|_)(?:{joined})(?:\b|_)", re.IGNORECASE
+            )
+
+        def load_censor_words(self, words=None):
+            source = self.DEFAULT_WORDS if words is None else self._coerce_words(words)
+            self._words = {w.strip().lower() for w in source if w and w.strip()}
+            self._rebuild_pattern()
+
+        def add_censor_words(self, words):
+            additions = {w.strip().lower() for w in self._coerce_words(words) if w and w.strip()}
+            if not additions:
+                return
+            self._words.update(additions)
+            self._rebuild_pattern()
+
+        def contains_profanity(self, text):
+            if not text or not self._pattern:
+                return False
+            return bool(self._pattern.search(text))
+
+    profanity = _FallbackProfanity()
+
 from modules.utils import mod_logging, mysql
 from modules.utils.guild_list_storage import fetch_values
 from modules.utils.action_command_helpers import (

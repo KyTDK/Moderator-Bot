@@ -4,7 +4,24 @@ import re
 from typing import Iterable, List
 from urllib.parse import urlparse
 
-from urlextract import URLExtract
+try:
+    from urlextract import URLExtract  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - best effort fallback
+    class URLExtract:  # type: ignore
+        """Fallback extractor when urlextract is unavailable."""
+
+        _PATTERN = re.compile(
+            r"(?:(?:https?://|www\.)[^\s<>\"]+)", re.IGNORECASE
+        )
+
+        def find_urls(self, text: str | None) -> List[str]:
+            if not text:
+                return []
+            return [match.group(0) for match in self._PATTERN.finditer(text)]
+
+        def update(self) -> None:
+            # urlextract refreshes remote TLD list; regex fallback is static.
+            return None
 
 _EXTRACTOR = URLExtract()
 
