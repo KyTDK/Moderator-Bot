@@ -1,53 +1,53 @@
 import re
 import unicodedata
-from typing import Dict
+from typing import Dict, Optional
 
 try:
     from cleantext import clean
 except ModuleNotFoundError:  # pragma: no cover - optional dependency guard
-        _FALLBACK_URL_RE = re.compile(r"https?://\S+")
-        _FALLBACK_EMAIL_RE = re.compile(r"\b[\w.+-]+@[\w.-]+\.\w+\b")
-        _FALLBACK_PHONE_RE = re.compile(r"\+?\d[\d\s\-()]{7,}\d")
-        _FALLBACK_CURRENCY_RE = re.compile(r"[€£¥$₩₹₽¢₿]", re.UNICODE)
-        _FALLBACK_PUNCT_RE = re.compile(r"[^\w\s]", re.UNICODE)
+    _FALLBACK_URL_RE = re.compile(r"https?://\S+")
+    _FALLBACK_EMAIL_RE = re.compile(r"\b[\w.+-]+@[\w.-]+\.\w+\b")
+    _FALLBACK_PHONE_RE = re.compile(r"\+?\d[\d\s\-()]{7,}\d")
+    _FALLBACK_CURRENCY_RE = re.compile(r"[€£¥$₩₹₽¢₿]", re.UNICODE)
+    _FALLBACK_PUNCT_RE = re.compile(r"[^\w\s]", re.UNICODE)
 
-        def clean(
-            text: str,
-            *,
-            lower: bool = False,
-            to_ascii: bool = False,
-            no_line_breaks: bool = False,
-            no_urls: bool = False,
-            no_emails: bool = False,
-            no_phone_numbers: bool = False,
-            no_digits: bool = False,
-            no_currency_symbols: bool = False,
-            no_punct: bool = False,
-            lang: str | None = None,
-        ) -> str:
-            """Minimal fallback replicating the subset we rely on."""
+    def clean(
+        text: str,
+        *,
+        lower: bool = False,
+        to_ascii: bool = False,
+        no_line_breaks: bool = False,
+        no_urls: bool = False,
+        no_emails: bool = False,
+        no_phone_numbers: bool = False,
+        no_digits: bool = False,
+        no_currency_symbols: bool = False,
+        no_punct: bool = False,
+        lang: Optional[str] = None,
+    ) -> str:
+        """Minimal fallback replicating the subset we rely on."""
 
-            result = text or ""
-            if no_line_breaks:
-                result = result.replace("\n", " ").replace("\r", " ")
-            if no_urls:
-                result = _FALLBACK_URL_RE.sub(" ", result)
-            if no_emails:
-                result = _FALLBACK_EMAIL_RE.sub(" ", result)
-            if no_phone_numbers:
-                result = _FALLBACK_PHONE_RE.sub(" ", result)
-            if no_currency_symbols:
-                result = _FALLBACK_CURRENCY_RE.sub(" ", result)
-            if no_digits:
-                result = re.sub(r"\d", "", result)
-            if no_punct:
-                result = _FALLBACK_PUNCT_RE.sub(" ", result)
-            if to_ascii:
-                result = unicodedata.normalize("NFKD", result).encode("ascii", "ignore").decode("ascii")
-            if lower:
-                result = result.lower()
-            result = re.sub(r"\s+", " ", result)
-            return result.strip()
+        result = text or ""
+        if no_line_breaks:
+            result = result.replace("\n", " ").replace("\r", " ")
+        if no_urls:
+            result = _FALLBACK_URL_RE.sub(" ", result)
+        if no_emails:
+            result = _FALLBACK_EMAIL_RE.sub(" ", result)
+        if no_phone_numbers:
+            result = _FALLBACK_PHONE_RE.sub(" ", result)
+        if no_currency_symbols:
+            result = _FALLBACK_CURRENCY_RE.sub(" ", result)
+        if no_digits:
+            result = re.sub(r"\d", "", result)
+        if no_punct:
+            result = _FALLBACK_PUNCT_RE.sub(" ", result)
+        if to_ascii:
+            result = unicodedata.normalize("NFKD", result).encode("ascii", "ignore").decode("ascii")
+        if lower:
+            result = result.lower()
+        result = re.sub(r"\s+", " ", result)
+        return result.strip()
 
 # Leetspeak map to help catch obfuscations
 LEET_MAP = {
