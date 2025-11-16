@@ -15,6 +15,7 @@ __all__ = [
     "OfflineCache",
     "OfflineQueryError",
     "PendingWrite",
+    "ColumnDefinition",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,6 +30,18 @@ class PendingWrite:
     row_id: int
     query: str
     params: tuple[Any, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ColumnDefinition:
+    name: str
+    affinity: str
+
+
+@dataclass(frozen=True, slots=True)
+class _SchemaState:
+    columns: tuple[ColumnDefinition, ...]
+    primary_keys: tuple[str, ...]
 
 
 def _normalize_value(value: Any) -> Any:
@@ -49,7 +62,8 @@ def _strip_backticks(sql: str) -> str:
     return sql.replace("`", "")
 
 
-_PLACEHOLDER_TOKEN = "%s"
+def _quote_identifier(identifier: str) -> str:
+    return f'"{identifier.replace("\"", "\"\"")}"'
 
 
 def _convert_placeholders(sql: str) -> str:
@@ -76,7 +90,7 @@ def _convert_on_duplicate(sql: str, conflict_target: Sequence[str]) -> str:
     before = sql[:idx].rstrip()
     after = sql[idx + len(marker) :].strip()
     if not conflict_target:
-        raise OfflineQueryError("No conflict target registered for ON DUPLICATE KEY statement")
+        raise OfflineQueryError("Conflict target required for ON DUPLICATE KEY translation")
 
     # Replace VALUES(column) with excluded.column for SQLite UPSERT.
     def _values_to_excluded(segment: str) -> str:
@@ -106,157 +120,8 @@ def _convert_on_duplicate(sql: str, conflict_target: Sequence[str]) -> str:
         return "".join(parts)
 
     rewritten_after = _values_to_excluded(after)
-    conflict_clause = ", ".join(conflict_target)
+    conflict_clause = ", ".join(_quote_identifier(column) for column in conflict_target)
     return f"{before} ON CONFLICT({conflict_clause}) DO UPDATE SET {rewritten_after}"
-
-
-_TABLE_SCHEMAS: dict[str, str] = {
-    "strikes": """
-        CREATE TABLE IF NOT EXISTS strikes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            guild_id INTEGER,
-            user_id INTEGER,
-            reason TEXT,
-            striked_by_id INTEGER,
-            timestamp TEXT,
-            expires_at TEXT
-        )
-    """,
-    "settings": """
-        CREATE TABLE IF NOT EXISTS settings (
-            guild_id INTEGER PRIMARY KEY,
-            settings_json TEXT
-        )
-    """,
-    "banned_words": """
-        CREATE TABLE IF NOT EXISTS banned_words (
-            guild_id INTEGER NOT NULL,
-            word TEXT NOT NULL,
-            PRIMARY KEY (guild_id, word)
-        )
-    """,
-    "banned_urls": """
-        CREATE TABLE IF NOT EXISTS banned_urls (
-            guild_id INTEGER NOT NULL,
-            url TEXT NOT NULL,
-            PRIMARY KEY (guild_id, url)
-        )
-    """,
-    "banned_guilds": """
-        CREATE TABLE IF NOT EXISTS banned_guilds (
-            guild_id INTEGER PRIMARY KEY,
-            reason TEXT,
-            added_at TEXT
-        )
-    """,
-    "faq_entries": """
-        CREATE TABLE IF NOT EXISTS faq_entries (
-            guild_id INTEGER NOT NULL,
-            entry_id INTEGER NOT NULL,
-            question TEXT NOT NULL,
-            answer TEXT NOT NULL,
-            vector_id INTEGER,
-            created_at TEXT,
-            updated_at TEXT,
-            PRIMARY KEY (guild_id, entry_id)
-        )
-    """,
-    "api_pool": """
-        CREATE TABLE IF NOT EXISTS api_pool (
-            user_id INTEGER NOT NULL,
-            guild_id INTEGER NOT NULL,
-            api_key TEXT NOT NULL,
-            api_key_hash TEXT NOT NULL,
-            working INTEGER NOT NULL DEFAULT 1,
-            PRIMARY KEY (user_id, api_key_hash)
-        )
-    """,
-    "aimod_usage": """
-        CREATE TABLE IF NOT EXISTS aimod_usage (
-            guild_id INTEGER PRIMARY KEY,
-            cycle_end TEXT NOT NULL,
-            tokens_used INTEGER DEFAULT 0,
-            cost_usd REAL DEFAULT 0,
-            limit_usd REAL DEFAULT 0
-        )
-    """,
-    "vcmod_usage": """
-        CREATE TABLE IF NOT EXISTS vcmod_usage (
-            guild_id INTEGER PRIMARY KEY,
-            cycle_end TEXT NOT NULL,
-            tokens_used INTEGER DEFAULT 0,
-            cost_usd REAL DEFAULT 0,
-            limit_usd REAL DEFAULT 0
-        )
-    """,
-    "premium_guilds": """
-        CREATE TABLE IF NOT EXISTS premium_guilds (
-            guild_id INTEGER PRIMARY KEY,
-            buyer_id INTEGER NOT NULL,
-            subscription_id TEXT NOT NULL UNIQUE,
-            tier TEXT NOT NULL,
-            status TEXT NOT NULL,
-            created_at TEXT,
-            activated_at TEXT,
-            next_billing TEXT
-        )
-    """,
-    "bot_shards": """
-        CREATE TABLE IF NOT EXISTS bot_shards (
-            shard_id INTEGER PRIMARY KEY,
-            status TEXT,
-            claimed_by TEXT,
-            claimed_at TEXT,
-            last_heartbeat TEXT,
-            session_id TEXT,
-            resume_gateway_url TEXT,
-            last_error TEXT,
-            updated_at TEXT
-        )
-    """,
-    "bot_instances": """
-        CREATE TABLE IF NOT EXISTS bot_instances (
-            instance_id TEXT PRIMARY KEY,
-            last_seen TEXT NOT NULL,
-            updated_at TEXT
-        )
-    """,
-    "guilds": """
-        CREATE TABLE IF NOT EXISTS guilds (
-            guild_id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            owner_id INTEGER NOT NULL,
-            total_members INTEGER NOT NULL DEFAULT 0,
-            locale TEXT,
-            created_at TEXT
-        )
-    """,
-    "captcha_embeds": """
-        CREATE TABLE IF NOT EXISTS captcha_embeds (
-            guild_id INTEGER PRIMARY KEY,
-            channel_id INTEGER NOT NULL,
-            message_id INTEGER NOT NULL,
-            updated_at TEXT
-        )
-    """,
-}
-
-PRIMARY_KEYS: dict[str, tuple[str, ...]] = {
-    "strikes": ("id",),
-    "settings": ("guild_id",),
-    "banned_words": ("guild_id", "word"),
-    "banned_urls": ("guild_id", "url"),
-    "banned_guilds": ("guild_id",),
-    "faq_entries": ("guild_id", "entry_id"),
-    "api_pool": ("user_id", "api_key_hash"),
-    "aimod_usage": ("guild_id",),
-    "vcmod_usage": ("guild_id",),
-    "premium_guilds": ("guild_id",),
-    "bot_shards": ("shard_id",),
-    "bot_instances": ("instance_id",),
-    "guilds": ("guild_id",),
-    "captcha_embeds": ("guild_id",),
-}
 
 
 class OfflineCache:
@@ -274,10 +139,7 @@ class OfflineCache:
         self._conn_lock = asyncio.Lock()
         self._snapshot_task: asyncio.Task[None] | None = None
         self._snapshot_callback: Callable[[], Awaitable[None]] | None = None
-
-    @property
-    def managed_tables(self) -> Sequence[str]:
-        return tuple(_TABLE_SCHEMAS.keys())
+        self._schema_cache: dict[str, _SchemaState] = {}
 
     async def ensure_started(self) -> aiosqlite.Connection:
         if self._conn is not None:
@@ -292,8 +154,6 @@ class OfflineCache:
             await conn.execute("PRAGMA journal_mode=WAL;")
             await conn.execute("PRAGMA synchronous=NORMAL;")
             await conn.execute("PRAGMA foreign_keys=OFF;")
-            for statement in _TABLE_SCHEMAS.values():
-                await conn.execute(_strip_backticks(statement))
             await conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS pending_writes (
@@ -340,6 +200,7 @@ class OfflineCache:
         if self._conn is not None:
             await self._conn.close()
             self._conn = None
+            self._schema_cache.clear()
 
     async def execute(
         self,
@@ -374,26 +235,60 @@ class OfflineCache:
     async def replace_table(self, table: str, rows: Iterable[dict[str, Any]]) -> None:
         """Bulk-replace table contents with authoritative rows from MySQL."""
         conn = await self.ensure_started()
-        table = table.strip()
-        await conn.execute(f"DELETE FROM {table}")
+        schema = self._schema_cache.get(table)
+        if schema is None:
+            raise OfflineQueryError(f"Schema is not registered for table '{table}'")
 
-        materialized_rows = list(rows)
-        if not materialized_rows:
-            await conn.commit()
+        column_names = [column.name for column in schema.columns]
+        if not column_names:
             return
 
-        columns = list(materialized_rows[0].keys())
-        placeholders = ", ".join(["?"] * len(columns))
-        column_clause = ", ".join(columns)
-        payload = [
-            tuple(_normalize_value(row.get(column)) for column in columns)
-            for row in materialized_rows
-        ]
-        await conn.executemany(
-            f"INSERT INTO {table} ({column_clause}) VALUES ({placeholders})",
-            payload,
-        )
+        quoted_table = _quote_identifier(table)
+        await conn.execute(f"DELETE FROM {quoted_table}")
+
+        materialized_rows = list(rows)
+        if materialized_rows:
+            placeholders = ", ".join(["?"] * len(column_names))
+            column_clause = ", ".join(_quote_identifier(column) for column in column_names)
+            payload = [
+                tuple(_normalize_value(row.get(column)) for column in column_names)
+                for row in materialized_rows
+            ]
+            await conn.executemany(
+                f"INSERT INTO {quoted_table} ({column_clause}) VALUES ({placeholders})",
+                payload,
+            )
         await conn.commit()
+
+    async def sync_schema(
+        self,
+        table: str,
+        columns: Sequence[ColumnDefinition],
+        primary_keys: Sequence[str],
+    ) -> None:
+        """Ensure the SQLite mirror has an up-to-date table definition."""
+        normalized_columns = tuple(columns)
+        normalized_primary_keys = tuple(primary_keys)
+        state = _SchemaState(normalized_columns, normalized_primary_keys)
+        if self._schema_cache.get(table) == state:
+            return
+
+        conn = await self.ensure_started()
+        quoted_table = _quote_identifier(table)
+        await conn.execute(f"DROP TABLE IF EXISTS {quoted_table}")
+
+        column_clause = ", ".join(
+            f"{_quote_identifier(column.name)} {column.affinity}"
+            for column in normalized_columns
+        )
+        pk_clause = (
+            f", PRIMARY KEY ({', '.join(_quote_identifier(pk) for pk in normalized_primary_keys)})"
+            if normalized_primary_keys
+            else ""
+        )
+        await conn.execute(f"CREATE TABLE {quoted_table} ({column_clause}{pk_clause})")
+        await conn.commit()
+        self._schema_cache[table] = state
 
     async def enqueue_pending_write(self, query: str, params: Sequence[Any]) -> None:
         conn = await self.ensure_started()
@@ -439,8 +334,9 @@ class OfflineCache:
         upper_sql = sql.upper()
         if "ON DUPLICATE KEY UPDATE" in upper_sql:
             table_name = self._extract_table_name(sql)
-            conflict_target = PRIMARY_KEYS.get(table_name or "")
-            sql = _convert_on_duplicate(sql, conflict_target or ())
+            state = self._schema_cache.get(table_name or "")
+            conflict_target: Sequence[str] = state.primary_keys if state else ()
+            sql = _convert_on_duplicate(sql, conflict_target)
         return sql
 
     @staticmethod

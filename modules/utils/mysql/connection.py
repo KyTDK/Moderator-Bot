@@ -7,7 +7,7 @@ from typing import Any, Optional, Sequence
 import aiomysql
 
 from .config import MYSQL_CONFIG
-from .offline_cache import OfflineCache, OfflineQueryError
+from .offline_cache import ColumnDefinition, OfflineCache, OfflineQueryError
 
 
 _USE_FAKE_POOL = os.getenv("MYSQL_FAKE", "").lower() in {"1", "true", "yes"}
@@ -357,6 +357,10 @@ async def initialise_and_get_pool() -> Any:
     """Convenience wrapper that callers can await during startup."""
     return await init_pool()
 
+async def refresh_offline_cache_snapshot() -> None:
+    """Public helper to force-refresh the local offline cache snapshot."""
+    await _refresh_offline_snapshot()
+
 
 async def _execute_mysql(
     query: str,
@@ -477,12 +481,102 @@ async def _refresh_offline_snapshot() -> None:
             return
 
         async with pool.acquire() as conn:
-            async with conn.cursor(aiomysql.DictCursor) as cur:
-                for table in _offline_cache.managed_tables:
-                    try:
-                        await cur.execute(f"SELECT * FROM {table}")
-                        rows = await cur.fetchall()
-                    except Exception:
-                        _LOGGER.exception("Failed to snapshot table %s", table)
-                        continue
+            try:
+                table_names = await _fetch_mysql_table_names(conn)
+            except Exception:
+                _LOGGER.exception("Failed to enumerate MySQL tables for offline cache")
+                return
+
+            for table in table_names:
+                try:
+                    columns, primary_keys = await _describe_mysql_table(conn, table)
+                    rows = await _fetch_mysql_table_rows(conn, table)
+                except Exception:
+                    _LOGGER.exception("Failed to snapshot table %s", table)
+                    continue
+
+                try:
+                    await _offline_cache.sync_schema(table, columns, primary_keys)
                     await _offline_cache.replace_table(table, rows)
+                except Exception:
+                    _LOGGER.exception("Failed to refresh offline data for table %s", table)
+
+
+async def _fetch_mysql_table_names(conn: aiomysql.Connection) -> list[str]:
+    async with conn.cursor() as cur:
+        await cur.execute("SHOW TABLES")
+        rows = await cur.fetchall()
+    tables: list[str] = []
+    for row in rows:
+        if isinstance(row, dict):
+            value = next(iter(row.values()), None)
+        else:
+            value = row[0] if row else None
+        if value:
+            tables.append(str(value))
+    return tables
+
+
+async def _describe_mysql_table(
+    conn: aiomysql.Connection,
+    table: str,
+) -> tuple[list[ColumnDefinition], list[str]]:
+    async with conn.cursor() as cur:
+        await cur.execute(f"DESCRIBE `{table}`")
+        rows = await cur.fetchall()
+
+    columns: list[ColumnDefinition] = []
+    primary_keys: list[str] = []
+    for row in rows:
+        field = row[0]
+        type_spec = row[1] if len(row) > 1 else "text"
+        key_flag = row[3] if len(row) > 3 else ""
+        column_name = str(field)
+        columns.append(
+            ColumnDefinition(
+                name=column_name,
+                affinity=_mysql_type_to_affinity(str(type_spec)),
+            )
+        )
+        if str(key_flag).upper() == "PRI":
+            primary_keys.append(column_name)
+    return columns, primary_keys
+
+
+async def _fetch_mysql_table_rows(
+    conn: aiomysql.Connection,
+    table: str,
+) -> list[dict[str, Any]]:
+    async with conn.cursor(aiomysql.DictCursor) as cur:
+        await cur.execute(f"SELECT * FROM `{table}`")
+        rows = await cur.fetchall()
+    return rows or []
+
+
+def _mysql_type_to_affinity(type_spec: str) -> str:
+    base = type_spec.split("(", 1)[0].strip().lower()
+    if base in {
+        "tinyint",
+        "smallint",
+        "mediumint",
+        "int",
+        "integer",
+        "bigint",
+        "bit",
+        "year",
+        "boolean",
+    }:
+        return "INTEGER"
+    if base in {"decimal", "numeric", "float", "double", "real"}:
+        return "REAL"
+    if base in {
+        "blob",
+        "tinyblob",
+        "mediumblob",
+        "longblob",
+        "binary",
+        "varbinary",
+        "bytea",
+    }:
+        return "BLOB"
+    return "TEXT"

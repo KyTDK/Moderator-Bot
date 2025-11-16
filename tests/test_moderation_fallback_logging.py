@@ -4,6 +4,7 @@ import enum
 import os
 import sys
 import types
+from dataclasses import dataclass
 from pathlib import Path
 
 import importlib
@@ -265,11 +266,16 @@ except Exception:
     mysql_stub.get_all_guild_locales = _async_noop  # pragma: no cover - minimal shim
     mysql_stub.add_settings_listener = lambda *_args, **_kwargs: None
     mysql_stub.remove_settings_listener = lambda *_args, **_kwargs: None
+    @dataclass(slots=True)
     class _ShardAssignment:
-        def __init__(self, shard_id=0, shard_count=1):
-            self.shard_id = shard_id
-            self.shard_count = shard_count
+        shard_id: int = 0
+        shard_count: int = 1
+
+    class _ShardClaimError(RuntimeError):
+        pass
+
     mysql_stub.ShardAssignment = _ShardAssignment
+    mysql_stub.ShardClaimError = _ShardClaimError
     sys.modules["modules.utils.mysql"] = mysql_stub
     setattr(utils_pkg, "mysql", mysql_stub)
 

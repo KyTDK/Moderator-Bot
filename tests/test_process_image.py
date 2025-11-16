@@ -2,6 +2,7 @@ import importlib
 import importlib.util
 import sys
 import types
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -311,6 +312,20 @@ mysql_stub.add_guild = _add_guild
 mysql_stub.remove_guild = _remove_guild
 mysql_stub.add_settings_listener = _add_settings_listener
 mysql_stub.remove_settings_listener = _remove_settings_listener
+
+
+@dataclass(slots=True)
+class _StubShardAssignment:
+    shard_id: int
+    shard_count: int
+
+
+class _StubShardClaimError(RuntimeError):
+    pass
+
+
+mysql_stub.ShardAssignment = _StubShardAssignment
+mysql_stub.ShardClaimError = _StubShardClaimError
 sys.modules["modules.utils.mysql"] = mysql_stub
 setattr(utils_pkg, "mysql", mysql_stub)
 

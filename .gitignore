@@ -10,3 +10,14 @@ vector.index
 .phishtank_cache.json.~4466
 old_code/
 docs/milvus.md
+data/
+backups/
+*.sqlite3
+*.sqlite
+*.db
+*.sql
+*.pem
+*.key
+.env.local
+.env.development
+.env.production

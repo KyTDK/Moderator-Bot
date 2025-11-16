@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 import enum
 import pytest
 import sys
@@ -276,6 +277,20 @@ mysql_stub.get_settings = _unpatched_async
 mysql_stub.resolve_guild_plan = _unpatched_async
 mysql_stub.is_accelerated = _unpatched_async
 mysql_stub.get_strike_count = _unpatched_async
+
+
+@dataclass(slots=True)
+class _StubShardAssignment:
+    shard_id: int
+    shard_count: int
+
+
+class _StubShardClaimError(RuntimeError):
+    pass
+
+
+mysql_stub.ShardAssignment = _StubShardAssignment
+mysql_stub.ShardClaimError = _StubShardClaimError
 sys.modules.setdefault("modules.utils.mysql", mysql_stub)
 
 mod_logging_stub = types.ModuleType("modules.utils.mod_logging")

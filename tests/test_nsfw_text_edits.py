@@ -3,6 +3,7 @@ import importlib.util
 import os
 import sys
 import types
+from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -175,6 +176,17 @@ if "modules.utils.mysql" not in sys.modules:
     mysql_stub.get_settings = _default_async
     mysql_stub.is_accelerated = _default_async
     mysql_stub.execute_query = _default_async
+
+    @dataclass(slots=True)
+    class _StubShardAssignment:
+        shard_id: int = 0
+        shard_count: int = 1
+
+    class _StubShardClaimError(RuntimeError):
+        pass
+
+    mysql_stub.ShardAssignment = _StubShardAssignment
+    mysql_stub.ShardClaimError = _StubShardClaimError
     sys.modules["modules.utils.mysql"] = mysql_stub
     utils_parent = sys.modules.get("modules.utils")
     if utils_parent is None:

@@ -4,7 +4,7 @@ import os
 
 os.environ.setdefault("FERNET_SECRET_KEY", base64.urlsafe_b64encode(b"0" * 32).decode())
 
-from modules.utils.mysql.offline_cache import OfflineCache
+from modules.utils.mysql.offline_cache import ColumnDefinition, OfflineCache
 
 
 def test_offline_cache_insert_and_query(tmp_path):
@@ -12,6 +12,17 @@ def test_offline_cache_insert_and_query(tmp_path):
         cache_path = tmp_path / "mirror.sqlite3"
         cache = OfflineCache(db_path=str(cache_path), snapshot_interval_seconds=1_000)
         await cache.ensure_started()
+        await cache.sync_schema(
+            "guilds",
+            [
+                ColumnDefinition("guild_id", "INTEGER"),
+                ColumnDefinition("name", "TEXT"),
+                ColumnDefinition("owner_id", "INTEGER"),
+                ColumnDefinition("locale", "TEXT"),
+                ColumnDefinition("total_members", "INTEGER"),
+            ],
+            ["guild_id"],
+        )
 
         await cache.apply_mutation(
             """
@@ -36,18 +47,30 @@ def test_offline_cache_insert_and_query(tmp_path):
 
 
 def test_translate_on_duplicate(tmp_path):
-    cache_path = tmp_path / "mirror.sqlite3"
-    cache = OfflineCache(db_path=str(cache_path), snapshot_interval_seconds=1_000)
-    sql = cache._translate(
-        """
-        INSERT INTO settings (guild_id, settings_json)
-        VALUES (%s, %s)
-        ON DUPLICATE KEY UPDATE settings_json = VALUES(settings_json)
-        """
-    )
-    normalized = " ".join(sql.split())
-    assert "ON CONFLICT(guild_id)" in normalized
-    assert "settings_json = excluded.settings_json" in normalized
+    async def _run():
+        cache_path = tmp_path / "mirror.sqlite3"
+        cache = OfflineCache(db_path=str(cache_path), snapshot_interval_seconds=1_000)
+        await cache.sync_schema(
+            "settings",
+            [
+                ColumnDefinition("guild_id", "INTEGER"),
+                ColumnDefinition("settings_json", "TEXT"),
+            ],
+            ["guild_id"],
+        )
+        sql = cache._translate(
+            """
+            INSERT INTO settings (guild_id, settings_json)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE settings_json = VALUES(settings_json)
+            """
+        )
+        normalized = " ".join(sql.split())
+        assert "ON CONFLICT(\"guild_id\")" in normalized
+        assert "settings_json = excluded.settings_json" in normalized
+        await cache.close()
+
+    asyncio.run(_run())
 
 
 def test_pending_write_queue(tmp_path):

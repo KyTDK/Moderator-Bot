@@ -15,6 +15,10 @@ if str(PROJECT_ROOT) not in sys.path:
 
 os.environ.setdefault("FERNET_SECRET_KEY", base64.urlsafe_b64encode(b"0" * 32).decode())
 
+from conftest import _restore_real_modules
+
+_restore_real_modules()
+
 import bot
 from modules.core.config import RuntimeConfig, ShardConfig
 from modules.utils.mysql import ShardAssignment, ShardClaimError
