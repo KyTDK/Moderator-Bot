@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import os
+from decimal import Decimal
 
 os.environ.setdefault("FERNET_SECRET_KEY", base64.urlsafe_b64encode(b"0" * 32).decode())
 
@@ -91,6 +92,38 @@ def test_pending_write_queue(tmp_path):
         await cache.remove_pending_write(pending[0].row_id)
         remaining = await cache.get_pending_writes()
         assert remaining == []
+        await cache.close()
+
+    asyncio.run(_run())
+
+
+def test_replace_table_handles_decimal(tmp_path):
+    async def _run():
+        cache_path = tmp_path / "mirror.sqlite3"
+        cache = OfflineCache(db_path=str(cache_path), snapshot_interval_seconds=1_000)
+        await cache.ensure_started()
+        await cache.sync_schema(
+            "usage",
+            [
+                ColumnDefinition("guild_id", "INTEGER"),
+                ColumnDefinition("cost_usd", "REAL"),
+            ],
+            ["guild_id"],
+        )
+
+        await cache.replace_table(
+            "usage",
+            [
+                {"guild_id": 1, "cost_usd": Decimal("1.234567")},
+            ],
+        )
+
+        row, _ = await cache.execute(
+            "SELECT cost_usd FROM usage WHERE guild_id = %s",
+            (1,),
+            fetch_one=True,
+        )
+        assert row[0] == float(Decimal("1.234567"))
         await cache.close()
 
     asyncio.run(_run())

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from decimal import Decimal
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -46,6 +47,8 @@ class _SchemaState:
 
 def _normalize_value(value: Any) -> Any:
     """Convert complex Python values into SQLite-friendly representations."""
+    if isinstance(value, Decimal):
+        return float(value)
     if isinstance(value, datetime):
         adjusted = value
         if value.tzinfo:
