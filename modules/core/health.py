@@ -12,6 +12,8 @@ __all__ = [
     "HealthSnapshot",
     "report_feature",
     "get_health_snapshot",
+    "format_overall_summary",
+    "format_status_counts",
     "render_health_lines",
 ]
 
@@ -30,13 +32,6 @@ _STATUS_RANK = {
     FeatureStatus.DEGRADED: 1,
     FeatureStatus.DISABLED: 2,
     FeatureStatus.UNAVAILABLE: 3,
-}
-
-_STATUS_MARKER = {
-    FeatureStatus.OK: "[OK]",
-    FeatureStatus.DEGRADED: "[WARN]",
-    FeatureStatus.DISABLED: "[DISABLED]",
-    FeatureStatus.UNAVAILABLE: "[ERROR]",
 }
 
 _STATUS_DISPLAY = {
@@ -192,19 +187,44 @@ def get_health_snapshot() -> HealthSnapshot:
     return _REGISTRY.snapshot()
 
 
+def _safe_percent(count: int, total: int) -> float:
+    if total <= 0:
+        return 0.0
+    return (count / total) * 100.0
+
+
+def format_overall_summary(snapshot: HealthSnapshot) -> str:
+    total = len(snapshot.features)
+    ok_count = snapshot.counts.get(FeatureStatus.OK, 0)
+    impacted = total - ok_count
+    working_pct = _safe_percent(ok_count, total)
+    impacted_pct = _safe_percent(impacted, total)
+    return (
+        f"Total: {total} | Working: {working_pct:.0f}% ({ok_count}) | "
+        f"Impacted: {impacted_pct:.0f}% ({impacted})"
+    )
+
+
 def format_status_counts(
     snapshot: HealthSnapshot,
     *,
     include_ok: bool = False,
+    show_percent: bool = True,
 ) -> str:
-    """Return a comma-separated list of counts per status."""
+    """Return a comma-separated list of counts (optionally with percentages)."""
 
+    total = len(snapshot.features)
     parts: List[str] = []
     for status in _STATUS_ORDER:
         if not include_ok and status is FeatureStatus.OK:
             continue
         count = snapshot.counts.get(status, 0)
-        if count:
+        if count == 0:
+            continue
+        if show_percent:
+            percent = _safe_percent(count, total)
+            parts.append(f"{_STATUS_DISPLAY[status]}: {count} ({percent:.0f}%)")
+        else:
             parts.append(f"{_STATUS_DISPLAY[status]}: {count}")
     return ", ".join(parts)
 
@@ -212,7 +232,7 @@ def format_status_counts(
 def render_health_lines(
     snapshot: HealthSnapshot,
     *,
-    per_status_limit: int = 4,
+    per_status_limit: Optional[int] = None,
     include_ok: bool = False,
 ) -> List[str]:
     """
@@ -232,12 +252,13 @@ def render_health_lines(
             continue
         header = f"{_STATUS_DISPLAY[status]} ({len(matching)})"
         lines.append(header)
-        for feature in matching[:per_status_limit]:
+        limit = per_status_limit or len(matching)
+        for feature in matching[:limit]:
             fallback_note = " [fallback]" if feature.using_fallback else ""
             detail = f" — {feature.detail}" if feature.detail else ""
             lines.append(f"  - {feature.label}{fallback_note}{detail}")
-        remaining = len(matching) - per_status_limit
-        if remaining > 0:
+        if per_status_limit and len(matching) > per_status_limit:
+            remaining = len(matching) - per_status_limit
             lines.append(f"  - ...and {remaining} more.")
         lines.append("")
 

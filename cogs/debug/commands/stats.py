@@ -10,7 +10,7 @@ import discord
 import tracemalloc
 
 from modules.core.health import (
-    FeatureStatus,
+    format_overall_summary,
     format_status_counts,
     get_health_snapshot,
     render_health_lines,
@@ -158,13 +158,13 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
             )
 
     health_snapshot = get_health_snapshot()
-    health_counts = format_status_counts(health_snapshot)
-    health_lines = render_health_lines(health_snapshot, per_status_limit=3)
-    sections = []
-    if health_counts:
-        sections.append(health_counts)
-    sections.append("\n".join(health_lines))
-    health_value = "\n".join(sections)
+    overall_line = format_overall_summary(health_snapshot)
+    health_counts = format_status_counts(health_snapshot, include_ok=True, show_percent=True)
+    health_lines = "\n".join(
+        render_health_lines(health_snapshot, include_ok=True, per_status_limit=None)
+    )
+    sections = [overall_line, health_counts, health_lines]
+    health_value = "\n\n".join(section for section in sections if section)
 
     embed.add_field(
         name=debug_texts.get("health_name", "System health"),
