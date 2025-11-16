@@ -1,14 +1,22 @@
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
 import aiomysql
 
 from .config import MYSQL_CONFIG
+from .offline_cache import OfflineCache, OfflineQueryError
 
 
 _USE_FAKE_POOL = os.getenv("MYSQL_FAKE", "").lower() in {"1", "true", "yes"}
+_offline_cache = OfflineCache()
+_snapshot_lock = asyncio.Lock()
+_pending_flush_lock = asyncio.Lock()
+_pending_write_flag = asyncio.Event()
+_mysql_online = True
+_LOGGER = logging.getLogger(__name__)
 
 
 if _USE_FAKE_POOL:
@@ -102,6 +110,9 @@ else:
             maxsize=maxsize,
             **MYSQL_CONFIG,
         )
+        await _offline_cache.ensure_started()
+        await _refresh_offline_snapshot()
+        _offline_cache.start_snapshot_loop(_refresh_offline_snapshot)
         return _pool
 
     async def close_pool() -> None:
@@ -320,6 +331,41 @@ async def execute_query(
     fetch_one: bool = False,
     fetch_all: bool = False,
 ):
+    await _offline_cache.ensure_started()
+    normalized_params: Sequence[Any] = tuple(params or ())
+    try:
+        result, affected = await _execute_mysql(
+            query,
+            normalized_params,
+            commit=commit,
+            fetch_one=fetch_one,
+            fetch_all=fetch_all,
+        )
+    except Exception:
+        await _handle_mysql_failure()
+        return await _execute_offline(
+            query,
+            normalized_params,
+            fetch_one=fetch_one,
+            fetch_all=fetch_all,
+        )
+
+    await _handle_mysql_success(query, normalized_params)
+    return result, affected
+
+async def initialise_and_get_pool() -> Any:
+    """Convenience wrapper that callers can await during startup."""
+    return await init_pool()
+
+
+async def _execute_mysql(
+    query: str,
+    params: Sequence[Any],
+    *,
+    commit: bool,
+    fetch_one: bool,
+    fetch_all: bool,
+) -> tuple[Any, int]:
     pool = await get_pool()
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
@@ -335,11 +381,108 @@ async def execute_query(
                     await conn.commit()
                 return result, affected_rows
             except Exception:
-                logging.exception("Error executing query")
                 if commit:
                     await conn.rollback()
-                return None, 0
+                raise
 
-async def initialise_and_get_pool() -> Any:
-    """Convenience wrapper that callers can await during startup."""
-    return await init_pool()
+
+async def _execute_offline(
+    query: str,
+    params: Sequence[Any],
+    *,
+    fetch_one: bool,
+    fetch_all: bool,
+) -> tuple[Any, int]:
+    try:
+        result, affected = await _offline_cache.execute(
+            query,
+            params,
+            fetch_one=fetch_one,
+            fetch_all=fetch_all,
+        )
+        if OfflineCache.is_mutation(query):
+            await _offline_cache.enqueue_pending_write(query, params)
+            _pending_write_flag.set()
+        return result, affected
+    except OfflineQueryError:
+        _LOGGER.exception("Offline cache could not interpret query")
+    except Exception:
+        _LOGGER.exception("Offline cache failed to execute query")
+    return None, 0
+
+
+async def _handle_mysql_success(query: str, params: Sequence[Any]) -> None:
+    global _mysql_online
+    if not _mysql_online:
+        _LOGGER.info("MySQL connection restored; draining offline queue")
+    _mysql_online = True
+    if OfflineCache.is_mutation(query):
+        try:
+            await _offline_cache.apply_mutation(query, params)
+        except OfflineQueryError:
+            _LOGGER.debug("Offline mirror skipped unsupported mutation for query %s", query.strip())
+        except Exception:
+            _LOGGER.exception("Failed to mirror mutation into offline cache")
+    await _flush_pending_writes()
+
+
+async def _handle_mysql_failure() -> None:
+    global _mysql_online
+    if _mysql_online:
+        _LOGGER.exception("MySQL query failed; switching to offline cache")
+    _mysql_online = False
+
+
+async def _flush_pending_writes() -> None:
+    if not _pending_write_flag.is_set():
+        return
+
+    async with _pending_flush_lock:
+        pending = await _offline_cache.get_pending_writes()
+        if not pending:
+            _pending_write_flag.clear()
+            return
+
+        for item in pending:
+            try:
+                await _execute_mysql(
+                    item.query,
+                    item.params,
+                    commit=True,
+                    fetch_one=False,
+                    fetch_all=False,
+                )
+            except Exception:
+                _LOGGER.exception("Failed to replay pending write %s", item.row_id)
+                break
+            else:
+                await _offline_cache.remove_pending_write(item.row_id)
+
+        remaining = await _offline_cache.get_pending_writes()
+        if not remaining:
+            _pending_write_flag.clear()
+
+
+async def _refresh_offline_snapshot() -> None:
+    if _USE_FAKE_POOL:
+        return
+
+    if _pool is None:
+        return
+
+    async with _snapshot_lock:
+        try:
+            pool = await get_pool()
+        except Exception:
+            return
+
+        async with pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cur:
+                for table in _offline_cache.managed_tables:
+                    try:
+                        await cur.execute(f"SELECT * FROM {table}")
+                        rows = await cur.fetchall()
+                    except Exception:
+                        _LOGGER.exception("Failed to snapshot table %s", table)
+                        continue
+                    await _offline_cache.replace_table(table, rows)

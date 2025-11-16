@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .connection import get_pool
+from .connection import execute_query
 
 
 async def update_instance_heartbeat(instance_id: str) -> None:
@@ -9,18 +9,14 @@ async def update_instance_heartbeat(instance_id: str) -> None:
     if not instance_id:
         return
 
-    pool = await get_pool()
-    async with pool.acquire() as conn:
-        async with conn.cursor() as cur:
-            await cur.execute(
-                """
-                INSERT INTO bot_instances (instance_id, last_seen)
-                VALUES (%s, UTC_TIMESTAMP())
-                ON DUPLICATE KEY UPDATE last_seen = VALUES(last_seen)
-                """,
-                (instance_id,),
-            )
-            await conn.commit()
+    await execute_query(
+        """
+        INSERT INTO bot_instances (instance_id, last_seen)
+        VALUES (%s, UTC_TIMESTAMP())
+        ON DUPLICATE KEY UPDATE last_seen = VALUES(last_seen)
+        """,
+        (instance_id,),
+    )
 
 
 async def clear_instance_heartbeat(instance_id: str) -> None:
@@ -29,13 +25,8 @@ async def clear_instance_heartbeat(instance_id: str) -> None:
     if not instance_id:
         return
 
-    pool = await get_pool()
-    async with pool.acquire() as conn:
-        async with conn.cursor() as cur:
-            await cur.execute(
-                "DELETE FROM bot_instances WHERE instance_id = %s",
-                (instance_id,),
-            )
-            await conn.commit()
-
+    await execute_query(
+        "DELETE FROM bot_instances WHERE instance_id = %s",
+        (instance_id,),
+    )
 
