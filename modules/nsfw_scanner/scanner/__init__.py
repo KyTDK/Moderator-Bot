@@ -11,7 +11,15 @@ import aiohttp
 import discord
 from discord.errors import NotFound
 from discord.ext import commands
-import pillow_avif  # registers AVIF support
+
+try:
+    import pillow_avif  # registers AVIF support
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    pillow_avif = None  # type: ignore[assignment]
+    logging.getLogger(__name__).warning(
+        "pillow_avif is not installed; AVIF attachments may be rejected. Install "
+        "\"pillow-avif-plugin\" to enable AVIF support."
+    )
 
 from cogs.hydration import wait_for_hydration
 from modules.config.premium_plans import PLAN_CORE, PLAN_FREE, PLAN_PRO, PLAN_ULTRA

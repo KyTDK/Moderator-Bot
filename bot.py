@@ -7,6 +7,7 @@ import time
 from modules.core import configure_logging, load_runtime_config
 from modules.core.moderator_bot import ModeratorBot
 from modules.utils import mysql
+from modules.utils.runtime_ssl import ensure_certifi_trust_store
 
 print(f"[BOOT] Starting Moderator Bot at {time.strftime('%X')}")
 
@@ -16,6 +17,7 @@ async def _main() -> None:
     print("[TRACE] Runtime config loaded")
     configure_logging(config.log_level)
     print(f"[TRACE] Logging configured at level {config.log_level}")
+    ensure_certifi_trust_store()
     logger = logging.getLogger("moderator.startup")
     logger.info("Log level resolved to %s", config.log_level)
     logger.info("Shard settings: instance=%s total=%s preferred=%s heartbeat=%ss instance_heartbeat=%ss standby=%s poll_interval=%ss",
@@ -204,4 +206,3 @@ async def _main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(_main())
-

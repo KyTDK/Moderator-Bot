@@ -1,14 +1,21 @@
 import aiohttp
+import logging
+import os
+
 from discord.ext import tasks
 from discord.ext.commands import AutoShardedBot
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
 TOPGG_API_TOKEN = os.getenv('TOPGG_API_TOKEN')
+log = logging.getLogger(__name__)
 
 @tasks.loop(minutes=30)
 async def post_guild_count(bot: AutoShardedBot):
+    if not TOPGG_API_TOKEN:
+        log.debug("Skipping top.gg post; TOPGG_API_TOKEN is not configured")
+        return
+
     async with aiohttp.ClientSession() as session:
         headers = {
             "Authorization": TOPGG_API_TOKEN,
@@ -28,6 +35,9 @@ async def post_guild_count(bot: AutoShardedBot):
 def start_topgg_poster(bot: AutoShardedBot):
     async def starter():
         await bot.wait_until_ready()
+        if not TOPGG_API_TOKEN:
+            log.info("TOPGG_API_TOKEN missing; top.gg posting disabled")
+            return
         if not post_guild_count.is_running():
             post_guild_count.start(bot)
 

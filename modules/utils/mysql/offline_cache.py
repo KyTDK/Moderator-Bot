@@ -154,7 +154,16 @@ class OfflineCache:
                 return self._conn
 
             self._db_path.parent.mkdir(parents=True, exist_ok=True)
-            conn = await aiosqlite.connect(self._db_path)
+
+            # aiosqlite.Connection is a threading.Thread subclass. If the
+            # connection is never explicitly closed the associated worker
+            # thread keeps the interpreter alive forever (observed under
+            # pytest where the suite completed but the process never exited).
+            # Mark the thread as daemon before awaiting the connection so the
+            # process can terminate even if a caller forgets to close us.
+            conn_task = aiosqlite.connect(self._db_path)
+            conn_task.daemon = True
+            conn = await conn_task
             await conn.execute("PRAGMA journal_mode=WAL;")
             await conn.execute("PRAGMA synchronous=NORMAL;")
             await conn.execute("PRAGMA foreign_keys=OFF;")
