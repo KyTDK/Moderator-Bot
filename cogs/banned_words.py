@@ -5,6 +5,8 @@ from modules.utils.action_manager import ActionListManager
 import re
 import discord
 
+from modules.core.health import FeatureStatus, report_feature
+
 try:
     from better_profanity import profanity
 except ModuleNotFoundError:  # pragma: no cover - optional dependency guard
@@ -74,6 +76,23 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency guard
             return bool(self._pattern.search(text))
 
     profanity = _FallbackProfanity()
+    report_feature(
+        "text.profanity_filter",
+        label="Profanity filter",
+        status=FeatureStatus.DEGRADED,
+        category="text",
+        detail="better_profanity missing; using regex fallback list.",
+        remedy="pip install better-profanity",
+        using_fallback=True,
+    )
+else:
+    report_feature(
+        "text.profanity_filter",
+        label="Profanity filter",
+        status=FeatureStatus.OK,
+        category="text",
+        detail="better_profanity active.",
+    )
 
 from modules.utils import mod_logging, mysql
 from modules.utils.guild_list_storage import fetch_values

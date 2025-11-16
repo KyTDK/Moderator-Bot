@@ -11,6 +11,8 @@ from threading import Event, Lock, Thread
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 import numpy as np
+
+from modules.core.health import FeatureStatus, report_feature
 try:  # pragma: no cover - optional dependency
     from pymilvus import (
         Collection,
@@ -81,6 +83,9 @@ class MilvusVectorSpace:
         port: str = "19530",
         logger: Optional[logging.Logger] = None,
         ready_timeout: float = 30.0,
+        health_key: Optional[str] = None,
+        health_label: Optional[str] = None,
+        health_category: str = "vectors",
     ) -> None:
         self.collection_name = collection_name
         self.dim = dim
@@ -121,8 +126,23 @@ class MilvusVectorSpace:
         # Write operations share a lock to avoid concurrent insert/delete flushes
         self._write_lock = Lock()
 
+        self._health_key = health_key or f"vector.{collection_name}"
+        self._health_label = health_label or f"{description} ({collection_name})"
+        self._health_category = health_category
+        self._health_remedy = "Install and configure pymilvus to enable vector operations."
+
         if not self._milvus_available:
             self._collection_ready.set()
+            self._publish_health(
+                FeatureStatus.DISABLED,
+                detail="pymilvus not available; vector store offline.",
+                using_fallback=True,
+            )
+        else:
+            self._publish_health(
+                FeatureStatus.OK,
+                detail="Milvus client detected; collection initialising.",
+            )
 
     def _log_unavailable_once(self) -> None:
         if self._milvus_warning_logged:
@@ -132,6 +152,34 @@ class MilvusVectorSpace:
             self.collection_name,
         )
         self._milvus_warning_logged = True
+        self._publish_health(
+            FeatureStatus.DISABLED,
+            detail="pymilvus missing; vector operations disabled.",
+            using_fallback=True,
+        )
+
+    def _publish_health(
+        self,
+        status: FeatureStatus,
+        detail: Optional[str] = None,
+        using_fallback: bool = False,
+    ) -> None:
+        if not self._health_key:
+            return
+        report_feature(
+            self._health_key,
+            label=self._health_label,
+            status=status,
+            category=self._health_category,
+            detail=detail,
+            remedy=self._health_remedy,
+            using_fallback=using_fallback,
+            metadata={
+                "collection": self.collection_name,
+                "host": self.host,
+                "port": self.port,
+            },
+        )
 
     # ------------------------------------------------------------------
     # Initialization helpers
@@ -169,6 +217,11 @@ class MilvusVectorSpace:
             self._last_notified_error_key = key
             callbacks = list(self._failure_callbacks)
             self._fallback_active = True
+        self._publish_health(
+            FeatureStatus.DEGRADED,
+            detail=f"{type(exc).__name__}: {exc}",
+            using_fallback=True,
+        )
 
         for callback, loop in callbacks:
             self._run_failure_callback(callback, loop, exc)
@@ -279,6 +332,11 @@ class MilvusVectorSpace:
                 self._vector_insert_warned = False
                 self._vector_search_warned = False
                 self._vector_delete_warned = False
+            self._publish_health(
+                FeatureStatus.OK,
+                detail="Milvus collection ready.",
+                using_fallback=False,
+            )
         except Exception as exc:  # pragma: no cover - defensive logging
             with self._collection_state_lock:
                 self._collection = None

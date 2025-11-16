@@ -4,6 +4,8 @@ import re
 from typing import Iterable, List
 from urllib.parse import urlparse
 
+from modules.core.health import FeatureStatus, report_feature
+
 try:
     from urlextract import URLExtract  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - best effort fallback
@@ -22,6 +24,24 @@ except ModuleNotFoundError:  # pragma: no cover - best effort fallback
         def update(self) -> None:
             # urlextract refreshes remote TLD list; regex fallback is static.
             return None
+
+    report_feature(
+        "text.url_extraction",
+        label="URL extraction",
+        status=FeatureStatus.DEGRADED,
+        category="text",
+        detail="python-urlextract missing; using regex fallback.",
+        remedy="pip install urlextract",
+        using_fallback=True,
+    )
+else:
+    report_feature(
+        "text.url_extraction",
+        label="URL extraction",
+        status=FeatureStatus.OK,
+        category="text",
+        detail="python-urlextract active.",
+    )
 
 _EXTRACTOR = URLExtract()
 

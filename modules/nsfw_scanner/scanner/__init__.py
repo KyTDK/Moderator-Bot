@@ -14,6 +14,8 @@ import discord
 from discord.errors import NotFound
 from discord.ext import commands
 
+from modules.core.health import FeatureStatus, report_feature
+
 try:
     import pillow_avif  # registers AVIF support
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
@@ -22,6 +24,23 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
     logging.getLogger(__name__).warning(
         "pillow_avif is not installed; AVIF attachments may be rejected. Install "
         "\"pillow-avif-plugin\" to enable AVIF support."
+    )
+    report_feature(
+        "media.avif",
+        label="AVIF media decoding",
+        status=FeatureStatus.DEGRADED,
+        category="media",
+        detail="pillow-avif-plugin missing; AVIF uploads rejected.",
+        remedy="pip install pillow-avif-plugin",
+        using_fallback=True,
+    )
+else:
+    report_feature(
+        "media.avif",
+        label="AVIF media decoding",
+        status=FeatureStatus.OK,
+        category="media",
+        detail="AVIF plugin active.",
     )
 
 from cogs.hydration import wait_for_hydration

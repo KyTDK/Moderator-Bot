@@ -9,6 +9,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from modules.core.health import FeatureStatus, report_feature
+
 log = logging.getLogger(__name__)
 
 try:
@@ -16,6 +18,15 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - optional dependency guard
     psutil = None
     log.warning("psutil is not installed; debug stats will use limited data.")
+    report_feature(
+        "core.psutil",
+        label="Process metrics",
+        status=FeatureStatus.DEGRADED,
+        category="core",
+        detail="psutil missing; /stats shows limited metrics.",
+        remedy="pip install psutil",
+        using_fallback=True,
+    )
 
     class _FallbackProcess:
         """Minimal psutil.Process stand-in when psutil is unavailable."""
@@ -33,6 +44,13 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency guard
             return 0
 else:
     _FallbackProcess = psutil.Process  # type: ignore
+    report_feature(
+        "core.psutil",
+        label="Process metrics",
+        status=FeatureStatus.OK,
+        category="core",
+        detail="psutil active.",
+    )
 
 from modules.core.moderator_bot import ModeratorBot
 from modules.i18n.strings import locale_string

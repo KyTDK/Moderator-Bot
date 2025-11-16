@@ -2,6 +2,8 @@ import re
 import unicodedata
 from typing import Dict, Optional
 
+from modules.core.health import FeatureStatus, report_feature
+
 try:
     from cleantext import clean
 except ModuleNotFoundError:  # pragma: no cover - optional dependency guard
@@ -48,6 +50,24 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency guard
             result = result.lower()
         result = re.sub(r"\s+", " ", result)
         return result.strip()
+
+    report_feature(
+        "text.cleaner",
+        label="Text normalizer",
+        status=FeatureStatus.DEGRADED,
+        category="text",
+        detail="clean-text missing; using built-in cleaner.",
+        remedy="pip install clean-text",
+        using_fallback=True,
+    )
+else:
+    report_feature(
+        "text.cleaner",
+        label="Text normalizer",
+        status=FeatureStatus.OK,
+        category="text",
+        detail="clean-text active.",
+    )
 
 # Leetspeak map to help catch obfuscations
 LEET_MAP = {
