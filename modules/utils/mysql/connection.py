@@ -406,10 +406,9 @@ def _is_retryable_mysql_error(exc: Exception) -> bool:
         seen.add(obj_id)
         if isinstance(current, _RETRYABLE_MYSQL_EXCEPTIONS):
             return True
-        if isinstance(current, aiomysql.Error):
-            code = _extract_mysql_error_code(current)
-            if code is not None and code in _RETRYABLE_MYSQL_ERROR_CODES:
-                return True
+        code = _extract_mysql_error_code(current)
+        if code is not None and code in _RETRYABLE_MYSQL_ERROR_CODES:
+            return True
         current = current.__cause__ or current.__context__
     return False
 
