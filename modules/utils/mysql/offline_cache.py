@@ -63,7 +63,8 @@ def _strip_backticks(sql: str) -> str:
 
 
 def _quote_identifier(identifier: str) -> str:
-    return f'"{identifier.replace("\"", "\"\"")}"'
+    escaped = identifier.replace('"', '""')
+    return f'"{escaped}"'
 
 
 def _convert_placeholders(sql: str) -> str:
