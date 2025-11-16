@@ -16,6 +16,7 @@ from modules.utils.discord_utils import safe_get_user
 
 load_dotenv()
 
+PRIMARY_OPENAI_KEY = os.getenv("PRIMARY_OPENAI_KEY")
 _working_keys = []
 _non_working_keys = []
 _quarantine: dict[str, float] = {}
@@ -146,13 +147,16 @@ async def get_next_shared_api_key():
     return None
 
 async def get_api_client(guild_id):
-    """Return an OpenAI client from the shared API pool only.
+    """Return an OpenAI client for moderation requests.
 
-    Per-guild API keys are not used. If no working pooled key is available,
-    returns (None, None).
+    Prefers shared pooled keys, but will fall back to PRIMARY_OPENAI_KEY if the
+    pool is empty. Per-guild API keys are not used. If neither source is
+    available, returns (None, None).
     """
     encrypted_key = await get_next_shared_api_key()
     if encrypted_key is None:
+        if PRIMARY_OPENAI_KEY:
+            return _get_client(PRIMARY_OPENAI_KEY), None
         return None, None
     api_key = fernet.decrypt(encrypted_key.encode()).decode()
     client = _get_client(api_key)

@@ -19,7 +19,7 @@ from .settings import VoiceSettings
 from .state import GuildVCState
 
 load_dotenv()
-AUTOMOD_OPENAI_KEY = os.getenv("AUTOMOD_OPENAI_KEY")
+PRIMARY_OPENAI_KEY = os.getenv("PRIMARY_OPENAI_KEY")
 AIMOD_MODEL = os.getenv("AIMOD_MODEL", "gpt-5-nano")
 VCMOD_TTS_MODEL = os.getenv("VCMOD_TTS_MODEL", "gpt-4o-mini-tts")
 VCMOD_TTS_VOICE = os.getenv("VCMOD_TTS_VOICE", "alloy")
@@ -33,7 +33,7 @@ class VoiceModeratorCog(commands.Cog):
         self.bot = bot
         self._states: dict[int, GuildVCState] = {}
         self._announcements = AnnouncementManager(
-            api_key=AUTOMOD_OPENAI_KEY,
+            api_key=PRIMARY_OPENAI_KEY,
             model=VCMOD_TTS_MODEL,
             voice=VCMOD_TTS_VOICE,
             response_format=VCMOD_TTS_FORMAT,
