@@ -4,92 +4,24 @@ from datetime import datetime, timezone
 from typing import Any, Mapping
 
 from ._redis import get_redis_client
-from .acceleration import ACCELERATION_PREFIXES, hydrate_acceleration_metrics
+from .baselines import apply_count_baselines, fetch_count_baselines
 from .keys import totals_key, totals_status_key
-from .serialization import (
-    coerce_int,
-    compute_average,
-    compute_frame_metrics,
-    compute_stddev,
-    ensure_utc,
-    json_dumps,
-    json_loads,
-    parse_iso_datetime,
-)
+from .hydration import MetricSnapshot
+from .serialization import coerce_int, ensure_utc, json_dumps, parse_iso_datetime
 
 
 async def fetch_metric_totals() -> dict[str, Any]:
     client = await get_redis_client()
-    totals_hash = await client.hgetall(totals_key())
+    totals_hash_key = totals_key()
+    totals_hash = await client.hgetall(totals_hash_key)
+    baseline_counts = await fetch_count_baselines(client, totals_hash_key)
+    apply_count_baselines(totals_hash, baseline_counts)
     status_counts_raw = await client.hgetall(totals_status_key())
 
-    scans_count = coerce_int(totals_hash.get("scans_count"))
-    flagged_count = coerce_int(totals_hash.get("flagged_count"))
-    flags_sum = coerce_int(totals_hash.get("flags_sum"))
-    total_bytes = coerce_int(totals_hash.get("total_bytes"))
-    total_duration = coerce_int(totals_hash.get("total_duration_ms"))
-    total_bytes_sq = coerce_int(totals_hash.get("total_bytes_sq"))
-    total_duration_sq = coerce_int(totals_hash.get("total_duration_sq_ms"))
-    total_frames_scanned = coerce_int(totals_hash.get("total_frames_scanned"))
-    total_frames_target = coerce_int(totals_hash.get("total_frames_target"))
-    total_frames_media = coerce_int(totals_hash.get("total_frames_media"))
-    last_duration = coerce_int(totals_hash.get("last_duration_ms"))
-    last_status = totals_hash.get("last_status")
-    last_reference_raw = totals_hash.get("last_reference")
-    last_reference = last_reference_raw if last_reference_raw else None
-    last_flagged_at = parse_iso_datetime(totals_hash.get("last_flagged_at"))
-    last_details = json_loads(totals_hash.get("last_details"))
-    updated_at = parse_iso_datetime(totals_hash.get("updated_at"))
-
-    status_counts = {name: coerce_int(value) for name, value in status_counts_raw.items()}
-    average_latency = compute_average(total_duration, scans_count)
-    latency_std_dev = compute_stddev(total_duration, total_duration_sq, scans_count)
-    average_bytes = compute_average(total_bytes, scans_count)
-    bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans_count)
-    flagged_rate = compute_average(flagged_count, scans_count)
-    average_flags = compute_average(flags_sum, scans_count)
-    average_frames_per_scan, average_latency_per_frame, frames_per_second, frame_coverage_rate = compute_frame_metrics(
-        total_duration_ms=total_duration,
-        total_frames_scanned=total_frames_scanned,
-        total_frames_target=total_frames_target,
-        total_frames_media=total_frames_media,
-        scan_count=scans_count,
-    )
-    acceleration_breakdown = {
-        result_key: hydrate_acceleration_metrics(prefix, totals_hash)
-        for result_key, prefix in ACCELERATION_PREFIXES.items()
-    }
-
-    return {
-        "scans_count": scans_count,
-        "flagged_count": flagged_count,
-        "flags_sum": flags_sum,
-        "total_bytes": total_bytes,
-        "total_bytes_sq": total_bytes_sq,
-        "average_bytes": average_bytes,
-        "bytes_std_dev": bytes_std_dev,
-        "total_duration_ms": total_duration,
-        "total_duration_sq_ms": total_duration_sq,
-        "total_frames_scanned": total_frames_scanned,
-        "total_frames_target": total_frames_target,
-        "total_frames_media": total_frames_media,
-        "average_frames_per_scan": average_frames_per_scan,
-        "last_latency_ms": last_duration,
-        "average_latency_ms": average_latency,
-        "latency_std_dev_ms": latency_std_dev,
-        "average_latency_per_frame_ms": average_latency_per_frame,
-        "frames_per_second": frames_per_second,
-        "frame_coverage_rate": frame_coverage_rate,
-        "flagged_rate": flagged_rate,
-        "average_flags_per_scan": average_flags,
-        "status_counts": status_counts,
-        "last_flagged_at": last_flagged_at,
-        "last_status": last_status,
-        "last_reference": last_reference,
-        "last_details": last_details,
-        "updated_at": updated_at,
-        "acceleration": acceleration_breakdown,
-    }
+    snapshot = MetricSnapshot.from_hash(totals_hash)
+    payload = snapshot.to_payload()
+    payload["status_counts"] = {name: coerce_int(value) for name, value in status_counts_raw.items()}
+    return payload
 
 
 async def import_totals_snapshot(

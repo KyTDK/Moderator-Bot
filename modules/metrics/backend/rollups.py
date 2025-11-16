@@ -5,12 +5,12 @@ from typing import Any, Mapping
 
 from ._redis import get_redis_client
 from .acceleration import (
-    ACCELERATION_PREFIXES,
     accumulate_summary_acceleration,
     empty_summary_acceleration,
     finalise_summary_acceleration_bucket,
-    hydrate_acceleration_metrics,
 )
+from .baselines import apply_count_baselines, fetch_count_baselines
+from .hydration import MetricSnapshot
 from .keys import (
     parse_rollup_key,
     rollup_guild_index_key,
@@ -25,9 +25,7 @@ from .serialization import (
     compute_frame_metrics,
     ensure_utc,
     json_dumps,
-    json_loads,
     normalise_since,
-    parse_iso_datetime,
 )
 
 
@@ -104,6 +102,9 @@ async def _fetch_rollups(
             continue
 
         rollup_data = await client.hgetall(key)
+        if rollup_data:
+            baselines = await fetch_count_baselines(client, key)
+            apply_count_baselines(rollup_data, baselines)
         status_counts_raw = await client.hgetall(rollup_status_key(key))
         rollup = _hydrate_rollup(metric_date, guild_value, content, rollup_data, status_counts_raw)
         results.append(rollup)
@@ -148,6 +149,10 @@ async def summarise_rollups(
             continue
 
         rollup_data = await client.hgetall(key)
+        if not rollup_data:
+            continue
+        baselines = await fetch_count_baselines(client, key)
+        apply_count_baselines(rollup_data, baselines)
         bucket = summary.setdefault(content, _empty_summary_bucket(content))
         _accumulate_summary_from_rollup(bucket, rollup_data)
 
@@ -213,77 +218,17 @@ def _hydrate_rollup(
     rollup_data: Mapping[str, str],
     status_counts_raw: Mapping[str, str],
 ) -> dict[str, Any]:
-    scans_count = coerce_int(rollup_data.get("scans_count"))
-    flagged_count = coerce_int(rollup_data.get("flagged_count"))
-    flags_sum = coerce_int(rollup_data.get("flags_sum"))
-    total_bytes = coerce_int(rollup_data.get("total_bytes"))
-    total_duration = coerce_int(rollup_data.get("total_duration_ms"))
-    total_bytes_sq = coerce_int(rollup_data.get("total_bytes_sq"))
-    total_duration_sq = coerce_int(rollup_data.get("total_duration_sq_ms"))
-    total_frames_scanned = coerce_int(rollup_data.get("total_frames_scanned"))
-    total_frames_target = coerce_int(rollup_data.get("total_frames_target"))
-    total_frames_media = coerce_int(rollup_data.get("total_frames_media"))
-    last_duration = coerce_int(rollup_data.get("last_duration_ms"))
-    last_status = rollup_data.get("last_status")
-    last_reference_raw = rollup_data.get("last_reference")
-    last_reference = last_reference_raw if last_reference_raw else None
-    last_flagged_at = parse_iso_datetime(rollup_data.get("last_flagged_at"))
-    last_details = json_loads(rollup_data.get("last_details"))
-    updated_at = parse_iso_datetime(rollup_data.get("updated_at"))
-
-    status_counts = {name: coerce_int(value) for name, value in status_counts_raw.items()}
-    average_latency = compute_average(total_duration, scans_count)
-    latency_std_dev = compute_stddev(total_duration, total_duration_sq, scans_count)
-    average_bytes = compute_average(total_bytes, scans_count)
-    bytes_std_dev = compute_stddev(total_bytes, total_bytes_sq, scans_count)
-    flagged_rate = compute_average(flagged_count, scans_count)
-    average_flags = compute_average(flags_sum, scans_count)
-    average_frames_per_scan, average_latency_per_frame, frames_per_second, frame_coverage_rate = compute_frame_metrics(
-        total_duration_ms=total_duration,
-        total_frames_scanned=total_frames_scanned,
-        total_frames_target=total_frames_target,
-        total_frames_media=total_frames_media,
-        scan_count=scans_count,
+    snapshot = MetricSnapshot.from_hash(rollup_data)
+    payload = snapshot.to_payload()
+    payload.update(
+        {
+            "metric_date": metric_date,
+            "guild_id": guild_id,
+            "content_type": content_type,
+            "status_counts": {name: coerce_int(value) for name, value in status_counts_raw.items()},
+        }
     )
-
-    acceleration_breakdown = {
-        result_key: hydrate_acceleration_metrics(prefix, rollup_data)
-        for result_key, prefix in ACCELERATION_PREFIXES.items()
-    }
-
-    return {
-        "metric_date": metric_date,
-        "guild_id": guild_id,
-        "content_type": content_type,
-        "scans_count": scans_count,
-        "flagged_count": flagged_count,
-        "flags_sum": flags_sum,
-        "flagged_rate": flagged_rate,
-        "average_flags_per_scan": average_flags,
-        "total_bytes": total_bytes,
-        "total_bytes_sq": total_bytes_sq,
-        "average_bytes": average_bytes,
-        "bytes_std_dev": bytes_std_dev,
-        "total_duration_ms": total_duration,
-        "total_duration_sq_ms": total_duration_sq,
-        "total_frames_scanned": total_frames_scanned,
-        "total_frames_target": total_frames_target,
-        "total_frames_media": total_frames_media,
-        "average_frames_per_scan": average_frames_per_scan,
-        "last_latency_ms": last_duration,
-        "average_latency_ms": average_latency,
-        "latency_std_dev_ms": latency_std_dev,
-        "average_latency_per_frame_ms": average_latency_per_frame,
-        "frames_per_second": frames_per_second,
-        "frame_coverage_rate": frame_coverage_rate,
-        "status_counts": status_counts,
-        "last_flagged_at": last_flagged_at,
-        "last_status": last_status,
-        "last_reference": last_reference,
-        "last_details": last_details,
-        "updated_at": updated_at,
-        "acceleration": acceleration_breakdown,
-    }
+    return payload
 
 
 def _empty_summary_bucket(content: str) -> dict[str, Any]:

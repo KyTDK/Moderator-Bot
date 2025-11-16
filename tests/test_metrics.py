@@ -23,6 +23,7 @@ from modules.metrics import (  # noqa: E402
 from modules.metrics import backend  # noqa: E402
 from modules.metrics.backend.keys import totals_key as backend_totals_key  # noqa: E402
 from modules.metrics.config import get_metrics_redis_config  # noqa: E402
+from modules.metrics.stats import compute_latency_breakdown  # noqa: E402
 
 
 @pytest.mark.anyio("asyncio")
@@ -220,6 +221,30 @@ def _zero_raw_totals(store: dict[str, str]) -> None:
     for field in list(store.keys()):
         if field in RESET_RAW_EXACT or any(field.endswith(suffix) for suffix in RESET_RAW_SUFFIXES):
             store[field] = "0"
+
+
+COUNT_FIELD_SUFFIXES = ("_scans_count", "_count", "_samples")
+COUNT_FALLBACK_FIELDS = ("scans_count", "count", "samples")
+
+
+def _collect_reset_baselines(store: dict[str, str]) -> dict[str, str]:
+    baselines: dict[str, str] = {}
+    for field, value in store.items():
+        if any(field.endswith(suffix) for suffix in COUNT_FIELD_SUFFIXES) or field in COUNT_FALLBACK_FIELDS:
+            baselines[field] = value
+    return baselines
+
+
+def _simulate_metrics_reset(client: FakeRedis) -> None:
+    for key, store in list(client.hashes.items()):
+        if key.endswith(":status") or key.endswith(":baseline"):
+            continue
+        if ":rollup:" not in key and not key.endswith(":totals"):
+            continue
+        baselines = _collect_reset_baselines(store)
+        if baselines:
+            client.hashes[f"{key}:baseline"] = dict(baselines)
+        _zero_raw_totals(store)
 
 
 @pytest.mark.anyio("asyncio")
@@ -569,3 +594,103 @@ async def test_resetting_raw_totals_clears_rollup_metrics(_patch_metrics_backend
     assert video_summary_after["average_frames_per_scan"] == pytest.approx(0.0)
     assert video_summary_after["frames_per_second"] == pytest.approx(0.0)
     assert video_summary_after["average_latency_per_frame_ms"] == pytest.approx(0.0)
+
+
+@pytest.mark.anyio("asyncio")
+async def test_latency_breakdown_uses_count_baselines(_patch_metrics_backend: FakeRedis) -> None:
+    client = _patch_metrics_backend
+    base_time = datetime(2024, 3, 1, 10, 0, tzinfo=timezone.utc)
+
+    # Seed historical data prior to the reset.
+    await log_media_scan(
+        guild_id=42,
+        channel_id=100,
+        user_id=555,
+        message_id=9000,
+        content_type="image",
+        detected_mime="image/jpeg",
+        filename="before_a.jpg",
+        file_size=1024,
+        source="attachment",
+        scan_result={"is_nsfw": False},
+        scan_duration_ms=100,
+        accelerated=True,
+        occurred_at=base_time,
+    )
+    await log_media_scan(
+        guild_id=42,
+        channel_id=101,
+        user_id=556,
+        message_id=9001,
+        content_type="image",
+        detected_mime="image/jpeg",
+        filename="before_b.jpg",
+        file_size=2048,
+        source="attachment",
+        scan_result={"is_nsfw": True},
+        scan_duration_ms=200,
+        accelerated=False,
+        occurred_at=base_time + timedelta(minutes=5),
+    )
+
+    _simulate_metrics_reset(client)
+
+    # New scans after the reset should drive averages independently.
+    await log_media_scan(
+        guild_id=42,
+        channel_id=100,
+        user_id=600,
+        message_id=9100,
+        content_type="image",
+        detected_mime="image/jpeg",
+        filename="after_a.jpg",
+        file_size=1024,
+        source="attachment",
+        scan_result={"is_nsfw": False},
+        scan_duration_ms=400,
+        accelerated=True,
+        occurred_at=base_time + timedelta(hours=1),
+    )
+    await log_media_scan(
+        guild_id=42,
+        channel_id=101,
+        user_id=601,
+        message_id=9101,
+        content_type="image",
+        detected_mime="image/jpeg",
+        filename="after_b.jpg",
+        file_size=2048,
+        source="attachment",
+        scan_result={"is_nsfw": False},
+        scan_duration_ms=600,
+        accelerated=False,
+        occurred_at=base_time + timedelta(hours=1, minutes=5),
+    )
+
+    totals = await get_media_metrics_totals()
+    assert totals["scans_count"] == 2
+    assert totals["average_latency_ms"] == pytest.approx(500.0)
+    accel_totals = totals["acceleration"]
+    assert accel_totals["accelerated"]["scans_count"] == 1
+    assert accel_totals["accelerated"]["average_latency_ms"] == pytest.approx(400.0)
+    assert accel_totals["non_accelerated"]["scans_count"] == 1
+    assert accel_totals["non_accelerated"]["average_latency_ms"] == pytest.approx(600.0)
+
+    summary = await get_media_metrics_summary(guild_id=42)
+    summary_by_type = {entry["content_type"]: entry for entry in summary}
+    image_summary = summary_by_type["image"]
+    assert image_summary["scans"] == 2
+    assert image_summary["average_latency_ms"] == pytest.approx(500.0)
+    assert image_summary["acceleration"]["accelerated"]["average_latency_ms"] == pytest.approx(400.0)
+    assert image_summary["acceleration"]["non_accelerated"]["average_latency_ms"] == pytest.approx(600.0)
+
+    breakdown = await compute_latency_breakdown()
+    overall = breakdown["overall"]
+    assert overall["scans"] == 2
+    assert overall["average_latency_ms"] == pytest.approx(500.0)
+    accel_breakdown = overall["acceleration"]
+    assert accel_breakdown["accelerated"]["average_latency_ms"] == pytest.approx(400.0)
+    assert accel_breakdown["non_accelerated"]["average_latency_ms"] == pytest.approx(600.0)
+    image_bucket = breakdown["image"]
+    assert image_bucket["scans"] == 2
+    assert image_bucket["average_latency_ms"] == pytest.approx(500.0)
