@@ -8,7 +8,7 @@ import httpx
 from openai import AsyncOpenAI
 
 from modules.utils import mysql
-from cryptography.fernet import Fernet
+from modules.utils.fernet_utils import get_fernet, is_fernet_configured
 import os
 from dotenv import load_dotenv
 
@@ -41,8 +41,8 @@ class APIKeyValidationError(Exception):
         self.fallback = fallback
         self.placeholders = placeholders or {}
 
-FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
-fernet = Fernet(FERNET_KEY)
+fernet = get_fernet()
+_API_POOL_ENABLED = is_fernet_configured()
 
 
 def _float_env(name: str, default: float) -> float:
@@ -115,6 +115,8 @@ async def check_openai_api_key(api_key):
 
 _lock = asyncio.Lock()
 async def get_next_shared_api_key():
+    if not _API_POOL_ENABLED:
+        return None
     global _working_keys, _non_working_keys
     async with _lock:
         now = time.monotonic()
@@ -163,7 +165,7 @@ async def get_api_client(guild_id):
     return client, encrypted_key
 
 async def set_api_key_working(api_key):
-    if not api_key:
+    if not api_key or not _API_POOL_ENABLED:
         return
     async with _lock:
         _quarantine.pop(api_key, None)
@@ -177,7 +179,7 @@ async def set_api_key_working(api_key):
     return affected_rows > 0
 
 async def set_api_key_not_working(api_key, bot=None):
-    if not api_key:
+    if not api_key or not _API_POOL_ENABLED:
         return
 
     async with _lock:
@@ -227,7 +229,7 @@ async def mark_api_key_rate_limited(
     api_key: str,
     cooldown: float | None = None,
 ) -> RateLimitPenalty | None:
-    if not api_key:
+    if not api_key or not _API_POOL_ENABLED:
         return None
     async with _lock:
         now = time.monotonic()
@@ -260,13 +262,15 @@ async def mark_api_key_rate_limited(
 
 
 async def is_api_key_working(api_key: str) -> bool:
-    if not api_key:
-        return
+    if not api_key or not _API_POOL_ENABLED:
+        return False
     query = "SELECT working FROM api_pool WHERE api_key = %s"
     result, _ = await mysql.execute_query(query, (api_key,), fetch_one=True)
     return result is not None and result[0] == 1
 
 async def get_working_api_keys():
+    if not _API_POOL_ENABLED:
+        return []
     query = """
         SELECT api_key
         FROM api_pool
@@ -276,6 +280,8 @@ async def get_working_api_keys():
     return [row[0] for row in result] if result else []
 
 async def get_non_working_api_keys():
+    if not _API_POOL_ENABLED:
+        return []
     query = """
         SELECT api_key
         FROM api_pool
@@ -285,6 +291,8 @@ async def get_non_working_api_keys():
     return [row[0] for row in result] if result else []
 
 async def is_guild_in_api_pool(guild_id: int) -> bool:
+    if not _API_POOL_ENABLED:
+        return False
     result, _ = await mysql.execute_query(
         "SELECT 1 FROM api_pool WHERE guild_id = %s LIMIT 1",
         (guild_id,),

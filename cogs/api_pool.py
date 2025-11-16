@@ -3,17 +3,13 @@ from discord.ext import commands
 from modules.utils.mysql import execute_query
 from modules.utils import api
 from modules.utils.api import APIKeyValidationError
-from cryptography.fernet import Fernet
-import os
-from dotenv import load_dotenv
+from modules.utils.fernet_utils import get_fernet, is_fernet_configured
 import hashlib
 from modules.core.moderator_bot import ModeratorBot
 from modules.i18n.strings import locale_string
 
-load_dotenv()
-
-FERNET_KEY = os.getenv("FERNET_SECRET_KEY") 
-fernet = Fernet(FERNET_KEY)
+API_POOL_ENABLED = is_fernet_configured()
+fernet = get_fernet()
 
 # nosec B303  # API key hashing, not password hashing
 def compute_api_key_hash(api_key: str) -> str:
@@ -24,6 +20,28 @@ class ApiPoolCog(commands.Cog):
 
     def __init__(self, bot: ModeratorBot):
         self.bot = bot
+        self._disabled_fallback = (
+            "The API pool is disabled because this bot isn't configured with "
+            "the FERNET_SECRET_KEY environment variable."
+        )
+
+    async def _ensure_enabled(self, interaction: Interaction) -> bool:
+        if API_POOL_ENABLED:
+            return True
+
+        guild_id = getattr(interaction.guild, "id", None)
+        message = self.bot.translate(
+            "cogs.api_pool.disabled",
+            guild_id=guild_id,
+            fallback=self._disabled_fallback,
+        )
+        responder = (
+            interaction.followup.send
+            if interaction.response.is_done()
+            else interaction.response.send_message
+        )
+        await responder(message, ephemeral=True)
+        return False
 
     api_pool_group = app_commands.Group(
         name="api_pool",
@@ -35,6 +53,8 @@ class ApiPoolCog(commands.Cog):
         description=locale_string("cogs.api_pool.meta.explain.description"),
     )
     async def explain(self, interaction: Interaction):
+        if not await self._ensure_enabled(interaction):
+            return
         guild_id = interaction.guild.id
         explanation = self.bot.translate(
             "cogs.api_pool.explanation.body",
@@ -50,6 +70,8 @@ class ApiPoolCog(commands.Cog):
         api_key=locale_string("cogs.api_pool.meta.add.params.api_key")
     )
     async def add_api(self, interaction: Interaction, api_key: str):
+        if not await self._ensure_enabled(interaction):
+            return
         await interaction.response.defer(ephemeral=True)
         user_id = interaction.user.id
         guild_id = interaction.guild.id
@@ -112,6 +134,8 @@ class ApiPoolCog(commands.Cog):
         api_key=locale_string("cogs.api_pool.meta.remove.params.api_key")
     )
     async def remove_api(self, interaction: Interaction, api_key: str):
+        if not await self._ensure_enabled(interaction):
+            return
         user_id = interaction.user.id
         guild_id = interaction.guild.id
         query = "DELETE FROM api_pool WHERE user_id = %s AND api_key_hash = %s"
@@ -134,6 +158,8 @@ class ApiPoolCog(commands.Cog):
         description=locale_string("cogs.api_pool.meta.clear.description"),
     )
     async def clear_api(self, interaction: Interaction):
+        if not await self._ensure_enabled(interaction):
+            return
         user_id = interaction.user.id
         guild_id = interaction.guild.id
         query = "DELETE FROM api_pool WHERE user_id = %s"
@@ -156,6 +182,8 @@ class ApiPoolCog(commands.Cog):
         description=locale_string("cogs.api_pool.meta.list.description"),
     )
     async def list_apis(self, interaction: Interaction):
+        if not await self._ensure_enabled(interaction):
+            return
         user_id = interaction.user.id
         guild_id = interaction.guild.id
         query = "SELECT api_key FROM api_pool WHERE user_id = %s"

@@ -1,7 +1,8 @@
 import os
 
-from cryptography.fernet import Fernet
 from dotenv import load_dotenv
+
+from modules.utils.fernet_utils import get_fernet, get_fernet_key
 
 load_dotenv()
 
@@ -14,8 +15,5 @@ MYSQL_CONFIG = {
     "charset": "utf8mb4",
 }
 
-FERNET_KEY = os.getenv("FERNET_SECRET_KEY")
-if FERNET_KEY is None:
-    raise RuntimeError("FERNET_SECRET_KEY environment variable must be set")
-
-fernet = Fernet(FERNET_KEY)
+FERNET_KEY = get_fernet_key()
+fernet = get_fernet()

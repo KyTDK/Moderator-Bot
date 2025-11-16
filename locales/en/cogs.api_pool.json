@@ -44,7 +44,8 @@
       "list": {
         "header": "Your API Keys:",
         "empty": "No API keys found in your pool."
-      }
+      },
+      "disabled": "⚠️ The API pool is disabled because this bot isn't configured with the FERNET_SECRET_KEY environment variable. Set it to manage shared OpenAI API keys."
     }
   }
 }
