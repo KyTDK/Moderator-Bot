@@ -6,7 +6,7 @@ from typing import Any, Optional, Sequence
 
 import aiomysql
 
-from .config import MYSQL_CONFIG
+from .config import MYSQL_CONFIG, MYSQL_MAX_RETRIES, MYSQL_RETRY_BACKOFF_SECONDS
 from .offline_cache import ColumnDefinition, OfflineCache, OfflineQueryError
 
 
@@ -17,6 +17,20 @@ _pending_flush_lock = asyncio.Lock()
 _pending_write_flag = asyncio.Event()
 _mysql_online = True
 _LOGGER = logging.getLogger(__name__)
+
+
+_RETRYABLE_MYSQL_ERROR_CODES: set[int] = {
+    2003,  # Can't connect to MySQL server
+    2006,  # MySQL server has gone away
+    2013,  # Lost connection during query
+    2055,  # Lost connection at host
+}
+_RETRYABLE_MYSQL_EXCEPTIONS = (
+    aiomysql.OperationalError,
+    aiomysql.InterfaceError,
+    ConnectionError,
+    OSError,
+)
 
 
 if _USE_FAKE_POOL:
@@ -333,29 +347,80 @@ async def execute_query(
 ):
     await _offline_cache.ensure_started()
     normalized_params: Sequence[Any] = tuple(params or ())
-    try:
-        result, affected = await _execute_mysql(
-            query,
-            normalized_params,
-            commit=commit,
-            fetch_one=fetch_one,
-            fetch_all=fetch_all,
-        )
-    except Exception:
-        await _handle_mysql_failure()
-        return await _execute_offline(
-            query,
-            normalized_params,
-            fetch_one=fetch_one,
-            fetch_all=fetch_all,
-        )
+    attempt = 0
+    total_attempts = max(MYSQL_MAX_RETRIES, 0) + 1
+    while True:
+        try:
+            result, affected = await _execute_mysql(
+                query,
+                normalized_params,
+                commit=commit,
+                fetch_one=fetch_one,
+                fetch_all=fetch_all,
+            )
+        except Exception as exc:
+            should_retry = attempt < MYSQL_MAX_RETRIES and _is_retryable_mysql_error(exc)
+            if should_retry:
+                delay = _calculate_retry_delay(attempt)
+                _LOGGER.warning(
+                    "MySQL query failed (attempt %s/%s); retrying in %.2fs",
+                    attempt + 1,
+                    total_attempts,
+                    delay,
+                )
+                if delay > 0:
+                    await asyncio.sleep(delay)
+                attempt += 1
+                continue
 
-    await _handle_mysql_success(query, normalized_params)
-    return result, affected
+            await _handle_mysql_failure()
+            return await _execute_offline(
+                query,
+                normalized_params,
+                fetch_one=fetch_one,
+                fetch_all=fetch_all,
+            )
+
+        await _handle_mysql_success(query, normalized_params)
+        return result, affected
 
 async def initialise_and_get_pool() -> Any:
     """Convenience wrapper that callers can await during startup."""
     return await init_pool()
+
+
+def _calculate_retry_delay(attempt: int) -> float:
+    base_delay = max(MYSQL_RETRY_BACKOFF_SECONDS, 0.0)
+    if base_delay == 0:
+        return 0.0
+    return base_delay * (2 ** attempt)
+
+
+def _is_retryable_mysql_error(exc: Exception) -> bool:
+    current: BaseException | None = exc
+    seen: set[int] = set()
+    while current is not None:
+        obj_id = id(current)
+        if obj_id in seen:
+            break
+        seen.add(obj_id)
+        if isinstance(current, _RETRYABLE_MYSQL_EXCEPTIONS):
+            return True
+        if isinstance(current, aiomysql.Error):
+            code = _extract_mysql_error_code(current)
+            if code is not None and code in _RETRYABLE_MYSQL_ERROR_CODES:
+                return True
+        current = current.__cause__ or current.__context__
+    return False
+
+
+def _extract_mysql_error_code(exc: BaseException) -> int | None:
+    args = getattr(exc, "args", None)
+    if not args:
+        return None
+    first = args[0]
+    return first if isinstance(first, int) else None
+
 
 async def refresh_offline_cache_snapshot() -> None:
     """Public helper to force-refresh the local offline cache snapshot."""
