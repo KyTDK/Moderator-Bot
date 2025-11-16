@@ -9,7 +9,12 @@ from typing import Any, Iterable, List, Tuple
 import discord
 import tracemalloc
 
-from modules.core.health import FeatureStatus, get_health_snapshot, render_health_lines
+from modules.core.health import (
+    FeatureStatus,
+    format_status_counts,
+    get_health_snapshot,
+    render_health_lines,
+)
 from modules.metrics import compute_latency_breakdown
 
 tracemalloc.start()
@@ -153,15 +158,13 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
             )
 
     health_snapshot = get_health_snapshot()
-    health_counts = ", ".join(
-        f"{status.value.capitalize()}: {health_snapshot.counts.get(status, 0)}"
-        for status in FeatureStatus
-        if health_snapshot.counts.get(status, 0)
-    )
-    health_lines = render_health_lines(health_snapshot, max_items=10)
-    health_value = "\n".join(health_lines)
+    health_counts = format_status_counts(health_snapshot)
+    health_lines = render_health_lines(health_snapshot, per_status_limit=3)
+    sections = []
     if health_counts:
-        health_value = f"{health_counts}\n{health_value}"
+        sections.append(health_counts)
+    sections.append("\n".join(health_lines))
+    health_value = "\n".join(sections)
 
     embed.add_field(
         name=debug_texts.get("health_name", "System health"),

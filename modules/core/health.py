@@ -39,6 +39,20 @@ _STATUS_MARKER = {
     FeatureStatus.UNAVAILABLE: "[ERROR]",
 }
 
+_STATUS_DISPLAY = {
+    FeatureStatus.OK: "OK",
+    FeatureStatus.DEGRADED: "Degraded",
+    FeatureStatus.DISABLED: "Disabled",
+    FeatureStatus.UNAVAILABLE: "Unavailable",
+}
+
+_STATUS_ORDER = (
+    FeatureStatus.UNAVAILABLE,
+    FeatureStatus.DISABLED,
+    FeatureStatus.DEGRADED,
+    FeatureStatus.OK,
+)
+
 
 @dataclass(slots=True)
 class FeatureState:
@@ -178,36 +192,58 @@ def get_health_snapshot() -> HealthSnapshot:
     return _REGISTRY.snapshot()
 
 
+def format_status_counts(
+    snapshot: HealthSnapshot,
+    *,
+    include_ok: bool = False,
+) -> str:
+    """Return a comma-separated list of counts per status."""
+
+    parts: List[str] = []
+    for status in _STATUS_ORDER:
+        if not include_ok and status is FeatureStatus.OK:
+            continue
+        count = snapshot.counts.get(status, 0)
+        if count:
+            parts.append(f"{_STATUS_DISPLAY[status]}: {count}")
+    return ", ".join(parts)
+
+
 def render_health_lines(
     snapshot: HealthSnapshot,
     *,
-    max_items: int = 12,
+    per_status_limit: int = 4,
     include_ok: bool = False,
 ) -> List[str]:
     """
-    Convert a snapshot into user-facing summary lines.
+    Convert a snapshot into structured summary lines grouped by status.
 
-    Only degraded/disabled/unavailable features are shown by default to keep the
-    output concise; pass include_ok=True to list every entry.
+    Only degraded/disabled/unavailable features are shown by default.
     """
 
     lines: List[str] = []
-    for feature in snapshot.features:
-        if not include_ok and feature.status is FeatureStatus.OK:
+    for status in _STATUS_ORDER:
+        if not include_ok and status is FeatureStatus.OK:
             continue
-        marker = _STATUS_MARKER.get(feature.status, "[INFO]")
-        fallback_note = " (fallback)" if feature.using_fallback else ""
-        detail = f" - {feature.detail}" if feature.detail else ""
-        lines.append(f"{marker} {feature.label}{fallback_note}{detail}")
-        if len(lines) >= max_items:
-            break
+        matching = [
+            feature for feature in snapshot.features if feature.status is status
+        ]
+        if not matching:
+            continue
+        header = f"{_STATUS_DISPLAY[status]} ({len(matching)})"
+        lines.append(header)
+        for feature in matching[:per_status_limit]:
+            fallback_note = " [fallback]" if feature.using_fallback else ""
+            detail = f" — {feature.detail}" if feature.detail else ""
+            lines.append(f"  - {feature.label}{fallback_note}{detail}")
+        remaining = len(matching) - per_status_limit
+        if remaining > 0:
+            lines.append(f"  - ...and {remaining} more.")
+        lines.append("")
 
     if not lines:
-        lines.append("[OK] All monitored subsystems report OK.")
+        return ["OK (0)", "  - All monitored subsystems report OK."]
 
-    if len(snapshot.features) > max_items:
-        remaining = len(snapshot.features) - max_items
-        if remaining > 0:
-            lines.append(f"...and {remaining} more entries.")
-
+    if lines[-1] == "":
+        lines.pop()
     return lines
