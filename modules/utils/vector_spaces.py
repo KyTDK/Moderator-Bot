@@ -365,16 +365,15 @@ class MilvusVectorSpace:
 
         self._ensure_collection_initializer_started()
         wait_timeout = self._ready_timeout if timeout is None else timeout
-        ready = self._collection_ready.wait(wait_timeout)
-        if not ready:
-            if not self._collection_not_ready_warned:
-                self._log.warning(
-                    "Milvus collection '%s' is still loading after %.1fs; vector ops deferred",
-                    self.collection_name,
-                    wait_timeout,
-                )
-                self._collection_not_ready_warned = True
-            return None
+        if not self._collection_ready.is_set():
+            if self._should_block_for_collection(wait_timeout):
+                ready = self._collection_ready.wait(wait_timeout)
+                if not ready:
+                    self._warn_collection_not_ready(wait_timeout)
+                    return None
+            else:
+                self._warn_collection_not_ready(wait_timeout, non_blocking=True)
+                return None
 
         with self._collection_state_lock:
             if self._collection is not None:
@@ -388,6 +387,31 @@ class MilvusVectorSpace:
                     )
                     self._collection_error_logged = True
             return None
+
+    def _warn_collection_not_ready(self, wait_timeout: float, *, non_blocking: bool = False) -> None:
+        if self._collection_not_ready_warned:
+            return
+        suffix = "; not blocking event loop" if non_blocking else ""
+        self._log.warning(
+            "Milvus collection '%s' is still loading after %.1fs; vector ops deferred%s",
+            self.collection_name,
+            wait_timeout,
+            suffix,
+        )
+        self._collection_not_ready_warned = True
+
+    def _should_block_for_collection(self, wait_timeout: float) -> bool:
+        if wait_timeout == 0:
+            return False
+        if not self._milvus_available:
+            return False
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return True
+
+        # When called inside an active asyncio event loop, avoid blocking the loop thread.
+        return not loop.is_running()
 
     # ------------------------------------------------------------------
     # Public status helpers
