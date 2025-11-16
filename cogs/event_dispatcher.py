@@ -13,6 +13,11 @@ class EventDispatcherCog(commands.Cog):
         self._singular_task_reporter = SingularTaskReporter(bot)
         self.free_queue = WorkerQueue(
             max_workers=1,
+            autoscale_max=3,
+            backlog_high_watermark=200,
+            backlog_low_watermark=40,
+            backlog_hard_limit=600,
+            backlog_shed_to=200,
             name="event_dispatcher_free",
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
