@@ -3,8 +3,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import sys
 import time
 from collections.abc import Awaitable, Callable
+from types import ModuleType
 from typing import Any
 
 import aiohttp
@@ -15,7 +17,8 @@ from discord.ext import commands
 try:
     import pillow_avif  # registers AVIF support
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
-    pillow_avif = None  # type: ignore[assignment]
+    pillow_avif = ModuleType("pillow_avif_stub")
+    sys.modules.setdefault("pillow_avif", pillow_avif)
     logging.getLogger(__name__).warning(
         "pillow_avif is not installed; AVIF attachments may be rejected. Install "
         "\"pillow-avif-plugin\" to enable AVIF support."
