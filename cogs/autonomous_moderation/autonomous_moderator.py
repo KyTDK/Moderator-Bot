@@ -23,7 +23,7 @@ import os
 from modules.core.moderator_bot import ModeratorBot
 
 load_dotenv()
-AUTOMOD_OPENAI_KEY = os.getenv('AUTOMOD_OPENAI_KEY')
+PRIMARY_OPENAI_KEY = os.getenv('PRIMARY_OPENAI_KEY')
 AIMOD_MODEL = os.getenv('AIMOD_MODEL', 'gpt-5-nano')
 
 
@@ -106,7 +106,7 @@ class AutonomousModeratorCog(commands.Cog):
             )
 
             autonomous = settings.get("autonomous-mod")
-            api_key = AUTOMOD_OPENAI_KEY
+            api_key = PRIMARY_OPENAI_KEY
             rules = settings.get("rules")
             if not (autonomous and api_key and rules):
                 continue

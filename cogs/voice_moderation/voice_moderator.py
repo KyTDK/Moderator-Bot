@@ -111,7 +111,7 @@ class VoiceModeratorCog(commands.Cog):
 
         voice_settings = VoiceSettings.from_raw(raw_settings)
 
-        if not voice_settings.enabled or not AUTOMOD_OPENAI_KEY:
+        if not voice_settings.enabled or not PRIMARY_OPENAI_KEY:
             await self._teardown_state(guild)
             return
 
@@ -221,7 +221,7 @@ class VoiceModeratorCog(commands.Cog):
             bot=self.bot,
             state=state,
             config=config,
-            api_key=AUTOMOD_OPENAI_KEY or "",
+            api_key=PRIMARY_OPENAI_KEY or "",
             aimod_model=AIMOD_MODEL,
             announcement_manager=self._announcements,
             violation_cache=violation_cache,
