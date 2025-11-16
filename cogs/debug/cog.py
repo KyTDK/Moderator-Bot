@@ -1,12 +1,38 @@
 from __future__ import annotations
 
+import logging
 import time
 from typing import Optional
+from types import SimpleNamespace
 
 import discord
-import psutil
 from discord import app_commands
 from discord.ext import commands
+
+log = logging.getLogger(__name__)
+
+try:
+    import psutil  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - optional dependency guard
+    psutil = None
+    log.warning("psutil is not installed; debug stats will use limited data.")
+
+    class _FallbackProcess:
+        """Minimal psutil.Process stand-in when psutil is unavailable."""
+
+        def memory_info(self):
+            return SimpleNamespace(rss=0, vms=0)
+
+        def cpu_percent(self, interval: float = 0.0) -> float:
+            return 0.0
+
+        def num_threads(self) -> int:
+            return 0
+
+        def num_handles(self) -> int:
+            return 0
+else:
+    _FallbackProcess = psutil.Process  # type: ignore
 
 from modules.core.moderator_bot import ModeratorBot
 from modules.i18n.strings import locale_string
@@ -42,7 +68,7 @@ def guild_scope_decorator():
 class DebugCog(commands.Cog):
     def __init__(self, bot: ModeratorBot):
         self.bot = bot
-        self.process = psutil.Process()
+        self.process = psutil.Process() if psutil else _FallbackProcess()
         self.start_time = time.time()
 
     @app_commands.command(
