@@ -30,6 +30,7 @@ def test_offline_cache_insert_and_query(tmp_path):
             fetch_one=True,
         )
         assert row == ("Test Guild", "en-US")
+        await cache.close()
 
     asyncio.run(_run())
 
@@ -67,5 +68,6 @@ def test_pending_write_queue(tmp_path):
         await cache.remove_pending_write(pending[0].row_id)
         remaining = await cache.get_pending_writes()
         assert remaining == []
+        await cache.close()
 
     asyncio.run(_run())

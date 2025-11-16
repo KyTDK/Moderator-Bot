@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -328,6 +329,18 @@ class OfflineCache:
                 _LOGGER.exception("Failed to refresh offline MySQL snapshot")
             await asyncio.sleep(self._snapshot_interval)
 
+    async def close(self) -> None:
+        """Dispose of the SQLite connection and any snapshot workers."""
+        if self._snapshot_task:
+            self._snapshot_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._snapshot_task
+            self._snapshot_task = None
+
+        if self._conn is not None:
+            await self._conn.close()
+            self._conn = None
+
     async def execute(
         self,
         query: str,
@@ -444,4 +457,3 @@ class OfflineCache:
             if term_idx != -1:
                 return rest[:term_idx]
         return rest or None
-
