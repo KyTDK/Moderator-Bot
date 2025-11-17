@@ -16,6 +16,7 @@ from modules.core.health import (
     render_health_lines,
 )
 from modules.metrics import compute_latency_breakdown
+from modules.utils.mysql.connection import get_offline_snapshot_stats
 
 tracemalloc.start()
 
@@ -57,6 +58,61 @@ def _chunk_lines(lines: Iterable[str], max_len: int = 900) -> list[str]:
     if current:
         chunks.append(current)
     return chunks
+
+
+def _format_duration(seconds: float | None) -> str:
+    if not seconds or seconds <= 0:
+        return "unknown"
+    if seconds < 1:
+        return f"{seconds * 1000:.0f} ms"
+    if seconds < 60:
+        return f"{seconds:.2f} s"
+    minutes, rem = divmod(seconds, 60)
+    if minutes < 60:
+        return f"{int(minutes)}m {rem:.0f}s"
+    hours, minutes = divmod(minutes, 60)
+    return f"{int(hours)}h {int(minutes)}m"
+
+
+def _format_bytes(size_bytes: int | None) -> str:
+    if size_bytes is None or size_bytes < 0:
+        return "unknown"
+    units = ["B", "KiB", "MiB", "GiB", "TiB"]
+    size = float(size_bytes)
+    for unit in units:
+        if size < 1024 or unit == units[-1]:
+            return f"{size:.2f} {unit}"
+        size /= 1024
+    return f"{size_bytes} B"
+
+
+def _build_backup_summary(debug_texts: dict[str, Any]) -> str | None:
+    stats = get_offline_snapshot_stats()
+    if stats is None:
+        return debug_texts.get("backup_missing", "No local backup information is available.")
+
+    completed = stats.completed_at.strftime("%Y-%m-%d %H:%M:%S UTC")
+    duration = _format_duration(stats.duration_seconds)
+    size = _format_bytes(stats.size_bytes)
+    template = debug_texts.get(
+        "backup_value",
+        (
+            "**Completed:** {completed}\n"
+            "**Duration:** {duration}\n"
+            "**Tables:** {tables}\n"
+            "**Rows:** {rows}\n"
+            "**Size:** {size}\n"
+            "**Location:** `{path}`"
+        ),
+    )
+    return template.format(
+        completed=completed,
+        duration=duration,
+        tables=f"{stats.table_count:,}",
+        rows=f"{stats.row_count:,}",
+        size=size,
+        path=stats.db_path,
+    )
 
 
 async def build_stats_embed(cog, interaction: discord.Interaction, show_all: bool) -> discord.Embed:
@@ -156,6 +212,14 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
                 value=f"```\n" + "\n".join(rate_lines) + "\n```",
                 inline=False,
             )
+
+    backup_summary = _build_backup_summary(debug_texts)
+    if backup_summary:
+        embed.add_field(
+            name=debug_texts.get("backup_name", "Local MySQL Backup"),
+            value=backup_summary,
+            inline=False,
+        )
 
     health_snapshot = get_health_snapshot()
     overall_line = format_overall_summary(health_snapshot)

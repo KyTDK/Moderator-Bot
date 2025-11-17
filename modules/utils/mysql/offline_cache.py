@@ -366,3 +366,13 @@ class OfflineCache:
             if term_idx != -1:
                 return rest[:term_idx]
         return rest or None
+
+    @property
+    def db_path(self) -> Path:
+        return self._db_path
+
+    def get_database_size_bytes(self) -> int | None:
+        try:
+            return self._db_path.stat().st_size
+        except OSError:
+            return None

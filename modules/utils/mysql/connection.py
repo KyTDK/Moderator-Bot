@@ -1,6 +1,9 @@
 import asyncio
 import logging
 import os
+import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from typing import Any, Optional, Sequence
 
@@ -17,6 +20,7 @@ _pending_flush_lock = asyncio.Lock()
 _pending_write_flag = asyncio.Event()
 _mysql_online = True
 _LOGGER = logging.getLogger(__name__)
+_last_snapshot_stats: "OfflineSnapshotStats | None" = None
 
 
 _RETRYABLE_MYSQL_ERROR_CODES: set[int] = {
@@ -426,6 +430,21 @@ async def refresh_offline_cache_snapshot() -> None:
     await _refresh_offline_snapshot()
 
 
+@dataclass(slots=True)
+class OfflineSnapshotStats:
+    started_at: datetime
+    completed_at: datetime
+    duration_seconds: float
+    table_count: int
+    row_count: int
+    size_bytes: int | None
+    db_path: str
+
+
+def get_offline_snapshot_stats() -> OfflineSnapshotStats | None:
+    return _last_snapshot_stats
+
+
 async def _execute_mysql(
     query: str,
     params: Sequence[Any],
@@ -539,6 +558,11 @@ async def _refresh_offline_snapshot() -> None:
         return
 
     async with _snapshot_lock:
+        snapshot_started_at = datetime.now(timezone.utc)
+        started_monotonic = time.perf_counter()
+        table_count = 0
+        total_rows = 0
+
         try:
             pool = await get_pool()
         except Exception:
@@ -564,6 +588,23 @@ async def _refresh_offline_snapshot() -> None:
                     await _offline_cache.replace_table(table, rows)
                 except Exception:
                     _LOGGER.exception("Failed to refresh offline data for table %s", table)
+                    continue
+
+                table_count += 1
+                total_rows += len(rows) if rows else 0
+
+        completed_at = datetime.now(timezone.utc)
+        duration = time.perf_counter() - started_monotonic
+        global _last_snapshot_stats
+        _last_snapshot_stats = OfflineSnapshotStats(
+            started_at=snapshot_started_at,
+            completed_at=completed_at,
+            duration_seconds=duration,
+            table_count=table_count,
+            row_count=total_rows,
+            size_bytes=_offline_cache.get_database_size_bytes(),
+            db_path=str(_offline_cache.db_path),
+        )
 
 
 async def _fetch_mysql_table_names(conn: aiomysql.Connection) -> list[str]:

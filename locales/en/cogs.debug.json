@@ -25,6 +25,9 @@
         "worker_error": "(error collecting metrics: {error})",
         "latency_name": "Latency Breakdown (ms)",
         "latency_error": "Unable to fetch latency metrics ({error})",
+        "backup_name": "Local MySQL Backup",
+        "backup_value": "**Completed:** {completed}\n**Duration:** {duration}\n**Tables:** {tables}\n**Rows:** {rows}\n**Size:** {size}\n**Location:** `{path}`",
+        "backup_missing": "No local backups have been recorded yet.",
         "footer": "Host: {host} | Python {python_version}"
       },
       "worker_rates": "Queue Throughput",
