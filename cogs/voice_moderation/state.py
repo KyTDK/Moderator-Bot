@@ -17,6 +17,7 @@ class GuildVCState:
         self.voice: Optional[discord.VoiceClient] = None
         self.next_start: datetime = datetime.now(timezone.utc)
         self.last_announce_key: Optional[Tuple[int, int]] = None
+        self.api_warning_sent: bool = False
 
     def reset_cycle(self) -> None:
         """Clear scheduling related bookkeeping."""

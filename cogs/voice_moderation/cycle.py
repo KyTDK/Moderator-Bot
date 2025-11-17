@@ -284,8 +284,9 @@ async def run_voice_cycle(
 
     try:
         if config.do_listen:
-            chunk_queue = asyncio.Queue()
-            pipeline_task = asyncio.create_task(_pipeline_worker())
+            if not config.transcript_only:
+                chunk_queue = asyncio.Queue()
+                pipeline_task = asyncio.create_task(_pipeline_worker())
 
             start = time.monotonic()
             deadline = start + config.listen_delta.total_seconds()

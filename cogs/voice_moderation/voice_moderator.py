@@ -111,7 +111,7 @@ class VoiceModeratorCog(commands.Cog):
 
         voice_settings = VoiceSettings.from_raw(raw_settings)
 
-        if not voice_settings.enabled or not PRIMARY_OPENAI_KEY:
+        if not voice_settings.enabled:
             await self._teardown_state(guild)
             return
 
@@ -120,6 +120,20 @@ class VoiceModeratorCog(commands.Cog):
             return
 
         state = self._get_state(guild.id)
+        api_key_available = bool(PRIMARY_OPENAI_KEY)
+        effective_transcript_only = voice_settings.transcript_only
+
+        if not api_key_available and not effective_transcript_only:
+            effective_transcript_only = True
+            if not state.api_warning_sent:
+                print(
+                    "[VCMod] PRIMARY_OPENAI_KEY missing; "
+                    f"guild {guild.id} will run voice moderation in transcript-only mode."
+                )
+                state.api_warning_sent = True
+        elif api_key_available and state.api_warning_sent:
+            state.api_warning_sent = False
+
         channels_changed = state.channel_ids != voice_settings.channel_ids
 
         if channels_changed:
@@ -207,7 +221,7 @@ class VoiceModeratorCog(commands.Cog):
             high_accuracy=settings.high_accuracy,
             high_quality_transcription=settings.high_quality_transcription,
             rules=settings.rules,
-            transcript_only=settings.transcript_only,
+            transcript_only=effective_transcript_only,
             action_setting=settings.action_setting,
             aimod_debug=settings.aimod_debug,
             log_channel=settings.log_channel,
