@@ -164,6 +164,7 @@ class VoiceModeratorCog(commands.Cog):
                 guild=guild,
                 settings=voice_settings,
                 channel=channel,
+                transcript_only=effective_transcript_only,
             )
 
         state.busy_task = self.bot.loop.create_task(_run())
@@ -201,6 +202,7 @@ class VoiceModeratorCog(commands.Cog):
         guild: discord.Guild,
         settings: VoiceSettings,
         channel: discord.VoiceChannel,
+        transcript_only: bool,
     ) -> None:
         state = self._get_state(guild.id)
         transcript_texts = self.bot.translate(
@@ -221,7 +223,7 @@ class VoiceModeratorCog(commands.Cog):
             high_accuracy=settings.high_accuracy,
             high_quality_transcription=settings.high_quality_transcription,
             rules=settings.rules,
-            transcript_only=effective_transcript_only,
+            transcript_only=transcript_only,
             action_setting=settings.action_setting,
             aimod_debug=settings.aimod_debug,
             log_channel=settings.log_channel,
