@@ -36,9 +36,11 @@ class AdaptiveQueueController:
         free_queue: WorkerQueue,
         accelerated_queue: WorkerQueue,
         accelerated_text_queue: WorkerQueue | None = None,
+        video_queue: WorkerQueue | None = None,
         free_policy: AdaptiveQueuePolicy,
         accelerated_policy: AdaptiveQueuePolicy,
         accelerated_text_policy: AdaptiveQueuePolicy | None = None,
+        video_policy: AdaptiveQueuePolicy | None = None,
         config: AdaptiveControllerConfig,
     ) -> None:
         self._config = config
@@ -50,6 +52,11 @@ class AdaptiveQueueController:
             self._states["accelerated_text"] = _QueueState(
                 queue=accelerated_text_queue,
                 policy=accelerated_text_policy,
+            )
+        if video_queue is not None and video_policy is not None:
+            self._states["accelerated_video"] = _QueueState(
+                queue=video_queue,
+                policy=video_policy,
             )
         self._task: Optional[asyncio.Task] = None
 

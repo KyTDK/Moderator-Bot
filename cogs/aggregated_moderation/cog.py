@@ -111,9 +111,11 @@ class AggregatedModerationCog(commands.Cog):
             free_queue=self.free_queue,
             accelerated_queue=self.accelerated_queue,
             accelerated_text_queue=self.accelerated_text_queue,
+            video_queue=self.video_queue,
             free_policy=free_policy,
             accelerated_policy=accel_policy,
             accelerated_text_policy=accel_text_policy,
+            video_policy=video_policy,
             config=controller_cfg,
         )
 
