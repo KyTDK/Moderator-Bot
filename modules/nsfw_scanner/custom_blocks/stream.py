@@ -57,12 +57,11 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
                 message.message_id,
                 payload,
             )
-            if (payload.get("action") or "add").strip().lower() == "delete":
-                await self._report_delete_failure(
-                    payload=payload,
-                    error=exc,
-                    message_id=message.message_id,
-                )
+            await self._report_command_failure(
+                payload=payload,
+                error=exc,
+                message_id=message.message_id,
+            )
             response = self._format_error_response(payload, exc)
 
         if response is not None and self.redis is not None:
@@ -146,16 +145,19 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
 
         if action == "list":
             entries = await list_custom_blocks(guild_id)
-            payload_entries = [
-                {
-                    "vector_id": entry.get("vector_id"),
-                    "label": entry.get("label"),
-                    "uploaded_by": entry.get("uploaded_by"),
-                    "uploaded_at": entry.get("uploaded_at"),
-                    "source": entry.get("source"),
-                }
-                for entry in entries
-            ]
+            payload_entries = []
+            for entry in entries:
+                vector_id = entry.get("vector_id")
+                uploaded_by = entry.get("uploaded_by")
+                payload_entries.append(
+                    {
+                        "vector_id": str(vector_id) if vector_id is not None else None,
+                        "label": entry.get("label"),
+                        "uploaded_by": str(uploaded_by) if uploaded_by is not None else None,
+                        "uploaded_at": entry.get("uploaded_at"),
+                        "source": entry.get("source"),
+                    }
+                )
             return {
                 "request_id": request_id,
                 "status": "ok",
@@ -261,7 +263,7 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
             response["guild_id"] = str(guild_id)
         return response
 
-    async def _report_delete_failure(
+    async def _report_command_failure(
         self,
         *,
         payload: Mapping[str, Any],
@@ -275,6 +277,7 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
             guild_id = _get_payload_value(payload, "guild_id", "guildId")
             vector_id = _get_payload_value(payload, "vector_id", "vectorId")
             request_id = _get_payload_value(payload, "request_id", "requestId") or ""
+            action = (_get_payload_value(payload, "action") or "add").strip().lower()
             error_message = str(error) or error.__class__.__name__
             payload_snapshot = json.dumps(
                 {k: str(v) for k, v in payload.items()},
@@ -290,6 +293,14 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
                     inline=True,
                 ),
             ]
+            if action:
+                fields.append(
+                    DeveloperLogField(
+                        name="Action",
+                        value=action,
+                        inline=True,
+                    )
+                )
             if vector_id is not None:
                 fields.append(
                     DeveloperLogField(
@@ -326,16 +337,17 @@ class CustomBlockStreamProcessor(RedisStreamConsumer):
                 ]
             )
 
+            summary_action = action or "command"
             await log_to_developer_channel(
                 self._bot,
-                summary="Custom block delete failed",
+                summary=f"Custom block {summary_action} failed",
                 severity="error",
-                description="Milvus delete request raised an exception.",
+                description="Custom block stream command raised an exception.",
                 fields=fields,
-                context="custom_blocks.delete",
+                context=f"custom_blocks.{summary_action}",
             )
         except Exception:  # pragma: no cover - defensive fallback
-            _logger.exception("Failed to report custom block delete failure to developer log channel")
+            _logger.exception("Failed to report custom block failure to developer log channel")
 
 
 def _coerce_int(value: Any) -> int | None:
