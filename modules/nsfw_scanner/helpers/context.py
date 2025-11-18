@@ -6,7 +6,6 @@ from typing import Any
 from modules.nsfw_scanner.settings_keys import (
     NSFW_HIGH_ACCURACY_SETTING,
     NSFW_IMAGE_CATEGORY_SETTING,
-    NSFW_OCR_ENABLED_SETTING,
     NSFW_OCR_LANGUAGES_SETTING,
     NSFW_TEXT_CATEGORY_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
@@ -52,7 +51,6 @@ async def build_image_processing_context(
                 NSFW_TEXT_ENABLED_SETTING,
                 NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
                 NSFW_TEXT_STRIKES_ONLY_SETTING,
-                NSFW_OCR_ENABLED_SETTING,
                 NSFW_OCR_LANGUAGES_SETTING,
             ],
         ) or {}

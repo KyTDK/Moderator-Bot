@@ -25,7 +25,6 @@ from modules.nsfw_scanner.helpers.text_sources import (
     normalize_text_sources,
 )
 from modules.nsfw_scanner.settings_keys import (
-    NSFW_OCR_ENABLED_SETTING,
     NSFW_OCR_LANGUAGES_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
     NSFW_TEXT_SOURCES_SETTING,
@@ -156,14 +155,6 @@ class AttachmentSettingsCache:
 
     def set_accelerated(self, value: Any) -> None:
         self.accelerated = bool(value)
-
-
-def _is_truthy(value: Any, *, default: bool) -> bool:
-    if value is None:
-        return default
-    if isinstance(value, str):
-        return value.strip().lower() == "true"
-    return bool(value)
 
 
 def _resolve_ocr_languages(value: Any) -> list[str]:
@@ -551,16 +542,9 @@ async def check_attachment(
         return False
 
     settings_map = context.settings_map or {}
-    ocr_enabled = _is_truthy(
-        settings_map.get(NSFW_OCR_ENABLED_SETTING),
-        default=True,
-    )
-    if not context.accelerated:
-        ocr_enabled = False
     ocr_languages = _resolve_ocr_languages(settings_map.get(NSFW_OCR_LANGUAGES_SETTING))
     text_sources = normalize_text_sources(settings_map.get(NSFW_TEXT_SOURCES_SETTING))
-    if TEXT_SOURCE_OCR not in text_sources:
-        ocr_enabled = False
+    ocr_enabled = context.accelerated and (TEXT_SOURCE_OCR in text_sources)
 
     if (
         file_type == FILE_TYPE_IMAGE

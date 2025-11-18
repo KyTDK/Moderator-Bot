@@ -42,9 +42,6 @@
         "nsfw-text-excluded-channels": {
           "description": "Channels where NSFW text scanning is disabled."
         },
-        "nsfw-ocr-enabled": {
-          "description": "Enable OCR scanning of image attachments to detect text-based NSFW content (Accelerated/Core plan or higher)."
-        },
         "nsfw-ocr-languages": {
           "description": "Preferred OCR language codes, listed in priority order (e.g., en, es, fr)."
         },

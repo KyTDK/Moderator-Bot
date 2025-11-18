@@ -654,7 +654,6 @@ async def _exercise_attachment_ocr(
     monkeypatch,
     tmp_path,
     *,
-    ocr_enabled: bool = True,
     accelerated_context: bool = True,
     text_sources: list[str] | None = None,
 ):
@@ -663,7 +662,6 @@ async def _exercise_attachment_ocr(
     fake_settings = {
         settings_keys.NSFW_TEXT_ENABLED_SETTING: True,
         "nsfw-verbose": False,
-        settings_keys.NSFW_OCR_ENABLED_SETTING: ocr_enabled,
         settings_keys.NSFW_OCR_LANGUAGES_SETTING: ["en"],
         settings_keys.NSFW_TEXT_SOURCES_SETTING: list(text_sources or ["messages", "ocr"]),
     }
@@ -801,9 +799,9 @@ def test_check_attachment_runs_image_ocr(monkeypatch, tmp_path):
     assert callback_calls, "nsfw_callback should be invoked for OCR detections"
 
 
-def test_attachment_ocr_respects_setting_toggle(monkeypatch, tmp_path):
+def test_attachment_ocr_respects_text_source_setting(monkeypatch, tmp_path):
     result, pipeline_calls, callback_calls = asyncio.run(
-        _exercise_attachment_ocr(monkeypatch, tmp_path, ocr_enabled=False)
+        _exercise_attachment_ocr(monkeypatch, tmp_path, text_sources=["messages"])
     )
     assert result is False
     assert pipeline_calls == []
@@ -813,15 +811,6 @@ def test_attachment_ocr_respects_setting_toggle(monkeypatch, tmp_path):
 def test_attachment_ocr_requires_accelerated_plan(monkeypatch, tmp_path):
     result, pipeline_calls, callback_calls = asyncio.run(
         _exercise_attachment_ocr(monkeypatch, tmp_path, accelerated_context=False)
-    )
-    assert result is False
-    assert pipeline_calls == []
-    assert callback_calls == []
-
-
-def test_attachment_ocr_respects_text_source_setting(monkeypatch, tmp_path):
-    result, pipeline_calls, callback_calls = asyncio.run(
-        _exercise_attachment_ocr(monkeypatch, tmp_path, text_sources=["messages"])
     )
     assert result is False
     assert pipeline_calls == []

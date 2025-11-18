@@ -88,15 +88,6 @@ def build_nsfw_settings() -> dict[str, Setting]:
             hidden=True,
             description_key="modules.config.settings_schema.nsfw-text-excluded-channels.description",
         ),
-        "nsfw-ocr-enabled": Setting(
-            name="nsfw-ocr-enabled",
-            description="Enable OCR scanning of image attachments to run NSFW text checks on embedded text.",
-            setting_type=bool,
-            default=True,
-            choices=["true", "false"],
-            required_plans=PLAN_CORE,
-            description_key="modules.config.settings_schema.nsfw-ocr-enabled.description",
-        ),
         "nsfw-ocr-languages": Setting(
             name="nsfw-ocr-languages",
             description="Preferred OCR language codes (two-letter or locale codes). First entry has priority.",
