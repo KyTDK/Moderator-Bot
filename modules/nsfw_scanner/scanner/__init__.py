@@ -320,6 +320,7 @@ class NSFWScanner:
         pre_latency_steps: dict[str, dict[str, Any]] | None = None,
         pre_download_bytes: int | None = None,
         overall_started_at: float | None = None,
+        queue_label: str | None = None,
     ) -> bool:
         try:
             return await helper_check_attachment(
@@ -334,6 +335,7 @@ class NSFWScanner:
                 pre_download_bytes=pre_download_bytes,
                 source_url=source,
                 overall_started_at=overall_started_at,
+                queue_name=queue_label,
             )
         except Exception as scan_exc:
             log.exception("Failed to scan %s %s", log_context, source)
@@ -362,6 +364,7 @@ class NSFWScanner:
         propagate_value_error: bool = False,
         propagate_download_exception: bool = True,
         overall_started_at: float | None = None,
+        queue_label: str | None = None,
     ) -> bool:
         normalized_url = self._normalize_source_url(source_url)
         if not normalized_url:
@@ -412,6 +415,7 @@ class NSFWScanner:
                         pre_latency_steps=pre_latency_steps,
                         pre_download_bytes=pre_download_bytes,
                         overall_started_at=overall_started_at,
+                        queue_label=queue_label,
                     )
                 except Exception:
                     scan_failed = True
@@ -471,6 +475,7 @@ class NSFWScanner:
         scan_text: bool = True,
         scan_media: bool = True,
         return_details: bool = False,
+        queue_label: str | None = None,
     ):
         settings_cache = AttachmentSettingsCache()
         outcome = ScanOutcome()
@@ -489,6 +494,7 @@ class NSFWScanner:
             download_cap_bytes=download_cap_bytes,
             author=member or (getattr(message, "author", None) if message else None),
             latency_origin=overall_started_at,
+            queue_label=queue_label,
         )
         media_scanner = MediaScanner(self, media_context)
 
@@ -517,6 +523,7 @@ class NSFWScanner:
                 nsfw_callback=nsfw_callback,
                 settings_cache=settings_cache,
                 settings_map=settings_map,
+                queue_label=queue_label,
             )
             if outcome.text_flagged:
                 return outcome.packed(return_details)

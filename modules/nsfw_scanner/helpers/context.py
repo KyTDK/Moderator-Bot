@@ -26,12 +26,14 @@ class ImageProcessingContext:
     text_moderation_threshold: float
     high_accuracy: bool
     accelerated: bool
+    queue_name: str | None = None
 
 
 async def build_image_processing_context(
     guild_id: int | None,
     settings: dict[str, Any] | None = None,
     accelerated: bool | None = None,
+    queue_name: str | None = None,
 ) -> ImageProcessingContext:
     """Build a shared image processing context for scans."""
     settings_map: dict[str, Any] = settings.copy() if settings else {}
@@ -85,4 +87,5 @@ async def build_image_processing_context(
         text_moderation_threshold=text_moderation_threshold,
         high_accuracy=high_accuracy,
         accelerated=accelerated_flag,
+        queue_name=queue_name,
     )

@@ -8,7 +8,12 @@ from modules.nsfw_scanner.constants import LOG_CHANNEL_ID
 from modules.utils.log_channel import send_developer_log_embed
 
 from .config import AggregatedModerationConfig
-from .alert_payloads import build_backlog_cleared_embed, build_backlog_embed
+from .alert_payloads import (
+    build_backlog_cleared_embed,
+    build_backlog_embed,
+    build_video_backlog_cleared_embed,
+    build_video_backlog_embed,
+)
 from .media_rates import MediaProcessingRate, MediaRateCalculator
 from .queue_snapshot import QueueSnapshot
 
@@ -22,11 +27,13 @@ class FreeQueueMonitor:
         bot,
         free_queue,
         accelerated_queue,
+        video_queue,
         config: AggregatedModerationConfig,
     ) -> None:
         self._bot = bot
         self._free_queue = free_queue
         self._accelerated_queue = accelerated_queue
+        self._video_queue = video_queue
         self._config = config
 
         self._task: Optional[asyncio.Task] = None
@@ -35,6 +42,9 @@ class FreeQueueMonitor:
         self._last_dropped_total: int = 0
         self._rate_calculator = MediaRateCalculator()
         self._backlog_active: bool = False
+        self._video_lag_hits: int = 0
+        self._video_last_report_at: Optional[float] = None
+        self._video_backlog_active: bool = False
 
     async def start(self) -> None:
         if self._task and not self._task.done():
@@ -56,6 +66,9 @@ class FreeQueueMonitor:
             self._last_report_at = None
             self._last_dropped_total = 0
             self._backlog_active = False
+            self._video_lag_hits = 0
+            self._video_last_report_at = None
+            self._video_backlog_active = False
 
     @staticmethod
     def _is_lagging(free: QueueSnapshot, accel: QueueSnapshot) -> bool:
@@ -132,6 +145,10 @@ class FreeQueueMonitor:
                     free_snapshot = QueueSnapshot.from_mapping(self._free_queue.metrics())
                     accel_snapshot = QueueSnapshot.from_mapping(self._accelerated_queue.metrics())
 
+                    if self._video_queue and self._video_queue.running:
+                        video_snapshot = QueueSnapshot.from_mapping(self._video_queue.metrics())
+                        await self._handle_video_queue(video_snapshot, monitor_cfg)
+
                     if self._is_lagging(free_snapshot, accel_snapshot):
                         self._lag_hits += 1
                     else:
@@ -163,6 +180,36 @@ class FreeQueueMonitor:
         if snapshot.backlog_low is not None and snapshot.backlog <= snapshot.backlog_low:
             return True
         return snapshot.backlog <= snapshot.baseline_workers
+
+    @staticmethod
+    def _is_video_lagging(snapshot: QueueSnapshot) -> bool:
+        if snapshot.backlog <= 0:
+            return False
+        backlog_pressure = snapshot.backlog_high is not None and snapshot.backlog >= snapshot.backlog_high
+        wait_signal = max(snapshot.avg_wait, snapshot.ema_wait, snapshot.last_wait, snapshot.longest_wait)
+        wait_pressure = wait_signal is not None and wait_signal >= 15.0
+        worker_saturated = snapshot.busy_workers >= snapshot.max_workers and snapshot.backlog > 0
+        burst_pressure = snapshot.backlog >= max(snapshot.max_workers * 3, snapshot.autoscale_max or snapshot.max_workers)
+        return backlog_pressure or (worker_saturated and wait_pressure) or burst_pressure
+
+    async def _handle_video_queue(self, snapshot: QueueSnapshot, monitor_cfg) -> None:
+        if self._is_video_lagging(snapshot):
+            self._video_lag_hits += 1
+        else:
+            if self._video_backlog_active and self._has_backlog_recovered(snapshot):
+                await self._emit_video_backlog_cleared(snapshot)
+            self._video_lag_hits = 0
+
+        if self._video_lag_hits < monitor_cfg.required_hits:
+            return
+
+        now = time.monotonic()
+        if self._video_last_report_at is not None and (now - self._video_last_report_at) < monitor_cfg.cooldown:
+            return
+
+        await self._emit_video_report(snapshot)
+        self._video_last_report_at = now
+        self._video_lag_hits = 0
 
     async def _emit_backlog_cleared(
         self,
@@ -198,6 +245,40 @@ class FreeQueueMonitor:
             return
 
         self._backlog_active = False
+
+    async def _emit_video_report(self, video: QueueSnapshot) -> None:
+        summary = [
+            "[VideoQueueLag]",
+            f"backlog={video.backlog}",
+            f"busy={video.busy_workers}/{video.max_workers}",
+            f"avg_wait={video.avg_wait:.2f}s",
+            f"avg_run={video.avg_runtime:.2f}s",
+        ]
+        print(" ".join(summary))
+
+        if LOG_CHANNEL_ID:
+            embed = build_video_backlog_embed(video=video)
+            success = await send_developer_log_embed(
+                self._bot,
+                embed=embed,
+                context="accelerated_video_backlog",
+            )
+            if not success:
+                print(f"[VideoQueueLag] Failed to send backlog warning to LOG_CHANNEL_ID={LOG_CHANNEL_ID}")
+        self._video_backlog_active = True
+
+    async def _emit_video_backlog_cleared(self, video: QueueSnapshot) -> None:
+        print(f"[VideoQueueLag] backlog_recovered backlog={video.backlog}")
+        if LOG_CHANNEL_ID:
+            embed = build_video_backlog_cleared_embed(video=video)
+            success = await send_developer_log_embed(
+                self._bot,
+                embed=embed,
+                context="accelerated_video_backlog",
+            )
+            if not success:
+                print(f"[VideoQueueLag] Failed to send backlog recovery notice to LOG_CHANNEL_ID={LOG_CHANNEL_ID}")
+        self._video_backlog_active = False
 
     async def _collect_rates_summary(self) -> tuple[list[MediaProcessingRate], str]:
         rates = await self._rate_calculator.compute_rates()

@@ -115,7 +115,55 @@ def build_backlog_cleared_embed(
     return embed
 
 
+def build_video_backlog_embed(*, video: QueueSnapshot) -> discord.Embed:
+    description = (
+        f"Video backlog {video.backlog} (~{video.backlog_ratio:.2f}x high watermark)"
+        if video.backlog_high
+        else f"Video backlog {video.backlog}"
+    )
+    embed = discord.Embed(
+        title="Accelerated video queue backlog warning",
+        description=description,
+        color=discord.Color.red(),
+    )
+    embed.add_field(name="Video queue", value=video.format_lines(), inline=False)
+    embed.add_field(
+        name="Longest video task breakdown",
+        value=video.format_longest_runtime_detail(),
+        inline=False,
+    )
+    embed.add_field(
+        name="Latest video task snapshot",
+        value=video.format_last_runtime_detail(),
+        inline=False,
+    )
+    embed.set_footer(
+        text=(
+            f"Workers: base {video.baseline_workers} / current {video.max_workers} / "
+            f"burst {video.autoscale_max}"
+        )
+    )
+    return embed
+
+
+def build_video_backlog_cleared_embed(*, video: QueueSnapshot) -> discord.Embed:
+    description = (
+        "Accelerated video queue backlog has cleared."
+        if video.backlog <= 0
+        else f"Video backlog reduced to {video.backlog}."
+    )
+    embed = discord.Embed(
+        title="Accelerated video queue backlog recovered",
+        description=description,
+        color=discord.Color.green(),
+    )
+    embed.add_field(name="Video queue", value=video.format_lines(), inline=False)
+    return embed
+
+
 __all__ = [
     "build_backlog_cleared_embed",
     "build_backlog_embed",
+    "build_video_backlog_cleared_embed",
+    "build_video_backlog_embed",
 ]

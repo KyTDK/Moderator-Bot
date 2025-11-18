@@ -71,6 +71,7 @@ class SlowScanDiagnostics:
 def _select_queue_snapshots(
     bot: discord.Client,
     accelerated_hint: Optional[bool],
+    queue_hint: Optional[str],
 ):
     try:
         from cogs.aggregated_moderation.queue_snapshot import QueueSnapshot
@@ -81,16 +82,24 @@ def _select_queue_snapshots(
     if cog is None:
         return None
 
+    queue_attr_map: dict[str, tuple[str, str]] = {
+        "free": ("free_queue", "free"),
+        "accelerated": ("accelerated_queue", "accelerated"),
+        "accelerated_video": ("video_queue", "accelerated_video"),
+        "accelerated_text": ("accelerated_text_queue", "accelerated_text"),
+    }
+
     candidates: list[tuple[str, str]] = []
-    if accelerated_hint is True:
-        candidates.append(("accelerated_queue", "accelerated"))
-    elif accelerated_hint is False:
-        candidates.append(("free_queue", "free"))
+    if queue_hint and queue_hint in queue_attr_map:
+        candidates.append(queue_attr_map[queue_hint])
     else:
-        candidates.extend([
-            ("free_queue", "free"),
-            ("accelerated_queue", "accelerated"),
-        ])
+        if accelerated_hint is True:
+            candidates.append(queue_attr_map["accelerated"])
+        elif accelerated_hint is False:
+            candidates.append(queue_attr_map["free"])
+        else:
+            candidates.extend([queue_attr_map["free"], queue_attr_map["accelerated"]])
+        candidates.append(queue_attr_map["accelerated_video"])
 
     snapshots: list[tuple[str, Any]] = []
     for attr, label in candidates:
@@ -306,7 +315,9 @@ async def gather_slow_scan_diagnostics(
     queue_rate_lines: list[str] = []
     queue_label: Optional[str] = None
 
-    selected = _select_queue_snapshots(bot, accelerated_flag)
+    queue_hint = getattr(telemetry, "queue_name", None)
+
+    selected = _select_queue_snapshots(bot, accelerated_flag, queue_hint)
     if selected is not None:
         queue_label, snapshot = selected
         health_lines, rate_lines = _build_queue_health_lines(queue_label, snapshot)
@@ -318,8 +329,9 @@ async def gather_slow_scan_diagnostics(
     path_parts: list[str] = []
     if accelerated_flag is not None:
         path_parts.append(f"Accelerated path: {'yes' if accelerated_flag else 'no'}")
-    if queue_label is not None:
-        path_parts.append(f"Queue: {queue_label}")
+    queue_name_display = queue_hint or queue_label
+    if queue_name_display is not None:
+        path_parts.append(f"Queue: {queue_name_display}")
     if queue_wait_ms is not None and total_ms:
         queue_share = queue_wait_ms / total_ms if total_ms else None
         processing_share = None

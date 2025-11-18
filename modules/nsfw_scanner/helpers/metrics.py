@@ -84,6 +84,7 @@ class LatencyTracker:
         "_execution_started_at",
         "_steps",
         "_queue_label",
+        "_queue_name",
     )
 
     QUEUE_STEP_NAME = "queue_wait"
@@ -95,6 +96,7 @@ class LatencyTracker:
         started_at: Any | None = None,
         steps: Any | None = None,
         queue_label: str | None = None,
+        queue_name: str | None = None,
     ) -> None:
         self._execution_started_at = time.perf_counter()
         self._origin_started_at = self._coerce_start(started_at)
@@ -108,7 +110,12 @@ class LatencyTracker:
             )
 
         self._steps: dict[str, dict[str, Any]] = normalize_latency_breakdown(steps)
-        self._queue_label = queue_label or self.DEFAULT_QUEUE_LABEL
+        self._queue_name = queue_name
+        resolved_label = queue_label
+        if not resolved_label and queue_name:
+            pretty = queue_name.replace("_", " ").strip()
+            resolved_label = f"{pretty.title()} queue wait" if pretty else None
+        self._queue_label = resolved_label or self.DEFAULT_QUEUE_LABEL
         if queue_wait_ms > 0:
             _add_latency_step(
                 self._steps,
@@ -192,6 +199,10 @@ class LatencyTracker:
 
         metrics["total_latency_ms"] = float(total)
         metrics["total_duration_ms"] = float(total)
+        if self._queue_name:
+            metrics.setdefault("queue_name", self._queue_name)
+        if self._queue_label and self._queue_label != self.DEFAULT_QUEUE_LABEL:
+            metrics.setdefault("queue_label", self._queue_label)
         return metrics, total
 
 
@@ -257,6 +268,7 @@ class ScanTelemetry:
     bytes_downloaded: Optional[int] = None
     early_exit: Any = None
     accelerated: Optional[bool] = None
+    queue_name: Optional[str] = None
 
 
 def normalize_latency_breakdown(entries: Any) -> dict[str, dict[str, Any]]:
@@ -483,11 +495,13 @@ def collect_scan_telemetry(
         bytes_downloaded = _coerce_int(pipeline_metrics.get("bytes_downloaded"))
         early_exit = pipeline_metrics.get("early_exit")
         accelerated_flag = _coerce_bool(pipeline_metrics.get("accelerated"))
+        queue_name = pipeline_metrics.get("queue_name")
     else:
         breakdown_source = None
         bytes_downloaded = None
         early_exit = None
         accelerated_flag = None
+        queue_name = None
 
     frame_lines = format_frame_metrics_lines(frame_metrics)
     breakdown_lines = format_latency_breakdown_lines(breakdown_source)
@@ -519,4 +533,5 @@ def collect_scan_telemetry(
         bytes_downloaded=bytes_downloaded,
         early_exit=early_exit,
         accelerated=accelerated_flag,
+        queue_name=queue_name,
     )

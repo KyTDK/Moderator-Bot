@@ -9,7 +9,7 @@ from PIL import Image
 
 from modules.utils import api, clip_vectors, text_vectors
 
-from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY
+from ..constants import ADD_SFW_VECTOR, MOD_API_MAX_CONCURRENCY, ACCELERATED_MOD_API_MAX_CONCURRENCY
 from ..utils.categories import is_allowed_category
 from .latency import ModeratorLatencyTracker
 from .moderation_context import RemoteFallbackContext
@@ -32,7 +32,21 @@ from .vector_tasks import (
 log = logging.getLogger(__name__)
 
 
-_MODERATION_API_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
+_STANDARD_MODERATION_SEMAPHORE = asyncio.Semaphore(max(1, MOD_API_MAX_CONCURRENCY))
+_ACCELERATED_MODERATION_SEMAPHORE = asyncio.Semaphore(
+    max(1, ACCELERATED_MOD_API_MAX_CONCURRENCY)
+)
+
+
+def _select_moderation_semaphore(
+    accelerated: bool | None,
+    queue_name: str | None,
+) -> asyncio.Semaphore:
+    if queue_name in {"accelerated_video", "accelerated_text", "accelerated"}:
+        return _ACCELERATED_MODERATION_SEMAPHORE
+    if accelerated:
+        return _ACCELERATED_MODERATION_SEMAPHORE
+    return _STANDARD_MODERATION_SEMAPHORE
 
 async def _get_moderations_resource(client):
     """
@@ -59,6 +73,8 @@ async def moderator_api(
     payload_metadata: dict[str, Any] | None = None,
     on_rate_limiter_acquire: Optional[Callable[[float], None]] = None,
     on_rate_limiter_release: Optional[Callable[[float], None]] = None,
+    accelerated: bool | None = None,
+    queue_name: str | None = None,
 ) -> dict[str, Any]:
     result: dict[str, Any] = {
         "is_nsfw": None,
@@ -205,7 +221,8 @@ async def moderator_api(
             latency_tracker.ensure_payload_detail("request_model", request_model)
             response = None
             limiter_wait_started = time.perf_counter()
-            async with _MODERATION_API_SEMAPHORE:
+            semaphore = _select_moderation_semaphore(accelerated, queue_name)
+            async with semaphore:
                 limiter_acquired_at = time.perf_counter()
                 if on_rate_limiter_acquire is not None:
                     try:

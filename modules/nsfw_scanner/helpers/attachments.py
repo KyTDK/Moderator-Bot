@@ -28,6 +28,17 @@ NSFW_CATEGORY_NAMESPACE = "cogs.nsfw.meta.categories"
 _CACHE_MISS = object()
 
 
+def _format_queue_wait_label(queue_name: str | None) -> str | None:
+    if not queue_name:
+        return None
+    pretty = queue_name.replace("_", " ").strip()
+    if not pretty:
+        return None
+    if "queue" not in pretty.lower():
+        pretty = f"{pretty} queue"
+    return f"{pretty.title()} wait"
+
+
 class AttachmentSettingsCache:
     """Cache frequently accessed guild settings for a scan batch."""
 
@@ -263,13 +274,17 @@ async def check_attachment(
     pre_download_bytes: int | None = None,
     source_url: str | None = None,
     overall_started_at: float | None = None,
+    queue_name: str | None = None,
 ) -> bool:
     if settings_cache is None:
         settings_cache = AttachmentSettingsCache()
 
+    queue_label = _format_queue_wait_label(queue_name)
     latency_tracker = LatencyTracker(
         started_at=overall_started_at,
         steps=pre_latency_steps,
+        queue_label=queue_label,
+        queue_name=queue_name,
     )
 
     filename = os.path.basename(temp_filename)
@@ -352,6 +367,8 @@ async def check_attachment(
             extra_context["message_id"] = message_id
         if message and getattr(message, "jump_url", None):
             extra_context["jump_url"] = message.jump_url
+        if queue_name:
+            extra_context["queue_name"] = queue_name
 
         try:
             accelerated_flag = pipeline_accelerated
@@ -413,6 +430,7 @@ async def check_attachment(
         guild_id,
         settings=settings,
         accelerated=accelerated_value,
+        queue_name=queue_name,
     )
     latency_tracker.record_step(
         "attachment_context_build",
@@ -431,6 +449,7 @@ async def check_attachment(
         "user_id": getattr(author, "id", None) if author else None,
         "message_jump_url": getattr(message, "jump_url", None) if message else None,
         "source_url": source_url,
+        "queue_name": queue_name,
     }
     payload_metadata = {
         key: value for key, value in (payload_metadata or {}).items() if value is not None

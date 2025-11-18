@@ -38,6 +38,7 @@ def _build_text_verbose_embed(
     result: dict[str, Any] | None,
     message: discord.Message | None,
     debug_lines: list[str] | None = None,
+    source_hint: str | None = None,
 ) -> discord.Embed:
     sanitized = escape_mentions(escape_markdown(text_content.strip()))
     snippet = sanitized[:512]
@@ -67,6 +68,8 @@ def _build_text_verbose_embed(
     if guild_id is not None:
         lines.append(f"Guild ID: `{guild_id}`")
     lines.append(f"Decision: **{decision_label}**")
+    if source_hint:
+        lines.append(f"Source: {source_hint}")
 
     embed = discord.Embed(
         title="NSFW Text Scan Report",
@@ -144,8 +147,15 @@ class TextScanPipeline:
         nsfw_callback: Callable[..., Awaitable[None]] | None,
         settings_cache: "AttachmentSettingsCache",
         settings_map: dict[str, Any] | None,
+        text_override: str | None = None,
+        source_hint: str | None = None,
+        metadata_overrides: dict[str, Any] | None = None,
+        queue_label: str | None = None,
     ) -> bool:
-        text_content = (message.content or "").strip()
+        if text_override is not None:
+            text_content = text_override.strip()
+        else:
+            text_content = (message.content or "").strip()
         if not text_content:
             return False
 
@@ -213,6 +223,8 @@ class TextScanPipeline:
         else:
             debug_lines.append("Strikes-only mode: no")
         debug_lines.append("Send moderation embed: no")
+        if source_hint:
+            debug_lines.append(f"Content source: {source_hint}")
 
         author_id = getattr(getattr(message, "author", None), "id", None)
         text_metadata = {
@@ -224,6 +236,8 @@ class TextScanPipeline:
             text_metadata["user_id"] = author_id
         if guild_id is not None:
             text_metadata["guild_id"] = guild_id
+        if metadata_overrides:
+            text_metadata.update(metadata_overrides)
 
         text_result = await process_text(
             scanner,
@@ -231,6 +245,7 @@ class TextScanPipeline:
             guild_id=guild_id,
             settings=settings_map,
             payload_metadata=text_metadata,
+            queue_name=queue_label,
         )
 
         verbose_enabled = False
@@ -251,6 +266,7 @@ class TextScanPipeline:
                 result=text_result,
                 message=message,
                 debug_lines=debug_lines if debug_lines else None,
+                source_hint=source_hint,
             )
 
         if verbose_enabled and verbose_embed is not None:

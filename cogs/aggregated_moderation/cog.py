@@ -17,6 +17,7 @@ from .config import AggregatedModerationConfig, load_config
 from .handlers import ModerationHandlers
 from .performance_monitor import AcceleratedPerformanceMonitor
 from .queue_monitor import FreeQueueMonitor
+from .queue_context import reset_current_queue, set_current_queue
 
 
 class AggregatedModerationCog(commands.Cog):
@@ -94,6 +95,7 @@ class AggregatedModerationCog(commands.Cog):
             bot=bot,
             free_queue=self.free_queue,
             accelerated_queue=self.accelerated_queue,
+            video_queue=self.video_queue,
             config=self.config,
         )
         self.performance_monitor = AcceleratedPerformanceMonitor(
@@ -143,7 +145,16 @@ class AggregatedModerationCog(commands.Cog):
             queue = self.accelerated_text_queue
         else:
             queue = self.accelerated_queue if accelerated else self.free_queue
-        await queue.add_task(coro)
+        queue_label = getattr(queue, "_name", None)
+
+        async def run_with_queue_context():
+            token = set_current_queue(queue_label)
+            try:
+                return await coro
+            finally:
+                reset_current_queue(token)
+
+        await queue.add_task(run_with_queue_context())
 
     async def handle_message(self, message: discord.Message):
         await self.handlers.handle_message(message)

@@ -191,6 +191,8 @@ async def _run_image_pipeline(
         payload_metadata=payload_metadata,
         on_rate_limiter_acquire=on_rate_limiter_acquire,
         on_rate_limiter_release=on_rate_limiter_release,
+        accelerated=context.accelerated,
+        queue_name=context.queue_name,
     )
     _add_step(
         "moderation_api",

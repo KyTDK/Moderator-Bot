@@ -215,6 +215,7 @@ class MediaScanner:
                 pre_latency_steps=pre_steps,
                 pre_download_bytes=pre_bytes,
                 overall_started_at=overall_started_at,
+                queue_label=self._context.queue_label,
             )
         finally:
             safe_delete(temp_filename)
@@ -247,6 +248,7 @@ class MediaScanner:
             propagate_value_error=propagate_value_error,
             propagate_download_exception=propagate_download_exception,
             overall_started_at=self._context.consume_latency_origin(),
+            queue_label=self._context.queue_label,
         )
 
     async def _tenor_enabled(self) -> bool:

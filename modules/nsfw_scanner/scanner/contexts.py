@@ -33,6 +33,7 @@ class MediaScanContext:
     download_cap_bytes: int | None
     author: discord.Member | None
     latency_origin: float | None
+    queue_label: str | None = None
 
     def consume_latency_origin(self) -> float | None:
         value = self.latency_origin

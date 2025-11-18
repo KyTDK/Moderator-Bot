@@ -14,6 +14,7 @@ from modules.nsfw_scanner.settings_keys import (
 )
 from modules.utils import mod_logging, mysql
 from modules.utils.discord_utils import safe_get_channel, safe_get_member, safe_get_message
+from .queue_context import get_current_queue
 
 
 class ModerationHandlers:
@@ -101,6 +102,7 @@ class ModerationHandlers:
             return
 
         async def scan_task():
+            queue_label = get_current_queue()
             scan_outcome = await self._scanner.is_nsfw(
                 message=message,
                 guild_id=guild_id,
@@ -109,6 +111,7 @@ class ModerationHandlers:
                 scan_text=False,
                 scan_media=nsfw_enabled,
                 return_details=True,
+                queue_label=queue_label,
             )
             if not scan_outcome["flagged"]:
                 return
@@ -277,6 +280,7 @@ class ModerationHandlers:
             if resolved_member is None and user_id is not None:
                 resolved_member = await safe_get_member(guild, user_id)
 
+            queue_label = get_current_queue()
             flagged = await self._scanner.is_nsfw(
                 message=message,
                 guild_id=guild.id,
@@ -284,6 +288,7 @@ class ModerationHandlers:
                 url=str(emoji.url),
                 member=resolved_member,
                 overall_started_at=queue_started_at,
+                queue_label=queue_label,
             )
             if not flagged:
                 return
@@ -319,11 +324,13 @@ class ModerationHandlers:
             return
 
         async def scan_task():
+            queue_label = get_current_queue()
             is_nsfw = await self._scanner.is_nsfw(
                 url=avatar_url,
                 member=member,
                 guild_id=guild.id,
                 overall_started_at=queue_started_at,
+                queue_label=queue_label,
             )
             if is_nsfw:
                 action = await mysql.get_settings(guild.id, "nsfw-pfp-action")
@@ -400,6 +407,7 @@ class ModerationHandlers:
 
         async def text_scan_task():
             try:
+                queue_label = get_current_queue()
                 outcome = await self._scanner.is_nsfw(
                     message=message,
                     guild_id=guild_id,
@@ -408,6 +416,7 @@ class ModerationHandlers:
                     scan_text=scan_text,
                     scan_media=False,
                     return_details=True,
+                    queue_label=queue_label,
                 )
             except Exception as exc:  # noqa: BLE001
                 if not result_future.done():

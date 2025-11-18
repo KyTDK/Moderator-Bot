@@ -4,6 +4,7 @@ from .context import ImageProcessingContext, build_image_processing_context
 from .images import process_image, process_image_batch
 from .text import process_text
 from .moderation import moderator_api
+from .ocr import extract_text_from_image
 from .videos import process_video
 
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "process_image_batch",
     "process_text",
     "moderator_api",
+    "extract_text_from_image",
     "process_video",
 ]

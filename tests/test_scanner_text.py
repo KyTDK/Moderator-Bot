@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 import types
+from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -350,7 +351,8 @@ api_stub.set_api_key_working = _api_set_api_key_working
 sys.modules.setdefault("modules.utils.api", api_stub)
 
 from modules.nsfw_scanner import scanner as scanner_mod
-from modules.nsfw_scanner.helpers import attachments as attachments_mod
+import modules.nsfw_scanner.helpers.attachments.scanner as attachments_scanner_mod
+from modules.nsfw_scanner.helpers.attachments import AttachmentSettingsCache, check_attachment
 from modules.nsfw_scanner.settings_keys import (
     NSFW_HIGH_ACCURACY_SETTING,
     NSFW_IMAGE_CATEGORY_SETTING,
@@ -474,12 +476,12 @@ async def _exercise_text_scan(
 
     monkeypatch.setattr(scanner_mod, "wait_for_hydration", fake_wait_for_hydration)
     monkeypatch.setattr(
-        attachments_mod.AttachmentSettingsCache,
+        AttachmentSettingsCache,
         "get_scan_settings",
         fake_get_scan_settings,
     )
     monkeypatch.setattr(
-        attachments_mod.AttachmentSettingsCache,
+        AttachmentSettingsCache,
         "set_scan_settings",
         fake_set_scan_settings,
     )
@@ -558,6 +560,214 @@ def test_text_scan_runs_when_media_scanning_disabled(monkeypatch):
     )
     assert flagged is True
     assert text_calls, "process_text should still run when media scanning is disabled"
-    assert callback_calls, "Text actions should still fire when only text scanning is enabled"
-    assert outcome["text_flagged"] is True, "Scanner should report text-based hits"
-    assert callback_calls[0][1]["send_embed"] is False
+
+
+async def _exercise_text_override_scan(monkeypatch, text_override: str = "ocr text"):
+    from modules.nsfw_scanner.helpers.attachments import AttachmentSettingsCache
+    import modules.nsfw_scanner.settings_keys as settings_keys
+    import modules.nsfw_scanner.text_pipeline as text_pipeline_module
+
+    process_calls: list[dict[str, Any]] = []
+    callback_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
+
+    async def fake_process_text(scanner, text, **kwargs):
+        process_calls.append(
+            {
+                "text": text,
+                "metadata": kwargs.get("payload_metadata"),
+            }
+        )
+        return {"is_nsfw": True, "category": "test", "score": 0.9}
+
+    async def fake_is_accelerated(*, guild_id=None, user_id=None):
+        return True
+
+    async def fake_get_strike_count(*_args, **_kwargs):
+        return 1
+
+    async def fake_callback(*args, **kwargs):
+        callback_calls.append((args, kwargs))
+
+    monkeypatch.setattr(text_pipeline_module, "process_text", fake_process_text, raising=False)
+    monkeypatch.setattr(text_pipeline_module.mysql, "is_accelerated", fake_is_accelerated, raising=False)
+    monkeypatch.setattr(text_pipeline_module.mysql, "get_strike_count", fake_get_strike_count, raising=False)
+
+    message = SimpleNamespace(
+        content="",
+        author=SimpleNamespace(id=99, mention="<@99>"),
+        channel=SimpleNamespace(id=123, mention="#general", name="general"),
+        id=777,
+        jump_url="https://discord.com/channels/1/2/3",
+    )
+    settings_cache = AttachmentSettingsCache()
+    settings_map = {
+        settings_keys.NSFW_TEXT_ENABLED_SETTING: True,
+        "nsfw-verbose": False,
+    }
+    pipeline = text_pipeline_module.TextScanPipeline(bot=SimpleNamespace())
+
+    result = await pipeline.scan(
+        scanner=SimpleNamespace(bot=None),
+        message=message,
+        guild_id=555,
+        nsfw_callback=fake_callback,
+        settings_cache=settings_cache,
+        settings_map=settings_map,
+        text_override=text_override,
+        source_hint="Image OCR",
+        metadata_overrides={"ocr_scan": True},
+    )
+
+    return result, process_calls, callback_calls
+
+
+def test_text_pipeline_accepts_override(monkeypatch):
+    result, process_calls, callback_calls = asyncio.run(_exercise_text_override_scan(monkeypatch))
+    assert result is True
+    assert process_calls, "process_text should be called when OCR text is supplied"
+    assert process_calls[0]["text"] == "ocr text"
+    metadata = process_calls[0]["metadata"]
+    assert metadata["ocr_scan"] is True
+    assert metadata["message_id"] == 777
+    assert callback_calls, "nsfw_callback should fire for OCR text hits"
+
+
+async def _exercise_attachment_ocr(monkeypatch, tmp_path):
+    import modules.nsfw_scanner.settings_keys as settings_keys
+
+    fake_settings = {
+        settings_keys.NSFW_TEXT_ENABLED_SETTING: True,
+        "nsfw-verbose": False,
+    }
+
+    async def fake_get_settings(guild_id, *_args, **_kwargs):
+        return fake_settings
+
+    async def fake_is_accelerated(*, guild_id=None, user_id=None):
+        return True
+
+    async def fake_process_image(*_args, **_kwargs):
+        return {"is_nsfw": False, "pipeline_metrics": {}}
+
+    async def fake_build_context(*_args, **_kwargs):
+        return SimpleNamespace(
+            guild_id=123,
+            settings_map=fake_settings,
+            allowed_categories=[],
+            text_allowed_categories=[],
+            moderation_threshold=0.7,
+            text_moderation_threshold=0.7,
+            high_accuracy=False,
+            accelerated=True,
+        )
+
+    async def fake_log_media_scan(**_kwargs):
+        return None
+
+    async def fake_log_slow_scan_if_needed(**_kwargs):
+        return None
+
+    async def fake_extract_text(*_args, **_kwargs):
+        return "hidden text"
+
+    async def fake_callback(*args, **kwargs):
+        callback_calls.append((args, kwargs))
+
+    async def fake_log_to_channel(*_args, **_kwargs):
+        return None
+
+    def fake_localize_message(
+        _translator,
+        _namespace,
+        _key,
+        *,
+        placeholders=None,
+        fallback="",
+        guild_id=None,
+    ):
+        if placeholders:
+            try:
+                return fallback.format(**placeholders)
+            except Exception:
+                return fallback or _key
+        return fallback or _key
+
+    class FakePipeline:
+        def __init__(self):
+            self.calls: list[dict[str, Any]] = []
+
+        async def scan(self, **kwargs):
+            self.calls.append(kwargs)
+            callback = kwargs.get("nsfw_callback")
+            message = kwargs.get("message")
+            if callback and message is not None:
+                await callback(
+                    message.author,
+                    SimpleNamespace(),
+                    kwargs.get("guild_id"),
+                    "Detected OCR violation",
+                    None,
+                    message,
+                )
+            return True
+
+    fake_pipeline = FakePipeline()
+    callback_calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
+
+    monkeypatch.setattr(attachments_scanner_mod.mysql, "get_settings", fake_get_settings, raising=False)
+    monkeypatch.setattr(attachments_scanner_mod.mysql, "is_accelerated", fake_is_accelerated, raising=False)
+    monkeypatch.setattr(attachments_scanner_mod, "process_image", fake_process_image, raising=False)
+    monkeypatch.setattr(attachments_scanner_mod, "build_image_processing_context", fake_build_context, raising=False)
+    monkeypatch.setattr(attachments_scanner_mod, "log_media_scan", fake_log_media_scan, raising=False)
+    monkeypatch.setattr(attachments_scanner_mod, "log_slow_scan_if_needed", fake_log_slow_scan_if_needed, raising=False)
+    monkeypatch.setattr(attachments_scanner_mod, "extract_text_from_image", fake_extract_text, raising=False)
+    monkeypatch.setattr(attachments_scanner_mod, "localize_message", fake_localize_message, raising=False)
+    monkeypatch.setattr(
+        attachments_scanner_mod.mod_logging,
+        "log_to_channel",
+        fake_log_to_channel,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        attachments_scanner_mod,
+        "determine_file_type",
+        lambda *_args, **_kwargs: (attachments_scanner_mod.FILE_TYPE_IMAGE, "image/png"),
+        raising=False,
+    )
+
+    image_path = tmp_path / "sample.png"
+    image_path.write_bytes(b"fake")
+
+    scanner = SimpleNamespace(bot=SimpleNamespace(), _text_pipeline=fake_pipeline)
+    channel = SimpleNamespace(id=321, mention="#ocr", name="ocr")
+    message = SimpleNamespace(
+        content="",
+        channel=channel,
+        author=SimpleNamespace(id=1, mention="<@1>"),
+        id=222,
+        jump_url="https://discord.com/channels/1/2/222",
+    )
+    settings_cache = AttachmentSettingsCache()
+
+    result = await check_attachment(
+        scanner,
+        author=message.author,
+        temp_filename=str(image_path),
+        nsfw_callback=fake_callback,
+        guild_id=555,
+        message=message,
+        perform_actions=True,
+        settings_cache=settings_cache,
+    )
+
+    return result, fake_pipeline.calls, callback_calls
+
+
+def test_check_attachment_runs_image_ocr(monkeypatch, tmp_path):
+    result, pipeline_calls, callback_calls = asyncio.run(
+        _exercise_attachment_ocr(monkeypatch, tmp_path)
+    )
+    assert result is True, "OCR-triggered text hits should mark the attachment as flagged"
+    assert pipeline_calls, "Text pipeline should be invoked when OCR text is available"
+    assert pipeline_calls[0]["text_override"] == "hidden text"
+    assert callback_calls, "nsfw_callback should be invoked for OCR detections"

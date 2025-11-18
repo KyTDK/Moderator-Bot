@@ -28,6 +28,7 @@ async def process_text(
     context: ImageProcessingContext | None = None,
     similarity_response: Optional[list[dict[str, Any]]] = None,
     payload_metadata: dict[str, Any] | None = None,
+    queue_name: str | None = None,
 ) -> dict[str, Any] | None:
     content = (text or "").strip()
     if not content:
@@ -35,7 +36,11 @@ async def process_text(
 
     ctx = context
     if ctx is None:
-        ctx = await build_image_processing_context(guild_id, settings=settings)
+        ctx = await build_image_processing_context(
+            guild_id,
+            settings=settings,
+            queue_name=queue_name,
+        )
 
     metadata = dict(payload_metadata or {})
     metadata.setdefault("input_kind", "text")
@@ -107,6 +112,8 @@ async def process_text(
         allowed_categories=ctx.text_allowed_categories,
         threshold=ctx.text_moderation_threshold,
         payload_metadata=metadata,
+        accelerated=ctx.accelerated,
+        queue_name=queue_name or ctx.queue_name,
     )
 
     if isinstance(response, dict):
