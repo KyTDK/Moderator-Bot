@@ -20,7 +20,11 @@ from modules.nsfw_scanner.helpers.metrics import (
 )
 from modules.nsfw_scanner.helpers.videos import process_video
 from modules.nsfw_scanner.logging_utils import log_slow_scan_if_needed
-from modules.nsfw_scanner.settings_keys import NSFW_TEXT_ENABLED_SETTING
+from modules.nsfw_scanner.settings_keys import (
+    NSFW_OCR_ENABLED_SETTING,
+    NSFW_OCR_LANGUAGES_SETTING,
+    NSFW_TEXT_ENABLED_SETTING,
+)
 from modules.nsfw_scanner.utils.file_types import (
     FILE_TYPE_IMAGE,
     FILE_TYPE_LABELS,
@@ -33,6 +37,7 @@ SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
 SHARED_CATEGORY = "modules.nsfw_scanner.shared.category"
 SHARED_ROOT = "modules.nsfw_scanner.shared"
 NSFW_CATEGORY_NAMESPACE = "cogs.nsfw.meta.categories"
+_DEFAULT_OCR_LANGUAGES = ["en"]
 
 _CACHE_MISS = object()
 
@@ -146,6 +151,37 @@ class AttachmentSettingsCache:
 
     def set_accelerated(self, value: Any) -> None:
         self.accelerated = bool(value)
+
+
+def _is_truthy(value: Any, *, default: bool) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() == "true"
+    return bool(value)
+
+
+def _resolve_ocr_languages(value: Any) -> list[str]:
+    if value is None:
+        return list(_DEFAULT_OCR_LANGUAGES)
+
+    if isinstance(value, str):
+        candidates = [value]
+    elif isinstance(value, (list, tuple, set)):
+        candidates = list(value)
+    else:
+        return list(_DEFAULT_OCR_LANGUAGES)
+
+    languages: list[str] = []
+    for entry in candidates:
+        if entry is None:
+            continue
+        text = str(entry).strip()
+        if not text:
+            continue
+        languages.append(text[:16])
+
+    return languages or list(_DEFAULT_OCR_LANGUAGES)
 
 DECISION_FALLBACKS = {
     "unknown": "Unknown",
@@ -509,25 +545,36 @@ async def check_attachment(
         )
         return False
 
+    settings_map = context.settings_map or {}
+    ocr_enabled = _is_truthy(
+        settings_map.get(NSFW_OCR_ENABLED_SETTING),
+        default=True,
+    )
+    if not context.accelerated:
+        ocr_enabled = False
+    ocr_languages = _resolve_ocr_languages(settings_map.get(NSFW_OCR_LANGUAGES_SETTING))
+
     if (
         file_type == FILE_TYPE_IMAGE
         and not (scan_result and scan_result.get("is_nsfw"))
         and text_pipeline is not None
         and message is not None
         and guild_id is not None
+        and ocr_enabled
     ):
         if settings_cache.has_text_enabled():
             text_enabled = bool(settings_cache.get_text_enabled())
         else:
-            text_enabled = bool(
-                (context.settings_map or {}).get(NSFW_TEXT_ENABLED_SETTING)
-            )
+            text_enabled = bool(settings_map.get(NSFW_TEXT_ENABLED_SETTING))
             settings_cache.set_text_enabled(text_enabled)
 
         if text_enabled:
             ocr_extract_started = time.perf_counter()
             try:
-                extracted_text = await extract_text_from_image(temp_filename)
+                extracted_text = await extract_text_from_image(
+                    temp_filename,
+                    languages=ocr_languages,
+                )
             except Exception as ocr_exc:  # pragma: no cover - best-effort logging
                 print(f"[ocr] Failed to extract text for {filename}: {ocr_exc}")
                 extracted_text = None

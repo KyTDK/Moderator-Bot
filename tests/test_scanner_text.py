@@ -632,12 +632,20 @@ def test_text_pipeline_accepts_override(monkeypatch):
     assert callback_calls, "nsfw_callback should fire for OCR text hits"
 
 
-async def _exercise_attachment_ocr(monkeypatch, tmp_path):
+async def _exercise_attachment_ocr(
+    monkeypatch,
+    tmp_path,
+    *,
+    ocr_enabled: bool = True,
+    accelerated_context: bool = True,
+):
     import modules.nsfw_scanner.settings_keys as settings_keys
 
     fake_settings = {
         settings_keys.NSFW_TEXT_ENABLED_SETTING: True,
         "nsfw-verbose": False,
+        settings_keys.NSFW_OCR_ENABLED_SETTING: ocr_enabled,
+        settings_keys.NSFW_OCR_LANGUAGES_SETTING: ["en"],
     }
 
     async def fake_get_settings(guild_id, *_args, **_kwargs):
@@ -658,7 +666,7 @@ async def _exercise_attachment_ocr(monkeypatch, tmp_path):
             moderation_threshold=0.7,
             text_moderation_threshold=0.7,
             high_accuracy=False,
-            accelerated=True,
+            accelerated=accelerated_context,
         )
 
     async def fake_log_media_scan(**_kwargs):
@@ -771,3 +779,21 @@ def test_check_attachment_runs_image_ocr(monkeypatch, tmp_path):
     assert pipeline_calls, "Text pipeline should be invoked when OCR text is available"
     assert pipeline_calls[0]["text_override"] == "hidden text"
     assert callback_calls, "nsfw_callback should be invoked for OCR detections"
+
+
+def test_attachment_ocr_respects_setting_toggle(monkeypatch, tmp_path):
+    result, pipeline_calls, callback_calls = asyncio.run(
+        _exercise_attachment_ocr(monkeypatch, tmp_path, ocr_enabled=False)
+    )
+    assert result is False
+    assert pipeline_calls == []
+    assert callback_calls == []
+
+
+def test_attachment_ocr_requires_accelerated_plan(monkeypatch, tmp_path):
+    result, pipeline_calls, callback_calls = asyncio.run(
+        _exercise_attachment_ocr(monkeypatch, tmp_path, accelerated_context=False)
+    )
+    assert result is False
+    assert pipeline_calls == []
+    assert callback_calls == []
