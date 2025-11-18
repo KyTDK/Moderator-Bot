@@ -352,7 +352,11 @@ sys.modules.setdefault("modules.utils.api", api_stub)
 
 from modules.nsfw_scanner import scanner as scanner_mod
 import modules.nsfw_scanner.helpers.attachments.scanner as attachments_scanner_mod
-from modules.nsfw_scanner.helpers.attachments import AttachmentSettingsCache, check_attachment
+from modules.nsfw_scanner.helpers.attachments import (
+    AttachmentSettingsCache,
+    check_attachment,
+    wait_for_async_ocr_tasks,
+)
 from modules.nsfw_scanner.settings_keys import (
     NSFW_HIGH_ACCURACY_SETTING,
     NSFW_IMAGE_CATEGORY_SETTING,
@@ -786,6 +790,7 @@ async def _exercise_attachment_ocr(
         settings_cache=settings_cache,
     )
 
+    await wait_for_async_ocr_tasks()
     return result, fake_pipeline.calls, callback_calls
 
 
@@ -793,7 +798,7 @@ def test_check_attachment_runs_image_ocr(monkeypatch, tmp_path):
     result, pipeline_calls, callback_calls = asyncio.run(
         _exercise_attachment_ocr(monkeypatch, tmp_path)
     )
-    assert result is True, "OCR-triggered text hits should mark the attachment as flagged"
+    assert result is False, "OCR follow-up scans now run asynchronously and should not block media scans"
     assert pipeline_calls, "Text pipeline should be invoked when OCR text is available"
     assert pipeline_calls[0]["text_override"] == "hidden text"
     assert callback_calls, "nsfw_callback should be invoked for OCR detections"

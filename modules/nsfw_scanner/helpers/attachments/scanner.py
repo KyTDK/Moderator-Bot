@@ -6,8 +6,27 @@ import discord
 
 from modules.metrics import log_media_scan
 from modules.utils import mod_logging, mysql
-from modules.utils.localization import TranslateFn, localize_message
+from modules.utils.localization import localize_message
 
+from modules.nsfw_scanner.helpers.attachments.cache import (
+    AttachmentSettingsCache,
+    format_queue_wait_label,
+)
+from modules.nsfw_scanner.helpers.attachments.localization import (
+    REPORT_BASE,
+    SHARED_ROOT,
+    localize_boolean,
+    localize_category,
+    localize_decision,
+    localize_field_name,
+    localize_reason,
+    resolve_translator,
+)
+from modules.nsfw_scanner.helpers.attachments.ocr import (
+    duplicate_file_for_ocr,
+    schedule_async_ocr_text_scan,
+)
+from modules.nsfw_scanner.helpers.attachments.reporting import build_verbose_scan_embed
 from modules.nsfw_scanner.helpers.images import (
     build_image_processing_context,
     process_image,
@@ -16,7 +35,6 @@ from modules.nsfw_scanner.helpers.ocr import extract_text_from_image
 from modules.nsfw_scanner.helpers.metrics import (
     LatencyTracker,
     collect_scan_telemetry,
-    format_video_scan_progress,
 )
 from modules.nsfw_scanner.helpers.videos import process_video
 from modules.nsfw_scanner.logging_utils import log_slow_scan_if_needed
@@ -31,130 +49,10 @@ from modules.nsfw_scanner.settings_keys import (
 )
 from modules.nsfw_scanner.utils.file_types import (
     FILE_TYPE_IMAGE,
-    FILE_TYPE_LABELS,
     FILE_TYPE_VIDEO,
     determine_file_type,
 )
-
-REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
-SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
-SHARED_CATEGORY = "modules.nsfw_scanner.shared.category"
-SHARED_ROOT = "modules.nsfw_scanner.shared"
-NSFW_CATEGORY_NAMESPACE = "cogs.nsfw.meta.categories"
 _DEFAULT_OCR_LANGUAGES = ["en"]
-
-_CACHE_MISS = object()
-
-
-def _format_queue_wait_label(queue_name: str | None) -> str | None:
-    if not queue_name:
-        return None
-    pretty = queue_name.replace("_", " ").strip()
-    if not pretty:
-        return None
-    if "queue" not in pretty.lower():
-        pretty = f"{pretty} queue"
-    return f"{pretty.title()} wait"
-
-
-class AttachmentSettingsCache:
-    """Cache frequently accessed guild settings for a scan batch."""
-
-    __slots__ = (
-        "scan_settings",
-        "nsfw_verbose",
-        "check_tenor_gifs",
-        "premium_status",
-        "premium_plan",
-        "text_enabled",
-        "accelerated",
-    )
-
-    def __init__(self) -> None:
-        self.scan_settings: Any = _CACHE_MISS
-        self.nsfw_verbose: Any = _CACHE_MISS
-        self.check_tenor_gifs: Any = _CACHE_MISS
-        self.premium_status: Any = _CACHE_MISS
-        self.premium_plan: Any = _CACHE_MISS
-        self.text_enabled: Any = _CACHE_MISS
-        self.accelerated: Any = _CACHE_MISS
-
-    def has_scan_settings(self) -> bool:
-        return self.scan_settings is not _CACHE_MISS
-
-    def get_scan_settings(self) -> dict[str, Any] | None:
-        if self.scan_settings is _CACHE_MISS:
-            return None
-        return self.scan_settings or {}
-
-    def set_scan_settings(self, value: dict[str, Any] | None) -> None:
-        self.scan_settings = value or {}
-
-    def has_verbose(self) -> bool:
-        return self.nsfw_verbose is not _CACHE_MISS
-
-    def get_verbose(self) -> bool | None:
-        if self.nsfw_verbose is _CACHE_MISS:
-            return None
-        return bool(self.nsfw_verbose)
-
-    def set_verbose(self, value: bool | None) -> None:
-        self.nsfw_verbose = bool(value)
-
-    def has_check_tenor(self) -> bool:
-        return self.check_tenor_gifs is not _CACHE_MISS
-
-    def get_check_tenor(self) -> bool | None:
-        if self.check_tenor_gifs is _CACHE_MISS:
-            return None
-        return bool(self.check_tenor_gifs)
-
-    def set_check_tenor(self, value: bool | None) -> None:
-        self.check_tenor_gifs = bool(value)
-
-    def has_premium_status(self) -> bool:
-        return self.premium_status is not _CACHE_MISS
-
-    def get_premium_status(self) -> Any:
-        if self.premium_status is _CACHE_MISS:
-            return None
-        return self.premium_status
-
-    def set_premium_status(self, value: Any) -> None:
-        self.premium_status = value if value is not None else {}
-
-    def has_premium_plan(self) -> bool:
-        return self.premium_plan is not _CACHE_MISS
-
-    def get_premium_plan(self) -> Any:
-        if self.premium_plan is _CACHE_MISS:
-            return None
-        return self.premium_plan
-
-    def set_premium_plan(self, value: Any) -> None:
-        self.premium_plan = value
-
-    def has_text_enabled(self) -> bool:
-        return self.text_enabled is not _CACHE_MISS
-
-    def get_text_enabled(self) -> bool | None:
-        if self.text_enabled is _CACHE_MISS:
-            return None
-        return bool(self.text_enabled)
-
-    def set_text_enabled(self, value: Any) -> None:
-        self.text_enabled = bool(value)
-
-    def has_accelerated(self) -> bool:
-        return self.accelerated is not _CACHE_MISS
-
-    def get_accelerated(self) -> bool | None:
-        if self.accelerated is _CACHE_MISS:
-            return None
-        return bool(self.accelerated)
-
-    def set_accelerated(self, value: Any) -> None:
-        self.accelerated = bool(value)
 
 
 def _resolve_ocr_languages(value: Any) -> list[str]:
@@ -179,128 +77,6 @@ def _resolve_ocr_languages(value: Any) -> list[str]:
 
     return languages or list(_DEFAULT_OCR_LANGUAGES)
 
-DECISION_FALLBACKS = {
-    "unknown": "Unknown",
-    "nsfw": "NSFW",
-    "safe": "Safe",
-}
-
-FIELD_FALLBACKS = {
-    "reason": "Reason",
-    "category": "Category",
-    "score": "Score",
-    "flagged_any": "Flagged Any",
-    "summary_categories": "Summary Categories",
-    "max_similarity": "Max Similarity",
-    "max_category": "Max Similarity Category",
-    "similarity": "Matched Similarity",
-    "high_accuracy": "High Accuracy",
-    "clip_threshold": "CLIP Threshold",
-    "moderation_threshold": "Moderation Threshold",
-    "video_frames": "Video Frames",
-    "latency_ms": "Scan Latency",
-    "average_latency_per_frame_ms": "Avg Latency / Frame",
-    "latency_breakdown": "Latency Breakdown",
-    "payload_details": "Payload Details",
-}
-
-REASON_FALLBACKS = {
-    "openai_moderation": "OpenAI moderation",
-    "openai_moderation_timeout": "OpenAI moderation timeout",
-    "openai_moderation_http_timeout": "OpenAI moderation HTTP timeout",
-    "openai_moderation_connection_error": "OpenAI moderation connection error",
-    "similarity_match": "Similarity match",
-    "no_frames_extracted": "No frames extracted",
-    "no_nsfw_frames_detected": "No NSFW frames detected",
-}
-
-
-def _resolve_translator(scanner) -> TranslateFn | None:
-    translate = getattr(getattr(scanner, "bot", None), "translate", None)
-    return translate if callable(translate) else None
-
-
-def _localize_decision(translator: TranslateFn | None, decision: str, guild_id: int | None) -> str:
-    fallback = DECISION_FALLBACKS.get(decision, decision.capitalize())
-    return localize_message(
-        translator,
-        REPORT_BASE,
-        f"decision.{decision}",
-        fallback=fallback,
-        guild_id=guild_id,
-    )
-
-
-def _localize_field_name(translator: TranslateFn | None, field: str, guild_id: int | None) -> str:
-    fallback = FIELD_FALLBACKS.get(field, field.replace("_", " ").title())
-    return localize_message(
-        translator,
-        REPORT_BASE,
-        f"fields.{field}",
-        fallback=fallback,
-        guild_id=guild_id,
-    )
-
-
-def _localize_reason(
-    translator: TranslateFn | None,
-    reason: Any,
-    guild_id: int | None,
-) -> str | None:
-    if reason is None:
-        return None
-    if isinstance(reason, str):
-        normalized = reason if reason in REASON_FALLBACKS else reason.lower().replace(" ", "_")
-        fallback = REASON_FALLBACKS.get(normalized, str(reason))
-        return localize_message(
-            translator,
-            REPORT_BASE,
-            f"reasons.{normalized}",
-            fallback=fallback,
-            guild_id=guild_id,
-        )
-    return str(reason)
-
-
-def _localize_boolean(
-    translator: TranslateFn | None,
-    value: bool,
-    guild_id: int | None,
-) -> str:
-    key = "true" if value else "false"
-    return localize_message(
-        translator,
-        SHARED_BOOLEAN,
-        key,
-        fallback=key,
-        guild_id=guild_id,
-    )
-
-
-def _localize_category(
-    translator: TranslateFn | None,
-    category: str | None,
-    guild_id: int | None,
-) -> str:
-    normalized = (category or "unspecified").strip()
-    if not normalized:
-        normalized = "unspecified"
-    normalized = normalized.replace("/", "_").replace("-", "_").lower()
-    fallback = normalized.replace("_", " ").title()
-
-    if translator is None:
-        return fallback
-
-    namespace = SHARED_CATEGORY if normalized == "unspecified" else NSFW_CATEGORY_NAMESPACE
-    return localize_message(
-        translator,
-        namespace,
-        normalized,
-        fallback=fallback,
-        guild_id=guild_id,
-    )
-
-
 async def check_attachment(
     scanner,
     author,
@@ -320,7 +96,7 @@ async def check_attachment(
     if settings_cache is None:
         settings_cache = AttachmentSettingsCache()
 
-    queue_label = _format_queue_wait_label(queue_name)
+    queue_label = format_queue_wait_label(queue_name)
     latency_tracker = LatencyTracker(
         started_at=overall_started_at,
         steps=pre_latency_steps,
@@ -350,7 +126,6 @@ async def check_attachment(
     metrics_recorded = False
     accelerated_cache: dict[str, Any] = {"fetched": False, "value": None}
     pipeline_accelerated: bool | None = None
-    text_pipeline_flagged = False
     text_pipeline = getattr(scanner, "_text_pipeline", None)
 
     async def _get_accelerated() -> bool | None:
@@ -561,23 +336,15 @@ async def check_attachment(
             settings_cache.set_text_enabled(text_enabled)
 
         if text_enabled:
-            ocr_extract_started = time.perf_counter()
-            try:
-                extracted_text = await extract_text_from_image(
-                    temp_filename,
-                    languages=ocr_languages,
-                )
-            except Exception as ocr_exc:  # pragma: no cover - best-effort logging
-                print(f"[ocr] Failed to extract text for {filename}: {ocr_exc}")
-                extracted_text = None
-            finally:
-                latency_tracker.record_step(
-                    "attachment_ocr_extract",
-                    (time.perf_counter() - ocr_extract_started) * 1000,
-                    label="OCR Extraction",
-                )
+            stage_started = time.perf_counter()
+            staged_path = await duplicate_file_for_ocr(temp_filename)
+            latency_tracker.record_step(
+                "attachment_ocr_stage",
+                (time.perf_counter() - stage_started) * 1000,
+                label="Stage OCR Payload",
+            )
 
-            if extracted_text:
+            if staged_path:
                 metadata_overrides = {
                     "ocr_scan": True,
                     "filename": filename,
@@ -587,28 +354,23 @@ async def check_attachment(
                 metadata_overrides = {
                     key: value for key, value in metadata_overrides.items() if value is not None
                 }
-                text_scan_started = time.perf_counter()
-                try:
-                    text_pipeline_flagged = await text_pipeline.scan(
-                        scanner=scanner,
-                        message=message,
-                        guild_id=guild_id,
-                        nsfw_callback=nsfw_callback if perform_actions else None,
-                        settings_cache=settings_cache,
-                        settings_map=context.settings_map,
-                        text_override=extracted_text,
-                        source_hint="Image OCR",
-                        metadata_overrides=metadata_overrides,
-                        queue_label=queue_name,
-                    )
-                finally:
-                    latency_tracker.record_step(
-                        "attachment_ocr_text_scan",
-                        (time.perf_counter() - text_scan_started) * 1000,
-                        label="OCR Text Scan",
-                    )
+                schedule_async_ocr_text_scan(
+                    scanner=scanner,
+                    temp_path=staged_path,
+                    languages=list(ocr_languages),
+                    text_pipeline=text_pipeline,
+                    guild_id=guild_id,
+                    message=message,
+                    nsfw_callback=nsfw_callback,
+                    settings_map=dict(context.settings_map or {}),
+                    metadata_overrides=metadata_overrides,
+                    queue_name=queue_name,
+                    perform_actions=perform_actions,
+                    accelerated=bool(context.accelerated),
+                    extract_text_fn=extract_text_from_image,
+                )
 
-    translator = _resolve_translator(scanner)
+    translator = resolve_translator(scanner)
 
     resolved_total_latency = latency_tracker.total_duration_ms()
 
@@ -663,309 +425,19 @@ async def check_attachment(
             decision_key = "unknown"
             if scan_result is not None:
                 decision_key = "nsfw" if scan_result.get("is_nsfw") else "safe"
-            decision_label = _localize_decision(translator, decision_key, guild_id)
-            file_type_label = localize_message(
-                translator,
-                REPORT_BASE,
-                f"file_types.{file_type}",
-                fallback=FILE_TYPE_LABELS.get(file_type, detected_mime or file_type.title()),
+            embed = build_verbose_scan_embed(
+                translator=translator,
                 guild_id=guild_id,
+                author=author,
+                message=message,
+                filename=filename,
+                file_type=file_type,
+                detected_mime=detected_mime,
+                decision_key=decision_key,
+                scan_result=scan_result,
+                telemetry=telemetry,
+                total_latency_ms=resolved_total_latency_ms,
             )
-
-            actor = author or getattr(message, "author", None)
-            actor_id = getattr(actor, "id", None)
-            actor_mention = getattr(actor, "mention", None)
-            if actor_mention is None and actor_id is not None:
-                actor_mention = f"<@{actor_id}>"
-            if actor_mention is None:
-                actor_mention = localize_message(
-                    translator,
-                    REPORT_BASE,
-                    "description.unknown_user",
-                    fallback="Unknown user",
-                    guild_id=guild_id,
-                )
-
-            embed = discord.Embed(
-                title=localize_message(
-                    translator,
-                    REPORT_BASE,
-                    "title",
-                    fallback="NSFW Scan Report",
-                    guild_id=guild_id,
-                ),
-                description="\n".join(
-                    [
-                        localize_message(
-                            translator,
-                            REPORT_BASE,
-                            "description.user",
-                            placeholders={"user": actor_mention},
-                            fallback="User: {user}",
-                            guild_id=guild_id,
-                        ),
-                        localize_message(
-                            translator,
-                            REPORT_BASE,
-                            "description.file",
-                            placeholders={"filename": filename},
-                            fallback="File: `{filename}`",
-                            guild_id=guild_id,
-                        ),
-                        localize_message(
-                            translator,
-                            REPORT_BASE,
-                            "description.type",
-                            placeholders={"file_type": file_type_label},
-                            fallback="Type: `{file_type}`",
-                            guild_id=guild_id,
-                        ),
-                        localize_message(
-                            translator,
-                            REPORT_BASE,
-                            "description.decision",
-                            placeholders={"decision": decision_label},
-                            fallback="Decision: **{decision}**",
-                            guild_id=guild_id,
-                        ),
-                    ]
-                ),
-                color=(
-                    discord.Color.orange()
-                    if decision_key == "safe"
-                    else (
-                        discord.Color.red()
-                        if decision_key == "nsfw"
-                        else discord.Color.dark_grey()
-                    )
-                ),
-            )
-
-            duration_display_ms = resolved_total_latency_ms
-            embed.add_field(
-                name=_localize_field_name(translator, "latency_ms", guild_id),
-                value=f"{duration_display_ms} ms",
-                inline=True,
-            )
-            if telemetry.breakdown_lines:
-                embed.add_field(
-                    name=_localize_field_name(
-                        translator, "latency_breakdown", guild_id
-                    ),
-                    value="\n".join(telemetry.breakdown_lines)[:1024],
-                    inline=False,
-                )
-            payload_lines: list[str] = []
-            pipeline_metrics = telemetry.pipeline_metrics if isinstance(
-                getattr(telemetry, "pipeline_metrics", None), dict
-            ) else None
-            payload_info = None
-            if pipeline_metrics:
-                moderator_metadata = pipeline_metrics.get("moderator_metadata")
-                if isinstance(moderator_metadata, dict):
-                    payload_info = moderator_metadata.get("payload_info")
-            if isinstance(payload_info, dict) and payload_info:
-                def _format_int(value: Any) -> int | None:
-                    try:
-                        return int(value)
-                    except (TypeError, ValueError):
-                        return None
-
-                def _format_int_with_commas(value: Any) -> str | None:
-                    coerced = _format_int(value)
-                    return f"{coerced:,}" if coerced is not None else None
-
-                resized_flag = payload_info.get("payload_resized")
-                if isinstance(resized_flag, bool):
-                    payload_lines.append(
-                        f"Resized: {_localize_boolean(translator, resized_flag, guild_id)}"
-                    )
-                elif resized_flag is not None:
-                    payload_lines.append(f"Resized: {resized_flag}")
-
-                original_size = payload_info.get("image_size")
-                payload_width = _format_int(payload_info.get("payload_width"))
-                payload_height = _format_int(payload_info.get("payload_height"))
-                if payload_width is not None and payload_height is not None:
-                    if isinstance(original_size, (list, tuple)) and len(original_size) == 2:
-                        orig_width = _format_int(original_size[0])
-                        orig_height = _format_int(original_size[1])
-                        if orig_width is not None and orig_height is not None:
-                            payload_lines.append(
-                                f"Dimensions: {orig_width}x{orig_height} -> {payload_width}x{payload_height}"
-                            )
-                        else:
-                            payload_lines.append(f"Dimensions: {payload_width}x{payload_height}")
-                    else:
-                        payload_lines.append(f"Dimensions: {payload_width}x{payload_height}")
-                elif isinstance(original_size, (list, tuple)) and len(original_size) == 2:
-                    orig_width = _format_int(original_size[0])
-                    orig_height = _format_int(original_size[1])
-                    if orig_width is not None and orig_height is not None:
-                        payload_lines.append(f"Dimensions: {orig_width}x{orig_height}")
-
-                source_bytes_fmt = _format_int_with_commas(payload_info.get("source_bytes"))
-                payload_bytes_fmt = _format_int_with_commas(payload_info.get("payload_bytes"))
-                if payload_bytes_fmt and source_bytes_fmt and source_bytes_fmt != payload_bytes_fmt:
-                    payload_lines.append(f"Bytes: {source_bytes_fmt} -> {payload_bytes_fmt}")
-                elif payload_bytes_fmt:
-                    payload_lines.append(f"Bytes: {payload_bytes_fmt}")
-                elif source_bytes_fmt:
-                    payload_lines.append(f"Bytes: {source_bytes_fmt}")
-
-                if "payload_edge_limit" in payload_info:
-                    edge_limit_value = payload_info.get("payload_edge_limit")
-                    edge_limit_int = _format_int(edge_limit_value)
-                    if edge_limit_int is not None:
-                        payload_lines.append(f"Edge Limit: {edge_limit_int:,} px")
-                    else:
-                        payload_lines.append("Edge Limit: disabled")
-
-                target_bytes_fmt = _format_int_with_commas(payload_info.get("payload_target_bytes"))
-                if target_bytes_fmt:
-                    payload_lines.append(f"Target Bytes: {target_bytes_fmt}")
-
-                strategy = payload_info.get("payload_strategy")
-                if strategy:
-                    payload_lines.append(f"Strategy: {strategy}")
-
-                quality = payload_info.get("payload_quality")
-                if quality is not None:
-                    payload_lines.append(f"Quality: {quality}")
-
-            if payload_lines:
-                embed.add_field(
-                    name=_localize_field_name(translator, "payload_details", guild_id),
-                    value="\n".join(payload_lines)[:1024],
-                    inline=False,
-                )
-            if scan_result:
-                reason_value = _localize_reason(
-                    translator, scan_result.get("reason"), guild_id
-                )
-                if reason_value:
-                    embed.add_field(
-                        name=_localize_field_name(translator, "reason", guild_id),
-                        value=str(reason_value)[:1024],
-                        inline=False,
-                    )
-                if scan_result.get("category"):
-                    embed.add_field(
-                        name=_localize_field_name(translator, "category", guild_id),
-                        value=_localize_category(
-                            translator,
-                            str(scan_result.get("category")),
-                            guild_id,
-                        ),
-                        inline=True,
-                    )
-                if scan_result.get("score") is not None:
-                    embed.add_field(
-                        name=_localize_field_name(translator, "score", guild_id),
-                        value=f"{float(scan_result.get('score') or 0):.3f}",
-                        inline=True,
-                    )
-                if scan_result.get("flagged_any") is not None:
-                    embed.add_field(
-                        name=_localize_field_name(
-                            translator, "flagged_any", guild_id
-                        ),
-                        value=_localize_boolean(
-                            translator,
-                            bool(scan_result.get("flagged_any")),
-                            guild_id,
-                        ),
-                        inline=True,
-                    )
-                if scan_result.get("summary_categories") is not None:
-                    embed.add_field(
-                        name=_localize_field_name(
-                            translator, "summary_categories", guild_id
-                        ),
-                        value=str(scan_result.get("summary_categories")),
-                        inline=False,
-                    )
-                if scan_result.get("max_similarity") is not None:
-                    embed.add_field(
-                        name=_localize_field_name(
-                            translator, "max_similarity", guild_id
-                        ),
-                        value=f"{float(scan_result.get('max_similarity') or 0):.3f}",
-                        inline=True,
-                    )
-                if scan_result.get("max_category") is not None:
-                    embed.add_field(
-                        name=_localize_field_name(
-                            translator, "max_category", guild_id
-                        ),
-                        value=str(scan_result.get("max_category")),
-                        inline=True,
-                    )
-                if scan_result.get("similarity") is not None:
-                    embed.add_field(
-                        name=_localize_field_name(
-                            translator, "similarity", guild_id
-                        ),
-                        value=f"{float(scan_result.get('similarity') or 0):.3f}",
-                        inline=True,
-                    )
-                if scan_result.get("high_accuracy") is not None:
-                    embed.add_field(
-                        name=_localize_field_name(
-                            translator, "high_accuracy", guild_id
-                        ),
-                        value=_localize_boolean(
-                            translator,
-                            bool(scan_result.get("high_accuracy")),
-                            guild_id,
-                        ),
-                        inline=True,
-                    )
-                if scan_result.get("clip_threshold") is not None:
-                    embed.add_field(
-                        name=_localize_field_name(
-                            translator, "clip_threshold", guild_id
-                        ),
-                        value=f"{float(scan_result.get('clip_threshold') or 0):.3f}",
-                        inline=True,
-                    )
-                if scan_result.get("threshold") is not None:
-                    try:
-                        embed.add_field(
-                            name=_localize_field_name(
-                                translator, "moderation_threshold", guild_id
-                            ),
-                            value=f"{float(scan_result.get('threshold') or 0):.3f}",
-                            inline=True,
-                        )
-                    except Exception:
-                        pass
-                frame_metrics = telemetry.frame_metrics
-                if frame_metrics.scanned is not None:
-                    progress_value = format_video_scan_progress(frame_metrics)
-                    embed.add_field(
-                        name=_localize_field_name(
-                            translator, "video_frames", guild_id
-                        ),
-                        value=str(progress_value)[:1024] if progress_value else "?",
-                        inline=True,
-                    )
-                    if telemetry.average_latency_per_frame_ms is not None:
-                        embed.add_field(
-                            name=_localize_field_name(
-                                translator, "average_latency_per_frame_ms", guild_id
-                            ),
-                            value=f"{telemetry.average_latency_per_frame_ms:.2f} ms/frame",
-                            inline=True,
-                        )
-
-            avatar_url = None
-            if actor is not None:
-                avatar = getattr(actor, "display_avatar", None)
-                if avatar:
-                    avatar_url = avatar.url
-            if avatar_url:
-                embed.set_thumbnail(url=avatar_url)
             await mod_logging.log_to_channel(
                 embed=embed,
                 channel_id=message.channel.id,
@@ -979,9 +451,6 @@ async def check_attachment(
         "scan_complete",
         duration_override_ms=resolved_total_latency_ms,
     )
-
-    if text_pipeline_flagged:
-        return True
 
     if not perform_actions:
         return False
@@ -1004,7 +473,7 @@ async def check_attachment(
         if file is None:
             file = discord.File(temp_filename, filename=filename)
         try:
-            category_label = _localize_category(
+            category_label = localize_category(
                 translator,
                 category_name,
                 guild_id,

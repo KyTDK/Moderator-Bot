@@ -6,7 +6,8 @@
           "title": "NSFW Content Detected",
           "description": "**User:** {user_mention} ({user_display})\n**Reason:** {reason}",
           "footer": "User ID: {user_id}",
-          "message_content": "Detected Content"
+          "message_content": "Detected Content",
+          "ocr_content": "OCR Extracted Text"
         }
       },
       "helpers": {

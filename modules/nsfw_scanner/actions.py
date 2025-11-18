@@ -15,6 +15,19 @@ from .utils.file_ops import safe_delete
 
 BASE_KEY = "modules.nsfw_scanner.actions"
 CONFIDENCE_BASE = "modules.nsfw_scanner.shared.confidence"
+_SNIPPET_LIMIT = 512
+
+
+def _build_snippet(value: str | None) -> str | None:
+    if not value:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    if len(text) > _SNIPPET_LIMIT:
+        text = text[:_SNIPPET_LIMIT].rstrip() + "..."
+    text = escape_markdown(text)
+    return text.replace("```", "`\u200b``")
 
 
 def _resolve_translator(bot: commands.Bot) -> TranslateFn | None:
@@ -32,6 +45,7 @@ async def handle_nsfw_content(
     confidence_source: str | None = None,
     action_setting: str = NSFW_ACTION_SETTING,
     send_embed: bool = True,
+    detected_text: str | None = None,
 ):
     action_flag = await mysql.get_settings(guild_id, action_setting)
     if action_flag:
@@ -116,12 +130,8 @@ async def handle_nsfw_content(
             )
         embed.set_thumbnail(url=user.display_avatar.url)
 
-        message_content = getattr(message, "content", "") or ""
-        if message_content.strip():
-            snippet = message_content.strip()
-            if len(snippet) > 512:
-                snippet = snippet[:512].rstrip() + "..."
-            snippet = escape_markdown(snippet)
+        message_snippet = _build_snippet(getattr(message, "content", ""))
+        if message_snippet:
             embed.add_field(
                 name=localize_message(
                     translator,
@@ -130,7 +140,21 @@ async def handle_nsfw_content(
                     fallback="Detected Content",
                     guild_id=guild_id,
                 ),
-                value=f"```{snippet}```",
+                value=f"```{message_snippet}```",
+                inline=False,
+            )
+
+        ocr_snippet = _build_snippet(detected_text)
+        if ocr_snippet:
+            embed.add_field(
+                name=localize_message(
+                    translator,
+                    BASE_KEY,
+                    "embed.ocr_content",
+                    fallback="OCR Extracted Text",
+                    guild_id=guild_id,
+                ),
+                value=f"```{ocr_snippet}```",
                 inline=False,
             )
 
