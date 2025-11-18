@@ -362,6 +362,7 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_EXCLUDED_CHANNELS_SETTING,
     NSFW_TEXT_STRIKES_ONLY_SETTING,
     NSFW_TEXT_THRESHOLD_SETTING,
+    NSFW_TEXT_SOURCES_SETTING,
     NSFW_THRESHOLD_SETTING,
 )
 
@@ -374,6 +375,7 @@ async def _exercise_text_scan(
     scan_media: bool = True,
     scan_text: bool = True,
     excluded_channels: list[int] | None = None,
+    text_sources: list[str] | None = None,
 ):
     """Run the text scanning pipeline with controllable acceleration flag."""
     author = SimpleNamespace(
@@ -407,6 +409,7 @@ async def _exercise_text_scan(
         NSFW_TEXT_ENABLED_SETTING: True,
         NSFW_TEXT_STRIKES_ONLY_SETTING: False,
         NSFW_TEXT_EXCLUDED_CHANNELS_SETTING: list(excluded_channels or []),
+        NSFW_TEXT_SOURCES_SETTING: list(text_sources or ["messages", "ocr"]),
     }
 
     def fake_get_scan_settings(self):
@@ -432,6 +435,8 @@ async def _exercise_text_scan(
             return settings_payload[NSFW_TEXT_ENABLED_SETTING]
         if keys == NSFW_TEXT_EXCLUDED_CHANNELS_SETTING:
             return settings_payload[NSFW_TEXT_EXCLUDED_CHANNELS_SETTING]
+        if keys == NSFW_TEXT_SOURCES_SETTING:
+            return settings_payload[NSFW_TEXT_SOURCES_SETTING]
         return None
 
     text_calls = []
@@ -562,6 +567,19 @@ def test_text_scan_runs_when_media_scanning_disabled(monkeypatch):
     assert text_calls, "process_text should still run when media scanning is disabled"
 
 
+def test_text_scan_respects_source_setting(monkeypatch):
+    flagged, text_calls, callback_calls, *_ = asyncio.run(
+        _exercise_text_scan(
+            monkeypatch,
+            accelerated_value=True,
+            text_sources=["ocr"],
+        )
+    )
+    assert flagged is False
+    assert text_calls == []
+    assert callback_calls == []
+
+
 async def _exercise_text_override_scan(monkeypatch, text_override: str = "ocr text"):
     from modules.nsfw_scanner.helpers.attachments import AttachmentSettingsCache
     import modules.nsfw_scanner.settings_keys as settings_keys
@@ -638,6 +656,7 @@ async def _exercise_attachment_ocr(
     *,
     ocr_enabled: bool = True,
     accelerated_context: bool = True,
+    text_sources: list[str] | None = None,
 ):
     import modules.nsfw_scanner.settings_keys as settings_keys
 
@@ -646,6 +665,7 @@ async def _exercise_attachment_ocr(
         "nsfw-verbose": False,
         settings_keys.NSFW_OCR_ENABLED_SETTING: ocr_enabled,
         settings_keys.NSFW_OCR_LANGUAGES_SETTING: ["en"],
+        settings_keys.NSFW_TEXT_SOURCES_SETTING: list(text_sources or ["messages", "ocr"]),
     }
 
     async def fake_get_settings(guild_id, *_args, **_kwargs):
@@ -793,6 +813,15 @@ def test_attachment_ocr_respects_setting_toggle(monkeypatch, tmp_path):
 def test_attachment_ocr_requires_accelerated_plan(monkeypatch, tmp_path):
     result, pipeline_calls, callback_calls = asyncio.run(
         _exercise_attachment_ocr(monkeypatch, tmp_path, accelerated_context=False)
+    )
+    assert result is False
+    assert pipeline_calls == []
+    assert callback_calls == []
+
+
+def test_attachment_ocr_respects_text_source_setting(monkeypatch, tmp_path):
+    result, pipeline_calls, callback_calls = asyncio.run(
+        _exercise_attachment_ocr(monkeypatch, tmp_path, text_sources=["messages"])
     )
     assert result is False
     assert pipeline_calls == []

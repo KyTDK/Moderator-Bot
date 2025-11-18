@@ -48,6 +48,9 @@
         "nsfw-ocr-languages": {
           "description": "Preferred OCR language codes, listed in priority order (e.g., en, es, fr)."
         },
+        "nsfw-text-sources": {
+          "description": "Select which sources run through NSFW text scanning (messages and/or OCR)."
+        },
         "nsfw-detection-categories": {
           "description": "Categories considered NSFW for detection."
         },

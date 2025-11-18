@@ -54,12 +54,17 @@ from ..constants import (
     NSFW_SCANNER_DEFAULT_HEADERS,
     TMP_DIR,
 )
+from ..settings_keys import NSFW_TEXT_SOURCES_SETTING
 from ..helpers import (
     AttachmentSettingsCache,
     check_attachment as helper_check_attachment,
     temp_download as helper_temp_download,
 )
 from ..helpers.metrics import build_download_latency_breakdown
+from ..helpers.text_sources import (
+    TEXT_SOURCE_MESSAGES,
+    normalize_text_sources,
+)
 from ..tenor_cache import TenorToggleCache
 from ..text_pipeline import TextScanPipeline
 from ..utils.file_ops import safe_delete
@@ -342,6 +347,8 @@ class NSFWScanner:
         media_scanner = MediaScanner(self, media_context)
 
         settings_map = await resolve_settings_map(guild_id, settings_cache)
+        text_sources = normalize_text_sources(settings_map.get(NSFW_TEXT_SOURCES_SETTING))
+        message_text_allowed = TEXT_SOURCE_MESSAGES in text_sources
 
         if url:
             outcome.media_flagged = await media_scanner.scan_remote_media(
@@ -358,7 +365,7 @@ class NSFWScanner:
 
         text_content = (message.content or "").strip()
 
-        if scan_text and text_content:
+        if scan_text and text_content and message_text_allowed:
             outcome.text_flagged = await self._text_pipeline.scan(
                 scanner=self,
                 message=message,

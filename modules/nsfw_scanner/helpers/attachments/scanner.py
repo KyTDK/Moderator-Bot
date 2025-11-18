@@ -20,10 +20,15 @@ from modules.nsfw_scanner.helpers.metrics import (
 )
 from modules.nsfw_scanner.helpers.videos import process_video
 from modules.nsfw_scanner.logging_utils import log_slow_scan_if_needed
+from modules.nsfw_scanner.helpers.text_sources import (
+    TEXT_SOURCE_OCR,
+    normalize_text_sources,
+)
 from modules.nsfw_scanner.settings_keys import (
     NSFW_OCR_ENABLED_SETTING,
     NSFW_OCR_LANGUAGES_SETTING,
     NSFW_TEXT_ENABLED_SETTING,
+    NSFW_TEXT_SOURCES_SETTING,
 )
 from modules.nsfw_scanner.utils.file_types import (
     FILE_TYPE_IMAGE,
@@ -553,6 +558,9 @@ async def check_attachment(
     if not context.accelerated:
         ocr_enabled = False
     ocr_languages = _resolve_ocr_languages(settings_map.get(NSFW_OCR_LANGUAGES_SETTING))
+    text_sources = normalize_text_sources(settings_map.get(NSFW_TEXT_SOURCES_SETTING))
+    if TEXT_SOURCE_OCR not in text_sources:
+        ocr_enabled = False
 
     if (
         file_type == FILE_TYPE_IMAGE

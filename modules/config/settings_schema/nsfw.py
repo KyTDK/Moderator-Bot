@@ -105,6 +105,15 @@ def build_nsfw_settings() -> dict[str, Setting]:
             required_plans=PLAN_CORE,
             description_key="modules.config.settings_schema.nsfw-ocr-languages.description",
         ),
+        "nsfw-text-sources": Setting(
+            name="nsfw-text-sources",
+            description="Choose which sources (message text, OCR text) should run through NSFW text detection.",
+            setting_type=list[str],
+            default=["messages", "ocr"],
+            choices=["messages", "ocr"],
+            required_plans=PLAN_CORE,
+            description_key="modules.config.settings_schema.nsfw-text-sources.description",
+        ),
         "nsfw-detection-categories": Setting(
             name="nsfw-detection-categories",
             description="Categories considered NSFW for detection.",
