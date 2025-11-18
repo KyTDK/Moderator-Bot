@@ -8,16 +8,25 @@ from modules.metrics import log_media_scan
 from modules.utils import mod_logging, mysql
 from modules.utils.localization import TranslateFn, localize_message
 
-from ..utils.file_types import (
+from modules.nsfw_scanner.helpers.images import (
+    build_image_processing_context,
+    process_image,
+)
+from modules.nsfw_scanner.helpers.ocr import extract_text_from_image
+from modules.nsfw_scanner.helpers.metrics import (
+    LatencyTracker,
+    collect_scan_telemetry,
+    format_video_scan_progress,
+)
+from modules.nsfw_scanner.helpers.videos import process_video
+from modules.nsfw_scanner.logging_utils import log_slow_scan_if_needed
+from modules.nsfw_scanner.settings_keys import NSFW_TEXT_ENABLED_SETTING
+from modules.nsfw_scanner.utils.file_types import (
     FILE_TYPE_IMAGE,
     FILE_TYPE_LABELS,
     FILE_TYPE_VIDEO,
     determine_file_type,
 )
-from ..logging_utils import log_slow_scan_if_needed
-from .images import build_image_processing_context, process_image
-from .metrics import LatencyTracker, collect_scan_telemetry, format_video_scan_progress
-from .videos import process_video
 
 REPORT_BASE = "modules.nsfw_scanner.helpers.attachments.report"
 SHARED_BOOLEAN = "modules.nsfw_scanner.shared.boolean"
@@ -309,6 +318,8 @@ async def check_attachment(
     metrics_recorded = False
     accelerated_cache: dict[str, Any] = {"fetched": False, "value": None}
     pipeline_accelerated: bool | None = None
+    text_pipeline_flagged = False
+    text_pipeline = getattr(scanner, "_text_pipeline", None)
 
     async def _get_accelerated() -> bool | None:
         nonlocal pipeline_accelerated
@@ -497,6 +508,66 @@ async def check_attachment(
             duration_override_ms=latency_tracker.total_duration_ms(),
         )
         return False
+
+    if (
+        file_type == FILE_TYPE_IMAGE
+        and not (scan_result and scan_result.get("is_nsfw"))
+        and text_pipeline is not None
+        and message is not None
+        and guild_id is not None
+    ):
+        if settings_cache.has_text_enabled():
+            text_enabled = bool(settings_cache.get_text_enabled())
+        else:
+            text_enabled = bool(
+                (context.settings_map or {}).get(NSFW_TEXT_ENABLED_SETTING)
+            )
+            settings_cache.set_text_enabled(text_enabled)
+
+        if text_enabled:
+            ocr_extract_started = time.perf_counter()
+            try:
+                extracted_text = await extract_text_from_image(temp_filename)
+            except Exception as ocr_exc:  # pragma: no cover - best-effort logging
+                print(f"[ocr] Failed to extract text for {filename}: {ocr_exc}")
+                extracted_text = None
+            finally:
+                latency_tracker.record_step(
+                    "attachment_ocr_extract",
+                    (time.perf_counter() - ocr_extract_started) * 1000,
+                    label="OCR Extraction",
+                )
+
+            if extracted_text:
+                metadata_overrides = {
+                    "ocr_scan": True,
+                    "filename": filename,
+                    "detected_mime": detected_mime,
+                    "source_url": source_url,
+                }
+                metadata_overrides = {
+                    key: value for key, value in metadata_overrides.items() if value is not None
+                }
+                text_scan_started = time.perf_counter()
+                try:
+                    text_pipeline_flagged = await text_pipeline.scan(
+                        scanner=scanner,
+                        message=message,
+                        guild_id=guild_id,
+                        nsfw_callback=nsfw_callback if perform_actions else None,
+                        settings_cache=settings_cache,
+                        settings_map=context.settings_map,
+                        text_override=extracted_text,
+                        source_hint="Image OCR",
+                        metadata_overrides=metadata_overrides,
+                        queue_label=queue_name,
+                    )
+                finally:
+                    latency_tracker.record_step(
+                        "attachment_ocr_text_scan",
+                        (time.perf_counter() - text_scan_started) * 1000,
+                        label="OCR Text Scan",
+                    )
 
     translator = _resolve_translator(scanner)
 
@@ -869,6 +940,9 @@ async def check_attachment(
         "scan_complete",
         duration_override_ms=resolved_total_latency_ms,
     )
+
+    if text_pipeline_flagged:
+        return True
 
     if not perform_actions:
         return False

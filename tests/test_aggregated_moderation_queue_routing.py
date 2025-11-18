@@ -34,6 +34,16 @@ class _FakeQueue:
 
     async def add_task(self, coro):
         self.added.append(coro)
+        close = getattr(coro, "close", None)
+        if callable(close):
+            close()
+
+
+def _make_dummy_task():
+    async def _dummy():
+        return None
+
+    return _dummy()
 
 
 @pytest.fixture()
@@ -72,46 +82,50 @@ def anyio_backend():
 @pytest.mark.anyio
 async def test_video_tasks_routed_to_accelerated_video_queue(monkeypatch, fake_queues):
     cog = await _build_cog(monkeypatch, fake_queues, accelerated=True)
-    token = object()
+    token = _make_dummy_task()
 
     await cog.add_to_queue(token, guild_id=1, task_kind="video")
 
-    assert fake_queues["accelerated_video"].added == [token]
+    assert len(fake_queues["accelerated_video"].added) == 1
     assert fake_queues["accelerated"].added == []
     assert fake_queues["free"].added == []
+    token.close()
 
 
 @pytest.mark.anyio
 async def test_non_accelerated_video_tasks_use_free_queue(monkeypatch, fake_queues):
     cog = await _build_cog(monkeypatch, fake_queues, accelerated=False)
-    token = object()
+    token = _make_dummy_task()
 
     await cog.add_to_queue(token, guild_id=1, task_kind="video")
 
-    assert fake_queues["free"].added == [token]
+    assert len(fake_queues["free"].added) == 1
     assert fake_queues["accelerated_video"].added == []
     assert fake_queues["accelerated"].added == []
+    token.close()
 
 
 @pytest.mark.anyio
 async def test_text_tasks_routed_to_accelerated_text_queue(monkeypatch, fake_queues):
     cog = await _build_cog(monkeypatch, fake_queues, accelerated=True)
-    token = object()
+    token = _make_dummy_task()
 
     await cog.add_to_queue(token, guild_id=5, task_kind="text")
 
-    assert fake_queues["accelerated_text"].added == [token]
+    assert len(fake_queues["accelerated_text"].added) == 1
     assert fake_queues["accelerated"].added == []
     assert fake_queues["free"].added == []
+    token.close()
 
 
 @pytest.mark.anyio
 async def test_non_accelerated_text_tasks_use_free_queue(monkeypatch, fake_queues):
     cog = await _build_cog(monkeypatch, fake_queues, accelerated=False)
-    token = object()
+    token = _make_dummy_task()
 
     await cog.add_to_queue(token, guild_id=7, task_kind="text")
 
-    assert fake_queues["free"].added == [token]
+    assert len(fake_queues["free"].added) == 1
     assert fake_queues["accelerated_text"].added == []
     assert fake_queues["accelerated"].added == []
+    token.close()

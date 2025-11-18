@@ -14,7 +14,7 @@ from modules.nsfw_scanner.settings_keys import (
 )
 from modules.utils import mod_logging, mysql
 from modules.utils.discord_utils import safe_get_channel, safe_get_member, safe_get_message
-from .queue_context import get_current_queue
+from cogs.aggregated_moderation.queue_context import get_current_queue
 
 
 class ModerationHandlers:
