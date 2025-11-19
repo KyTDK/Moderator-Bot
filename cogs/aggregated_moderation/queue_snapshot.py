@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
-from typing import Any, Mapping, Optional
+from typing import Any, Iterable, Mapping, Optional
 
 
 def _int(value: Any, default: int = 0) -> int:
@@ -110,15 +110,33 @@ class QueueSnapshot:
 
     @property
     def wait_pressure(self) -> bool:
-        if self.avg_runtime > 0.0:
-            if self.avg_wait >= max(5.0, self.avg_runtime * 2.0):
-                return True
-            if self.last_wait >= max(10.0, self.avg_runtime * 2.5):
-                return True
-            if self.longest_wait >= max(15.0, self.avg_runtime * 3.0):
-                return True
-            return False
-        return max(self.avg_wait, self.last_wait, self.longest_wait) >= 10.0
+        runtime = self.runtime_signal()
+        if runtime > 0.0:
+            checks = (
+                (self.avg_wait, max(5.0, runtime * 2.0)),
+                (self.last_wait, max(10.0, runtime * 2.5)),
+                (self.longest_wait, max(15.0, runtime * 3.0)),
+            )
+            return any(value is not None and value >= threshold for value, threshold in checks)
+        return self.wait_signal() >= 10.0
+
+    def runtime_signal(self) -> float:
+        """Representative runtime derived from available metrics."""
+        return self._first_positive(
+            (self.avg_runtime, self.ema_runtime, self.last_runtime, self.longest_runtime)
+        )
+
+    def wait_signal(self) -> float:
+        """Peak wait seen on this queue."""
+        return self._max_positive((self.avg_wait, self.ema_wait, self.last_wait, self.longest_wait))
+
+    def backlog_recovered(self) -> bool:
+        """True when backlog has fallen back to acceptable bounds."""
+        if self.backlog <= 0:
+            return True
+        if self.backlog_low is not None and self.backlog <= self.backlog_low:
+            return True
+        return self.backlog <= self.baseline_workers
 
     def format_lines(self) -> str:
         high = self.backlog_high if self.backlog_high is not None else "-"
@@ -178,6 +196,29 @@ class QueueSnapshot:
             return float(value)
         except (TypeError, ValueError):
             return None
+
+    @staticmethod
+    def _first_positive(values: Iterable[Any]) -> float:
+        for value in values:
+            try:
+                numeric = float(value)
+            except (TypeError, ValueError):
+                continue
+            if numeric > 0:
+                return numeric
+        return 0.0
+
+    @staticmethod
+    def _max_positive(values: Iterable[Any]) -> float:
+        best = 0.0
+        for value in values:
+            try:
+                numeric = float(value)
+            except (TypeError, ValueError):
+                continue
+            if numeric > best:
+                best = numeric
+        return best
 
     @staticmethod
     def _format_source(details: Mapping[str, Any]) -> Optional[str]:
@@ -288,5 +329,125 @@ class QueueSnapshot:
 
         return "\n".join(lines)
 
+def _weighted_average(pairs: Iterable[tuple[Optional[float], int]]) -> float:
+    total_weight = 0
+    total_value = 0.0
+    fallback: list[float] = []
+    for value, weight in pairs:
+        if value is None:
+            continue
+        value = float(value)
+        fallback.append(value)
+        if weight and weight > 0:
+            total_value += value * weight
+            total_weight += weight
+    if total_weight > 0:
+        return total_value / total_weight
+    if fallback:
+        return sum(fallback) / len(fallback)
+    return 0.0
 
-__all__ = ["QueueSnapshot"]
+
+def _detail_timestamp(detail: Mapping[str, Any]) -> float:
+    for key in ("completed_at_wall", "completed_at_monotonic", "started_at_wall", "started_at_monotonic"):
+        value = detail.get(key)
+        if value is None:
+            continue
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            continue
+    return 0.0
+
+
+def _select_latest_detail(snapshots: Iterable[QueueSnapshot], attr: str) -> Mapping[str, Any]:
+    best_detail: Mapping[str, Any] = {}
+    best_ts = float("-inf")
+    for snapshot in snapshots:
+        detail = getattr(snapshot, attr)
+        if not detail:
+            continue
+        ts = _detail_timestamp(detail)
+        if ts > best_ts:
+            best_ts = ts
+            best_detail = detail
+    return best_detail
+
+
+def _select_longest_detail(snapshots: Iterable[QueueSnapshot]) -> Mapping[str, Any]:
+    best_detail: Mapping[str, Any] = {}
+    best_runtime = float("-inf")
+    for snapshot in snapshots:
+        detail = snapshot.longest_runtime_details
+        runtime = snapshot.longest_runtime
+        if detail and runtime > best_runtime:
+            best_runtime = runtime
+            best_detail = detail
+    return best_detail
+
+
+def merge_queue_snapshots(name: str, snapshots: Iterable[QueueSnapshot]) -> QueueSnapshot:
+    """Combine multiple queue snapshots into a single aggregated view."""
+    snapshot_list = [snapshot for snapshot in snapshots if snapshot is not None]
+    if not snapshot_list:
+        raise ValueError("merge_queue_snapshots requires at least one snapshot")
+    if len(snapshot_list) == 1:
+        snapshot = snapshot_list[0]
+        return snapshot if snapshot.name == name else replace(snapshot, name=name)
+
+    def sum_attr(attr: str) -> int:
+        return sum(getattr(snapshot, attr) for snapshot in snapshot_list)
+
+    def sum_optional(attr: str) -> Optional[int]:
+        values = [getattr(snapshot, attr) for snapshot in snapshot_list if getattr(snapshot, attr) is not None]
+        return sum(values) if values else None
+
+    tasks_completed = sum_attr("tasks_completed")
+    avg_runtime = _weighted_average((snapshot.avg_runtime, snapshot.tasks_completed) for snapshot in snapshot_list)
+    avg_wait = _weighted_average((snapshot.avg_wait, snapshot.tasks_completed) for snapshot in snapshot_list)
+    ema_runtime = _weighted_average((snapshot.ema_runtime, snapshot.tasks_completed) for snapshot in snapshot_list)
+    ema_wait = _weighted_average((snapshot.ema_wait, snapshot.tasks_completed) for snapshot in snapshot_list)
+
+    last_detail = _select_latest_detail(snapshot_list, "last_runtime_details")
+    longest_detail = _select_longest_detail(snapshot_list)
+
+    longest_runtime = max((snapshot.longest_runtime for snapshot in snapshot_list), default=0.0)
+    longest_wait = max((snapshot.longest_wait for snapshot in snapshot_list), default=0.0)
+    last_runtime = float(last_detail.get("runtime", 0.0)) if last_detail else max(
+        (snapshot.last_runtime for snapshot in snapshot_list), default=0.0
+    )
+    last_wait = float(last_detail.get("wait", 0.0)) if last_detail else max(
+        (snapshot.last_wait for snapshot in snapshot_list), default=0.0
+    )
+
+    return QueueSnapshot(
+        name=name,
+        backlog=sum_attr("backlog"),
+        active_workers=sum_attr("active_workers"),
+        busy_workers=sum_attr("busy_workers"),
+        max_workers=sum_attr("max_workers"),
+        baseline_workers=sum_attr("baseline_workers"),
+        autoscale_max=sum_attr("autoscale_max"),
+        pending_stops=sum_attr("pending_stops"),
+        backlog_high=sum_optional("backlog_high"),
+        backlog_low=sum_optional("backlog_low"),
+        backlog_hard_limit=sum_optional("backlog_hard_limit"),
+        backlog_shed_to=sum_optional("backlog_shed_to"),
+        dropped_total=sum_attr("dropped_total"),
+        tasks_completed=tasks_completed,
+        avg_runtime=avg_runtime,
+        avg_wait=avg_wait,
+        ema_runtime=ema_runtime,
+        ema_wait=ema_wait,
+        last_runtime=last_runtime,
+        last_wait=last_wait,
+        longest_runtime=longest_runtime,
+        longest_wait=longest_wait,
+        last_runtime_details=dict(last_detail),
+        longest_runtime_details=dict(longest_detail),
+        check_interval=max(snapshot.check_interval for snapshot in snapshot_list),
+        scale_down_grace=max(snapshot.scale_down_grace for snapshot in snapshot_list),
+    )
+
+
+__all__ = ["QueueSnapshot", "merge_queue_snapshots"]

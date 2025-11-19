@@ -152,7 +152,7 @@ class FreeQueueMonitor:
                     if self._is_lagging(free_snapshot, accel_snapshot):
                         self._lag_hits += 1
                     else:
-                        if self._backlog_active and self._has_backlog_recovered(free_snapshot):
+                        if self._backlog_active and free_snapshot.backlog_recovered():
                             await self._emit_backlog_cleared(free_snapshot, accel_snapshot)
                         self._lag_hits = 0
 
@@ -174,20 +174,13 @@ class FreeQueueMonitor:
         except asyncio.CancelledError:
             raise
 
-    def _has_backlog_recovered(self, snapshot: QueueSnapshot) -> bool:
-        if snapshot.backlog <= 0:
-            return True
-        if snapshot.backlog_low is not None and snapshot.backlog <= snapshot.backlog_low:
-            return True
-        return snapshot.backlog <= snapshot.baseline_workers
-
     @staticmethod
     def _is_video_lagging(snapshot: QueueSnapshot) -> bool:
         if snapshot.backlog <= 0:
             return False
         backlog_pressure = snapshot.backlog_high is not None and snapshot.backlog >= snapshot.backlog_high
-        wait_signal = max(snapshot.avg_wait, snapshot.ema_wait, snapshot.last_wait, snapshot.longest_wait)
-        wait_pressure = wait_signal is not None and wait_signal >= 15.0
+        wait_signal = snapshot.wait_signal()
+        wait_pressure = wait_signal >= 15.0
         worker_saturated = snapshot.busy_workers >= snapshot.max_workers and snapshot.backlog > 0
         burst_pressure = snapshot.backlog >= max(snapshot.max_workers * 3, snapshot.autoscale_max or snapshot.max_workers)
         return backlog_pressure or (worker_saturated and wait_pressure) or burst_pressure
@@ -196,7 +189,7 @@ class FreeQueueMonitor:
         if self._is_video_lagging(snapshot):
             self._video_lag_hits += 1
         else:
-            if self._video_backlog_active and self._has_backlog_recovered(snapshot):
+            if self._video_backlog_active and snapshot.backlog_recovered():
                 await self._emit_video_backlog_cleared(snapshot)
             self._video_lag_hits = 0
 

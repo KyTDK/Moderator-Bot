@@ -11,7 +11,7 @@ from modules.utils.log_channel import send_developer_log_embed
 from .config import AggregatedModerationConfig
 from .media_rates import MediaProcessingRate, MediaRateCalculator
 from .performance_alerts import build_performance_alert_embed
-from .queue_snapshot import QueueSnapshot
+from .queue_snapshot import QueueSnapshot, merge_queue_snapshots
 
 
 @dataclass(slots=True)
@@ -34,12 +34,19 @@ class AcceleratedPerformanceMonitor:
         bot,
         free_queue,
         accelerated_queue,
+        accelerated_text_queue=None,
+        video_queue=None,
         config: AggregatedModerationConfig,
     ) -> None:
         self._bot = bot
         self._free_queue = free_queue
         self._accelerated_queue = accelerated_queue
+        self._accelerated_text_queue = accelerated_text_queue
+        self._video_queue = video_queue
         self._config = config.performance_monitor
+        self._aux_accelerated_queues = tuple(
+            queue for queue in (accelerated_text_queue, video_queue) if queue is not None
+        )
 
         self._rate_calculator = MediaRateCalculator()
         self._task: Optional[asyncio.Task] = None
@@ -76,7 +83,7 @@ class AcceleratedPerformanceMonitor:
                         continue
 
                     free_snapshot = QueueSnapshot.from_mapping(self._free_queue.metrics())
-                    accel_snapshot = QueueSnapshot.from_mapping(self._accelerated_queue.metrics())
+                    accel_snapshot = self._build_accelerated_snapshot()
 
                     comparison = self._evaluate_comparison(free_snapshot, accel_snapshot)
                     if comparison is None:
@@ -102,6 +109,15 @@ class AcceleratedPerformanceMonitor:
         except asyncio.CancelledError:
             raise
 
+    def _build_accelerated_snapshot(self) -> QueueSnapshot:
+        """Return a consolidated snapshot of the accelerated processing lanes."""
+        snapshots = [QueueSnapshot.from_mapping(self._accelerated_queue.metrics())]
+        for queue in self._aux_accelerated_queues:
+            snapshots.append(QueueSnapshot.from_mapping(queue.metrics()))
+        if not self._aux_accelerated_queues:
+            return snapshots[0]
+        return merge_queue_snapshots("accelerated_all", snapshots)
+
     def _evaluate_comparison(
         self,
         free: QueueSnapshot,
@@ -111,13 +127,13 @@ class AcceleratedPerformanceMonitor:
         if min(free.tasks_completed, accel.tasks_completed) < cfg.min_completed_tasks:
             return None
 
-        free_runtime = self._resolve_runtime(free)
-        accel_runtime = self._resolve_runtime(accel)
+        free_runtime = free.runtime_signal()
+        accel_runtime = accel.runtime_signal()
         if free_runtime < cfg.min_runtime_seconds or accel_runtime < cfg.min_runtime_seconds:
             return None
 
-        free_wait = self._resolve_wait(free)
-        accel_wait = self._resolve_wait(accel)
+        free_wait = free.wait_signal()
+        accel_wait = accel.wait_signal()
 
         runtime_ratio = accel_runtime / max(free_runtime, 0.001)
         wait_ratio = accel_wait / max(free_wait, 0.001) if free_wait >= cfg.min_runtime_seconds else 0.0
@@ -146,30 +162,6 @@ class AcceleratedPerformanceMonitor:
             accel_wait=accel_wait,
             reasons=reasons,
         )
-
-    @staticmethod
-    def _resolve_runtime(snapshot: QueueSnapshot) -> float:
-        for value in (
-            snapshot.avg_runtime,
-            snapshot.ema_runtime,
-            snapshot.last_runtime,
-            snapshot.longest_runtime,
-        ):
-            if value and value > 0:
-                return float(value)
-        return 0.0
-
-    @staticmethod
-    def _resolve_wait(snapshot: QueueSnapshot) -> float:
-        for value in (
-            snapshot.avg_wait,
-            snapshot.ema_wait,
-            snapshot.last_wait,
-            snapshot.longest_wait,
-        ):
-            if value and value > 0:
-                return float(value)
-        return 0.0
 
     async def _emit_report(
         self,
