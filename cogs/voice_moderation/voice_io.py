@@ -22,6 +22,7 @@ from cogs.voice_moderation.transcriber import (
     transcribe_pcm_map,
     estimate_minutes_from_pcm_map,
 )
+from .backoff import VOICE_BACKOFF
 
 # Reduce noisy warnings from decoder flushes at the end of cycles
 logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
@@ -164,16 +165,27 @@ async def _ensure_connected(
             with contextlib.suppress(Exception):
                 if hasattr(current, "ws"):
                     await current.ws.voice_state(channel.id, self_deaf=False, self_mute=self_mute)  # type: ignore[attr-defined]
+            VOICE_BACKOFF.clear(guild.id, channel.id)
             return current
+
+        cooldown = VOICE_BACKOFF.remaining(guild.id, channel.id)
+        if cooldown > 0.0:
+            print(
+                f"[VC IO] Skipping voice connect for guild {guild.id} channel {channel.id}; "
+                f"backoff {cooldown:.1f}s remaining"
+            )
+            return None
 
         # Fresh connect with a retry if Discord still thinks we're attached elsewhere.
         for _ in range(2):
             try:
-                return await channel.connect(
+                conn = await channel.connect(
                     self_deaf=False,
                     self_mute=self_mute,
                     cls=voice_recv.VoiceRecvClient,
                 )
+                VOICE_BACKOFF.clear(guild.id, channel.id)
+                return conn
             except discord.ClientException as e:
                 if "Already connected" not in str(e):
                     raise
@@ -185,7 +197,11 @@ async def _ensure_connected(
                 continue
         return None
     except Exception as e:
-        print(f"[VC IO] failed to connect/move in guild {guild.id}, channel {channel.id}: {e}")
+        delay = VOICE_BACKOFF.record_failure(guild.id, channel.id)
+        print(
+            f"[VC IO] failed to connect/move in guild {guild.id}, channel {channel.id}: {e} "
+            f"(cooldown {delay:.0f}s)"
+        )
         return None
 
 
@@ -209,7 +225,9 @@ async def harvest_pcm_chunk(
 
     vc = await _ensure_connected(guild=guild, channel=channel, voice=voice, self_mute=self_mute)
     if not vc:
-        await asyncio.sleep(5)
+        cooldown = VOICE_BACKOFF.remaining(guild.id, channel.id)
+        sleep_s = 5.0 if cooldown <= 0 else min(max(cooldown, 5.0), 30.0)
+        await asyncio.sleep(sleep_s)
         return None, {}, {}, {}
 
     if not hasattr(vc, "listen") or not hasattr(vc, "stop_listening"):

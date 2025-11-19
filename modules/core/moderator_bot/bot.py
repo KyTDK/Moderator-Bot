@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections import deque
+from dataclasses import dataclass
 import logging
 from typing import Optional
 
@@ -9,12 +11,30 @@ from discord.ext import commands, tasks
 
 from modules.core.moderator_bot.background import BackgroundTaskMixin
 from modules.core.moderator_bot.command_sync import CommandTreeSyncMixin
+from modules.core.moderator_bot.connection_health import (
+    GatewayHealthMonitor,
+    GatewayHealthSnapshot,
+)
+from modules.core.moderator_bot.network_diagnostics import (
+    NetworkDiagnosticAlert,
+    NetworkDiagnosticsTask,
+)
 from modules.i18n.guild_cache import GuildLocaleCache
 from modules.i18n.locale_utils import normalise_locale
 from modules.i18n.resolution import LocaleResolver
 from modules.utils import mysql
+from modules.utils.log_channel import log_developer_issue
 
 _logger = logging.getLogger(__name__)
+
+
+@dataclass(slots=True)
+class _PendingDeveloperAlert:
+    summary: str
+    details: str | None
+    severity: str
+    context: str | None
+    attempts: int = 0
 
 
 class ModeratorBot(
@@ -81,6 +101,18 @@ class ModeratorBot(
         self._guild_cache_preload_task = None
         self._topgg_poster_task = None
         self._guild_sync_task = None
+        self._gateway_health = GatewayHealthMonitor(
+            threshold=4,
+            window_seconds=max(float(heartbeat_seconds), 180.0),
+            cooldown_seconds=900.0,
+        )
+        self._pending_dev_alerts: deque[_PendingDeveloperAlert] = deque()
+        self._network_diagnostics = NetworkDiagnosticsTask(
+            interval_seconds=45.0,
+            failure_threshold=3,
+            alert_cooldown_seconds=900.0,
+            alert_callback=self._handle_network_alert,
+        )
 
         mysql.add_settings_listener(self._locale_settings_listener)
 
@@ -120,6 +152,7 @@ class ModeratorBot(
         self._schedule_command_tree_sync()
 
         asyncio.create_task(self.push_status("starting"))
+        self._network_diagnostics.start()
 
     async def on_ready(self) -> None:  # type: ignore[override]
         shard_label = (
@@ -135,14 +168,17 @@ class ModeratorBot(
             self._guild_sync_task = asyncio.create_task(self._sync_guilds_with_database())
 
         asyncio.create_task(self.push_status("ready"))
+        asyncio.create_task(self._flush_pending_dev_alerts())
 
     async def on_resumed(self) -> None:  # type: ignore[override]
         print(">> Gateway session resumed.")
         await self.push_status("ready")
+        await self._flush_pending_dev_alerts()
 
     async def on_disconnect(self) -> None:  # type: ignore[override]
         print(">> Disconnected from gateway.")
         await self.push_status("disconnected")
+        await self._handle_gateway_disconnect()
 
     async def on_connect(self) -> None:  # type: ignore[override]
         print(">> Connected to gateway.")
@@ -249,4 +285,98 @@ class ModeratorBot(
                 self._command_tree_sync_task = None
 
         mysql.remove_settings_listener(self._locale_settings_listener)
+        await self._network_diagnostics.stop()
         await super().close()
+
+    async def _handle_gateway_disconnect(self) -> None:
+        snapshot = self._gateway_health.record_disconnect()
+        if snapshot is None:
+            return
+
+        details = self._format_gateway_snapshot(snapshot)
+        await self._send_dev_alert(
+            summary="Gateway disconnect storm detected",
+            details=details,
+            severity="critical",
+            context="gateway-monitor",
+        )
+
+    def _format_gateway_snapshot(self, snapshot: GatewayHealthSnapshot) -> str:
+        return (
+            f"Observed {snapshot.disconnect_count} disconnects within "
+            f"{int(snapshot.window_seconds)}s. First event was "
+            f"{snapshot.first_disconnect_age:.1f}s ago. Investigate upstream DNS/network."
+        )
+
+    async def _handle_network_alert(self, alert: NetworkDiagnosticAlert) -> None:
+        parts = [
+            f"Consecutive probe failures: {alert.consecutive_failures}",
+            f"Errors: {'; '.join(alert.errors[:5])}",
+        ]
+        if alert.failure_duration:
+            parts.append(f"Failure window: {alert.failure_duration:.1f}s")
+        if alert.last_success_age is not None:
+            parts.append(f"Last successful lookup: {alert.last_success_age:.1f}s ago")
+        if alert.last_success_latency_ms is not None:
+            parts.append(f"Last success max latency: {alert.last_success_latency_ms:.1f} ms")
+
+        await self._send_dev_alert(
+            summary="DNS resolution failures detected",
+            details="\n".join(parts),
+            severity="critical",
+            context="network-diagnostics",
+        )
+
+    async def _send_dev_alert(
+        self,
+        *,
+        summary: str,
+        details: str | None,
+        severity: str,
+        context: str | None,
+    ) -> None:
+        alert = _PendingDeveloperAlert(summary, details, severity, context)
+        if self.is_ready():
+            success = await log_developer_issue(
+                self,
+                summary=summary,
+                details=details,
+                severity=severity,
+                context=context,
+                logger=_logger,
+            )
+            if success:
+                return
+            alert.attempts += 1
+        self._pending_dev_alerts.append(alert)
+        _logger.warning("Queued developer alert (%s): %s", severity, summary)
+
+    async def _flush_pending_dev_alerts(self) -> None:
+        if not self.is_ready():
+            return
+        if not self._pending_dev_alerts:
+            return
+
+        attempts = len(self._pending_dev_alerts)
+        for _ in range(attempts):
+            alert = self._pending_dev_alerts.popleft()
+            success = await log_developer_issue(
+                self,
+                summary=alert.summary,
+                details=alert.details,
+                severity=alert.severity,
+                context=alert.context,
+                logger=_logger,
+            )
+            if success:
+                continue
+            alert.attempts += 1
+            if alert.attempts >= 3:
+                _logger.warning(
+                    "Dropping developer alert after %s failed attempts: %s",
+                    alert.attempts,
+                    alert.summary,
+                )
+                continue
+            self._pending_dev_alerts.append(alert)
+            break
