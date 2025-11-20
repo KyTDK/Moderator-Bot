@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from threading import Lock
 from typing import Iterable, Sequence
 
 try:
@@ -16,6 +17,7 @@ _reader_lock = asyncio.Lock()
 _reader: "PaddleOCR | None" = None
 _reader_failed = False
 _missing_dependency_logged = False
+_reader_inference_lock = Lock()  # PaddleOCR is not thread-safe; serialize inference calls.
 
 
 async def _load_reader(language: str | None = None) -> "PaddleOCR | None":
@@ -85,7 +87,8 @@ async def extract_text_from_image(
         return None
 
     def _read_text():
-        return reader.ocr(image_path, cls=True)
+        with _reader_inference_lock:
+            return reader.ocr(image_path, cls=True)
 
     try:
         ocr_result = await asyncio.to_thread(_read_text)
