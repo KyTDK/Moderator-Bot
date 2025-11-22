@@ -123,7 +123,7 @@ class QueueSnapshot:
     def runtime_signal(self) -> float:
         """Representative runtime derived from available metrics."""
         return self._first_positive(
-            (self.avg_runtime, self.ema_runtime, self.last_runtime, self.longest_runtime)
+            (self.ema_runtime, self.avg_runtime, self.last_runtime, self.longest_runtime)
         )
 
     def wait_signal(self) -> float:
