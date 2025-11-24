@@ -756,6 +756,20 @@ class MilvusVectorSpace:
         categories: Optional[Sequence[str]] = None,
         filter_expr: Optional[str] = None,
     ) -> List[List[Dict[str, Any]]]:
+        if not items:
+            return []
+
+        if not self.is_available() or self._fallback_active:
+            if not self._vector_search_warned:
+                reason = "fallback mode" if self._fallback_active else "collection unavailable"
+                self._log.warning(
+                    "[%s] Vector search skipped; %s",
+                    self.collection_name,
+                    reason,
+                )
+                self._vector_search_warned = True
+            return [[] for _ in items]
+
         coll = self._get_collection()
         if coll is None:
             if not self._vector_search_warned:
@@ -765,9 +779,6 @@ class MilvusVectorSpace:
                 )
                 self._vector_search_warned = True
             return [[] for _ in items]
-
-        if not items:
-            return []
 
         vectors = self.embed_batch(items)
         if vectors.size == 0:

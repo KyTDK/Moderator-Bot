@@ -56,26 +56,33 @@ async def _run_image_pipeline(
         payload["pipeline_metrics"] = pipeline_metrics
         return payload
 
+    milvus_available = clip_vectors.is_available()
+    vector_search_online = milvus_available and not clip_vectors.is_fallback_active()
+
     similarity_results = similarity_response
     if similarity_results is None:
-        similarity_started = time.perf_counter()
-        try:
-            similarity_results = await asyncio.to_thread(
-                clip_vectors.query_similar, image, threshold=0
-            )
-        except Exception as exc:
-            log.warning(
-                "Similarity search failed; falling back to moderator API: %s",
-                exc,
-                exc_info=True,
-            )
+        if vector_search_online:
+            similarity_started = time.perf_counter()
+            try:
+                similarity_results = await asyncio.to_thread(
+                    clip_vectors.query_similar, image, threshold=0
+                )
+            except Exception as exc:
+                log.warning(
+                    "Similarity search failed; falling back to moderator API: %s",
+                    exc,
+                    exc_info=True,
+                )
+                similarity_results = []
+            finally:
+                _add_step(
+                    "similarity_search",
+                    (time.perf_counter() - similarity_started) * 1000,
+                    label="Similarity Search",
+                )
+        else:
             similarity_results = []
-        finally:
-            _add_step(
-                "similarity_search",
-                (time.perf_counter() - similarity_started) * 1000,
-                label="Similarity Search",
-            )
+            _add_step("similarity_search", 0.0, label="Similarity Search (offline)")
 
     best_match = None
     max_similarity = 0.0
@@ -107,7 +114,6 @@ async def _run_image_pipeline(
             )
             schedule_vector_delete(vector_id, logger=log)
 
-    milvus_available = clip_vectors.is_available()
     allow_similarity_shortcut = (
         similarity_results
         and not refresh_triggered
@@ -175,7 +181,7 @@ async def _run_image_pipeline(
 
     skip_vector = (
         max_similarity >= CLIP_THRESHOLD and not refresh_triggered
-    ) or not milvus_available
+    ) or not vector_search_online
     moderation_started = time.perf_counter()
     response = await moderator_api(
         scanner,

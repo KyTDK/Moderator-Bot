@@ -94,8 +94,8 @@ def _build_policy(
 def load_config() -> AggregatedModerationConfig:
     cpu_count = max(1, os.cpu_count() or 4)
 
-    free_min_workers = 1
-    free_max_workers = max(2, min(3, max(1, cpu_count // 2)))
+    free_min_workers = max(2, min(4, cpu_count))
+    free_max_workers = max(6, cpu_count * 2, free_min_workers * 4)
     free_backlog_target = max(80, cpu_count * 4)
     free_backlog_low = max(6, int(free_backlog_target * 0.3))
     free_backlog_soft = max(250, int(free_backlog_target * 2.5))
