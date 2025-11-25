@@ -48,10 +48,12 @@ from modules.nsfw_scanner.settings_keys import (
     NSFW_TEXT_SOURCES_SETTING,
 )
 from modules.nsfw_scanner.utils.file_types import (
+    ANIMATED_EXTS,
     FILE_TYPE_IMAGE,
     FILE_TYPE_VIDEO,
     determine_file_type,
 )
+from modules.nsfw_scanner.utils.file_ops import safe_delete
 _DEFAULT_OCR_LANGUAGES = ["en"]
 
 
@@ -112,6 +114,7 @@ async def check_attachment(
         (time.perf_counter() - mime_started) * 1000,
         label="MIME Detection",
     )
+    file_extension = os.path.splitext(filename)[1].lower()
     try:
         size_started = time.perf_counter()
         file_size = os.path.getsize(temp_filename)
@@ -273,6 +276,44 @@ async def check_attachment(
         key: value for key, value in (payload_metadata or {}).items() if value is not None
     }
 
+    settings_map = context.settings_map or {}
+    ocr_languages = _resolve_ocr_languages(settings_map.get(NSFW_OCR_LANGUAGES_SETTING))
+    text_sources = normalize_text_sources(settings_map.get(NSFW_TEXT_SOURCES_SETTING))
+    ocr_enabled = context.accelerated and (TEXT_SOURCE_OCR in text_sources)
+    detected_mime_value = (detected_mime or "").lower()
+    animated_image_video = file_type == FILE_TYPE_VIDEO and (
+        file_extension in ANIMATED_EXTS or detected_mime_value.startswith("image/")
+    )
+    ocr_media_supported = file_type == FILE_TYPE_IMAGE or animated_image_video
+
+    staged_ocr_path: str | None = None
+    ocr_task_scheduled = False
+
+    async def _stage_attachment_for_ocr() -> str | None:
+        nonlocal staged_ocr_path
+        if staged_ocr_path:
+            return staged_ocr_path
+        stage_started = time.perf_counter()
+        staged_path = await duplicate_file_for_ocr(temp_filename)
+        latency_tracker.record_step(
+            "attachment_ocr_stage",
+            (time.perf_counter() - stage_started) * 1000,
+            label="Stage OCR Payload",
+        )
+        if staged_path:
+            staged_ocr_path = staged_path
+        return staged_path
+
+    ocr_prereqs_met = (
+        ocr_media_supported
+        and text_pipeline is not None
+        and message is not None
+        and guild_id is not None
+        and ocr_enabled
+    )
+    if animated_image_video and ocr_prereqs_met:
+        await _stage_attachment_for_ocr()
+
     if file_type == FILE_TYPE_IMAGE:
         scan_result = await process_image(
             scanner,
@@ -316,13 +357,8 @@ async def check_attachment(
         )
         return False
 
-    settings_map = context.settings_map or {}
-    ocr_languages = _resolve_ocr_languages(settings_map.get(NSFW_OCR_LANGUAGES_SETTING))
-    text_sources = normalize_text_sources(settings_map.get(NSFW_TEXT_SOURCES_SETTING))
-    ocr_enabled = context.accelerated and (TEXT_SOURCE_OCR in text_sources)
-
     if (
-        file_type == FILE_TYPE_IMAGE
+        ocr_media_supported
         and not (scan_result and scan_result.get("is_nsfw"))
         and text_pipeline is not None
         and message is not None
@@ -336,14 +372,7 @@ async def check_attachment(
             settings_cache.set_text_enabled(text_enabled)
 
         if text_enabled:
-            stage_started = time.perf_counter()
-            staged_path = await duplicate_file_for_ocr(temp_filename)
-            latency_tracker.record_step(
-                "attachment_ocr_stage",
-                (time.perf_counter() - stage_started) * 1000,
-                label="Stage OCR Payload",
-            )
-
+            staged_path = await _stage_attachment_for_ocr()
             if staged_path:
                 metadata_overrides = {
                     "ocr_scan": True,
@@ -369,6 +398,11 @@ async def check_attachment(
                     accelerated=bool(context.accelerated),
                     extract_text_fn=extract_text_from_image,
                 )
+                ocr_task_scheduled = True
+
+    if staged_ocr_path and not ocr_task_scheduled:
+        safe_delete(staged_ocr_path)
+        staged_ocr_path = None
 
     translator = resolve_translator(scanner)
 

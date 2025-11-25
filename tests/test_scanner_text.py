@@ -660,6 +660,9 @@ async def _exercise_attachment_ocr(
     *,
     accelerated_context: bool = True,
     text_sources: list[str] | None = None,
+    file_type_override: str | None = None,
+    detected_mime: str | None = "image/png",
+    filename: str = "sample.png",
 ):
     import modules.nsfw_scanner.settings_keys as settings_keys
 
@@ -675,6 +678,9 @@ async def _exercise_attachment_ocr(
 
     async def fake_is_accelerated(*, guild_id=None, user_id=None):
         return True
+
+    async def fake_get_premium_status(*_args, **_kwargs):
+        return {"is_active": False}
 
     async def fake_process_image(*_args, **_kwargs):
         return {"is_nsfw": False, "pipeline_metrics": {}}
@@ -746,6 +752,12 @@ async def _exercise_attachment_ocr(
 
     monkeypatch.setattr(attachments_scanner_mod.mysql, "get_settings", fake_get_settings, raising=False)
     monkeypatch.setattr(attachments_scanner_mod.mysql, "is_accelerated", fake_is_accelerated, raising=False)
+    monkeypatch.setattr(
+        attachments_scanner_mod.mysql,
+        "get_premium_status",
+        fake_get_premium_status,
+        raising=False,
+    )
     monkeypatch.setattr(attachments_scanner_mod, "process_image", fake_process_image, raising=False)
     monkeypatch.setattr(attachments_scanner_mod, "build_image_processing_context", fake_build_context, raising=False)
     monkeypatch.setattr(attachments_scanner_mod, "log_media_scan", fake_log_media_scan, raising=False)
@@ -761,11 +773,14 @@ async def _exercise_attachment_ocr(
     monkeypatch.setattr(
         attachments_scanner_mod,
         "determine_file_type",
-        lambda *_args, **_kwargs: (attachments_scanner_mod.FILE_TYPE_IMAGE, "image/png"),
+        lambda *_args, **_kwargs: (
+            file_type_override or attachments_scanner_mod.FILE_TYPE_IMAGE,
+            detected_mime,
+        ),
         raising=False,
     )
 
-    image_path = tmp_path / "sample.png"
+    image_path = tmp_path / filename
     image_path.write_bytes(b"fake")
 
     scanner = SimpleNamespace(bot=SimpleNamespace(), _text_pipeline=fake_pipeline)
@@ -802,6 +817,21 @@ def test_check_attachment_runs_image_ocr(monkeypatch, tmp_path):
     assert pipeline_calls, "Text pipeline should be invoked when OCR text is available"
     assert pipeline_calls[0]["text_override"] == "hidden text"
     assert callback_calls, "nsfw_callback should be invoked for OCR detections"
+
+
+def test_check_attachment_runs_gif_ocr(monkeypatch, tmp_path):
+    result, pipeline_calls, callback_calls = asyncio.run(
+        _exercise_attachment_ocr(
+            monkeypatch,
+            tmp_path,
+            file_type_override=attachments_scanner_mod.FILE_TYPE_VIDEO,
+            detected_mime="image/gif",
+            filename="animated.gif",
+        )
+    )
+    assert result is False
+    assert pipeline_calls, "Text pipeline should run for animated image videos like GIFs"
+    assert callback_calls, "nsfw_callback should fire when GIF OCR detects NSFW text"
 
 
 def test_attachment_ocr_respects_text_source_setting(monkeypatch, tmp_path):
