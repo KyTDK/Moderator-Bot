@@ -53,9 +53,9 @@ NSFW_SCANNER_DEFAULT_HEADERS = {
 # Threshold for similarity search
 _CLIP_THRESHOLD_RAW = os.getenv("CLIP_THRESHOLD")
 try:
-    CLIP_THRESHOLD = float(_CLIP_THRESHOLD_RAW) if _CLIP_THRESHOLD_RAW is not None else 0.85
+    CLIP_THRESHOLD = float(_CLIP_THRESHOLD_RAW) if _CLIP_THRESHOLD_RAW is not None else 0.90
 except (TypeError, ValueError):
-    CLIP_THRESHOLD = 0.85
+    CLIP_THRESHOLD = 0.90
 
 _TEXT_THRESHOLD_RAW = os.getenv("TEXT_SIMILARITY_THRESHOLD")
 try:
@@ -64,7 +64,7 @@ try:
     )
 except (TypeError, ValueError):
     TEXT_SIMILARITY_THRESHOLD = 0.75
-HIGH_ACCURACY_SIMILARITY = 0.90  # Min similarity to skip API when high-accuracy is enabled
+HIGH_ACCURACY_SIMILARITY = 0.95  # Min similarity to skip API when high-accuracy is enabled
 # Max frames per video
 MAX_FRAMES_PER_VIDEO = 5
 ACCELERATED_MAX_FRAMES_PER_VIDEO = 100
