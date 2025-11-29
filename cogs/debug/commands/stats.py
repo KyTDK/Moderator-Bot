@@ -60,6 +60,41 @@ def _chunk_lines(lines: Iterable[str], max_len: int = 900) -> list[str]:
     return chunks
 
 
+def _truncate_field_value(raw_value: Any, limit: int = 1024) -> str:
+    """Clamp embed field values to Discord's 1024-char limit."""
+    text = str(raw_value) if raw_value is not None else ""
+    if len(text) <= limit:
+        return text
+
+    ellipsis = "…"
+    if text.startswith("```") and text.endswith("```"):
+        suffix = "```"
+        newline_idx = text.find("\n", 3)
+        if newline_idx == -1:
+            prefix = "```"
+            inner_start = 3
+        else:
+            prefix = text[: newline_idx + 1]
+            inner_start = newline_idx + 1
+        inner = text[inner_start:-3]
+        available = max(0, limit - len(prefix) - len(suffix) - len(ellipsis))
+        trimmed_inner = inner[:available].rstrip()
+        return f"{prefix}{trimmed_inner}{ellipsis}{suffix}"
+
+    available = max(0, limit - len(ellipsis))
+    return text[:available].rstrip() + ellipsis
+
+
+def _add_embed_field(
+    embed: discord.Embed,
+    *,
+    name: str,
+    value: Any,
+    inline: bool = False,
+) -> None:
+    embed.add_field(name=name, value=_truncate_field_value(value), inline=inline)
+
+
 def _format_duration(seconds: float | None) -> str:
     if not seconds or seconds <= 0:
         return "unknown"
@@ -141,7 +176,8 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
         title=debug_texts["title"],
         color=discord.Color.blurple(),
     )
-    embed.add_field(
+    _add_embed_field(
+        embed,
         name=debug_texts["memory_name"],
         value=debug_texts["memory_value"].format(
             rss=rss,
@@ -151,12 +187,14 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
         ),
         inline=False,
     )
-    embed.add_field(
+    _add_embed_field(
+        embed,
         name=debug_texts["cpu_name"],
         value=debug_texts["cpu_value"].format(cpu_percent=cpu_percent, threads=threads, handles=handles),
         inline=False,
     )
-    embed.add_field(
+    _add_embed_field(
+        embed,
         name=debug_texts["bot_name"],
         value=debug_texts["bot_value"].format(
             guilds=len(cog.bot.guilds),
@@ -167,7 +205,8 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
     )
 
     for index, chunk in enumerate(_chunk_lines(top_allocations), start=1):
-        embed.add_field(
+        _add_embed_field(
+            embed,
             name=debug_texts["allocations_name"].format(index=index),
             value=f"```{chunk}```",
             inline=False,
@@ -177,14 +216,16 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
         latency_table = await _build_latency_table()
     except Exception as exc:  # noqa: BLE001
         latency_error = debug_texts.get("latency_error", "Unable to fetch latency metrics ({error})")
-        embed.add_field(
+        _add_embed_field(
+            embed,
             name=debug_texts.get("latency_name", "Latency / Coverage"),
             value=latency_error.format(error=exc),
             inline=False,
         )
     else:
         if latency_table:
-            embed.add_field(
+            _add_embed_field(
+                embed,
                 name=debug_texts.get("latency_name", "Latency / Coverage"),
                 value=f"```\n{latency_table}\n```",
                 inline=False,
@@ -194,20 +235,23 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
     try:
         queue_lines, rate_lines = _collect_worker_summaries(cog)
     except Exception as exc:  # noqa: BLE001
-        embed.add_field(
+        _add_embed_field(
+            embed,
             name=debug_texts["worker_name"],
             value=debug_texts["worker_error"].format(error=exc),
             inline=False,
         )
     else:
         if queue_lines:
-            embed.add_field(
+            _add_embed_field(
+                embed,
                 name=debug_texts["worker_name"],
                 value=f"```\n" + "\n".join(queue_lines) + "\n```",
                 inline=False,
             )
         if rate_lines:
-            embed.add_field(
+            _add_embed_field(
+                embed,
                 name=cog.bot.translate("cogs.debug.worker_rates", guild_id=guild_id),
                 value=f"```\n" + "\n".join(rate_lines) + "\n```",
                 inline=False,
@@ -215,7 +259,8 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
 
     backup_summary = _build_backup_summary(debug_texts)
     if backup_summary:
-        embed.add_field(
+        _add_embed_field(
+            embed,
             name=debug_texts.get("backup_name", "Local MySQL Backup"),
             value=backup_summary,
             inline=False,
@@ -230,7 +275,8 @@ async def build_stats_embed(cog, interaction: discord.Interaction, show_all: boo
     sections = [overall_line, health_counts, health_lines]
     health_value = "\n\n".join(section for section in sections if section)
 
-    embed.add_field(
+    _add_embed_field(
+        embed,
         name=debug_texts.get("health_name", "System health"),
         value=health_value,
         inline=False,
