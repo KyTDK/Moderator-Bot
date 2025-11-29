@@ -36,8 +36,6 @@ class EventDispatcherCog(commands.Cog):
         self._best_effort_drop_cooldown = 15.0
         self._best_effort_skip_until = 0.0
         self._best_effort_suppressed = False
-        self._emergency_accel_threshold = 600
-        self._accelerated_backlog_guard = 80
 
         self.free_queue = WorkerQueue(
             max_workers=2,
@@ -108,23 +106,7 @@ class EventDispatcherCog(commands.Cog):
 
     async def _resolve_queue_for_guild(self, guild_id: int) -> tuple[WorkerQueue, bool]:
         accelerated = await mysql.is_accelerated(guild_id=guild_id)
-        queue = self.accelerated_queue if accelerated else self.free_queue
-        effective_accelerated = accelerated
-
-        if not accelerated:
-            free_backlog = self._queue_backlog(self.free_queue)
-            accel_backlog = self._queue_backlog(self.accelerated_queue)
-            if free_backlog >= self._emergency_accel_threshold and accel_backlog <= self._accelerated_backlog_guard:
-                queue = self.accelerated_queue
-                effective_accelerated = True
-                self._log.warning(
-                    "Temporarily routing guild %s through accelerated queue (free backlog=%s, accel backlog=%s)",
-                    guild_id,
-                    free_backlog,
-                    accel_backlog,
-                )
-
-        return queue, effective_accelerated
+        return (self.accelerated_queue if accelerated else self.free_queue, accelerated)
 
     def _queue_backlog(self, queue: WorkerQueue) -> int:
         try:
