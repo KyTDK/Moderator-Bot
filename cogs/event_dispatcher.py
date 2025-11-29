@@ -30,20 +30,28 @@ class EventDispatcherCog(commands.Cog):
         self.bot = bot
         self._log = logging.getLogger(f"{__name__}.EventDispatcher")
         self._singular_task_reporter = SingularTaskReporter(bot)
-        self._degraded_threshold = 380
+        self._degraded_threshold = 460
         self._best_effort_active = False
         self._best_effort_overload_threshold = 350
         self._best_effort_drop_cooldown = 15.0
         self._best_effort_skip_until = 0.0
         self._best_effort_suppressed = False
+        self._surge_tiers: list[tuple[int, int]] = [
+            (600, 18),
+            (800, 26),
+            (1000, 36),
+            (1200, 42),
+        ]
+        self._surge_cooldown = 12.0
+        self._last_surge = 0.0
 
         self.free_queue = WorkerQueue(
             max_workers=2,
-            autoscale_max=14,
-            backlog_high_watermark=360,
+            autoscale_max=32,
+            backlog_high_watermark=480,
             backlog_low_watermark=90,
-            backlog_hard_limit=1000,
-            backlog_shed_to=320,
+            backlog_hard_limit=1800,
+            backlog_shed_to=520,
             name="event_dispatcher_free",
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
@@ -92,6 +100,8 @@ class EventDispatcherCog(commands.Cog):
         backlog = self._queue_backlog(queue)
         degraded = bool(not accelerated and backlog >= self._degraded_threshold)
         self._update_best_effort_state(degraded, backlog)
+        if queue is self.free_queue:
+            await self._maybe_trigger_free_queue_surge(backlog)
 
         for name in self._ESSENTIAL_COGS:
             await self._enqueue_cog(queue, name, message, batch_label="primary")
@@ -113,6 +123,39 @@ class EventDispatcherCog(commands.Cog):
             return queue.queue.qsize()
         except Exception:
             return 0
+
+    async def _maybe_trigger_free_queue_surge(self, backlog: int) -> None:
+        target_workers = 0
+        threshold_hit = None
+        for threshold, workers in self._surge_tiers:
+            if backlog >= threshold:
+                target_workers = workers
+                threshold_hit = threshold
+        if not target_workers:
+            return
+
+        now = time.monotonic()
+        if (now - self._last_surge) < self._surge_cooldown:
+            return
+
+        self._last_surge = now
+        try:
+            await self.free_queue.ensure_capacity(target_workers)
+        except Exception:
+            self._log.exception(
+                "Failed to trigger free queue surge (backlog=%s, threshold=%s, target=%s)",
+                backlog,
+                threshold_hit,
+                target_workers,
+            )
+            return
+
+        self._log.warning(
+            "Free queue surge triggered; backlog=%s exceeded tier %s -> workers=%s",
+            backlog,
+            threshold_hit,
+            target_workers,
+        )
 
     def _resolve_best_effort_target(self, degraded: bool) -> WorkerQueue | None:
         if not degraded:
