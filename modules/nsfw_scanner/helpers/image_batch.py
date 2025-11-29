@@ -152,12 +152,15 @@ async def process_image_batch(
             frame_metadata.setdefault("frame_index", frame_index)
         entries.append((frame, image, payload_bytes, payload_mime, similarity_response, frame_metadata))
 
-    max_local_concurrency = 8 if context.accelerated else 3
     mod_api_limit = (
         ACCELERATED_MOD_API_MAX_CONCURRENCY
         if context.accelerated
         else MOD_API_MAX_CONCURRENCY
     )
+    cpu_capacity = max(2, os.cpu_count() or 2)
+    baseline = 8 if context.accelerated else 3
+    dynamic_local_limit = max(baseline, min(cpu_capacity, mod_api_limit))
+    max_local_concurrency = min(dynamic_local_limit, mod_api_limit)
     local_limit_candidates = [len(entries) or 1, max_local_concurrency, mod_api_limit]
     if isinstance(max_concurrent_frames, int) and max_concurrent_frames > 0:
         local_limit_candidates.append(max_concurrent_frames)

@@ -111,6 +111,15 @@ def iter_video_frames_opencv(
                     cap_obj.set(cv2.CAP_PROP_BUFFERSIZE, 4)
             except Exception:
                 pass
+        threads_prop = getattr(cv2, "CAP_PROP_THREADS", None)
+        if threads_prop is not None:
+            try:
+                cpu_count = os.cpu_count() or 1
+                desired_threads = max(1, min(cpu_count, 8))
+                with _suppress_cv2_stderr():
+                    cap_obj.set(threads_prop, desired_threads)
+            except Exception:
+                pass
         return cap_obj
 
     enable_parallel = bool(accelerated_tier) if accelerated_tier is not None else use_hwaccel
@@ -118,6 +127,66 @@ def iter_video_frames_opencv(
     hwaccel_in_use = enable_hwaccel
 
     cap = _open_capture(use_hw=hwaccel_in_use)
+    current_frame = 0
+    frame_seek_threshold = 5
+
+    def _read_position() -> int:
+        try:
+            value = cap.get(cv2.CAP_PROP_POS_FRAMES)
+        except Exception:
+            return current_frame
+        return int(value or 0)
+
+    def _set_position(prop: int, value: float) -> int | None:
+        try:
+            with _suppress_cv2_stderr():
+                ok = cap.set(prop, value)
+        except Exception:
+            return None
+        if not ok:
+            return None
+        return _read_position()
+
+    def _replace_capture(*, use_hw: bool) -> None:
+        nonlocal cap, current_frame
+        try:
+            cap.release()
+        except Exception:
+            pass
+        cap = _open_capture(use_hw=use_hw)
+        current_frame = _read_position()
+
+    def _smart_seek(target_idx: int) -> int | None:
+        nonlocal cap, current_frame
+        if target_idx < 0:
+            return None
+
+        strategies: list[tuple[int, float]] = []
+        ratio_prop = getattr(cv2, "CAP_PROP_POS_AVI_RATIO", None)
+        msec_prop = getattr(cv2, "CAP_PROP_POS_MSEC", None)
+        if total_frames > 0:
+            strategies.append((cv2.CAP_PROP_POS_FRAMES, float(target_idx)))
+            if ratio_prop is not None and total_frames > 1:
+                ratio = target_idx / max(total_frames - 1, 1)
+                strategies.append((ratio_prop, float(min(max(ratio, 0.0), 1.0))))
+        if fps > 0 and msec_prop is not None:
+            timestamp_ms = (target_idx / fps) * 1000.0
+            strategies.append((msec_prop, timestamp_ms))
+
+        coarse_tolerance = 2
+        catch_up_tolerance = max(6, frame_seek_threshold * 3)
+
+        for prop, value in strategies:
+            new_pos = _set_position(prop, value)
+            if new_pos is None:
+                continue
+            if abs(new_pos - target_idx) <= coarse_tolerance:
+                return new_pos
+            if new_pos < target_idx and (target_idx - new_pos) <= catch_up_tolerance:
+                return new_pos
+
+        _replace_capture(use_hw=hwaccel_in_use)
+        return _set_position(cv2.CAP_PROP_POS_FRAMES, float(target_idx))
 
     try:
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
@@ -135,10 +204,9 @@ def iter_video_frames_opencv(
         if not idxs_list:
             return
 
-        frame_seek_threshold = 5
         idx_iter = iter(idxs_list)
         pending_idx: int | None = None
-        current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES) or 0)
+        current_frame = _read_position()
 
         executor: ThreadPoolExecutor | None = None
         pending: list[tuple[int, Future[Optional[ExtractedFrame]]]] = []
@@ -181,19 +249,15 @@ def iter_video_frames_opencv(
                     jump = target_idx - current_frame
                     seek_success = False
                     if jump > frame_seek_threshold:
-                        try:
-                            with _suppress_cv2_stderr():
-                                seek_success = cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
-                        except Exception:
-                            seek_success = False
-                        else:
-                            if not seek_success:
-                                pos_after_seek = cap.get(cv2.CAP_PROP_POS_FRAMES)
-                                if pos_after_seek is not None and int(pos_after_seek) == target_idx:
-                                    seek_success = True
-                        if seek_success:
-                            current_frame = target_idx
-
+                        new_pos = _smart_seek(target_idx)
+                        if new_pos is not None:
+                            current_frame = new_pos
+                            jump = target_idx - current_frame
+                            if jump <= 0:
+                                if jump < 0:
+                                    pending_idx = target_idx
+                                    continue
+                                seek_success = True
                     if not seek_success:
                         skipped = 0
                         while skipped < jump:
@@ -212,15 +276,12 @@ def iter_video_frames_opencv(
                             break
 
                 elif target_idx < current_frame:
-                    seek_success = False
-                    try:
-                        with _suppress_cv2_stderr():
-                            seek_success = cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
-                    except Exception:
-                        seek_success = False
-                    if seek_success:
-                        current_frame = target_idx
-                    else:
+                    new_pos = _smart_seek(target_idx)
+                    if new_pos is None:
+                        continue
+                    current_frame = new_pos
+                    if abs(current_frame - target_idx) > frame_seek_threshold:
+                        pending_idx = target_idx
                         continue
 
                 if stop_requested:
