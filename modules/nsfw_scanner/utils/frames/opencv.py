@@ -17,6 +17,37 @@ from .sampling import adaptive_cap
 _STDERR_REDIRECT_LOCK = Lock()
 
 
+def detect_hwaccel_support() -> tuple[bool, str]:
+    """
+    Best-effort probe for OpenCV hardware decode availability.
+    Returns (available, detail_message).
+    """
+
+    has_flags = all(
+        hasattr(cv2, attr)
+        for attr in ("CAP_PROP_HW_ACCELERATION", "VIDEO_ACCELERATION_ANY")
+    )
+    if not has_flags:
+        return False, "OpenCV build missing hardware acceleration flags."
+
+    cuda_module = getattr(cv2, "cuda", None)
+    cuda_count = 0
+    cuda_error: str | None = None
+    if cuda_module is not None and hasattr(cuda_module, "getCudaEnabledDeviceCount"):
+        try:
+            cuda_count = int(cuda_module.getCudaEnabledDeviceCount())
+        except Exception as exc:  # noqa: BLE001 - informative metadata
+            cuda_error = f"CUDA detection failed ({exc})"
+    else:
+        cuda_error = "CUDA bindings unavailable in OpenCV."
+
+    if cuda_count > 0:
+        return True, f"CUDA devices detected ({cuda_count})."
+
+    detail = cuda_error or "No CUDA-enabled devices detected."
+    return False, detail
+
+
 @contextmanager
 def _suppress_cv2_stderr():
     if not SUPPRESS_OPENCV_STDERR:

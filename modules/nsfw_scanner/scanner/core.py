@@ -68,6 +68,7 @@ from ..helpers.text_sources import (
 from ..tenor_cache import TenorToggleCache
 from ..text_pipeline import TextScanPipeline
 from ..utils.file_ops import safe_delete
+from ..video_capabilities import evaluate_video_capabilities
 from .contexts import MediaScanContext, ScanOutcome
 from .failures import FailureReporter
 from .media import MediaScanner
@@ -110,6 +111,7 @@ class NSFWScanner:
         self.session = aiohttp.ClientSession(headers=session_headers)
         os.makedirs(self.tmp_dir, exist_ok=True)
         self._ensure_clip_failure_notifier()
+        evaluate_video_capabilities(source="nsfw_scanner.start")
 
     async def stop(self):
         if self.session:
