@@ -30,7 +30,7 @@ class EventDispatcherCog(commands.Cog):
         self.bot = bot
         self._log = logging.getLogger(f"{__name__}.EventDispatcher")
         self._singular_task_reporter = SingularTaskReporter(bot)
-        self._degraded_threshold = 320
+        self._degraded_threshold = 380
         self._best_effort_active = False
         self._best_effort_overload_threshold = 350
         self._best_effort_drop_cooldown = 15.0
@@ -40,17 +40,17 @@ class EventDispatcherCog(commands.Cog):
         self._accelerated_backlog_guard = 80
 
         self.free_queue = WorkerQueue(
-            max_workers=6,
-            autoscale_max=16,
-            backlog_high_watermark=220,
-            backlog_low_watermark=60,
-            backlog_hard_limit=900,
-            backlog_shed_to=260,
+            max_workers=2,
+            autoscale_max=14,
+            backlog_high_watermark=360,
+            backlog_low_watermark=90,
+            backlog_hard_limit=1000,
+            backlog_shed_to=320,
             name="event_dispatcher_free",
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
             developer_log_context="event_dispatcher.free_queue",
-            adaptive_mode=True,
+            adaptive_mode=False,
         )
         self.best_effort_queue = WorkerQueue(
             max_workers=4,
