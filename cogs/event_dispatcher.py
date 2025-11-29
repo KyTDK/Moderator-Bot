@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 import discord
 from discord.ext import commands
@@ -31,36 +32,43 @@ class EventDispatcherCog(commands.Cog):
         self._singular_task_reporter = SingularTaskReporter(bot)
         self._degraded_threshold = 320
         self._best_effort_active = False
+        self._best_effort_overload_threshold = 350
+        self._best_effort_drop_cooldown = 15.0
+        self._best_effort_skip_until = 0.0
+        self._best_effort_suppressed = False
+        self._emergency_accel_threshold = 600
+        self._accelerated_backlog_guard = 80
 
         self.free_queue = WorkerQueue(
-            max_workers=3,
-            autoscale_max=8,
-            backlog_high_watermark=180,
-            backlog_low_watermark=40,
+            max_workers=6,
+            autoscale_max=16,
+            backlog_high_watermark=220,
+            backlog_low_watermark=60,
             backlog_hard_limit=900,
-            backlog_shed_to=250,
+            backlog_shed_to=260,
             name="event_dispatcher_free",
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
             developer_log_context="event_dispatcher.free_queue",
-            adaptive_mode=False,
+            adaptive_mode=True,
         )
         self.best_effort_queue = WorkerQueue(
-            max_workers=2,
-            autoscale_max=4,
-            backlog_high_watermark=150,
-            backlog_low_watermark=25,
+            max_workers=4,
+            autoscale_max=10,
+            backlog_high_watermark=200,
+            backlog_low_watermark=30,
             backlog_hard_limit=500,
-            backlog_shed_to=150,
+            backlog_shed_to=180,
             name="event_dispatcher_best_effort",
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
             developer_log_context="event_dispatcher.best_effort_queue",
+            adaptive_mode=True,
         )
         self.accelerated_queue = WorkerQueue(
-            max_workers=6,
-            autoscale_max=12,
-            backlog_high_watermark=120,
+            max_workers=8,
+            autoscale_max=20,
+            backlog_high_watermark=140,
             backlog_low_watermark=20,
             backlog_hard_limit=600,
             backlog_shed_to=180,
@@ -83,69 +91,97 @@ class EventDispatcherCog(commands.Cog):
         guild_id = message.guild.id
 
         queue, accelerated = await self._resolve_queue_for_guild(guild_id)
-        primary_cogs, deferred_cogs, degraded, backlog = self._select_cog_batches(
-            queue=queue,
-            accelerated=accelerated,
-        )
+        backlog = self._queue_backlog(queue)
+        degraded = bool(not accelerated and backlog >= self._degraded_threshold)
         self._update_best_effort_state(degraded, backlog)
 
-        primary_task = self._build_cog_runner(message, primary_cogs, "primary")
-        if primary_task is not None:
-            await queue.add_task(primary_task)
+        for name in self._ESSENTIAL_COGS:
+            await self._enqueue_cog(queue, name, message, batch_label="primary")
 
-        if deferred_cogs:
-            deferred_task = self._build_cog_runner(message, deferred_cogs, "best_effort")
-            if deferred_task is not None:
-                await self.best_effort_queue.add_task(deferred_task)
+        best_effort_target = self._resolve_best_effort_target(degraded)
+        if best_effort_target is None and degraded:
+            return
+
+        target_queue = best_effort_target or queue
+        for name in self._BEST_EFFORT_COGS:
+            await self._enqueue_cog(target_queue, name, message, batch_label="best_effort", best_effort=bool(best_effort_target))
 
     async def _resolve_queue_for_guild(self, guild_id: int) -> tuple[WorkerQueue, bool]:
         accelerated = await mysql.is_accelerated(guild_id=guild_id)
-        return (self.accelerated_queue if accelerated else self.free_queue, accelerated)
+        queue = self.accelerated_queue if accelerated else self.free_queue
+        effective_accelerated = accelerated
 
-    def _select_cog_batches(
-        self,
-        *,
-        queue: WorkerQueue,
-        accelerated: bool,
-    ) -> tuple[list[str], list[str], bool, int]:
+        if not accelerated:
+            free_backlog = self._queue_backlog(self.free_queue)
+            accel_backlog = self._queue_backlog(self.accelerated_queue)
+            if free_backlog >= self._emergency_accel_threshold and accel_backlog <= self._accelerated_backlog_guard:
+                queue = self.accelerated_queue
+                effective_accelerated = True
+                self._log.warning(
+                    "Temporarily routing guild %s through accelerated queue (free backlog=%s, accel backlog=%s)",
+                    guild_id,
+                    free_backlog,
+                    accel_backlog,
+                )
+
+        return queue, effective_accelerated
+
+    def _queue_backlog(self, queue: WorkerQueue) -> int:
         try:
-            backlog = queue.queue.qsize()
+            return queue.queue.qsize()
         except Exception:
-            backlog = 0
+            return 0
 
-        degraded = bool(not accelerated and backlog >= self._degraded_threshold)
-        primary = list(self._ESSENTIAL_COGS)
-        deferred = list(self._BEST_EFFORT_COGS)
+    def _resolve_best_effort_target(self, degraded: bool) -> WorkerQueue | None:
         if not degraded:
-            primary.extend(deferred)
-            deferred = []
-        return primary, deferred, degraded, backlog
-
-    def _build_cog_runner(self, message: discord.Message, cog_names: list[str], batch_label: str):
-        if not cog_names:
+            self._adjust_best_effort_suppression(recovered=True)
             return None
 
-        async def _runner():
-            for name in cog_names:
-                cog = self.bot.get_cog(name)
-                handler = getattr(cog, "handle_message", None) if cog else None
-                if handler is None:
-                    continue
-                try:
-                    await handler(message)
-                except Exception:
-                    self._log.exception(
-                        "Event dispatcher failed to execute %s.%s",
-                        name,
-                        batch_label,
-                        extra={
-                            "guild_id": getattr(getattr(message, "guild", None), "id", None),
-                            "channel_id": getattr(getattr(message, "channel", None), "id", None),
-                            "message_id": getattr(message, "id", None),
-                        },
-                    )
+        backlog = self._queue_backlog(self.best_effort_queue)
+        now = time.monotonic()
+        if backlog >= self._best_effort_overload_threshold:
+            self._best_effort_skip_until = now + self._best_effort_drop_cooldown
+            if not self._best_effort_suppressed:
+                self._log.warning(
+                    "Best-effort queue overloaded (backlog=%s); temporarily dropping optional cogs",
+                    backlog,
+                )
+            self._best_effort_suppressed = True
+            return None
 
-        return _runner()
+        if self._best_effort_suppressed and now >= self._best_effort_skip_until and backlog <= max(1, self._best_effort_overload_threshold // 2):
+            self._best_effort_suppressed = False
+            self._log.info("Best-effort queue recovered; resuming optional cogs")
+
+        return None if self._best_effort_suppressed else self.best_effort_queue
+
+    async def _enqueue_cog(
+        self,
+        queue: WorkerQueue,
+        name: str,
+        message: discord.Message,
+        *,
+        batch_label: str,
+        best_effort: bool = False,
+    ) -> None:
+        cog = self.bot.get_cog(name)
+        handler = getattr(cog, "handle_message", None) if cog else None
+        if handler is None:
+            return
+        try:
+            await queue.add_task(handler(message))
+        except Exception:
+            self._log.exception(
+                "Event dispatcher failed to enqueue %s (%s)",
+                name,
+                batch_label,
+                extra={
+                    "guild_id": getattr(getattr(message, "guild", None), "id", None),
+                    "channel_id": getattr(getattr(message, "channel", None), "id", None),
+                    "message_id": getattr(message, "id", None),
+                    "best_effort": best_effort,
+                },
+            )
 
     def _update_best_effort_state(self, degraded: bool, backlog: int) -> None:
         if degraded and not self._best_effort_active:
@@ -157,6 +193,13 @@ class EventDispatcherCog(commands.Cog):
         elif not degraded and self._best_effort_active:
             self._best_effort_active = False
             self._log.info("Event dispatcher recovered; backlog back under threshold")
+            self._adjust_best_effort_suppression(recovered=True)
+
+    def _adjust_best_effort_suppression(self, *, recovered: bool) -> None:
+        if recovered and self._best_effort_suppressed:
+            self._best_effort_suppressed = False
+            self._best_effort_skip_until = 0.0
+            self._log.info("Best-effort drop window cleared after recovery")
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
