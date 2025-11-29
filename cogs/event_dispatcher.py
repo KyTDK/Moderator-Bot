@@ -37,17 +37,28 @@ class EventDispatcherCog(commands.Cog):
         self._best_effort_skip_until = 0.0
         self._best_effort_suppressed = False
         self._surge_tiers: list[tuple[int, int]] = [
-            (600, 18),
-            (800, 26),
-            (1000, 36),
-            (1200, 42),
+            (500, 18),
+            (700, 28),
+            (900, 38),
+            (1100, 48),
+            (1300, 56),
+            (1500, 64),
         ]
-        self._surge_cooldown = 12.0
+        self._surge_cooldown = 8.0
         self._last_surge = 0.0
+        self._accelerated_surge_tiers: list[tuple[int, int]] = [
+            (160, 12),
+            (240, 18),
+            (320, 24),
+            (420, 30),
+            (520, 36),
+        ]
+        self._accelerated_surge_cooldown = 8.0
+        self._last_accelerated_surge = 0.0
 
         self.free_queue = WorkerQueue(
             max_workers=2,
-            autoscale_max=32,
+            autoscale_max=36,
             backlog_high_watermark=480,
             backlog_low_watermark=90,
             backlog_hard_limit=1800,
@@ -73,11 +84,11 @@ class EventDispatcherCog(commands.Cog):
         )
         self.accelerated_queue = WorkerQueue(
             max_workers=8,
-            autoscale_max=20,
+            autoscale_max=28,
             backlog_high_watermark=140,
             backlog_low_watermark=20,
-            backlog_hard_limit=600,
-            backlog_shed_to=180,
+            backlog_hard_limit=650,
+            backlog_shed_to=200,
             name="event_dispatcher_accelerated",
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
@@ -101,7 +112,23 @@ class EventDispatcherCog(commands.Cog):
         degraded = bool(not accelerated and backlog >= self._degraded_threshold)
         self._update_best_effort_state(degraded, backlog)
         if queue is self.free_queue:
-            await self._maybe_trigger_free_queue_surge(backlog)
+            await self._maybe_trigger_surge(
+                queue=self.free_queue,
+                backlog=backlog,
+                tiers=self._surge_tiers,
+                cooldown_attr="_last_surge",
+                cooldown_seconds=self._surge_cooldown,
+                label="Free queue",
+            )
+        else:
+            await self._maybe_trigger_surge(
+                queue=self.accelerated_queue,
+                backlog=backlog,
+                tiers=self._accelerated_surge_tiers,
+                cooldown_attr="_last_accelerated_surge",
+                cooldown_seconds=self._accelerated_surge_cooldown,
+                label="Accelerated queue",
+            )
 
         for name in self._ESSENTIAL_COGS:
             await self._enqueue_cog(queue, name, message, batch_label="primary")
@@ -124,10 +151,19 @@ class EventDispatcherCog(commands.Cog):
         except Exception:
             return 0
 
-    async def _maybe_trigger_free_queue_surge(self, backlog: int) -> None:
+    async def _maybe_trigger_surge(
+        self,
+        *,
+        queue: WorkerQueue,
+        backlog: int,
+        tiers: list[tuple[int, int]],
+        cooldown_attr: str,
+        cooldown_seconds: float,
+        label: str,
+    ) -> None:
         target_workers = 0
         threshold_hit = None
-        for threshold, workers in self._surge_tiers:
+        for threshold, workers in tiers:
             if backlog >= threshold:
                 target_workers = workers
                 threshold_hit = threshold
@@ -135,15 +171,17 @@ class EventDispatcherCog(commands.Cog):
             return
 
         now = time.monotonic()
-        if (now - self._last_surge) < self._surge_cooldown:
+        last_surge = getattr(self, cooldown_attr, 0.0)
+        if (now - last_surge) < cooldown_seconds:
             return
 
-        self._last_surge = now
+        setattr(self, cooldown_attr, now)
         try:
-            await self.free_queue.ensure_capacity(target_workers)
+            await queue.ensure_capacity(target_workers)
         except Exception:
             self._log.exception(
-                "Failed to trigger free queue surge (backlog=%s, threshold=%s, target=%s)",
+                "%s surge failed (backlog=%s, threshold=%s, target=%s)",
+                label,
                 backlog,
                 threshold_hit,
                 target_workers,
@@ -151,7 +189,8 @@ class EventDispatcherCog(commands.Cog):
             return
 
         self._log.warning(
-            "Free queue surge triggered; backlog=%s exceeded tier %s -> workers=%s",
+            "%s surge triggered; backlog=%s exceeded tier %s -> workers=%s",
+            label,
             backlog,
             threshold_hit,
             target_workers,
