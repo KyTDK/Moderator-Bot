@@ -6,7 +6,10 @@ from typing import Any, List, Optional, Sequence, Tuple
 
 from PIL import Image
 
-from modules.nsfw_scanner.constants import MOD_API_MAX_CONCURRENCY
+from modules.nsfw_scanner.constants import (
+    ACCELERATED_MOD_API_MAX_CONCURRENCY,
+    MOD_API_MAX_CONCURRENCY,
+)
 from modules.utils import clip_vectors
 
 from ..utils.frames import ExtractedFrame
@@ -150,7 +153,12 @@ async def process_image_batch(
         entries.append((frame, image, payload_bytes, payload_mime, similarity_response, frame_metadata))
 
     max_local_concurrency = 8 if context.accelerated else 3
-    local_limit_candidates = [len(entries) or 1, max_local_concurrency, MOD_API_MAX_CONCURRENCY]
+    mod_api_limit = (
+        ACCELERATED_MOD_API_MAX_CONCURRENCY
+        if context.accelerated
+        else MOD_API_MAX_CONCURRENCY
+    )
+    local_limit_candidates = [len(entries) or 1, max_local_concurrency, mod_api_limit]
     if isinstance(max_concurrent_frames, int) and max_concurrent_frames > 0:
         local_limit_candidates.append(max_concurrent_frames)
     local_moderation_semaphore = asyncio.Semaphore(max(1, min(local_limit_candidates)))
