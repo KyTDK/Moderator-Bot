@@ -34,7 +34,7 @@ def test_config_uses_defaults_when_missing() -> None:
     config = DockerUpdateConfig.from_env(env)
     assert config.image == DEFAULT_IMAGE
     assert config.services == DEFAULT_SERVICES
-    assert config.deployment_mode == "container"
+    assert config.deployment_mode == "auto"
     assert config.container_name == "moderator-bot"
     assert config.container_args == DEFAULT_CONTAINER_ARGS
 
@@ -72,9 +72,14 @@ def test_config_parsing_defaults() -> None:
 
 
 class _FakeExecutor:
-    def __init__(self, fail_on: set[tuple[str, ...]] | None = None) -> None:
+    def __init__(
+        self,
+        fail_on: set[tuple[str, ...]] | None = None,
+        scripted: dict[tuple[str, ...], CommandOutcome] | None = None,
+    ) -> None:
         self.calls: list[tuple[tuple[str, ...], float | None, dict[str, str] | None]] = []
         self._fail_on = fail_on or set()
+        self._scripted = scripted or {}
 
     async def __call__(
         self,
@@ -87,6 +92,9 @@ class _FakeExecutor:
         self.calls.append((cmd_tuple, timeout, captured_env))
         if cmd_tuple in self._fail_on:
             raise DockerCommandError(command=cmd_tuple, exit_code=1, stdout="", stderr="boom")
+        outcome = self._scripted.get(cmd_tuple)
+        if outcome is not None:
+            return outcome
         return CommandOutcome(
             command=cmd_tuple,
             stdout="ok",
@@ -150,7 +158,7 @@ async def test_manager_runs_pull_and_updates() -> None:
     ]
     assert fake.calls == expected
     assert [result.service for result in report.services] == ["alpha", "beta"]
-    assert report.rollout_mode.startswith("start-first")
+    assert report.rollout_mode.startswith("service | start-first")
 
 
 def test_config_supports_docker_host_env() -> None:
@@ -232,6 +240,54 @@ async def test_manager_container_mode_ignores_stop_failures() -> None:
     assert stop_result.outcome.exit_code == 1
     assert rm_result.outcome.exit_code == 1
     assert run_result.outcome.exit_code == 0
+
+
+@pytest.mark.anyio
+async def test_manager_auto_detects_service_mode() -> None:
+    env: dict[str, str] = {
+        "MODBOT_DOCKER_IMAGE": "ghcr.io/example/modbot:main",
+        "MODBOT_DOCKER_SERVICES": "alpha",
+    }
+    config = DockerUpdateConfig.from_env(env)
+    info_command = (
+        "docker",
+        "info",
+        "--format",
+        "{{.Swarm.LocalNodeState}} {{.Swarm.ControlAvailable}}",
+    )
+    scripted = {
+        info_command: CommandOutcome(command=info_command, stdout="active true", stderr="", duration=0.1, exit_code=0)
+    }
+    fake = _FakeExecutor(scripted=scripted)
+    manager = DockerUpdateManager(config, executor=fake)
+
+    await manager.run()
+
+    commands = [call[0] for call in fake.calls]
+    assert commands[0] == info_command
+    assert any(cmd[:2] == ("docker", "service") for cmd in commands)
+
+
+@pytest.mark.anyio
+async def test_manager_auto_detects_container_mode_when_info_fails() -> None:
+    env: dict[str, str] = {
+        "MODBOT_DOCKER_IMAGE": "ghcr.io/example/modbot:main",
+    }
+    config = DockerUpdateConfig.from_env(env)
+    info_command = (
+        "docker",
+        "info",
+        "--format",
+        "{{.Swarm.LocalNodeState}} {{.Swarm.ControlAvailable}}",
+    )
+    fake = _FakeExecutor(fail_on={info_command})
+    manager = DockerUpdateManager(config, executor=fake)
+
+    await manager.run()
+
+    commands = [call[0] for call in fake.calls]
+    assert commands[0] == info_command
+    assert any(cmd[:2] == ("docker", "run") for cmd in commands)
 
 
 def test_format_update_report() -> None:

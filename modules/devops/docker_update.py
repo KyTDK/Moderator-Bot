@@ -234,9 +234,9 @@ class DockerUpdateConfig:
         if config_path:
             env_overrides["DOCKER_CONFIG"] = config_path
 
-        deployment_mode = (_first("MODBOT_DOCKER_DEPLOYMENT", "MODBOT_DEPLOYMENT_MODE", default="container") or "container").lower()
-        if deployment_mode not in {"service", "container"}:
-            raise UpdateConfigError("MODBOT_DOCKER_DEPLOYMENT must be 'service' or 'container'.")
+        deployment_mode = (_first("MODBOT_DOCKER_DEPLOYMENT", "MODBOT_DEPLOYMENT_MODE", default="auto") or "auto").lower()
+        if deployment_mode not in {"service", "container", "auto"}:
+            raise UpdateConfigError("MODBOT_DOCKER_DEPLOYMENT must be 'service', 'container', or 'auto'.")
 
         container_name = _first("MODBOT_DOCKER_CONTAINER_NAME", "DOCKER_CONTAINER_NAME", default="moderator-bot") or "moderator-bot"
         container_args_raw = _first("MODBOT_DOCKER_CONTAINER_ARGS", "DOCKER_CONTAINER_ARGS")
@@ -334,20 +334,26 @@ class DockerUpdateManager:
         self._executor = executor or _run_subprocess
 
     async def run(self) -> UpdateReport:
-        pull_command = [self.config.docker_binary, "pull", self.config.image]
         env = self.config.env or None
+        mode = await self._resolve_deployment_mode(env)
+
+        pull_command = [self.config.docker_binary, "pull", self.config.image]
         pull_result = await self._executor(pull_command, self.config.pull_timeout, env)
 
-        if self.config.deployment_mode == "container":
+        if mode == "container":
             service_results = await self._run_container_update(env)
         else:
             service_results = await self._run_service_update(env)
 
-        rollout_mode = (
-            f"{self.config.update_order}, "
-            f"parallelism={self.config.update_parallelism}, "
-            f"delay={self.config.update_delay}"
-        )
+        if mode == "service":
+            rollout_mode = (
+                "service | "
+                f"{self.config.update_order}, "
+                f"parallelism={self.config.update_parallelism}, "
+                f"delay={self.config.update_delay}"
+            )
+        else:
+            rollout_mode = "container | stop -> rm -> run"
         return UpdateReport(
             image=self.config.image,
             pull=pull_result,
@@ -370,6 +376,29 @@ class DockerUpdateManager:
         command.extend(self.config.extra_flags)
         command.append(service)
         return command
+
+    async def _resolve_deployment_mode(self, env: Mapping[str, str] | None) -> str:
+        if self.config.deployment_mode != "auto":
+            return self.config.deployment_mode
+        info_command = [
+            self.config.docker_binary,
+            "info",
+            "--format",
+            "{{.Swarm.LocalNodeState}} {{.Swarm.ControlAvailable}}",
+        ]
+        try:
+            outcome = await self._executor(info_command, self.config.pull_timeout, env)
+        except DockerCommandError:
+            return "container"
+        result = outcome.stdout.strip().lower()
+        if not result:
+            return "container"
+        parts = result.split()
+        state = parts[0] if parts else ""
+        control = parts[1] if len(parts) > 1 else ""
+        if state == "active" and control in {"true", "yes"}:
+            return "service"
+        return "container"
 
     async def _run_service_update(self, env: Mapping[str, str] | None) -> list[ServiceUpdateResult]:
         service_results: list[ServiceUpdateResult] = []
