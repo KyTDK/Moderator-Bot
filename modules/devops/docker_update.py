@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 
 TRUE_VALUES = {"1", "true", "yes", "on"}
 DEFAULT_IMAGE = "ghcr.io/kytdk/moderator-bot:latest"
+DEFAULT_CONTAINER_ARGS = ("--restart", "always")
 DEFAULT_SERVICES = ("moderator-bot",)
 
 
@@ -142,6 +143,9 @@ class DockerUpdateConfig:
     update_timeout: float
     extra_flags: tuple[str, ...]
     env: dict[str, str]
+    deployment_mode: str
+    container_name: str
+    container_args: tuple[str, ...]
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> DockerUpdateConfig:
@@ -221,6 +225,17 @@ class DockerUpdateConfig:
         if config_path:
             env_overrides["DOCKER_CONFIG"] = config_path
 
+        deployment_mode = (_first("MODBOT_DOCKER_DEPLOYMENT", "MODBOT_DEPLOYMENT_MODE", default="service") or "service").lower()
+        if deployment_mode not in {"service", "container"}:
+            raise UpdateConfigError("MODBOT_DOCKER_DEPLOYMENT must be 'service' or 'container'.")
+
+        container_name = _first("MODBOT_DOCKER_CONTAINER_NAME", "DOCKER_CONTAINER_NAME", default="moderator-bot") or "moderator-bot"
+        container_args_raw = _first("MODBOT_DOCKER_CONTAINER_ARGS", "DOCKER_CONTAINER_ARGS")
+        if container_args_raw:
+            container_args = _parse_extra_flags(container_args_raw)
+        else:
+            container_args = DEFAULT_CONTAINER_ARGS
+
         return cls(
             image=image,
             services=services,
@@ -233,6 +248,9 @@ class DockerUpdateConfig:
             update_timeout=update_timeout,
             extra_flags=extra_flags,
             env=env_overrides,
+            deployment_mode=deployment_mode,
+            container_name=container_name,
+            container_args=container_args,
         )
 
 
@@ -311,11 +329,10 @@ class DockerUpdateManager:
         env = self.config.env or None
         pull_result = await self._executor(pull_command, self.config.pull_timeout, env)
 
-        service_results: list[ServiceUpdateResult] = []
-        for service in self.config.services:
-            command = self._build_service_command(service)
-            outcome = await self._executor(command, self.config.update_timeout, env)
-            service_results.append(ServiceUpdateResult(service=service, outcome=outcome))
+        if self.config.deployment_mode == "container":
+            service_results = await self._run_container_update(env)
+        else:
+            service_results = await self._run_service_update(env)
 
         rollout_mode = (
             f"{self.config.update_order}, "
@@ -344,6 +361,52 @@ class DockerUpdateManager:
         command.extend(self.config.extra_flags)
         command.append(service)
         return command
+
+    async def _run_service_update(self, env: Mapping[str, str] | None) -> list[ServiceUpdateResult]:
+        service_results: list[ServiceUpdateResult] = []
+        for service in self.config.services:
+            command = self._build_service_command(service)
+            outcome = await self._executor(command, self.config.update_timeout, env)
+            service_results.append(ServiceUpdateResult(service=service, outcome=outcome))
+        return service_results
+
+    async def _run_container_update(self, env: Mapping[str, str] | None) -> list[ServiceUpdateResult]:
+        container = self.config.container_name
+        results: list[ServiceUpdateResult] = []
+
+        stop_command = [self.config.docker_binary, "stop", container]
+        stop_outcome = await self._best_effort(stop_command, env)
+        results.append(ServiceUpdateResult(service=f"{container}:stop", outcome=stop_outcome))
+
+        rm_command = [self.config.docker_binary, "rm", container]
+        rm_outcome = await self._best_effort(rm_command, env)
+        results.append(ServiceUpdateResult(service=f"{container}:rm", outcome=rm_outcome))
+
+        run_command = [
+            self.config.docker_binary,
+            "run",
+            "-d",
+            "--name",
+            container,
+            *self.config.container_args,
+            self.config.image,
+        ]
+        run_outcome = await self._executor(run_command, self.config.update_timeout, env)
+        results.append(ServiceUpdateResult(service=f"{container}:run", outcome=run_outcome))
+        return results
+
+    async def _best_effort(self, command: list[str], env: Mapping[str, str] | None) -> CommandOutcome:
+        try:
+            return await self._executor(command, self.config.update_timeout, env)
+        except DockerCommandError as exc:
+            log.debug("Command %s failed but will be ignored: %s", " ".join(command), exc)
+            return CommandOutcome(
+                command=tuple(command),
+                stdout=exc.stdout,
+                stderr=exc.stderr,
+                duration=0.0,
+                exit_code=exc.exit_code,
+            )
 
 
 def format_update_report(report: UpdateReport) -> str:

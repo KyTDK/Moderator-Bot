@@ -14,12 +14,14 @@ from modules.devops.docker_update import (  # noqa: E402
     CommandOutcome,
     DEFAULT_IMAGE,
     DEFAULT_SERVICES,
+    DEFAULT_CONTAINER_ARGS,
     DockerUpdateConfig,
     DockerUpdateManager,
     ServiceUpdateResult,
     UpdateConfigError,
     UpdateReport,
     format_update_report,
+    DockerCommandError,
 )
 
 @pytest.fixture
@@ -32,6 +34,9 @@ def test_config_uses_defaults_when_missing() -> None:
     config = DockerUpdateConfig.from_env(env)
     assert config.image == DEFAULT_IMAGE
     assert config.services == DEFAULT_SERVICES
+    assert config.deployment_mode == "service"
+    assert config.container_name == "moderator-bot"
+    assert config.container_args == DEFAULT_CONTAINER_ARGS
 
 
 def test_config_falls_back_to_default_services_when_env_blank() -> None:
@@ -67,8 +72,9 @@ def test_config_parsing_defaults() -> None:
 
 
 class _FakeExecutor:
-    def __init__(self) -> None:
+    def __init__(self, fail_on: set[tuple[str, ...]] | None = None) -> None:
         self.calls: list[tuple[tuple[str, ...], float | None, dict[str, str] | None]] = []
+        self._fail_on = fail_on or set()
 
     async def __call__(
         self,
@@ -77,9 +83,12 @@ class _FakeExecutor:
         env: Mapping[str, str] | None,
     ) -> CommandOutcome:
         captured_env = dict(env) if env else None
-        self.calls.append((tuple(args), timeout, captured_env))
+        cmd_tuple = tuple(args)
+        self.calls.append((cmd_tuple, timeout, captured_env))
+        if cmd_tuple in self._fail_on:
+            raise DockerCommandError(command=cmd_tuple, exit_code=1, stdout="", stderr="boom")
         return CommandOutcome(
-            command=tuple(args),
+            command=cmd_tuple,
             stdout="ok",
             stderr="",
             duration=0.5,
@@ -160,6 +169,68 @@ def test_config_supports_docker_host_env() -> None:
         "DOCKER_CERT_PATH": "/certs",
         "DOCKER_CONFIG": "/config",
     }
+
+
+@pytest.mark.anyio
+async def test_manager_container_mode_sequence() -> None:
+    env = {
+        "MODBOT_DOCKER_DEPLOYMENT": "container",
+        "MODBOT_DOCKER_CONTAINER_NAME": "moderator-bot",
+        "MODBOT_DOCKER_CONTAINER_ARGS": "--env-file /srv/modbot/.env --network host --restart always",
+    }
+    config = DockerUpdateConfig.from_env(env)
+    fake = _FakeExecutor()
+    manager = DockerUpdateManager(config, executor=fake)
+
+    report = await manager.run()
+
+    expected_commands = [
+        ("docker", "pull", config.image),
+        ("docker", "stop", "moderator-bot"),
+        ("docker", "rm", "moderator-bot"),
+        (
+            "docker",
+            "run",
+            "-d",
+            "--name",
+            "moderator-bot",
+            "--env-file",
+            "/srv/modbot/.env",
+            "--network",
+            "host",
+            "--restart",
+            "always",
+            config.image,
+        ),
+    ]
+    assert [call[0] for call in fake.calls] == expected_commands
+    assert [result.service for result in report.services] == [
+        "moderator-bot:stop",
+        "moderator-bot:rm",
+        "moderator-bot:run",
+    ]
+
+
+@pytest.mark.anyio
+async def test_manager_container_mode_ignores_stop_failures() -> None:
+    env = {
+        "MODBOT_DOCKER_DEPLOYMENT": "container",
+        "MODBOT_DOCKER_CONTAINER_NAME": "moderator-bot",
+    }
+    config = DockerUpdateConfig.from_env(env)
+    fail_on = {
+        ("docker", "stop", "moderator-bot"),
+        ("docker", "rm", "moderator-bot"),
+    }
+    fake = _FakeExecutor(fail_on=fail_on)
+    manager = DockerUpdateManager(config, executor=fake)
+
+    report = await manager.run()
+
+    stop_result, rm_result, run_result = report.services
+    assert stop_result.outcome.exit_code == 1
+    assert rm_result.outcome.exit_code == 1
+    assert run_result.outcome.exit_code == 0
 
 
 def test_format_update_report() -> None:
