@@ -3,6 +3,7 @@
 from .docker_update import (
     CommandOutcome,
     DEFAULT_IMAGE,
+    DEFAULT_SERVICES,
     DockerCommandError,
     DockerUpdateConfig,
     DockerUpdateManager,
@@ -14,6 +15,7 @@ from .docker_update import (
 
 __all__ = [
     "DEFAULT_IMAGE",
+    "DEFAULT_SERVICES",
     "CommandOutcome",
     "DockerCommandError",
     "DockerUpdateConfig",

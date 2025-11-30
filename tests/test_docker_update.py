@@ -12,9 +12,11 @@ if str(PROJECT_ROOT) not in sys.path:
 from modules.devops.docker_update import (  # noqa: E402
     CommandOutcome,
     DEFAULT_IMAGE,
+    DEFAULT_SERVICES,
     DockerUpdateConfig,
     DockerUpdateManager,
     ServiceUpdateResult,
+    UpdateConfigError,
     UpdateReport,
     format_update_report,
 )
@@ -24,10 +26,17 @@ def anyio_backend() -> str:
     return "asyncio"
 
 
-def test_config_uses_default_image_when_missing() -> None:
-    env = {"MODBOT_DOCKER_SERVICES": "alpha"}
+def test_config_uses_defaults_when_missing() -> None:
+    env = {}
     config = DockerUpdateConfig.from_env(env)
     assert config.image == DEFAULT_IMAGE
+    assert config.services == DEFAULT_SERVICES
+
+
+def test_config_falls_back_to_default_services_when_env_blank() -> None:
+    env = {"MODBOT_DOCKER_SERVICES": "   "}
+    config = DockerUpdateConfig.from_env(env)
+    assert config.services == DEFAULT_SERVICES
 
 
 def test_config_parsing_defaults() -> None:

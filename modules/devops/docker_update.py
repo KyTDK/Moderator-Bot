@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 
 TRUE_VALUES = {"1", "true", "yes", "on"}
 DEFAULT_IMAGE = "ghcr.io/kytdk/moderator-bot:latest"
+DEFAULT_SERVICES = ("moderator-bot",)
 
 
 class UpdateConfigError(ValueError):
@@ -155,9 +156,14 @@ class DockerUpdateConfig:
         image = _first("MODBOT_DOCKER_IMAGE", "DOCKER_IMAGE", default=DEFAULT_IMAGE) or DEFAULT_IMAGE
 
         services_raw = _first("MODBOT_DOCKER_SERVICES", "DOCKER_SERVICES")
-        services = _parse_services(services_raw)
-        if not services:
-            raise UpdateConfigError("Set MODBOT_DOCKER_SERVICES to at least one service name (comma separated).")
+        if services_raw:
+            services = _parse_services(services_raw)
+            if not services:
+                raise UpdateConfigError(
+                    "Set MODBOT_DOCKER_SERVICES to at least one service name (comma separated)."
+                )
+        else:
+            services = DEFAULT_SERVICES
 
         docker_binary = _first(
             "MODBOT_DOCKER_BINARY",
