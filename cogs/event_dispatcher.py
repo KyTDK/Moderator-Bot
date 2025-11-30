@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from dataclasses import dataclass
 from typing import Any
 
 import discord
@@ -15,19 +14,48 @@ from modules.utils.log_channel import DeveloperLogField, log_to_developer_channe
 from modules.worker_queue import WorkerQueue
 from modules.worker_queue_alerts import SingularTaskReporter
 
-@dataclass(slots=True)
+
 class QueueProfile:
-    label: str
-    queue: WorkerQueue
-    baseline: int
-    ceiling: int
-    min_backlog_high: int
-    min_backlog_low: int
-    hard_limit_floor: int
-    shed_to_floor: int
-    high_multiplier: float = 3.5
-    shed_multiplier: float = 2.5
-    hard_multiplier: float = 6.0
+    __slots__ = (
+        "label",
+        "queue",
+        "baseline",
+        "ceiling",
+        "min_backlog_high",
+        "min_backlog_low",
+        "hard_limit_floor",
+        "shed_to_floor",
+        "high_multiplier",
+        "shed_multiplier",
+        "hard_multiplier",
+    )
+
+    def __init__(
+        self,
+        *,
+        label: str,
+        queue: WorkerQueue,
+        baseline: int,
+        ceiling: int,
+        min_backlog_high: int,
+        min_backlog_low: int,
+        hard_limit_floor: int,
+        shed_to_floor: int,
+        high_multiplier: float = 3.5,
+        shed_multiplier: float = 2.5,
+        hard_multiplier: float = 6.0,
+    ) -> None:
+        self.label = label
+        self.queue = queue
+        self.baseline = baseline
+        self.ceiling = ceiling
+        self.min_backlog_high = min_backlog_high
+        self.min_backlog_low = min_backlog_low
+        self.hard_limit_floor = hard_limit_floor
+        self.shed_to_floor = shed_to_floor
+        self.high_multiplier = high_multiplier
+        self.shed_multiplier = shed_multiplier
+        self.hard_multiplier = hard_multiplier
 
 
 class EventDispatcherCog(commands.Cog):
