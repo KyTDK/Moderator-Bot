@@ -13,6 +13,12 @@ RUN --mount=type=cache,target=/var/cache/apt \
     ffmpeg git curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# Install a standalone Docker CLI so in-container updates can control the host daemon
+ARG DOCKER_CLI_VERSION=27.2.0
+RUN curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_CLI_VERSION}.tgz" \
+    | tar --extract --gzip --strip-components=1 --directory=/usr/local/bin docker/docker \
+    && chmod +x /usr/local/bin/docker
+
 WORKDIR /app
 
 COPY requirements.txt .
