@@ -34,7 +34,7 @@ def test_config_uses_defaults_when_missing() -> None:
     config = DockerUpdateConfig.from_env(env)
     assert config.image == DEFAULT_IMAGE
     assert config.services == DEFAULT_SERVICES
-    assert config.deployment_mode == "service"
+    assert config.deployment_mode == "container"
     assert config.container_name == "moderator-bot"
     assert config.container_args == DEFAULT_CONTAINER_ARGS
 
@@ -103,6 +103,7 @@ async def test_manager_runs_pull_and_updates() -> None:
         "MODBOT_DOCKER_SERVICES": "alpha,beta",
         "MODBOT_DOCKER_WITH_REGISTRY_AUTH": "1",
         "MODBOT_DOCKER_EXTRA_FLAGS": "--label-add stack=dev",
+        "MODBOT_DOCKER_DEPLOYMENT": "service",
     }
     config = DockerUpdateConfig.from_env(env)
     fake = _FakeExecutor()

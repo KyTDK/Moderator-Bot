@@ -12,7 +12,16 @@ log = logging.getLogger(__name__)
 
 TRUE_VALUES = {"1", "true", "yes", "on"}
 DEFAULT_IMAGE = "ghcr.io/kytdk/moderator-bot:latest"
-DEFAULT_CONTAINER_ARGS = ("--restart", "always")
+DEFAULT_CONTAINER_ARGS = (
+    "--restart",
+    "always",
+    "--env-file",
+    "/srv/modbot/.env",
+    "--network",
+    "host",
+    "--add-host",
+    "host.docker.internal:host-gateway",
+)
 DEFAULT_SERVICES = ("moderator-bot",)
 
 
@@ -225,7 +234,7 @@ class DockerUpdateConfig:
         if config_path:
             env_overrides["DOCKER_CONFIG"] = config_path
 
-        deployment_mode = (_first("MODBOT_DOCKER_DEPLOYMENT", "MODBOT_DEPLOYMENT_MODE", default="service") or "service").lower()
+        deployment_mode = (_first("MODBOT_DOCKER_DEPLOYMENT", "MODBOT_DEPLOYMENT_MODE", default="container") or "container").lower()
         if deployment_mode not in {"service", "container"}:
             raise UpdateConfigError("MODBOT_DOCKER_DEPLOYMENT must be 'service' or 'container'.")
 
