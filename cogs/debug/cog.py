@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from typing import Optional
@@ -10,6 +11,14 @@ from discord import app_commands
 from discord.ext import commands
 
 from modules.core.health import FeatureStatus, report_feature
+from modules.devops import (
+    DockerCommandError,
+    DockerUpdateConfig,
+    DockerUpdateManager,
+    UpdateConfigError,
+    UpdateReport,
+    format_update_report,
+)
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +63,7 @@ else:
 
 from modules.core.moderator_bot import ModeratorBot
 from modules.i18n.strings import locale_string
+from modules.utils.log_channel import DeveloperLogField, log_to_developer_channel
 
 from .commands.guilds import ban_guild as handle_ban_guild
 from .commands.guilds import refresh_guilds as handle_refresh_guilds
@@ -88,6 +98,7 @@ class DebugCog(commands.Cog):
         self.bot = bot
         self.process = psutil.Process() if psutil else _FallbackProcess()
         self.start_time = time.time()
+        self._update_lock = asyncio.Lock()
 
     @app_commands.command(
         name="stats",
@@ -218,8 +229,125 @@ class DebugCog(commands.Cog):
         await report_vector_status(interaction)
 
     @app_commands.command(
+        name="update",
+        description="Pull the latest Docker image and redeploy the bot with zero-gap failover.",
+    )
+    @guild_scope_decorator()
+    @app_commands.checks.has_permissions(administrator=True)
+    async def update_bot(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+        if not await require_dev_access(self.bot, interaction):
+            return
+        if self._update_lock.locked():
+            await interaction.followup.send(
+                "Another deployment is already running. Try again once it completes.",
+                ephemeral=True,
+            )
+            return
+        try:
+            config = DockerUpdateConfig.from_env()
+        except UpdateConfigError as exc:
+            await interaction.followup.send(f"Update aborted: {exc}", ephemeral=True)
+            return
+
+        async with self._update_lock:
+            status_message = await interaction.followup.send(
+                "Pulling latest Docker image...",
+                ephemeral=True,
+            )
+            manager = DockerUpdateManager(config)
+            try:
+                report = await manager.run()
+            except DockerCommandError as exc:
+                failure_message = self._format_update_error(exc)
+                await status_message.edit(content=failure_message)
+                await self._log_update_failure(interaction.user, config.image, exc)
+                return
+
+            summary = format_update_report(report)
+            await status_message.edit(content=summary)
+            await self._log_update_success(interaction.user, report)
+
+    @app_commands.command(
         name="locale",
         description=locale_string("cogs.debug.meta.locale.description"),
     )
     async def current_locale(self, interaction: discord.Interaction):
         await send_current_locale(self, interaction)
+
+    @staticmethod
+    def _format_update_error(error: DockerCommandError) -> str:
+        command = " ".join(error.command) or "docker"
+        snippet_source = (error.stderr or error.stdout or "").strip()
+        if snippet_source:
+            snippet = snippet_source.splitlines()[-1]
+            if len(snippet) > 200:
+                snippet = snippet[:197] + "..."
+            detail = f"\nDetails: {snippet}"
+        else:
+            detail = ""
+        return (
+            f"Update failed while running `{command}` (exit {error.exit_code})."
+            f"{detail}"
+        )
+
+    @staticmethod
+    def _summarize_output(stdout: str, stderr: str, *, limit: int = 900) -> str:
+        payload = (stderr or stdout or "").strip()
+        if not payload:
+            return "*(no output)*"
+        if len(payload) > limit:
+            payload = payload[: limit - 3] + "..."
+        prefix = "stderr" if stderr else "stdout"
+        return f"{prefix}: {payload}"
+
+    async def _log_update_success(self, user: discord.abc.User, report: UpdateReport) -> None:
+        user_label = f"{user} ({user.id})"
+        fields = [
+            DeveloperLogField(name="Triggered by", value=user_label),
+            DeveloperLogField(name="Image", value=f"`{report.image}`"),
+            DeveloperLogField(name="Rollout", value=report.rollout_mode),
+        ]
+        for result in report.services:
+            fields.append(
+                DeveloperLogField(
+                    name=f"{result.service} ({result.outcome.duration:.1f}s)",
+                    value=self._summarize_output(result.outcome.stdout, result.outcome.stderr),
+                )
+            )
+        await log_to_developer_channel(
+            self.bot,
+            summary="Zero-gap deployment completed",
+            severity="success",
+            description=(
+                f"Total duration {report.total_duration:.1f}s across {len(report.services)} service(s)."
+            ),
+            fields=fields,
+            context="debug.update",
+        )
+
+    async def _log_update_failure(
+        self,
+        user: discord.abc.User,
+        image: str,
+        error: DockerCommandError,
+    ) -> None:
+        user_label = f"{user} ({user.id})"
+        fields = [
+            DeveloperLogField(name="Triggered by", value=user_label),
+            DeveloperLogField(name="Image", value=f"`{image}`"),
+            DeveloperLogField(name="Command", value=" ".join(error.command) or "(unknown)"),
+            DeveloperLogField(name="Exit code", value=str(error.exit_code)),
+            DeveloperLogField(
+                name="Output",
+                value=self._summarize_output(error.stdout, error.stderr),
+            ),
+        ]
+        await log_to_developer_channel(
+            self.bot,
+            summary="Deployment failed",
+            severity="error",
+            description="Docker update command did not complete.",
+            fields=fields,
+            context="debug.update",
+        )
