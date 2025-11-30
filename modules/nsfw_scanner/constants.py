@@ -5,6 +5,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _int_from_env(name: str, default: int | None, *, allow_none: bool = False) -> int | None:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    cleaned = raw.strip().lower()
+    if allow_none and cleaned in {"none", "null", "unlimited"}:
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return default
+
+
 GUILD_ID = int(os.getenv("GUILD_ID", 0))
 LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", 0))
 
@@ -66,20 +80,25 @@ except (TypeError, ValueError):
     TEXT_SIMILARITY_THRESHOLD = 0.75
 HIGH_ACCURACY_SIMILARITY = 0.95  # Min similarity to skip API when high-accuracy is enabled
 # Max frames per video
-MAX_FRAMES_PER_VIDEO = 5
-ACCELERATED_MAX_FRAMES_PER_VIDEO = 100
-ACCELERATED_PRO_MAX_FRAMES_PER_VIDEO = 300
-ACCELERATED_ULTRA_MAX_FRAMES_PER_VIDEO = None
+MAX_FRAMES_PER_VIDEO = _int_from_env("MAX_FRAMES_PER_VIDEO", 5)
+ACCELERATED_MAX_FRAMES_PER_VIDEO = _int_from_env("ACCELERATED_MAX_FRAMES_PER_VIDEO", 100)
+ACCELERATED_PRO_MAX_FRAMES_PER_VIDEO = _int_from_env("ACCELERATED_PRO_MAX_FRAMES_PER_VIDEO", 300)
+ACCELERATED_ULTRA_MAX_FRAMES_PER_VIDEO = _int_from_env("ACCELERATED_ULTRA_MAX_FRAMES_PER_VIDEO", None, allow_none=True)
 # Download caps
-DEFAULT_DOWNLOAD_CAP_BYTES = 128 * 1024 * 1024  # 128 MiB
-ACCELERATED_DOWNLOAD_CAP_BYTES = 256 * 1024 * 1024  # 256 MiB
-ACCELERATED_PRO_DOWNLOAD_CAP_BYTES = 512 * 1024 * 1024  # 512 MiB
-ACCELERATED_ULTRA_DOWNLOAD_CAP_BYTES = None  # Unlimited
+DEFAULT_DOWNLOAD_CAP_BYTES = _int_from_env("DEFAULT_DOWNLOAD_CAP_BYTES", 128 * 1024 * 1024)  # 128 MiB
+ACCELERATED_DOWNLOAD_CAP_BYTES = _int_from_env("ACCELERATED_DOWNLOAD_CAP_BYTES", 256 * 1024 * 1024)  # 256 MiB
+ACCELERATED_PRO_DOWNLOAD_CAP_BYTES = _int_from_env("ACCELERATED_PRO_DOWNLOAD_CAP_BYTES", 512 * 1024 * 1024)  # 512 MiB
+ACCELERATED_ULTRA_DOWNLOAD_CAP_BYTES = _int_from_env("ACCELERATED_ULTRA_DOWNLOAD_CAP_BYTES", None, allow_none=True)  # Unlimited
 # Make concurrent frames
-MAX_CONCURRENT_FRAMES = 5
-ACCELERATED_MAX_CONCURRENT_FRAMES = 24
-ACCELERATED_PRO_CONCURRENT_FRAMES = 28
-ACCELERATED_ULTRA_CONCURRENT_FRAMES = 32
+MAX_CONCURRENT_FRAMES = _int_from_env("MAX_CONCURRENT_FRAMES", 5)
+ACCELERATED_MAX_CONCURRENT_FRAMES = _int_from_env("ACCELERATED_MAX_CONCURRENT_FRAMES", 24)
+ACCELERATED_PRO_CONCURRENT_FRAMES = _int_from_env("ACCELERATED_PRO_CONCURRENT_FRAMES", 28)
+ACCELERATED_ULTRA_CONCURRENT_FRAMES = _int_from_env("ACCELERATED_ULTRA_CONCURRENT_FRAMES", 32)
+# Queue/batch safety caps
+FREE_VIDEO_MAX_CONCURRENCY_CAP = _int_from_env("FREE_VIDEO_MAX_CONCURRENCY_CAP", 4)
+FREE_VIDEO_BATCH_CAP = _int_from_env("FREE_VIDEO_BATCH_CAP", 4)
+ACCELERATED_VIDEO_BATCH_CAP = _int_from_env("ACCELERATED_VIDEO_BATCH_CAP", 16)
+VIDEO_MAX_BATCH_CAP = _int_from_env("VIDEO_MAX_BATCH_CAP", 16)
 ADD_SFW_VECTOR = True  # Add SFW vectors to the index
 SFW_VECTOR_MAX_SIMILARITY = 0.7  # Only add SFW vectors when similarity is low
 try:
@@ -87,9 +106,9 @@ try:
 except (TypeError, ValueError):
     VECTOR_REFRESH_DIVISOR = 0
 try:
-    MOD_API_MAX_CONCURRENCY = int(os.getenv("MOD_API_MAX_CONCURRENCY", "6"))
+    MOD_API_MAX_CONCURRENCY = int(os.getenv("MOD_API_MAX_CONCURRENCY", "10"))
 except (TypeError, ValueError):
-    MOD_API_MAX_CONCURRENCY = 6
+    MOD_API_MAX_CONCURRENCY = 10
 try:
     _ACCEL_CONCURRENCY_RAW = os.getenv("ACCELERATED_MOD_API_MAX_CONCURRENCY")
     if _ACCEL_CONCURRENCY_RAW is None:
