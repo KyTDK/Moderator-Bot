@@ -279,22 +279,33 @@ class DebugCog(commands.Cog):
     def _format_update_error(error: DockerCommandError) -> str:
         command = " ".join(error.command) or "docker"
         snippet_source = (error.stderr or error.stdout or "").strip()
+        detail = ""
         if snippet_source:
             snippet = snippet_source.splitlines()[-1]
             if len(snippet) > 200:
                 snippet = snippet[:197] + "..."
             detail = f"\nDetails: {snippet}"
         else:
-            detail = ""
+            error_detail = str(error).strip()
+            if error_detail:
+                detail = f"\nDetails: {error_detail}"
         return (
             f"Update failed while running `{command}` (exit {error.exit_code})."
             f"{detail}"
         )
 
     @staticmethod
-    def _summarize_output(stdout: str, stderr: str, *, limit: int = 900) -> str:
+    def _summarize_output(
+        stdout: str,
+        stderr: str,
+        *,
+        limit: int = 900,
+        fallback: str | None = None,
+    ) -> str:
         payload = (stderr or stdout or "").strip()
         if not payload:
+            if fallback:
+                return fallback
             return "*(no output)*"
         if len(payload) > limit:
             payload = payload[: limit - 3] + "..."
@@ -340,7 +351,11 @@ class DebugCog(commands.Cog):
             DeveloperLogField(name="Exit code", value=str(error.exit_code)),
             DeveloperLogField(
                 name="Output",
-                value=self._summarize_output(error.stdout, error.stderr),
+                value=self._summarize_output(
+                    error.stdout,
+                    error.stderr,
+                    fallback=str(error).strip() or None,
+                ),
             ),
         ]
         await log_to_developer_channel(
