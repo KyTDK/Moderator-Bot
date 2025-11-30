@@ -10,7 +10,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update && apt-get install -y --no-install-recommends \
     build-essential gcc g++ make pkg-config \
     libopus0 libpng-dev zlib1g-dev \
-    ffmpeg git curl ca-certificates \
+    ffmpeg git curl ca-certificates openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Install a standalone Docker CLI so in-container updates can control the host daemon

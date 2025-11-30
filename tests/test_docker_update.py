@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Mapping
 
 import pytest
 
@@ -67,10 +68,16 @@ def test_config_parsing_defaults() -> None:
 
 class _FakeExecutor:
     def __init__(self) -> None:
-        self.commands: list[tuple[tuple[str, ...], float | None]] = []
+        self.calls: list[tuple[tuple[str, ...], float | None, dict[str, str] | None]] = []
 
-    async def __call__(self, args: list[str], timeout: float | None) -> CommandOutcome:
-        self.commands.append((tuple(args), timeout))
+    async def __call__(
+        self,
+        args: list[str],
+        timeout: float | None,
+        env: Mapping[str, str] | None,
+    ) -> CommandOutcome:
+        captured_env = dict(env) if env else None
+        self.calls.append((tuple(args), timeout, captured_env))
         return CommandOutcome(
             command=tuple(args),
             stdout="ok",
@@ -95,7 +102,7 @@ async def test_manager_runs_pull_and_updates() -> None:
     report = await manager.run()
 
     expected = [
-        (("docker", "pull", env["MODBOT_DOCKER_IMAGE"]), 300.0),
+        (("docker", "pull", env["MODBOT_DOCKER_IMAGE"]), 300.0, None),
         (
             (
                 "docker",
@@ -111,6 +118,7 @@ async def test_manager_runs_pull_and_updates() -> None:
                 "alpha",
             ),
             600.0,
+            None,
         ),
         (
             (
@@ -127,11 +135,31 @@ async def test_manager_runs_pull_and_updates() -> None:
                 "beta",
             ),
             600.0,
+            None,
         ),
     ]
-    assert fake.commands == expected
+    assert fake.calls == expected
     assert [result.service for result in report.services] == ["alpha", "beta"]
     assert report.rollout_mode.startswith("start-first")
+
+
+def test_config_supports_docker_host_env() -> None:
+    env = {
+        "MODBOT_DOCKER_SERVICES": "alpha",
+        "MODBOT_DOCKER_HOST": "ssh://deploy@example",
+        "MODBOT_DOCKER_CONTEXT": "prod",
+        "MODBOT_DOCKER_TLS_VERIFY": "1",
+        "MODBOT_DOCKER_CERT_PATH": "/certs",
+        "MODBOT_DOCKER_CONFIG": "/config",
+    }
+    config = DockerUpdateConfig.from_env(env)
+    assert config.env == {
+        "DOCKER_HOST": "ssh://deploy@example",
+        "DOCKER_CONTEXT": "prod",
+        "DOCKER_TLS_VERIFY": "1",
+        "DOCKER_CERT_PATH": "/certs",
+        "DOCKER_CONFIG": "/config",
+    }
 
 
 def test_format_update_report() -> None:

@@ -77,7 +77,7 @@ class UpdateReport:
         return self.pull.duration + sum(result.outcome.duration for result in self.services)
 
 
-CommandRunner = Callable[[Sequence[str], float | None], Awaitable[CommandOutcome]]
+CommandRunner = Callable[[Sequence[str], float | None, Mapping[str, str] | None], Awaitable[CommandOutcome]]
 
 
 def _parse_bool(value: str | None, *, default: bool = False) -> bool:
@@ -141,6 +141,7 @@ class DockerUpdateConfig:
     pull_timeout: float
     update_timeout: float
     extra_flags: tuple[str, ...]
+    env: dict[str, str]
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> DockerUpdateConfig:
@@ -203,6 +204,23 @@ class DockerUpdateConfig:
 
         extra_flags = _parse_extra_flags(_first("MODBOT_DOCKER_EXTRA_FLAGS", "DOCKER_EXTRA_FLAGS"))
 
+        env_overrides: dict[str, str] = {}
+        docker_host = _first("MODBOT_DOCKER_HOST", "DOCKER_HOST")
+        if docker_host:
+            env_overrides["DOCKER_HOST"] = docker_host
+        docker_context = _first("MODBOT_DOCKER_CONTEXT", "DOCKER_CONTEXT")
+        if docker_context:
+            env_overrides["DOCKER_CONTEXT"] = docker_context
+        tls_verify = _first("MODBOT_DOCKER_TLS_VERIFY", "DOCKER_TLS_VERIFY")
+        if tls_verify is not None:
+            env_overrides["DOCKER_TLS_VERIFY"] = tls_verify
+        cert_path = _first("MODBOT_DOCKER_CERT_PATH", "DOCKER_CERT_PATH")
+        if cert_path:
+            env_overrides["DOCKER_CERT_PATH"] = cert_path
+        config_path = _first("MODBOT_DOCKER_CONFIG", "DOCKER_CONFIG")
+        if config_path:
+            env_overrides["DOCKER_CONFIG"] = config_path
+
         return cls(
             image=image,
             services=services,
@@ -214,10 +232,15 @@ class DockerUpdateConfig:
             pull_timeout=pull_timeout,
             update_timeout=update_timeout,
             extra_flags=extra_flags,
+            env=env_overrides,
         )
 
 
-async def _run_subprocess(args: Sequence[str], timeout: float | None = None) -> CommandOutcome:
+async def _run_subprocess(
+    args: Sequence[str],
+    timeout: float | None = None,
+    env: Mapping[str, str] | None = None,
+) -> CommandOutcome:
     start = time.perf_counter()
     log.debug("Running command: %s", " ".join(shlex.quote(arg) for arg in args))
     try:
@@ -225,6 +248,7 @@ async def _run_subprocess(args: Sequence[str], timeout: float | None = None) -> 
             *args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            env=(os.environ | dict(env)) if env else None,
         )
     except FileNotFoundError as exc:  # pragma: no cover - environment specific
         raise DockerCommandError(
@@ -284,12 +308,13 @@ class DockerUpdateManager:
 
     async def run(self) -> UpdateReport:
         pull_command = [self.config.docker_binary, "pull", self.config.image]
-        pull_result = await self._executor(pull_command, self.config.pull_timeout)
+        env = self.config.env or None
+        pull_result = await self._executor(pull_command, self.config.pull_timeout, env)
 
         service_results: list[ServiceUpdateResult] = []
         for service in self.config.services:
             command = self._build_service_command(service)
-            outcome = await self._executor(command, self.config.update_timeout)
+            outcome = await self._executor(command, self.config.update_timeout, env)
             service_results.append(ServiceUpdateResult(service=service, outcome=outcome))
 
         rollout_mode = (
