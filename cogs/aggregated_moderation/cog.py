@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import time
 
 import discord
 from discord.ext import commands
@@ -18,6 +19,7 @@ from .handlers import ModerationHandlers
 from .performance_monitor import AcceleratedPerformanceMonitor
 from .queue_monitor import FreeQueueMonitor
 from .queue_context import reset_current_queue, set_current_queue
+from .queue_snapshot import QueueSnapshot
 
 
 class AggregatedModerationCog(commands.Cog):
@@ -123,6 +125,9 @@ class AggregatedModerationCog(commands.Cog):
             config=controller_cfg,
         )
 
+        self._last_free_failover: float = 0.0
+        self._failover_cooldown: float = 30.0
+
     def _is_new_guild(self, guild_id: int) -> bool:
         """Return True if the bot joined this guild within the last 30 minutes."""
         try:
@@ -136,9 +141,43 @@ class AggregatedModerationCog(commands.Cog):
         except Exception:
             return False
 
+    def _free_queue_overloaded(self) -> bool:
+        """Return True when free queue is saturated enough to justify failover."""
+
+        if not self.free_queue.running:
+            return False
+
+        if self._last_free_failover:
+            elapsed = time.monotonic() - self._last_free_failover
+            if elapsed < self._failover_cooldown:
+                return True
+
+        try:
+            snapshot = QueueSnapshot.from_mapping(self.free_queue.metrics())
+        except Exception:
+            return False
+
+        backlog_high = snapshot.backlog_high or max(snapshot.baseline_workers * 3, 12)
+        backlog_pressure = snapshot.backlog >= max(int(backlog_high * 1.25), backlog_high + snapshot.max_workers)
+        hard_limit_pressure = False
+        if snapshot.backlog_hard_limit is not None:
+            hard_limit_pressure = snapshot.backlog >= max(snapshot.backlog_hard_limit - max(5, snapshot.max_workers), 0)
+
+        wait_signal = snapshot.wait_signal()
+        runtime_signal = snapshot.runtime_signal() or 0.0
+        wait_pressure = wait_signal >= max(10.0, runtime_signal * 3.0)
+
+        overloaded = backlog_pressure or hard_limit_pressure or wait_pressure
+        if overloaded:
+            self._last_free_failover = time.monotonic()
+        return overloaded
+
     async def add_to_queue(self, coro, guild_id: int, *, task_kind: str | None = None):
         accelerated = await mysql.is_accelerated(guild_id=guild_id)
         if not accelerated and self._is_new_guild(guild_id):
+            accelerated = True
+
+        if not accelerated and self._free_queue_overloaded():
             accelerated = True
 
         if task_kind == "video" and accelerated:

@@ -22,6 +22,7 @@ from ..constants import (
     FREE_VIDEO_MAX_CONCURRENCY_CAP,
     MAX_CONCURRENT_FRAMES,
     MAX_FRAMES_PER_VIDEO,
+    VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS,
     VIDEO_MAX_BATCH_CAP,
 )
 from ..utils.file_ops import safe_delete
@@ -355,6 +356,14 @@ async def process_video(
     flagged = False
     try:
         while True:
+            if (
+                VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS
+                and (time.perf_counter() - overall_started) >= VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS
+            ):
+                if not metrics.has_early_exit():
+                    metrics.note_early_exit("wall_clock_timeout")
+                stop_event.set()
+                break
             try:
                 wait_started = time.perf_counter()
                 timeout: float | None = None
