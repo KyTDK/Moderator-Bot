@@ -30,6 +30,8 @@ os.environ[
 class _FakeQueue:
     def __init__(self, *, name=None, **_):
         self.name = name
+        self._name = name
+        self.running = True
         self.added = []
 
     async def add_task(self, coro):
