@@ -43,6 +43,17 @@ class VoiceConnectBackoff:
             return 0.0
         return remaining
 
+    def snooze(self, guild_id: int, channel_id: int, seconds: float) -> None:
+        """Pause attempts for a fixed duration without escalating attempts."""
+        delay = max(0.0, seconds)
+        if delay == 0.0:
+            self.clear(guild_id, channel_id)
+            return
+        self._entries[(guild_id, channel_id)] = _BackoffEntry(
+            until=time.monotonic() + delay,
+            attempts=0,
+        )
+
 
 VOICE_BACKOFF = VoiceConnectBackoff()
 

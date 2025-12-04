@@ -2,7 +2,7 @@ import asyncio
 import contextlib
 import math
 from datetime import timedelta, datetime, timezone
-from typing import Optional, Tuple, List, Dict
+from typing import Optional, Tuple, List, Dict, Any
 import sys
 import os
 import logging
@@ -28,6 +28,7 @@ from .backoff import VOICE_BACKOFF
 logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
 
 HARVEST_WINDOW_SECONDS: float = 6.0
+_GATEWAY_SNOOZE_SECONDS: float = 30.0
 _MIN_SPOKEN_DURATION_S = 0.35
 _MIN_RMS_THRESHOLD = 900.0
 
@@ -65,6 +66,39 @@ def _filter_pcm_by_energy(
             continue
         filtered[uid] = pcm
     return filtered
+
+
+def _gateway_websocket_ready(guild: discord.Guild) -> bool:
+    """Best-effort check that the shard websocket can accept new voice_state payloads."""
+    state = getattr(guild, "_state", None)
+    if state is None:
+        return False
+
+    websocket: Any = None
+    getter = getattr(state, "_get_websocket", None)
+    shard_id = getattr(guild, "shard_id", None)
+    if callable(getter):
+        try:
+            websocket = getter(shard_id)
+        except Exception:
+            websocket = None
+
+    if websocket is None:
+        websocket = getattr(state, "ws", None)
+    if websocket is None:
+        return False
+
+    socket = getattr(websocket, "socket", None)
+    if socket is None:
+        return True
+    if getattr(socket, "closed", False):
+        return False
+    if getattr(socket, "_closing", False):
+        return False
+    close_code = getattr(socket, "close_code", None)
+    if close_code is not None:
+        return False
+    return True
 
 def _ensure_opus_loaded() -> None:
     """Ensure opus is loaded for voice receive/PCM decode."""
@@ -146,6 +180,22 @@ async def _ensure_connected(
             current = None
             voice = None
 
+        cooldown = VOICE_BACKOFF.remaining(guild.id, channel.id)
+        if cooldown > 0.0:
+            print(
+                f"[VC IO] Skipping voice connect for guild {guild.id} channel {channel.id}; "
+                f"backoff {cooldown:.1f}s remaining"
+            )
+            return None
+
+        if not _gateway_websocket_ready(guild):
+            VOICE_BACKOFF.snooze(guild.id, channel.id, _GATEWAY_SNOOZE_SECONDS)
+            print(
+                f"[VC IO] Gateway websocket unavailable for guild {guild.id} channel {channel.id}; "
+                f"pausing {int(_GATEWAY_SNOOZE_SECONDS)}s before retry"
+            )
+            return None
+
         # Attempt to move if we are connected elsewhere.
         if current and current.is_connected() and current_channel_id != channel.id:
             try:
@@ -168,14 +218,6 @@ async def _ensure_connected(
             VOICE_BACKOFF.clear(guild.id, channel.id)
             return current
 
-        cooldown = VOICE_BACKOFF.remaining(guild.id, channel.id)
-        if cooldown > 0.0:
-            print(
-                f"[VC IO] Skipping voice connect for guild {guild.id} channel {channel.id}; "
-                f"backoff {cooldown:.1f}s remaining"
-            )
-            return None
-
         # Fresh connect with a retry if Discord still thinks we're attached elsewhere.
         for _ in range(2):
             try:
@@ -195,6 +237,13 @@ async def _ensure_connected(
                     voice = None
                 await asyncio.sleep(0.5)
                 continue
+        return None
+    except ConnectionResetError as e:
+        VOICE_BACKOFF.snooze(guild.id, channel.id, _GATEWAY_SNOOZE_SECONDS)
+        print(
+            f"[VC IO] Gateway websocket closed during voice connect for guild {guild.id}, channel {channel.id}: {e}; "
+            f"retrying in {int(_GATEWAY_SNOOZE_SECONDS)}s"
+        )
         return None
     except Exception as e:
         delay = VOICE_BACKOFF.record_failure(guild.id, channel.id)
