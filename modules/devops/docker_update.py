@@ -90,6 +90,28 @@ class UpdateReport:
 CommandRunner = Callable[[Sequence[str], float | None, Mapping[str, str] | None], Awaitable[CommandOutcome]]
 
 
+def _is_running_in_container() -> bool:
+    """Best-effort detection for containerized runtime.
+
+    We prefer a conservative heuristic here: if the bot is running inside a
+    container, performing a container-mode update would stop the current
+    process before it can report success or failure. The bot should instead be
+    updated from an orchestrator (e.g., Docker Swarm) or via an external
+    operator.
+    """
+
+    if os.path.exists("/.dockerenv"):
+        return True
+
+    try:
+        with open("/proc/1/cgroup", encoding="utf-8") as fp:
+            content = fp.read()
+    except OSError:  # pragma: no cover - environment dependent
+        return False
+
+    return "docker" in content or "kubepods" in content
+
+
 def _parse_bool(value: str | None, *, default: bool = False) -> bool:
     if value is None:
         return default
@@ -339,6 +361,12 @@ class DockerUpdateManager:
 
         pull_command = [self.config.docker_binary, "pull", self.config.image]
         pull_result = await self._executor(pull_command, self.config.pull_timeout, env)
+
+        if mode == "container" and _is_running_in_container():
+            raise UpdateConfigError(
+                "Container-mode updates cannot be run from inside a container. "
+                "Set MODBOT_DOCKER_DEPLOYMENT=service or trigger the rollout from an external host."
+            )
 
         if mode == "container":
             service_results = await self._run_container_update(env)

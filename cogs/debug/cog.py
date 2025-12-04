@@ -263,6 +263,9 @@ class DebugCog(commands.Cog):
                 await status_message.edit(content=failure_message)
                 await self._log_update_failure(interaction.user, config.image, exc)
                 return
+            except UpdateConfigError as exc:
+                await status_message.edit(content=f"Update aborted: {exc}")
+                return
 
             summary = format_update_report(report)
             await status_message.edit(content=summary)
