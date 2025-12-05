@@ -315,12 +315,33 @@ async def test_manager_auto_switches_to_service_when_inside_container(monkeypatc
     manager = DockerUpdateManager(config, executor=fake)
     monkeypatch.setattr("modules.devops.docker_update._is_running_in_container", lambda: True)
 
-    await manager.run()
+    report = await manager.run()
 
     commands = [call[0] for call in fake.calls]
     assert commands[0] == info_command
     assert any(cmd[:3] == ("docker", "service", "update") for cmd in commands)
     assert not any(cmd[:2] == ("docker", "run") for cmd in commands)
+    assert report.rollout_mode.startswith("service (container-runtime fallback)")
+
+
+@pytest.mark.anyio
+async def test_manager_forced_container_falls_back_inside_container(monkeypatch) -> None:
+    env: dict[str, str] = {
+        "MODBOT_DOCKER_IMAGE": "ghcr.io/example/modbot:main",
+        "MODBOT_DOCKER_DEPLOYMENT": "container",
+    }
+    config = DockerUpdateConfig.from_env(env)
+    fake = _FakeExecutor()
+    manager = DockerUpdateManager(config, executor=fake)
+    monkeypatch.setattr("modules.devops.docker_update._is_running_in_container", lambda: True)
+
+    report = await manager.run()
+
+    commands = [call[0] for call in fake.calls]
+    assert commands[0] == ("docker", "pull", config.image)
+    assert any(cmd[:3] == ("docker", "service", "update") for cmd in commands)
+    assert not any(cmd[:2] == ("docker", "run") for cmd in commands)
+    assert report.rollout_mode.startswith("service (container-runtime fallback)")
 
 
 def test_format_update_report() -> None:
