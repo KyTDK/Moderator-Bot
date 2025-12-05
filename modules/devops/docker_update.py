@@ -358,15 +358,21 @@ class DockerUpdateManager:
     async def run(self) -> UpdateReport:
         env = self.config.env or None
         mode = await self._resolve_deployment_mode(env)
+        inside_container = _is_running_in_container()
+        if mode == "container" and inside_container:
+            if self.config.deployment_mode == "auto":
+                log.info(
+                    "Detected container runtime with auto deployment mode; falling back to service rollout."
+                )
+                mode = "service"
+            else:
+                raise UpdateConfigError(
+                    "Container-mode updates cannot be run from inside a container. "
+                    "Set MODBOT_DOCKER_DEPLOYMENT=service or trigger the rollout from an external host."
+                )
 
         pull_command = [self.config.docker_binary, "pull", self.config.image]
         pull_result = await self._executor(pull_command, self.config.pull_timeout, env)
-
-        if mode == "container" and _is_running_in_container():
-            raise UpdateConfigError(
-                "Container-mode updates cannot be run from inside a container. "
-                "Set MODBOT_DOCKER_DEPLOYMENT=service or trigger the rollout from an external host."
-            )
 
         if mode == "container":
             service_results = await self._run_container_update(env)

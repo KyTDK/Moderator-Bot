@@ -76,12 +76,34 @@ def _gateway_websocket_ready(guild: discord.Guild) -> bool:
 
     websocket: Any = None
     getter = getattr(state, "_get_websocket", None)
+    guild_id = getattr(guild, "id", None)
     shard_id = getattr(guild, "shard_id", None)
     if callable(getter):
+        kwargs: Dict[str, Any] = {}
+        if shard_id is not None:
+            kwargs["shard_id"] = shard_id
         try:
-            websocket = getter(shard_id)
+            websocket = getter(guild_id, **kwargs)
+        except TypeError:
+            # Older discord.py signatures only accept guild_id positional
+            try:
+                websocket = getter(guild_id)
+            except Exception:
+                websocket = None
         except Exception:
             websocket = None
+
+    if websocket is None:
+        # Fallback to the client reference discord.py stores on the state
+        client_getter = getattr(state, "_get_client", None)
+        if callable(client_getter):
+            try:
+                client = client_getter()
+            except Exception:
+                client = None
+            else:
+                if client is not None:
+                    websocket = getattr(client, "ws", None)
 
     if websocket is None:
         websocket = getattr(state, "ws", None)
@@ -89,6 +111,9 @@ def _gateway_websocket_ready(guild: discord.Guild) -> bool:
         return False
 
     socket = getattr(websocket, "socket", None)
+    if socket is None:
+        # AutoShardedClient stores the aiohttp socket on the `.ws` attribute
+        socket = getattr(websocket, "ws", None)
     if socket is None:
         return True
     if getattr(socket, "closed", False):

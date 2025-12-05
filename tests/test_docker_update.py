@@ -290,6 +290,39 @@ async def test_manager_auto_detects_container_mode_when_info_fails() -> None:
     assert any(cmd[:2] == ("docker", "run") for cmd in commands)
 
 
+@pytest.mark.anyio
+async def test_manager_auto_switches_to_service_when_inside_container(monkeypatch) -> None:
+    env: dict[str, str] = {
+        "MODBOT_DOCKER_IMAGE": "ghcr.io/example/modbot:main",
+    }
+    config = DockerUpdateConfig.from_env(env)
+    info_command = (
+        "docker",
+        "info",
+        "--format",
+        "{{.Swarm.LocalNodeState}} {{.Swarm.ControlAvailable}}",
+    )
+    scripted = {
+        info_command: CommandOutcome(
+            command=info_command,
+            stdout="inactive false",
+            stderr="",
+            duration=0.1,
+            exit_code=0,
+        )
+    }
+    fake = _FakeExecutor(scripted=scripted)
+    manager = DockerUpdateManager(config, executor=fake)
+    monkeypatch.setattr("modules.devops.docker_update._is_running_in_container", lambda: True)
+
+    await manager.run()
+
+    commands = [call[0] for call in fake.calls]
+    assert commands[0] == info_command
+    assert any(cmd[:3] == ("docker", "service", "update") for cmd in commands)
+    assert not any(cmd[:2] == ("docker", "run") for cmd in commands)
+
+
 def test_format_update_report() -> None:
     pull = CommandOutcome(command=("docker", "pull", "img"), stdout="", stderr="", duration=1.25, exit_code=0)
     service_outcome = CommandOutcome(
