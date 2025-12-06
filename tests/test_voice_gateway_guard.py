@@ -69,6 +69,36 @@ def test_gateway_guard_true_when_socket_open():
     assert voice_io._gateway_websocket_ready(guild) is True
 
 
+def test_gateway_guard_false_when_client_closed():
+    socket = types.SimpleNamespace(closed=False, _closing=False, close_code=None)
+    websocket = types.SimpleNamespace(socket=socket)
+    client = types.SimpleNamespace(ws=websocket)
+    client.is_closed = lambda: True
+    state = types.SimpleNamespace(
+        _get_websocket=lambda *_: websocket,
+        _get_client=lambda: client,
+    )
+    guild = types.SimpleNamespace(_state=state, id=42, shard_id=0)
+    assert voice_io._gateway_websocket_ready(guild) is False
+
+
+def test_gateway_guard_false_when_transport_closing():
+    class _Transport:
+        def is_closing(self):
+            return True
+
+    socket = types.SimpleNamespace(
+        closed=False,
+        _closing=False,
+        close_code=None,
+        transport=_Transport(),
+    )
+    websocket = types.SimpleNamespace(socket=socket)
+    state = types.SimpleNamespace(_get_websocket=lambda *_: websocket)
+    guild = types.SimpleNamespace(_state=state, id=5, shard_id=1)
+    assert voice_io._gateway_websocket_ready(guild) is False
+
+
 def test_gateway_guard_uses_guild_and_shard_ids_when_available():
     called = {}
 

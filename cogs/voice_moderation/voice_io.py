@@ -68,10 +68,112 @@ def _filter_pcm_by_energy(
     return filtered
 
 
+def _client_online(client: Any) -> bool:
+    """Return False when the discord.py client is shutting down/offline."""
+    if client is None:
+        return True
+
+    closed_flag = getattr(client, "_closed", None)
+    if isinstance(closed_flag, bool) and closed_flag:
+        return False
+
+    is_closed = getattr(client, "is_closed", None)
+    if callable(is_closed):
+        try:
+            if is_closed():
+                return False
+        except Exception:
+            return False
+
+    loop = getattr(client, "loop", None)
+    if loop is not None:
+        loop_is_closed = getattr(loop, "is_closed", None)
+        if callable(loop_is_closed):
+            try:
+                if loop_is_closed():
+                    return False
+            except Exception:
+                return False
+    return True
+
+
+def _extract_socket_handle(candidate: Any) -> Any:
+    """Return the best-effort socket/transport handle from websocket-like objects."""
+    for attr in ("socket", "ws", "_socket", "_ws"):
+        handle = getattr(candidate, attr, None)
+        if handle is not None:
+            return handle
+    return None
+
+
+def _connection_is_open(handle: Any) -> bool:
+    """Heuristic to determine if a websocket/socket is open enough to send payloads."""
+    if handle is None:
+        return False
+
+    for attr in ("closed", "_closed", "_closing", "ws_closed"):
+        flag = getattr(handle, attr, None)
+        if flag:
+            return False
+
+    close_code = getattr(handle, "close_code", None)
+    if close_code is not None:
+        return False
+
+    exception = getattr(handle, "exception", None)
+    if callable(exception):
+        try:
+            exc = exception()
+        except Exception:
+            return False
+        if exc is not None:
+            return False
+
+    transport = getattr(handle, "transport", None)
+    if transport is not None:
+        is_closing = getattr(transport, "is_closing", None)
+        if callable(is_closing):
+            try:
+                if is_closing():
+                    return False
+            except Exception:
+                return False
+
+    loop = getattr(handle, "loop", None)
+    if loop is not None:
+        loop_is_closed = getattr(loop, "is_closed", None)
+        if callable(loop_is_closed):
+            try:
+                if loop_is_closed():
+                    return False
+            except Exception:
+                return False
+
+    return True
+
+
+def _state_client(state: Any) -> Any:
+    getter = getattr(state, "_get_client", None)
+    if callable(getter):
+        try:
+            client = getter()
+        except Exception:
+            client = None
+    else:
+        client = None
+    if client is None:
+        client = getattr(state, "client", None)
+    return client
+
+
 def _gateway_websocket_ready(guild: discord.Guild) -> bool:
     """Best-effort check that the shard websocket can accept new voice_state payloads."""
     state = getattr(guild, "_state", None)
     if state is None:
+        return False
+
+    client = _state_client(state)
+    if not _client_online(client):
         return False
 
     websocket: Any = None
@@ -93,35 +195,21 @@ def _gateway_websocket_ready(guild: discord.Guild) -> bool:
         except Exception:
             websocket = None
 
-    if websocket is None:
-        # Fallback to the client reference discord.py stores on the state
-        client_getter = getattr(state, "_get_client", None)
-        if callable(client_getter):
-            try:
-                client = client_getter()
-            except Exception:
-                client = None
-            else:
-                if client is not None:
-                    websocket = getattr(client, "ws", None)
+    if websocket is None and client is not None:
+        websocket = getattr(client, "ws", None)
 
     if websocket is None:
         websocket = getattr(state, "ws", None)
     if websocket is None:
         return False
 
-    socket = getattr(websocket, "socket", None)
-    if socket is None:
-        # AutoShardedClient stores the aiohttp socket on the `.ws` attribute
-        socket = getattr(websocket, "ws", None)
+    if not _connection_is_open(websocket):
+        return False
+
+    socket = _extract_socket_handle(websocket)
     if socket is None:
         return True
-    if getattr(socket, "closed", False):
-        return False
-    if getattr(socket, "_closing", False):
-        return False
-    close_code = getattr(socket, "close_code", None)
-    if close_code is not None:
+    if not _connection_is_open(socket):
         return False
     return True
 
