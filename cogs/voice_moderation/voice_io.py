@@ -169,39 +169,39 @@ def _state_client(state: Any) -> Any:
 def _gateway_websocket_ready(guild: discord.Guild) -> bool:
     """Best-effort check that the shard websocket can accept new voice_state payloads."""
     state = getattr(guild, "_state", None)
-    if state is None:
-        return False
-
-    client = _state_client(state)
+    client = _state_client(state) if state is not None else None
     if not _client_online(client):
         return False
 
     websocket: Any = None
-    getter = getattr(state, "_get_websocket", None)
     guild_id = getattr(guild, "id", None)
     shard_id = getattr(guild, "shard_id", None)
+
+    # discord.py 2.6 keeps _get_websocket on the Client (not the state), and this
+    # handles both sharded and non-sharded bots.
+    getter = getattr(client, "_get_websocket", None)
     if callable(getter):
-        kwargs: Dict[str, Any] = {}
-        if shard_id is not None:
-            kwargs["shard_id"] = shard_id
         try:
-            websocket = getter(guild_id, **kwargs)
+            websocket = getter(guild_id, shard_id=shard_id)
         except TypeError:
-            # Older discord.py signatures only accept guild_id positional
-            try:
+            # Older signatures may not accept shard_id kwarg.
+            with contextlib.suppress(Exception):
                 websocket = getter(guild_id)
-            except Exception:
-                websocket = None
         except Exception:
             websocket = None
 
     if websocket is None and client is not None:
         websocket = getattr(client, "ws", None)
+        if websocket is None and hasattr(client, "shards"):
+            with contextlib.suppress(Exception):
+                websocket = client.shards.get(shard_id)
 
     if websocket is None:
         websocket = getattr(state, "ws", None)
     if websocket is None:
-        return False
+        # If we can't find a websocket handle, assume it's usable instead of
+        # blocking forever on a false negative.
+        return True
 
     if not _connection_is_open(websocket):
         return False
