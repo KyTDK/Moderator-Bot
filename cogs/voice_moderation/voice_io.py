@@ -190,6 +190,18 @@ def _gateway_websocket_ready(guild: discord.Guild) -> bool:
         except Exception:
             websocket = None
 
+    # Legacy path: older discord.py exposed _get_websocket on the state
+    if websocket is None and state is not None:
+        getter_state = getattr(state, "_get_websocket", None)
+        if callable(getter_state):
+            try:
+                websocket = getter_state(guild_id, shard_id=shard_id)
+            except TypeError:
+                with contextlib.suppress(Exception):
+                    websocket = getter_state(guild_id)
+            except Exception:
+                websocket = None
+
     if websocket is None and client is not None:
         websocket = getattr(client, "ws", None)
         if websocket is None and hasattr(client, "shards"):
