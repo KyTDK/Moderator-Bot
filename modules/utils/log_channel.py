@@ -174,7 +174,11 @@ def _compose_content(
     base = content or f"{emoji} {summary}"
     if mention:
         combined = f"{mention} {base}".strip()
-        allowed = discord.AllowedMentions(users=True, roles=True)
+        # Allow pings for users/roles; include everyone mentions when explicitly requested.
+        if "@everyone" in mention or "@here" in mention:
+            allowed = discord.AllowedMentions(everyone=True, users=True, roles=True)
+        else:
+            allowed = discord.AllowedMentions(users=True, roles=True)
         return combined, allowed
     return base, discord.AllowedMentions.none()
 
@@ -270,4 +274,3 @@ __all__ = [
     "send_developer_log_embed",
     "send_developer_log_message",
 ]
-

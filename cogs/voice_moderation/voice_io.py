@@ -195,10 +195,14 @@ async def _notify_gateway_issue(
 
     mention = _DEVELOPER_MENTION or None
     summary = "Voice gateway unavailable; forcing reconnect" if forced else "Voice gateway unavailable"
+    suffix = (
+        "Attempting forced voice connect to break deadlock."
+        if forced
+        else "Backoff remains active."
+    )
     description = (
         f"Guild `{guild_id}`, channel `{channel_id}` has reported an unavailable gateway websocket "
-        f"for {int(duration_unavailable)}s. "
-        f\"{'Attempting forced voice connect to break deadlock.' if forced else 'Backoff remains active.'}\"
+        f"for {int(duration_unavailable)}s. {suffix}"
     )
     fields = [
         devlog.DeveloperLogField(name="Guild ID", value=str(guild_id), inline=True),
@@ -380,6 +384,13 @@ async def _ensure_connected(
                     f"pausing {int(_GATEWAY_SNOOZE_SECONDS)}s before retry "
                     f"(offline {duration_unavailable:.0f}s)"
                 )
+                await _notify_gateway_issue(
+                    _state_client(getattr(guild, "_state", None)),
+                    guild_id=guild.id,
+                    channel_id=channel.id,
+                    duration_unavailable=duration_unavailable,
+                    forced=False,
+                )
                 return None
 
             # After prolonged unavailability, force a connect attempt anyway to break deadlocks.
@@ -387,10 +398,18 @@ async def _ensure_connected(
                 f"[VC IO] Gateway websocket still unavailable for guild {guild.id} channel {channel.id} "
                 f"after {int(duration_unavailable)}s; forcing voice connect attempt."
             )
+            await _notify_gateway_issue(
+                _state_client(getattr(guild, "_state", None)),
+                guild_id=guild.id,
+                channel_id=channel.id,
+                duration_unavailable=duration_unavailable,
+                forced=True,
+            )
             VOICE_BACKOFF.clear(guild.id, channel.id)
             _GATEWAY_UNAVAILABLE.pop(key, None)
         else:
             _GATEWAY_UNAVAILABLE.pop((guild.id, channel.id), None)
+            _GATEWAY_ALERT_LAST.pop((guild.id, channel.id), None)
 
         # Attempt to move if we are connected elsewhere.
         if current and current.is_connected() and current_channel_id != channel.id:
