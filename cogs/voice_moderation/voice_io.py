@@ -12,6 +12,7 @@ from array import array
 import discord
 from discord.ext import voice_recv
 from modules.utils import mysql
+from modules.utils import log_channel as devlog
 from modules.ai.costs import (
     TRANSCRIPTION_PRICE_PER_MINUTE_USD,
     LOCAL_TRANSCRIPTION_PRICE_PER_MINUTE_USD,
@@ -29,8 +30,15 @@ logging.getLogger("discord.ext.voice_recv.opus").setLevel(logging.ERROR)
 
 HARVEST_WINDOW_SECONDS: float = 6.0
 _GATEWAY_SNOOZE_SECONDS: float = 30.0
+_GATEWAY_FORCE_READY_AFTER_S: float = 120.0  # if gateway appears closed this long, force tries
+_GATEWAY_ALERT_COOLDOWN_S: float = 600.0
 _MIN_SPOKEN_DURATION_S = 0.35
 _MIN_RMS_THRESHOLD = 900.0
+_DEVELOPER_MENTION = os.getenv("DEVELOPER_MENTION", "@here").strip()
+
+# Track prolonged gateway unavailability per guild/channel to avoid indefinite skips
+_GATEWAY_UNAVAILABLE: Dict[Tuple[int, int], float] = {}
+_GATEWAY_ALERT_LAST: Dict[Tuple[int, int], float] = {}
 
 
 def _pcm_rms(pcm: bytes) -> float:
@@ -164,6 +172,50 @@ def _state_client(state: Any) -> Any:
     if client is None:
         client = getattr(state, "client", None)
     return client
+
+
+async def _notify_gateway_issue(
+    client: Any,
+    *,
+    guild_id: int,
+    channel_id: int,
+    duration_unavailable: float,
+    forced: bool,
+) -> None:
+    """Emit a developer log when the gateway looks stuck for voice joins."""
+    if client is None:
+        return
+    bot = client
+    now = time.monotonic()
+    key = (guild_id, channel_id)
+    last = _GATEWAY_ALERT_LAST.get(key, 0.0)
+    if (now - last) < _GATEWAY_ALERT_COOLDOWN_S:
+        return
+    _GATEWAY_ALERT_LAST[key] = now
+
+    mention = _DEVELOPER_MENTION or None
+    summary = "Voice gateway unavailable; forcing reconnect" if forced else "Voice gateway unavailable"
+    description = (
+        f"Guild `{guild_id}`, channel `{channel_id}` has reported an unavailable gateway websocket "
+        f"for {int(duration_unavailable)}s. "
+        f\"{'Attempting forced voice connect to break deadlock.' if forced else 'Backoff remains active.'}\"
+    )
+    fields = [
+        devlog.DeveloperLogField(name="Guild ID", value=str(guild_id), inline=True),
+        devlog.DeveloperLogField(name="Channel ID", value=str(channel_id), inline=True),
+        devlog.DeveloperLogField(name="Offline (s)", value=str(int(duration_unavailable)), inline=True),
+    ]
+    with contextlib.suppress(Exception):
+        await devlog.log_to_developer_channel(
+            bot,
+            summary=summary,
+            severity="error",
+            description=description,
+            fields=fields,
+            timestamp=True,
+            mention=mention,
+            context="voice.gateway",
+        )
 
 
 def _gateway_websocket_ready(guild: discord.Guild) -> bool:
@@ -314,12 +366,31 @@ async def _ensure_connected(
             return None
 
         if not _gateway_websocket_ready(guild):
-            VOICE_BACKOFF.snooze(guild.id, channel.id, _GATEWAY_SNOOZE_SECONDS)
+            now = time.monotonic()
+            key = (guild.id, channel.id)
+            first_unavailable = _GATEWAY_UNAVAILABLE.get(key)
+            if first_unavailable is None:
+                _GATEWAY_UNAVAILABLE[key] = now
+            duration_unavailable = 0.0 if first_unavailable is None else now - first_unavailable
+
+            if duration_unavailable < _GATEWAY_FORCE_READY_AFTER_S:
+                VOICE_BACKOFF.snooze(guild.id, channel.id, _GATEWAY_SNOOZE_SECONDS)
+                print(
+                    f"[VC IO] Gateway websocket unavailable for guild {guild.id} channel {channel.id}; "
+                    f"pausing {int(_GATEWAY_SNOOZE_SECONDS)}s before retry "
+                    f"(offline {duration_unavailable:.0f}s)"
+                )
+                return None
+
+            # After prolonged unavailability, force a connect attempt anyway to break deadlocks.
             print(
-                f"[VC IO] Gateway websocket unavailable for guild {guild.id} channel {channel.id}; "
-                f"pausing {int(_GATEWAY_SNOOZE_SECONDS)}s before retry"
+                f"[VC IO] Gateway websocket still unavailable for guild {guild.id} channel {channel.id} "
+                f"after {int(duration_unavailable)}s; forcing voice connect attempt."
             )
-            return None
+            VOICE_BACKOFF.clear(guild.id, channel.id)
+            _GATEWAY_UNAVAILABLE.pop(key, None)
+        else:
+            _GATEWAY_UNAVAILABLE.pop((guild.id, channel.id), None)
 
         # Attempt to move if we are connected elsewhere.
         if current and current.is_connected() and current_channel_id != channel.id:
