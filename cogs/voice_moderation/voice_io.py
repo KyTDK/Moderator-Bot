@@ -174,6 +174,27 @@ def _state_client(state: Any) -> Any:
     return client
 
 
+async def _wait_for_gateway_ready(guild: discord.Guild, *, timeout: float = 60.0) -> bool:
+    """Block until the bot gateway is ready again; returns False on timeout/errors."""
+    state = getattr(guild, "_state", None)
+    client = _state_client(state) if state is not None else None
+    wait_ready = getattr(client, "wait_until_ready", None)
+    is_ready = getattr(client, "is_ready", None)
+    if client is None or wait_ready is None or not callable(wait_ready):
+        return False
+    if callable(is_ready):
+        try:
+            if is_ready():
+                return True
+        except Exception:
+            pass
+    try:
+        await asyncio.wait_for(wait_ready(), timeout=timeout)
+        return True
+    except Exception:
+        return False
+
+
 async def _notify_gateway_issue(
     client: Any,
     *,
@@ -353,6 +374,19 @@ async def _ensure_connected(
             current = None
             voice = None
 
+        # If the gateway is reconnecting, wait for ready before any move/connect attempts.
+        client = _state_client(getattr(guild, "_state", None))
+        is_ready = getattr(client, "is_ready", None)
+        if callable(is_ready):
+            try:
+                ready_now = is_ready()
+            except Exception:
+                ready_now = True
+        else:
+            ready_now = True
+        if not ready_now:
+            await _wait_for_gateway_ready(guild, timeout=60.0)
+
         # If we appear to be in the target channel already, reuse the existing client.
         if current and current_channel_id == channel.id:
             if isinstance(current, voice_recv.VoiceRecvClient):
@@ -370,43 +404,49 @@ async def _ensure_connected(
             return None
 
         if not _gateway_websocket_ready(guild):
-            now = time.monotonic()
-            key = (guild.id, channel.id)
-            first_unavailable = _GATEWAY_UNAVAILABLE.get(key)
-            if first_unavailable is None:
-                _GATEWAY_UNAVAILABLE[key] = now
-            duration_unavailable = 0.0 if first_unavailable is None else now - first_unavailable
+            # Give the gateway a chance to finish reconnecting before we back off.
+            await _wait_for_gateway_ready(guild, timeout=45.0)
+            if _gateway_websocket_ready(guild):
+                _GATEWAY_UNAVAILABLE.pop((guild.id, channel.id), None)
+                _GATEWAY_ALERT_LAST.pop((guild.id, channel.id), None)
+            else:
+                now = time.monotonic()
+                key = (guild.id, channel.id)
+                first_unavailable = _GATEWAY_UNAVAILABLE.get(key)
+                if first_unavailable is None:
+                    _GATEWAY_UNAVAILABLE[key] = now
+                duration_unavailable = 0.0 if first_unavailable is None else now - first_unavailable
 
-            if duration_unavailable < _GATEWAY_FORCE_READY_AFTER_S:
-                VOICE_BACKOFF.snooze(guild.id, channel.id, _GATEWAY_SNOOZE_SECONDS)
+                if duration_unavailable < _GATEWAY_FORCE_READY_AFTER_S:
+                    VOICE_BACKOFF.snooze(guild.id, channel.id, _GATEWAY_SNOOZE_SECONDS)
+                    print(
+                        f"[VC IO] Gateway websocket unavailable for guild {guild.id} channel {channel.id}; "
+                        f"pausing {int(_GATEWAY_SNOOZE_SECONDS)}s before retry "
+                        f"(offline {duration_unavailable:.0f}s)"
+                    )
+                    await _notify_gateway_issue(
+                        _state_client(getattr(guild, "_state", None)),
+                        guild_id=guild.id,
+                        channel_id=channel.id,
+                        duration_unavailable=duration_unavailable,
+                        forced=False,
+                    )
+                    return None
+
+                # After prolonged unavailability, force a connect attempt anyway to break deadlocks.
                 print(
-                    f"[VC IO] Gateway websocket unavailable for guild {guild.id} channel {channel.id}; "
-                    f"pausing {int(_GATEWAY_SNOOZE_SECONDS)}s before retry "
-                    f"(offline {duration_unavailable:.0f}s)"
+                    f"[VC IO] Gateway websocket still unavailable for guild {guild.id} channel {channel.id} "
+                    f"after {int(duration_unavailable)}s; forcing voice connect attempt."
                 )
                 await _notify_gateway_issue(
                     _state_client(getattr(guild, "_state", None)),
                     guild_id=guild.id,
                     channel_id=channel.id,
                     duration_unavailable=duration_unavailable,
-                    forced=False,
+                    forced=True,
                 )
-                return None
-
-            # After prolonged unavailability, force a connect attempt anyway to break deadlocks.
-            print(
-                f"[VC IO] Gateway websocket still unavailable for guild {guild.id} channel {channel.id} "
-                f"after {int(duration_unavailable)}s; forcing voice connect attempt."
-            )
-            await _notify_gateway_issue(
-                _state_client(getattr(guild, "_state", None)),
-                guild_id=guild.id,
-                channel_id=channel.id,
-                duration_unavailable=duration_unavailable,
-                forced=True,
-            )
-            VOICE_BACKOFF.clear(guild.id, channel.id)
-            _GATEWAY_UNAVAILABLE.pop(key, None)
+                VOICE_BACKOFF.clear(guild.id, channel.id)
+                _GATEWAY_UNAVAILABLE.pop(key, None)
         else:
             _GATEWAY_UNAVAILABLE.pop((guild.id, channel.id), None)
             _GATEWAY_ALERT_LAST.pop((guild.id, channel.id), None)
@@ -459,6 +499,7 @@ async def _ensure_connected(
             f"[VC IO] Gateway websocket closed during voice connect for guild {guild.id}, channel {channel.id}: {e}; "
             f"retrying in {int(_GATEWAY_SNOOZE_SECONDS)}s"
         )
+        await _wait_for_gateway_ready(guild, timeout=60.0)
         return None
     except Exception as e:
         delay = VOICE_BACKOFF.record_failure(guild.id, channel.id)
