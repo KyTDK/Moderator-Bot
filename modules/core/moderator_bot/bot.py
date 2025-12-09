@@ -251,9 +251,15 @@ class ModeratorBot(
                     continue
 
     async def on_guild_remove(self, guild: discord.Guild) -> None:  # type: ignore[override]
-        await self._wait_for_mysql_ready()
-        await mysql.remove_guild(guild.id)
-        self._guild_locales.drop(guild.id)
+        try:
+            await self._wait_for_mysql_ready()
+            await mysql.remove_guild(guild.id)
+            self._guild_locales.drop(guild.id)
+        except asyncio.CancelledError:
+            # Shutdown may cancel this event; swallow to avoid “Task was destroyed” spam.
+            raise
+        except Exception:
+            _logger.exception("Failed to process guild remove for %s", guild.id)
 
     @tasks.loop(hours=6)
     async def cleanup_task(self) -> None:
