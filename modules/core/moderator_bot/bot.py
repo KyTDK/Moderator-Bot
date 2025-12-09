@@ -3,7 +3,9 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from dataclasses import dataclass
+import contextlib
 import logging
+import os
 from typing import Optional
 
 import discord
@@ -23,9 +25,12 @@ from modules.i18n.guild_cache import GuildLocaleCache
 from modules.i18n.locale_utils import normalise_locale
 from modules.i18n.resolution import LocaleResolver
 from modules.utils import mysql
-from modules.utils.log_channel import log_developer_issue
+from modules.utils.log_channel import log_developer_issue, log_to_developer_channel
 
 _logger = logging.getLogger(__name__)
+_DEV_MENTION = os.getenv("DEVELOPER_MENTION", "@here").strip() or None
+_RESTART_REASON_GATEWAY = "Gateway disconnect storm"
+_RESTART_REASON_NETWORK = "Network probe failures"
 
 
 @dataclass(slots=True)
@@ -103,16 +108,17 @@ class ModeratorBot(
         self._guild_sync_task = None
         self._gateway_health = GatewayHealthMonitor(
             threshold=4,
-            window_seconds=max(float(heartbeat_seconds), 180.0),
-            cooldown_seconds=900.0,
+            window_seconds=max(float(heartbeat_seconds), 240.0),
+            cooldown_seconds=300.0,
         )
         self._pending_dev_alerts: deque[_PendingDeveloperAlert] = deque()
         self._network_diagnostics = NetworkDiagnosticsTask(
             interval_seconds=45.0,
             failure_threshold=3,
-            alert_cooldown_seconds=900.0,
+            alert_cooldown_seconds=300.0,
             alert_callback=self._handle_network_alert,
         )
+        self._force_restart_task: asyncio.Task[None] | None = None
 
         mysql.add_settings_listener(self._locale_settings_listener)
 
@@ -300,6 +306,7 @@ class ModeratorBot(
             severity="critical",
             context="gateway-monitor",
         )
+        self._schedule_hard_restart(f"{_RESTART_REASON_GATEWAY}: {details}")
 
     def _format_gateway_snapshot(self, snapshot: GatewayHealthSnapshot) -> str:
         return (
@@ -326,6 +333,10 @@ class ModeratorBot(
             severity="critical",
             context="network-diagnostics",
         )
+        if alert.consecutive_failures >= 3:
+            self._schedule_hard_restart(
+                f"{_RESTART_REASON_NETWORK}: {'; '.join(alert.errors[:3])}"
+            )
 
     async def _send_dev_alert(
         self,
@@ -380,3 +391,29 @@ class ModeratorBot(
                 continue
             self._pending_dev_alerts.append(alert)
             break
+
+    def _schedule_hard_restart(self, reason: str) -> None:
+        """Force a clean process restart via container supervisor after fatal connectivity issues."""
+        if self._force_restart_task and not self._force_restart_task.done():
+            return
+
+        async def _do_restart() -> None:
+            _logger.critical("Triggering forced restart: %s", reason)
+            with contextlib.suppress(Exception):
+                await self.push_status("restarting")
+            with contextlib.suppress(Exception):
+                await log_to_developer_channel(
+                    self,
+                    summary="Restarting process after connectivity failures",
+                    severity="critical",
+                    description=reason,
+                    mention=_DEV_MENTION,
+                    context="self-heal",
+                )
+            with contextlib.suppress(Exception):
+                await self.close()
+            os._exit(1)
+
+        self._force_restart_task = asyncio.create_task(
+            _do_restart(), name="forced-restart"
+        )
