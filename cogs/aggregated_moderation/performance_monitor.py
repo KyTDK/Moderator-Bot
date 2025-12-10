@@ -42,10 +42,12 @@ class AcceleratedPerformanceMonitor:
         self._free_queue = free_queue
         self._accelerated_queue = accelerated_queue
         self._accelerated_text_queue = accelerated_text_queue
-        self._video_queue = video_queue
         self._config = config.performance_monitor
+        # The accelerated video lane is intentionally excluded here. Its much heavier
+        # workloads would skew the comparison and generate slowdown alerts even when
+        # the core accelerated pipeline is healthy.
         self._aux_accelerated_queues = tuple(
-            queue for queue in (accelerated_text_queue, video_queue) if queue is not None
+            queue for queue in (accelerated_text_queue,) if queue is not None
         )
 
         self._rate_calculator = MediaRateCalculator()
