@@ -40,6 +40,15 @@ class FakeNotifier:
     ) -> None:
         self.records.append(("error", message, event_key, details))
 
+    def debug(
+        self,
+        message: str,
+        *,
+        event_key: str | None = None,
+        details: Optional[dict[str, object]] = None,
+    ) -> None:
+        self.records.append(("debug", message, event_key, details))
+
 
 def _runtime_detail(*, runtime: float, max_workers: int = 1, autoscale_max: int = 1) -> TaskRuntimeDetail:
     metadata = TaskMetadata(
@@ -149,6 +158,6 @@ def test_queue_event_logger_emits_expected_messages() -> None:
     assert details is None
 
     severity, message, event_key, details = notifier.records[2]
-    assert severity == "info"
+    assert severity == "debug"
     assert event_key == "adaptive_plan:2:1:10"
     assert "adaptive plan updated: target 1->2" in message

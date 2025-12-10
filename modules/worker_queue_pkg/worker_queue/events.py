@@ -38,7 +38,7 @@ class QueueEventLogger:
     ) -> None:
         event_key = f"adaptive_plan:{target}:{baseline}:{backlog_high or 'none'}"
         change_summary = ", ".join(changes)
-        self._notifier.info(
+        self._notifier.debug(
             f"[WorkerQueue:{self._name}] adaptive plan updated: {change_summary}",
             event_key=event_key,
         )
