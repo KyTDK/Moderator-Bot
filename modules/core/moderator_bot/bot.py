@@ -416,8 +416,11 @@ class ModeratorBot(
                     mention=_DEV_MENTION,
                     context="self-heal",
                 )
+            loop = asyncio.get_running_loop()
+            # Hard-stop safety in case cleanup hangs.
+            loop.call_later(5.0, os._exit, 1)
             with contextlib.suppress(Exception):
-                await self.close()
+                await asyncio.wait_for(self.close(), timeout=3.0)
             os._exit(1)
 
         self._force_restart_task = asyncio.create_task(
