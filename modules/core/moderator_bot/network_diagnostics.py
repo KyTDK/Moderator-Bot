@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import logging
 import socket
 import time
+from urllib import error as url_error
+from urllib import request as url_request
 from typing import Awaitable, Callable, Iterable, Sequence
 
 log = logging.getLogger(__name__)
@@ -37,6 +39,8 @@ class NetworkDiagnosticsTask:
         alert_cooldown_seconds: float = 900.0,
         targets: Sequence[ProbeTarget] | None = None,
         alert_callback: Callable[[NetworkDiagnosticAlert], Awaitable[None]] | None = None,
+        http_probe: bool = True,
+        http_timeout: float = 5.0,
     ) -> None:
         self._interval_seconds = max(5.0, interval_seconds)
         self._failure_threshold = max(1, failure_threshold)
@@ -52,6 +56,8 @@ class NetworkDiagnosticsTask:
         )
         self._alert_callback = alert_callback
         self._task: asyncio.Task[None] | None = None
+        self._http_probe = http_probe
+        self._http_timeout = max(1.0, http_timeout)
         self._consecutive_failures = 0
         self._first_failure_monotonic: float | None = None
         self._last_success_monotonic: float | None = None
@@ -110,6 +116,13 @@ class NetworkDiagnosticsTask:
                 log.debug("Probe failed for %s: %s", target.label, exc, exc_info=True)
                 errors.append(f"{target.label}: {exc.__class__.__name__}")
 
+        # Optional HTTP reachability probe to detect outbound TLS or firewall issues
+        if self._http_probe:
+            try:
+                await asyncio.to_thread(self._http_check)
+            except Exception as exc:  # broad to catch TLS/HTTP/DNS errors
+                errors.append(f"http.discord.com: {exc.__class__.__name__}: {exc}")
+
         if errors:
             self._handle_failure(errors)
         else:
@@ -120,6 +133,13 @@ class NetworkDiagnosticsTask:
         await loop.getaddrinfo(target.host, target.port, type=socket.SOCK_STREAM)
         elapsed_ms = (time.perf_counter() - start) * 1000.0
         return elapsed_ms
+
+    def _http_check(self) -> None:
+        url = "https://discord.com/api/v10/gateway"
+        req = url_request.Request(url, method="HEAD")
+        with url_request.urlopen(req, timeout=self._http_timeout) as resp:
+            # Consume minimal data; only status matters
+            _ = resp.status
 
     def _handle_success(self, latency_samples: Iterable[float]) -> None:
         self._consecutive_failures = 0

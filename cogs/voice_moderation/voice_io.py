@@ -36,9 +36,10 @@ _MIN_SPOKEN_DURATION_S = 0.35
 _MIN_RMS_THRESHOLD = 900.0
 _DEVELOPER_MENTION = os.getenv("DEVELOPER_MENTION", "@here").strip()
 
-# Track prolonged gateway unavailability per guild/channel to avoid indefinite skips
+    # Track prolonged gateway unavailability per guild/channel to avoid indefinite skips
 _GATEWAY_UNAVAILABLE: Dict[Tuple[int, int], float] = {}
 _GATEWAY_ALERT_LAST: Dict[Tuple[int, int], float] = {}
+_VOICE_CONNECT_FAILURES: Dict[Tuple[int, int], Tuple[int, float]] = {}
 
 
 def _pcm_rms(pcm: bytes) -> float:
@@ -178,9 +179,14 @@ async def _wait_for_gateway_ready(guild: discord.Guild, *, timeout: float = 60.0
     """Block until the bot gateway is ready again; returns False on timeout/errors."""
     state = getattr(guild, "_state", None)
     client = _state_client(state) if state is not None else None
+    if client is None:
+        return False
+    # If the client is reconnecting/closed, skip voice actions.
+    if getattr(client, "is_closed", lambda: False)():
+        return False
     wait_ready = getattr(client, "wait_until_ready", None)
     is_ready = getattr(client, "is_ready", None)
-    if client is None or wait_ready is None or not callable(wait_ready):
+    if wait_ready is None or not callable(wait_ready):
         return False
     if callable(is_ready):
         try:
@@ -386,6 +392,9 @@ async def _ensure_connected(
             ready_now = True
         if not ready_now:
             await _wait_for_gateway_ready(guild, timeout=60.0)
+            # If still not ready, bail out and retry later instead of hammering voice connect.
+            if not _gateway_websocket_ready(guild):
+                return None
 
         # If we appear to be in the target channel already, reuse the existing client.
         if current and current_channel_id == channel.id:
@@ -499,6 +508,23 @@ async def _ensure_connected(
             f"[VC IO] Gateway websocket closed during voice connect for guild {guild.id}, channel {channel.id}: {e}; "
             f"retrying in {int(_GATEWAY_SNOOZE_SECONDS)}s"
         )
+        now = time.monotonic()
+        key = (guild.id, channel.id)
+        failures, first_ts = _VOICE_CONNECT_FAILURES.get(key, (0, now))
+        failures += 1
+        _VOICE_CONNECT_FAILURES[key] = (failures, first_ts)
+        if failures >= 3 and (now - first_ts) <= 600:
+            await _notify_gateway_issue(
+                _state_client(getattr(guild, "_state", None)),
+                guild_id=guild.id,
+                channel_id=channel.id,
+                duration_unavailable=now - first_ts,
+                forced=False,
+            )
+            VOICE_BACKOFF.snooze(guild.id, channel.id, 300.0)
+        elif (now - first_ts) > 600:
+            _VOICE_CONNECT_FAILURES.pop(key, None)
+
         await _wait_for_gateway_ready(guild, timeout=60.0)
         return None
     except Exception as e:

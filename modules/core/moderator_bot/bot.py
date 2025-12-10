@@ -117,6 +117,8 @@ class ModeratorBot(
             failure_threshold=3,
             alert_cooldown_seconds=300.0,
             alert_callback=self._handle_network_alert,
+            http_probe=True,
+            http_timeout=5.0,
         )
         self._force_restart_task: asyncio.Task[None] | None = None
 
