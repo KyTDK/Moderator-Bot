@@ -569,8 +569,8 @@ class EventDispatcherCog(commands.Cog):
             return
 
         # Populate missing author details when we fall back to defaults
-        if cached_before.author_id is None:
-            cached_before.author_id = after.author.id
+        if getattr(cached_before, "author_id", None) is None:
+            cached_before.author_id = getattr(after.author, "id", None)
             cached_before.author_name = str(after.author)
             cached_before.author_avatar = (
                 str(after.author.avatar.url)
