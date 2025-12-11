@@ -565,14 +565,22 @@ class EventDispatcherCog(commands.Cog):
         
         # Check if the message was edited or if it's from a bot
         after = payload.message
-        if cached_before.content == after.content or after.author.bot:
+        if not after or not after.author or cached_before.content == after.content or after.author.bot:
             return
 
         # Handle message edit
-        await self.bot.get_cog("AggregatedModerationCog").handle_message_edit(cached_before, after)
-        await self.bot.get_cog("BannedWordsCog").handle_message_edit(cached_before, after)
-        await self.bot.get_cog("MonitoringCog").handle_message_edit(cached_before, after)
-        await self.bot.get_cog("AutonomousModeratorCog").handle_message_edit(cached_before, after)
+        cogs_to_notify = (
+            "AggregatedModerationCog",
+            "BannedWordsCog",
+            "MonitoringCog",
+            "AutonomousModeratorCog",
+        )
+        for cog_name in cogs_to_notify:
+            cog = self.bot.get_cog(cog_name)
+            if not cog:
+                self._log.warning("Skipping handle_message_edit; cog %s is not available", cog_name)
+                continue
+            await cog.handle_message_edit(cached_before, after)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
