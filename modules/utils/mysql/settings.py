@@ -184,8 +184,8 @@ async def get_settings(
         await execute_query(
             """
             INSERT INTO settings (guild_id, settings_json)
-            VALUES (%s, %s)
-            ON DUPLICATE KEY UPDATE settings_json = VALUES(settings_json)
+            VALUES (%s, %s) AS new_values
+            ON DUPLICATE KEY UPDATE settings_json = new_values.settings_json
             """,
             (guild_id, settings_json),
         )
@@ -243,8 +243,8 @@ async def update_settings(guild_id: int, settings_key: str, settings_value):
     await execute_query(
         """
         INSERT INTO settings (guild_id, settings_json)
-        VALUES (%s, %s)
-        ON DUPLICATE KEY UPDATE settings_json = VALUES(settings_json)
+        VALUES (%s, %s) AS new_values
+        ON DUPLICATE KEY UPDATE settings_json = new_values.settings_json
         """,
         (guild_id, settings_json),
     )

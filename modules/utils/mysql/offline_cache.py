@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from decimal import Decimal
 from contextlib import suppress
 from dataclasses import dataclass
@@ -96,6 +97,11 @@ def _convert_on_duplicate(sql: str, conflict_target: Sequence[str]) -> str:
     if not conflict_target:
         raise OfflineQueryError("Conflict target required for ON DUPLICATE KEY translation")
 
+    alias_match = re.search(r"\bAS\s+([A-Za-z_][A-Za-z0-9_]*)\s*$", before, re.IGNORECASE)
+    alias = alias_match.group(1) if alias_match else None
+    if alias:
+        before = before[: alias_match.start()].rstrip()
+
     # Replace VALUES(column) with excluded.column for SQLite UPSERT.
     def _values_to_excluded(segment: str) -> str:
         parts: list[str] = []
@@ -124,6 +130,8 @@ def _convert_on_duplicate(sql: str, conflict_target: Sequence[str]) -> str:
         return "".join(parts)
 
     rewritten_after = _values_to_excluded(after)
+    if alias:
+        rewritten_after = rewritten_after.replace(f"{alias}.", "excluded.")
     conflict_clause = ", ".join(_quote_identifier(column) for column in conflict_target)
     return f"{before} ON CONFLICT({conflict_clause}) DO UPDATE SET {rewritten_after}"
 

@@ -49,10 +49,10 @@ async def upsert_captcha_embed_record(
     await execute_query(
         """
         INSERT INTO captcha_embeds (guild_id, channel_id, message_id)
-        VALUES (%s, %s, %s)
+        VALUES (%s, %s, %s) AS new_values
         ON DUPLICATE KEY UPDATE
-            channel_id = VALUES(channel_id),
-            message_id = VALUES(message_id),
+            channel_id = new_values.channel_id,
+            message_id = new_values.message_id,
             updated_at = CURRENT_TIMESTAMP
         """,
         (guild_id, channel_id, message_id),

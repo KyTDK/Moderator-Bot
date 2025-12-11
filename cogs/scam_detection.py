@@ -160,8 +160,8 @@ async def _url_is_scam(url_lower: str, guild_id: int) -> bool:
     if check_phishtank(url_lower) or await check_url_google_safe_browsing(GOOGLE_API_KEY, url_lower):
         await execute_query(
             """INSERT INTO scam_urls (guild_id, full_url, added_by, global_verified)
-               VALUES (%s, %s, %s, TRUE)
-               ON DUPLICATE KEY UPDATE global_verified = TRUE""",
+               VALUES (%s, %s, %s, TRUE) AS new_values
+               ON DUPLICATE KEY UPDATE global_verified = new_values.global_verified""",
             (guild_id, url_lower, 0)
         )
         return True

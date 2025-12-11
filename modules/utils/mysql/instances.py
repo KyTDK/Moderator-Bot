@@ -12,8 +12,8 @@ async def update_instance_heartbeat(instance_id: str) -> None:
     await execute_query(
         """
         INSERT INTO bot_instances (instance_id, last_seen)
-        VALUES (%s, UTC_TIMESTAMP())
-        ON DUPLICATE KEY UPDATE last_seen = VALUES(last_seen)
+        VALUES (%s, UTC_TIMESTAMP()) AS new_values
+        ON DUPLICATE KEY UPDATE last_seen = new_values.last_seen
         """,
         (instance_id,),
     )

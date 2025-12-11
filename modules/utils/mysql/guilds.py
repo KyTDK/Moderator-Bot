@@ -63,12 +63,12 @@ async def add_guild(
     await execute_query(
         """
         INSERT INTO guilds (guild_id, name, owner_id, locale, total_members)
-        VALUES (%s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s) AS new_values
         ON DUPLICATE KEY UPDATE
-            name = VALUES(name),
-            owner_id = VALUES(owner_id),
-            locale = VALUES(locale),
-            total_members = VALUES(total_members)
+            name = new_values.name,
+            owner_id = new_values.owner_id,
+            locale = new_values.locale,
+            total_members = new_values.total_members
         """,
         (guild_id, name, owner_id, locale, members_value),
     )
@@ -138,8 +138,8 @@ async def ban_guild(guild_id: int, reason: Optional[str]) -> None:
     await execute_query(
         """
         INSERT INTO banned_guilds (guild_id, reason)
-        VALUES (%s, %s)
-        ON DUPLICATE KEY UPDATE reason = VALUES(reason), added_at = CURRENT_TIMESTAMP
+        VALUES (%s, %s) AS new_values
+        ON DUPLICATE KEY UPDATE reason = new_values.reason, added_at = CURRENT_TIMESTAMP
         """,
         (guild_id, reason),
     )

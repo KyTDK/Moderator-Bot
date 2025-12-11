@@ -317,8 +317,8 @@ async def perform_disciplinary_action(
                     await execute_query(
                         """
                         INSERT INTO timeouts (user_id, guild_id, timeout_until, reason, source)
-                        VALUES (%s, %s, %s, %s, %s)
-                        ON DUPLICATE KEY UPDATE timeout_until = VALUES(timeout_until), reason = VALUES(reason), source = VALUES(source)
+                        VALUES (%s, %s, %s, %s, %s) AS new_values
+                        ON DUPLICATE KEY UPDATE timeout_until = new_values.timeout_until, reason = new_values.reason, source = new_values.source
                         """,
                         (user.id, user.guild.id, until, reason, source),
                     )

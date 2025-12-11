@@ -28,10 +28,10 @@ def test_offline_cache_insert_and_query(tmp_path):
         await cache.apply_mutation(
             """
             INSERT INTO guilds (guild_id, name, owner_id, locale, total_members)
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s) AS new_values
             ON DUPLICATE KEY UPDATE
-                name = VALUES(name),
-                locale = VALUES(locale)
+                name = new_values.name,
+                locale = new_values.locale
             """,
             (123, "Test Guild", 987, "en-US", 42),
         )
@@ -62,8 +62,8 @@ def test_translate_on_duplicate(tmp_path):
         sql = cache._translate(
             """
             INSERT INTO settings (guild_id, settings_json)
-            VALUES (%s, %s)
-            ON DUPLICATE KEY UPDATE settings_json = VALUES(settings_json)
+            VALUES (%s, %s) AS new_values
+            ON DUPLICATE KEY UPDATE settings_json = new_values.settings_json
             """
         )
         normalized = " ".join(sql.split())
