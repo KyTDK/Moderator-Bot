@@ -66,6 +66,7 @@ class WorkerQueue(
         self._lock = asyncio.Lock()
         self._autoscaler_task: Optional[asyncio.Task] = None
         self._pending_stops: int = 0
+        self._shutting_down: bool = False
 
         self._log = logging.getLogger(f"{__name__}.{self._name}")
         self._notifier = QueueEventNotifier(

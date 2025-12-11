@@ -99,6 +99,7 @@ class LifecycleMixin:
         async with self._lock:
             if self.running:
                 return
+            self._shutting_down = False
             self.running = True
             for _ in range(self.max_workers):
                 self.workers.append(asyncio.create_task(self.worker_loop()))
@@ -108,7 +109,9 @@ class LifecycleMixin:
     async def stop(self):
         async with self._lock:
             if not self.running:
+                self._shutting_down = True
                 return
+            self._shutting_down = True
             self.running = False
             if self._autoscaler_task is not None:
                 self._autoscaler_task.cancel()
@@ -213,11 +216,18 @@ class LifecycleMixin:
             try:
                 await task
             except asyncio.CancelledError:
-                self._notifier.warning(
-                    f"[WorkerQueue:{self._name}] Task cancelled.",
-                    event_key="task_cancelled",
-                    details={"Task": repr(task)},
-                )
+                if self._shutting_down or not self.running:
+                    self._log.debug(
+                        "[WorkerQueue:%s] Task cancelled during shutdown; suppressing warning. Task=%r",
+                        self._name,
+                        task,
+                    )
+                else:
+                    self._notifier.warning(
+                        f"[WorkerQueue:{self._name}] Task cancelled.",
+                        event_key="task_cancelled",
+                        details={"Task": repr(task)},
+                    )
             except BaseException as exc:  # noqa: BLE001
                 base_group = getattr(builtins, "BaseExceptionGroup", None)
                 if base_group is not None and isinstance(exc, base_group):
