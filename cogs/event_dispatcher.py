@@ -562,11 +562,22 @@ class EventDispatcherCog(commands.Cog):
             cached_before.guild_id = payload.guild_id
             cached_before.message_id = payload.message_id
             cached_before.channel_id = payload.channel_id
-        
+
         # Check if the message was edited or if it's from a bot
         after = payload.message
         if not after or not after.author or cached_before.content == after.content or after.author.bot:
             return
+
+        # Populate missing author details when we fall back to defaults
+        if cached_before.author_id is None:
+            cached_before.author_id = after.author.id
+            cached_before.author_name = str(after.author)
+            cached_before.author_avatar = (
+                str(after.author.avatar.url)
+                if getattr(after.author, "avatar", None) is not None
+                else None
+            )
+            cached_before.author_mention = getattr(after.author, "mention", None)
 
         # Handle message edit
         cogs_to_notify = (

@@ -353,3 +353,59 @@ def test_event_dispatcher_calls_aggregated_moderation_on_edit(monkeypatch):
         assert call_args.kwargs == {}
 
     asyncio.run(run_test())
+
+
+def test_event_dispatcher_populates_fallback_author(monkeypatch):
+    dispatcher_spec = importlib.util.spec_from_file_location(
+        "test_event_dispatcher_module",
+        PROJECT_ROOT / "cogs" / "event_dispatcher.py",
+    )
+    dispatcher_module = importlib.util.module_from_spec(dispatcher_spec)
+    assert dispatcher_spec.loader is not None
+    dispatcher_spec.loader.exec_module(dispatcher_module)
+    EventDispatcherCog = dispatcher_module.EventDispatcherCog
+
+    async def fake_get_cached_message(_guild_id, _message_id):
+        return None
+
+    monkeypatch.setattr(dispatcher_module, "get_cached_message", fake_get_cached_message)
+
+    author_calls: dict[str, object] = {}
+
+    async def capture_monitoring(cached_before, after):
+        author_calls["cached_before"] = cached_before
+        author_calls["after"] = after
+
+    class _DummyBot(SimpleNamespace):
+        def get_cog(self, name):
+            return getattr(self, name)
+
+    class _DummyAuthor(SimpleNamespace):
+        def __str__(self):
+            return "dummy#0001"
+
+    monitoring_cog = SimpleNamespace(handle_message_edit=AsyncMock(side_effect=capture_monitoring))
+    dummy_cog = SimpleNamespace(handle_message_edit=AsyncMock())
+    bot = _DummyBot(
+        AggregatedModerationCog=dummy_cog,
+        BannedWordsCog=dummy_cog,
+        MonitoringCog=monitoring_cog,
+        AutonomousModeratorCog=dummy_cog,
+    )
+
+    dispatcher = EventDispatcherCog.__new__(EventDispatcherCog)
+    dispatcher.bot = bot
+
+    author = _DummyAuthor(id=5, mention="<@5>", avatar=None, bot=False)
+    after = SimpleNamespace(content="after", author=author)
+    payload = SimpleNamespace(guild_id=1, message_id=2, channel_id=3, message=after)
+
+    async def run_test():
+        await dispatcher.on_raw_message_edit(payload)
+        cached_before = author_calls["cached_before"]
+        assert cached_before.author_id == author.id
+        assert cached_before.author_name == str(author)
+        assert cached_before.author_avatar is None
+        assert cached_before.author_mention == author.mention
+
+    asyncio.run(run_test())
