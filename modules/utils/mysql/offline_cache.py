@@ -269,14 +269,20 @@ class OfflineCache:
 
         materialized_rows = list(rows)
         if materialized_rows:
+            quoted_columns = [_quote_identifier(column) for column in column_names]
             placeholders = ", ".join(["?"] * len(column_names))
-            column_clause = ", ".join(_quote_identifier(column) for column in column_names)
+            column_clause = ", ".join(quoted_columns)
+            conflict_clause = ""
+            if schema.primary_keys:
+                conflict_targets = ", ".join(_quote_identifier(pk) for pk in schema.primary_keys)
+                update_clause = ", ".join(f"{col}=excluded.{col}" for col in quoted_columns)
+                conflict_clause = f" ON CONFLICT({conflict_targets}) DO UPDATE SET {update_clause}"
             payload = [
                 tuple(_normalize_value(row.get(column)) for column in column_names)
                 for row in materialized_rows
             ]
             await conn.executemany(
-                f"INSERT INTO {quoted_table} ({column_clause}) VALUES ({placeholders})",
+                f"INSERT INTO {quoted_table} ({column_clause}) VALUES ({placeholders}){conflict_clause}",
                 payload,
             )
         await conn.commit()

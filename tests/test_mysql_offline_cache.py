@@ -127,3 +127,38 @@ def test_replace_table_handles_decimal(tmp_path):
         await cache.close()
 
     asyncio.run(_run())
+
+
+def test_replace_table_handles_duplicate_primary_keys(tmp_path):
+    async def _run():
+        cache_path = tmp_path / "mirror.sqlite3"
+        cache = OfflineCache(db_path=str(cache_path), snapshot_interval_seconds=1_000)
+        await cache.ensure_started()
+        await cache.sync_schema(
+            "guilds",
+            [
+                ColumnDefinition("guild_id", "INTEGER"),
+                ColumnDefinition("name", "TEXT"),
+            ],
+            ["guild_id"],
+        )
+
+        await cache.replace_table(
+            "guilds",
+            [
+                {"guild_id": 5, "name": "first"},
+                {"guild_id": 5, "name": "second"},
+            ],
+        )
+
+        row, _ = await cache.execute(
+            "SELECT name FROM guilds WHERE guild_id = %s",
+            (5,),
+            fetch_one=True,
+        )
+        count_row, _ = await cache.execute("SELECT COUNT(*) FROM guilds", fetch_one=True)
+        assert row[0] == "second"
+        assert count_row[0] == 1
+        await cache.close()
+
+    asyncio.run(_run())
