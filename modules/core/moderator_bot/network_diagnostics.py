@@ -136,10 +136,21 @@ class NetworkDiagnosticsTask:
 
     def _http_check(self) -> None:
         url = "https://discord.com/api/v10/gateway"
-        req = url_request.Request(url, method="HEAD")
-        with url_request.urlopen(req, timeout=self._http_timeout) as resp:
-            # Consume minimal data; only status matters
-            _ = resp.status
+        headers = {
+            "User-Agent": "moderator-bot-healthcheck/1.0",
+            "Accept": "application/json",
+        }
+        req = url_request.Request(url, method="GET", headers=headers)
+        try:
+            with url_request.urlopen(req, timeout=self._http_timeout) as resp:
+                # Consume minimal data; only status matters
+                _ = resp.status
+        except url_error.HTTPError as exc:
+            # Cloudflare sometimes blocks HEAD/no-UA with a 403; treat 403 as reachable
+            if exc.code == 403:
+                log.debug("HTTP probe received 403; treating as success")
+                return
+            raise
 
     def _handle_success(self, latency_samples: Iterable[float]) -> None:
         self._consecutive_failures = 0
