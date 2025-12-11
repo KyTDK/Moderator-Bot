@@ -28,6 +28,7 @@ class QueueProfile:
         "high_multiplier",
         "shed_multiplier",
         "hard_multiplier",
+        "shed_ratio",
     )
 
     def __init__(
@@ -44,6 +45,7 @@ class QueueProfile:
         high_multiplier: float = 3.5,
         shed_multiplier: float = 2.5,
         hard_multiplier: float = 6.0,
+        shed_ratio: float | None = None,
     ) -> None:
         self.label = label
         self.queue = queue
@@ -56,6 +58,7 @@ class QueueProfile:
         self.high_multiplier = high_multiplier
         self.shed_multiplier = shed_multiplier
         self.hard_multiplier = hard_multiplier
+        self.shed_ratio = shed_ratio
 
 
 class EventDispatcherCog(commands.Cog):
@@ -107,10 +110,10 @@ class EventDispatcherCog(commands.Cog):
         self.free_queue = WorkerQueue(
             max_workers=6,
             autoscale_max=48,
-            backlog_high_watermark=130,
-            backlog_low_watermark=35,
-            backlog_hard_limit=900,
-            backlog_shed_to=360,
+            backlog_high_watermark=200,
+            backlog_low_watermark=60,
+            backlog_hard_limit=1500,
+            backlog_shed_to=1000,
             name="event_dispatcher_free",
             singular_task_reporter=self._singular_task_reporter,
             developer_log_bot=bot,
@@ -150,13 +153,14 @@ class EventDispatcherCog(commands.Cog):
                 queue=self.free_queue,
                 baseline=6,
                 ceiling=72,
-                min_backlog_high=130,
-                min_backlog_low=35,
-                hard_limit_floor=900,
-                shed_to_floor=360,
+                min_backlog_high=200,
+                min_backlog_low=60,
+                hard_limit_floor=1400,
+                shed_to_floor=650,
                 high_multiplier=4.0,
                 shed_multiplier=2.5,
-                hard_multiplier=7.0,
+                hard_multiplier=8.0,
+                shed_ratio=0.72,
             ),
             "best_effort": QueueProfile(
                 label="best_effort",
@@ -463,9 +467,15 @@ class EventDispatcherCog(commands.Cog):
             profile.hard_limit_floor,
             int(max(backlog_high * profile.hard_multiplier, backlog_high + 1)),
         )
+        shed_candidates = [
+            backlog_high * profile.shed_multiplier,
+            backlog_high,
+        ]
+        if profile.shed_ratio:
+            shed_candidates.append(backlog_hard_limit * profile.shed_ratio)
         backlog_shed_to = max(
             profile.shed_to_floor,
-            int(max(backlog_high * profile.shed_multiplier, backlog_high)),
+            int(max(shed_candidates)),
         )
         backlog_shed_to = min(backlog_shed_to, backlog_hard_limit - 1)
 
