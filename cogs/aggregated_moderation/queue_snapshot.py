@@ -127,8 +127,8 @@ class QueueSnapshot:
         )
 
     def wait_signal(self) -> float:
-        """Peak wait seen on this queue."""
-        return self._max_positive((self.avg_wait, self.ema_wait, self.last_wait, self.longest_wait))
+        """Representative wait from recent samples (ignore long-tail extremes)."""
+        return self._max_positive((self.ema_wait, self.avg_wait, self.last_wait))
 
     def backlog_recovered(self) -> bool:
         """True when backlog has fallen back to acceptable bounds."""
