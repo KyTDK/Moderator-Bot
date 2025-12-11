@@ -1,13 +1,21 @@
 from __future__ import annotations
 
+import logging
 import os
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
 from threading import Event, Lock
 from typing import Iterator, Optional
 
-import cv2
 import numpy as np
+
+try:
+    import cv2
+except Exception as exc:  # pragma: no cover - optional dependency
+    cv2 = None  # type: ignore
+    _cv2_import_error = exc
+else:
+    _cv2_import_error = None
 
 from .config import SUPPRESS_OPENCV_STDERR
 from .encoding import package_bgr_frame
@@ -15,6 +23,7 @@ from .models import ExtractedFrame
 from .sampling import adaptive_cap
 
 _STDERR_REDIRECT_LOCK = Lock()
+log = logging.getLogger(__name__)
 
 
 def detect_hwaccel_support() -> tuple[bool, str]:
@@ -22,6 +31,9 @@ def detect_hwaccel_support() -> tuple[bool, str]:
     Best-effort probe for OpenCV hardware decode availability.
     Returns (available, detail_message).
     """
+
+    if cv2 is None:
+        return False, "OpenCV not available (import failed)"
 
     has_flags = all(
         hasattr(cv2, attr)
@@ -97,6 +109,21 @@ def iter_video_frames_opencv(
     accelerated_tier: bool | None = None,
     stop_event: Event | None = None,
 ) -> Iterator[ExtractedFrame]:
+    global cv2
+    if cv2 is None:
+        try:
+            from modules.nsfw_scanner.utils import frames as frames_pkg
+
+            injected = getattr(frames_pkg, "cv2", None)
+            if injected is not None:
+                cv2 = injected  # type: ignore[assignment]
+        except Exception:  # pragma: no cover - defensive import shim
+            injected = None
+        if cv2 is None:
+            raise ImportError("OpenCV is required for video frame extraction") from _cv2_import_error
+
+    if cv2 is None:
+        raise ImportError("OpenCV is required for video frame extraction") from _cv2_import_error
     def _open_capture(*, use_hw: bool) -> cv2.VideoCapture:
         with _suppress_cv2_stderr():
             cap_obj = cv2.VideoCapture(filename)

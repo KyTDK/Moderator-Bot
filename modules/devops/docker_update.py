@@ -100,16 +100,24 @@ def _is_running_in_container() -> bool:
     operator.
     """
 
-    if os.path.exists("/.dockerenv"):
-        return True
+    override = os.environ.get("MODBOT_ASSUME_CONTAINER")
+    if override is not None:
+        return _parse_bool(override, default=False)
+
+    dockerenv_present = os.path.exists("/.dockerenv")
 
     try:
         with open("/proc/1/cgroup", encoding="utf-8") as fp:
             content = fp.read()
     except OSError:  # pragma: no cover - environment dependent
-        return False
+        content = ""
 
-    return "docker" in content or "kubepods" in content
+    cgroup_hint = "docker" in content or "kubepods" in content
+
+    if dockerenv_present and cgroup_hint:
+        return True
+
+    return False
 
 
 def _parse_bool(value: str | None, *, default: bool = False) -> bool:
@@ -357,10 +365,14 @@ class DockerUpdateManager:
 
     async def run(self) -> UpdateReport:
         env = self.config.env or None
-        mode = await self._resolve_deployment_mode(env)
+        mode, swarm_info_available = await self._resolve_deployment_mode(env)
         inside_container = _is_running_in_container()
         forced_service = False
-        if mode == "container" and inside_container:
+        if (
+            mode == "container"
+            and swarm_info_available
+            and inside_container
+        ):
             forced_service = True
             log.info(
                 "Detected container runtime while configured for %s deployment; "
@@ -410,9 +422,11 @@ class DockerUpdateManager:
         command.append(service)
         return command
 
-    async def _resolve_deployment_mode(self, env: Mapping[str, str] | None) -> str:
+    async def _resolve_deployment_mode(self, env: Mapping[str, str] | None) -> tuple[str, bool]:
+        """Resolve deployment mode and whether swarm info was available."""
+
         if self.config.deployment_mode != "auto":
-            return self.config.deployment_mode
+            return self.config.deployment_mode, True
         info_command = [
             self.config.docker_binary,
             "info",
@@ -422,16 +436,16 @@ class DockerUpdateManager:
         try:
             outcome = await self._executor(info_command, self.config.pull_timeout, env)
         except DockerCommandError:
-            return "container"
+            return "container", False
         result = outcome.stdout.strip().lower()
         if not result:
-            return "container"
+            return "container", True
         parts = result.split()
         state = parts[0] if parts else ""
         control = parts[1] if len(parts) > 1 else ""
         if state == "active" and control in {"true", "yes"}:
-            return "service"
-        return "container"
+            return "service", True
+        return "container", True
 
     async def _run_service_update(self, env: Mapping[str, str] | None) -> list[ServiceUpdateResult]:
         service_results: list[ServiceUpdateResult] = []

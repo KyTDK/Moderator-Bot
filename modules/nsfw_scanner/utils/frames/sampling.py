@@ -1,10 +1,20 @@
 from __future__ import annotations
 
+import logging
 import os
 from typing import Iterable, Optional
 
-import cv2
 import numpy as np
+
+try:
+    import cv2
+except Exception as exc:  # pragma: no cover - optional dependency
+    cv2 = None  # type: ignore
+    _cv2_import_error = exc
+else:
+    _cv2_import_error = None
+
+log = logging.getLogger(__name__)
 
 from .config import PREVIEW_MAX_DIMENSION
 
@@ -40,21 +50,29 @@ def build_preview_frame(frame_rgb: np.ndarray) -> np.ndarray:
         return np.zeros((1, 1), dtype="float32")
     height, width = frame_rgb.shape[:2]
     longest = max(height, width)
-    if longest > PREVIEW_MAX_DIMENSION and longest > 0:
-        scale = PREVIEW_MAX_DIMENSION / float(longest)
-        frame_rgb = cv2.resize(
-            frame_rgb,
-            (max(1, int(round(width * scale))), max(1, int(round(height * scale)))),
-            interpolation=cv2.INTER_AREA,
-        )
     preview = frame_rgb
-    try:
-        preview = cv2.cvtColor(preview, cv2.COLOR_RGB2GRAY)
-    except Exception:
+    if cv2 is not None:
+        if longest > PREVIEW_MAX_DIMENSION and longest > 0:
+            scale = PREVIEW_MAX_DIMENSION / float(longest)
+            preview = cv2.resize(
+                preview,
+                (max(1, int(round(width * scale))), max(1, int(round(height * scale)))),
+                interpolation=cv2.INTER_AREA,
+            )
         try:
-            preview = cv2.cvtColor(preview, cv2.COLOR_BGR2GRAY)
+            preview = cv2.cvtColor(preview, cv2.COLOR_RGB2GRAY)
         except Exception:
-            preview = preview[:, :, 0] if preview.ndim == 3 else preview
+            try:
+                preview = cv2.cvtColor(preview, cv2.COLOR_BGR2GRAY)
+            except Exception:
+                preview = preview[:, :, 0] if preview.ndim == 3 else preview
+    else:
+        if longest > PREVIEW_MAX_DIMENSION and longest > 0:
+            scale = PREVIEW_MAX_DIMENSION / float(longest)
+            new_height = max(1, int(round(height * scale)))
+            new_width = max(1, int(round(width * scale)))
+            preview = preview[:new_height, :new_width]
+        preview = preview[:, :, 0] if preview.ndim == 3 else preview
     return preview.astype("float32") / 255.0
 
 
@@ -63,18 +81,26 @@ def motion_scores(preview_frames: list[np.ndarray]) -> list[float]:
         return []
     scores: list[float] = [0.0]
     previous = preview_frames[0]
-    try:
-        prev_hist = cv2.calcHist([previous], [0], None, [16], [0, 1])
-        prev_hist = cv2.normalize(prev_hist, prev_hist).flatten()
-    except Exception:
-        prev_hist = np.zeros(16, dtype="float32")
+    if cv2 is not None:
+        try:
+            prev_hist = cv2.calcHist([previous], [0], None, [16], [0, 1])
+            prev_hist = cv2.normalize(prev_hist, prev_hist).flatten()
+        except Exception:
+            prev_hist = np.zeros(16, dtype="float32")
+    else:
+        hist, _ = np.histogram(previous, bins=16, range=(0, 1), density=True)
+        prev_hist = hist.astype("float32")
     for preview in preview_frames[1:]:
         diff = np.mean(np.abs(preview - previous))
-        try:
-            hist = cv2.calcHist([preview], [0], None, [16], [0, 1])
-            hist = cv2.normalize(hist, hist).flatten()
-        except Exception:
-            hist = np.zeros_like(prev_hist)
+        if cv2 is not None:
+            try:
+                hist = cv2.calcHist([preview], [0], None, [16], [0, 1])
+                hist = cv2.normalize(hist, hist).flatten()
+            except Exception:
+                hist = np.zeros_like(prev_hist)
+        else:
+            hist, _ = np.histogram(preview, bins=16, range=(0, 1), density=True)
+            hist = hist.astype("float32")
         hist_delta = float(np.linalg.norm(hist - prev_hist, ord=1))
         score = float(diff * 0.7 + hist_delta * 0.3)
         scores.append(score)

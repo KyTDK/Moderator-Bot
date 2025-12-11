@@ -1,10 +1,20 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Optional
 
-import cv2
 import numpy as np
+
+try:
+    import cv2
+except Exception as exc:  # pragma: no cover - optional dependency
+    cv2 = None  # type: ignore
+    _cv2_import_error = exc
+else:
+    _cv2_import_error = None
+
+log = logging.getLogger(__name__)
 
 from .config import (
     DEDUP_SIGNATURE_DIM,
@@ -16,6 +26,8 @@ from .models import ExtractedFrame
 
 
 def resize_for_model(frame_rgb: np.ndarray) -> np.ndarray:
+    if cv2 is None:
+        return frame_rgb
     if frame_rgb is None:
         return frame_rgb
     height, width = frame_rgb.shape[:2]
@@ -31,6 +43,9 @@ def resize_for_model(frame_rgb: np.ndarray) -> np.ndarray:
 
 
 def compute_signature_from_rgb(frame_rgb: np.ndarray) -> Optional[np.ndarray]:
+    if cv2 is None:
+        log.debug("OpenCV unavailable; cannot compute frame signature")
+        return None
     if frame_rgb is None:
         return None
     try:
@@ -56,6 +71,9 @@ def encode_rgb_frame(
     frame_idx: int,
     total_frames: Optional[int],
 ) -> Optional[ExtractedFrame]:
+    if cv2 is None:
+        log.debug("OpenCV unavailable; skipping RGB frame encoding")
+        return None
     if frame_rgb is None:
         return None
     working = frame_rgb
@@ -125,6 +143,9 @@ def package_bgr_frame(
     frame_idx: int,
     total_frames: Optional[int],
 ) -> Optional[ExtractedFrame]:
+    if cv2 is None:
+        log.debug("OpenCV unavailable; cannot package BGR frame")
+        return None
     if frame_bgr is None:
         return None
     try:

@@ -7,7 +7,10 @@ from typing import Iterable, Sequence
 
 try:
     from paddleocr import PaddleOCR  # type: ignore
-except ModuleNotFoundError:  # pragma: no cover - optional dependency
+except Exception:  # pragma: no cover - optional dependency
+    # ``paddleocr`` pulls in native dependencies (e.g. libGL via opencv) that may not
+    # be present in every runtime. Treat any import failure as an unavailable optional
+    # dependency instead of crashing at import time.
     PaddleOCR = None  # type: ignore
 
 log = logging.getLogger(__name__)
