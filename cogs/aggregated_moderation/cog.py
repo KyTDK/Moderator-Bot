@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import timedelta
 import time
+import asyncio
+from datetime import timedelta
 
 import discord
 from discord.ext import commands
@@ -9,6 +10,7 @@ from discord.utils import utcnow
 
 from modules.core.moderator_bot import ModeratorBot
 from modules.nsfw_scanner import NSFWScanner
+from modules.nsfw_scanner.constants import VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS
 from modules.utils import mysql
 from modules.worker_queue import WorkerQueue
 from modules.worker_queue_alerts import SingularTaskReporter
@@ -20,6 +22,11 @@ from .performance_monitor import AcceleratedPerformanceMonitor
 from .queue_monitor import FreeQueueMonitor
 from .queue_context import reset_current_queue, set_current_queue
 from .queue_snapshot import QueueSnapshot
+
+_VIDEO_TASK_TIMEOUT_SECONDS = max(
+    90.0,
+    min(240.0, (VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS or 0) + 30.0),
+)
 
 
 class AggregatedModerationCog(commands.Cog):
@@ -87,6 +94,7 @@ class AggregatedModerationCog(commands.Cog):
             scale_down_grace=max(5.0, controller_cfg.scale_down_cooldown),
             name="accelerated_video",
             singular_task_reporter=self._singular_task_reporter,
+            singular_runtime_threshold=_VIDEO_TASK_TIMEOUT_SECONDS,
             developer_log_bot=bot,
             developer_log_context="aggregated_moderation.accelerated_video_queue",
             adaptive_mode=True,
@@ -127,6 +135,7 @@ class AggregatedModerationCog(commands.Cog):
 
         self._last_free_failover: float = 0.0
         self._failover_cooldown: float = 30.0
+        self._video_task_timeout = _VIDEO_TASK_TIMEOUT_SECONDS
 
     def _is_new_guild(self, guild_id: int) -> bool:
         """Return True if the bot joined this guild within the last 30 minutes."""
@@ -191,7 +200,23 @@ class AggregatedModerationCog(commands.Cog):
         async def run_with_queue_context():
             token = set_current_queue(queue_label)
             try:
-                return await coro
+                awaitable = coro
+                if task_kind == "video" and self._video_task_timeout:
+                    try:
+                        awaitable = asyncio.wait_for(coro, timeout=float(self._video_task_timeout))
+                    except Exception:
+                        # If constructing the timeout wrapper fails for any reason, fall back to the raw task.
+                        awaitable = coro
+                try:
+                    return await awaitable
+                except asyncio.TimeoutError:
+                    if task_kind == "video" and self._video_task_timeout:
+                        print(
+                            f"[AggregatedModeration] Video task timed out after "
+                            f"{self._video_task_timeout:.1f}s (guild_id={guild_id}, queue={queue_label})"
+                        )
+                        return None
+                    raise
             finally:
                 reset_current_queue(token)
 
