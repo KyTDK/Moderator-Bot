@@ -425,6 +425,16 @@ class EventDispatcherCog(commands.Cog):
         backlog_low_floor = profile.min_backlog_low
         arrival = float(metrics.get("arrival_rate_per_min") or 0.0)
         completion = float(metrics.get("completion_rate_per_min") or 0.0)
+        wait_signal = max(
+            float(metrics.get("ema_wait_time") or 0.0),
+            float(metrics.get("avg_wait_time") or 0.0),
+            float(metrics.get("last_wait_time") or 0.0),
+        )
+        runtime_signal = max(
+            float(metrics.get("ema_runtime") or 0.0),
+            float(metrics.get("avg_runtime") or 0.0),
+            float(metrics.get("last_runtime") or 0.0),
+        )
         if completion <= 0:
             ratio = 5.0 if arrival > 0 else 0.0
         else:
@@ -478,6 +488,36 @@ class EventDispatcherCog(commands.Cog):
             int(max(shed_candidates)),
         )
         backlog_shed_to = min(backlog_shed_to, backlog_hard_limit - 1)
+
+        wait_pressure = wait_signal >= max(12.0, runtime_signal * 3.5)
+        severe_backlog = backlog >= max(backlog_high * 2, int(backlog_hard_limit * 0.8))
+        if wait_pressure or severe_backlog:
+            target = profile.ceiling
+            baseline = max(profile.baseline, min(target - 1, int(target * 0.7)))
+            backlog_high = max(
+                backlog_high,
+                int(max(target * profile.high_multiplier, backlog_high_floor)),
+            )
+            backlog_low = max(
+                backlog_low,
+                max(backlog_low_floor, max(5, int(backlog_high * 0.35))),
+            )
+            backlog_hard_limit = max(
+                backlog_hard_limit,
+                int(max(backlog_high * profile.hard_multiplier, backlog_high + 1)),
+            )
+            shed_candidates = [
+                backlog_shed_to,
+                backlog_high * profile.shed_multiplier,
+                backlog_high,
+            ]
+            if profile.shed_ratio:
+                shed_candidates.append(backlog_hard_limit * profile.shed_ratio)
+            backlog_shed_to = max(
+                profile.shed_to_floor,
+                int(max(shed_candidates)),
+            )
+            backlog_shed_to = min(backlog_shed_to, backlog_hard_limit - 1)
 
         return {
             "target": int(target),
