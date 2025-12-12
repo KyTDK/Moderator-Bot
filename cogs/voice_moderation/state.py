@@ -18,6 +18,9 @@ class GuildVCState:
         self.next_start: datetime = datetime.now(timezone.utc)
         self.last_announce_key: Optional[Tuple[int, int]] = None
         self.api_warning_sent: bool = False
+        self.last_cycle_started: Optional[datetime] = None
+        self.last_cycle_failed: bool = False
+        self.consecutive_failures: int = 0
 
     def reset_cycle(self) -> None:
         """Clear scheduling related bookkeeping."""
@@ -25,3 +28,6 @@ class GuildVCState:
         self.index = 0
         self.next_start = datetime.now(timezone.utc)
         self.last_announce_key = None
+        self.last_cycle_started = None
+        self.last_cycle_failed = False
+        self.consecutive_failures = 0

@@ -28,6 +28,24 @@ VCMOD_TTS_FORMAT = os.getenv("VCMOD_TTS_FORMAT", "mp3")
 violation_cache: dict[int, deque[tuple[str, str]]] = defaultdict(lambda: deque(maxlen=10))
 
 
+def _cycle_timeout_seconds(listen_delta: timedelta, idle_delta: timedelta) -> float:
+    """Compute an upper bound for how long a single voice cycle should run."""
+    listen = max(0.0, listen_delta.total_seconds())
+    idle = max(0.0, idle_delta.total_seconds())
+    base = listen + idle
+    margin = max(30.0, base * 0.3)
+    return max(90.0, base + margin)
+
+
+def _failure_delay_seconds(consecutive_failures: int, idle_seconds: float) -> float:
+    """Backoff delay between cycles when we fail to connect to voice."""
+    base = idle_seconds if idle_seconds > 0 else 15.0
+    base = max(10.0, min(base, 45.0))
+    extra = max(0, min(consecutive_failures - 1, 3)) * 0.5
+    delay = base * (1.0 + extra)
+    return min(90.0, delay)
+
+
 class VoiceModeratorCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
@@ -54,8 +72,14 @@ class VoiceModeratorCog(commands.Cog):
         state = self._get_state(guild.id)
         if state.busy_task and not state.busy_task.done():
             state.busy_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError, Exception):
-                await state.busy_task
+            try:
+                await asyncio.wait_for(state.busy_task, timeout=10.0)
+            except asyncio.TimeoutError:
+                print(f"[VCMod] voice cycle teardown timed out for guild {guild.id}; orphaning task.")
+            except asyncio.CancelledError:
+                pass
+            except Exception:
+                pass
         state.busy_task = None
 
         voice = guild.voice_client or state.voice
@@ -119,6 +143,10 @@ class VoiceModeratorCog(commands.Cog):
             await self._teardown_state(guild)
             return
 
+        timeout_seconds = _cycle_timeout_seconds(
+            voice_settings.listen_delta,
+            voice_settings.idle_delta,
+        )
         state = self._get_state(guild.id)
         api_key_available = bool(PRIMARY_OPENAI_KEY)
         effective_transcript_only = voice_settings.transcript_only
@@ -146,6 +174,23 @@ class VoiceModeratorCog(commands.Cog):
         state.channel_ids = voice_settings.channel_ids
 
         if state.busy_task and not state.busy_task.done():
+            started = state.last_cycle_started
+            if started:
+                elapsed = (now - started).total_seconds()
+                if elapsed > timeout_seconds:
+                    print(
+                        f"[VCMod] voice cycle for guild {guild.id} exceeded {int(elapsed)}s "
+                        "with no completion; resetting."
+                    )
+                    await self._teardown_state(guild)
+                    state = self._get_state(guild.id)
+                    state.last_cycle_failed = True
+                    state.consecutive_failures = min(state.consecutive_failures + 1, 5)
+                    delay = _failure_delay_seconds(
+                        state.consecutive_failures,
+                        voice_settings.idle_delta.total_seconds(),
+                    )
+                    state.next_start = datetime.now(timezone.utc) + timedelta(seconds=delay)
             return
         if now < state.next_start:
             return
@@ -159,6 +204,8 @@ class VoiceModeratorCog(commands.Cog):
             state.next_start = datetime.now(timezone.utc)
             return
 
+        failure_idle_seconds = voice_settings.idle_delta.total_seconds()
+
         async def _run() -> None:
             await self._run_cycle_for_channel(
                 guild=guild,
@@ -167,14 +214,21 @@ class VoiceModeratorCog(commands.Cog):
                 transcript_only=effective_transcript_only,
             )
 
+        state.last_cycle_started = datetime.now(timezone.utc)
+        state.last_cycle_failed = False
         state.busy_task = self.bot.loop.create_task(_run())
 
         def _done_callback(_future: asyncio.Future) -> None:
             try:
                 state.index += 1
-                state.next_start = datetime.now(timezone.utc)
+                delay = 0.0
+                if state.last_cycle_failed:
+                    delay = _failure_delay_seconds(state.consecutive_failures, failure_idle_seconds)
+                state.next_start = datetime.now(timezone.utc) + timedelta(seconds=delay)
             except Exception:
                 state.next_start = datetime.now(timezone.utc) + timedelta(seconds=10)
+            finally:
+                state.last_cycle_started = None
 
         state.busy_task.add_done_callback(_done_callback)
 

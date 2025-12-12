@@ -149,6 +149,9 @@ async def run_voice_cycle(
 ) -> None:
     guild = config.guild
     channel = config.channel
+    connected_once = bool(
+        state.voice and getattr(state.voice, "is_connected", lambda: False)()
+    )
 
     formatter = TranscriptFormatter(
         guild=guild,
@@ -166,6 +169,17 @@ async def run_voice_cycle(
         min_interval=_LIVE_FLUSH_MIN_INTERVAL_S,
         max_latency=_LIVE_FLUSH_MAX_LATENCY_S,
     )
+    result_recorded = False
+
+    def _mark_cycle_result() -> None:
+        nonlocal result_recorded
+        if result_recorded:
+            return
+        state.last_cycle_failed = not connected_once
+        state.consecutive_failures = (
+            state.consecutive_failures + 1 if state.last_cycle_failed else 0
+        )
+        result_recorded = True
 
     chunk_queue: asyncio.Queue[Optional[list[tuple[int, str, datetime]]]] | None = None
     pipeline_task: Optional[asyncio.Task[None]] = None
@@ -307,6 +321,9 @@ async def run_voice_cycle(
                     self_mute=not config.join_announcement,
                     window_seconds=HARVEST_WINDOW_SECONDS,
                 )
+                connected_once = connected_once or bool(
+                    state.voice and getattr(state.voice, "is_connected", lambda: False)()
+                )
 
                 await announcement_manager.maybe_announce(
                     state=state,
@@ -352,6 +369,9 @@ async def run_voice_cycle(
                 self_mute=not config.join_announcement,
                 window_seconds=HARVEST_WINDOW_SECONDS,
             )
+            connected_once = connected_once or bool(
+                state.voice and getattr(state.voice, "is_connected", lambda: False)()
+            )
             await announcement_manager.maybe_announce(
                 state=state,
                 guild=guild,
@@ -360,8 +380,13 @@ async def run_voice_cycle(
                 enabled=config.join_announcement,
                 texts=config.announcement_texts,
             )
+            _mark_cycle_result()
             return
     except asyncio.CancelledError:
+        _mark_cycle_result()
+        raise
+    except Exception:
+        _mark_cycle_result()
         raise
     finally:
         with contextlib.suppress(asyncio.CancelledError, Exception):
@@ -373,6 +398,7 @@ async def run_voice_cycle(
         if pipeline_task:
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await pipeline_task
+        _mark_cycle_result()
 
     await live_emitter.flush(force=True)
 
