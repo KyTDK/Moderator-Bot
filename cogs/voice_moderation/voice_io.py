@@ -536,6 +536,35 @@ async def _ensure_connected(
         return None
 
 
+async def _ensure_connected_with_retry(
+    *,
+    guild: discord.Guild,
+    channel: discord.VoiceChannel,
+    voice: Optional[discord.VoiceClient],
+    self_mute: bool,
+    attempts: int = 2,
+    retry_delay: float = 1.0,
+) -> Optional[discord.VoiceClient]:
+    """Try to join/move the voice channel a few times before backing off."""
+    attempts = max(1, attempts)
+    vc: Optional[discord.VoiceClient] = None
+    for attempt in range(attempts):
+        vc = await _ensure_connected(
+            guild=guild,
+            channel=channel,
+            voice=voice,
+            self_mute=self_mute,
+        )
+        if vc:
+            return vc
+        # If a backoff/snooze was triggered, don't hammer retries in this cycle.
+        if VOICE_BACKOFF.remaining(guild.id, channel.id) > 0.0:
+            return None
+        if attempt + 1 < attempts:
+            await asyncio.sleep(retry_delay)
+    return vc
+
+
 async def harvest_pcm_chunk(
     *,
     guild: discord.Guild,
@@ -554,7 +583,14 @@ async def harvest_pcm_chunk(
     # Prereqs
     _ensure_opus_loaded()
 
-    vc = await _ensure_connected(guild=guild, channel=channel, voice=voice, self_mute=self_mute)
+    vc = await _ensure_connected_with_retry(
+        guild=guild,
+        channel=channel,
+        voice=voice,
+        self_mute=self_mute,
+        attempts=2,
+        retry_delay=1.0,
+    )
     if not vc:
         cooldown = VOICE_BACKOFF.remaining(guild.id, channel.id)
         sleep_s = 5.0 if cooldown <= 0 else min(max(cooldown, 5.0), 30.0)

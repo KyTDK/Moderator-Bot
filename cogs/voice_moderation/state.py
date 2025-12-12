@@ -21,6 +21,9 @@ class GuildVCState:
         self.last_cycle_started: Optional[datetime] = None
         self.last_cycle_failed: bool = False
         self.consecutive_failures: int = 0
+        self.last_connected_at: Optional[datetime] = None
+        self.last_connect_attempt: Optional[datetime] = None
+        self.last_join_alert_at: Optional[datetime] = None
 
     def reset_cycle(self) -> None:
         """Clear scheduling related bookkeeping."""
@@ -31,3 +34,6 @@ class GuildVCState:
         self.last_cycle_started = None
         self.last_cycle_failed = False
         self.consecutive_failures = 0
+        self.last_connected_at = None
+        self.last_connect_attempt = None
+        self.last_join_alert_at = None

@@ -12,7 +12,9 @@ from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 from modules.utils import mysql
+from modules.utils import log_channel as devlog
 from .announcements import AnnouncementManager
+from .backoff import VOICE_BACKOFF
 from .cycle import VoiceCycleConfig, run_voice_cycle
 from .metrics import record_voice_metrics
 from .settings import VoiceSettings
@@ -101,6 +103,69 @@ class VoiceModeratorCog(commands.Cog):
                     await voice.disconnect(force=True)
 
         state.reset_cycle()
+
+    async def _maybe_force_retry(self, guild: discord.Guild, settings: VoiceSettings, state: GuildVCState, now: datetime) -> None:
+        """Force a prompt retry when joins are stalling so the bot re-enters voice quickly."""
+        if not settings.enabled or not settings.channel_ids:
+            return
+        if state.busy_task and not state.busy_task.done():
+            return
+
+        min_failures = 1 if state.last_connected_at is None else 2
+        if state.consecutive_failures < min_failures:
+            return
+        if now >= state.next_start:
+            return
+
+        last_attempt = state.last_connect_attempt or state.last_cycle_started or state.next_start
+        stalled_for = max(0.0, (now - last_attempt).total_seconds())
+        if stalled_for < 20.0:
+            return
+
+        cleared_any = False
+        for cid in settings.channel_ids:
+            if VOICE_BACKOFF.remaining(guild.id, cid) > 0.0:
+                cleared_any = True
+            VOICE_BACKOFF.clear(guild.id, cid)
+
+        state.next_start = datetime.now(timezone.utc)
+
+        should_log = state.last_join_alert_at is None or (now - state.last_join_alert_at).total_seconds() >= 300.0
+        state.last_join_alert_at = now if should_log else state.last_join_alert_at
+
+        if not should_log:
+            return
+
+        channels_value = ", ".join(str(cid) for cid in settings.channel_ids[:5])
+        with contextlib.suppress(Exception):
+            await devlog.log_to_developer_channel(
+                self.bot,
+                summary="Voice moderation join stalled; forcing retry",
+                severity="warning",
+                description=(
+                    "Voice moderation could not connect to a configured channel; forcing an immediate retry "
+                    "so the bot can rejoin without manual intervention."
+                ),
+                fields=[
+                    devlog.DeveloperLogField(name="Guild ID", value=str(guild.id), inline=True),
+                    devlog.DeveloperLogField(
+                        name="Channels",
+                        value=channels_value or "unset",
+                        inline=False,
+                    ),
+                    devlog.DeveloperLogField(
+                        name="Failures",
+                        value=str(state.consecutive_failures),
+                        inline=True,
+                    ),
+                    devlog.DeveloperLogField(
+                        name="Backoff cleared",
+                        value="yes" if cleared_any else "no",
+                        inline=True,
+                    ),
+                ],
+                context="voice.join",
+            )
 
     @tasks.loop(seconds=10)
     async def loop(self) -> None:
@@ -192,6 +257,7 @@ class VoiceModeratorCog(commands.Cog):
                     )
                     state.next_start = datetime.now(timezone.utc) + timedelta(seconds=delay)
             return
+        await self._maybe_force_retry(guild, voice_settings, state, now)
         if now < state.next_start:
             return
 
@@ -223,7 +289,10 @@ class VoiceModeratorCog(commands.Cog):
                 state.index += 1
                 delay = 0.0
                 if state.last_cycle_failed:
-                    delay = _failure_delay_seconds(state.consecutive_failures, failure_idle_seconds)
+                    base_idle = failure_idle_seconds
+                    if state.last_connected_at is None:
+                        base_idle = min(base_idle, 12.0)
+                    delay = _failure_delay_seconds(state.consecutive_failures, base_idle)
                 state.next_start = datetime.now(timezone.utc) + timedelta(seconds=delay)
             except Exception:
                 state.next_start = datetime.now(timezone.utc) + timedelta(seconds=10)

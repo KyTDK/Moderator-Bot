@@ -5,7 +5,7 @@ import contextlib
 import time
 from collections import deque
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import partial
 from typing import Any, Awaitable, Callable, Dict, Optional
 
@@ -152,6 +152,9 @@ async def run_voice_cycle(
     connected_once = bool(
         state.voice and getattr(state.voice, "is_connected", lambda: False)()
     )
+    cycle_started = datetime.now(timezone.utc)
+    if connected_once:
+        state.last_connected_at = cycle_started
 
     formatter = TranscriptFormatter(
         guild=guild,
@@ -189,6 +192,14 @@ async def run_voice_cycle(
         "Violation history:\n"
         "Not provided by policy; do not consider prior violations.\n\n"
     )
+    state.last_connect_attempt = cycle_started
+
+    def _note_connection() -> None:
+        if state.voice and getattr(state.voice, "is_connected", lambda: False)():
+            state.last_connected_at = datetime.now(timezone.utc)
+
+    def _mark_attempt() -> None:
+        state.last_connect_attempt = datetime.now(timezone.utc)
 
     async def _pipeline_worker() -> None:
         assert chunk_queue is not None
@@ -307,6 +318,7 @@ async def run_voice_cycle(
 
             while True:
                 iteration_start = time.monotonic()
+                _mark_attempt()
                 (
                     state.voice,
                     eligible_map,
@@ -324,6 +336,7 @@ async def run_voice_cycle(
                 connected_once = connected_once or bool(
                     state.voice and getattr(state.voice, "is_connected", lambda: False)()
                 )
+                _note_connection()
 
                 await announcement_manager.maybe_announce(
                     state=state,
@@ -355,6 +368,7 @@ async def run_voice_cycle(
                 min(config.listen_delta.total_seconds(), listen_end - start),
             )
         else:
+            _mark_attempt()
             (
                 state.voice,
                 _eligible_map,
@@ -372,6 +386,7 @@ async def run_voice_cycle(
             connected_once = connected_once or bool(
                 state.voice and getattr(state.voice, "is_connected", lambda: False)()
             )
+            _note_connection()
             await announcement_manager.maybe_announce(
                 state=state,
                 guild=guild,
@@ -381,6 +396,23 @@ async def run_voice_cycle(
                 texts=config.announcement_texts,
             )
             _mark_cycle_result()
+            if not connected_once:
+                await record_metrics(
+                    guild=guild,
+                    channel=channel,
+                    transcript_only=config.transcript_only,
+                    high_accuracy=config.high_accuracy,
+                    listen_delta=config.listen_delta,
+                    idle_delta=config.idle_delta,
+                    utterance_count=0,
+                    status="connect_failed",
+                    report_obj=None,
+                    total_tokens=0,
+                    request_cost=0.0,
+                    usage_snapshot={},
+                    duration_ms=int(config.idle_delta.total_seconds() * 1000),
+                    error="voice_connect_unavailable",
+                )
             return
     except asyncio.CancelledError:
         _mark_cycle_result()
@@ -403,6 +435,23 @@ async def run_voice_cycle(
     await live_emitter.flush(force=True)
 
     if not utterances:
+        if not connected_once:
+            await record_metrics(
+                guild=guild,
+                channel=channel,
+                transcript_only=config.transcript_only,
+                high_accuracy=config.high_accuracy,
+                listen_delta=config.listen_delta,
+                idle_delta=config.idle_delta,
+                utterance_count=0,
+                status="connect_failed",
+                report_obj=None,
+                total_tokens=0,
+                request_cost=0.0,
+                usage_snapshot={},
+                duration_ms=int(max(actual_listen_seconds, 0.0) * 1000),
+                error="voice_connect_unavailable",
+            )
         return
 
     async def _sleep_after_cycle() -> None:
