@@ -14,7 +14,7 @@ from .helpers.slow_scan_metrics import gather_slow_scan_diagnostics
 log = logging.getLogger(__name__)
 
 
-SLOW_SCAN_THRESHOLD_MS = 90_000.0
+SLOW_SCAN_THRESHOLD_MS = 30_000.0
 
 
 SCAN_REASON_DESCRIPTIONS: dict[str, str] = {
