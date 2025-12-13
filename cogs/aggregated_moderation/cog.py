@@ -10,8 +10,13 @@ from discord.utils import utcnow
 
 from modules.core.moderator_bot import ModeratorBot
 from modules.nsfw_scanner import NSFWScanner
-from modules.nsfw_scanner.constants import VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS
+from modules.nsfw_scanner.constants import LOG_CHANNEL_ID, VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS
 from modules.utils import mysql
+from modules.utils.log_channel import (
+    DeveloperLogField,
+    build_developer_log_embed,
+    send_developer_log_embed,
+)
 from modules.worker_queue import WorkerQueue
 from modules.worker_queue_alerts import SingularTaskReporter
 
@@ -211,10 +216,66 @@ class AggregatedModerationCog(commands.Cog):
                     return await awaitable
                 except asyncio.TimeoutError:
                     if task_kind == "video" and self._video_task_timeout:
-                        print(
-                            f"[AggregatedModeration] Video task timed out after "
+                        timeout_summary = (
+                            "[AggregatedModeration] Video task timed out after "
                             f"{self._video_task_timeout:.1f}s (guild_id={guild_id}, queue={queue_label})"
                         )
+                        print(timeout_summary)
+
+                        if LOG_CHANNEL_ID:
+                            metrics_summary = None
+                            try:
+                                metrics = queue.metrics()
+                                metrics_fields = {
+                                    "backlog": metrics.get("backlog"),
+                                    "busy_workers": metrics.get("busy_workers"),
+                                    "active_workers": metrics.get("active_workers"),
+                                    "max_workers": metrics.get("max_workers"),
+                                    "autoscale_max": metrics.get("autoscale_max"),
+                                    "backlog_high": metrics.get("backlog_high"),
+                                    "backlog_low": metrics.get("backlog_low"),
+                                    "backlog_hard_limit": metrics.get("backlog_hard_limit"),
+                                    "arrival_rate_per_min": metrics.get("arrival_rate_per_min"),
+                                    "completion_rate_per_min": metrics.get("completion_rate_per_min"),
+                                }
+                                metrics_summary = "\n".join(
+                                    f"{key}={value}" for key, value in metrics_fields.items() if value is not None
+                                )
+                            except Exception:
+                                metrics_summary = None
+
+                            embed_fields = [
+                                DeveloperLogField(name="Guild", value=str(guild_id)),
+                                DeveloperLogField(name="Queue", value=str(queue_label)),
+                                DeveloperLogField(
+                                    name="Timeout",
+                                    value=f"{self._video_task_timeout:.1f}s",
+                                ),
+                            ]
+
+                            if metrics_summary:
+                                embed_fields.append(
+                                    DeveloperLogField(
+                                        name="Queue metrics", value=metrics_summary, inline=False
+                                    )
+                                )
+
+                            embed = build_developer_log_embed(
+                                title="AggregatedModeration video task timed out",
+                                description=timeout_summary,
+                                severity="error",
+                                fields=embed_fields,
+                                timestamp=True,
+                            )
+
+                            if not await send_developer_log_embed(
+                                self.bot,
+                                embed=embed,
+                                context="aggregated_moderation.video_timeout",
+                            ):
+                                print(
+                                    f"[AggregatedModeration] Failed to send video timeout to LOG_CHANNEL_ID={LOG_CHANNEL_ID}"
+                                )
                         return None
                     raise
             finally:
