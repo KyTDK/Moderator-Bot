@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Iterable
 from typing import Any, Optional, TYPE_CHECKING
@@ -25,6 +26,8 @@ if discord is not None:
             app_commands = _app_commands
 else:  # pragma: no cover - triggered during tests without discord.py
     app_commands = None
+
+log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from discord import Interaction  # type: ignore
@@ -137,7 +140,13 @@ async def safe_get_user(bot: discord.Client, user_id: int, *, force_fetch: bool 
         return cached
 
 
-async def safe_get_member(guild: discord.Guild, user_id: int, *, force_fetch: bool = False) -> Optional[discord.Member]:
+async def safe_get_member(
+    guild: discord.Guild,
+    user_id: int,
+    *,
+    force_fetch: bool = False,
+    timeout: float | None = 5.0,
+) -> Optional[discord.Member]:
     """
     Safely get a Member from cache or fetch.
 
@@ -149,9 +158,21 @@ async def safe_get_member(guild: discord.Guild, user_id: int, *, force_fetch: bo
         return member
 
     try:
-        fetched = await guild.fetch_member(user_id)
+        fetch_coro = guild.fetch_member(user_id)
+        fetched = (
+            await asyncio.wait_for(fetch_coro, timeout=timeout)
+            if timeout is not None
+            else await fetch_coro
+        )
         return fetched or member
     except (_NotFoundError, _ForbiddenError):
+        return member if member is not None else None
+    except asyncio.TimeoutError:
+        log.warning(
+            "[safe_get_member] fetch_member(%s) timed out after %ss; using cache fallback",
+            user_id,
+            timeout,
+        )
         return member if member is not None else None
     except _HTTPException as e:
         print(f"[safe_get_member] fetch_member({user_id}) failed: {e}")

@@ -189,6 +189,17 @@ class MediaScanner:
                         "label": "Attachment Save",
                     }
                 }
+            except asyncio.TimeoutError as exc:
+                safe_delete(tmp.name)
+                log.warning(
+                    "[NSFW] Attachment download timed out for %s", getattr(attachment, "url", "unknown")
+                )
+                await self._scanner._report_download_failure(
+                    source_url=getattr(attachment, "url", None) or getattr(attachment, "filename", "unknown"),
+                    exc=exc,
+                    message=self._context.message,
+                )
+                return False
             except NotFound as exc:
                 safe_delete(tmp.name)
                 print(f"[NSFW] Attachment not found: {getattr(attachment, 'url', 'unknown')}")

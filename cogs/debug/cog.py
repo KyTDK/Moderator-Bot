@@ -108,7 +108,11 @@ class DebugCog(commands.Cog):
     @app_commands.describe(show_all=locale_string("cogs.debug.meta.stats.show_all"))
     @app_commands.checks.has_permissions(administrator=True)
     async def stats(self, interaction: discord.Interaction, show_all: bool = True):
-        await interaction.response.defer(ephemeral=True)
+        try:
+            await interaction.response.defer(ephemeral=True)
+        except asyncio.TimeoutError:
+            log.warning("[debug] Interaction defer timed out for stats command")
+            return
         if not await require_dev_access(self.bot, interaction):
             return
         embed = await build_stats_embed(self, interaction, show_all)
