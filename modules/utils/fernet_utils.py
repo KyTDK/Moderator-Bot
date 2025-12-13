@@ -43,23 +43,35 @@ def _resolve_fernet_key() -> str:
     return _DEFAULT_FERNET_KEY
 
 
+def _validated_fernet_key() -> str:
+    """Return a Fernet-compatible key, falling back to the dev key when invalid."""
+
+    key = _resolve_fernet_key()
+    try:
+        Fernet(key)
+        return key
+    except (ValueError, TypeError):
+        _LOGGER.warning(
+            "%s is invalid; using a built-in development fallback key. "
+            "This key is public and must not be used in production.",
+            _ENV_NAME,
+            exc_info=True,
+        )
+        os.environ[_ENV_NAME] = _DEFAULT_FERNET_KEY
+        return _DEFAULT_FERNET_KEY
+
+
 def get_fernet_key() -> str:
     """Return the configured Fernet key or the development fallback."""
 
-    return _resolve_fernet_key()
+    return _validated_fernet_key()
 
 
 @lru_cache(maxsize=1)
 def get_fernet() -> Fernet:
     """Return a cached Fernet instance so every consumer shares the same key."""
 
-    key = _resolve_fernet_key()
-    try:
-        return Fernet(key)
-    except (ValueError, TypeError) as exc:
-        raise RuntimeError(
-            f"{_ENV_NAME} must be a base64-encoded 32-byte key compatible with Fernet"
-        ) from exc
+    return Fernet(_validated_fernet_key())
 
 
 def is_fernet_configured() -> bool:

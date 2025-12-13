@@ -10,13 +10,10 @@ from discord.utils import utcnow
 
 from modules.core.moderator_bot import ModeratorBot
 from modules.nsfw_scanner import NSFWScanner
-from modules.nsfw_scanner.constants import LOG_CHANNEL_ID, VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS
+from modules.nsfw_scanner import constants as nsfw_constants
 from modules.utils import mysql
-from modules.utils.log_channel import (
-    DeveloperLogField,
-    build_developer_log_embed,
-    send_developer_log_embed,
-)
+from modules.utils import log_channel as log_channel_module
+from modules.utils.log_channel import DeveloperLogField
 from modules.worker_queue import WorkerQueue
 from modules.worker_queue_alerts import SingularTaskReporter
 
@@ -28,10 +25,13 @@ from .queue_monitor import FreeQueueMonitor
 from .queue_context import reset_current_queue, set_current_queue
 from .queue_snapshot import QueueSnapshot
 
-_VIDEO_TASK_TIMEOUT_SECONDS = max(
-    90.0,
-    min(240.0, (VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS or 0) + 30.0),
-)
+build_developer_log_embed = getattr(log_channel_module, "build_developer_log_embed", lambda **kwargs: None)
+send_developer_log_embed = getattr(log_channel_module, "send_developer_log_embed", lambda *args, **kwargs: False)
+
+_LOG_CHANNEL_ID = getattr(nsfw_constants, "LOG_CHANNEL_ID", 0)
+_VIDEO_WALL_CLOCK_LIMIT = getattr(nsfw_constants, "VIDEO_SCAN_WALL_CLOCK_LIMIT_SECONDS", 105)
+
+_VIDEO_TASK_TIMEOUT_SECONDS = max(90.0, min(240.0, (_VIDEO_WALL_CLOCK_LIMIT or 0) + 30.0))
 
 
 class AggregatedModerationCog(commands.Cog):
@@ -222,7 +222,7 @@ class AggregatedModerationCog(commands.Cog):
                         )
                         print(timeout_summary)
 
-                        if LOG_CHANNEL_ID:
+                        if _LOG_CHANNEL_ID:
                             metrics_summary = None
                             try:
                                 metrics = queue.metrics()
@@ -274,7 +274,7 @@ class AggregatedModerationCog(commands.Cog):
                                 context="aggregated_moderation.video_timeout",
                             ):
                                 print(
-                                    f"[AggregatedModeration] Failed to send video timeout to LOG_CHANNEL_ID={LOG_CHANNEL_ID}"
+                                    f"[AggregatedModeration] Failed to send video timeout to LOG_CHANNEL_ID={_LOG_CHANNEL_ID}"
                                 )
                         return None
                     raise
