@@ -342,13 +342,14 @@ def prepare_image_payload(
 
     return loop.run_in_executor(
         executor,
-        prepare_image_payload_sync,
-        image,
-        image_bytes,
-        image_path,
-        image_mime,
-        original_size,
-        max_image_edge,
-        jpeg_target_bytes,
-        target_format,
+        lambda: prepare_image_payload_sync(
+            image=image,
+            image_bytes=image_bytes,
+            image_path=image_path,
+            image_mime=image_mime,
+            original_size=original_size,
+            max_image_edge=max_image_edge,
+            jpeg_target_bytes=jpeg_target_bytes,
+            target_format=target_format,
+        ),
     )
