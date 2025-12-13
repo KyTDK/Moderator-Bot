@@ -344,6 +344,10 @@ async def moderator_api(
             continue
         except openai.InternalServerError as exc:
             latency_tracker.stop("api_call_ms", api_started)
+            status_code = getattr(exc, "status_code", None)
+            if not status_code:
+                response = getattr(exc, "response", None)
+                status_code = getattr(response, "status_code", None)
             context_summary = build_error_context(
                 exc=exc,
                 attempt_number=attempt_number,
@@ -353,6 +357,35 @@ async def moderator_api(
                 image_state=image_state if isinstance(image_state, ImageModerationState) else None,
                 payload_metadata=payload_metadata if isinstance(payload_metadata, dict) else None,
             )
+            if status_code == 504:
+                error_message = format_exception_for_log(exc)
+                had_http_timeout = True
+                latency_tracker.record_failure("http_timeout")
+                remote_handled = await fallback_ctx.handle_remote_inline_fallback(
+                    label="remote_http_timeout",
+                    error_message=f"{error_message}. Context: {context_summary}",
+                    attempt_number=attempt_number,
+                    context_summary=context_summary,
+                )
+                if remote_handled:
+                    print(
+                        "[moderator_api] Gateway timeout during moderation request on attempt "
+                        f"{attempt_number}/{max_attempts}: {error_message}. "
+                        "Retrying with inline payload."
+                    )
+                    continue
+                print(
+                    "[moderator_api] Gateway timeout during moderation request on attempt "
+                    f"{attempt_number}/{max_attempts}: {error_message}. Context: {context_summary}"
+                )
+                log.debug(
+                    "Gateway timeout during moderation request. Context: %s",
+                    context_summary,
+                    exc_info=True,
+                )
+                if attempt_index < max_attempts - 1:
+                    await asyncio.sleep(min(2 ** attempt_index, 5.0))
+                continue
             fallback_ctx.record_fallback_context("internal_server_error", context_summary)
             had_internal_error = True
             error_message = format_exception_for_log(exc)

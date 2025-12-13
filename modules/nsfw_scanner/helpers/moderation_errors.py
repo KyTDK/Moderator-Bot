@@ -1,10 +1,57 @@
 from __future__ import annotations
 
+import re
+from html import unescape
 from typing import Any
 
 from .moderation_state import ImageModerationState
 
 __all__ = ["build_error_context", "format_exception_for_log"]
+
+
+_HTML_TITLE_PATTERN = re.compile(r"<title>(.*?)</title>", re.IGNORECASE | re.DOTALL)
+
+
+def _extract_html_title(body: str | None) -> str | None:
+    if not body:
+        return None
+    match = _HTML_TITLE_PATTERN.search(body)
+    if not match:
+        return None
+    title = unescape(match.group(1))
+    cleaned = " ".join(title.split())
+    return cleaned or None
+
+
+def _summarize_html_error_response(response: Any, body: str | None) -> str | None:
+    """Return a concise summary when the response body is an HTML error page."""
+
+    if not body:
+        return None
+
+    stripped = body.lstrip()
+    if not stripped:
+        return None
+
+    lowered = stripped[:512].lower()
+    if "<html" not in lowered and "<!doctype html" not in lowered:
+        return None
+
+    status_code = getattr(response, "status_code", None)
+    reason_phrase = getattr(response, "reason_phrase", None)
+    parts: list[str] = []
+
+    if status_code:
+        parts.append(f"HTTP {status_code}")
+    if isinstance(reason_phrase, str) and reason_phrase.strip():
+        parts.append(reason_phrase.strip())
+
+    title = _extract_html_title(body)
+    if title:
+        parts.append(f"title={title}")
+
+    parts.append("html_response")
+    return " ".join(parts)
 
 
 def build_error_context(
@@ -99,25 +146,43 @@ def build_error_context(
                     context_parts.append(
                         f"error_message={sanitized_message}"
                     )
+        body_preview = None
         try:
             body_preview = response.text
         except Exception:
             body_preview = None
         if body_preview:
-            sanitized_preview = body_preview[:256].replace("\n", " ")
-            context_parts.append(
-                f"response_body_preview={sanitized_preview}"
-            )
+            html_summary = _summarize_html_error_response(response, body_preview)
+            if html_summary:
+                context_parts.append(f"response_body_preview={html_summary}")
+            else:
+                sanitized_preview = body_preview[:256].replace("\n", " ")
+                context_parts.append(
+                    f"response_body_preview={sanitized_preview}"
+                )
     return ", ".join(context_parts)
 
 
 def format_exception_for_log(exc: Exception, *, limit: int = 256) -> str:
     """Return a sanitized, truncated string representation of ``exc`` for logs."""
 
+    response = getattr(exc, "response", None)
+    response_body = None
+    if response is not None:
+        try:
+            response_body = response.text
+        except Exception:  # pragma: no cover - defensive
+            response_body = None
+
+    html_summary = _summarize_html_error_response(response, response_body) if response else None
+
     try:
         message = str(exc)
     except Exception:  # pragma: no cover - extremely defensive
         message = repr(exc)
+
+    if html_summary:
+        message = html_summary
 
     if not message:
         message = type(exc).__name__
