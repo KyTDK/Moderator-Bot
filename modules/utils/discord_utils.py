@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Iterable
+from time import monotonic
 from typing import Any, Optional, TYPE_CHECKING
 
 try:
@@ -38,6 +39,9 @@ _ForbiddenError = getattr(discord, "Forbidden", Exception) if discord is not Non
 _HTTPException = getattr(discord, "HTTPException", Exception) if discord is not None else Exception
 _NotFoundError = getattr(discord, "NotFound", Exception) if discord is not None else Exception
 _DiscordUtilsGet = getattr(getattr(discord, "utils", None), "get", None) if discord is not None else None
+
+_timeout_log_state: dict[int, tuple[float, int]] = {}
+_TIMEOUT_LOG_COOLDOWN = 60.0
 
 
 def _app_command_check(predicate):
@@ -168,11 +172,33 @@ async def safe_get_member(
     except (_NotFoundError, _ForbiddenError):
         return member if member is not None else None
     except asyncio.TimeoutError:
-        log.warning(
-            "[safe_get_member] fetch_member(%s) timed out after %ss; using cache fallback",
-            user_id,
-            timeout,
-        )
+        now = monotonic()
+        last_log, suppressed = _timeout_log_state.get(user_id, (0.0, 0))
+        if last_log == 0.0 or now - last_log >= _TIMEOUT_LOG_COOLDOWN:
+            if suppressed:
+                log.warning(
+                    "[safe_get_member] fetch_member(%s) timed out after %ss; using cache fallback (%s suppressed in last %ss)",
+                    user_id,
+                    timeout,
+                    suppressed,
+                    _TIMEOUT_LOG_COOLDOWN,
+                )
+            else:
+                log.warning(
+                    "[safe_get_member] fetch_member(%s) timed out after %ss; using cache fallback",
+                    user_id,
+                    timeout,
+                )
+            _timeout_log_state[user_id] = (now, 0)
+        else:
+            _timeout_log_state[user_id] = (last_log, suppressed + 1)
+            log.debug(
+                "[safe_get_member] suppressing timeout log for %s (%s suppressed within %ss)",
+                user_id,
+                suppressed + 1,
+                _TIMEOUT_LOG_COOLDOWN,
+            )
+
         return member if member is not None else None
     except _HTTPException as e:
         print(f"[safe_get_member] fetch_member({user_id}) failed: {e}")
