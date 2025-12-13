@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import io
 import os
 from dataclasses import dataclass
@@ -44,6 +45,27 @@ def _coerce_positive_int(value: int | str | None) -> int | None:
     except (TypeError, ValueError):
         return None
     return number if number > 0 else None
+
+
+_PAYLOAD_EXECUTOR: concurrent.futures.ThreadPoolExecutor | None = None
+_PAYLOAD_WORKERS = _coerce_positive_int(
+    os.getenv("MODBOT_MODERATION_PAYLOAD_THREADS", "4")
+)
+
+
+def _get_payload_executor() -> concurrent.futures.ThreadPoolExecutor | None:
+    global _PAYLOAD_EXECUTOR
+
+    if _PAYLOAD_WORKERS is None:
+        return None
+
+    if _PAYLOAD_EXECUTOR is None:
+        _PAYLOAD_EXECUTOR = concurrent.futures.ThreadPoolExecutor(
+            max_workers=_PAYLOAD_WORKERS,
+            thread_name_prefix="modbot-payload",
+        )
+
+    return _PAYLOAD_EXECUTOR
 
 
 @dataclass(slots=True)
@@ -302,14 +324,31 @@ def prepare_image_payload(
     jpeg_target_bytes: int | None = None,
     target_format: str | None = None,
 ) -> asyncio.Future[PreparedImagePayload]:
-    return asyncio.to_thread(
+    executor = _get_payload_executor()
+    loop = asyncio.get_running_loop()
+
+    if executor is None:
+        return asyncio.to_thread(
+            prepare_image_payload_sync,
+            image=image,
+            image_bytes=image_bytes,
+            image_path=image_path,
+            image_mime=image_mime,
+            original_size=original_size,
+            max_image_edge=max_image_edge,
+            jpeg_target_bytes=jpeg_target_bytes,
+            target_format=target_format,
+        )
+
+    return loop.run_in_executor(
+        executor,
         prepare_image_payload_sync,
-        image=image,
-        image_bytes=image_bytes,
-        image_path=image_path,
-        image_mime=image_mime,
-        original_size=original_size,
-        max_image_edge=max_image_edge,
-        jpeg_target_bytes=jpeg_target_bytes,
-        target_format=target_format,
+        image,
+        image_bytes,
+        image_path,
+        image_mime,
+        original_size,
+        max_image_edge,
+        jpeg_target_bytes,
+        target_format,
     )
