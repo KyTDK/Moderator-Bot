@@ -7,6 +7,7 @@ from typing import Any, Callable, List, Optional
 from modules.nsfw_scanner.constants import (
     CLIP_THRESHOLD,
     HIGH_ACCURACY_SIMILARITY,
+    SIMILARITY_SEARCH_TIMEOUT_SECONDS,
     VECTOR_REFRESH_DIVISOR,
 )
 from modules.utils import clip_vectors
@@ -64,9 +65,16 @@ async def _run_image_pipeline(
         if vector_search_online:
             similarity_started = time.perf_counter()
             try:
-                similarity_results = await asyncio.to_thread(
-                    clip_vectors.query_similar, image, threshold=0
+                similarity_results = await asyncio.wait_for(
+                    asyncio.to_thread(clip_vectors.query_similar, image, threshold=0),
+                    timeout=SIMILARITY_SEARCH_TIMEOUT_SECONDS,
                 )
+            except asyncio.TimeoutError:
+                log.warning(
+                    "Similarity search exceeded %.1fs; falling back to moderator API",
+                    SIMILARITY_SEARCH_TIMEOUT_SECONDS,
+                )
+                similarity_results = []
             except Exception as exc:
                 log.warning(
                     "Similarity search failed; falling back to moderator API: %s",

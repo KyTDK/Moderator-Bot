@@ -9,6 +9,7 @@ from PIL import Image
 from modules.nsfw_scanner.constants import (
     ACCELERATED_MOD_API_MAX_CONCURRENCY,
     MOD_API_MAX_CONCURRENCY,
+    SIMILARITY_SEARCH_TIMEOUT_SECONDS,
 )
 from modules.utils import clip_vectors
 
@@ -76,12 +77,22 @@ async def process_image_batch(
     if valid_images:
         try:
             similarity_started = time.perf_counter()
-            similarity_batches = await asyncio.to_thread(
-                clip_vectors.query_similar_batch, valid_images, 0
+            similarity_batches = await asyncio.wait_for(
+                asyncio.to_thread(clip_vectors.query_similar_batch, valid_images, 0),
+                timeout=SIMILARITY_SEARCH_TIMEOUT_SECONDS,
             )
             batch_metrics["similarity_latency_ms"] += (
                 time.perf_counter() - similarity_started
             ) * 1000
+        except asyncio.TimeoutError:
+            batch_metrics["similarity_latency_ms"] += (
+                time.perf_counter() - similarity_started
+            ) * 1000
+            log.warning(
+                "Batch similarity search exceeded %.1fs; skipping matches",
+                SIMILARITY_SEARCH_TIMEOUT_SECONDS,
+            )
+            similarity_batches = [[] for _ in valid_images]
         except Exception as exc:
             log.warning(
                 "Batch similarity search failed; continuing without matches: %s",

@@ -71,6 +71,16 @@ try:
 except (TypeError, ValueError):
     CLIP_THRESHOLD = 0.90
 
+_SIMILARITY_TIMEOUT_RAW = os.getenv("SIMILARITY_SEARCH_TIMEOUT_SECONDS")
+try:
+    SIMILARITY_SEARCH_TIMEOUT_SECONDS = (
+        float(_SIMILARITY_TIMEOUT_RAW)
+        if _SIMILARITY_TIMEOUT_RAW is not None
+        else 5.0
+    )
+except (TypeError, ValueError):
+    SIMILARITY_SEARCH_TIMEOUT_SECONDS = 5.0
+
 _TEXT_THRESHOLD_RAW = os.getenv("TEXT_SIMILARITY_THRESHOLD")
 try:
     TEXT_SIMILARITY_THRESHOLD = (
