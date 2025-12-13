@@ -255,13 +255,14 @@ async def process_video(
     max_flush_timeout = 0.24 if context.accelerated else 0.32
     avg_interarrival: float | None = None
     last_frame_timestamp: float | None = None
+    queue_name = getattr(context, "queue_name", None)
     metrics.data.update(
         {
             "ffmpeg_available": ffmpeg_available(),
             "cpu_count": cpu_count,
             "frames_to_scan": frames_to_scan,
             "queue_max": queue_max,
-            "queue_name": context.queue_name,
+            "queue_name": queue_name,
             "accelerated": context.accelerated,
             "max_concurrent_frames": max_concurrent_frames,
             "batch_size": batch_size,
