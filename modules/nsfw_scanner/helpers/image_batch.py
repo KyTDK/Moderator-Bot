@@ -46,7 +46,9 @@ async def process_image_batch(
         "moderation_latency_ms": 0.0,
         "moderation_wait_latency_ms": 0.0,
     }
-    semaphore = asyncio.Semaphore(16 if context.accelerated else 1)
+    cpu_capacity = max(2, os.cpu_count() or 2)
+    decode_parallelism = min(32, cpu_capacity * (2 if context.accelerated else 1))
+    semaphore = asyncio.Semaphore(max(1, decode_parallelism))
 
     async def _decode_frame(frame: ExtractedFrame) -> Image.Image | None:
         async with semaphore:

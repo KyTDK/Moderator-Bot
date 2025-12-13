@@ -27,6 +27,7 @@ from ..constants import (
 )
 from ..utils.file_ops import safe_delete
 from ..utils.frames import ExtractedFrame, frames_are_similar, iter_extracted_frames
+from ..utils.frames.ffmpeg import ffmpeg_available
 from .context import ImageProcessingContext, build_image_processing_context
 from .images import process_image_batch
 from .metrics import LatencyTracker
@@ -184,6 +185,9 @@ async def process_video(
         guild_id,
         premium_status=premium_status,
     )
+    cpu_count = max(os.cpu_count() or 1, 1)
+    if isinstance(max_concurrent_frames, int) and max_concurrent_frames > 0:
+        max_concurrent_frames = max(1, min(max_concurrent_frames, cpu_count * 2))
 
     if context is None:
         context = await build_image_processing_context(guild_id)
@@ -229,10 +233,12 @@ async def process_video(
     media_total_frames: int | None = None
     flagged_file: Optional[discord.File] = None
     flagged_scan: dict[str, Any] | None = None
+    latency_tracker = LatencyTracker()
+    metrics = VideoMetrics(latency_tracker)
     batch: list[ExtractedFrame] = []
     batch_cap = ACCELERATED_MAX_BATCH_CAP if context.accelerated else FREE_MAX_BATCH_CAP
     batch_size = max(1, min(max_concurrent_frames, batch_cap))
-    dedupe_enabled = context.accelerated
+    dedupe_enabled = True
     last_signature = None
     dedupe_threshold = 0.985 if dedupe_enabled else 0.0
     last_motion_signature = None
@@ -249,8 +255,21 @@ async def process_video(
     max_flush_timeout = 0.24 if context.accelerated else 0.32
     avg_interarrival: float | None = None
     last_frame_timestamp: float | None = None
-    latency_tracker = LatencyTracker()
-    metrics = VideoMetrics(latency_tracker)
+    metrics.data.update(
+        {
+            "ffmpeg_available": ffmpeg_available(),
+            "cpu_count": cpu_count,
+            "frames_to_scan": frames_to_scan,
+            "queue_max": queue_max,
+            "queue_name": context.queue_name,
+            "accelerated": context.accelerated,
+            "max_concurrent_frames": max_concurrent_frames,
+            "batch_size": batch_size,
+            "dedupe_enabled": dedupe_enabled,
+            "dedupe_threshold": dedupe_threshold,
+            "use_hwaccel": context.accelerated,
+        }
+    )
 
     def _record_latency(name: str, duration_ms: float, label: str) -> None:
         latency_tracker.record_step(name, duration_ms, label=label)

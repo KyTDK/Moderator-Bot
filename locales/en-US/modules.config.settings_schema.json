@@ -151,7 +151,10 @@
                     "description": "Enable voice channel moderation and transcription."
                 },
                 "vcmod-channels": {
-                    "description": "Voice channels to monitor (when empty, none are monitored)."
+                    "description": "Voice or stage channels to monitor (when empty, none are monitored)."
+                },
+                "vcmod-categories": {
+                    "description": "Voice channel categories to monitor (cycles through all voice/stage channels inside)."
                 },
                 "vcmod-listen-duration": {
                     "description": "How long to actively listen per voice channel during a cycle (e.g., 2m, 5m)."

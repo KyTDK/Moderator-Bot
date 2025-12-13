@@ -11,6 +11,7 @@ from modules.utils.time import parse_duration
 class VoiceSettings:
     enabled: bool
     channel_ids: list[int]
+    category_ids: list[int]
     saver_mode: bool
     listen_delta: timedelta
     idle_delta: timedelta
@@ -45,6 +46,16 @@ class VoiceSettings:
                 continue
             channel_ids.append(cid)
 
+        category_ids: list[int] = []
+        categories_raw = settings.get("vcmod-categories") or []
+
+        for entry in categories_raw:
+            try:
+                cid = int(getattr(entry, "id", entry))
+            except Exception:
+                continue
+            category_ids.append(cid)
+
         rules = settings.get("vcmod-rules") or ""
         action_setting = list(settings.get("vcmod-detection-action") or ["auto"])
         aimod_debug = bool(settings.get("aimod-debug"))
@@ -54,6 +65,7 @@ class VoiceSettings:
         return cls(
             enabled=enabled,
             channel_ids=channel_ids,
+            category_ids=category_ids,
             saver_mode=saver_mode,
             listen_delta=listen_delta,
             idle_delta=idle_delta,

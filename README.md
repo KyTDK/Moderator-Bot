@@ -321,7 +321,8 @@ Access https://modbot.neomechanical.com to review moderation stats, tune setting
 | `vpn-pre-actions`                  | list\[str]            | Role adjustments before VPN screening               |
 | `vpn-post-actions`                 | list\[str]            | Role adjustments after VPN screening succeeds       |
 | `vcmod-enabled`                    | bool (Accelerated)    | Enable voice moderation                             |
-| `vcmod-channels`                   | list\[VoiceChannel]   | Voice channels monitored by the bot                 |
+| `vcmod-channels`                   | list\[VoiceChannel \| StageChannel] | Voice/stage channels monitored by the bot           |
+| `vcmod-categories`                 | list\[CategoryChannel] | Voice categories whose channels are cycled          |
 | `vcmod-listen-duration`            | TimeString            | Active listening window per channel                 |
 | `vcmod-idle-duration`              | TimeString            | Pause between transcripts in saver mode             |
 | `vcmod-saver-mode`                 | bool                  | Lightweight cycling without constant recording      |

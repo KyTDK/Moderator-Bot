@@ -159,7 +159,7 @@ class LiveTranscriptEmitter:
         *,
         formatter: TranscriptFormatter,
         bot: commands.Bot,
-        channel: discord.VoiceChannel,
+        channel: discord.VoiceChannel | discord.StageChannel,
         transcript_channel_id: Optional[int],
         high_quality: bool,
         min_utterances: int,

@@ -204,7 +204,7 @@ class AnnouncementManager:
         *,
         state: GuildVCState,
         guild: discord.Guild,
-        channel: discord.VoiceChannel,
+        channel: discord.VoiceChannel | discord.StageChannel,
         transcript_only: bool,
         enabled: bool,
         texts: Optional[Dict[str, Any]],

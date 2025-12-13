@@ -298,11 +298,19 @@ def build_general_settings() -> dict[str, Setting]:
         ),
         "vcmod-channels": Setting(
             name="vcmod-channels",
-            description="Voice channels to monitor (when empty, none are monitored).",
-            setting_type=list[discord.VoiceChannel],
+            description="Voice or stage channels to monitor (when empty, none are monitored).",
+            setting_type=list[discord.VoiceChannel | discord.StageChannel],
             default=[],
             hidden=True,
             description_key="modules.config.settings_schema.vcmod-channels.description",
+        ),
+        "vcmod-categories": Setting(
+            name="vcmod-categories",
+            description="Voice channel categories to monitor (cycles through all voice/stage channels inside).",
+            setting_type=list[discord.CategoryChannel],
+            default=[],
+            hidden=True,
+            description_key="modules.config.settings_schema.vcmod-categories.description",
         ),
         "vcmod-listen-duration": Setting(
             name="vcmod-listen-duration",

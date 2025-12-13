@@ -53,6 +53,16 @@ def _format_latency(ms_value: float) -> str:
     return f"{ms_value:.2f} ms ({seconds:.2f} s)"
 
 
+def _format_ms(value: float | int | None) -> str:
+    if value is None:
+        return "unknown"
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return "unknown"
+    return f"{numeric:.2f} ms"
+
+
 async def log_slow_scan_if_needed(
     *,
     bot: discord.Client,
@@ -204,8 +214,60 @@ async def log_slow_scan_if_needed(
 
     moderator_meta_lines: list[str] = []
     payload_info_lines: list[str] = []
+    pipeline_config_lines: list[str] = []
+    frame_control_lines: list[str] = []
     pipeline_metrics = getattr(telemetry, "pipeline_metrics", None)
     if isinstance(pipeline_metrics, dict):
+        # Pipeline configuration/context hints to help triage slowness.
+        for label, key in (
+            ("Queue", "queue_name"),
+            ("Frames To Scan", "frames_to_scan"),
+            ("Max Concurrent Frames", "max_concurrent_frames"),
+            ("Batch Size", "batch_size"),
+            ("Queue Max", "queue_max"),
+            ("CPU Count", "cpu_count"),
+        ):
+            value = pipeline_metrics.get(key)
+            if value is not None:
+                pipeline_config_lines.append(f"{label}: {value}")
+        for label, key in (
+            ("FFmpeg Available", "ffmpeg_available"),
+            ("HW Accel Enabled", "use_hwaccel"),
+            ("Accelerated Tier", "accelerated"),
+            ("Dedupe Enabled", "dedupe_enabled"),
+        ):
+            value = pipeline_metrics.get(key)
+            if value is not None:
+                pipeline_config_lines.append(f"{label}: {bool(value)}")
+        if pipeline_metrics.get("dedupe_threshold") is not None:
+            pipeline_config_lines.append(
+                f"Dedupe Threshold: {pipeline_metrics.get('dedupe_threshold')}"
+            )
+
+        # Frame control and scheduler data.
+        for label, key in (
+            ("Residual Low Risk Streak", "residual_low_risk_streak"),
+            ("Residual Motion Plateau", "residual_motion_plateau"),
+            ("Flush Count", "flush_count"),
+            ("Frames Submitted", "frames_submitted"),
+            ("Frames Processed", "frames_processed"),
+            ("Frames Scanned", "frames_scanned"),
+            ("Frames Target", "frames_target"),
+        ):
+            value = pipeline_metrics.get(key)
+            if value is not None:
+                frame_control_lines.append(f"{label}: {value}")
+        if pipeline_metrics.get("avg_frame_interarrival_ms") is not None:
+            frame_control_lines.append(
+                f"Avg Frame Interarrival: {_format_ms(pipeline_metrics.get('avg_frame_interarrival_ms'))}"
+            )
+        if pipeline_metrics.get("effective_flush_timeout_ms") is not None:
+            frame_control_lines.append(
+                f"Effective Flush Timeout: {_format_ms(pipeline_metrics.get('effective_flush_timeout_ms'))}"
+            )
+        if pipeline_metrics.get("early_exit") is not None:
+            frame_control_lines.append(f"Early Exit: {pipeline_metrics.get('early_exit')}")
+
         metadata = pipeline_metrics.get("moderator_metadata")
         if isinstance(metadata, dict):
             attempts = metadata.get("attempts")
@@ -313,6 +375,22 @@ async def log_slow_scan_if_needed(
             DeveloperLogField(
                 name="Moderator Payload",
                 value="\n".join(payload_info_lines)[:1024],
+                inline=False,
+            )
+        )
+    if pipeline_config_lines:
+        fields.append(
+            DeveloperLogField(
+                name="Pipeline Config",
+                value="\n".join(pipeline_config_lines)[:1024],
+                inline=False,
+            )
+        )
+    if frame_control_lines:
+        fields.append(
+            DeveloperLogField(
+                name="Frame Controls",
+                value="\n".join(frame_control_lines)[:1024],
                 inline=False,
             )
         )

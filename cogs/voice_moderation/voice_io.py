@@ -356,7 +356,7 @@ def _ensure_opus_loaded() -> None:
 async def _ensure_connected(
     *,
     guild: discord.Guild,
-    channel: discord.VoiceChannel,
+    channel: discord.VoiceChannel | discord.StageChannel,
     voice: Optional[discord.VoiceClient],
     self_mute: bool,
 ) -> Optional[voice_recv.VoiceRecvClient]:
@@ -539,7 +539,7 @@ async def _ensure_connected(
 async def _ensure_connected_with_retry(
     *,
     guild: discord.Guild,
-    channel: discord.VoiceChannel,
+    channel: discord.VoiceChannel | discord.StageChannel,
     voice: Optional[discord.VoiceClient],
     self_mute: bool,
     attempts: int = 2,
@@ -568,7 +568,7 @@ async def _ensure_connected_with_retry(
 async def harvest_pcm_chunk(
     *,
     guild: discord.Guild,
-    channel: discord.VoiceChannel,
+    channel: discord.VoiceChannel | discord.StageChannel,
     voice: Optional[discord.VoiceClient],
     do_listen: bool,
     idle_delta: timedelta,

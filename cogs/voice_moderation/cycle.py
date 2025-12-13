@@ -34,11 +34,13 @@ _LIVE_FLUSH_MAX_UTTERANCES = 12
 _LIVE_FLUSH_MIN_INTERVAL_S = 2.5
 _LIVE_FLUSH_MAX_LATENCY_S = 8.0
 
+VCChannel = discord.VoiceChannel | discord.StageChannel
+
 
 @dataclass
 class VoiceCycleConfig:
     guild: discord.Guild
-    channel: discord.VoiceChannel
+    channel: VCChannel
     do_listen: bool
     listen_delta: timedelta
     idle_delta: timedelta

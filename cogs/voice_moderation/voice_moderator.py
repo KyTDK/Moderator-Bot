@@ -195,6 +195,7 @@ class VoiceModeratorCog(commands.Cog):
                 "vcmod-transcript-channel",
                 "vcmod-transcript-only",
                 "vcmod-join-announcement",
+                "vcmod-categories",
             ],
         )
 
@@ -203,6 +204,9 @@ class VoiceModeratorCog(commands.Cog):
         if not voice_settings.enabled:
             await self._teardown_state(guild)
             return
+
+        # Merge explicit channel list with any voice channels found inside the configured category.
+        voice_settings.channel_ids = await self._expand_voice_channels(guild, voice_settings)
 
         if not voice_settings.channel_ids:
             await self._teardown_state(guild)
@@ -301,30 +305,67 @@ class VoiceModeratorCog(commands.Cog):
 
         state.busy_task.add_done_callback(_done_callback)
 
+    async def _expand_voice_channels(
+        self,
+        guild: discord.Guild,
+        settings: VoiceSettings,
+    ) -> list[int]:
+        """Merge explicitly configured channels with all voice/stage channels inside configured categories."""
+        channel_ids: list[int] = []
+        seen: set[int] = set()
+
+        def _maybe_add(chan: discord.abc.Connectable) -> None:
+            cid = getattr(chan, "id", None)
+            if not isinstance(cid, int) or cid in seen:
+                return
+            seen.add(cid)
+            channel_ids.append(cid)
+
+        for cid in settings.channel_ids:
+            if cid in seen:
+                continue
+            seen.add(cid)
+            channel_ids.append(cid)
+
+        for category_id in settings.category_ids:
+            category = guild.get_channel(category_id)
+            if category is None:
+                with contextlib.suppress(Exception):
+                    category = await self.bot.fetch_channel(category_id)
+
+            if not isinstance(category, discord.CategoryChannel):
+                continue
+
+            for ch in category.channels:
+                if isinstance(ch, (discord.VoiceChannel, discord.StageChannel)):
+                    _maybe_add(ch)
+
+        return channel_ids
+
     async def _resolve_channel(
         self,
         guild: discord.Guild,
         settings: VoiceSettings,
         index: int,
-    ) -> Optional[discord.VoiceChannel]:
+    ) -> Optional[discord.abc.Connectable]:
         if index >= len(settings.channel_ids):
             return None
         chan_id = settings.channel_ids[index]
         channel = guild.get_channel(chan_id)
-        if isinstance(channel, discord.VoiceChannel):
+        if isinstance(channel, (discord.VoiceChannel, discord.StageChannel)):
             return channel
         try:
             fetched = await self.bot.fetch_channel(chan_id)
         except Exception:
             return None
-        return fetched if isinstance(fetched, discord.VoiceChannel) else None
+        return fetched if isinstance(fetched, (discord.VoiceChannel, discord.StageChannel)) else None
 
     async def _run_cycle_for_channel(
         self,
         *,
         guild: discord.Guild,
         settings: VoiceSettings,
-        channel: discord.VoiceChannel,
+        channel: discord.VoiceChannel | discord.StageChannel,
         transcript_only: bool,
     ) -> None:
         state = self._get_state(guild.id)
